@@ -1,12 +1,10 @@
 {
-  "//": "beacon2/frontend/vercel.json — Vercel deployment configuration",
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
   "installCommand": "npm install",
   "framework": "vite",
   "rewrites": [
     {
-      "//": "Send all page requests to index.html so React Router handles navigation",
       "source": "/(.*)",
       "destination": "/index.html"
     }
