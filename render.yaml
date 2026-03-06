@@ -11,7 +11,7 @@ services:
     region: frankfurt          # EU region — required for GDPR
     plan: free                 # Change to 'starter' when moving to production
     rootDir: backend
-    buildCommand: npm install
+    buildCommand: npm install && npm run build
     startCommand: node src/app.js
     healthCheckPath: /health
 

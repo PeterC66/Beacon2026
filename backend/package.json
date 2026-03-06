@@ -5,12 +5,16 @@
   "type": "module",
   "main": "src/app.js",
   "scripts": {
+    "build": "prisma generate",
     "dev": "node --watch src/app.js",
     "start": "node src/app.js",
     "db:migrate": "prisma migrate dev",
     "db:seed": "node src/seed/index.js",
     "db:studio": "prisma studio",
     "test": "vitest"
+  },
+  "engines": {
+    "node": ">=20.0.0"
   },
   "dependencies": {
     "@prisma/client": "^5.0.0",
