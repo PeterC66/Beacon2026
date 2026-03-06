@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { roles as rolesApi } from '../../lib/api.js';
 import { useAuth } from '../../context/AuthContext.jsx';
+import NavBar from '../../components/NavBar.jsx';
 
 export default function RoleList() {
   const { can } = useAuth();
@@ -39,21 +40,18 @@ export default function RoleList() {
     }
   }
 
-  if (loading) return <PageShell><Spinner /></PageShell>;
-  if (error)   return <PageShell><ErrorMsg msg={error} /></PageShell>;
+  const navLinks = [
+    { label: 'Home', to: '/' },
+    ...(can('role_record', 'create') ? [{ label: 'Add Role', to: '/roles/new' }] : []),
+  ];
+
+  if (loading) return <PageShell navLinks={navLinks}><Spinner /></PageShell>;
+  if (error)   return <PageShell navLinks={navLinks}><ErrorMsg msg={error} /></PageShell>;
 
   return (
-    <PageShell>
+    <PageShell navLinks={navLinks}>
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-xl font-semibold text-slate-800">Roles</h1>
-        {can('role_record', 'create') && (
-          <button
-            onClick={() => navigate('/roles/new')}
-            className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors"
-          >
-            + Add role
-          </button>
-        )}
       </div>
 
       {roleList.length === 0 ? (
@@ -108,8 +106,14 @@ export default function RoleList() {
   );
 }
 
-function PageShell({ children }) {
-  return <div className="p-6 max-w-4xl mx-auto">{children}</div>;
+function PageShell({ navLinks, children }) {
+  return (
+    <div className="min-h-screen bg-slate-100">
+      <NavBar links={navLinks} />
+      <div className="p-6 max-w-4xl mx-auto">{children}</div>
+      <NavBar links={navLinks} />
+    </div>
+  );
 }
 function Spinner() {
   return <div className="text-slate-400 text-sm">Loading…</div>;
