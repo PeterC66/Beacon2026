@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Beacon2 — Users, Roles, Privileges & Authentication: Design Document</title>
+<style>
+  body { font-family: Arial, sans-serif; font-size: 13px; color: #222; max-width: 960px; margin: 40px auto; padding: 0 30px; line-height: 1.6; }
+  h1 { font-size: 24px; color: #1a3a5c; border-bottom: 3px solid #1a3a5c; padding-bottom: 8px; margin-bottom: 4px; }
+  h2 { font-size: 18px; color: #1a3a5c; margin-top: 36px; border-bottom: 1px solid #ccc; padding-bottom: 4px; }
+  h3 { font-size: 14px; color: #2c5f8a; margin-top: 20px; }
+  .meta { color: #666; font-size: 12px; margin-bottom: 30px; }
+  .callout { background: #f0f6ff; border-left: 4px solid #2c5f8a; padding: 10px 16px; margin: 16px 0; border-radius: 0 4px 4px 0; }
+  .warning { background: #fff8e1; border-left: 4px solid #f0a500; padding: 10px 16px; margin: 16px 0; border-radius: 0 4px 4px 0; }
+  table { width: 100%; border-collapse: collapse; margin: 12px 0 20px 0; font-size: 12px; }
+  th { background: #1a3a5c; color: white; padding: 7px 10px; text-align: left; }
+  td { padding: 6px 10px; border-bottom: 1px solid #ddd; vertical-align: top; }
+  tr:nth-child(even) td { background: #f5f8fc; }
+  code { background: #eef2f7; padding: 1px 5px; border-radius: 3px; font-family: Consolas, monospace; font-size: 12px; }
+  pre { background: #1e2d3d; color: #d4e6f1; padding: 16px; border-radius: 6px; overflow-x: auto; font-size: 12px; line-height: 1.5; }
+  .section-num { color: #888; font-weight: normal; margin-right: 6px; }
+  .tag { display: inline-block; background: #e8f4e8; color: #2a7a2a; border-radius: 3px; padding: 1px 7px; font-size: 11px; margin-left: 6px; }
+  .tag.new { background: #e8f4e8; color: #2a7a2a; }
+  .tag.improved { background: #fff3e0; color: #c05000; }
+  ul li, ol li { margin-bottom: 4px; }
+  .toc { background: #f8f9fa; border: 1px solid #ddd; padding: 16px 24px; border-radius: 4px; margin-bottom: 30px; }
+  .toc a { color: #2c5f8a; text-decoration: none; }
+  .toc a:hover { text-decoration: underline; }
+  .toc li { margin-bottom: 3px; }
+  hr { border: none; border-top: 1px solid #ddd; margin: 30px 0; }
+  .priv-table th { font-size: 11px; }
+  .priv-table td { font-size: 11px; }
+  .tick { color: #2a7a2a; font-weight: bold; }
+  .dash { color: #aaa; }
+  .tier { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: bold; }
+  .tier-system { background: #fde8e8; color: #a00; }
+  .tier-u3a { background: #e8eeff; color: #00a; }
+  .tier-member { background: #e8f8e8; color: #060; }
+</style>
+</head>
+<body>
+
+<h1>Beacon2</h1>
+<h2 style="border:none; margin-top:0; color:#444; font-size:16px;">Users, Roles, Privileges &amp; Authentication — Design Document</h2>
+<div class="meta">
+  Version 0.1 &nbsp;|&nbsp; Draft &nbsp;|&nbsp; March 2026 &nbsp;|&nbsp; Module: AUTH
+</div>
+
+<div class="toc">
+  <strong>Contents</strong>
+  <ol>
+    <li><a href="#s1">Purpose &amp; Scope</a></li>
+    <li><a href="#s2">Key Design Principles</a></li>
+    <li><a href="#s3">Recommended Technology Stack</a></li>
+    <li><a href="#s4">Multi-tenancy Architecture</a></li>
+    <li><a href="#s5">Access Tiers</a></li>
+    <li><a href="#s6">Roles &amp; Privileges Model</a></li>
+    <li><a href="#s7">Privilege Reference</a></li>
+    <li><a href="#s8">Database Schema</a></li>
+    <li><a href="#s9">Authentication Flow</a></li>
+    <li><a href="#s10">API Design</a></li>
+    <li><a href="#s11">Data Migration Notes</a></li>
+    <li><a href="#s12">Open Questions</a></li>
+  </ol>
+</div>
+
+<!-- ───────────────────────────── 1 ───────────────────────────── -->
+<h2 id="s1"><span class="section-num">1.</span> Purpose &amp; Scope</h2>
+
+<p>This document defines the design for the <strong>Users, Roles, Privileges and Authentication</strong> module of Beacon2 — the modernised replacement for the Beacon u3a management system.</p>
+
+<p>Beacon2 serves many independent u3a organisations. Each u3a must feel as though they are the only user of the system — their data and configuration are completely isolated from all others. This principle is called <strong>multi-tenancy</strong> and it underpins every decision in this module.</p>
+
+<div class="callout">
+  <strong>Scope of this document:</strong> Login and session management; user accounts; roles; privileges; role assignment to users; and the system-level tier for creating and managing u3a tenants. Data migration from Beacon is noted but detailed separately.
+</div>
+
+<!-- ───────────────────────────── 2 ───────────────────────────── -->
+<h2 id="s2"><span class="section-num">2.</span> Key Design Principles</h2>
+
+<ul>
+  <li><strong>Tenant isolation first.</strong> Every database query that touches u3a data must be scoped to a tenant ID. There must be no way for one u3a's data to leak to another.</li>
+  <li><strong>Roles are per-tenant.</strong> Role names and their privilege sets are fully configurable by each u3a administrator. Default roles are seeded at tenant creation but are not fixed.</li>
+  <li><strong>Roles are additive.</strong> A user may hold multiple roles. Their effective privileges are the union of all roles assigned to them.</li>
+  <li><strong>Privilege to view is prerequisite.</strong> A user cannot create, change, or delete a resource unless they also have the View privilege for that resource.</li>
+  <li><strong>Minimum privilege principle.</strong> The system should guide administrators to assign only the privileges necessary for a role, not the maximum available.</li>
+  <li><strong>Committee roles are flagged.</strong> Roles can be marked as "committee roles" — this flag has reporting and display uses but does not change how privileges work.</li>
+  <li><strong>System-level functions are separate.</strong> The ability to create a new u3a tenant, suspend a tenant, or access cross-tenant data belongs to a distinct system-level tier that is never exposed within a u3a's own interface.</li>
+</ul>
+
+<!-- ───────────────────────────── 3 ───────────────────────────── -->
+<h2 id="s3"><span class="section-num">3.</span> Recommended Technology Stack</h2>
+
+<p>The following stack is recommended for a small team building a maintainable, modern full-stack JavaScript system:</p>
+
+<table>
+  <thead><tr><th>Layer</th><th>Recommended Choice</th><th>Rationale</th></tr></thead>
+  <tbody>
+    <tr><td>Frontend UI</td><td><strong>React</strong> (with Vite)</td><td>Largest ecosystem, easy to hire for, component model suits a permission-driven UI</td></tr>
+    <tr><td>UI Components</td><td><strong>shadcn/ui</strong> + Tailwind CSS</td><td>Accessible, composable, no vendor lock-in</td></tr>
+    <tr><td>Backend API</td><td><strong>Node.js + Express</strong> (or Fastify)</td><td>Stays in JavaScript across the whole codebase; familiar to the team</td></tr>
+    <tr><td>Database</td><td><strong>PostgreSQL</strong></td><td>Robust, supports row-level security (ideal for multi-tenancy), excellent JSON support</td></tr>
+    <tr><td>ORM</td><td><strong>Prisma</strong></td><td>Type-safe, excellent migration tooling, readable schema files</td></tr>
+    <tr><td>Authentication</td><td><strong>JWT</strong> (access token) + <strong>refresh tokens</strong> stored in httpOnly cookies</td><td>Stateless, scalable; secure against XSS with httpOnly cookies</td></tr>
+    <tr><td>Password hashing</td><td><strong>bcrypt</strong> (12 rounds)</td><td>Industry standard, slow by design</td></tr>
+    <tr><td>Session store</td><td><strong>Redis</strong> (for refresh token revocation)</td><td>Allows instant logout / token invalidation</td></tr>
+    <tr><td>Hosting</td><td>TBD — containerised via <strong>Docker</strong></td><td>Environment consistency; easy to deploy to any cloud</td></tr>
+    <tr><td>Testing</td><td><strong>Vitest</strong> (unit) + <strong>Playwright</strong> (e2e)</td><td>Fast, modern, well-supported</td></tr>
+  </tbody>
+</table>
+
+<div class="callout">
+  <strong>Why not a monolithic framework like Next.js?</strong> A separate frontend and backend gives the small team clearer separation of concerns and makes it easier to have one person own the API while another owns the UI. It also means the API can be reused by other clients (e.g. a future mobile app) without change.
+</div>
+
+<!-- ───────────────────────────── 4 ───────────────────────────── -->
+<h2 id="s4"><span class="section-num">4.</span> Multi-tenancy Architecture</h2>
+
+<p>Beacon2 uses a <strong>shared database, separate schemas</strong> approach, sometimes called the "schema-per-tenant" pattern in PostgreSQL.</p>
+
+<ul>
+  <li>Each u3a gets its own PostgreSQL <strong>schema</strong> (e.g. <code>u3a_oxfordshire</code>). All of that u3a's tables live in their schema.</li>
+  <li>A shared <code>public</code> schema holds system-level tables: the list of tenants, system administrator accounts, and global configuration.</li>
+  <li>The application sets <code>search_path</code> to the correct tenant schema at the start of each request, based on the authenticated user's tenant ID embedded in their JWT.</li>
+  <li>This means there is <strong>no need for a tenant_id column on every table</strong> — the schema boundary enforces isolation at the database level.</li>
+</ul>
+
+<div class="warning">
+  <strong>Important:</strong> Every API endpoint must validate that the tenant ID in the JWT matches the resource being requested. This must be enforced at the middleware layer, not left to individual route handlers.
+</div>
+
+<h3>Tenant lifecycle (system-level)</h3>
+<p>When a new u3a joins Beacon2, a system administrator performs these steps:</p>
+<ol>
+  <li>Creates a new tenant record in the <code>public.tenants</code> table.</li>
+  <li>Runs a migration to create the u3a's schema and seed its tables.</li>
+  <li>Seeds the five default roles (see Section 6) and their default privileges.</li>
+  <li>Creates the first administrator user account for that u3a.</li>
+</ol>
+
+<!-- ───────────────────────────── 5 ───────────────────────────── -->
+<h2 id="s5"><span class="section-num">5.</span> Access Tiers</h2>
+
+<p>Beacon2 has three distinct access tiers. Users at a higher tier cannot be created or managed from within a lower tier's interface.</p>
+
+<table>
+  <thead><tr><th>Tier</th><th>Who</th><th>What they can do</th></tr></thead>
+  <tbody>
+    <tr>
+      <td><span class="tier tier-system">System</span></td>
+      <td>Beacon2 platform operators</td>
+      <td>Create / suspend / delete u3a tenants; view cross-tenant diagnostics; manage system-level configuration; create other system admins</td>
+    </tr>
+    <tr>
+      <td><span class="tier tier-u3a">u3a Admin</span></td>
+      <td>Site Administrator within a u3a</td>
+      <td>Manage all users, roles and privileges for their u3a; access all modules they hold privileges for; configure u3a-level settings</td>
+    </tr>
+    <tr>
+      <td><span class="tier tier-member">Member / Officer</span></td>
+      <td>Any user within a u3a</td>
+      <td>Access only the parts of the system their assigned roles permit; may hold one or more roles</td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="callout">
+  Note: The <span class="tier tier-system">System</span> tier interface is a separate, internal-only application (or at minimum a separate route prefix, <code>/system</code>, protected by IP allowlist in addition to auth). u3a users never see system-tier screens.
+</div>
+
+<!-- ───────────────────────────── 6 ───────────────────────────── -->
+<h2 id="s6"><span class="section-num">6.</span> Roles &amp; Privileges Model</h2>
+
+<h3>Default Roles (seeded at tenant creation)</h3>
+<p>When a new u3a is set up, the following five roles are created automatically. All are fully editable — name, committee flag, and privilege set.</p>
+
+<table>
+  <thead><tr><th>Default Role Name</th><th>Committee Role</th><th>Notes</th></tr></thead>
+  <tbody>
+    <tr><td>Administration</td><td>No</td><td>Broad administrative access; typically the Site Administrator</td></tr>
+    <tr><td>Group Leaders</td><td>No</td><td>Access scoped to groups the user leads</td></tr>
+    <tr><td>Groups Coordinator</td><td>No</td><td>Coordinates across all groups</td></tr>
+    <tr><td>Membership Secretary</td><td>Yes</td><td>Manages member records and renewals</td></tr>
+    <tr><td>Treasurer</td><td>Yes</td><td>Manages financial records</td></tr>
+  </tbody>
+</table>
+
+<h3>How roles work</h3>
+<ul>
+  <li>A role has a <strong>name</strong>, a <strong>committee flag</strong>, optional <strong>notes</strong>, and a set of <strong>privilege assignments</strong>.</li>
+  <li>A <strong>user</strong> is assigned one or more roles. Their effective access is the <strong>union</strong> of all privilege assignments across all their roles.</li>
+  <li>Roles are scoped to a <strong>tenant</strong> — a role in one u3a has no meaning in another.</li>
+  <li>The "Administration" role (or equivalent) should have access to the Role Record and Users List privileges so it can manage roles and users.</li>
+</ul>
+
+<h3>Group-scoped privileges</h3>
+<p>Several privileges apply differently depending on the user's relationship to a group:</p>
+<ul>
+  <li><strong>all</strong> — can access records for any group</li>
+  <li><strong>as leader</strong> — can only access groups where they are the leader</li>
+  <li><strong>as member</strong> — can only access groups where they are a participant</li>
+</ul>
+<p>These are stored as separate privilege entries, not as a modifier on a single entry.</p>
+
+<!-- ───────────────────────────── 7 ───────────────────────────── -->
+<h2 id="s7"><span class="section-num">7.</span> Privilege Reference</h2>
+
+<p>The following table lists all privileges carried forward from Beacon. Each privilege can be assigned independently per role. The columns V/C/Ch/D represent View, Create, Change (edit), Delete. The "Other" column captures additional operations unique to that resource.</p>
+
+<table class="priv-table">
+  <thead>
+    <tr><th>Resource</th><th>V</th><th>C</th><th>Ch</th><th>D</th><th>Other</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>Address labels</td><td class="tick">✓</td><td class="dash">—</td><td class="dash">—</td><td class="dash">—</td><td>Download</td></tr>
+    <tr><td>Addresses export</td><td class="tick">✓</td><td class="dash">—</td><td class="dash">—</td><td class="dash">—</td><td>Download</td></tr>
+    <tr><td>Audit detail</td><td class="tick">✓</td><td class="dash">—</td><td class="dash">—</td><td class="dash">—</td><td>—</td></tr>
+    <tr><td>Audit trail</td><td class="tick">✓</td><td class="dash">—</td><td class="dash">—</td><td class="tick">✓</td><td>—</td></tr>
+    <tr><td>Calendar</td><td class="tick">✓</td><td class="dash">—</td><td class="dash">—</td><td class="dash">—</td><td>Download</td></tr>
+    <tr><td>Data export + backup</td><td class="tick">✓</td><td class="dash">—</td><td class="dash">—</td><td class="dash">—</td><td>Download</td></tr>
+    <tr><td>E-mail</td><td class="tick">✓</td><td class="dash">—</td><td class="dash">—</td><td class="dash">—</td><td>Send</td></tr>
+    <tr><td>E-mail addresses</td><td class="dash">—</td><td class="dash">—</td><td class="dash">—</td><td class="dash">—</td><td>Download</td></tr>
+    <tr><td>E-mail delivery</td><td class="tick">✓</td><td class="dash">—</td><td class="dash">—</td><td class="dash">—</td><td>All</td></tr>
+    <tr><td>E-mail standard messages</td><td class="tick">✓</td><td class="tick">✓</td><td class="tick">✓</td><td class="tick">✓</td><td>—</td></tr>
+    <tr><td>Finance: accounts</td><td class="tick">✓</td><td class="tick">✓</td><td class="tick">✓</td><td class="tick">✓</td><td>—</td></tr>
+    <tr><td>Finance: batches</td><td class="tick">✓</td><td class="tick">✓</td><td class="dash">—</td><td class="tick">✓</td><td>—</td></tr>
+    <tr><td>Finance: categories</td><td class="tick">✓</td><td class="tick">✓</td><td class="tick">✓</td><td class="tick">✓</td><td>—</td></tr>
+    <tr><td>Finance: ledger</td><td class="tick">✓</td><td class="dash">—</td><td class="dash">—</td><td class="dash">—</td><td>Download</td></tr>
+    <tr><td>Finance: reconcile accounts</td><td class="tick">✓</td><td class="dash">—</td><td class="dash">—</td><td class="dash">—</td><td>Reconcile</td></tr>
+    <tr><td>Finance: statement</td><td class="tick">✓</td><td class="dash">—</td><td class="dash">—</td><td class="dash">—</td><td>Download</td></tr>
+    <tr><td>Finance: transactions</td><td class="tick">✓</td><td class="tick">✓</td><td class="tick">✓</td><td class="tick">✓</td><td>—</td></tr>
+    <tr><td>Finance: transfer money</td><td class="tick">✓</td><td class="tick">✓</td><td class="tick">✓</td><td class="tick">✓</td><td>—</td></tr>
+    <tr><td>Gift Aid declaration</td><td class="tick">✓</td><td class="dash">—</td><td class="dash">—</td><td class="dash">—</td><td>Download &amp; Mark</td></tr>
+    <tr><td>Group faculties</td><td class="tick">✓</td><td class="tick">✓</td><td class="tick">✓</td><td class="tick">✓</td><td>—</td></tr>
+    <tr><td>Group leaders</td><td class="tick">✓</td><td class="dash">—</td><td class="dash">—</td><td class="dash">—</td><td>E-mail/Labels</td></tr>
+    <tr><td>Group ledger (all)</td><td class="tick">✓</td><td class="tick">✓</td><td class="tick">✓</td><td class="tick">✓</td><td>Download</td></tr>
+    <tr><td>Group ledger (as leader)</td><td class="tick">✓</td><td class="tick">✓</td><td class="tick">✓</td><td class="tick">✓</td><td>Download</td></tr>
+    <tr><td>Group records (all)</td><td class="tick">✓</td><td class="tick">✓</td><td class="tick">✓</td><td class="tick">✓</td><td>Download members</td></tr>
+    <tr><td>Group records (as leader)</td><td class="tick">✓</td><td class="dash">—</td><td class="tick">✓</td><td class="tick">✓</td><td>Download members</td></tr>
+    <tr><td>Group records (as member)</td><td class="tick">✓</td><td class="dash">—</td><td class="tick">✓</td><td class="dash">—</td><td>—</td></tr>
+    <tr><td>Group statement</td><td class="tick">✓</td><td class="dash">—</td><td class="dash">—</td><td class="dash">—</td><td>Download</td></tr>
+    <tr><td>Group venues</td><td class="tick">✓</td><td class="tick">✓</td><td class="tick">✓</td><td class="tick">✓</td><td>—</td></tr>
+    <tr><td>Groups list</td><td class="tick">✓</td><td class="dash">—</td><td class="dash">—</td><td class="dash">—</td><td>Download</td></tr>
+    <tr><td>Groups: add members by name</td><td class="dash">—</td><td class="dash">—</td><td class="tick">✓</td><td class="dash">—</td><td>—</td></tr>
+    <tr><td>Groups: add members by name (as leader)</td><td class="dash">—</td><td class="dash">—</td><td class="tick">✓</td><td class="dash">—</td><td>—</td></tr>
+    <tr><td>Groups: add members by no</td><td class="dash">—</td><td class="dash">—</td><td class="tick">✓</td><td class="dash">—</td><td>—</td></tr>
+    <tr><td>Groups: add members by no (as leader)</td><td class="dash">—</td><td class="dash">—</td><td class="tick">✓</td><td class="dash">—</td><td>—</td></tr>
+    <tr><td>Letters</td><td class="tick">✓</td><td class="dash">—</td><td class="dash">—</td><td class="dash">—</td><td>Download</td></tr>
+    <tr><td>Letters: standard messages</td><td class="tick">✓</td><td class="tick">✓</td><td class="tick">✓</td><td class="tick">✓</td><td>—</td></tr>
+    <tr><td>Meetings</td><td class="tick">✓</td><td class="tick">✓</td><td class="tick">✓</td><td class="tick">✓</td><td>—</td></tr>
+    <tr><td>Member classes</td><td class="tick">✓</td><td class="tick">✓</td><td class="tick">✓</td><td class="tick">✓</td><td>—</td></tr>
+    <tr><td>Member record</td><td class="tick">✓</td><td class="tick">✓</td><td class="tick">✓</td><td class="tick">✓</td><td>—</td></tr>
+    <tr><td>Member statuses</td><td class="tick">✓</td><td class="tick">✓</td><td class="tick">✓</td><td class="tick">✓</td><td>—</td></tr>
+    <tr><td>Members list</td><td class="tick">✓</td><td class="dash">—</td><td class="dash">—</td><td class="dash">—</td><td>Download</td></tr>
+    <tr><td>Members: delete expired</td><td class="tick">✓</td><td class="dash">—</td><td class="dash">—</td><td class="tick">✓</td><td>—</td></tr>
+    <tr><td>Members: non-renewals</td><td class="tick">✓</td><td class="dash">—</td><td class="dash">—</td><td class="dash">—</td><td>Lapse</td></tr>
+    <tr><td>Members: recent</td><td class="tick">✓</td><td class="dash">—</td><td class="dash">—</td><td class="dash">—</td><td>Download</td></tr>
+    <tr><td>Membership cards</td><td class="tick">✓</td><td class="dash">—</td><td class="dash">—</td><td class="dash">—</td><td>Download &amp; Mark</td></tr>
+    <tr><td>Membership renewals</td><td class="tick">✓</td><td class="dash">—</td><td class="dash">—</td><td class="dash">—</td><td>Renew</td></tr>
+    <tr><td>Membership statistics</td><td class="tick">✓</td><td class="dash">—</td><td class="dash">—</td><td class="dash">—</td><td>Download</td></tr>
+    <tr><td>Offices</td><td class="tick">✓</td><td class="tick">✓</td><td class="tick">✓</td><td class="tick">✓</td><td>—</td></tr>
+    <tr><td>Poll set up</td><td class="tick">✓</td><td class="tick">✓</td><td class="tick">✓</td><td class="tick">✓</td><td>—</td></tr>
+    <tr><td>Public links</td><td class="tick">✓</td><td class="dash">—</td><td class="dash">—</td><td class="dash">—</td><td>—</td></tr>
+    <tr><td>Role record</td><td class="tick">✓</td><td class="tick">✓</td><td class="tick">✓</td><td class="tick">✓</td><td>—</td></tr>
+    <tr><td>Roles list</td><td class="tick">✓</td><td class="dash">—</td><td class="dash">—</td><td class="dash">—</td><td>—</td></tr>
+    <tr><td>Settings</td><td class="tick">✓</td><td class="dash">—</td><td class="tick">✓</td><td class="dash">—</td><td>—</td></tr>
+    <tr><td>System messages</td><td class="tick">✓</td><td class="tick">✓</td><td class="tick">✓</td><td class="dash">—</td><td>—</td></tr>
+    <tr><td>User record</td><td class="tick">✓</td><td class="tick">✓</td><td class="tick">✓</td><td class="tick">✓</td><td>—</td></tr>
+    <tr><td>Users list</td><td class="tick">✓</td><td class="dash">—</td><td class="dash">—</td><td class="dash">—</td><td>—</td></tr>
+  </tbody>
+</table>
+
+<div class="callout">
+  <strong>Implementation note:</strong> Privileges should be stored as a structured list in the database (one row per resource/action combination per role), not as a bitmask or JSON blob. This makes querying, auditing, and migration significantly simpler.
+</div>
+
+<!-- ───────────────────────────── 8 ───────────────────────────── -->
+<h2 id="s8"><span class="section-num">8.</span> Database Schema</h2>
+
+<p>The following Prisma-style schema covers the auth module. Tables in the <code>public</code> schema are prefixed with <code>sys_</code>; tables in the per-tenant schema have no prefix.</p>
+
+<h3>System-level tables (public schema)</h3>
+<pre>
+// public schema
+
+model sys_tenant {
+  id          String   @id @default(cuid())
+  name        String                         // e.g. "Oxfordshire u3a"
+  slug        String   @unique               // e.g. "oxfordshire" — used as schema name
+  active      Boolean  @default(true)
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+}
+
+model sys_admin {
+  id            String   @id @default(cuid())
+  email         String   @unique
+  password_hash String
+  name          String
+  active        Boolean  @default(true)
+  created_at    DateTime @default(now())
+  last_login    DateTime?
+}
+</pre>
+
+<h3>Per-tenant tables (u3a schema)</h3>
+<pre>
+// per-tenant schema (e.g. u3a_oxfordshire)
+
+model user {
+  id            String   @id @default(cuid())
+  email         String   @unique
+  password_hash String?                      // null = no login access
+  name          String
+  active        Boolean  @default(true)
+  created_at    DateTime @default(now())
+  updated_at    DateTime @updatedAt
+  last_login    DateTime?
+  member_id     String?                      // link to member record (future module)
+
+  user_roles    user_role[]
+  refresh_tokens refresh_token[]
+}
+
+model role {
+  id             String   @id @default(cuid())
+  name           String
+  is_committee   Boolean  @default(false)
+  notes          String?
+  created_at     DateTime @default(now())
+  updated_at     DateTime @updatedAt
+
+  user_roles     user_role[]
+  privileges     role_privilege[]
+}
+
+model user_role {
+  id         String   @id @default(cuid())
+  user       user     @relation(fields: [user_id], references: [id])
+  user_id    String
+  role       role     @relation(fields: [role_id], references: [id])
+  role_id    String
+  assigned_at DateTime @default(now())
+
+  @@unique([user_id, role_id])
+}
+
+model privilege_resource {
+  id       String   @id @default(cuid())
+  code     String   @unique        // e.g. "finance:transactions"
+  label    String                  // e.g. "Finance: transactions"
+  actions  String[]                // allowed actions e.g. ["view","create","change","delete"]
+  // Note: actions lists what is POSSIBLE for this resource, not what is granted
+}
+
+model role_privilege {
+  id          String   @id @default(cuid())
+  role        role     @relation(fields: [role_id], references: [id])
+  role_id     String
+  resource    privilege_resource @relation(fields: [resource_id], references: [id])
+  resource_id String
+  action      String              // "view" | "create" | "change" | "delete" | "download"
+                                  // | "send" | "reconcile" | "renew" | "lapse" | "all" etc.
+  @@unique([role_id, resource_id, action])
+}
+
+model refresh_token {
+  id          String   @id @default(cuid())
+  user        user     @relation(fields: [user_id], references: [id])
+  user_id     String
+  token_hash  String   @unique
+  expires_at  DateTime
+  revoked     Boolean  @default(false)
+  created_at  DateTime @default(now())
+}
+</pre>
+
+<!-- ───────────────────────────── 9 ───────────────────────────── -->
+<h2 id="s9"><span class="section-num">9.</span> Authentication Flow</h2>
+
+<h3>Login</h3>
+<ol>
+  <li>User submits email + password to <code>POST /auth/login</code>.</li>
+  <li>Server looks up user by email within the correct tenant schema (tenant is identified by subdomain or login-page context).</li>
+  <li>Server verifies password hash with bcrypt.</li>
+  <li>On success, server issues:
+    <ul>
+      <li>A short-lived <strong>access token</strong> (JWT, 15 minutes), containing: user ID, tenant slug, and computed effective privileges.</li>
+      <li>A long-lived <strong>refresh token</strong> (opaque string, 30 days), stored as an httpOnly cookie and its hash saved in the database.</li>
+    </ul>
+  </li>
+  <li>The access token is returned in the response body. The frontend stores it in memory only (not localStorage).</li>
+</ol>
+
+<h3>Authorisation on each request</h3>
+<ol>
+  <li>Frontend sends the access token as a <code>Bearer</code> header.</li>
+  <li>API middleware validates the JWT signature and expiry.</li>
+  <li>Middleware extracts the tenant slug and sets the PostgreSQL <code>search_path</code> to the correct tenant schema.</li>
+  <li>Route handler checks the required privilege against the token's privilege set.</li>
+</ol>
+
+<h3>Token refresh</h3>
+<ol>
+  <li>When the access token expires, the frontend calls <code>POST /auth/refresh</code>.</li>
+  <li>The server reads the refresh token from the httpOnly cookie, validates it against the database, and issues a new access token.</li>
+  <li>Refresh tokens are rotated on each use (old one revoked, new one issued).</li>
+</ol>
+
+<h3>Logout</h3>
+<ol>
+  <li>Frontend calls <code>POST /auth/logout</code>.</li>
+  <li>Server revokes the refresh token in Redis and the database.</li>
+  <li>Frontend discards the access token from memory.</li>
+</ol>
+
+<div class="callout">
+  <strong>Privilege embedding in JWT:</strong> Computing privileges on every request would require multiple database joins. Instead, the effective privilege set is computed at login and embedded in the JWT. When an administrator changes a role's privileges, affected users' sessions are invalidated via Redis so they must re-login and receive a fresh token.
+</div>
+
+<!-- ───────────────────────────── 10 ───────────────────────────── -->
+<h2 id="s10"><span class="section-num">10.</span> API Design</h2>
+
+<table>
+  <thead><tr><th>Method</th><th>Endpoint</th><th>Description</th><th>Required privilege</th></tr></thead>
+  <tbody>
+    <tr><td>POST</td><td>/auth/login</td><td>Authenticate user, return tokens</td><td>None</td></tr>
+    <tr><td>POST</td><td>/auth/logout</td><td>Revoke refresh token</td><td>Authenticated</td></tr>
+    <tr><td>POST</td><td>/auth/refresh</td><td>Issue new access token</td><td>Valid refresh token</td></tr>
+    <tr><td>GET</td><td>/users</td><td>List all users in tenant</td><td>users_list: view</td></tr>
+    <tr><td>GET</td><td>/users/:id</td><td>Get a user record</td><td>user_record: view</td></tr>
+    <tr><td>POST</td><td>/users</td><td>Create a user</td><td>user_record: create</td></tr>
+    <tr><td>PATCH</td><td>/users/:id</td><td>Update a user</td><td>user_record: change</td></tr>
+    <tr><td>DELETE</td><td>/users/:id</td><td>Delete a user</td><td>user_record: delete</td></tr>
+    <tr><td>POST</td><td>/users/:id/roles</td><td>Assign a role to a user</td><td>user_record: change</td></tr>
+    <tr><td>DELETE</td><td>/users/:id/roles/:roleId</td><td>Remove a role from a user</td><td>user_record: change</td></tr>
+    <tr><td>GET</td><td>/roles</td><td>List all roles in tenant</td><td>roles_list: view</td></tr>
+    <tr><td>GET</td><td>/roles/:id</td><td>Get role with its privileges</td><td>role_record: view</td></tr>
+    <tr><td>POST</td><td>/roles</td><td>Create a new role</td><td>role_record: create</td></tr>
+    <tr><td>PATCH</td><td>/roles/:id</td><td>Update role name / committee flag</td><td>role_record: change</td></tr>
+    <tr><td>DELETE</td><td>/roles/:id</td><td>Delete a role</td><td>role_record: delete</td></tr>
+    <tr><td>PUT</td><td>/roles/:id/privileges</td><td>Replace full privilege set for a role</td><td>role_record: change</td></tr>
+    <tr><td>GET</td><td>/privileges/resources</td><td>List all available privilege resources &amp; actions</td><td>role_record: view</td></tr>
+    <tr><td colspan="4" style="background:#f0f6ff; font-style:italic;">System-tier endpoints (separate app / /system prefix)</td></tr>
+    <tr><td>GET</td><td>/system/tenants</td><td>List all u3a tenants</td><td>sys_admin</td></tr>
+    <tr><td>POST</td><td>/system/tenants</td><td>Create a new u3a tenant</td><td>sys_admin</td></tr>
+    <tr><td>PATCH</td><td>/system/tenants/:id</td><td>Update / suspend a tenant</td><td>sys_admin</td></tr>
+  </tbody>
+</table>
+
+<!-- ───────────────────────────── 11 ───────────────────────────── -->
+<h2 id="s11"><span class="section-num">11.</span> Data Migration Notes</h2>
+
+<p>A full migration design is out of scope for this document, but the following points are relevant to the auth module specifically:</p>
+
+<ul>
+  <li>Beacon user passwords cannot be migrated directly (they are hashed with an unknown algorithm and the plaintext is unavailable). The recommended approach is to <strong>force a password reset</strong> for all users on first login to Beacon2.</li>
+  <li>Roles and their privilege assignments can be migrated by reading the Beacon configuration and mapping to the Beacon2 privilege resource codes defined in Section 7.</li>
+  <li>User–role assignments can be migrated directly once roles are in place.</li>
+  <li>The migration tool should be a standalone script that connects to the Beacon data export and populates the correct tenant schema in Beacon2.</li>
+</ul>
+
+<!-- ───────────────────────────── 12 ───────────────────────────── -->
+<h2 id="s12"><span class="section-num">12.</span> Open Questions</h2>
+
+<table>
+  <thead><tr><th>#</th><th>Question</th><th>Impact</th></tr></thead>
+  <tbody>
+    <tr><td>1</td><td>Should Beacon2 support login via email magic link in addition to password? This would simplify the forced password reset migration.</td><td>Auth flow, user table</td></tr>
+    <tr><td>2</td><td>What is the password policy? Minimum length, complexity, expiry?</td><td>User creation, login flow</td></tr>
+    <tr><td>3</td><td>Can a user belong to more than one u3a? (i.e. can the same email address exist in two tenants?)</td><td>Multi-tenancy model</td></tr>
+    <tr><td>4</td><td>Is there a requirement for two-factor authentication (2FA) — particularly for the Administration role?</td><td>Auth flow complexity</td></tr>
+    <tr><td>5</td><td>What system-level functions does the System tier need beyond creating tenants? (e.g. global announcements, billing, usage reports)</td><td>System-tier scope</td></tr>
+    <tr><td>6</td><td>Should audit trail entries for privilege changes be immutable (i.e. can never be deleted, even by Administration)?</td><td>Audit trail schema</td></tr>
+  </tbody>
+</table>
+
+<hr>
+<div style="color:#888; font-size:11px; text-align:center;">
+  Beacon2 Design Document — AUTH module — v0.1 Draft — March 2026<br>
+  This document should be version-controlled in the Beacon2 repository under <code>/docs/design/auth.html</code>
+</div>
+
+</body>
+</html>
