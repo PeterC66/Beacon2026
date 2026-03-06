@@ -1,36 +1,34 @@
 # beacon2/render.yaml
-# Render "Infrastructure as Code" file.
-# Connect your GitHub repo in Render and it will read this file automatically.
-# Docs: https://render.com/docs/infrastructure-as-code
 
 services:
-  # ── Backend API ──────────────────────────────────────────────────────────
   - type: web
     name: beacon2-backend
     runtime: node
-    region: frankfurt          # EU region — required for GDPR
-    plan: free                 # Change to 'starter' when moving to production
+    region: frankfurt
+    plan: free
     rootDir: backend
     buildCommand: npm install && npm run build
     startCommand: node src/app.js
     healthCheckPath: /health
 
     envVars:
-      # Render automatically injects DATABASE_URL from the database below
       - key: DATABASE_URL
         fromDatabase:
           name: beacon2-db
           property: connectionString
 
-      # Generate these two secrets at https://generate-secret.now.sh/64
-      # Paste the values into Render's dashboard after first deploy
       - key: JWT_ACCESS_SECRET
-        sync: false            # Render will prompt you to fill this in
+        sync: false        # Paste a random 64-char string in the Render dashboard
 
       - key: JWT_REFRESH_SECRET
-        sync: false
+        sync: false        # Paste a DIFFERENT random 64-char string
 
-      # For POC: Redis is disabled. Set to 'false' to skip Redis calls.
+      - key: SEED_ADMIN_EMAIL
+        value: "admin@beacon2.local"   # Change to your preferred admin email
+
+      - key: SEED_ADMIN_PASSWORD
+        sync: false        # Paste your chosen admin password here — set this before first deploy
+
       - key: USE_REDIS
         value: "false"
 
@@ -49,14 +47,12 @@ services:
       - key: BCRYPT_ROUNDS
         value: "12"
 
-      # Set this after Vercel deploys the frontend (paste your Vercel URL)
       - key: CORS_ORIGIN
-        sync: false
+        sync: false        # Paste your Vercel frontend URL here
 
-# ── PostgreSQL Database ───────────────────────────────────────────────────
 databases:
   - name: beacon2-db
-    region: frankfurt          # Must match the backend region
-    plan: free                 # Free tier — fine for POC
+    region: frankfurt
+    plan: free
     databaseName: beacon2
     user: beacon2
