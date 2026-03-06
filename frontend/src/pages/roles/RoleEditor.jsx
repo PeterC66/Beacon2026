@@ -6,6 +6,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { roles as rolesApi, privileges as privsApi } from '../../lib/api.js';
 import { useAuth } from '../../context/AuthContext.jsx';
+import NavBar from '../../components/NavBar.jsx';
 
 export default function RoleEditor() {
   const { id }    = useParams();           // undefined for new role
@@ -150,22 +151,23 @@ export default function RoleEditor() {
     resources.flatMap((r) => r.actions.filter((a) => !STANDARD_ACTIONS.includes(a)))
   )].sort();
 
-  if (loading) return <PageShell><p className="text-slate-400 text-sm">Loading…</p></PageShell>;
-
   const canEdit = can('role_record', isNew ? 'create' : 'change');
 
+  const navLinks = [
+    { label: 'Home', to: '/' },
+    { label: 'Roles List', to: '/roles' },
+    ...(!isNew && can('role_record', 'create') ? [{ label: 'Add Role', to: '/roles/new' }] : []),
+  ];
+
+  if (loading) return <PageShell navLinks={navLinks}><p className="text-slate-400 text-sm">Loading…</p></PageShell>;
+
   return (
-    <PageShell>
+    <PageShell navLinks={navLinks}>
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
-        <div>
-          <button onClick={() => navigate('/roles')} className="text-blue-600 hover:underline text-sm mr-2">
-            ← Roles
-          </button>
-          <h1 className="text-xl font-semibold text-slate-800 inline">
-            {isNew ? 'New role' : `Edit: ${name}`}
-          </h1>
-        </div>
+        <h1 className="text-xl font-semibold text-slate-800">
+          {isNew ? 'New role' : `Edit: ${name}`}
+        </h1>
         <div className="flex gap-2">
           <button
             onClick={() => navigate('/roles')}
@@ -316,6 +318,12 @@ export default function RoleEditor() {
   );
 }
 
-function PageShell({ children }) {
-  return <div className="p-6 max-w-5xl mx-auto">{children}</div>;
+function PageShell({ navLinks, children }) {
+  return (
+    <div className="min-h-screen bg-slate-100">
+      <NavBar links={navLinks} />
+      <div className="p-6 max-w-5xl mx-auto">{children}</div>
+      <NavBar links={navLinks} />
+    </div>
+  );
 }
