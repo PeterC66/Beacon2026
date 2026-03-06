@@ -1,0 +1,67 @@
+// beacon2/backend/src/seed/privilegeResources.js
+// Complete list of privilege resources, derived from the Beacon documentation.
+// codes are snake_case versions of the resource names.
+// actions lists all possible actions for each resource.
+
+import { v4 as uuid } from 'uuid';
+
+// Helper to keep the list readable
+const r = (code, label, actions) => ({ id: uuid(), code, label, actions });
+
+export const PRIVILEGE_RESOURCES = [
+  r('address_labels',            'Address labels',                  ['view', 'download']),
+  r('addresses_export',          'Addresses export',                ['view', 'download']),
+  r('audit_detail',              'Audit detail',                    ['view']),
+  r('audit_trail',               'Audit trail',                     ['view', 'delete']),
+  r('calendar',                  'Calendar',                        ['view', 'download']),
+  r('data_export_backup',        'Data export + backup',            ['view', 'download']),
+  r('email',                     'E-mail',                          ['view', 'send']),
+  r('email_addresses',           'E-mail addresses',                ['download']),
+  r('email_delivery',            'E-mail delivery',                 ['view', 'all']),
+  r('email_standard_messages',   'E-mail standard messages',        ['view', 'create', 'change', 'delete']),
+  r('finance_accounts',          'Finance: accounts',               ['view', 'create', 'change', 'delete']),
+  r('finance_batches',           'Finance: batches',                ['view', 'create', 'delete']),
+  r('finance_categories',        'Finance: categories',             ['view', 'create', 'change', 'delete']),
+  r('finance_ledger',            'Finance: ledger',                 ['view', 'download']),
+  r('finance_reconcile',         'Finance: reconcile accounts',     ['view', 'reconcile']),
+  r('finance_statement',         'Finance: statement',              ['view', 'download']),
+  r('finance_transactions',      'Finance: transactions',           ['view', 'create', 'change', 'delete']),
+  r('finance_transfer_money',    'Finance: transfer money',         ['view', 'create', 'change', 'delete']),
+  r('gift_aid_declaration',      'Gift Aid declaration',            ['view', 'download_and_mark']),
+  r('group_faculties',           'Group faculties',                 ['view', 'create', 'change', 'delete']),
+  r('group_leaders',             'Group leaders',                   ['view', 'email_labels']),
+  r('group_ledger_all',          'Group ledger (all)',              ['view', 'create', 'change', 'delete', 'download']),
+  r('group_ledger_as_leader',    'Group ledger (as leader)',        ['view', 'create', 'change', 'delete', 'download']),
+  r('group_records_all',         'Group records (all)',             ['view', 'create', 'change', 'delete', 'download_members']),
+  r('group_records_as_leader',   'Group records (as leader)',       ['view', 'change', 'delete', 'download_members']),
+  r('group_records_as_member',   'Group records (as member)',       ['view', 'change']),
+  r('group_statement',           'Group statement',                 ['view', 'download']),
+  r('group_venues',              'Group venues',                    ['view', 'create', 'change', 'delete']),
+  r('groups_list',               'Groups list',                     ['view', 'download']),
+  r('groups_add_by_name',        'Groups: add members by name',     ['change']),
+  r('groups_add_by_name_leader', 'Groups: add members by name (as leader)', ['change']),
+  r('groups_add_by_no',          'Groups: add members by number',   ['change']),
+  r('groups_add_by_no_leader',   'Groups: add members by number (as leader)', ['change']),
+  r('letters',                   'Letters',                         ['view', 'download']),
+  r('letters_standard_messages', 'Letters: standard messages',      ['view', 'create', 'change', 'delete']),
+  r('meetings',                  'Meetings',                        ['view', 'create', 'change', 'delete']),
+  r('member_classes',            'Member classes',                  ['view', 'create', 'change', 'delete']),
+  r('member_record',             'Member record',                   ['view', 'create', 'change', 'delete']),
+  r('member_statuses',           'Member statuses',                 ['view', 'create', 'change', 'delete']),
+  r('members_list',              'Members list',                    ['view', 'download']),
+  r('members_delete_expired',    'Members: delete expired',         ['view', 'delete']),
+  r('members_non_renewals',      'Members: non-renewals',           ['view', 'lapse']),
+  r('members_recent',            'Members: recent',                 ['view', 'download']),
+  r('membership_cards',          'Membership cards',                ['view', 'download_and_mark']),
+  r('membership_renewals',       'Membership renewals',             ['view', 'renew']),
+  r('membership_statistics',     'Membership statistics',           ['view', 'download']),
+  r('offices',                   'Offices',                         ['view', 'create', 'change', 'delete']),
+  r('poll_set_up',               'Poll set up',                     ['view', 'create', 'change', 'delete']),
+  r('public_links',              'Public links',                    ['view']),
+  r('role_record',               'Role record',                     ['view', 'create', 'change', 'delete']),
+  r('roles_list',                'Roles list',                      ['view']),
+  r('settings',                  'Settings',                        ['view', 'change']),
+  r('system_messages',           'System messages',                 ['view', 'create', 'change']),
+  r('user_record',               'User record',                     ['view', 'create', 'change', 'delete']),
+  r('users_list',                'Users list',                      ['view']),
+];

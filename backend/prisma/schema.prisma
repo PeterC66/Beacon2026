@@ -1,0 +1,41 @@
+// Beacon2 Prisma Schema
+// Run `prisma migrate dev` to apply changes
+// Note: per-tenant tables are created dynamically via raw SQL (see seed/createTenant.js)
+// This schema covers the PUBLIC (system-level) tables only.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─────────────────────────────────────────────
+// SYSTEM-LEVEL TABLES  (public schema)
+// ─────────────────────────────────────────────
+
+model SysTenant {
+  id         String   @id @default(cuid())
+  name       String                        // "Oxfordshire u3a"
+  slug       String   @unique              // "oxfordshire" → schema name: u3a_oxfordshire
+  active     Boolean  @default(true)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@map("sys_tenants")
+}
+
+model SysAdmin {
+  id           String    @id @default(cuid())
+  email        String    @unique
+  passwordHash String
+  name         String
+  active       Boolean   @default(true)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  lastLogin    DateTime?
+
+  @@map("sys_admins")
+}
