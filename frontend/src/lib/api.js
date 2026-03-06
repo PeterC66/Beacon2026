@@ -123,3 +123,33 @@ export const roles = {
 export const privileges = {
   resources: () => request('/privileges/resources'),
 };
+
+// ─── System admin (separate token, no tenant) ─────────────────────────────
+
+export const system = {
+  login: (email, password) =>
+    fetch(`${BASE}/auth/system/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password }),
+    }).then((r) => r.json().then((b) => { if (!r.ok) throw new Error(b.error ?? `HTTP ${r.status}`); return b; })),
+
+  listTenants: (token) =>
+    fetch(`${BASE}/system/tenants`, {
+      headers: { Authorization: `Bearer ${token}` },
+    }).then((r) => r.json().then((b) => { if (!r.ok) throw new Error(b.error ?? `HTTP ${r.status}`); return b; })),
+
+  createTenant: (token, data) =>
+    fetch(`${BASE}/system/tenants`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify(data),
+    }).then((r) => r.json().then((b) => { if (!r.ok) throw new Error(b.error ?? `HTTP ${r.status}`); return b; })),
+
+  setTenantActive: (token, id, active) =>
+    fetch(`${BASE}/system/tenants/${id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ active }),
+    }).then((r) => r.json().then((b) => { if (!r.ok) throw new Error(b.error ?? `HTTP ${r.status}`); return b; })),
+};
