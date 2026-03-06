@@ -2,10 +2,12 @@
 
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext.jsx';
-import Login      from './pages/Login.jsx';
-import Home       from './pages/Home.jsx';
-import RoleList   from './pages/roles/RoleList.jsx';
-import RoleEditor from './pages/roles/RoleEditor.jsx';
+import Login           from './pages/Login.jsx';
+import Home            from './pages/Home.jsx';
+import RoleList        from './pages/roles/RoleList.jsx';
+import RoleEditor      from './pages/roles/RoleEditor.jsx';
+import SystemLogin     from './pages/system/SystemLogin.jsx';
+import SystemDashboard from './pages/system/SystemDashboard.jsx';
 
 function ProtectedRoute({ children }) {
   const { isLoggedIn } = useAuth();
@@ -19,7 +21,11 @@ export default function App() {
         <Routes>
           <Route path="/login" element={<Login />} />
 
-          {/* Protected routes */}
+          {/* System admin routes (auth handled inside pages via sessionStorage) */}
+          <Route path="/system/login" element={<SystemLogin />} />
+          <Route path="/system"       element={<SystemDashboard />} />
+
+          {/* Protected tenant routes */}
           <Route path="/"           element={<ProtectedRoute><Home /></ProtectedRoute>} />
           <Route path="/roles"      element={<ProtectedRoute><RoleList /></ProtectedRoute>} />
           <Route path="/roles/new"  element={<ProtectedRoute><RoleEditor /></ProtectedRoute>} />
