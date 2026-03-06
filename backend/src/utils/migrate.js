@@ -8,10 +8,10 @@ import { hashPassword } from './password.js';
 
 export async function migrateAndSeed() {
   // 1. Run Prisma migrations (creates system-level tables if they don't exist)
-  console.log('Running database migrations...');
+  console.log('Pushing database schema...');
   try {
-    execSync('npx prisma migrate deploy', { stdio: 'inherit' });
-    console.log('Migrations complete.');
+    execSync('npx prisma db push --accept-data-loss', { stdio: 'inherit' });
+    console.log('Schema push complete.');
   } catch (err) {
     console.error('Migration failed:', err.message);
     throw err;
