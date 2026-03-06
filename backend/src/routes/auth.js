@@ -11,8 +11,8 @@ const router = Router();
 const COOKIE_NAME = 'beacon2_refresh';
 const cookieOptions = {
   httpOnly: true,
-  secure: process.env.NODE_ENV === 'production',
-  sameSite: 'strict',
+  secure: true,
+  sameSite: 'none',   // required for cross-origin (Vercel frontend → Render backend)
   maxAge: 1000 * 60 * 60 * 24 * parseInt(process.env.JWT_REFRESH_EXPIRES_DAYS ?? '30', 10),
 };
 
