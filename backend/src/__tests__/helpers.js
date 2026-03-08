@@ -14,6 +14,9 @@ export const ALL_PRIVS = [
   'member_statuses:view', 'member_statuses:create', 'member_statuses:change', 'member_statuses:delete',
   'members_list:view',
   'member_record:view', 'member_record:create', 'member_record:change', 'member_record:delete',
+  'groups_list:view',
+  'group_records_all:view', 'group_records_all:create', 'group_records_all:change', 'group_records_all:delete',
+  'group_faculties:view', 'group_faculties:create', 'group_faculties:change', 'group_faculties:delete',
 ];
 
 export const TEST_TENANT = 'test-u3a';
