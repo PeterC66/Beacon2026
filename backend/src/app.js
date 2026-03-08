@@ -12,8 +12,6 @@ import roleRoutes      from './routes/roles.js';
 import privilegeRoutes from './routes/privileges.js';
 import systemRoutes    from './routes/system.js';
 import { errorHandler } from './middleware/errorHandler.js';
-import { prisma }       from './utils/db.js';
-import { migrateAndSeed } from './utils/migrate.js';
 
 const app = express();
 
@@ -39,24 +37,5 @@ app.use('/system',     systemRoutes);
 app.get('/health', (_req, res) => res.json({ status: 'ok' }));
 
 app.use(errorHandler);
-
-// ── Start: migrate first, then listen ────────────────────────────────────
-const PORT = process.env.PORT ?? 3001;
-
-migrateAndSeed()
-  .then(() => {
-    app.listen(PORT, () => {
-      console.log(`Beacon2 API running on port ${PORT} [${process.env.NODE_ENV}]`);
-    });
-  })
-  .catch((err) => {
-    console.error('Startup failed:', err);
-    process.exit(1);
-  });
-
-process.on('SIGTERM', async () => {
-  await prisma.$disconnect();
-  process.exit(0);
-});
 
 export default app;
