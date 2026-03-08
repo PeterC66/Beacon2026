@@ -1,0 +1,63 @@
+# beacon2/.github/workflows/ci.yml
+# Runs backend and frontend tests on every push to a claude/* branch
+# and on every pull request targeting main.
+
+name: CI
+
+on:
+  push:
+    branches:
+      - 'claude/**'
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  # ── Backend unit/integration tests ───────────────────────────────────────
+  backend-test:
+    name: Backend tests
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: backend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      # DB is fully mocked — no Postgres service container needed.
+      # Secrets are set in vitest.config.js env block for tests.
+      - name: Run tests
+        run: npm test
+
+  # ── Frontend smoke tests ──────────────────────────────────────────────────
+  frontend-test:
+    name: Frontend tests
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run tests
+        run: npm test

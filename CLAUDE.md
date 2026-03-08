@@ -68,3 +68,54 @@ Do **not** replace these with generic Tailwind classes — they match the Beacon
 
 ### SystemLogin / SystemDashboard
 These already used Tailwind before the Option B migration. They use `bg-slate-100` for the whole page (no lighthouse background) — this is intentional for the system-admin area.
+
+## Testing harness (set up March 2026)
+
+### How to run tests
+
+```bash
+# Backend (from /backend)
+npm test           # runs vitest --run (exits after one pass)
+
+# Frontend (from /frontend)
+npm test           # runs vitest --run (exits after one pass)
+```
+
+CI runs automatically on every push to `claude/**` branches via `.github/workflows/ci.yml`.
+
+### Backend tests — architecture
+
+- **Framework**: vitest + supertest
+- **Config**: `backend/vitest.config.js` — sets JWT secrets in `env` block so `jwt.js` loads without throwing
+- **No real database**: the DB layer (`../utils/db.js`) is mocked with `vi.mock()` in every test file
+- **Auth bypass**: `../utils/redis.js` is mocked so `isSessionInvalidated` always returns false
+- **Token helper**: `backend/src/__tests__/helpers.js` exports `makeAuthHeader()` and `makeSysAdminHeader()` — use these instead of hard-coding tokens
+- **Test files**: `backend/src/__tests__/{health,auth,users,roles}.test.js`
+- **app.js vs server.js**: `app.js` exports the pure Express app (safe to import in tests); `server.js` handles `migrateAndSeed()` + `app.listen()` — never import `server.js` in tests
+
+### Backend testing patterns
+
+When adding tests for a new endpoint:
+1. Add `vi.mock('../utils/db.js', ...)` and `vi.mock('../utils/redis.js', ...)`
+2. Use `tenantQuery.mockResolvedValueOnce([...])` to simulate DB responses
+3. Use `makeAuthHeader()` for the `Authorization` header
+4. Use `makeAuthHeader({ privileges: [] })` to test 403 responses
+
+### Frontend tests — architecture
+
+- **Framework**: vitest + React Testing Library + jsdom
+- **Config**: `vite.config.js` `test` block — environment `jsdom`, setupFiles loads `@testing-library/jest-dom`
+- **All API calls mocked**: `vi.mock('../lib/api.js', ...)` with resolved empty arrays
+- **Auth context mocked**: `vi.mock('../context/AuthContext.jsx', ...)` injects a test user with `can` always returning true
+- **Router mocked**: `useParams` and `useNavigate` are overridden via `vi.mock('react-router-dom', ...)`; pages are wrapped in `<MemoryRouter>`
+- **Test files**: `frontend/src/__tests__/*.test.jsx` — one per page
+
+### Frontend testing patterns
+
+When adding a new page, add a smoke test that:
+1. Mocks `AuthContext` with the minimum fields the page needs
+2. Mocks any API calls the page makes
+3. Wraps in `<MemoryRouter>`
+4. Asserts the page heading is visible (use `getByText`)
+
+This catches: import errors, JSX syntax errors, missing context, broken component props.
