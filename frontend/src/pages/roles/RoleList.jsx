@@ -5,26 +5,23 @@ import { useNavigate } from 'react-router-dom';
 import { roles as rolesApi } from '../../lib/api.js';
 import { useAuth } from '../../context/AuthContext.jsx';
 import NavBar from '../../components/NavBar.jsx';
+import BeaconLogo from '../../components/BeaconLogo.jsx';
 
 export default function RoleList() {
-  const { can } = useAuth();
+  const { can, tenant } = useAuth();
   const navigate = useNavigate();
-  const [roleList, setRoleList]   = useState([]);
-  const [loading,  setLoading]    = useState(true);
-  const [error,    setError]      = useState(null);
-  const [deleting, setDeleting]   = useState(null);
+  const [roleList, setRoleList] = useState([]);
+  const [loading,  setLoading]  = useState(true);
+  const [error,    setError]    = useState(null);
+  const [deleting, setDeleting] = useState(null);
 
   useEffect(() => { load(); }, []);
 
   async function load() {
     setLoading(true);
-    try {
-      setRoleList(await rolesApi.list());
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
+    try { setRoleList(await rolesApi.list()); }
+    catch (err) { setError(err.message); }
+    finally { setLoading(false); }
   }
 
   async function handleDelete(role) {
@@ -45,79 +42,81 @@ export default function RoleList() {
     ...(can('role_record', 'create') ? [{ label: 'Add Role', to: '/roles/new' }] : []),
   ];
 
-  if (loading) return <PageShell navLinks={navLinks}><Spinner /></PageShell>;
-  if (error)   return <PageShell navLinks={navLinks}><ErrorMsg msg={error} /></PageShell>;
+  const tenantDisplay = tenant
+    ? tenant.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())
+    : '';
 
   return (
-    <PageShell navLinks={navLinks}>
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-xl font-semibold text-slate-800">Roles</h1>
+    <div style={{ minHeight: '100vh', paddingBottom: 40 }}>
+
+      {/* Logo + tenant header */}
+      <div style={{ display: 'flex', alignItems: 'center', padding: '16px 32px 8px' }}>
+        <BeaconLogo />
+        {tenantDisplay && (
+          <span style={{ fontFamily: 'Arial', fontSize: 42, marginLeft: 24, color: '#000' }}>
+            {tenantDisplay}
+          </span>
+        )}
       </div>
 
-      {roleList.length === 0 ? (
-        <p className="text-slate-500 text-sm">No roles found.</p>
-      ) : (
-        <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="bg-slate-50 border-b border-slate-200">
-                <th className="text-left px-4 py-3 font-medium text-slate-600">Role name</th>
-                <th className="text-left px-4 py-3 font-medium text-slate-600">Committee role</th>
-                <th className="text-left px-4 py-3 font-medium text-slate-600">Users</th>
-                <th className="px-4 py-3"></th>
-              </tr>
-            </thead>
-            <tbody>
-              {roleList.map((role) => (
-                <tr key={role.id} className="border-b border-slate-100 hover:bg-slate-50">
-                  <td className="px-4 py-3 font-medium text-slate-800">{role.name}</td>
-                  <td className="px-4 py-3 text-slate-600">
-                    {role.is_committee ? (
-                      <span className="inline-block bg-blue-100 text-blue-700 text-xs font-medium px-2 py-0.5 rounded-full">Yes</span>
-                    ) : '—'}
-                  </td>
-                  <td className="px-4 py-3 text-slate-600">{role.user_count}</td>
-                  <td className="px-4 py-3 text-right space-x-2">
-                    {can('role_record', 'view') && (
-                      <button
-                        onClick={() => navigate(`/roles/${role.id}`)}
-                        className="text-blue-600 hover:underline text-xs"
-                      >
-                        Edit
-                      </button>
-                    )}
-                    {can('role_record', 'delete') && (
-                      <button
-                        onClick={() => handleDelete(role)}
-                        disabled={deleting === role.id}
-                        className="text-red-500 hover:underline text-xs disabled:opacity-50"
-                      >
-                        {deleting === role.id ? 'Deleting…' : 'Delete'}
-                      </button>
-                    )}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
-    </PageShell>
-  );
-}
-
-function PageShell({ navLinks, children }) {
-  return (
-    <div className="min-h-screen bg-slate-100">
       <NavBar links={navLinks} />
-      <div className="p-6 max-w-4xl mx-auto">{children}</div>
+
+      <div style={{ maxWidth: 900, margin: '0 auto', padding: '12px 16px' }}>
+        <h1 style={{ textAlign: 'center', fontWeight: 'bold', marginBottom: 14 }}>User Roles</h1>
+
+        {loading && <p style={{ textAlign: 'center', color: '#555' }}>Loading…</p>}
+        {error   && <p style={{ textAlign: 'center', color: 'red' }}>Error: {error}</p>}
+
+        {!loading && !error && (
+          roleList.length === 0 ? (
+            <p style={{ textAlign: 'center', color: '#555' }}>No roles found.</p>
+          ) : (
+            <table className="b-table">
+              <thead>
+                <tr>
+                  <th>Role Name</th>
+                  <th>Committee role</th>
+                  <th>Users</th>
+                  {(can('role_record', 'view') || can('role_record', 'delete')) && <th></th>}
+                </tr>
+              </thead>
+              <tbody>
+                {roleList.map((role) => (
+                  <tr key={role.id}>
+                    <td>{role.name}</td>
+                    <td style={{ textAlign: 'center' }}>{role.is_committee ? 'Y' : ''}</td>
+                    <td style={{ textAlign: 'center' }}>{role.user_count}</td>
+                    {(can('role_record', 'view') || can('role_record', 'delete')) && (
+                      <td className="b-td-action" style={{ textAlign: 'right' }}>
+                        {can('role_record', 'view') && (
+                          <a
+                            href="#edit"
+                            onClick={(e) => { e.preventDefault(); navigate(`/roles/${role.id}`); }}
+                            style={{ marginRight: 8 }}
+                          >
+                            Edit
+                          </a>
+                        )}
+                        {can('role_record', 'delete') && (
+                          <a
+                            href="#del"
+                            onClick={(e) => { e.preventDefault(); handleDelete(role); }}
+                            style={{ color: '#cc0000' }}
+                          >
+                            {deleting === role.id ? 'Deleting…' : 'Delete'}
+                          </a>
+                        )}
+                      </td>
+                    )}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )
+        )}
+      </div>
+
       <NavBar links={navLinks} />
     </div>
   );
-}
-function Spinner() {
-  return <div className="text-slate-400 text-sm">Loading…</div>;
-}
-function ErrorMsg({ msg }) {
-  return <div className="text-red-600 text-sm">Error: {msg}</div>;
 }

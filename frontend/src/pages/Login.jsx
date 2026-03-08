@@ -1,14 +1,17 @@
 // beacon2/frontend/src/pages/Login.jsx
+// Tenant user sign-in — styled to match Beacon's original login page.
 
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext.jsx';
+import BeaconLogo from '../components/BeaconLogo.jsx';
 
 export default function Login() {
   const { login, loading, error } = useAuth();
   const navigate = useNavigate();
 
   const [form, setForm] = useState({ tenantSlug: '', email: '', password: '' });
+  const [showPw, setShowPw] = useState(false);
 
   const handleChange = (e) =>
     setForm((f) => ({ ...f, [e.target.name]: e.target.value }));
@@ -20,74 +23,97 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-100 flex items-center justify-center">
-      <div className="bg-white rounded-xl shadow-md w-full max-w-md p-8">
+    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', paddingTop: 60 }}>
 
-        {/* Logo / title */}
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-slate-800">Beacon<span className="text-blue-600">2</span></h1>
-          <p className="text-slate-500 text-sm mt-1">u3a management system</p>
-        </div>
+      <BeaconLogo large />
 
-        {error && (
-          <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
-            {error}
-          </div>
-        )}
+      <h1 style={{ marginTop: 24, fontWeight: 'bold', textAlign: 'center', fontSize: 20 }}>
+        Administration
+      </h1>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">
-              u3a name
-            </label>
-            <input
-              name="tenantSlug"
-              value={form.tenantSlug}
-              onChange={handleChange}
-              placeholder="e.g. oxfordshire"
-              required
-              className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-            <p className="text-xs text-slate-400 mt-1">Your u3a's short name (provided by your administrator)</p>
-          </div>
+      {error && <div className="b-flash-error">{error}</div>}
 
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">
-              Email address
-            </label>
-            <input
-              name="email"
-              type="email"
-              value={form.email}
-              onChange={handleChange}
-              required
-              className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
+      <form onSubmit={handleSubmit} style={{ marginTop: 16 }}>
+        <table style={{ borderCollapse: 'collapse', fontSize: 13 }}>
+          <tbody>
+            <tr>
+              <td style={{ textAlign: 'right', paddingRight: 8, paddingBottom: 6, color: '#222' }}>u3a</td>
+              <td style={{ paddingBottom: 6 }}>
+                <input
+                  name="tenantSlug"
+                  value={form.tenantSlug}
+                  onChange={handleChange}
+                  placeholder="your-u3a-slug"
+                  required
+                  style={{ width: 220 }}
+                />
+              </td>
+            </tr>
+            <tr>
+              <td style={{ textAlign: 'right', paddingRight: 8, paddingBottom: 6, color: '#222' }}>Email</td>
+              <td style={{ paddingBottom: 6 }}>
+                <input
+                  name="email"
+                  type="email"
+                  value={form.email}
+                  onChange={handleChange}
+                  required
+                  style={{ width: 220 }}
+                />
+              </td>
+            </tr>
+            <tr>
+              <td style={{ textAlign: 'right', paddingRight: 8, paddingBottom: 4, color: '#222' }}>Password</td>
+              <td style={{ paddingBottom: 4 }}>
+                <span style={{ position: 'relative', display: 'inline-block' }}>
+                  <input
+                    name="password"
+                    type={showPw ? 'text' : 'password'}
+                    value={form.password}
+                    onChange={handleChange}
+                    required
+                    style={{ width: 196, paddingRight: 24 }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPw((v) => !v)}
+                    style={{
+                      position: 'absolute', right: 4, top: '50%', transform: 'translateY(-50%)',
+                      background: 'none', border: 'none', cursor: 'pointer', fontSize: 14, padding: 0,
+                    }}
+                    title={showPw ? 'Hide password' : 'Show password'}
+                  >
+                    {showPw ? '🙈' : '👁'}
+                  </button>
+                </span>
+              </td>
+            </tr>
+            <tr>
+              <td colSpan={2} style={{ textAlign: 'center', fontSize: 11, color: '#666', paddingBottom: 10 }}>
+                Passwords are case sensitive
+              </td>
+            </tr>
+            <tr>
+              <td colSpan={2} style={{ textAlign: 'center' }}>
+                <button
+                  type="submit"
+                  disabled={loading}
+                  style={{ padding: '3px 20px', fontSize: 13 }}
+                >
+                  {loading ? 'Signing in…' : 'Enter'}
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </form>
 
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">
-              Password
-            </label>
-            <input
-              name="password"
-              type="password"
-              value={form.password}
-              onChange={handleChange}
-              required
-              className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
+      <hr style={{ width: 600, marginTop: 28, borderTop: '1px solid #999', border: 'none', borderBottom: '1px solid #ccc' }} />
 
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white font-medium py-2 rounded-lg text-sm transition-colors"
-          >
-            {loading ? 'Signing in…' : 'Sign in'}
-          </button>
-        </form>
-      </div>
+      <p style={{ marginTop: 16, fontSize: 13 }}>
+        Forgotten your username or password?{' '}
+        <a href="#forgot">Click here.</a>
+      </p>
     </div>
   );
 }
