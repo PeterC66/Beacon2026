@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { users as usersApi } from '../../lib/api.js';
 import { useAuth } from '../../context/AuthContext.jsx';
 import NavBar from '../../components/NavBar.jsx';
-import BeaconLogo from '../../components/BeaconLogo.jsx';
+import PageHeader from '../../components/PageHeader.jsx';
 
 export default function UserList() {
   const { can, tenant } = useAuth();
@@ -42,78 +42,67 @@ export default function UserList() {
     ...(can('user_record', 'create') ? [{ label: 'Add User', to: '/users/new' }] : []),
   ];
 
-  const tenantDisplay = tenant
-    ? tenant.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())
-    : '';
-
   return (
-    <div style={{ minHeight: '100vh', paddingBottom: 40 }}>
+    <div className="min-h-screen pb-10">
 
-      {/* Logo + tenant header */}
-      <div style={{ display: 'flex', alignItems: 'center', padding: '16px 32px 8px' }}>
-        <BeaconLogo />
-        {tenantDisplay && (
-          <span style={{ fontFamily: 'Arial', fontSize: 42, marginLeft: 24, color: '#000' }}>
-            {tenantDisplay}
-          </span>
-        )}
-      </div>
-
+      <PageHeader tenant={tenant} />
       <NavBar links={navLinks} />
 
-      <div style={{ maxWidth: 900, margin: '0 auto', padding: '12px 16px' }}>
-        <h1 style={{ textAlign: 'center', fontWeight: 'bold', marginBottom: 14 }}>System Users</h1>
+      <div className="max-w-4xl mx-auto px-4 py-5">
+        <h1 className="text-xl font-bold text-center mb-4">System Users</h1>
 
-        {loading && <p style={{ textAlign: 'center', color: '#555' }}>Loading…</p>}
-        {error   && <p style={{ textAlign: 'center', color: 'red' }}>Error: {error}</p>}
+        {loading && <p className="text-center text-slate-500">Loading…</p>}
+        {error   && <p className="text-center text-red-600">Error: {error}</p>}
 
         {!loading && !error && (
           userList.length === 0 ? (
-            <p style={{ textAlign: 'center', color: '#555' }}>No users found.</p>
+            <p className="text-center text-slate-500">No users found.</p>
           ) : (
-            <table className="b-table">
-              <thead>
-                <tr>
-                  <th>Name</th>
-                  <th>Email</th>
-                  <th>Active</th>
-                  <th>Roles</th>
-                  {(can('user_record', 'view') || can('user_record', 'delete')) && <th></th>}
-                </tr>
-              </thead>
-              <tbody>
-                {userList.map((user) => (
-                  <tr key={user.id}>
-                    <td>{user.name}</td>
-                    <td>{user.email}</td>
-                    <td style={{ textAlign: 'center' }}>{user.active ? 'Y' : ''}</td>
-                    <td>{user.roles.map((r) => r.name).join(', ')}</td>
-                    {(can('user_record', 'view') || can('user_record', 'delete')) && (
-                      <td className="b-td-action" style={{ textAlign: 'right' }}>
-                        {can('user_record', 'view') && (
-                          <a
-                            href="#edit"
-                            onClick={(e) => { e.preventDefault(); navigate(`/users/${user.id}`); }}
-                            style={{ marginRight: 8 }}
-                          >
-                            Edit
-                          </a>
-                        )}
-                        {can('user_record', 'delete') && (
-                          <a
-                            href="#del"
-                            onClick={(e) => { e.preventDefault(); handleDelete(user); }}
-                            style={{ color: '#cc0000' }}
-                          >
-                            {deleting === user.id ? 'Deleting…' : 'Delete'}
-                          </a>
-                        )}
-                      </td>
-                    )}
+            <div className="overflow-x-auto rounded-lg shadow-sm">
+              <table className="w-full text-sm bg-white min-w-max">
+                <thead>
+                  <tr className="bg-slate-50 border-b border-slate-200 text-left text-slate-600 italic font-normal">
+                    <th className="px-4 py-2.5 font-normal">Name</th>
+                    <th className="px-4 py-2.5 font-normal">Email</th>
+                    <th className="px-4 py-2.5 font-normal text-center">Active</th>
+                    <th className="px-4 py-2.5 font-normal">Roles</th>
+                    {(can('user_record', 'view') || can('user_record', 'delete')) && <th className="px-4 py-2.5"></th>}
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {userList.map((user, i) => (
+                    <tr key={user.id} className={`border-b border-slate-100 ${i % 2 === 0 ? 'bg-yellow-50' : 'bg-white'}`}>
+                      <td className="px-4 py-2.5">{user.name}</td>
+                      <td className="px-4 py-2.5">{user.email}</td>
+                      <td className="px-4 py-2.5 text-center">{user.active ? 'Y' : ''}</td>
+                      <td className="px-4 py-2.5">{user.roles.map((r) => r.name).join(', ')}</td>
+                      {(can('user_record', 'view') || can('user_record', 'delete')) && (
+                        <td className="px-4 py-2.5 text-right whitespace-nowrap">
+                          {can('user_record', 'view') && (
+                            <a
+                              href="#edit"
+                              onClick={(e) => { e.preventDefault(); navigate(`/users/${user.id}`); }}
+                              className="text-blue-700 hover:underline mr-4"
+                            >
+                              Edit
+                            </a>
+                          )}
+                          {can('user_record', 'delete') && (
+                            <a
+                              href="#del"
+                              onClick={(e) => { e.preventDefault(); handleDelete(user); }}
+                              className="text-red-600 hover:underline"
+                            >
+                              {deleting === user.id ? 'Deleting…' : 'Delete'}
+                            </a>
+                          )}
+                        </td>
+                      )}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           )
         )}
       </div>
