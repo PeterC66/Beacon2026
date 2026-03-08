@@ -18,8 +18,8 @@ export default function Home() {
     {
       title: 'Membership',
       items: [
-        { label: 'Members',             to: null },
-        { label: 'Add new member',      to: null },
+        { label: 'Members',             to: can('members_list', 'view')   ? '/members'     : null },
+        { label: 'Add new member',      to: can('member_record', 'create') ? '/members/new' : null },
         { label: 'Membership renewals', to: null },
         { label: 'Recent members',      to: null },
         { label: 'Non-renewals',        to: null },

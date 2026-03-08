@@ -143,6 +143,25 @@ export const memberStatuses = {
   delete: (id)       => request(`/member-statuses/${id}`, { method: 'DELETE' }),
 };
 
+// ─── Members ──────────────────────────────────────────────────────────────
+
+export const members = {
+  list:    (params = {}) => {
+    const qs = new URLSearchParams();
+    if (params.status)  qs.set('status',  params.status);
+    if (params.classId) qs.set('classId', params.classId);
+    if (params.q)       qs.set('q',       params.q);
+    if (params.letter)  qs.set('letter',  params.letter);
+    const query = qs.toString();
+    return request(`/members${query ? '?' + query : ''}`);
+  },
+  get:     (id)              => request(`/members/${id}`),
+  create:  (data, confirmed) =>
+    request(`/members${confirmed ? '?confirmed=1' : ''}`, { method: 'POST', body: JSON.stringify(data) }),
+  update:  (id, data)        => request(`/members/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
+  delete:  (id)              => request(`/members/${id}`, { method: 'DELETE' }),
+};
+
 // ─── System admin (separate token, no tenant) ─────────────────────────────
 
 export const system = {

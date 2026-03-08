@@ -12,6 +12,8 @@ export const ALL_PRIVS = [
   'privilege_resources:view',
   'member_classes:view', 'member_classes:create', 'member_classes:change', 'member_classes:delete',
   'member_statuses:view', 'member_statuses:create', 'member_statuses:change', 'member_statuses:delete',
+  'members_list:view',
+  'member_record:view', 'member_record:create', 'member_record:change', 'member_record:delete',
 ];
 
 export const TEST_TENANT = 'test-u3a';

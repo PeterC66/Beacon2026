@@ -14,6 +14,7 @@ import privilegeRoutes     from './routes/privileges.js';
 import systemRoutes        from './routes/system.js';
 import memberClassRoutes   from './routes/memberClasses.js';
 import memberStatusRoutes  from './routes/memberStatuses.js';
+import memberRoutes        from './routes/members.js';
 import { errorHandler } from './middleware/errorHandler.js';
 
 const app = express();
@@ -39,6 +40,7 @@ app.use('/privileges',      privilegeRoutes);
 app.use('/system',          systemRoutes);
 app.use('/member-classes',  memberClassRoutes);
 app.use('/member-statuses', memberStatusRoutes);
+app.use('/members',         memberRoutes);
 
 app.get('/health', (_req, res) => res.json({ status: 'ok' }));
 
