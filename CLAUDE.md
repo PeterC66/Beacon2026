@@ -144,3 +144,22 @@ When adding a new page, add a smoke test that:
 4. Asserts the page heading is visible (use `getByText`)
 
 This catches: import errors, JSX syntax errors, missing context, broken component props.
+
+### Run tests after every code change
+
+After making any code change (backend or frontend), run the relevant test suite:
+
+```bash
+cd backend && npm test   # if backend files changed
+cd frontend && npm test  # if frontend files changed
+```
+
+If any test fails, **do not stop and report success**. Instead:
+1. Read the full error output carefully
+2. Identify the root cause (broken import, wrong mock, changed API, logic error, etc.)
+3. Fix the code (or the test if the test itself is wrong)
+4. Re-run the suite to confirm it passes
+5. Only then move on
+
+Repeat until the suite is green. If after two fix attempts the cause is still unclear,
+explain the failure to the user and ask for guidance rather than guessing further.
