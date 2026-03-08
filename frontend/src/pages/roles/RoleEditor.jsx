@@ -307,7 +307,7 @@ export default function RoleEditor() {
         {!isNew && (
           <>
             <h2 style={{ textAlign: 'center', fontWeight: 'bold', marginBottom: 10 }}>Privileges</h2>
-            <p style={{ textAlign: 'center', fontSize: 12, color: '#555', marginBottom: 10 }}>
+            <p style={{ textAlign: 'center', marginBottom: 10 }}>
               Click a row or column heading to toggle all. View is required for any other action.
             </p>
 
@@ -319,50 +319,57 @@ export default function RoleEditor() {
                 <tbody>
                   {resources.map((resource, i) => {
                     const resourceOtherActions = resource.actions.filter((a) => !STANDARD_ACTIONS.includes(a));
+                    const repeatHeader = i > 0 && i % 15 === 0;
                     return (
-                      <tr key={resource.id} style={{ backgroundColor: i % 2 === 0 ? '#ffffcc' : '#f0f0f0' }}>
-                        <td
-                          style={{
-                            color: '#0000cc',
-                            fontStyle: 'italic',
-                            cursor: canEdit ? 'pointer' : 'default',
-                            padding: '2px 6px',
-                            whiteSpace: 'nowrap',
-                          }}
-                          onClick={() => canEdit && toggleRow(resource.id, resource.actions)}
-                          title={canEdit ? 'Click to toggle all' : ''}
-                        >
-                          {resource.label}
-                        </td>
-                        {STANDARD_ACTIONS.map((action) => (
-                          <td key={action} style={{ textAlign: 'center', padding: '2px 4px' }}>
-                            {resource.actions.includes(action) ? (
-                              <input
-                                type="checkbox"
-                                checked={!!granted[`${resource.id}:${action}`]}
-                                onChange={() => canEdit && toggle(resource.id, action)}
-                                disabled={!canEdit}
-                              />
-                            ) : ''}
+                      <>
+                        {repeatHeader && (
+                          <tr key={`hdr-${i}`}>{colHeaders}</tr>
+                        )}
+                        <tr key={resource.id} style={{ backgroundColor: i % 2 === 0 ? '#ffffcc' : '#f0f0f0' }}>
+                          <td
+                            style={{
+                              color: '#0000cc',
+                              fontStyle: 'italic',
+                              textAlign: 'left',
+                              cursor: canEdit ? 'pointer' : 'default',
+                              padding: '2px 6px',
+                              whiteSpace: 'nowrap',
+                            }}
+                            onClick={() => canEdit && toggleRow(resource.id, resource.actions)}
+                            title={canEdit ? 'Click to toggle all' : ''}
+                          >
+                            {resource.label}
                           </td>
-                        ))}
-                        {hasOtherActions && (
-                          <td style={{ padding: '2px 8px' }}>
-                            {resourceOtherActions.map((action) => (
-                              <label key={action} style={{ display: 'inline-flex', alignItems: 'center', marginRight: 8, whiteSpace: 'nowrap' }}>
+                          {STANDARD_ACTIONS.map((action) => (
+                            <td key={action} style={{ textAlign: 'center', padding: '2px 4px' }}>
+                              {resource.actions.includes(action) ? (
                                 <input
                                   type="checkbox"
                                   checked={!!granted[`${resource.id}:${action}`]}
                                   onChange={() => canEdit && toggle(resource.id, action)}
                                   disabled={!canEdit}
-                                  style={{ marginRight: 3 }}
                                 />
-                                {action.charAt(0).toUpperCase() + action.slice(1).replace(/_/g, ' ')}
-                              </label>
-                            ))}
-                          </td>
-                        )}
-                      </tr>
+                              ) : ''}
+                            </td>
+                          ))}
+                          {hasOtherActions && (
+                            <td style={{ textAlign: 'left', padding: '2px 8px' }}>
+                              {resourceOtherActions.map((action) => (
+                                <label key={action} style={{ display: 'inline-flex', alignItems: 'center', marginRight: 8, whiteSpace: 'nowrap' }}>
+                                  <input
+                                    type="checkbox"
+                                    checked={!!granted[`${resource.id}:${action}`]}
+                                    onChange={() => canEdit && toggle(resource.id, action)}
+                                    disabled={!canEdit}
+                                    style={{ marginRight: 3 }}
+                                  />
+                                  {action.charAt(0).toUpperCase() + action.slice(1).replace(/_/g, ' ')}
+                                </label>
+                              ))}
+                            </td>
+                          )}
+                        </tr>
+                      </>
                     );
                   })}
                 </tbody>
