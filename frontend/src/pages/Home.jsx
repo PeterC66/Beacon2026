@@ -1,7 +1,7 @@
 // beacon2/frontend/src/pages/Home.jsx
 // Landing page after login — styled to match Beacon's main menu page.
 
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext.jsx';
 import BeaconLogo from '../components/BeaconLogo.jsx';
 
@@ -79,7 +79,7 @@ export default function Home() {
             <td><span className="b-menu-link-dim">Gift aid log</span></td>
             <td>
               {can('role_record', 'view')
-                ? <a href="/roles">Roles and privileges</a>
+                ? <Link to="/roles">Roles and privileges</Link>
                 : <span className="b-menu-link-dim">Roles and privileges</span>}
             </td>
           </tr>

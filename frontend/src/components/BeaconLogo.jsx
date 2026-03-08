@@ -29,7 +29,7 @@ export default function BeaconLogo({ large = false }) {
         marginTop: large ? 4 : 2,
         userSelect: 'none',
       }}>
-        Beacon
+        Beacon2
       </div>
     </div>
   );
