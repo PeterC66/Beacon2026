@@ -30,3 +30,4 @@ All work goes on a branch whose name starts with `claude/`. Never push directly 
 - All tenant database queries must go through `tenantQuery()` or `withTenant()` in `backend/src/utils/db.js`
 - Validate all request bodies with **Zod** before processing
 - Never construct SQL with string concatenation — always use parameterised queries
+- Always, before you start, ask any questions one by one, until you are 95% certain that you can carry out this task.
