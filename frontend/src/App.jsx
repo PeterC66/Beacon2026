@@ -6,6 +6,8 @@ import Login           from './pages/Login.jsx';
 import Home            from './pages/Home.jsx';
 import RoleList        from './pages/roles/RoleList.jsx';
 import RoleEditor      from './pages/roles/RoleEditor.jsx';
+import UserList        from './pages/users/UserList.jsx';
+import UserEditor      from './pages/users/UserEditor.jsx';
 import SystemLogin     from './pages/system/SystemLogin.jsx';
 import SystemDashboard from './pages/system/SystemDashboard.jsx';
 
@@ -30,6 +32,9 @@ export default function App() {
           <Route path="/roles"      element={<ProtectedRoute><RoleList /></ProtectedRoute>} />
           <Route path="/roles/new"  element={<ProtectedRoute><RoleEditor /></ProtectedRoute>} />
           <Route path="/roles/:id"  element={<ProtectedRoute><RoleEditor /></ProtectedRoute>} />
+          <Route path="/users"      element={<ProtectedRoute><UserList /></ProtectedRoute>} />
+          <Route path="/users/new"  element={<ProtectedRoute><UserEditor /></ProtectedRoute>} />
+          <Route path="/users/:id"  element={<ProtectedRoute><UserEditor /></ProtectedRoute>} />
         </Routes>
       </BrowserRouter>
     </AuthProvider>
