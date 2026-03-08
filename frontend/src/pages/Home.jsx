@@ -70,7 +70,11 @@ export default function Home() {
             <td><span className="b-menu-link-dim">Groups</span></td>
             <td><span className="b-menu-link-dim">Ledger (by account)</span></td>
             <td><span className="b-menu-link-dim">Audit log</span></td>
-            <td><span className="b-menu-link-dim">System users</span></td>
+            <td>
+              {can('users_list', 'view')
+                ? <Link to="/users">System users</Link>
+                : <span className="b-menu-link-dim">System users</span>}
+            </td>
           </tr>
           <tr>
             <td><span className="b-menu-link-dim">Add new member</span></td>
