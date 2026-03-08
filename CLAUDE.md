@@ -31,3 +31,40 @@ All work goes on a branch whose name starts with `claude/`. Never push directly 
 - Validate all request bodies with **Zod** before processing
 - Never construct SQL with string concatenation — always use parameterised queries
 - Always, before you start, ask any questions one by one, until you are 95% certain that you can carry out this task.
+
+## Frontend styling — Tailwind CSS (Option B, adopted March 2026)
+
+All frontend pages now use **Tailwind CSS v3** exclusively. No custom `.b-*` CSS classes remain.
+
+### Infrastructure
+- `frontend/tailwind.config.js` — content paths: `./index.html` and `./src/**/*.{js,jsx}`
+- `frontend/postcss.config.cjs` — uses `.cjs` extension because `package.json` has `"type": "module"`
+- `frontend/src/index.css` — only `@tailwind base/components/utilities` + the background-image rule
+
+### Design decisions (confirmed with user)
+- **Modernised look** — clean slate/blue palette, not preserving the old yellow/grey Beacon colours except where noted
+- **Data tables on mobile** — horizontal scroll (`overflow-x-auto`) with `min-w-max` table; no card/stack layout
+- **Home menu on mobile** — single-column stacked sections; desktop (`md:`) retains 5-column grid
+
+### Shared components
+- `frontend/src/components/PageHeader.jsx` — logo + tenant display name (`text-xl sm:text-4xl`); import this instead of duplicating the header in every page
+- `frontend/src/components/NavBar.jsx` — glass-effect backdrop, blue links, `–` separator
+
+### Privilege matrix (RoleEditor) — keep Beacon colours
+The privilege table in `RoleEditor.jsx` deliberately retains Beacon documentation colours using inline styles:
+- Row backgrounds: `#ffffcc` (even) / `#f0f0f0` (odd)
+- Resource name text: `color: #0000cc; font-style: italic`
+- Save Privileges button: `bg-[#e08000]`
+Do **not** replace these with generic Tailwind classes — they match the Beacon spec.
+
+### Common patterns
+- Inputs: `border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500`
+- Primary button: `bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white rounded px-5 py-2 text-sm font-medium transition-colors`
+- Destructive button: `border border-red-300 text-red-600 hover:bg-red-50 rounded px-5 py-2 text-sm`
+- Alternating table rows: `i % 2 === 0 ? 'bg-yellow-50' : 'bg-white'` with `bg-slate-50` header
+- Content cards: `bg-white/90 rounded-lg shadow-sm p-4 sm:p-6`
+- Form labels: stacked above inputs on all screen sizes (`block text-sm font-medium text-slate-700 mb-1`)
+- Responsive grids: always `grid-cols-1 sm:grid-cols-2`, never bare `grid-cols-2`
+
+### SystemLogin / SystemDashboard
+These already used Tailwind before the Option B migration. They use `bg-slate-100` for the whole page (no lighthouse background) — this is intentional for the system-admin area.
