@@ -17,6 +17,31 @@ reference material in `docs/`) are present in the working branch before starting
 The full project brief is at `docs/FromBeacon/CLAUDE_CODE_PROMPT.md`. Read it at the
 start of any session where you are unsure what to build next.
 
+## Reference documentation
+
+### User Guide — `docs/BeaconUG/`
+
+Admin and user documentation for the original Beacon system lives in `docs/BeaconUG/`.
+Each subfolder corresponds to one webpage from the Beacon User Guide: the page was
+printed to PDF, then the PDF was transcribed into Markdown, with all images kept
+alongside it in the same folder.
+
+**Before using any folder in `docs/BeaconUG/`**, check whether it still contains PDF
+files. If it does, warn the user that those pages have not yet been transcribed and ask
+them to convert the PDFs to Markdown before you proceed — do not attempt to interpret
+raw PDFs yourself.
+
+If you need documentation for a Beacon feature that does not appear anywhere in
+`docs/BeaconUG/`, ask the user to supply it rather than guessing or sourcing it
+elsewhere.
+
+### Legacy Beacon source — `docs/FromBeacon/`
+
+`docs/FromBeacon/` contains selected files from the original Beacon codebase. Refer to
+them when they shed light on existing behaviour or data structures you are replicating.
+If you need a specific file from the old codebase that is not already present, ask the
+user to add it rather than assuming its contents.
+
 ## Development branch
 
 All work goes on a branch whose name starts with `claude/`. Never push directly to `main`.
