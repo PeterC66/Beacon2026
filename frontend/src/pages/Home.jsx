@@ -18,8 +18,8 @@ export default function Home() {
     {
       title: 'Membership',
       items: [
-        { label: 'Members',             to: null },
-        { label: 'Add new member',      to: null },
+        { label: 'Members',             to: can('members_list', 'view')   ? '/members'     : null },
+        { label: 'Add new member',      to: can('member_record', 'create') ? '/members/new' : null },
         { label: 'Membership renewals', to: null },
         { label: 'Recent members',      to: null },
         { label: 'Non-renewals',        to: null },
@@ -72,8 +72,8 @@ export default function Home() {
         { label: 'System messages',     to: null },
         { label: 'Finance accounts',    to: null },
         { label: 'Finance categories',  to: null },
-        { label: 'Membership classes',  to: null },
-        { label: 'Member statuses',     to: null },
+        { label: 'Membership classes',  to: can('member_classes',  'view') ? '/membership/classes'  : null },
+        { label: 'Member statuses',     to: can('member_statuses', 'view') ? '/membership/statuses' : null },
         { label: 'Poll',                to: null },
       ],
     },

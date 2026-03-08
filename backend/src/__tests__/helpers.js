@@ -10,6 +10,10 @@ export const ALL_PRIVS = [
   'roles_list:view',
   'role_record:view', 'role_record:create', 'role_record:change', 'role_record:delete',
   'privilege_resources:view',
+  'member_classes:view', 'member_classes:create', 'member_classes:change', 'member_classes:delete',
+  'member_statuses:view', 'member_statuses:create', 'member_statuses:change', 'member_statuses:delete',
+  'members_list:view',
+  'member_record:view', 'member_record:create', 'member_record:change', 'member_record:delete',
 ];
 
 export const TEST_TENANT = 'test-u3a';

@@ -79,6 +79,86 @@ CREATE TABLE :schema.refresh_tokens (
 );
 
 -- ─────────────────────────────────────────────
+-- MEMBERSHIP CLASSES
+-- ─────────────────────────────────────────────
+CREATE TABLE :schema.member_classes (
+  id           TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
+  name         TEXT NOT NULL,
+  current      BOOLEAN NOT NULL DEFAULT true,   -- may be used for new memberships
+  explanation  TEXT,                            -- shown when joining online
+  is_joint     BOOLEAN NOT NULL DEFAULT false,  -- 1 of 2 people at same address (HMRC family rule)
+  is_associate BOOLEAN NOT NULL DEFAULT false,  -- full member of another u3a
+  show_online  BOOLEAN NOT NULL DEFAULT false,  -- show to members joining online
+  fee          NUMERIC(8,2),                    -- fee per person per year
+  gift_aid_fee NUMERIC(8,2),                    -- gift aid eligible portion (≤ fee)
+  locked       BOOLEAN NOT NULL DEFAULT false,  -- locked against deletion (e.g. Individual)
+  created_at   TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at   TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+-- ─────────────────────────────────────────────
+-- MEMBER STATUSES
+-- ─────────────────────────────────────────────
+CREATE TABLE :schema.member_statuses (
+  id         TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
+  name       TEXT NOT NULL UNIQUE,
+  locked     BOOLEAN NOT NULL DEFAULT false,  -- locked system statuses cannot be edited/deleted
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+-- ─────────────────────────────────────────────
+-- MEMBERSHIP NUMBER SEQUENCE
+-- ─────────────────────────────────────────────
+CREATE SEQUENCE :schema.membership_number_seq START 1;
+
+-- ─────────────────────────────────────────────
+-- ADDRESSES  (may be shared between two members at the same address)
+-- ─────────────────────────────────────────────
+CREATE TABLE :schema.addresses (
+  id         TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
+  house_no   TEXT,                -- house/flat number or name
+  street     TEXT,
+  add_line1  TEXT,                -- district / village (used for sorting)
+  add_line2  TEXT,
+  town       TEXT,
+  county     TEXT,
+  postcode   TEXT,
+  telephone  TEXT,                -- home landline — shared between partners
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+-- ─────────────────────────────────────────────
+-- MEMBERS
+-- ─────────────────────────────────────────────
+CREATE TABLE :schema.members (
+  id                TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
+  membership_number INTEGER NOT NULL UNIQUE
+                    DEFAULT nextval('membership_number_seq'),
+  title             TEXT,                              -- Mr, Mrs, Ms, Dr etc.
+  forenames         TEXT NOT NULL,
+  surname           TEXT NOT NULL,
+  known_as          TEXT,                              -- preferred first name
+  initials          TEXT,                              -- auto-derived from forenames
+  suffix            TEXT,                              -- MBE, OBE etc.
+  email             TEXT,
+  mobile            TEXT,
+  address_id        TEXT REFERENCES :schema.addresses(id),
+  status_id         TEXT REFERENCES :schema.member_statuses(id),
+  class_id          TEXT REFERENCES :schema.member_classes(id),
+  joined_on         DATE,
+  next_renewal      DATE,
+  gift_aid_from     DATE,
+  home_u3a          TEXT,                              -- for associate-class members
+  notes             TEXT,
+  hide_contact      BOOLEAN NOT NULL DEFAULT false,    -- hide from group leaders
+  partner_id        TEXT REFERENCES :schema.members(id),
+  created_at        TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at        TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+-- ─────────────────────────────────────────────
 -- INDEXES
 -- ─────────────────────────────────────────────
 CREATE INDEX ON :schema.user_roles (user_id);
@@ -86,3 +166,7 @@ CREATE INDEX ON :schema.user_roles (role_id);
 CREATE INDEX ON :schema.role_privileges (role_id);
 CREATE INDEX ON :schema.refresh_tokens (user_id);
 CREATE INDEX ON :schema.refresh_tokens (token_hash);
+CREATE INDEX ON :schema.members (surname, forenames);
+CREATE INDEX ON :schema.members (status_id);
+CREATE INDEX ON :schema.members (class_id);
+CREATE INDEX ON :schema.members (address_id);

@@ -74,7 +74,24 @@ export async function createTenantSchema({ name, slug, adminEmail, adminName, ad
     }
   }
 
-  // 5. Create first admin user (gets the Administration role)
+  // 5. Seed default member statuses (locked system statuses)
+  const DEFAULT_STATUSES = ['Current', 'Lapsed', 'Resigned', 'Deceased'];
+  for (const statusName of DEFAULT_STATUSES) {
+    await tenantQuery(
+      slug,
+      `INSERT INTO member_statuses (name, locked) VALUES ($1, true) ON CONFLICT (name) DO NOTHING`,
+      [statusName],
+    );
+  }
+
+  // 6. Seed default member class (Individual — locked against deletion)
+  await tenantQuery(
+    slug,
+    `INSERT INTO member_classes (name, current, locked) VALUES ($1, true, true)`,
+    ['Individual'],
+  );
+
+  // 7. Create first admin user (gets the Administration role)
   const passwordHash = await hashPassword(adminPassword);
   const [user] = await tenantQuery(
     slug,
