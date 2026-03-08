@@ -31,10 +31,10 @@ export default function Home() {
     {
       title: 'Groups',
       items: [
-        { label: 'Groups',   to: null },
-        { label: 'Venues',   to: null },
+        { label: 'Groups',    to: can('groups_list', 'view') ? '/groups' : null },
+        { label: 'Venues',    to: null },
         { label: 'Faculties', to: null },
-        { label: 'Calendar', to: null },
+        { label: 'Calendar',  to: null },
       ],
     },
     {

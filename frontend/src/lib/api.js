@@ -162,6 +162,42 @@ export const members = {
   delete:  (id)              => request(`/members/${id}`, { method: 'DELETE' }),
 };
 
+// ─── Faculties ────────────────────────────────────────────────────────────
+
+export const faculties = {
+  list:   ()         => request('/faculties'),
+  create: (data)     => request('/faculties', { method: 'POST', body: JSON.stringify(data) }),
+  update: (id, data) => request(`/faculties/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
+  delete: (id)       => request(`/faculties/${id}`, { method: 'DELETE' }),
+};
+
+// ─── Groups ───────────────────────────────────────────────────────────────
+
+export const groups = {
+  list: (params = {}) => {
+    const qs = new URLSearchParams();
+    if (params.activeOnly !== undefined) qs.set('activeOnly', params.activeOnly ? 'true' : 'false');
+    if (params.facultyId) qs.set('facultyId', params.facultyId);
+    if (params.letter)    qs.set('letter',    params.letter);
+    const query = qs.toString();
+    return request(`/groups${query ? '?' + query : ''}`);
+  },
+  get:    (id)       => request(`/groups/${id}`),
+  create: (data)     => request('/groups', { method: 'POST', body: JSON.stringify(data) }),
+  update: (id, data) => request(`/groups/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
+  delete: (id)       => request(`/groups/${id}`, { method: 'DELETE' }),
+
+  listMembers:  (id, params = {}) => {
+    const qs = new URLSearchParams();
+    if (params.showWaiting !== undefined) qs.set('showWaiting', params.showWaiting ? 'true' : 'false');
+    const query = qs.toString();
+    return request(`/groups/${id}/members${query ? '?' + query : ''}`);
+  },
+  addMember:    (id, data)           => request(`/groups/${id}/members`, { method: 'POST', body: JSON.stringify(data) }),
+  updateMember: (id, memberId, data) => request(`/groups/${id}/members/${memberId}`, { method: 'PATCH', body: JSON.stringify(data) }),
+  removeMember: (id, memberId)       => request(`/groups/${id}/members/${memberId}`, { method: 'DELETE' }),
+};
+
 // ─── System admin (separate token, no tenant) ─────────────────────────────
 
 export const system = {

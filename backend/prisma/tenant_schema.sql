@@ -159,6 +159,55 @@ CREATE TABLE :schema.members (
 );
 
 -- ─────────────────────────────────────────────
+-- FACULTIES
+-- ─────────────────────────────────────────────
+CREATE TABLE :schema.faculties (
+  id         TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
+  name       TEXT NOT NULL UNIQUE,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+-- ─────────────────────────────────────────────
+-- GROUPS
+-- ─────────────────────────────────────────────
+CREATE TABLE :schema.groups (
+  id                   TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
+  name                 TEXT NOT NULL,
+  faculty_id           TEXT REFERENCES :schema.faculties(id),
+  status               TEXT NOT NULL DEFAULT 'active'
+                         CHECK (status IN ('active', 'inactive')),
+  when_text            TEXT,               -- e.g. "2nd Thursday at 2:00pm"
+  start_time           TIME,               -- default start time for events
+  end_time             TIME,               -- default end time for events
+  venue                TEXT,
+  enquiries            TEXT,               -- public contact info for enquirers
+  max_members          INTEGER,
+  allow_online_join    BOOLEAN NOT NULL DEFAULT false,
+  enable_waiting_list  BOOLEAN NOT NULL DEFAULT false,
+  notify_leader        BOOLEAN NOT NULL DEFAULT false,
+  display_waiting_list BOOLEAN NOT NULL DEFAULT false,
+  information          TEXT,               -- may be shown publicly
+  notes                TEXT,               -- private notes
+  show_addresses       BOOLEAN NOT NULL DEFAULT false,
+  created_at           TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at           TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+-- ─────────────────────────────────────────────
+-- GROUP MEMBERS
+-- ─────────────────────────────────────────────
+CREATE TABLE :schema.group_members (
+  id            TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
+  group_id      TEXT NOT NULL REFERENCES :schema.groups(id) ON DELETE CASCADE,
+  member_id     TEXT NOT NULL REFERENCES :schema.members(id) ON DELETE CASCADE,
+  is_leader     BOOLEAN NOT NULL DEFAULT false,
+  waiting_since DATE,                      -- non-null = member is on waiting list
+  created_at    TIMESTAMPTZ NOT NULL DEFAULT now(),
+  UNIQUE (group_id, member_id)
+);
+
+-- ─────────────────────────────────────────────
 -- INDEXES
 -- ─────────────────────────────────────────────
 CREATE INDEX ON :schema.user_roles (user_id);
@@ -170,3 +219,7 @@ CREATE INDEX ON :schema.members (surname, forenames);
 CREATE INDEX ON :schema.members (status_id);
 CREATE INDEX ON :schema.members (class_id);
 CREATE INDEX ON :schema.members (address_id);
+CREATE INDEX ON :schema.groups (faculty_id);
+CREATE INDEX ON :schema.groups (status);
+CREATE INDEX ON :schema.group_members (group_id);
+CREATE INDEX ON :schema.group_members (member_id);

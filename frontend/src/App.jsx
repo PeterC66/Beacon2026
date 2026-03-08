@@ -15,6 +15,8 @@ import MemberClassEditor from './pages/membership/MemberClassEditor.jsx';
 import MemberStatusList  from './pages/membership/MemberStatusList.jsx';
 import MemberList        from './pages/members/MemberList.jsx';
 import MemberEditor      from './pages/members/MemberEditor.jsx';
+import GroupList         from './pages/groups/GroupList.jsx';
+import GroupRecord       from './pages/groups/GroupRecord.jsx';
 
 function ProtectedRoute({ children }) {
   const { isLoggedIn } = useAuth();
@@ -47,6 +49,9 @@ export default function App() {
           <Route path="/members"      element={<ProtectedRoute><MemberList /></ProtectedRoute>} />
           <Route path="/members/new"  element={<ProtectedRoute><MemberEditor /></ProtectedRoute>} />
           <Route path="/members/:id"  element={<ProtectedRoute><MemberEditor /></ProtectedRoute>} />
+          <Route path="/groups"       element={<ProtectedRoute><GroupList /></ProtectedRoute>} />
+          <Route path="/groups/new"   element={<ProtectedRoute><GroupRecord /></ProtectedRoute>} />
+          <Route path="/groups/:id"   element={<ProtectedRoute><GroupRecord /></ProtectedRoute>} />
         </Routes>
       </BrowserRouter>
     </AuthProvider>
