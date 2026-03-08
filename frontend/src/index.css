@@ -1,0 +1,199 @@
+/* beacon2/frontend/src/index.css
+   Global styles matching Beacon's visual design.
+   Background image: place lighthouse photo at frontend/public/light.jpg
+*/
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 13px;
+  /* Lighthouse photo. Blue-sky gradient is the fallback while image loads
+     or if light.jpg has not yet been added to frontend/public/. */
+  background:
+    url('/light.jpg') no-repeat center center fixed;
+  background-size: cover;
+  background-color: #9dc8df;
+}
+
+#root { min-height: 100vh; }
+
+a            { color: #0000ff; text-decoration: none; }
+a:hover      { text-decoration: underline; }
+h1           { font-family: Arial, Helvetica, sans-serif; font-size: 20px; margin: 0 0 8px; }
+h2           { font-family: Arial, Helvetica, sans-serif; font-size: 18px; margin: 0 0 6px; }
+p            { font-family: Arial, Helvetica, sans-serif; font-size: 13px; }
+
+/* ── Inputs ─────────────────────────────────────────────────────── */
+
+input[type="text"],
+input[type="email"],
+input[type="password"],
+select {
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 13px;
+  border: 1px solid #777;
+  padding: 2px 4px;
+  height: 24px;
+  background: #fff;
+}
+
+button {
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+/* ── Beacon navigation bar ──────────────────────────────────────── */
+
+.b-nav {
+  text-align: center;
+  padding: 8px 0 6px;
+  font-size: 13px;
+}
+
+.b-nav a      { color: #0000ff; }
+.b-nav-sep    { margin: 0 6px; color: #444; }
+
+/* ── Data table (roles list etc.) ───────────────────────────────── */
+
+.b-table {
+  border-collapse: collapse;
+  margin: 0 auto;
+  font-size: 13px;
+}
+
+.b-table th {
+  background-color: #fff;
+  font-style: italic;
+  font-weight: normal;
+  border: 1px solid #999;
+  padding: 3px 12px;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.b-table td {
+  background-color: #ffffc6;
+  border: 1px solid #999;
+  padding: 3px 12px;
+  vertical-align: middle;
+}
+
+.b-table td.b-td-action {
+  background-color: #ffffc6;
+  white-space: nowrap;
+}
+
+/* ── Menu table (Home page) ─────────────────────────────────────── */
+
+.b-menu-table {
+  border-collapse: collapse;
+  margin: 0 auto;
+  background-image: radial-gradient(#ffffc6, #f7ae56);
+  font-size: 13px;
+  min-width: 600px;
+}
+
+.b-menu-table th {
+  font-weight: bold;
+  font-size: 13px;
+  border: 1px solid #bbb;
+  padding: 8px 18px 4px;
+  vertical-align: top;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.b-menu-table td {
+  border: 1px solid #bbb;
+  padding: 3px 18px;
+  vertical-align: top;
+  white-space: nowrap;
+}
+
+.b-menu-table td.b-menu-footer {
+  text-align: center;
+  font-size: 12px;
+  padding: 6px 18px;
+  background-color: rgba(255,255,255,0.3);
+}
+
+.b-menu-link-dim {
+  color: #888;
+  cursor: default;
+}
+.b-menu-link-dim:hover { text-decoration: none; }
+
+/* ── Flash / error messages ─────────────────────────────────────── */
+
+.b-flash-error {
+  border: 2px solid #ebcccc;
+  background-color: #f2dede;
+  color: #a94442;
+  padding: 6px 12px;
+  margin: 10px auto;
+  max-width: 400px;
+  text-align: center;
+  font-size: 13px;
+}
+
+/* ── Role editor ────────────────────────────────────────────────── */
+
+.b-form-table {
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.b-form-table td {
+  padding: 4px 6px;
+  vertical-align: middle;
+  background: transparent;
+  border: none;
+}
+
+.b-form-table td.b-label {
+  text-align: right;
+  padding-right: 8px;
+  color: #222;
+}
+
+.b-priv-table {
+  border-collapse: collapse;
+  margin: 0 auto;
+  font-size: 13px;
+}
+
+.b-priv-table th {
+  background-color: #fff;
+  font-style: italic;
+  font-weight: normal;
+  border: 1px solid #999;
+  padding: 4px 10px;
+  text-align: center;
+  cursor: pointer;
+}
+
+.b-priv-table th.b-res-head {
+  text-align: left;
+}
+
+.b-priv-table td {
+  background-color: #ffffc6;
+  border: 1px solid #999;
+  padding: 3px 10px;
+  text-align: center;
+  vertical-align: middle;
+}
+
+.b-priv-table td.b-res-name {
+  text-align: left;
+  cursor: pointer;
+}
+
+.b-priv-table td.b-res-name:hover {
+  background-color: #fff5a0;
+}

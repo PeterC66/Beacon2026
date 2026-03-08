@@ -1,9 +1,9 @@
 // beacon2/frontend/src/pages/Home.jsx
-// Landing page after login. Shows the u3a name, welcome message,
-// and cards linking to available modules.
+// Landing page after login — styled to match Beacon's main menu page.
 
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext.jsx';
+import BeaconLogo from '../components/BeaconLogo.jsx';
 
 export default function Home() {
   const { user, tenant, logout, can } = useAuth();
@@ -14,68 +14,132 @@ export default function Home() {
     navigate('/login');
   };
 
-  return (
-    <div className="min-h-screen bg-slate-100">
+  // Tenant display name: capitalise the slug for now
+  const tenantDisplay = tenant
+    ? tenant.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())
+    : '';
 
-      {/* Header */}
-      <header className="bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between">
-        <div>
-          <span className="text-xl font-bold text-slate-800">
-            Beacon<span className="text-blue-600">2</span>
+  return (
+    <div style={{ minHeight: '100vh', paddingBottom: 40 }}>
+
+      {/* ── Logo + tenant name header ─────────────────────────── */}
+      <div style={{ display: 'flex', alignItems: 'center', padding: '16px 32px 8px' }}>
+        <BeaconLogo />
+        {tenantDisplay && (
+          <span style={{
+            fontFamily: 'Arial, sans-serif',
+            fontSize: 42,
+            fontWeight: 'normal',
+            marginLeft: 24,
+            color: '#000',
+          }}>
+            {tenantDisplay}
           </span>
-          {tenant && (
-            <span className="ml-3 text-slate-500 text-sm capitalize">{tenant}</span>
-          )}
-        </div>
-        <div className="flex items-center gap-4 text-sm">
-          {user?.name && (
-            <span className="text-slate-600">Signed in as <strong>{user.name}</strong></span>
-          )}
-          <button onClick={handleLogout} className="text-red-600 hover:underline">
-            Sign out
-          </button>
-        </div>
-      </header>
-
-      <div className="p-8 max-w-3xl mx-auto">
-        <h1 className="text-2xl font-semibold text-slate-800 mb-1">Home</h1>
-        <p className="text-slate-500 text-sm mb-8">Select a section to manage.</p>
-
-        <div className="grid gap-4 sm:grid-cols-2">
-
-          {can('role_record', 'view') && (
-            <ModuleCard
-              title="Roles & Privileges"
-              description="Manage user roles and their permission sets."
-              links={[
-                { label: 'Roles list', to: '/roles' },
-                { label: 'Add role', to: '/roles/new' },
-              ]}
-            />
-          )}
-
-        </div>
+        )}
       </div>
-    </div>
-  );
-}
 
-function ModuleCard({ title, description, links }) {
-  return (
-    <div className="bg-white rounded-xl shadow-sm border border-slate-100 p-5">
-      <h2 className="font-semibold text-slate-800 mb-1">{title}</h2>
-      <p className="text-xs text-slate-500 mb-3">{description}</p>
-      <div className="flex flex-wrap gap-3">
-        {links.map((l) => (
-          <Link
-            key={l.to}
-            to={l.to}
-            className="text-sm text-blue-600 hover:underline"
+      {/* ── Page title + user info ────────────────────────────── */}
+      <div style={{ textAlign: 'center', marginTop: 16, marginBottom: 16 }}>
+        <h1 style={{ fontSize: 20, fontWeight: 'bold', margin: '0 0 6px' }}>Administration</h1>
+        <span style={{ fontSize: 13, color: '#222' }}>
+          You are logged in as {user?.name ?? user?.email ?? ''}
+          {'  '}
+          <button
+            onClick={handleLogout}
+            style={{ background: 'none', border: 'none', color: '#0000ff', cursor: 'pointer', fontSize: 13, padding: 0 }}
           >
-            {l.label}
-          </Link>
-        ))}
+            Log Out
+          </button>
+        </span>
       </div>
+
+      {/* ── Main menu table ───────────────────────────────────── */}
+      <table className="b-menu-table">
+        <thead>
+          <tr>
+            <th>Membership</th>
+            <th>Groups</th>
+            <th>Finance</th>
+            <th>Misc</th>
+            <th>Set up</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><span className="b-menu-link-dim">Members</span></td>
+            <td><span className="b-menu-link-dim">Groups</span></td>
+            <td><span className="b-menu-link-dim">Ledger (by account)</span></td>
+            <td><span className="b-menu-link-dim">Audit log</span></td>
+            <td><span className="b-menu-link-dim">System users</span></td>
+          </tr>
+          <tr>
+            <td><span className="b-menu-link-dim">Add new member</span></td>
+            <td><span className="b-menu-link-dim">Venues</span></td>
+            <td><span className="b-menu-link-dim">Ledger (by category)</span></td>
+            <td><span className="b-menu-link-dim">Gift aid log</span></td>
+            <td>
+              {can('role_record', 'view')
+                ? <a href="/roles">Roles and privileges</a>
+                : <span className="b-menu-link-dim">Roles and privileges</span>}
+            </td>
+          </tr>
+          <tr>
+            <td><span className="b-menu-link-dim">Membership renewals</span></td>
+            <td><span className="b-menu-link-dim">Faculties</span></td>
+            <td><span className="b-menu-link-dim">Ledger (by group)</span></td>
+            <td><span className="b-menu-link-dim">u3a Officers</span></td>
+            <td><span className="b-menu-link-dim">System settings</span></td>
+          </tr>
+          <tr>
+            <td><span className="b-menu-link-dim">Recent members</span></td>
+            <td><span className="b-menu-link-dim">Calendar</span></td>
+            <td><span className="b-menu-link-dim">Add transaction</span></td>
+            <td><span className="b-menu-link-dim">Public links</span></td>
+            <td><span className="b-menu-link-dim">System messages</span></td>
+          </tr>
+          <tr>
+            <td><span className="b-menu-link-dim">Non-renewals</span></td>
+            <td></td>
+            <td><span className="b-menu-link-dim">Transfer money</span></td>
+            <td><span className="b-menu-link-dim">Data export &amp; backup</span></td>
+            <td><span className="b-menu-link-dim">Finance accounts</span></td>
+          </tr>
+          <tr>
+            <td><span className="b-menu-link-dim">Membership cards</span></td>
+            <td></td>
+            <td><span className="b-menu-link-dim">Credit batches</span></td>
+            <td><span className="b-menu-link-dim">E-mail delivery</span></td>
+            <td><span className="b-menu-link-dim">Finance categories</span></td>
+          </tr>
+          <tr>
+            <td><span className="b-menu-link-dim">Addresses export</span></td>
+            <td></td>
+            <td><span className="b-menu-link-dim">Reconcile account</span></td>
+            <td><span className="b-menu-link-dim">Personal preferences</span></td>
+            <td><span className="b-menu-link-dim">Membership classes</span></td>
+          </tr>
+          <tr>
+            <td><span className="b-menu-link-dim">Statistics</span></td>
+            <td></td>
+            <td><span className="b-menu-link-dim">Financial statement</span></td>
+            <td></td>
+            <td><span className="b-menu-link-dim">Member statuses</span></td>
+          </tr>
+          <tr>
+            <td></td>
+            <td></td>
+            <td><span className="b-menu-link-dim">Gift Aid declaration</span></td>
+            <td></td>
+            <td><span className="b-menu-link-dim">Poll</span></td>
+          </tr>
+          <tr>
+            <td className="b-menu-footer" colSpan={5} style={{ textAlign: 'center', fontSize: 12, fontStyle: 'italic', color: '#555' }}>
+              Hover mouse over captions for more information
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
     </div>
   );
 }
