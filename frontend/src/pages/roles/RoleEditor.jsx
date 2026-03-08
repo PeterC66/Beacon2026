@@ -6,7 +6,9 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { roles as rolesApi, privileges as privsApi } from '../../lib/api.js';
 import { useAuth } from '../../context/AuthContext.jsx';
 import NavBar from '../../components/NavBar.jsx';
-import BeaconLogo from '../../components/BeaconLogo.jsx';
+import PageHeader from '../../components/PageHeader.jsx';
+
+const inputCls = 'w-full border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-slate-50 disabled:text-slate-500';
 
 export default function RoleEditor() {
   const { id }   = useParams();
@@ -89,11 +91,11 @@ export default function RoleEditor() {
 
   const toggleOtherColumn = useCallback(() => {
     setGranted((prev) => {
-      const next    = { ...prev };
-      const pairs   = resources.flatMap((r) =>
+      const next  = { ...prev };
+      const pairs = resources.flatMap((r) =>
         r.actions.filter((a) => !STANDARD_ACTIONS.includes(a)).map((a) => ({ r, a }))
       );
-      const allOn   = pairs.every(({ r, a }) => next[`${r.id}:${a}`]);
+      const allOn = pairs.every(({ r, a }) => next[`${r.id}:${a}`]);
       pairs.forEach(({ r, a }) => {
         const key = `${r.id}:${a}`;
         if (allOn) { delete next[key]; }
@@ -159,7 +161,7 @@ export default function RoleEditor() {
     }
   };
 
-  const hasOtherActions  = resources.some((r) => r.actions.some((a) => !STANDARD_ACTIONS.includes(a)));
+  const hasOtherActions = resources.some((r) => r.actions.some((a) => !STANDARD_ACTIONS.includes(a)));
 
   const canEdit   = can('role_record', isNew ? 'create' : 'change');
   const canDelete = !isNew && can('role_record', 'delete');
@@ -170,31 +172,18 @@ export default function RoleEditor() {
     ...(!isNew && can('role_record', 'create') ? [{ label: 'Add Role', to: '/roles/new' }] : []),
   ];
 
-  const tenantDisplay = tenant
-    ? tenant.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())
-    : '';
-
-  const colHeadStyle = {
-    fontStyle: 'italic',
-    color: '#0000cc',
-    textAlign: 'center',
-    padding: '2px 6px',
-    cursor: canEdit ? 'pointer' : 'default',
-    minWidth: 52,
-    fontWeight: 'normal',
-  };
-
+  // ── Privilege table column headers (reused in thead, tfoot, and mid-table) ──
+  const colHeadCls = 'text-[#0000cc] italic font-normal text-center px-1.5 py-1 border border-slate-300 text-sm cursor-pointer select-none';
   const colHeaders = (
     <>
-      <th style={{ minWidth: 220 }}></th>
+      <th className="px-2 py-1 border border-slate-300 min-w-[180px]"></th>
       {STANDARD_ACTIONS.map((a) => (
-        <th key={a} style={colHeadStyle} onClick={() => canEdit && toggleColumn(a)}>
+        <th key={a} className={colHeadCls} style={{ minWidth: 52 }} onClick={() => canEdit && toggleColumn(a)}>
           {a.charAt(0).toUpperCase() + a.slice(1)}
         </th>
       ))}
       {hasOtherActions && (
-        <th style={{ ...colHeadStyle, minWidth: 120, cursor: canEdit ? 'pointer' : 'default' }}
-            onClick={() => canEdit && toggleOtherColumn()}>
+        <th className={colHeadCls} style={{ minWidth: 120 }} onClick={() => canEdit && toggleOtherColumn()}>
           Other
         </th>
       )}
@@ -203,118 +192,107 @@ export default function RoleEditor() {
 
   if (loading) {
     return (
-      <div style={{ minHeight: '100vh' }}>
-        <div style={{ display: 'flex', alignItems: 'center', padding: '16px 32px 8px' }}>
-          <BeaconLogo />
-        </div>
+      <div className="min-h-screen pb-10">
+        <PageHeader tenant={tenant} />
         <NavBar links={navLinks} />
-        <p style={{ textAlign: 'center', marginTop: 20, color: '#555' }}>Loading…</p>
+        <p className="text-center mt-8 text-slate-500">Loading…</p>
       </div>
     );
   }
 
   return (
-    <div style={{ minHeight: '100vh', paddingBottom: 40 }}>
+    <div className="min-h-screen pb-10">
 
-      {/* Logo + tenant header */}
-      <div style={{ display: 'flex', alignItems: 'center', padding: '16px 32px 8px' }}>
-        <BeaconLogo />
-        {tenantDisplay && (
-          <span style={{ fontFamily: 'Arial', fontSize: 42, marginLeft: 24, color: '#000' }}>
-            {tenantDisplay}
-          </span>
-        )}
-      </div>
-
+      <PageHeader tenant={tenant} />
       <NavBar links={navLinks} />
 
-      <div style={{ maxWidth: 960, margin: '0 auto', padding: '12px 16px' }}>
+      <div className="max-w-5xl mx-auto px-4 py-5">
 
-        <h1 style={{ textAlign: 'center', fontWeight: 'bold', marginBottom: 14 }}>
-          Role Record
-        </h1>
+        <h1 className="text-xl font-bold text-center mb-4">Role Record</h1>
 
-        {error && <div className="b-flash-error">{error}</div>}
+        {error && (
+          <div className="mb-4 p-3 bg-red-50 border border-red-300 rounded text-red-700 text-sm text-center">
+            {error}
+          </div>
+        )}
 
-        {/* Role details form */}
-        <table className="b-form-table" style={{ margin: '0 auto 20px' }}>
-          <tbody>
-            <tr>
-              <td className="b-label">Name</td>
-              <td>
-                <input
-                  type="text"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  disabled={!canEdit}
-                  style={{ width: 280 }}
-                />
-              </td>
-              {isNew && (
-                <td style={{ paddingLeft: 10, color: '#555', fontStyle: 'italic' }}>New Role</td>
+        {/* Role details card */}
+        <div className="bg-white/90 rounded-lg shadow-sm p-4 sm:p-6 mb-6 space-y-4">
+
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">
+              Name
+              {isNew && <span className="ml-2 text-xs text-slate-400 italic font-normal">New Role</span>}
+            </label>
+            <input
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              disabled={!canEdit}
+              className={`${inputCls} max-w-sm`}
+            />
+          </div>
+
+          <div className="flex items-center gap-3">
+            <label className="text-sm font-medium text-slate-700">Committee role</label>
+            <input
+              type="checkbox"
+              checked={isCommittee}
+              onChange={(e) => setIsCommittee(e.target.checked)}
+              disabled={!canEdit}
+              className="w-5 h-5 rounded border-slate-300 accent-blue-600"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">Notes</label>
+            <textarea
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              disabled={!canEdit}
+              rows={3}
+              className={`${inputCls} max-w-sm resize-y`}
+            />
+          </div>
+
+          {isNew && (
+            <p className="text-xs text-slate-400 italic">New record</p>
+          )}
+
+          {canEdit && (
+            <div className="flex gap-3 pt-1">
+              <button
+                onClick={handleSaveRole}
+                disabled={savingRole}
+                className="px-5 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white rounded text-sm font-medium transition-colors"
+              >
+                {savingRole ? 'Saving…' : 'Save Role'}
+              </button>
+              {canDelete && (
+                <button
+                  onClick={handleDeleteRole}
+                  disabled={deleting}
+                  className="px-5 py-2 border border-red-300 text-red-600 hover:bg-red-50 rounded text-sm font-medium transition-colors disabled:opacity-50"
+                >
+                  {deleting ? 'Deleting…' : 'Delete Role'}
+                </button>
               )}
-            </tr>
-            <tr>
-              <td className="b-label">Committee role</td>
-              <td>
-                <input
-                  type="checkbox"
-                  checked={isCommittee}
-                  onChange={(e) => setIsCommittee(e.target.checked)}
-                  disabled={!canEdit}
-                />
-              </td>
-            </tr>
-            <tr>
-              <td className="b-label" style={{ verticalAlign: 'top', paddingTop: 6 }}>Notes</td>
-              <td>
-                <textarea
-                  value={notes}
-                  onChange={(e) => setNotes(e.target.value)}
-                  disabled={!canEdit}
-                  rows={3}
-                  style={{ width: 280, fontFamily: 'Arial', fontSize: 13, border: '1px solid #777', padding: '2px 4px', resize: 'vertical' }}
-                />
-              </td>
-            </tr>
-            {isNew && (
-              <tr>
-                <td></td>
-                <td style={{ fontSize: 12, color: '#555', fontStyle: 'italic', paddingTop: 2 }}>
-                  New record
-                </td>
-              </tr>
-            )}
-            {canEdit && (
-              <tr>
-                <td></td>
-                <td style={{ paddingTop: 8 }}>
-                  <button onClick={handleSaveRole} disabled={savingRole} style={{ marginRight: 8, padding: '3px 16px' }}>
-                    {savingRole ? 'Saving…' : 'Save Role'}
-                  </button>
-                  {canDelete && (
-                    <button onClick={handleDeleteRole} disabled={deleting} style={{ padding: '3px 16px' }}>
-                      {deleting ? 'Deleting…' : 'Delete Role'}
-                    </button>
-                  )}
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
+            </div>
+          )}
+        </div>
 
         {/* Privilege matrix — only shown when editing an existing role */}
         {!isNew && (
           <>
-            <h2 style={{ textAlign: 'center', fontWeight: 'bold', marginBottom: 10 }}>Privileges</h2>
-            <p style={{ textAlign: 'center', marginBottom: 10 }}>
+            <h2 className="text-lg font-bold text-center mb-2">Privileges</h2>
+            <p className="text-center mb-3 text-sm">
               Click a row or column heading to toggle all. View is required for any other action.
             </p>
 
-            <div style={{ overflowX: 'auto' }}>
-              <table className="b-priv-table" style={{ borderCollapse: 'collapse', width: '100%' }}>
+            <div className="overflow-x-auto rounded-lg shadow-sm">
+              <table style={{ borderCollapse: 'collapse', width: '100%' }}>
                 <thead>
-                  <tr>{colHeaders}</tr>
+                  <tr className="bg-white">{colHeaders}</tr>
                 </thead>
                 <tbody>
                   {resources.map((resource, i) => {
@@ -323,7 +301,7 @@ export default function RoleEditor() {
                     return (
                       <>
                         {repeatHeader && (
-                          <tr key={`hdr-${i}`}>{colHeaders}</tr>
+                          <tr key={`hdr-${i}`} className="bg-white">{colHeaders}</tr>
                         )}
                         <tr key={resource.id} style={{ backgroundColor: i % 2 === 0 ? '#ffffcc' : '#f0f0f0' }}>
                           <td
@@ -334,6 +312,8 @@ export default function RoleEditor() {
                               cursor: canEdit ? 'pointer' : 'default',
                               padding: '2px 6px',
                               whiteSpace: 'nowrap',
+                              border: '1px solid #ccc',
+                              fontSize: '0.875rem',
                             }}
                             onClick={() => canEdit && toggleRow(resource.id, resource.actions)}
                             title={canEdit ? 'Click to toggle all' : ''}
@@ -341,7 +321,7 @@ export default function RoleEditor() {
                             {resource.label}
                           </td>
                           {STANDARD_ACTIONS.map((action) => (
-                            <td key={action} style={{ textAlign: 'center', padding: '2px 4px' }}>
+                            <td key={action} style={{ textAlign: 'center', padding: '2px 4px', border: '1px solid #ccc' }}>
                               {resource.actions.includes(action) ? (
                                 <input
                                   type="checkbox"
@@ -353,7 +333,7 @@ export default function RoleEditor() {
                             </td>
                           ))}
                           {hasOtherActions && (
-                            <td style={{ textAlign: 'left', padding: '2px 8px' }}>
+                            <td style={{ textAlign: 'left', padding: '2px 8px', border: '1px solid #ccc', fontSize: '0.875rem' }}>
                               {resourceOtherActions.map((action) => (
                                 <label key={action} style={{ display: 'inline-flex', alignItems: 'center', marginRight: 8, whiteSpace: 'nowrap' }}>
                                   <input
@@ -374,17 +354,17 @@ export default function RoleEditor() {
                   })}
                 </tbody>
                 <tfoot>
-                  <tr>{colHeaders}</tr>
+                  <tr className="bg-white">{colHeaders}</tr>
                 </tfoot>
               </table>
             </div>
 
             {canEdit && (
-              <div style={{ textAlign: 'center', marginTop: 12 }}>
+              <div className="text-center mt-4">
                 <button
                   onClick={handleSavePrivileges}
                   disabled={savingPrivs}
-                  style={{ padding: '4px 24px', backgroundColor: '#e08000', color: '#fff', border: '1px solid #b06000', borderRadius: 3, fontWeight: 'bold', cursor: 'pointer' }}
+                  className="px-8 py-2 bg-[#e08000] hover:bg-[#c07000] disabled:opacity-50 text-white rounded font-bold text-sm transition-colors"
                 >
                   {savingPrivs ? 'Saving…' : 'Save Privileges'}
                 </button>

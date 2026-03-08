@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { roles as rolesApi } from '../../lib/api.js';
 import { useAuth } from '../../context/AuthContext.jsx';
 import NavBar from '../../components/NavBar.jsx';
-import BeaconLogo from '../../components/BeaconLogo.jsx';
+import PageHeader from '../../components/PageHeader.jsx';
 
 export default function RoleList() {
   const { can, tenant } = useAuth();
@@ -42,76 +42,65 @@ export default function RoleList() {
     ...(can('role_record', 'create') ? [{ label: 'Add Role', to: '/roles/new' }] : []),
   ];
 
-  const tenantDisplay = tenant
-    ? tenant.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())
-    : '';
-
   return (
-    <div style={{ minHeight: '100vh', paddingBottom: 40 }}>
+    <div className="min-h-screen pb-10">
 
-      {/* Logo + tenant header */}
-      <div style={{ display: 'flex', alignItems: 'center', padding: '16px 32px 8px' }}>
-        <BeaconLogo />
-        {tenantDisplay && (
-          <span style={{ fontFamily: 'Arial', fontSize: 42, marginLeft: 24, color: '#000' }}>
-            {tenantDisplay}
-          </span>
-        )}
-      </div>
-
+      <PageHeader tenant={tenant} />
       <NavBar links={navLinks} />
 
-      <div style={{ maxWidth: 900, margin: '0 auto', padding: '12px 16px' }}>
-        <h1 style={{ textAlign: 'center', fontWeight: 'bold', marginBottom: 14 }}>User Roles</h1>
+      <div className="max-w-3xl mx-auto px-4 py-5">
+        <h1 className="text-xl font-bold text-center mb-4">User Roles</h1>
 
-        {loading && <p style={{ textAlign: 'center', color: '#555' }}>Loading…</p>}
-        {error   && <p style={{ textAlign: 'center', color: 'red' }}>Error: {error}</p>}
+        {loading && <p className="text-center text-slate-500">Loading…</p>}
+        {error   && <p className="text-center text-red-600">Error: {error}</p>}
 
         {!loading && !error && (
           roleList.length === 0 ? (
-            <p style={{ textAlign: 'center', color: '#555' }}>No roles found.</p>
+            <p className="text-center text-slate-500">No roles found.</p>
           ) : (
-            <table className="b-table">
-              <thead>
-                <tr>
-                  <th>Role Name</th>
-                  <th>Committee role</th>
-                  <th>Users</th>
-                  {(can('role_record', 'view') || can('role_record', 'delete')) && <th></th>}
-                </tr>
-              </thead>
-              <tbody>
-                {roleList.map((role) => (
-                  <tr key={role.id}>
-                    <td>{role.name}</td>
-                    <td style={{ textAlign: 'center' }}>{role.is_committee ? 'Y' : ''}</td>
-                    <td style={{ textAlign: 'center' }}>{role.user_count}</td>
-                    {(can('role_record', 'view') || can('role_record', 'delete')) && (
-                      <td className="b-td-action" style={{ textAlign: 'right' }}>
-                        {can('role_record', 'view') && (
-                          <a
-                            href="#edit"
-                            onClick={(e) => { e.preventDefault(); navigate(`/roles/${role.id}`); }}
-                            style={{ marginRight: 8 }}
-                          >
-                            Edit
-                          </a>
-                        )}
-                        {can('role_record', 'delete') && (
-                          <a
-                            href="#del"
-                            onClick={(e) => { e.preventDefault(); handleDelete(role); }}
-                            style={{ color: '#cc0000' }}
-                          >
-                            {deleting === role.id ? 'Deleting…' : 'Delete'}
-                          </a>
-                        )}
-                      </td>
-                    )}
+            <div className="overflow-x-auto rounded-lg shadow-sm">
+              <table className="w-full text-sm bg-white min-w-max">
+                <thead>
+                  <tr className="bg-slate-50 border-b border-slate-200 text-left text-slate-600 italic font-normal">
+                    <th className="px-4 py-2.5 font-normal">Role Name</th>
+                    <th className="px-4 py-2.5 font-normal text-center">Committee role</th>
+                    <th className="px-4 py-2.5 font-normal text-center">Users</th>
+                    {(can('role_record', 'view') || can('role_record', 'delete')) && <th className="px-4 py-2.5"></th>}
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {roleList.map((role, i) => (
+                    <tr key={role.id} className={`border-b border-slate-100 ${i % 2 === 0 ? 'bg-yellow-50' : 'bg-white'}`}>
+                      <td className="px-4 py-2.5">{role.name}</td>
+                      <td className="px-4 py-2.5 text-center">{role.is_committee ? 'Y' : ''}</td>
+                      <td className="px-4 py-2.5 text-center">{role.user_count}</td>
+                      {(can('role_record', 'view') || can('role_record', 'delete')) && (
+                        <td className="px-4 py-2.5 text-right whitespace-nowrap">
+                          {can('role_record', 'view') && (
+                            <a
+                              href="#edit"
+                              onClick={(e) => { e.preventDefault(); navigate(`/roles/${role.id}`); }}
+                              className="text-blue-700 hover:underline mr-4"
+                            >
+                              Edit
+                            </a>
+                          )}
+                          {can('role_record', 'delete') && (
+                            <a
+                              href="#del"
+                              onClick={(e) => { e.preventDefault(); handleDelete(role); }}
+                              className="text-red-600 hover:underline"
+                            >
+                              {deleting === role.id ? 'Deleting…' : 'Delete'}
+                            </a>
+                          )}
+                        </td>
+                      )}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           )
         )}
       </div>

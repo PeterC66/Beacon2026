@@ -156,7 +156,7 @@ export default function SystemDashboard() {
             )}
 
             <form onSubmit={handleCreate} className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">u3a name</label>
                   <input name="name" value={form.name} onChange={handleChange} required
@@ -177,7 +177,7 @@ export default function SystemDashboard() {
               <hr className="border-slate-100" />
               <p className="text-sm font-medium text-slate-600">First admin user</p>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">Name</label>
                   <input name="adminName" value={form.adminName} onChange={handleChange} required

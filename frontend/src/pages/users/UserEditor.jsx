@@ -6,7 +6,9 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { users as usersApi, roles as rolesApi } from '../../lib/api.js';
 import { useAuth } from '../../context/AuthContext.jsx';
 import NavBar from '../../components/NavBar.jsx';
-import BeaconLogo from '../../components/BeaconLogo.jsx';
+import PageHeader from '../../components/PageHeader.jsx';
+
+const inputCls = 'w-full border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-slate-50 disabled:text-slate-500';
 
 export default function UserEditor() {
   const { id }   = useParams();
@@ -81,7 +83,6 @@ export default function UserEditor() {
         if (password) patch.password = password;
         await usersApi.update(id, patch);
 
-        // Diff role assignments
         const toAdd    = [...assignedIds].filter((rid) => !origRoleIds.has(rid));
         const toRemove = [...origRoleIds].filter((rid) => !assignedIds.has(rid));
         await Promise.all([
@@ -106,161 +107,149 @@ export default function UserEditor() {
     ...(!isNew && can('user_record', 'create') ? [{ label: 'Add User', to: '/users/new' }] : []),
   ];
 
-  const tenantDisplay = tenant
-    ? tenant.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())
-    : '';
-
   if (loading) {
     return (
-      <div style={{ minHeight: '100vh' }}>
-        <div style={{ display: 'flex', alignItems: 'center', padding: '16px 32px 8px' }}>
-          <BeaconLogo />
-        </div>
+      <div className="min-h-screen pb-10">
+        <PageHeader tenant={tenant} />
         <NavBar links={navLinks} />
-        <p style={{ textAlign: 'center', marginTop: 20, color: '#555' }}>Loading…</p>
+        <p className="text-center mt-8 text-slate-500">Loading…</p>
       </div>
     );
   }
 
   return (
-    <div style={{ minHeight: '100vh', paddingBottom: 40 }}>
+    <div className="min-h-screen pb-10">
 
-      {/* Logo + tenant header */}
-      <div style={{ display: 'flex', alignItems: 'center', padding: '16px 32px 8px' }}>
-        <BeaconLogo />
-        {tenantDisplay && (
-          <span style={{ fontFamily: 'Arial', fontSize: 42, marginLeft: 24, color: '#000' }}>
-            {tenantDisplay}
-          </span>
-        )}
-      </div>
-
+      <PageHeader tenant={tenant} />
       <NavBar links={navLinks} />
 
-      <div style={{ maxWidth: 700, margin: '0 auto', padding: '12px 16px' }}>
+      <div className="max-w-2xl mx-auto px-4 py-5">
 
-        <h1 style={{ textAlign: 'center', fontWeight: 'bold', marginBottom: 14 }}>
+        <h1 className="text-xl font-bold text-center mb-4">
           {isNew ? 'Add User' : `Edit User: ${name}`}
         </h1>
 
-        {error && <div className="b-flash-error">{error}</div>}
+        {error && (
+          <div className="mb-4 p-3 bg-red-50 border border-red-300 rounded text-red-700 text-sm text-center">
+            {error}
+          </div>
+        )}
 
-        {/* User details form */}
-        <table className="b-form-table" style={{ margin: '0 auto 20px' }}>
-          <tbody>
-            <tr>
-              <td className="b-label">Name</td>
-              <td>
-                <input
-                  type="text"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  disabled={!canEdit}
-                  style={{ width: 280 }}
-                />
-              </td>
-            </tr>
-            <tr>
-              <td className="b-label">Email</td>
-              <td>
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  disabled={!canEdit}
-                  style={{ width: 280 }}
-                />
-              </td>
-            </tr>
-            <tr>
-              <td className="b-label">{isNew ? 'Password' : 'New password'}</td>
-              <td>
-                <span style={{ position: 'relative', display: 'inline-block' }}>
-                  <input
-                    type={showPw ? 'text' : 'password'}
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    disabled={!canEdit}
-                    placeholder={isNew ? 'Required' : 'Leave blank to keep current'}
-                    style={{ width: 256, paddingRight: 24 }}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPw((v) => !v)}
-                    style={{
-                      position: 'absolute', right: 4, top: '50%', transform: 'translateY(-50%)',
-                      background: 'none', border: 'none', cursor: 'pointer', fontSize: 14, padding: 0,
-                    }}
-                    title={showPw ? 'Hide password' : 'Show password'}
-                  >
-                    {showPw ? '🙈' : '👁'}
-                  </button>
-                </span>
-              </td>
-            </tr>
-            <tr>
-              <td className="b-label">Active</td>
-              <td>
-                <input
-                  type="checkbox"
-                  checked={active}
-                  onChange={(e) => setActive(e.target.checked)}
-                  disabled={!canEdit}
-                />
-              </td>
-            </tr>
-            {canEdit && (
-              <tr>
-                <td></td>
-                <td style={{ paddingTop: 8 }}>
-                  <button onClick={handleSave} disabled={saving} style={{ marginRight: 8, padding: '3px 16px' }}>
-                    {saving ? 'Saving…' : 'Save user'}
-                  </button>
-                  <button onClick={() => navigate('/users')} style={{ padding: '3px 16px' }}>
-                    Cancel
-                  </button>
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
+        {/* User details card */}
+        <div className="bg-white/90 rounded-lg shadow-sm p-4 sm:p-6 mb-6 space-y-4">
+
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">Name</label>
+            <input type="text" value={name} onChange={(e) => setName(e.target.value)}
+              disabled={!canEdit} className={inputCls} />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">Email</label>
+            <input type="email" value={email} onChange={(e) => setEmail(e.target.value)}
+              disabled={!canEdit} className={inputCls} />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">
+              {isNew ? 'Password' : 'New password'}
+            </label>
+            <div className="relative">
+              <input
+                type={showPw ? 'text' : 'password'}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                disabled={!canEdit}
+                placeholder={isNew ? 'Required' : 'Leave blank to keep current'}
+                className={`${inputCls} pr-10`}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPw((v) => !v)}
+                className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-800 p-1"
+                title={showPw ? 'Hide password' : 'Show password'}
+              >
+                {showPw ? '🙈' : '👁'}
+              </button>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <label className="text-sm font-medium text-slate-700">Active</label>
+            <input
+              type="checkbox"
+              checked={active}
+              onChange={(e) => setActive(e.target.checked)}
+              disabled={!canEdit}
+              className="w-5 h-5 rounded border-slate-300 accent-blue-600"
+            />
+          </div>
+
+          {canEdit && (
+            <div className="flex gap-3 pt-1">
+              <button
+                onClick={handleSave}
+                disabled={saving}
+                className="px-5 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white rounded text-sm font-medium transition-colors"
+              >
+                {saving ? 'Saving…' : 'Save user'}
+              </button>
+              <button
+                onClick={() => navigate('/users')}
+                className="px-5 py-2 border border-slate-300 rounded text-sm text-slate-700 hover:bg-slate-50 transition-colors"
+              >
+                Cancel
+              </button>
+            </div>
+          )}
+        </div>
 
         {/* Role assignments */}
         {allRoles.length > 0 && (
           <>
-            <h2 style={{ textAlign: 'center', fontWeight: 'bold', marginBottom: 10 }}>Roles</h2>
-            <table className="b-table" style={{ margin: '0 auto' }}>
-              <thead>
-                <tr>
-                  <th>Role</th>
-                  <th>Committee role</th>
-                  <th style={{ textAlign: 'center' }}>Assigned</th>
-                </tr>
-              </thead>
-              <tbody>
-                {allRoles.map((role) => (
-                  <tr key={role.id}>
-                    <td>{role.name}</td>
-                    <td style={{ textAlign: 'center' }}>{role.is_committee ? 'Y' : ''}</td>
-                    <td style={{ textAlign: 'center' }}>
-                      <input
-                        type="checkbox"
-                        checked={assignedIds.has(role.id)}
-                        onChange={() => canEdit && toggleRole(role.id)}
-                        disabled={!canEdit}
-                      />
-                    </td>
+            <h2 className="text-lg font-bold text-center mb-3">Roles</h2>
+            <div className="overflow-x-auto rounded-lg shadow-sm">
+              <table className="w-full text-sm bg-white min-w-max">
+                <thead>
+                  <tr className="bg-slate-50 border-b border-slate-200 text-left text-slate-600 italic font-normal">
+                    <th className="px-4 py-2.5 font-normal">Role</th>
+                    <th className="px-4 py-2.5 font-normal text-center">Committee role</th>
+                    <th className="px-4 py-2.5 font-normal text-center">Assigned</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {allRoles.map((role, i) => (
+                    <tr key={role.id} className={`border-b border-slate-100 ${i % 2 === 0 ? 'bg-yellow-50' : 'bg-white'}`}>
+                      <td className="px-4 py-2.5">{role.name}</td>
+                      <td className="px-4 py-2.5 text-center">{role.is_committee ? 'Y' : ''}</td>
+                      <td className="px-4 py-2.5 text-center">
+                        <input
+                          type="checkbox"
+                          checked={assignedIds.has(role.id)}
+                          onChange={() => canEdit && toggleRole(role.id)}
+                          disabled={!canEdit}
+                          className="w-5 h-5 rounded border-slate-300 accent-blue-600"
+                        />
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
 
             {canEdit && (
-              <div style={{ textAlign: 'center', marginTop: 16 }}>
-                <button onClick={handleSave} disabled={saving} style={{ marginRight: 8, padding: '3px 16px' }}>
+              <div className="flex justify-center gap-3 mt-4">
+                <button
+                  onClick={handleSave}
+                  disabled={saving}
+                  className="px-5 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white rounded text-sm font-medium transition-colors"
+                >
                   {saving ? 'Saving…' : 'Save user'}
                 </button>
-                <button onClick={() => navigate('/users')} style={{ padding: '3px 16px' }}>
+                <button
+                  onClick={() => navigate('/users')}
+                  className="px-5 py-2 border border-slate-300 rounded text-sm text-slate-700 hover:bg-slate-50 transition-colors"
+                >
                   Cancel
                 </button>
               </div>

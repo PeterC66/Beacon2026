@@ -1,5 +1,5 @@
 // beacon2/frontend/src/pages/Login.jsx
-// Tenant user sign-in — styled to match Beacon's original login page.
+// Tenant user sign-in.
 
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -39,97 +39,83 @@ export default function Login() {
   };
 
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', paddingTop: 60 }}>
+    <div className="min-h-screen flex flex-col items-center px-4 pt-10 pb-10">
 
       <BeaconLogo large />
 
-      <h1 style={{ marginTop: 24, fontWeight: 'bold', textAlign: 'center', fontSize: 20 }}>
-        Administration
-      </h1>
+      <h1 className="mt-6 text-xl font-bold text-center">Administration</h1>
 
-      {error && <div className="b-flash-error">{error}</div>}
+      {error && (
+        <div className="mt-4 w-full max-w-xs p-3 bg-red-50 border border-red-300 rounded text-red-700 text-sm text-center">
+          {error}
+        </div>
+      )}
 
-      <form onSubmit={handleSubmit} style={{ marginTop: 16 }}>
-        <table style={{ borderCollapse: 'collapse', fontSize: 13 }}>
-          <tbody>
-            <tr>
-              <td style={{ textAlign: 'right', paddingRight: 8, paddingBottom: 6, color: '#222' }}>u3a</td>
-              <td style={{ paddingBottom: 6 }}>
-                <input
-                  name="tenantSlug"
-                  value={form.tenantSlug}
-                  onChange={handleChange}
-                  placeholder="your-u3a-slug"
-                  required
-                  style={{ width: 220 }}
-                />
-              </td>
-            </tr>
-            <tr>
-              <td style={{ textAlign: 'right', paddingRight: 8, paddingBottom: 6, color: '#222' }}>Email</td>
-              <td style={{ paddingBottom: 6 }}>
-                <input
-                  name="email"
-                  type="email"
-                  value={form.email}
-                  onChange={handleChange}
-                  required
-                  style={{ width: 220 }}
-                />
-              </td>
-            </tr>
-            <tr>
-              <td style={{ textAlign: 'right', paddingRight: 8, paddingBottom: 4, color: '#222' }}>Password</td>
-              <td style={{ paddingBottom: 4 }}>
-                <span style={{ position: 'relative', display: 'inline-block' }}>
-                  <input
-                    name="password"
-                    type={showPw ? 'text' : 'password'}
-                    value={form.password}
-                    onChange={handleChange}
-                    required
-                    style={{ width: 196, paddingRight: 24 }}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPw((v) => !v)}
-                    style={{
-                      position: 'absolute', right: 4, top: '50%', transform: 'translateY(-50%)',
-                      background: 'none', border: 'none', cursor: 'pointer', fontSize: 14, padding: 0,
-                    }}
-                    title={showPw ? 'Hide password' : 'Show password'}
-                  >
-                    {showPw ? '🙈' : '👁'}
-                  </button>
-                </span>
-              </td>
-            </tr>
-            <tr>
-              <td colSpan={2} style={{ textAlign: 'center', fontSize: 11, color: '#666', paddingBottom: 10 }}>
-                Passwords are case sensitive
-              </td>
-            </tr>
-            <tr>
-              <td colSpan={2} style={{ textAlign: 'center' }}>
-                <button
-                  type="submit"
-                  disabled={loading}
-                  style={{ padding: '3px 20px', fontSize: 13 }}
-                >
-                  {loading ? 'Signing in…' : 'Enter'}
-                </button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
+      <form onSubmit={handleSubmit} className="mt-4 w-full max-w-xs space-y-3">
+        <div>
+          <label className="block text-sm font-medium text-slate-700 mb-1">u3a</label>
+          <input
+            name="tenantSlug"
+            value={form.tenantSlug}
+            onChange={handleChange}
+            placeholder="your-u3a-slug"
+            required
+            className="w-full border border-slate-400 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-slate-700 mb-1">Email</label>
+          <input
+            name="email"
+            type="email"
+            value={form.email}
+            onChange={handleChange}
+            required
+            className="w-full border border-slate-400 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-slate-700 mb-1">Password</label>
+          <div className="relative">
+            <input
+              name="password"
+              type={showPw ? 'text' : 'password'}
+              value={form.password}
+              onChange={handleChange}
+              required
+              className="w-full border border-slate-400 rounded px-3 py-2 pr-10 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+            <button
+              type="button"
+              onClick={() => setShowPw((v) => !v)}
+              className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-800 p-1"
+              title={showPw ? 'Hide password' : 'Show password'}
+            >
+              {showPw ? '🙈' : '👁'}
+            </button>
+          </div>
+        </div>
+
+        <p className="text-xs text-slate-500 text-center">Passwords are case sensitive</p>
+
+        <button
+          type="submit"
+          disabled={loading}
+          className="w-full py-2.5 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white rounded font-medium text-sm transition-colors"
+        >
+          {loading ? 'Signing in…' : 'Enter'}
+        </button>
       </form>
 
-      <hr style={{ width: 600, marginTop: 28, borderTop: '1px solid #999', border: 'none', borderBottom: '1px solid #ccc' }} />
+      <hr className="w-full max-w-xs mt-8 border-slate-400" />
 
-      <p style={{ marginTop: 16, fontSize: 13 }}>
+      <p className="mt-4 text-sm text-slate-700">
         Forgotten your username or password?{' '}
-        <a href="#forgot">Click here.</a>
+        <a href="#forgot" className="text-blue-700 hover:underline">Click here.</a>
       </p>
+
     </div>
   );
 }
