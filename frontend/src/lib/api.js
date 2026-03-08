@@ -124,6 +124,25 @@ export const privileges = {
   resources: () => request('/privileges/resources'),
 };
 
+// ─── Member classes ───────────────────────────────────────────────────────
+
+export const memberClasses = {
+  list:   ()         => request('/member-classes'),
+  get:    (id)       => request(`/member-classes/${id}`),
+  create: (data)     => request('/member-classes', { method: 'POST', body: JSON.stringify(data) }),
+  update: (id, data) => request(`/member-classes/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
+  delete: (id)       => request(`/member-classes/${id}`, { method: 'DELETE' }),
+};
+
+// ─── Member statuses ──────────────────────────────────────────────────────
+
+export const memberStatuses = {
+  list:   ()         => request('/member-statuses'),
+  create: (data)     => request('/member-statuses', { method: 'POST', body: JSON.stringify(data) }),
+  update: (id, data) => request(`/member-statuses/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
+  delete: (id)       => request(`/member-statuses/${id}`, { method: 'DELETE' }),
+};
+
 // ─── System admin (separate token, no tenant) ─────────────────────────────
 
 export const system = {

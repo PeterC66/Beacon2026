@@ -79,6 +79,35 @@ CREATE TABLE :schema.refresh_tokens (
 );
 
 -- ─────────────────────────────────────────────
+-- MEMBERSHIP CLASSES
+-- ─────────────────────────────────────────────
+CREATE TABLE :schema.member_classes (
+  id           TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
+  name         TEXT NOT NULL,
+  current      BOOLEAN NOT NULL DEFAULT true,   -- may be used for new memberships
+  explanation  TEXT,                            -- shown when joining online
+  is_joint     BOOLEAN NOT NULL DEFAULT false,  -- 1 of 2 people at same address (HMRC family rule)
+  is_associate BOOLEAN NOT NULL DEFAULT false,  -- full member of another u3a
+  show_online  BOOLEAN NOT NULL DEFAULT false,  -- show to members joining online
+  fee          NUMERIC(8,2),                    -- fee per person per year
+  gift_aid_fee NUMERIC(8,2),                    -- gift aid eligible portion (≤ fee)
+  locked       BOOLEAN NOT NULL DEFAULT false,  -- locked against deletion (e.g. Individual)
+  created_at   TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at   TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+-- ─────────────────────────────────────────────
+-- MEMBER STATUSES
+-- ─────────────────────────────────────────────
+CREATE TABLE :schema.member_statuses (
+  id         TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
+  name       TEXT NOT NULL UNIQUE,
+  locked     BOOLEAN NOT NULL DEFAULT false,  -- locked system statuses cannot be edited/deleted
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+-- ─────────────────────────────────────────────
 -- INDEXES
 -- ─────────────────────────────────────────────
 CREATE INDEX ON :schema.user_roles (user_id);

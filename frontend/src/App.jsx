@@ -8,8 +8,11 @@ import RoleList        from './pages/roles/RoleList.jsx';
 import RoleEditor      from './pages/roles/RoleEditor.jsx';
 import UserList        from './pages/users/UserList.jsx';
 import UserEditor      from './pages/users/UserEditor.jsx';
-import SystemLogin     from './pages/system/SystemLogin.jsx';
-import SystemDashboard from './pages/system/SystemDashboard.jsx';
+import SystemLogin       from './pages/system/SystemLogin.jsx';
+import SystemDashboard   from './pages/system/SystemDashboard.jsx';
+import MemberClassList   from './pages/membership/MemberClassList.jsx';
+import MemberClassEditor from './pages/membership/MemberClassEditor.jsx';
+import MemberStatusList  from './pages/membership/MemberStatusList.jsx';
 
 function ProtectedRoute({ children }) {
   const { isLoggedIn } = useAuth();
@@ -35,6 +38,10 @@ export default function App() {
           <Route path="/users"      element={<ProtectedRoute><UserList /></ProtectedRoute>} />
           <Route path="/users/new"  element={<ProtectedRoute><UserEditor /></ProtectedRoute>} />
           <Route path="/users/:id"  element={<ProtectedRoute><UserEditor /></ProtectedRoute>} />
+          <Route path="/membership/classes"      element={<ProtectedRoute><MemberClassList /></ProtectedRoute>} />
+          <Route path="/membership/classes/new"  element={<ProtectedRoute><MemberClassEditor /></ProtectedRoute>} />
+          <Route path="/membership/classes/:id"  element={<ProtectedRoute><MemberClassEditor /></ProtectedRoute>} />
+          <Route path="/membership/statuses"     element={<ProtectedRoute><MemberStatusList /></ProtectedRoute>} />
         </Routes>
       </BrowserRouter>
     </AuthProvider>
