@@ -6,11 +6,24 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext.jsx';
 import BeaconLogo from '../components/BeaconLogo.jsx';
 
+const COOKIE_NAME = 'beacon_last_u3a';
+const COOKIE_DAYS = 365;
+
+function getLastU3aCookie() {
+  const match = document.cookie.split('; ').find((c) => c.startsWith(COOKIE_NAME + '='));
+  return match ? decodeURIComponent(match.split('=')[1]) : '';
+}
+
+function setLastU3aCookie(slug) {
+  const expires = new Date(Date.now() + COOKIE_DAYS * 864e5).toUTCString();
+  document.cookie = `${COOKIE_NAME}=${encodeURIComponent(slug)}; expires=${expires}; path=/; SameSite=Lax`;
+}
+
 export default function Login() {
   const { login, loading, error } = useAuth();
   const navigate = useNavigate();
 
-  const [form, setForm] = useState({ tenantSlug: '', email: '', password: '' });
+  const [form, setForm] = useState({ tenantSlug: getLastU3aCookie(), email: '', password: '' });
   const [showPw, setShowPw] = useState(false);
 
   const handleChange = (e) =>
@@ -19,7 +32,10 @@ export default function Login() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     const ok = await login(form.tenantSlug, form.email, form.password);
-    if (ok) navigate('/');
+    if (ok) {
+      setLastU3aCookie(form.tenantSlug);
+      navigate('/');
+    }
   };
 
   return (
