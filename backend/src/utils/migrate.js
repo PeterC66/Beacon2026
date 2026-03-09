@@ -65,18 +65,28 @@ async function migrateTenantSchemas() {
     const schemaName = `u3a_${slug}`;
     console.log(`Migrating tenant schema: ${schemaName}`);
 
-    try {
-      // Run the idempotent DDL
-      const statements = schemaSQL
-        .replace(/:schema/g, schemaName)
-        .split(';')
-        .map((s) => s.trim())
-        .filter(Boolean);
+    let ddlErrors = 0;
 
-      for (const stmt of statements) {
+    // Run the idempotent DDL — each statement is independent; a failure
+    // on one statement (e.g. a pre-existing constraint) must not prevent
+    // subsequent tables from being created.
+    const statements = schemaSQL
+      .replace(/:schema/g, schemaName)
+      .split(';')
+      .map((s) => s.trim())
+      .filter(Boolean);
+
+    for (const stmt of statements) {
+      try {
         await prisma.$executeRawUnsafe(stmt);
+      } catch (err) {
+        ddlErrors++;
+        console.error(`  ✗ DDL error [${schemaName}]: ${err.message}`);
       }
+    }
 
+    // Re-seed default data — these run even if some DDL steps had warnings
+    try {
       // Re-seed privilege resources (ON CONFLICT DO NOTHING keeps existing rows)
       for (const resource of PRIVILEGE_RESOURCES) {
         await tenantQuery(
@@ -104,11 +114,14 @@ async function migrateTenantSchemas() {
          SELECT 'Individual', true, true
          WHERE NOT EXISTS (SELECT 1 FROM member_classes WHERE name = 'Individual' AND locked = true)`,
       );
-
-      console.log(`  ✓ ${schemaName} up to date`);
     } catch (err) {
-      // Log but don't crash — a broken tenant shouldn't stop the server
-      console.error(`  ✗ Failed to migrate ${schemaName}:`, err.message);
+      console.error(`  ✗ Seed error [${schemaName}]:`, err.message);
+    }
+
+    if (ddlErrors > 0) {
+      console.warn(`  ⚠ ${schemaName}: ${ddlErrors} DDL statement(s) failed (see errors above)`);
+    } else {
+      console.log(`  ✓ ${schemaName} up to date`);
     }
   }
 }
