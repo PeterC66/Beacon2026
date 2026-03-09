@@ -143,6 +143,53 @@ Common causes:
 
 ---
 
+## Prisma `$queryRawUnsafe` and PostgreSQL type casting
+
+### The problem
+
+`tenantQuery()` uses `prisma.$transaction` → `tx.$queryRawUnsafe(sql, ...params)`.
+Prisma sends JavaScript string parameters **without explicit PostgreSQL type OIDs**.
+In PostgreSQL's extended query protocol this means the implicit `text → date` (and
+`text → time`, `text → numeric`, etc.) casts may not fire, causing a 500 error like:
+
+```
+ERROR: column "joined_on" is of type date but expression is of type text
+```
+
+This manifests as: operation succeeds when the field is `null` but fails when a
+non-null value (e.g. a date string) is supplied — because `null` has no type conflict.
+
+### The fix
+
+Add an explicit PostgreSQL cast in the SQL wherever a non-text column type is involved:
+
+```sql
+-- DATE columns
+VALUES (..., $12::date, $13::date, $14::date, ...)
+
+-- TIME columns
+start_time = $3::time
+
+-- NUMERIC columns
+fee = $4::numeric
+```
+
+`null::date` is valid in PostgreSQL (returns NULL), so explicit casts are safe even
+when the parameter value is null.
+
+### Affected columns to watch for
+
+Any column whose PostgreSQL type is **not** `TEXT` / `VARCHAR` / `BOOLEAN` / `INTEGER`
+needs an explicit cast when set via `$queryRawUnsafe`. Key examples in this codebase:
+
+| Column | Type | Cast needed |
+|--------|------|-------------|
+| `joined_on`, `next_renewal`, `gift_aid_from` | `DATE` | `::date` |
+| `start_time`, `end_time` | `TIME` | `::time` |
+| `fee`, `gift_aid_fee` | `NUMERIC` | `::numeric` |
+
+---
+
 ## Testing harness (set up March 2026)
 
 ### How to run tests
