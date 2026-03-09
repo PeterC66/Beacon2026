@@ -339,8 +339,59 @@ router.patch('/:id', requirePrivilege('member_record', 'change'), async (req, re
       && current.address_id !== null
       && current.address_id === current.partner_address_id;
 
-    // Update address if address fields supplied
-    if (data.address) {
+    // ── Handle partner change ──────────────────────────────────────────────
+    // When partnerId changes we must: set the reverse link on the new partner,
+    // clear the reverse link on the old partner, point X at the new partner's
+    // address, and queue X's old address for deletion if nothing else uses it.
+    let oldAddressIdForCleanup = null;
+    let partnerIsChanging = false;
+
+    if (data.partnerId !== undefined) {
+      const newPartnerId = data.partnerId;                    // null = clearing
+      const oldPartnerId = current.partner_id ?? null;       // normalise to null
+
+      if (newPartnerId !== oldPartnerId) {
+        partnerIsChanging = true;
+
+        if (newPartnerId) {
+          if (newPartnerId === memberId) throw AppError('A member cannot be their own partner.', 400);
+
+          const [partnerY] = await tenantQuery(
+            slug,
+            `SELECT id, address_id FROM members WHERE id = $1`,
+            [newPartnerId],
+          );
+          if (!partnerY) throw AppError('Partner not found.', 404);
+
+          // X will share Y's address row
+          if (partnerY.address_id) {
+            data._newAddressId = partnerY.address_id;
+          }
+
+          // Set Y.partner_id = X (bi-directional)
+          await tenantQuery(
+            slug,
+            `UPDATE members SET partner_id = $1, updated_at = now() WHERE id = $2`,
+            [memberId, newPartnerId],
+          );
+
+          // Schedule X's old address for cleanup after the member UPDATE
+          oldAddressIdForCleanup = current.address_id;
+        }
+
+        // Clear old partner Z's reverse link (if Z ≠ new partner)
+        if (oldPartnerId && oldPartnerId !== newPartnerId) {
+          await tenantQuery(
+            slug,
+            `UPDATE members SET partner_id = NULL, updated_at = now() WHERE id = $1`,
+            [oldPartnerId],
+          );
+        }
+      }
+    }
+
+    // Update address if address fields supplied (skipped when partner is changing)
+    if (data.address && !partnerIsChanging) {
       const addr = data.address;
 
       // When the address is shared and the caller wants 'me-only', create a new
@@ -435,6 +486,18 @@ router.patch('/:id', requirePrivilege('member_record', 'change'), async (req, re
       values,
     );
     if (!member) throw AppError('Member not found.', 404);
+
+    // After the member UPDATE, delete X's old address if it is no longer referenced
+    if (oldAddressIdForCleanup && oldAddressIdForCleanup !== data._newAddressId) {
+      const [remaining] = await tenantQuery(
+        slug,
+        `SELECT COUNT(*)::int AS n FROM members WHERE address_id = $1`,
+        [oldAddressIdForCleanup],
+      );
+      if (remaining.n === 0) {
+        await tenantQuery(slug, `DELETE FROM addresses WHERE id = $1`, [oldAddressIdForCleanup]);
+      }
+    }
 
     res.json({ message: 'Member updated.', id: member.id, membership_number: member.membership_number });
   } catch (err) {
