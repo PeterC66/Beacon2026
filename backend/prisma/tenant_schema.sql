@@ -1,8 +1,10 @@
 -- beacon2/backend/prisma/tenant_schema.sql
--- This SQL is executed for each new u3a tenant.
+-- This SQL is executed for each new u3a tenant AND re-run against every
+-- existing tenant on startup (to pick up new tables).
+-- All statements are idempotent: CREATE TABLE IF NOT EXISTS, etc.
 -- Replace :schema with the tenant slug, e.g. u3a_oxfordshire
 --
--- Usage: called by src/seed/createTenant.js
+-- Usage: called by src/seed/createTenant.js  and  src/utils/migrate.js
 
 -- Create the schema
 CREATE SCHEMA IF NOT EXISTS :schema;
@@ -10,7 +12,7 @@ CREATE SCHEMA IF NOT EXISTS :schema;
 -- ─────────────────────────────────────────────
 -- USERS
 -- ─────────────────────────────────────────────
-CREATE TABLE :schema.users (
+CREATE TABLE IF NOT EXISTS :schema.users (
   id            TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
   email         TEXT NOT NULL UNIQUE,
   password_hash TEXT,                        -- NULL = no login access
@@ -25,7 +27,7 @@ CREATE TABLE :schema.users (
 -- ─────────────────────────────────────────────
 -- ROLES
 -- ─────────────────────────────────────────────
-CREATE TABLE :schema.roles (
+CREATE TABLE IF NOT EXISTS :schema.roles (
   id           TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
   name         TEXT NOT NULL,
   is_committee BOOLEAN NOT NULL DEFAULT false,
@@ -37,7 +39,7 @@ CREATE TABLE :schema.roles (
 -- ─────────────────────────────────────────────
 -- USER ↔ ROLE ASSIGNMENTS
 -- ─────────────────────────────────────────────
-CREATE TABLE :schema.user_roles (
+CREATE TABLE IF NOT EXISTS :schema.user_roles (
   id          TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
   user_id     TEXT NOT NULL REFERENCES :schema.users(id) ON DELETE CASCADE,
   role_id     TEXT NOT NULL REFERENCES :schema.roles(id) ON DELETE CASCADE,
@@ -48,7 +50,7 @@ CREATE TABLE :schema.user_roles (
 -- ─────────────────────────────────────────────
 -- PRIVILEGE RESOURCES  (system-seeded, not editable per tenant)
 -- ─────────────────────────────────────────────
-CREATE TABLE :schema.privilege_resources (
+CREATE TABLE IF NOT EXISTS :schema.privilege_resources (
   id      TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
   code    TEXT NOT NULL UNIQUE,             -- e.g. "finance:transactions"
   label   TEXT NOT NULL,                   -- e.g. "Finance: transactions"
@@ -58,7 +60,7 @@ CREATE TABLE :schema.privilege_resources (
 -- ─────────────────────────────────────────────
 -- ROLE ↔ PRIVILEGE ASSIGNMENTS
 -- ─────────────────────────────────────────────
-CREATE TABLE :schema.role_privileges (
+CREATE TABLE IF NOT EXISTS :schema.role_privileges (
   id          TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
   role_id     TEXT NOT NULL REFERENCES :schema.roles(id) ON DELETE CASCADE,
   resource_id TEXT NOT NULL REFERENCES :schema.privilege_resources(id) ON DELETE CASCADE,
@@ -69,7 +71,7 @@ CREATE TABLE :schema.role_privileges (
 -- ─────────────────────────────────────────────
 -- REFRESH TOKENS
 -- ─────────────────────────────────────────────
-CREATE TABLE :schema.refresh_tokens (
+CREATE TABLE IF NOT EXISTS :schema.refresh_tokens (
   id         TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
   user_id    TEXT NOT NULL REFERENCES :schema.users(id) ON DELETE CASCADE,
   token_hash TEXT NOT NULL UNIQUE,
@@ -81,7 +83,7 @@ CREATE TABLE :schema.refresh_tokens (
 -- ─────────────────────────────────────────────
 -- MEMBERSHIP CLASSES
 -- ─────────────────────────────────────────────
-CREATE TABLE :schema.member_classes (
+CREATE TABLE IF NOT EXISTS :schema.member_classes (
   id           TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
   name         TEXT NOT NULL,
   current      BOOLEAN NOT NULL DEFAULT true,   -- may be used for new memberships
@@ -99,7 +101,7 @@ CREATE TABLE :schema.member_classes (
 -- ─────────────────────────────────────────────
 -- MEMBER STATUSES
 -- ─────────────────────────────────────────────
-CREATE TABLE :schema.member_statuses (
+CREATE TABLE IF NOT EXISTS :schema.member_statuses (
   id         TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
   name       TEXT NOT NULL UNIQUE,
   locked     BOOLEAN NOT NULL DEFAULT false,  -- locked system statuses cannot be edited/deleted
@@ -110,12 +112,12 @@ CREATE TABLE :schema.member_statuses (
 -- ─────────────────────────────────────────────
 -- MEMBERSHIP NUMBER SEQUENCE
 -- ─────────────────────────────────────────────
-CREATE SEQUENCE :schema.membership_number_seq START 1;
+CREATE SEQUENCE IF NOT EXISTS :schema.membership_number_seq START 1;
 
 -- ─────────────────────────────────────────────
 -- ADDRESSES  (may be shared between two members at the same address)
 -- ─────────────────────────────────────────────
-CREATE TABLE :schema.addresses (
+CREATE TABLE IF NOT EXISTS :schema.addresses (
   id         TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
   house_no   TEXT,                -- house/flat number or name
   street     TEXT,
@@ -132,10 +134,10 @@ CREATE TABLE :schema.addresses (
 -- ─────────────────────────────────────────────
 -- MEMBERS
 -- ─────────────────────────────────────────────
-CREATE TABLE :schema.members (
+CREATE TABLE IF NOT EXISTS :schema.members (
   id                TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
   membership_number INTEGER NOT NULL UNIQUE
-                    DEFAULT nextval('membership_number_seq'),
+                    DEFAULT nextval(':schema.membership_number_seq'),
   title             TEXT,                              -- Mr, Mrs, Ms, Dr etc.
   forenames         TEXT NOT NULL,
   surname           TEXT NOT NULL,
@@ -161,7 +163,7 @@ CREATE TABLE :schema.members (
 -- ─────────────────────────────────────────────
 -- FACULTIES
 -- ─────────────────────────────────────────────
-CREATE TABLE :schema.faculties (
+CREATE TABLE IF NOT EXISTS :schema.faculties (
   id         TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
   name       TEXT NOT NULL UNIQUE,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
@@ -171,7 +173,7 @@ CREATE TABLE :schema.faculties (
 -- ─────────────────────────────────────────────
 -- GROUPS
 -- ─────────────────────────────────────────────
-CREATE TABLE :schema.groups (
+CREATE TABLE IF NOT EXISTS :schema.groups (
   id                   TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
   name                 TEXT NOT NULL,
   faculty_id           TEXT REFERENCES :schema.faculties(id),
@@ -197,7 +199,7 @@ CREATE TABLE :schema.groups (
 -- ─────────────────────────────────────────────
 -- GROUP MEMBERS
 -- ─────────────────────────────────────────────
-CREATE TABLE :schema.group_members (
+CREATE TABLE IF NOT EXISTS :schema.group_members (
   id            TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
   group_id      TEXT NOT NULL REFERENCES :schema.groups(id) ON DELETE CASCADE,
   member_id     TEXT NOT NULL REFERENCES :schema.members(id) ON DELETE CASCADE,
@@ -208,18 +210,18 @@ CREATE TABLE :schema.group_members (
 );
 
 -- ─────────────────────────────────────────────
--- INDEXES
+-- INDEXES  (named so IF NOT EXISTS works)
 -- ─────────────────────────────────────────────
-CREATE INDEX ON :schema.user_roles (user_id);
-CREATE INDEX ON :schema.user_roles (role_id);
-CREATE INDEX ON :schema.role_privileges (role_id);
-CREATE INDEX ON :schema.refresh_tokens (user_id);
-CREATE INDEX ON :schema.refresh_tokens (token_hash);
-CREATE INDEX ON :schema.members (surname, forenames);
-CREATE INDEX ON :schema.members (status_id);
-CREATE INDEX ON :schema.members (class_id);
-CREATE INDEX ON :schema.members (address_id);
-CREATE INDEX ON :schema.groups (faculty_id);
-CREATE INDEX ON :schema.groups (status);
-CREATE INDEX ON :schema.group_members (group_id);
-CREATE INDEX ON :schema.group_members (member_id);
+CREATE INDEX IF NOT EXISTS :schema_idx_user_roles_user_id   ON :schema.user_roles (user_id);
+CREATE INDEX IF NOT EXISTS :schema_idx_user_roles_role_id   ON :schema.user_roles (role_id);
+CREATE INDEX IF NOT EXISTS :schema_idx_role_privs_role_id   ON :schema.role_privileges (role_id);
+CREATE INDEX IF NOT EXISTS :schema_idx_refresh_tokens_user  ON :schema.refresh_tokens (user_id);
+CREATE INDEX IF NOT EXISTS :schema_idx_refresh_tokens_hash  ON :schema.refresh_tokens (token_hash);
+CREATE INDEX IF NOT EXISTS :schema_idx_members_name         ON :schema.members (surname, forenames);
+CREATE INDEX IF NOT EXISTS :schema_idx_members_status       ON :schema.members (status_id);
+CREATE INDEX IF NOT EXISTS :schema_idx_members_class        ON :schema.members (class_id);
+CREATE INDEX IF NOT EXISTS :schema_idx_members_address      ON :schema.members (address_id);
+CREATE INDEX IF NOT EXISTS :schema_idx_groups_faculty       ON :schema.groups (faculty_id);
+CREATE INDEX IF NOT EXISTS :schema_idx_groups_status        ON :schema.groups (status);
+CREATE INDEX IF NOT EXISTS :schema_idx_group_members_group  ON :schema.group_members (group_id);
+CREATE INDEX IF NOT EXISTS :schema_idx_group_members_member ON :schema.group_members (member_id);
