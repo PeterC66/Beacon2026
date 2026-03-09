@@ -152,7 +152,7 @@ const createMemberSchema = z.object({
   mobile:      z.string().max(30).optional(),
   statusId:    z.string().min(1),
   classId:     z.string().min(1),
-  joinedOn:    z.string().optional(),     // ISO date string
+  joinedOn:    z.string().min(1, 'Date joined is required'),  // ISO date string
   nextRenewal: z.string().optional(),
   giftAidFrom: z.string().optional(),
   homeU3a:     z.string().max(100).optional(),
@@ -161,6 +161,15 @@ const createMemberSchema = z.object({
   // Address — either a new address object or an existing partner's id
   address:        addressSchema.optional(),
   existingPartnerId: z.string().optional(),  // reuse this member's address_id
+}).superRefine((val, ctx) => {
+  // Postcode is required when not sharing a partner's address
+  if (!val.existingPartnerId && !val.address?.postcode?.trim()) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ['address', 'postcode'],
+      message: 'Postcode is required',
+    });
+  }
 });
 
 router.post('/', requirePrivilege('member_record', 'create'), async (req, res, next) => {
@@ -223,7 +232,7 @@ router.post('/', requirePrivilege('member_record', 'create'), async (req, res, n
          (title, forenames, surname, known_as, initials, suffix, email, mobile,
           address_id, status_id, class_id, joined_on, next_renewal, gift_aid_from,
           home_u3a, notes, hide_contact, partner_id)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12::date,$13::date,$14::date,$15,$16,$17,$18)
        RETURNING id, membership_number, title, forenames, surname, known_as,
                  initials, suffix, email, mobile, status_id, class_id,
                  joined_on, next_renewal, gift_aid_from, home_u3a, notes,
@@ -375,9 +384,9 @@ router.patch('/:id', requirePrivilege('member_record', 'change'), async (req, re
     if (data.mobile      !== undefined) { fields.push(`mobile = $${i++}`);       values.push(data.mobile); }
     if (data.statusId    !== undefined) { fields.push(`status_id = $${i++}`);    values.push(data.statusId); }
     if (data.classId     !== undefined) { fields.push(`class_id = $${i++}`);     values.push(data.classId); }
-    if (data.joinedOn    !== undefined) { fields.push(`joined_on = $${i++}`);    values.push(data.joinedOn); }
-    if (data.nextRenewal !== undefined) { fields.push(`next_renewal = $${i++}`); values.push(data.nextRenewal); }
-    if (data.giftAidFrom !== undefined) { fields.push(`gift_aid_from = $${i++}`); values.push(data.giftAidFrom); }
+    if (data.joinedOn    !== undefined) { fields.push(`joined_on = $${i++}::date`);    values.push(data.joinedOn); }
+    if (data.nextRenewal !== undefined) { fields.push(`next_renewal = $${i++}::date`); values.push(data.nextRenewal); }
+    if (data.giftAidFrom !== undefined) { fields.push(`gift_aid_from = $${i++}::date`); values.push(data.giftAidFrom); }
     if (data.homeU3a     !== undefined) { fields.push(`home_u3a = $${i++}`);     values.push(data.homeU3a); }
     if (data.notes       !== undefined) { fields.push(`notes = $${i++}`);        values.push(data.notes); }
     if (data.hideContact !== undefined) { fields.push(`hide_contact = $${i++}`); values.push(data.hideContact); }
