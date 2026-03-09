@@ -84,6 +84,7 @@ describe('GET /members/:id', () => {
 
 const VALID_BODY = {
   forenames: 'Jane', surname: 'Doe', statusId: 'st1', classId: 'mc1',
+  joinedOn: '2026-01-01',
   address: { houseNo: '5', street: 'Low St', town: 'Somewhere', postcode: 'XY9 0AB' },
 };
 

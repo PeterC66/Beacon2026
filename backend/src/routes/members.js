@@ -152,7 +152,7 @@ const createMemberSchema = z.object({
   mobile:      z.string().max(30).optional(),
   statusId:    z.string().min(1),
   classId:     z.string().min(1),
-  joinedOn:    z.string().optional(),     // ISO date string
+  joinedOn:    z.string().min(1, 'Date joined is required'),  // ISO date string
   nextRenewal: z.string().optional(),
   giftAidFrom: z.string().optional(),
   homeU3a:     z.string().max(100).optional(),
@@ -161,6 +161,15 @@ const createMemberSchema = z.object({
   // Address — either a new address object or an existing partner's id
   address:        addressSchema.optional(),
   existingPartnerId: z.string().optional(),  // reuse this member's address_id
+}).superRefine((val, ctx) => {
+  // Postcode is required when not sharing a partner's address
+  if (!val.existingPartnerId && !val.address?.postcode?.trim()) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ['address', 'postcode'],
+      message: 'Postcode is required',
+    });
+  }
 });
 
 router.post('/', requirePrivilege('member_record', 'create'), async (req, res, next) => {

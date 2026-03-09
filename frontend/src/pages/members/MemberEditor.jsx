@@ -228,8 +228,8 @@ export default function MemberEditor() {
                 </select>
               </div>
               <div>
-                <label className={labelCls}>Joined</label>
-                <input type="date" value={form.joinedOn} onChange={(e) => set('joinedOn', e.target.value)} className={inputCls} />
+                <label className={labelCls}><strong>Joined</strong></label>
+                <input type="date" value={form.joinedOn} onChange={(e) => set('joinedOn', e.target.value)} required className={inputCls} />
               </div>
               <div>
                 <label className={labelCls}>Next renewal</label>
@@ -357,8 +357,9 @@ export default function MemberEditor() {
                 <input type="text" value={form.county} onChange={(e) => set('county', e.target.value)} className={inputCls} />
               </div>
               <div>
-                <label className={labelCls}>Postcode</label>
-                <input type="text" value={form.postcode} onChange={(e) => set('postcode', e.target.value)} className={inputCls} maxLength={10} />
+                <label className={labelCls}><strong>Postcode</strong></label>
+                <input type="text" value={form.postcode} onChange={(e) => set('postcode', e.target.value)}
+                  required={!(isNew && form.existingPartnerId)} className={inputCls} maxLength={10} />
               </div>
               <div>
                 <label className={labelCls}>Home telephone <span className="text-slate-400 font-normal">(shared)</span></label>
