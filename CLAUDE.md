@@ -94,6 +94,55 @@ Do **not** replace these with generic Tailwind classes — they match the Beacon
 ### SystemLogin / SystemDashboard
 These already used Tailwind before the Option B migration. They use `bg-slate-100` for the whole page (no lighthouse background) — this is intentional for the system-admin area.
 
+## Session wrap-up
+
+At the end of any session that raised problems, learned something new, or required
+a non-obvious fix, **update this file** with the lessons learned before pushing.
+This keeps future sessions from repeating the same mistakes.
+
+---
+
+## Tenant schema migrations
+
+### Background
+
+`backend/prisma/tenant_schema.sql` is executed once when a tenant is first created
+(`src/seed/createTenant.js`). Tables added to that file after a tenant already exists
+will be **missing** from that tenant, causing 500 errors on any endpoint that queries
+those tables.
+
+### The fix (in place since March 2026)
+
+`src/utils/migrate.js` → `migrateTenantSchemas()` re-runs the full
+`tenant_schema.sql` against every active tenant on every server startup.
+
+**Rules to keep this working:**
+
+1. Every `CREATE TABLE`, `CREATE SEQUENCE`, and `CREATE INDEX` in
+   `tenant_schema.sql` must use **`IF NOT EXISTS`**.
+2. `CREATE INDEX` statements must have **explicit names** (required for
+   `IF NOT EXISTS` to work):
+   `CREATE INDEX IF NOT EXISTS :schema_idx_<table>_<col> ON :schema.<table> (<col>);`
+3. Seed `INSERT` statements use **`ON CONFLICT DO NOTHING`** (or
+   `WHERE NOT EXISTS` when the target column has no UNIQUE constraint).
+4. The DDL loop in `migrateTenantSchemas()` has **per-statement** try/catch so
+   one failing statement never prevents the rest from running.
+
+### Diagnosing "unexpected error" on a page
+
+When a page shows "An unexpected error occurred." the backend logged the real error.
+Check Render (or server) logs for the line:
+`[timestamp] METHOD /path: Error: ...`
+
+Common causes:
+- `relation "u3a_xxx.some_table" does not exist` — table missing from that tenant's
+  schema; check `git log -- backend/prisma/tenant_schema.sql` to see when it was added
+  relative to when the tenant was created
+- `function nextval(...)` error — `membership_number_seq` sequence missing
+- FK violation — status_id/class_id not found in the referenced table
+
+---
+
 ## Testing harness (set up March 2026)
 
 ### How to run tests
