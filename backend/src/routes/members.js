@@ -112,7 +112,8 @@ router.get('/:id', requirePrivilege('member_record', 'view'), async (req, res, n
               a.house_no, a.street, a.add_line1, a.add_line2,
               a.town, a.county, a.postcode, a.telephone,
               p.forenames AS partner_forenames, p.surname AS partner_surname,
-              p.membership_number AS partner_number
+              p.membership_number AS partner_number,
+              (p.id IS NOT NULL AND p.address_id = m.address_id) AS address_shared
        FROM members m
        LEFT JOIN member_statuses ms ON ms.id = m.status_id
        LEFT JOIN member_classes  mc ON mc.id = m.class_id
@@ -277,22 +278,24 @@ router.post('/', requirePrivilege('member_record', 'create'), async (req, res, n
 // ─── PATCH /members/:id ───────────────────────────────────────────────────
 
 const updateMemberSchema = z.object({
-  title:       z.string().max(20).optional(),
-  forenames:   z.string().min(1).max(100).optional(),
-  surname:     z.string().min(1).max(100).optional(),
-  knownAs:     z.string().max(50).nullable().optional(),
-  suffix:      z.string().max(30).nullable().optional(),
-  email:       z.string().email().optional().or(z.literal('')).nullable(),
-  mobile:      z.string().max(30).nullable().optional(),
-  statusId:    z.string().optional(),
-  classId:     z.string().optional(),
-  joinedOn:    z.string().nullable().optional(),
-  nextRenewal: z.string().nullable().optional(),
-  giftAidFrom: z.string().nullable().optional(),
-  homeU3a:     z.string().max(100).nullable().optional(),
-  notes:       z.string().nullable().optional(),
-  hideContact: z.boolean().optional(),
-  partnerId:   z.string().nullable().optional(),
+  title:        z.string().max(20).optional(),
+  forenames:    z.string().min(1).max(100).optional(),
+  surname:      z.string().min(1).max(100).optional(),
+  knownAs:      z.string().max(50).nullable().optional(),
+  suffix:       z.string().max(30).nullable().optional(),
+  email:        z.string().email().optional().or(z.literal('')).nullable(),
+  mobile:       z.string().max(30).nullable().optional(),
+  statusId:     z.string().optional(),
+  classId:      z.string().optional(),
+  joinedOn:     z.string().nullable().optional(),
+  nextRenewal:  z.string().nullable().optional(),
+  giftAidFrom:  z.string().nullable().optional(),
+  homeU3a:      z.string().max(100).nullable().optional(),
+  notes:        z.string().nullable().optional(),
+  hideContact:  z.boolean().optional(),
+  partnerId:    z.string().nullable().optional(),
+  // 'both' = update the shared address row in place; 'me-only' = create a new address for this member only
+  addressScope: z.enum(['both', 'me-only']).optional(),
   // Address fields — updates the linked address record
   address: z.object({
     houseNo:   z.string().nullable().optional(),
@@ -319,19 +322,61 @@ router.patch('/:id', requirePrivilege('member_record', 'change'), async (req, re
       return res.status(400).json({ error: 'Nothing to update.' });
     }
 
-    // Fetch current member to get address_id
+    // Fetch current member to get address_id and partner's address_id
     const [current] = await tenantQuery(
       slug,
-      `SELECT id, address_id, forenames FROM members WHERE id = $1`,
+      `SELECT m.id, m.address_id, m.forenames, m.partner_id,
+              p.address_id AS partner_address_id
+       FROM members m
+       LEFT JOIN members p ON p.id = m.partner_id
+       WHERE m.id = $1`,
       [memberId],
     );
     if (!current) throw AppError('Member not found.', 404);
 
+    // Is this address currently shared with the partner?
+    const addressIsShared = current.partner_id !== null
+      && current.address_id !== null
+      && current.address_id === current.partner_address_id;
+
     // Update address if address fields supplied
     if (data.address) {
       const addr = data.address;
-      if (current.address_id) {
-        // Update existing address record (affects all members sharing it)
+
+      // When the address is shared and the caller wants 'me-only', create a new
+      // address record for this member and leave the partner's address unchanged.
+      const splitAddress = addressIsShared && data.addressScope === 'me-only';
+
+      if (splitAddress || !current.address_id) {
+        // Read the current shared address to populate unchanged fields
+        let base = {};
+        if (current.address_id) {
+          const [existingAddr] = await tenantQuery(
+            slug,
+            `SELECT house_no, street, add_line1, add_line2, town, county, postcode, telephone
+             FROM addresses WHERE id = $1`,
+            [current.address_id],
+          );
+          base = existingAddr ?? {};
+        }
+        const [newAddr] = await tenantQuery(
+          slug,
+          `INSERT INTO addresses (house_no, street, add_line1, add_line2, town, county, postcode, telephone)
+           VALUES ($1,$2,$3,$4,$5,$6,$7,$8) RETURNING id`,
+          [
+            addr.houseNo   !== undefined ? addr.houseNo   : (base.house_no  ?? null),
+            addr.street    !== undefined ? addr.street    : (base.street    ?? null),
+            addr.addLine1  !== undefined ? addr.addLine1  : (base.add_line1 ?? null),
+            addr.addLine2  !== undefined ? addr.addLine2  : (base.add_line2 ?? null),
+            addr.town      !== undefined ? addr.town      : (base.town      ?? null),
+            addr.county    !== undefined ? addr.county    : (base.county    ?? null),
+            addr.postcode  !== undefined ? addr.postcode  : (base.postcode  ?? null),
+            addr.telephone !== undefined ? addr.telephone : (base.telephone ?? null),
+          ],
+        );
+        data._newAddressId = newAddr.id;
+      } else if (current.address_id) {
+        // Update existing address record in place (affects all members sharing it)
         const addrFields = [];
         const addrVals = [];
         let ai = 1;
@@ -352,20 +397,6 @@ router.patch('/:id', requirePrivilege('member_record', 'change'), async (req, re
             addrVals,
           );
         }
-      } else {
-        // Create a new address record and link it
-        const [newAddr] = await tenantQuery(
-          slug,
-          `INSERT INTO addresses (house_no, street, add_line1, add_line2, town, county, postcode, telephone)
-           VALUES ($1,$2,$3,$4,$5,$6,$7,$8) RETURNING id`,
-          [
-            addr.houseNo ?? null, addr.street ?? null,
-            addr.addLine1 ?? null, addr.addLine2 ?? null,
-            addr.town ?? null, addr.county ?? null,
-            addr.postcode ?? null, addr.telephone ?? null,
-          ],
-        );
-        data._newAddressId = newAddr.id;
       }
     }
 

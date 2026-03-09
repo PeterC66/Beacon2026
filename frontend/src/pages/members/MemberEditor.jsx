@@ -1,7 +1,8 @@
 // beacon2/frontend/src/pages/members/MemberEditor.jsx
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { isValidPhoneNumber } from 'libphonenumber-js';
 import { members as membersApi, memberStatuses as statusApi, memberClasses as classApi } from '../../lib/api.js';
 import { useAuth } from '../../context/AuthContext.jsx';
 import NavBar from '../../components/NavBar.jsx';
@@ -25,14 +26,22 @@ export default function MemberEditor() {
   const { can, tenant } = useAuth();
   const isNew     = !id || id === 'new';
 
-  const [form,      setForm]      = useState(BLANK_FORM);
-  const [statuses,  setStatuses]  = useState([]);
-  const [classes,   setClasses]   = useState([]);
-  const [allMembers, setAllMembers] = useState([]);   // for partner dropdown
-  const [loading,   setLoading]   = useState(!isNew);
-  const [saving,    setSaving]    = useState(false);
-  const [deleting,  setDeleting]  = useState(false);
-  const [error,     setError]     = useState(null);
+  const [form,        setForm]        = useState(BLANK_FORM);
+  const [statuses,    setStatuses]    = useState([]);
+  const [classes,     setClasses]     = useState([]);
+  const [allMembers,  setAllMembers]  = useState([]);   // for partner dropdown
+  const [loading,     setLoading]     = useState(!isNew);
+  const [saving,      setSaving]      = useState(false);
+  const [deleting,    setDeleting]    = useState(false);
+  const [error,       setError]       = useState(null);
+  // Phone validation errors
+  const [phoneErrors, setPhoneErrors] = useState({ mobile: null, telephone: null });
+  // Whether the current member shares an address with their partner
+  const [addressShared, setAddressShared] = useState(false);
+  // Partner display name (for dialogs/notes)
+  const [partnerName,   setPartnerName]   = useState('');
+  // Pending save payload — held while waiting for address-scope dialog
+  const pendingSave = useRef(null);
 
   // Is the selected class an associate class?
   const selectedClass = classes.find((c) => c.id === form.classId);
@@ -73,6 +82,10 @@ export default function MemberEditor() {
             telephone:         m.telephone    ?? '',
             existingPartnerId: m.partner_id   ?? '',
           });
+          setAddressShared(m.address_shared ?? false);
+          if (m.partner_forenames || m.partner_surname) {
+            setPartnerName(`${m.partner_forenames ?? ''} ${m.partner_surname ?? ''}`.trim());
+          }
         })
         .catch((err) => setError(err.message))
         .finally(() => setLoading(false));
@@ -93,8 +106,30 @@ export default function MemberEditor() {
     setForm((prev) => ({ ...prev, [field]: value }));
   }
 
+  /** Validate a phone field against GB numbers. Returns null if valid/empty, else error string. */
+  function validatePhone(value) {
+    if (!value || !value.trim()) return null;
+    try {
+      return isValidPhoneNumber(value, 'GB') ? null : 'Enter a valid UK phone number';
+    } catch {
+      return 'Enter a valid UK phone number';
+    }
+  }
+
+  function handlePhoneBlur(field) {
+    setPhoneErrors((prev) => ({ ...prev, [field]: validatePhone(form[field]) }));
+  }
+
+  /** Build the save payload and trigger save (or address-scope prompt if needed). */
   async function handleSave(e) {
     e.preventDefault();
+
+    // Phone validation gate
+    const mobileErr    = validatePhone(form.mobile);
+    const telephoneErr = validatePhone(form.telephone);
+    setPhoneErrors({ mobile: mobileErr, telephone: telephoneErr });
+    if (mobileErr || telephoneErr) return;
+
     setSaving(true);
     setError(null);
 
@@ -129,8 +164,16 @@ export default function MemberEditor() {
     if (isNew && form.existingPartnerId) {
       payload.existingPartnerId = form.existingPartnerId;
       delete payload.address;
-    } else if (!isNew && form.existingPartnerId !== undefined) {
-      // For edits pass partnerId directly (not existingPartnerId)
+    }
+
+    // For PATCH on a shared address, ask the user which scope to apply
+    if (!isNew && addressShared && payload.address) {
+      const thisName = `${form.forenames} ${form.surname}`.trim();
+      const choice = confirm(
+        `Is this address change for both ${partnerName} and ${thisName}, or just ${thisName}?\n\n` +
+        `Click OK for both, Cancel for just ${thisName}.`
+      );
+      payload.addressScope = choice ? 'both' : 'me-only';
     }
 
     try {
@@ -272,7 +315,11 @@ export default function MemberEditor() {
               </div>
               <div>
                 <label className={labelCls}>Mobile</label>
-                <input type="text" value={form.mobile} onChange={(e) => set('mobile', e.target.value)} className={inputCls} />
+                <input type="text" value={form.mobile}
+                  onChange={(e) => set('mobile', e.target.value)}
+                  onBlur={() => handlePhoneBlur('mobile')}
+                  className={inputCls + (phoneErrors.mobile ? ' border-red-400' : '')} />
+                {phoneErrors.mobile && <p className="text-xs text-red-600 mt-1">{phoneErrors.mobile}</p>}
               </div>
               {isAssociate && (
                 <div>
@@ -303,7 +350,14 @@ export default function MemberEditor() {
 
           {/* ── iii) Address ───────────────────────────────────────── */}
           <div className={sectionCls}>
-            <h2 className="text-sm font-semibold text-slate-700 uppercase tracking-wide mb-3">Address</h2>
+            <div className="flex items-center gap-3 mb-3">
+              <h2 className="text-sm font-semibold text-slate-700 uppercase tracking-wide">Address</h2>
+              {!isNew && addressShared && partnerName && (
+                <span className="inline-flex items-center gap-1 rounded-full bg-blue-50 border border-blue-200 px-2 py-0.5 text-xs text-blue-700">
+                  Shared with {partnerName}
+                </span>
+              )}
+            </div>
 
             {/* Partner — if set, note that address is shared */}
             <div className="mb-4">
@@ -363,7 +417,11 @@ export default function MemberEditor() {
               </div>
               <div>
                 <label className={labelCls}>Home telephone <span className="text-slate-400 font-normal">(shared)</span></label>
-                <input type="text" value={form.telephone} onChange={(e) => set('telephone', e.target.value)} className={inputCls} />
+                <input type="text" value={form.telephone}
+                  onChange={(e) => set('telephone', e.target.value)}
+                  onBlur={() => handlePhoneBlur('telephone')}
+                  className={inputCls + (phoneErrors.telephone ? ' border-red-400' : '')} />
+                {phoneErrors.telephone && <p className="text-xs text-red-600 mt-1">{phoneErrors.telephone}</p>}
               </div>
             </div>
           </div>
