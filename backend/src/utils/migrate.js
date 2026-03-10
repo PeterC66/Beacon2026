@@ -147,6 +147,12 @@ async function migrateDefaultRolePrivileges() {
   for (const tenant of tenants) {
     const slug = tenant.slug;
     try {
+      // Load the code→id map from the tenant's own privilege_resources table.
+      // We MUST use the DB-stored IDs, not the in-memory UUIDs from
+      // privilegeResources.js — those are regenerated fresh on every startup.
+      const dbResources = await tenantQuery(slug, `SELECT id, code FROM privilege_resources`);
+      const resourceIdByCode = Object.fromEntries(dbResources.map((r) => [r.code, r.id]));
+
       for (const roleData of DEFAULT_ROLES) {
         // Find the role by its canonical name
         const rows = await tenantQuery(
@@ -161,13 +167,13 @@ async function migrateDefaultRolePrivileges() {
         await tenantQuery(slug, `DELETE FROM role_privileges WHERE role_id = $1`, [roleId]);
 
         for (const { code, action } of roleData.defaultPrivileges) {
-          const resource = PRIVILEGE_RESOURCES.find((r) => r.code === code);
-          if (!resource) continue;
+          const resourceId = resourceIdByCode[code];
+          if (!resourceId) continue; // resource not yet in DB — skip silently
           await tenantQuery(
             slug,
             `INSERT INTO role_privileges (role_id, resource_id, action)
              VALUES ($1, $2, $3) ON CONFLICT DO NOTHING`,
-            [roleId, resource.id, action],
+            [roleId, resourceId, action],
           );
         }
       }
