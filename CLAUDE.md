@@ -96,8 +96,21 @@ These already used Tailwind before the Option B migration. They use `bg-slate-10
 
 ## Session wrap-up
 
-At the end of any session that raised problems, learned something new, or required
-a non-obvious fix, **update this file** with the lessons learned before pushing.
+**This step is mandatory and must be in your TodoWrite list from the start of every session.**
+
+Add a todo item — "Update CLAUDE.md if anything new was learned" — at session start
+alongside your other planned tasks. Mark it complete only after explicitly checking
+whether anything in the session warrants documentation.
+
+At the end of every session:
+1. Review what was built or fixed.
+2. If anything new, non-obvious, or previously problematic was encountered, add it
+   to this file under a dated heading.
+3. Commit and push the updated CLAUDE.md along with (or just after) the code changes.
+4. **Tell the user** "I have updated CLAUDE.md with: [brief description]" (or "No
+   CLAUDE.md update needed this session" if nothing warranted it). This makes the
+   step visible and auditable.
+
 This keeps future sessions from repeating the same mistakes.
 
 ---
