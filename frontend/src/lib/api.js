@@ -201,10 +201,11 @@ export const groups = {
 // ─── Finance ──────────────────────────────────────────────────────────────
 
 export const finance = {
-  listAccounts:   ()         => request('/finance/accounts'),
-  createAccount:  (data)     => request('/finance/accounts', { method: 'POST', body: JSON.stringify(data) }),
-  updateAccount:  (id, data) => request(`/finance/accounts/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
-  deleteAccount:  (id)       => request(`/finance/accounts/${id}`, { method: 'DELETE' }),
+  listAccounts:     ()         => request('/finance/accounts'),
+  createAccount:    (data)     => request('/finance/accounts', { method: 'POST', body: JSON.stringify(data) }),
+  updateAccount:    (id, data) => request(`/finance/accounts/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
+  configureAccount: (id, data) => request(`/finance/accounts/${id}/config`, { method: 'PATCH', body: JSON.stringify(data) }),
+  deleteAccount:    (id)       => request(`/finance/accounts/${id}`, { method: 'DELETE' }),
 
   listCategories:   ()         => request('/finance/categories'),
   createCategory:   (data)     => request('/finance/categories', { method: 'POST', body: JSON.stringify(data) }),

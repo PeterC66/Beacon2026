@@ -18,10 +18,11 @@ import MemberEditor      from './pages/members/MemberEditor.jsx';
 import GroupList         from './pages/groups/GroupList.jsx';
 import GroupRecord       from './pages/groups/GroupRecord.jsx';
 import SystemSettings    from './pages/settings/SystemSettings.jsx';
-import FinanceAccounts   from './pages/finance/FinanceAccounts.jsx';
-import FinanceCategories from './pages/finance/FinanceCategories.jsx';
-import FinanceLedger     from './pages/finance/FinanceLedger.jsx';
-import TransactionEditor from './pages/finance/TransactionEditor.jsx';
+import FinanceAccounts    from './pages/finance/FinanceAccounts.jsx';
+import FinanceCategories  from './pages/finance/FinanceCategories.jsx';
+import FinanceLedger      from './pages/finance/FinanceLedger.jsx';
+import TransactionEditor  from './pages/finance/TransactionEditor.jsx';
+import ConfigureAccount   from './pages/finance/ConfigureAccount.jsx';
 
 function ProtectedRoute({ children }) {
   const { isLoggedIn } = useAuth();
@@ -58,11 +59,12 @@ export default function App() {
           <Route path="/groups/new"   element={<ProtectedRoute><GroupRecord /></ProtectedRoute>} />
           <Route path="/groups/:id"   element={<ProtectedRoute><GroupRecord /></ProtectedRoute>} />
           <Route path="/settings"                        element={<ProtectedRoute><SystemSettings /></ProtectedRoute>} />
-          <Route path="/finance/accounts"               element={<ProtectedRoute><FinanceAccounts /></ProtectedRoute>} />
-          <Route path="/finance/categories"             element={<ProtectedRoute><FinanceCategories /></ProtectedRoute>} />
-          <Route path="/finance/ledger"                 element={<ProtectedRoute><FinanceLedger /></ProtectedRoute>} />
-          <Route path="/finance/transactions/new"       element={<ProtectedRoute><TransactionEditor /></ProtectedRoute>} />
-          <Route path="/finance/transactions/:id"       element={<ProtectedRoute><TransactionEditor /></ProtectedRoute>} />
+          <Route path="/finance/accounts"                    element={<ProtectedRoute><FinanceAccounts /></ProtectedRoute>} />
+          <Route path="/finance/accounts/:id/configure"     element={<ProtectedRoute><ConfigureAccount /></ProtectedRoute>} />
+          <Route path="/finance/categories"                  element={<ProtectedRoute><FinanceCategories /></ProtectedRoute>} />
+          <Route path="/finance/ledger"                      element={<ProtectedRoute><FinanceLedger /></ProtectedRoute>} />
+          <Route path="/finance/transactions/new"            element={<ProtectedRoute><TransactionEditor /></ProtectedRoute>} />
+          <Route path="/finance/transactions/:id"            element={<ProtectedRoute><TransactionEditor /></ProtectedRoute>} />
         </Routes>
       </BrowserRouter>
     </AuthProvider>
