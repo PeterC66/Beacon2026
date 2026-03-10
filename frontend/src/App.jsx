@@ -17,6 +17,7 @@ import MemberList        from './pages/members/MemberList.jsx';
 import MemberEditor      from './pages/members/MemberEditor.jsx';
 import GroupList         from './pages/groups/GroupList.jsx';
 import GroupRecord       from './pages/groups/GroupRecord.jsx';
+import SystemSettings   from './pages/settings/SystemSettings.jsx';
 
 function ProtectedRoute({ children }) {
   const { isLoggedIn } = useAuth();
@@ -52,6 +53,7 @@ export default function App() {
           <Route path="/groups"       element={<ProtectedRoute><GroupList /></ProtectedRoute>} />
           <Route path="/groups/new"   element={<ProtectedRoute><GroupRecord /></ProtectedRoute>} />
           <Route path="/groups/:id"   element={<ProtectedRoute><GroupRecord /></ProtectedRoute>} />
+          <Route path="/settings"     element={<ProtectedRoute><SystemSettings /></ProtectedRoute>} />
         </Routes>
       </BrowserRouter>
     </AuthProvider>
