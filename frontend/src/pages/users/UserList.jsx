@@ -67,9 +67,9 @@ export default function UserList() {
               <table className="w-full text-sm bg-white min-w-max">
                 <thead>
                   <tr className="bg-slate-50 border-b border-slate-200 text-left text-slate-600 italic font-normal">
-                    <SortableHeader col="name"   label="Name"   sortKey={sortKey} sortDir={sortDir} onSort={onSort} className={TH} />
-                    <SortableHeader col="email"  label="Email"  sortKey={sortKey} sortDir={sortDir} onSort={onSort} className={TH} />
-                    <SortableHeader col="active" label="Active" sortKey={sortKey} sortDir={sortDir} onSort={onSort} className={`${TH} text-center`} />
+                    <SortableHeader col="name"     label="Name"     sortKey={sortKey} sortDir={sortDir} onSort={onSort} className={TH} />
+                    <SortableHeader col="username" label="Username" sortKey={sortKey} sortDir={sortDir} onSort={onSort} className={TH} />
+                    <SortableHeader col="active"   label="Active"   sortKey={sortKey} sortDir={sortDir} onSort={onSort} className={`${TH} text-center`} />
                     <th className={TH}>Roles</th>
                     {(can('user_record', 'view') || can('user_record', 'delete')) && <th className="px-4 py-2.5"></th>}
                   </tr>
@@ -77,8 +77,17 @@ export default function UserList() {
                 <tbody>
                   {sorted.map((user, i) => (
                     <tr key={user.id} className={`border-b border-slate-100 ${i % 2 === 0 ? 'bg-yellow-50' : 'bg-white'}`}>
-                      <td className="px-4 py-2.5">{user.name}</td>
-                      <td className="px-4 py-2.5">{user.email}</td>
+                      <td className="px-4 py-2.5 font-medium">
+                        {can('user_record', 'view') ? (
+                          <button
+                            onClick={() => navigate(`/users/${user.id}`)}
+                            className="text-blue-700 hover:underline text-left"
+                          >
+                            {user.name}
+                          </button>
+                        ) : user.name}
+                      </td>
+                      <td className="px-4 py-2.5 font-mono text-slate-600">{user.username ?? ''}</td>
                       <td className="px-4 py-2.5 text-center">{user.active ? 'Y' : ''}</td>
                       <td className="px-4 py-2.5">{user.roles.map((r) => r.name).join(', ')}</td>
                       {(can('user_record', 'view') || can('user_record', 'delete')) && (

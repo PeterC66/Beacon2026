@@ -18,6 +18,7 @@ export default function UserEditor() {
 
   const [name,         setName]         = useState('');
   const [email,        setEmail]        = useState('');
+  const [username,     setUsername]     = useState('');
   const [password,     setPassword]     = useState('');
   const [showPw,       setShowPw]       = useState(false);
   const [active,       setActive]       = useState(true);
@@ -39,6 +40,7 @@ export default function UserEditor() {
         if (user) {
           setName(user.name);
           setEmail(user.email);
+          setUsername(user.username ?? '');
           setActive(user.active);
           const ids = new Set(user.roles.map((r) => r.id));
           setAssignedIds(ids);
@@ -65,6 +67,10 @@ export default function UserEditor() {
   const handleSave = async () => {
     if (!name.trim())  { setError('Name is required.');  return; }
     if (!email.trim()) { setError('Email is required.'); return; }
+    if (username.trim() && !/^[a-z0-9]+$/.test(username.trim())) {
+      setError('Username must be lowercase letters and numbers only (no spaces).');
+      return;
+    }
     if (isNew && !password) { setError('Password is required for new users.'); return; }
     setSaving(true);
     setError(null);
@@ -73,13 +79,14 @@ export default function UserEditor() {
         const created = await usersApi.create({
           name: name.trim(),
           email: email.trim(),
+          username: username.trim() || undefined,
           password,
           active,
           roleIds: [...assignedIds],
         });
         navigate(`/users/${created.id}`);
       } else {
-        const patch = { name: name.trim(), email: email.trim(), active };
+        const patch = { name: name.trim(), email: email.trim(), username: username.trim() || null, active };
         if (password) patch.password = password;
         await usersApi.update(id, patch);
 
@@ -142,6 +149,21 @@ export default function UserEditor() {
             <label className="block text-sm font-medium text-slate-700 mb-1">Name</label>
             <input type="text" value={name} onChange={(e) => setName(e.target.value)}
               disabled={!canEdit} className={inputCls} />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">
+              Username <span className="text-slate-400 font-normal">(used to log in)</span>
+            </label>
+            <input
+              type="text"
+              value={username}
+              onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9]/g, ''))}
+              disabled={!canEdit}
+              placeholder="e.g. jbloggs"
+              className={`${inputCls} font-mono`}
+            />
+            <p className="text-xs text-slate-400 mt-1">Lowercase letters and numbers only.</p>
           </div>
 
           <div>

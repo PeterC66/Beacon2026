@@ -7,6 +7,7 @@ import { members as membersApi, memberStatuses as statusApi, memberClasses as cl
 import { useAuth } from '../../context/AuthContext.jsx';
 import NavBar from '../../components/NavBar.jsx';
 import PageHeader from '../../components/PageHeader.jsx';
+import DateInput from '../../components/DateInput.jsx';
 
 const BLANK_FORM = {
   title: '', forenames: '', surname: '', knownAs: '', suffix: '', email: '',
@@ -376,16 +377,16 @@ export default function MemberEditor() {
               </div>
               <div>
                 <label className={labelCls}><strong>Joined</strong></label>
-                <input type="date" value={form.joinedOn}
-                  onChange={(e) => set('joinedOn', e.target.value)}
+                <DateInput value={form.joinedOn}
+                  onChange={(v) => set('joinedOn', v)}
                   onBlur={() => handleBlur('joinedOn')}
                   className={ic('joinedOn')} />
                 {fieldErrors.joinedOn && <p className={errMsgCls}>{fieldErrors.joinedOn}</p>}
               </div>
               <div>
                 <label className={labelCls}>Next renewal</label>
-                <input type="date" value={form.nextRenewal}
-                  onChange={(e) => set('nextRenewal', e.target.value)}
+                <DateInput value={form.nextRenewal}
+                  onChange={(v) => set('nextRenewal', v)}
                   className={inputCls} />
               </div>
             </div>
@@ -453,8 +454,8 @@ export default function MemberEditor() {
               )}
               <div>
                 <label className={labelCls}>Gift Aid from</label>
-                <input type="date" value={form.giftAidFrom}
-                  onChange={(e) => set('giftAidFrom', e.target.value)}
+                <DateInput value={form.giftAidFrom}
+                  onChange={(v) => set('giftAidFrom', v)}
                   max={new Date().toISOString().slice(0, 10)}
                   className={inputCls} />
               </div>

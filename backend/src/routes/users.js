@@ -19,7 +19,7 @@ router.get('/', requirePrivilege('users_list', 'view'), async (req, res, next) =
   try {
     const users = await tenantQuery(
       req.user.tenantSlug,
-      `SELECT u.id, u.email, u.name, u.active, u.created_at, u.last_login,
+      `SELECT u.id, u.email, u.username, u.name, u.active, u.created_at, u.last_login,
               COALESCE(
                 json_agg(json_build_object('id', r.id, 'name', r.name)) FILTER (WHERE r.id IS NOT NULL),
                 '[]'
@@ -41,7 +41,7 @@ router.get('/:id', requirePrivilege('user_record', 'view'), async (req, res, nex
   try {
     const [user] = await tenantQuery(
       req.user.tenantSlug,
-      `SELECT u.id, u.email, u.name, u.active, u.created_at, u.updated_at, u.last_login,
+      `SELECT u.id, u.email, u.username, u.name, u.active, u.created_at, u.updated_at, u.last_login,
               COALESCE(
                 json_agg(json_build_object('id', r.id, 'name', r.name, 'is_committee', r.is_committee))
                   FILTER (WHERE r.id IS NOT NULL),
@@ -64,6 +64,7 @@ router.get('/:id', requirePrivilege('user_record', 'view'), async (req, res, nex
 // ─── POST /users ──────────────────────────────────────────────────────────
 const createUserSchema = z.object({
   email:    z.string().email(),
+  username: z.string().regex(/^[a-z0-9]+$/, 'Username must be lowercase letters and numbers only').optional(),
   name:     z.string().min(1),
   password: z.string().min(8).optional(),
   active:   z.boolean().default(true),
@@ -77,10 +78,10 @@ router.post('/', requirePrivilege('user_record', 'create'), async (req, res, nex
 
     const [user] = await tenantQuery(
       req.user.tenantSlug,
-      `INSERT INTO users (email, name, password_hash, active)
-       VALUES ($1, $2, $3, $4)
-       RETURNING id, email, name, active, created_at`,
-      [data.email.toLowerCase(), data.name, passwordHash, data.active],
+      `INSERT INTO users (email, username, name, password_hash, active)
+       VALUES ($1, $2, $3, $4, $5)
+       RETURNING id, email, username, name, active, created_at`,
+      [data.email.toLowerCase(), data.username ?? null, data.name, passwordHash, data.active],
     );
 
     // Assign roles if provided
@@ -101,6 +102,7 @@ router.post('/', requirePrivilege('user_record', 'create'), async (req, res, nex
 // ─── PATCH /users/:id ────────────────────────────────────────────────────
 const updateUserSchema = z.object({
   email:    z.string().email().optional(),
+  username: z.string().regex(/^[a-z0-9]+$/, 'Username must be lowercase letters and numbers only').nullable().optional(),
   name:     z.string().min(1).optional(),
   password: z.string().min(8).optional(),
   active:   z.boolean().optional(),
@@ -114,6 +116,7 @@ router.patch('/:id', requirePrivilege('user_record', 'change'), async (req, res,
     let i = 1;
 
     if (data.email)    { fields.push(`email = $${i++}`);         values.push(data.email.toLowerCase()); }
+    if (data.username !== undefined) { fields.push(`username = $${i++}`); values.push(data.username); }
     if (data.name)     { fields.push(`name = $${i++}`);          values.push(data.name); }
     if (data.password) { fields.push(`password_hash = $${i++}`); values.push(await hashPassword(data.password)); }
     if (data.active !== undefined) { fields.push(`active = $${i++}`); values.push(data.active); }
@@ -125,7 +128,7 @@ router.patch('/:id', requirePrivilege('user_record', 'change'), async (req, res,
 
     const [user] = await tenantQuery(
       req.user.tenantSlug,
-      `UPDATE users SET ${fields.join(', ')} WHERE id = $${i} RETURNING id, email, name, active`,
+      `UPDATE users SET ${fields.join(', ')} WHERE id = $${i} RETURNING id, email, username, name, active`,
       values,
     );
     if (!user) throw AppError('User not found.', 404);

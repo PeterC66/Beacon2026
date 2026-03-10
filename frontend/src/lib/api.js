@@ -84,8 +84,8 @@ export class ApiError extends Error {
 // ─── Auth ─────────────────────────────────────────────────────────────────
 
 export const auth = {
-  login:   (tenantSlug, email, password) =>
-    request('/auth/login', { method: 'POST', body: JSON.stringify({ tenantSlug, email, password }) }),
+  login:   (tenantSlug, username, password) =>
+    request('/auth/login', { method: 'POST', body: JSON.stringify({ tenantSlug, username, password }) }),
   logout:  () =>
     request('/auth/logout', { method: 'POST' }),
   refresh: () =>

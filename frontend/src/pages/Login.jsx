@@ -23,7 +23,7 @@ export default function Login() {
   const { login, loading, error } = useAuth();
   const navigate = useNavigate();
 
-  const [form, setForm] = useState({ tenantSlug: getLastU3aCookie(), email: '', password: '' });
+  const [form, setForm] = useState({ tenantSlug: getLastU3aCookie(), username: '', password: '' });
   const [showPw, setShowPw] = useState(false);
 
   const handleChange = (e) =>
@@ -31,7 +31,7 @@ export default function Login() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const ok = await login(form.tenantSlug, form.email, form.password);
+    const ok = await login(form.tenantSlug, form.username, form.password);
     if (ok) {
       setLastU3aCookie(form.tenantSlug);
       navigate('/');
@@ -65,13 +65,14 @@ export default function Login() {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-slate-700 mb-1">Email</label>
+          <label className="block text-sm font-medium text-slate-700 mb-1">Username</label>
           <input
-            name="email"
-            type="email"
-            value={form.email}
+            name="username"
+            type="text"
+            value={form.username}
             onChange={handleChange}
             required
+            autoComplete="username"
             className="w-full border border-slate-400 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
         </div>

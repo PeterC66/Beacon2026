@@ -22,14 +22,14 @@ const cookieOptions = {
 
 const loginSchema = z.object({
   tenantSlug: z.string().min(1),
-  email:      z.string().email(),
+  username:   z.string().min(1),
   password:   z.string().min(1),
 });
 
 router.post('/login', async (req, res, next) => {
   try {
-    const { tenantSlug, email, password } = loginSchema.parse(req.body);
-    const result = await loginUser(tenantSlug, email, password);
+    const { tenantSlug, username, password } = loginSchema.parse(req.body);
+    const result = await loginUser(tenantSlug, username, password);
 
     res.cookie(COOKIE_NAME, result.refreshToken, cookieOptions);
 
