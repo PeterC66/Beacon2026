@@ -23,12 +23,21 @@ export async function loginUser(tenantSlug, username, password) {
   const tenant = await prisma.sysTenant.findUnique({ where: { slug: tenantSlug } });
   if (!tenant || !tenant.active) throw AppError('Invalid credentials.', 401);
 
-  // 2. Find user in tenant schema
-  const [user] = await tenantQuery(
+  // 2. Find user in tenant schema — try username first, fall back to email
+  //    (fallback allows existing users without a username set to still log in)
+  let [user] = await tenantQuery(
     tenantSlug,
     `SELECT id, email, name, password_hash, active FROM users WHERE username = $1`,
     [username.toLowerCase()],
   );
+
+  if (!user) {
+    [user] = await tenantQuery(
+      tenantSlug,
+      `SELECT id, email, name, password_hash, active FROM users WHERE email = $1`,
+      [username.toLowerCase()],
+    );
+  }
 
   // Use a consistent comparison time even if user not found (timing attack prevention)
   const dummyHash = '$2b$12$invalidhashfortimingattackprevention000000000000000000000';

@@ -532,3 +532,22 @@ import DateInput from '../../components/DateInput.jsx';
 - Parses both `dd/mm/yyyy` (typed) and syncs via hidden `<input type="date">` for picker
 - Calendar 📅 button calls `input.showPicker()` (Chrome 99+, FF 101+, Safari 14.1+)
 - `value` prop changes from outside are synced via `useEffect`
+
+---
+
+## App version display (March 2026)
+
+The frontend version (`frontend/package.json` → `"version"`) is injected at build time
+via `vite.config.js` → `define: { __APP_VERSION__: ... }` and shown discreetly in the
+top-right corner of every `PageHeader`.
+
+**To release a new version:** bump `"version"` in `frontend/package.json` before committing.
+Use semantic versioning — `0.x.0` for feature releases during early development.
+
+## Login transition: username vs email fallback (March 2026)
+
+`authService.loginUser()` first looks up by `username`, then falls back to `email`
+if no match is found. This allows existing users without a username set to keep
+logging in with their email address while they transition to a username.
+
+Once all users have usernames, the fallback can be removed from `authService.js`.
