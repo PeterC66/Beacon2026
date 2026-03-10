@@ -252,14 +252,22 @@ INSERT INTO :schema.tenant_settings (id) VALUES ('singleton') ON CONFLICT (id) D
 -- FINANCE ACCOUNTS
 -- ─────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS :schema.finance_accounts (
-  id         TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
-  name       TEXT NOT NULL,
-  active     BOOLEAN NOT NULL DEFAULT true,
-  locked     BOOLEAN NOT NULL DEFAULT false,   -- locked accounts cannot be deleted/renamed
-  sort_order INTEGER NOT NULL DEFAULT 0,
-  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+  id              TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
+  name            TEXT NOT NULL,
+  active          BOOLEAN NOT NULL DEFAULT true,
+  locked          BOOLEAN NOT NULL DEFAULT false,   -- locked accounts cannot be deleted/renamed
+  sort_order      INTEGER NOT NULL DEFAULT 0,
+  -- Configure Account settings (doc 8.6 sections c–e)
+  pending_config  TEXT NOT NULL DEFAULT 'disabled',  -- 'disabled' | 'optional' | 'by_type'
+  pending_types   TEXT[] NOT NULL DEFAULT '{}',       -- payment types auto-pending when by_type
+  enable_refunds  BOOLEAN NOT NULL DEFAULT false,
+  created_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at      TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+-- Backfill configure columns on existing tenants (safe; DEFAULT handles all rows)
+ALTER TABLE :schema.finance_accounts ADD COLUMN IF NOT EXISTS pending_config TEXT NOT NULL DEFAULT 'disabled';
+ALTER TABLE :schema.finance_accounts ADD COLUMN IF NOT EXISTS pending_types  TEXT[] NOT NULL DEFAULT '{}';
+ALTER TABLE :schema.finance_accounts ADD COLUMN IF NOT EXISTS enable_refunds BOOLEAN NOT NULL DEFAULT false;
 
 -- ─────────────────────────────────────────────
 -- FINANCE CATEGORIES

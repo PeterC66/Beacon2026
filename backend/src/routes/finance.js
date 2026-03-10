@@ -17,7 +17,8 @@ router.get('/accounts', requirePrivilege('finance_accounts', 'view'), async (req
   try {
     const rows = await tenantQuery(
       req.user.tenantSlug,
-      `SELECT id, name, active, locked, sort_order, created_at
+      `SELECT id, name, active, locked, sort_order,
+              pending_config, pending_types, enable_refunds, created_at
        FROM finance_accounts ORDER BY sort_order, name`,
     );
     res.json(rows);
@@ -68,6 +69,54 @@ router.patch('/accounts/:id', requirePrivilege('finance_accounts', 'change'), as
     const [row] = await tenantQuery(
       req.user.tenantSlug,
       `UPDATE finance_accounts SET ${fields.join(', ')} WHERE id = $${i} RETURNING id, name, active, locked, sort_order`,
+      values,
+    );
+    res.json(row);
+  } catch (err) { next(err); }
+});
+
+// PATCH /finance/accounts/:id/config — configure pending and refund settings.
+// Name is also editable here for unlocked accounts.
+const PENDING_TYPES = ['Cheque', 'Cash', 'PayPal', 'Standing Order', 'Direct Debit',
+                       'BACS', 'Debit card', 'Account transfer', 'Credit card'];
+
+const configSchema = z.object({
+  name:           z.string().min(1).max(100).optional(),
+  pending_config: z.enum(['disabled', 'optional', 'by_type']),
+  pending_types:  z.array(z.enum(PENDING_TYPES)).optional().default([]),
+  enable_refunds: z.boolean(),
+});
+
+router.patch('/accounts/:id/config', requirePrivilege('finance_accounts', 'change'), async (req, res, next) => {
+  try {
+    const [current] = await tenantQuery(
+      req.user.tenantSlug,
+      `SELECT id, name, locked FROM finance_accounts WHERE id = $1`,
+      [req.params.id],
+    );
+    if (!current) throw AppError('Account not found.', 404);
+
+    const data = configSchema.parse(req.body);
+
+    // Name change blocked for locked accounts
+    if (data.name !== undefined && current.locked) {
+      throw AppError('This account is locked and cannot be renamed.', 400);
+    }
+
+    const fields = [];
+    const values = [];
+    let i = 1;
+    if (data.name !== undefined && !current.locked) { fields.push(`name = $${i++}`); values.push(data.name); }
+    fields.push(`pending_config = $${i++}`); values.push(data.pending_config);
+    fields.push(`pending_types  = $${i++}`); values.push(data.pending_config === 'by_type' ? data.pending_types : []);
+    fields.push(`enable_refunds = $${i++}`); values.push(data.enable_refunds);
+    fields.push(`updated_at = now()`);
+    values.push(req.params.id);
+
+    const [row] = await tenantQuery(
+      req.user.tenantSlug,
+      `UPDATE finance_accounts SET ${fields.join(', ')} WHERE id = $${i}
+       RETURNING id, name, active, locked, sort_order, pending_config, pending_types, enable_refunds`,
       values,
     );
     res.json(row);

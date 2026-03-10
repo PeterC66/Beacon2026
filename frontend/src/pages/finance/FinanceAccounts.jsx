@@ -2,6 +2,7 @@
 // Finance accounts management — 8.6 Finance Set-up, section 1.
 
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { finance as financeApi } from '../../lib/api.js';
 import { useAuth } from '../../context/AuthContext.jsx';
 import NavBar from '../../components/NavBar.jsx';
@@ -19,9 +20,6 @@ export default function FinanceAccounts() {
   const [error,    setError]        = useState(null);
   const [newName,  setNewName]      = useState('');
   const [adding,   setAdding]       = useState(false);
-  const [editId,   setEditId]       = useState(null);
-  const [editName, setEditName]     = useState('');
-  const [saving,   setSaving]       = useState(false);
 
   useEffect(() => { load(); }, []);
 
@@ -50,17 +48,6 @@ export default function FinanceAccounts() {
       const updated = await financeApi.updateAccount(acc.id, { active: !acc.active });
       setAccounts((prev) => prev.map((a) => a.id === acc.id ? { ...a, ...updated } : a));
     } catch (err) { alert(err.message); }
-  }
-
-  async function handleSaveName(acc) {
-    if (!editName.trim() || editName.trim() === acc.name) { setEditId(null); return; }
-    setSaving(true);
-    try {
-      const updated = await financeApi.updateAccount(acc.id, { name: editName.trim() });
-      setAccounts((prev) => prev.map((a) => a.id === acc.id ? { ...a, ...updated } : a));
-      setEditId(null);
-    } catch (err) { alert(err.message); }
-    finally { setSaving(false); }
   }
 
   async function handleDelete(acc) {
@@ -95,31 +82,20 @@ export default function FinanceAccounts() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="bg-slate-50 border-b border-slate-200 text-left text-slate-600 italic font-normal">
-                  <th className="px-4 py-2.5 font-normal">Account name</th>
+                  <th className="px-4 py-2.5 font-normal">Account</th>
                   <th className="px-4 py-2.5 font-normal text-center">Active</th>
-                  {(canChange || canDelete) && <th className="px-4 py-2.5"></th>}
+                  <th className="px-4 py-2.5"></th>
+                  <th className="px-4 py-2.5"></th>
                 </tr>
               </thead>
               <tbody>
                 {accounts.length === 0 && (
-                  <tr><td colSpan={3} className="px-4 py-4 text-center text-slate-400">No accounts yet.</td></tr>
+                  <tr><td colSpan={4} className="px-4 py-4 text-center text-slate-400">No accounts yet.</td></tr>
                 )}
                 {accounts.map((acc, i) => (
                   <tr key={acc.id} className={`border-b border-slate-100 ${i % 2 === 0 ? 'bg-yellow-50' : 'bg-white'}`}>
                     <td className="px-4 py-2.5">
-                      {editId === acc.id ? (
-                        <input
-                          type="text"
-                          value={editName}
-                          onChange={(e) => setEditName(e.target.value)}
-                          onKeyDown={(e) => { if (e.key === 'Enter') handleSaveName(acc); if (e.key === 'Escape') setEditId(null); }}
-                          className={`${inputCls} w-full`}
-                          autoFocus
-                        />
-                      ) : (
-                        <span className={acc.active ? '' : 'text-slate-400 line-through'}>{acc.name}</span>
-                      )}
-                      {acc.locked && <span className="ml-2 text-xs text-slate-400">(locked)</span>}
+                      <span className={acc.active ? '' : 'text-slate-400 line-through'}>{acc.name}</span>
                     </td>
                     <td className="px-4 py-2.5 text-center">
                       <input
@@ -130,24 +106,25 @@ export default function FinanceAccounts() {
                         className="w-4 h-4 accent-blue-600"
                       />
                     </td>
-                    {(canChange || canDelete) && (
-                      <td className="px-4 py-2.5 text-right whitespace-nowrap space-x-2">
-                        {canChange && !acc.locked && editId !== acc.id && (
-                          <button onClick={() => { setEditId(acc.id); setEditName(acc.name); }} className={btnSmall}>
-                            Rename
+                    <td className="px-4 py-2.5">
+                      {canChange && (
+                        <Link to={`/finance/accounts/${acc.id}/configure`}
+                          className="text-blue-600 hover:underline text-sm">
+                          configure
+                        </Link>
+                      )}
+                    </td>
+                    <td className="px-4 py-2.5">
+                      {acc.locked ? (
+                        <span className="text-xs text-slate-400">locked</span>
+                      ) : (
+                        canDelete && (
+                          <button onClick={() => handleDelete(acc)} className={btnDanger}>
+                            delete
                           </button>
-                        )}
-                        {editId === acc.id && (
-                          <>
-                            <button onClick={() => handleSaveName(acc)} disabled={saving} className={btnPrimary}>Save</button>
-                            <button onClick={() => setEditId(null)} className={btnSmall}>Cancel</button>
-                          </>
-                        )}
-                        {canDelete && !acc.locked && editId !== acc.id && (
-                          <button onClick={() => handleDelete(acc)} className={btnDanger}>Delete</button>
-                        )}
-                      </td>
-                    )}
+                        )
+                      )}
+                    </td>
                   </tr>
                 ))}
               </tbody>

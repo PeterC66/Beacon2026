@@ -46,8 +46,11 @@ export async function migrateAndSeed() {
   // 3. Bring all existing tenant schemas up to date
   await migrateTenantSchemas();
 
-  // 4. Re-sync default role privileges to match the canonical definition
-  await migrateDefaultRolePrivileges();
+  // NOTE: migrateDefaultRolePrivileges() was a one-time fix (March 2026) to
+  // correct privilege assignments on existing tenants after the default roles
+  // were overhauled to match doc 8.4.1.  It is no longer called on startup —
+  // the canonical set is now applied only when a new tenant is created via
+  // createTenant.js.  The function is kept below for reference.
 }
 
 /**
@@ -118,6 +121,25 @@ async function migrateTenantSchemas() {
          SELECT 'Individual', true, true
          WHERE NOT EXISTS (SELECT 1 FROM member_classes WHERE name = 'Individual' AND locked = true)`,
       );
+
+      // Seed default locked finance account: Current
+      await tenantQuery(
+        slug,
+        `INSERT INTO finance_accounts (name, active, locked)
+         SELECT 'Current', true, true
+         WHERE NOT EXISTS (SELECT 1 FROM finance_accounts WHERE name = 'Current' AND locked = true)`,
+      );
+
+      // Seed default locked finance categories: Donations, Membership
+      for (const catName of ['Donations', 'Membership']) {
+        await tenantQuery(
+          slug,
+          `INSERT INTO finance_categories (name, active, locked)
+           SELECT $1, true, true
+           WHERE NOT EXISTS (SELECT 1 FROM finance_categories WHERE name = $1 AND locked = true)`,
+          [catName],
+        );
+      }
     } catch (err) {
       console.error(`  ✗ Seed error [${schemaName}]:`, err.message);
     }
