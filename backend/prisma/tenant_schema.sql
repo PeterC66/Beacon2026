@@ -15,6 +15,7 @@ CREATE SCHEMA IF NOT EXISTS :schema;
 CREATE TABLE IF NOT EXISTS :schema.users (
   id            TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
   email         TEXT NOT NULL UNIQUE,
+  username      TEXT,                        -- login username (lowercase, no spaces)
   password_hash TEXT,                        -- NULL = no login access
   name          TEXT NOT NULL,
   active        BOOLEAN NOT NULL DEFAULT true,
@@ -23,6 +24,10 @@ CREATE TABLE IF NOT EXISTS :schema.users (
   last_login    TIMESTAMPTZ,
   member_id     TEXT                         -- future: link to members table
 );
+
+-- Add username to existing tenants (idempotent)
+ALTER TABLE :schema.users ADD COLUMN IF NOT EXISTS username TEXT;
+CREATE UNIQUE INDEX IF NOT EXISTS :schema_idx_users_username ON :schema.users (username) WHERE username IS NOT NULL;
 
 -- ─────────────────────────────────────────────
 -- ROLES

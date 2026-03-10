@@ -43,12 +43,12 @@ describe('POST /auth/login', () => {
 
     const res = await request(app)
       .post('/auth/login')
-      .send({ tenantSlug: 'test-u3a', email: 'alice@example.com', password: 'secret' });
+      .send({ tenantSlug: 'test-u3a', username: 'alice', password: 'secret' });
 
     expect(res.status).toBe(200);
     expect(res.body.accessToken).toBe('acc.tok.en');
     expect(res.body.user.name).toBe('Alice');
-    expect(loginUser).toHaveBeenCalledWith('test-u3a', 'alice@example.com', 'secret');
+    expect(loginUser).toHaveBeenCalledWith('test-u3a', 'alice', 'secret');
   });
 
   it('returns 401 when authService throws an auth error', async () => {
@@ -57,13 +57,13 @@ describe('POST /auth/login', () => {
 
     const res = await request(app)
       .post('/auth/login')
-      .send({ tenantSlug: 'test-u3a', email: 'x@y.com', password: 'wrong' });
+      .send({ tenantSlug: 'test-u3a', username: 'baduser', password: 'wrong' });
 
     expect(res.status).toBe(401);
     expect(res.body.error).toBe('Invalid credentials.');
   });
 
-  it('returns 422 on invalid body (missing email)', async () => {
+  it('returns 422 on invalid body (missing username)', async () => {
     const res = await request(app)
       .post('/auth/login')
       .send({ tenantSlug: 'test-u3a', password: 'pw' });

@@ -474,3 +474,61 @@ const { sorted, sortKey, sortDir, onSort } = useSortedData(myList);
 // In tbody:
 {sorted.map((item, i) => ...)}
 ```
+
+---
+
+## Username-based login (March 2026)
+
+### Overview
+
+System users log in with a **username** (not email). Usernames are lowercase
+letters and numbers only, no spaces (e.g. `jbloggs`).
+
+### Data model
+
+`users` table has a `username TEXT` column (nullable, unique where non-null).
+- Added via `ALTER TABLE :schema.users ADD COLUMN IF NOT EXISTS username TEXT;`
+- Uniqueness enforced by partial index: `CREATE UNIQUE INDEX IF NOT EXISTS :schema_idx_users_username ON :schema.users (username) WHERE username IS NOT NULL;`
+
+### Auth flow
+
+- `POST /auth/login` accepts `{ tenantSlug, username, password }` (no longer `email`)
+- `authService.loginUser()` looks up users by `WHERE username = $1`
+- Existing users without a username cannot log in until a username is set by admin
+
+### Validation
+
+Backend Zod schema: `username: z.string().regex(/^[a-z0-9]+$/)` (create and update).
+Frontend `UserEditor`: input auto-lowercases and strips invalid chars on change.
+
+---
+
+## DateInput component (March 2026)
+
+### Location
+
+`frontend/src/components/DateInput.jsx`
+
+### Usage
+
+Replaces `<input type="date">` everywhere. Accepts typed UK-format (dd/mm/yyyy)
+input and has a calendar icon button that opens the native date picker.
+
+```jsx
+import DateInput from '../../components/DateInput.jsx';
+
+<DateInput
+  value={form.joinedOn}          // ISO string (YYYY-MM-DD) or ''
+  onChange={(v) => set('joinedOn', v)}   // always called with ISO or ''
+  onBlur={() => handleBlur('joinedOn')}  // optional
+  className={ic('joinedOn')}     // applies to the text input
+  max="2026-12-31"               // optional, passed to hidden date picker
+/>
+```
+
+### Behaviour
+
+- Displays in `dd/mm/yyyy` format for typing
+- Parses both `dd/mm/yyyy` (typed) and syncs via hidden `<input type="date">` for picker
+- Calendar 📅 button calls `input.showPicker()` (Chrome 99+, FF 101+, Safari 14.1+)
+- `value` prop changes from outside are synced via `useEffect`

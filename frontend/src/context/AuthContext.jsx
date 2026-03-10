@@ -24,11 +24,11 @@ export function AuthProvider({ children }) {
     return () => window.removeEventListener('auth:expired', handler);
   }, []);
 
-  const login = useCallback(async (tenantSlug, email, password) => {
+  const login = useCallback(async (tenantSlug, username, password) => {
     setLoading(true);
     setError(null);
     try {
-      const data = await authApi.login(tenantSlug, email, password);
+      const data = await authApi.login(tenantSlug, username, password);
       setAuth(data.accessToken, tenantSlug);
 
       // Decode the JWT payload to extract privileges

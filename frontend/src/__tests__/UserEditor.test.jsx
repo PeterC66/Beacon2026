@@ -12,7 +12,7 @@ vi.mock('../context/AuthContext.jsx', () => ({
 }));
 
 vi.mock('../lib/api.js', () => ({
-  users: { get: vi.fn().mockResolvedValue({ name: '', email: '', active: true, roles: [] }) },
+  users: { get: vi.fn().mockResolvedValue({ name: '', email: '', username: '', active: true, roles: [] }) },
   roles: { list: vi.fn().mockResolvedValue([]) },
 }));
 
