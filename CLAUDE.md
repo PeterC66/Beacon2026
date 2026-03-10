@@ -551,3 +551,80 @@ if no match is found. This allows existing users without a username set to keep
 logging in with their email address while they transition to a username.
 
 Once all users have usernames, the fallback can be removed from `authService.js`.
+
+---
+
+## Finance module (March 2026)
+
+### DB tables
+
+All in `backend/prisma/tenant_schema.sql` (idempotent, picked up by `migrateTenantSchemas()`):
+
+| Table | Notes |
+|-------|-------|
+| `finance_accounts` | `active`, `locked`, `sort_order`; locked = cannot rename/delete |
+| `finance_categories` | same pattern as accounts |
+| `transaction_number_seq` | sequential integer auto-assigned |
+| `transactions` | `type IN ('in','out')`, `amount NUMERIC(10,2) > 0`, `cleared_at DATE` |
+| `transaction_categories` | splits; `SUM(amount)` must equal `transactions.amount` |
+
+### Backend routes — `backend/src/routes/finance.js`
+
+Mounted at `/finance` in `app.js`. Privilege resources used:
+
+| Route pattern | Privilege |
+|--------------|-----------|
+| `GET /finance/accounts` | `finance_accounts:view` |
+| `POST/PATCH/DELETE /finance/accounts` | `finance_accounts:create/change/delete` |
+| `GET/POST/PATCH/DELETE /finance/categories` | `finance_categories:*` |
+| `GET /finance/transactions` (ledger query) | `finance_ledger:view` |
+| `GET /finance/transactions/:id` | `finance_transactions:view` |
+| `POST/PATCH/DELETE /finance/transactions/:id` | `finance_transactions:create/change/delete` |
+
+Key rules enforced server-side:
+- **Locked** accounts/categories: cannot change name or delete
+- **Cleared** transactions (`cleared_at IS NOT NULL`): cannot PATCH or DELETE
+- **Category sum**: `|SUM(category.amount) - transaction.amount| > 0.001` → 400
+
+### Frontend pages
+
+| File | Route | Notes |
+|------|-------|-------|
+| `FinanceAccounts.jsx` | `/finance/accounts` | Inline rename, active toggle, add/delete |
+| `FinanceCategories.jsx` | `/finance/categories` | Same pattern |
+| `FinanceLedger.jsx` | `/finance/ledger?view=account\|category\|group` | Year selector, running balance in account view |
+| `TransactionEditor.jsx` | `/finance/transactions/new`, `/finance/transactions/:id` | Full form per doc 7.2 |
+
+### Finance ledger design decisions
+
+- **Calendar year** (Jan 1–Dec 31) used for year filtering — not financial year.
+  The year selector shows current year back 5 years.
+- **Running balance** computed client-side in `useMemo`; only meaningful in account view
+  sorted by date ascending (the default).
+- **Member search** in TransactionEditor: loads all members, filters client-side
+  (first 50 results shown). Uses a `size={4}` `<select>` list — not a combobox.
+- **Category amounts** stored as individual rows in `transaction_categories`; the
+  frontend shows all active categories with number inputs.
+
+### API namespace
+
+```js
+import { finance as financeApi } from '../../lib/api.js';
+
+financeApi.listAccounts()
+financeApi.createAccount(data)
+financeApi.updateAccount(id, data)
+financeApi.deleteAccount(id)
+// same pattern for listCategories / createCategory / updateCategory / deleteCategory
+financeApi.listTransactions({ accountId?, categoryId?, groupId?, year? })
+financeApi.getTransaction(id)
+financeApi.createTransaction(data)   // data includes `categories: [{category_id, amount}]`
+financeApi.updateTransaction(id, data)
+financeApi.deleteTransaction(id)
+```
+
+### Test helpers note
+
+`backend/src/__tests__/helpers.js` `ALL_PRIVS` must include finance privileges.
+They were added in this session — if new finance privilege resources are added,
+update `ALL_PRIVS` accordingly.

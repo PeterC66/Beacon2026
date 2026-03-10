@@ -198,6 +198,34 @@ export const groups = {
   removeMember: (id, memberId)       => request(`/groups/${id}/members/${memberId}`, { method: 'DELETE' }),
 };
 
+// ─── Finance ──────────────────────────────────────────────────────────────
+
+export const finance = {
+  listAccounts:   ()         => request('/finance/accounts'),
+  createAccount:  (data)     => request('/finance/accounts', { method: 'POST', body: JSON.stringify(data) }),
+  updateAccount:  (id, data) => request(`/finance/accounts/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
+  deleteAccount:  (id)       => request(`/finance/accounts/${id}`, { method: 'DELETE' }),
+
+  listCategories:   ()         => request('/finance/categories'),
+  createCategory:   (data)     => request('/finance/categories', { method: 'POST', body: JSON.stringify(data) }),
+  updateCategory:   (id, data) => request(`/finance/categories/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
+  deleteCategory:   (id)       => request(`/finance/categories/${id}`, { method: 'DELETE' }),
+
+  listTransactions: (params = {}) => {
+    const qs = new URLSearchParams();
+    if (params.accountId)  qs.set('accountId',  params.accountId);
+    if (params.categoryId) qs.set('categoryId', params.categoryId);
+    if (params.groupId)    qs.set('groupId',    params.groupId);
+    if (params.year)       qs.set('year',       String(params.year));
+    const query = qs.toString();
+    return request(`/finance/transactions${query ? '?' + query : ''}`);
+  },
+  getTransaction:    (id)       => request(`/finance/transactions/${id}`),
+  createTransaction: (data)     => request('/finance/transactions', { method: 'POST', body: JSON.stringify(data) }),
+  updateTransaction: (id, data) => request(`/finance/transactions/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
+  deleteTransaction: (id)       => request(`/finance/transactions/${id}`, { method: 'DELETE' }),
+};
+
 // ─── Settings ─────────────────────────────────────────────────────────────
 
 export const settings = {

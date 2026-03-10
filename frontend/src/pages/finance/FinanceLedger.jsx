@@ -1,0 +1,275 @@
+// beacon2/frontend/src/pages/finance/FinanceLedger.jsx
+// Financial ledger — view transactions by account, category, or group.
+// Implements Beacon doc 7.1.
+
+import { useState, useEffect, useMemo } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { finance as financeApi, groups as groupsApi } from '../../lib/api.js';
+import { useAuth } from '../../context/AuthContext.jsx';
+import NavBar from '../../components/NavBar.jsx';
+import PageHeader from '../../components/PageHeader.jsx';
+import SortableHeader from '../../components/SortableHeader.jsx';
+import { useSortedData } from '../../hooks/useSortedData.js';
+
+const VIEWS = ['account', 'category', 'group'];
+const thisYear = new Date().getFullYear();
+const YEARS = Array.from({ length: 6 }, (_, i) => thisYear - i);
+
+const fmtDate   = (d) => d ? new Date(d).toLocaleDateString('en-GB') : '';
+const fmtAmount = (n) => n != null ? `£${Number(n).toFixed(2)}` : '';
+
+export default function FinanceLedger() {
+  const { can, tenant } = useAuth();
+  const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  const initView = VIEWS.includes(searchParams.get('view')) ? searchParams.get('view') : 'account';
+  const [view,       setView]       = useState(initView);
+  const [year,       setYear]       = useState(thisYear);
+  const [accounts,   setAccounts]   = useState([]);
+  const [categories, setCategories] = useState([]);
+  const [groups,     setGroups]     = useState([]);
+  const [selId,       setSelId]       = useState('');
+  const [groupFilter, setGroupFilter] = useState('');
+  const [txns,        setTxns]        = useState([]);
+  const [loading,     setLoading]     = useState(false);
+  const [error,       setError]       = useState(null);
+
+  const { sorted, sortKey, sortDir, onSort } = useSortedData(txns, 'date', 'asc');
+
+  // Load selector lists
+  useEffect(() => {
+    async function loadLists() {
+      try {
+        const [acc, cat, grp] = await Promise.all([
+          financeApi.listAccounts(),
+          financeApi.listCategories(),
+          groupsApi.list(),
+        ]);
+        setAccounts(acc.filter((a) => a.active));
+        setCategories(cat.filter((c) => c.active));
+        setGroups(grp);
+      } catch (err) { setError(err.message); }
+    }
+    loadLists();
+  }, []);
+
+  // Reset selection when view changes
+  useEffect(() => { setSelId(''); setTxns([]); setGroupFilter(''); }, [view]);
+
+  const filteredGroups = useMemo(() => {
+    const q = groupFilter.trim().toLowerCase();
+    if (!q) return groups;
+    return groups.filter((g) => g.name.toLowerCase().includes(q));
+  }, [groups, groupFilter]);
+
+  // Fetch transactions when selId or year changes
+  useEffect(() => {
+    if (!selId) { setTxns([]); return; }
+    async function load() {
+      setLoading(true);
+      setError(null);
+      try {
+        const params = { year };
+        if (view === 'account')  params.accountId  = selId;
+        if (view === 'category') params.categoryId = selId;
+        if (view === 'group')    params.groupId    = selId;
+        setTxns(await financeApi.listTransactions(params));
+      } catch (err) { setError(err.message); }
+      finally { setLoading(false); }
+    }
+    load();
+  }, [selId, year, view]);
+
+  // Running balance (only meaningful when sorted by date asc, for account view)
+  const withBalance = useMemo(() => {
+    if (view !== 'account') return sorted;
+    let balance = 0;
+    return sorted.map((t) => {
+      const amt = Number(t.amount);
+      if (t.type === 'in')  balance += amt;
+      if (t.type === 'out') balance -= amt;
+      return { ...t, _balance: balance };
+    });
+  }, [sorted, view]);
+
+  // Totals
+  const totals = useMemo(() => {
+    const inTotal  = txns.filter((t) => t.type === 'in').reduce((s, t) => s + Number(t.amount), 0);
+    const outTotal = txns.filter((t) => t.type === 'out').reduce((s, t) => s + Number(t.amount), 0);
+    return { in: inTotal, out: outTotal };
+  }, [txns]);
+
+  const navLinks = [
+    { label: 'Home', to: '/' },
+    ...(can('finance_transactions', 'create') ? [{ label: 'Add transaction', to: '/finance/transactions/new' }] : []),
+  ];
+
+  const TH = 'px-3 py-2.5 font-normal';
+
+  return (
+    <div className="min-h-screen pb-10">
+      <PageHeader tenant={tenant} />
+      <NavBar links={navLinks} />
+
+      <div className="max-w-6xl mx-auto px-4 py-5">
+        <h1 className="text-xl font-bold text-center mb-4">Financial Ledger</h1>
+
+        {/* Controls */}
+        <div className="bg-white/90 rounded-lg shadow-sm p-4 mb-4 flex flex-wrap gap-4 items-end">
+          {/* View selector */}
+          <div>
+            <label className="block text-xs font-medium text-slate-600 mb-1">View by</label>
+            <div className="flex gap-1">
+              {VIEWS.map((v) => (
+                <button
+                  key={v}
+                  onClick={() => { setView(v); setSearchParams({ view: v }); }}
+                  className={`px-3 py-1.5 rounded text-sm font-medium transition-colors capitalize ${
+                    view === v ? 'bg-blue-600 text-white' : 'border border-slate-300 text-slate-700 hover:bg-slate-50'
+                  }`}
+                >
+                  {v}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Selector */}
+          <div className="flex-1 min-w-[180px]">
+            <label className="block text-xs font-medium text-slate-600 mb-1 capitalize">{view}</label>
+            {view === 'group' && (
+              <input
+                type="text"
+                value={groupFilter}
+                onChange={(e) => setGroupFilter(e.target.value)}
+                placeholder="Filter groups…"
+                className="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 mb-1"
+              />
+            )}
+            <select
+              value={selId}
+              onChange={(e) => setSelId(e.target.value)}
+              className="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="">— select —</option>
+              {view === 'account'  && accounts.map((a)  => <option key={a.id}  value={a.id}>{a.name}</option>)}
+              {view === 'category' && categories.map((c) => <option key={c.id}  value={c.id}>{c.name}</option>)}
+              {view === 'group'    && (
+                <>
+                  <option value="all">All groups</option>
+                  {filteredGroups.map((g) => (
+                    <option key={g.id} value={g.id} style={g.status === 'inactive' ? { color: '#dc2626' } : {}}>
+                      {g.name}{g.status === 'inactive' ? ' (inactive)' : ''}
+                    </option>
+                  ))}
+                </>
+              )}
+            </select>
+          </div>
+
+          {/* Year */}
+          <div>
+            <label className="block text-xs font-medium text-slate-600 mb-1">Year</label>
+            <select
+              value={year}
+              onChange={(e) => setYear(Number(e.target.value))}
+              className="border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              {YEARS.map((y) => <option key={y} value={y}>{y}</option>)}
+            </select>
+          </div>
+        </div>
+
+        {loading && <p className="text-center text-slate-500 py-8">Loading…</p>}
+        {error   && <p className="text-center text-red-600 py-4">Error: {error}</p>}
+
+        {!loading && selId && !error && (
+          <>
+            {txns.length === 0 ? (
+              <p className="text-center text-slate-400 py-8">No transactions found for this {view} in {year}.</p>
+            ) : (
+              <>
+                <div className="overflow-x-auto rounded-lg shadow-sm">
+                  <table className="w-full text-sm bg-white min-w-max">
+                    <thead>
+                      <tr className="bg-slate-50 border-b border-slate-200 text-left text-slate-600 italic font-normal">
+                        <SortableHeader col="transaction_number" label="#"       sortKey={sortKey} sortDir={sortDir} onSort={onSort} className={TH} />
+                        <SortableHeader col="date"               label="Date"    sortKey={sortKey} sortDir={sortDir} onSort={onSort} className={TH} />
+                        <SortableHeader col="detail"             label="Detail"  sortKey={sortKey} sortDir={sortDir} onSort={onSort} className={TH} />
+                        <SortableHeader col="from_to"            label="From/To" sortKey={sortKey} sortDir={sortDir} onSort={onSort} className={TH} />
+                        <SortableHeader col="payment_method"     label="Method"  sortKey={sortKey} sortDir={sortDir} onSort={onSort} className={TH} />
+                        <th className={`${TH} text-right`}>In</th>
+                        <th className={`${TH} text-right`}>Out</th>
+                        {view === 'account' && <th className={`${TH} text-right`}>Balance</th>}
+                        <SortableHeader col="cleared_at"         label="Cleared" sortKey={sortKey} sortDir={sortDir} onSort={onSort} className={`${TH} text-center`} />
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {withBalance.map((t, i) => (
+                        <tr key={t.id} className={`border-b border-slate-100 ${i % 2 === 0 ? 'bg-yellow-50' : 'bg-white'}`}>
+                          <td className="px-3 py-2">
+                            {can('finance_transactions', 'view') ? (
+                              <button
+                                onClick={() => navigate(`/finance/transactions/${t.id}`)}
+                                className="text-blue-700 hover:underline font-mono"
+                              >
+                                {t.transaction_number}
+                              </button>
+                            ) : (
+                              <span className="font-mono">{t.transaction_number}</span>
+                            )}
+                          </td>
+                          <td className="px-3 py-2 whitespace-nowrap">{fmtDate(t.date)}</td>
+                          <td className="px-3 py-2 max-w-[200px] truncate" title={t.detail}>{t.detail}</td>
+                          <td className="px-3 py-2 max-w-[160px] truncate" title={t.from_to}>{t.from_to}</td>
+                          <td className="px-3 py-2">{t.payment_method}</td>
+                          <td className="px-3 py-2 text-right text-green-700">{t.type === 'in'  ? fmtAmount(t.amount) : ''}</td>
+                          <td className="px-3 py-2 text-right text-red-700"> {t.type === 'out' ? fmtAmount(t.amount) : ''}</td>
+                          {view === 'account' && (
+                            <td className={`px-3 py-2 text-right font-medium ${t._balance >= 0 ? 'text-slate-700' : 'text-red-600'}`}>
+                              {fmtAmount(t._balance)}
+                            </td>
+                          )}
+                          <td className="px-3 py-2 text-center text-xs text-slate-500">
+                            {t.cleared_at ? fmtDate(t.cleared_at) : ''}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                    <tfoot>
+                      <tr className="bg-slate-100 border-t-2 border-slate-300 font-medium text-sm">
+                        <td colSpan={5} className="px-3 py-2 text-right text-slate-600">Totals:</td>
+                        <td className="px-3 py-2 text-right text-green-700">{fmtAmount(totals.in)}</td>
+                        <td className="px-3 py-2 text-right text-red-700">{fmtAmount(totals.out)}</td>
+                        {view === 'account' && <td className="px-3 py-2"></td>}
+                        <td></td>
+                      </tr>
+                    </tfoot>
+                  </table>
+                </div>
+
+                {can('finance_transactions', 'create') && (
+                  <div className="mt-4 text-center">
+                    <button
+                      onClick={() => navigate(`/finance/transactions/new${selId && view === 'account' ? `?accountId=${selId}` : ''}`)}
+                      className="bg-blue-600 hover:bg-blue-700 text-white rounded px-5 py-2 text-sm font-medium transition-colors"
+                    >
+                      Add transaction
+                    </button>
+                  </div>
+                )}
+              </>
+            )}
+          </>
+        )}
+
+        {!loading && !selId && !error && (
+          <p className="text-center text-slate-400 py-12">Select a {view} above to view transactions.</p>
+        )}
+      </div>
+
+      <NavBar links={navLinks} />
+    </div>
+  );
+}
