@@ -29,10 +29,11 @@ export default function FinanceLedger() {
   const [accounts,   setAccounts]   = useState([]);
   const [categories, setCategories] = useState([]);
   const [groups,     setGroups]     = useState([]);
-  const [selId,      setSelId]      = useState('');
-  const [txns,       setTxns]       = useState([]);
-  const [loading,    setLoading]    = useState(false);
-  const [error,      setError]      = useState(null);
+  const [selId,       setSelId]       = useState('');
+  const [groupFilter, setGroupFilter] = useState('');
+  const [txns,        setTxns]        = useState([]);
+  const [loading,     setLoading]     = useState(false);
+  const [error,       setError]       = useState(null);
 
   const { sorted, sortKey, sortDir, onSort } = useSortedData(txns, 'date', 'asc');
 
@@ -54,7 +55,13 @@ export default function FinanceLedger() {
   }, []);
 
   // Reset selection when view changes
-  useEffect(() => { setSelId(''); setTxns([]); }, [view]);
+  useEffect(() => { setSelId(''); setTxns([]); setGroupFilter(''); }, [view]);
+
+  const filteredGroups = useMemo(() => {
+    const q = groupFilter.trim().toLowerCase();
+    if (!q) return groups;
+    return groups.filter((g) => g.name.toLowerCase().includes(q));
+  }, [groups, groupFilter]);
 
   // Fetch transactions when selId or year changes
   useEffect(() => {
@@ -131,6 +138,15 @@ export default function FinanceLedger() {
           {/* Selector */}
           <div className="flex-1 min-w-[180px]">
             <label className="block text-xs font-medium text-slate-600 mb-1 capitalize">{view}</label>
+            {view === 'group' && (
+              <input
+                type="text"
+                value={groupFilter}
+                onChange={(e) => setGroupFilter(e.target.value)}
+                placeholder="Filter groups…"
+                className="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 mb-1"
+              />
+            )}
             <select
               value={selId}
               onChange={(e) => setSelId(e.target.value)}
@@ -142,7 +158,7 @@ export default function FinanceLedger() {
               {view === 'group'    && (
                 <>
                   <option value="all">All groups</option>
-                  {groups.map((g) => (
+                  {filteredGroups.map((g) => (
                     <option key={g.id} value={g.id} style={g.status === 'inactive' ? { color: '#dc2626' } : {}}>
                       {g.name}{g.status === 'inactive' ? ' (inactive)' : ''}
                     </option>
