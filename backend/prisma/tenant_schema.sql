@@ -249,6 +249,72 @@ CREATE TABLE IF NOT EXISTS :schema.tenant_settings (
 INSERT INTO :schema.tenant_settings (id) VALUES ('singleton') ON CONFLICT (id) DO NOTHING;
 
 -- ─────────────────────────────────────────────
+-- FINANCE ACCOUNTS
+-- ─────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS :schema.finance_accounts (
+  id         TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
+  name       TEXT NOT NULL,
+  active     BOOLEAN NOT NULL DEFAULT true,
+  locked     BOOLEAN NOT NULL DEFAULT false,   -- locked accounts cannot be deleted/renamed
+  sort_order INTEGER NOT NULL DEFAULT 0,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+-- ─────────────────────────────────────────────
+-- FINANCE CATEGORIES
+-- ─────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS :schema.finance_categories (
+  id         TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
+  name       TEXT NOT NULL,
+  active     BOOLEAN NOT NULL DEFAULT true,
+  locked     BOOLEAN NOT NULL DEFAULT false,   -- locked categories cannot be deleted/renamed
+  sort_order INTEGER NOT NULL DEFAULT 0,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+-- ─────────────────────────────────────────────
+-- TRANSACTION NUMBER SEQUENCE
+-- ─────────────────────────────────────────────
+CREATE SEQUENCE IF NOT EXISTS :schema.transaction_number_seq START 1;
+
+-- ─────────────────────────────────────────────
+-- TRANSACTIONS
+-- ─────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS :schema.transactions (
+  id                 TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
+  transaction_number INTEGER NOT NULL UNIQUE
+                     DEFAULT nextval(':schema.transaction_number_seq'),
+  account_id         TEXT NOT NULL REFERENCES :schema.finance_accounts(id),
+  date               DATE NOT NULL DEFAULT CURRENT_DATE,
+  type               TEXT NOT NULL CHECK (type IN ('in', 'out')),
+  from_to            TEXT,                     -- person/body received from or paid to
+  amount             NUMERIC(10,2) NOT NULL CHECK (amount > 0),
+  payment_method     TEXT,
+  payment_ref        TEXT,                     -- cheque number or other reference
+  detail             TEXT,                     -- concise description shown in ledger
+  remarks            TEXT,                     -- additional notes
+  member_id_1        TEXT REFERENCES :schema.members(id) ON DELETE SET NULL,
+  member_id_2        TEXT REFERENCES :schema.members(id) ON DELETE SET NULL,
+  group_id           TEXT REFERENCES :schema.groups(id) ON DELETE SET NULL,
+  cleared_at         DATE,                     -- set by reconciliation
+  created_at         TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at         TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+-- ─────────────────────────────────────────────
+-- TRANSACTION CATEGORY SPLITS
+-- ─────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS :schema.transaction_categories (
+  id             TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
+  transaction_id TEXT NOT NULL REFERENCES :schema.transactions(id) ON DELETE CASCADE,
+  category_id    TEXT NOT NULL REFERENCES :schema.finance_categories(id),
+  amount         NUMERIC(10,2) NOT NULL,
+  UNIQUE (transaction_id, category_id)
+);
+
+-- ─────────────────────────────────────────────
 -- INDEXES  (named so IF NOT EXISTS works)
 -- ─────────────────────────────────────────────
 CREATE INDEX IF NOT EXISTS :schema_idx_user_roles_user_id   ON :schema.user_roles (user_id);
@@ -264,3 +330,8 @@ CREATE INDEX IF NOT EXISTS :schema_idx_groups_faculty       ON :schema.groups (f
 CREATE INDEX IF NOT EXISTS :schema_idx_groups_status        ON :schema.groups (status);
 CREATE INDEX IF NOT EXISTS :schema_idx_group_members_group  ON :schema.group_members (group_id);
 CREATE INDEX IF NOT EXISTS :schema_idx_group_members_member ON :schema.group_members (member_id);
+CREATE INDEX IF NOT EXISTS :schema_idx_transactions_account ON :schema.transactions (account_id);
+CREATE INDEX IF NOT EXISTS :schema_idx_transactions_date    ON :schema.transactions (date);
+CREATE INDEX IF NOT EXISTS :schema_idx_transactions_group   ON :schema.transactions (group_id);
+CREATE INDEX IF NOT EXISTS :schema_idx_txn_cats_txn         ON :schema.transaction_categories (transaction_id);
+CREATE INDEX IF NOT EXISTS :schema_idx_txn_cats_cat         ON :schema.transaction_categories (category_id);

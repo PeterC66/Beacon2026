@@ -17,6 +17,11 @@ export const ALL_PRIVS = [
   'groups_list:view',
   'group_records_all:view', 'group_records_all:create', 'group_records_all:change', 'group_records_all:delete',
   'group_faculties:view', 'group_faculties:create', 'group_faculties:change', 'group_faculties:delete',
+  'finance_accounts:view', 'finance_accounts:create', 'finance_accounts:change', 'finance_accounts:delete',
+  'finance_categories:view', 'finance_categories:create', 'finance_categories:change', 'finance_categories:delete',
+  'finance_ledger:view',
+  'finance_transactions:view', 'finance_transactions:create', 'finance_transactions:change', 'finance_transactions:delete',
+  'settings:view', 'settings:change',
 ];
 
 export const TEST_TENANT = 'test-u3a';
