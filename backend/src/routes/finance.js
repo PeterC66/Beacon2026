@@ -261,7 +261,7 @@ router.get('/transactions', requirePrivilege('finance_ledger', 'view'), async (r
         LEFT JOIN groups g   ON g.id  = t.group_id
         LEFT JOIN transaction_categories tc ON tc.transaction_id = t.id
         LEFT JOIN finance_categories fc ON fc.id = tc.category_id
-        WHERE t.account_id = $1 AND t.date BETWEEN $2 AND $3
+        WHERE t.account_id = $1 AND t.date BETWEEN $2::date AND $3::date
         GROUP BY t.id, m1.forenames, m1.surname, m2.forenames, m2.surname, g.name
         ORDER BY t.date, t.transaction_number`;
       params = [accountId, yearStart, yearEnd];
@@ -287,7 +287,7 @@ router.get('/transactions', requirePrivilege('finance_ledger', 'view'), async (r
         LEFT JOIN groups g   ON g.id  = t.group_id
         LEFT JOIN transaction_categories tc ON tc.transaction_id = t.id
         LEFT JOIN finance_categories fc ON fc.id = tc.category_id
-        WHERE t.date BETWEEN $2 AND $3
+        WHERE t.date BETWEEN $2::date AND $3::date
         GROUP BY t.id, m1.forenames, m1.surname, m2.forenames, m2.surname, g.name, tc_this.amount
         ORDER BY t.date, t.transaction_number`;
       params = [categoryId, yearStart, yearEnd];
@@ -309,7 +309,7 @@ router.get('/transactions', requirePrivilege('finance_ledger', 'view'), async (r
         LEFT JOIN members m2 ON m2.id = t.member_id_2
         LEFT JOIN transaction_categories tc ON tc.transaction_id = t.id
         LEFT JOIN finance_categories fc ON fc.id = tc.category_id
-        WHERE ($1 = 'all' OR t.group_id = $1) AND t.date BETWEEN $2 AND $3
+        WHERE ($1 = 'all' OR t.group_id = $1) AND t.date BETWEEN $2::date AND $3::date
         GROUP BY t.id, m1.forenames, m1.surname, m2.forenames, m2.surname
         ORDER BY t.date, t.transaction_number`;
       params = [groupId, yearStart, yearEnd];
