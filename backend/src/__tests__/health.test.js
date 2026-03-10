@@ -19,9 +19,14 @@ vi.mock('../utils/redis.js', () => ({
 const { default: app } = await import('../app.js');
 
 describe('GET /health', () => {
-  it('returns 200 { status: "ok" }', async () => {
+  it('returns 200 with status, version, env, uptime', async () => {
     const res = await request(app).get('/health');
     expect(res.status).toBe(200);
-    expect(res.body).toEqual({ status: 'ok' });
+    expect(res.body).toMatchObject({
+      status:  'ok',
+      version: expect.stringMatching(/^\d+\.\d+\.\d+$/),
+      env:     expect.any(String),
+      uptime:  expect.any(Number),
+    });
   });
 });
