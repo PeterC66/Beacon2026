@@ -10,6 +10,7 @@ import { prisma } from './db.js';
 import { tenantQuery } from './db.js';
 import { hashPassword } from './password.js';
 import { PRIVILEGE_RESOURCES } from '../seed/privilegeResources.js';
+import { DEFAULT_ROLES } from '../seed/defaultRoles.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -44,6 +45,9 @@ export async function migrateAndSeed() {
 
   // 3. Bring all existing tenant schemas up to date
   await migrateTenantSchemas();
+
+  // 4. Re-sync default role privileges to match the canonical definition
+  await migrateDefaultRolePrivileges();
 }
 
 /**
@@ -122,6 +126,54 @@ async function migrateTenantSchemas() {
       console.warn(`  ⚠ ${schemaName}: ${ddlErrors} DDL statement(s) failed (see errors above)`);
     } else {
       console.log(`  ✓ ${schemaName} up to date`);
+    }
+  }
+}
+
+/**
+ * Re-sync the privileges for the five default roles on every active tenant to
+ * exactly match DEFAULT_ROLES in defaultRoles.js.
+ *
+ * Strategy: for each default role (looked up by name) delete all its current
+ * privileges and re-insert from the canonical set.  This corrects both missing
+ * entries and stale entries from earlier code versions.
+ *
+ * Custom roles and any admin-added privileges on non-default roles are untouched.
+ */
+async function migrateDefaultRolePrivileges() {
+  const tenants = await prisma.sysTenant.findMany({ where: { active: true } });
+  if (tenants.length === 0) return;
+
+  for (const tenant of tenants) {
+    const slug = tenant.slug;
+    try {
+      for (const roleData of DEFAULT_ROLES) {
+        // Find the role by its canonical name
+        const rows = await tenantQuery(
+          slug,
+          `SELECT id FROM roles WHERE name = $1 LIMIT 1`,
+          [roleData.name],
+        );
+        if (rows.length === 0) continue;
+        const roleId = rows[0].id;
+
+        // Replace all privileges for this role atomically
+        await tenantQuery(slug, `DELETE FROM role_privileges WHERE role_id = $1`, [roleId]);
+
+        for (const { code, action } of roleData.defaultPrivileges) {
+          const resource = PRIVILEGE_RESOURCES.find((r) => r.code === code);
+          if (!resource) continue;
+          await tenantQuery(
+            slug,
+            `INSERT INTO role_privileges (role_id, resource_id, action)
+             VALUES ($1, $2, $3) ON CONFLICT DO NOTHING`,
+            [roleId, resource.id, action],
+          );
+        }
+      }
+      console.log(`  ✓ Default role privileges synced for ${slug}`);
+    } catch (err) {
+      console.error(`  ✗ Privilege sync error [${slug}]:`, err.message);
     }
   }
 }
