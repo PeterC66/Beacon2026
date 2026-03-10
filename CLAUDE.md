@@ -436,3 +436,35 @@ Save button calls PATCH and reflects the returned (server-authoritative) values.
 
 The SystemSettings page renders "System Settings" in **both** the NavBar
 breadcrumb and the page `<h1>`, so use `getAllByText` (not `getByText`) in tests.
+
+---
+
+## Sortable table columns (March 2026)
+
+### Shared infrastructure
+
+- `frontend/src/hooks/useSortedData.js` — `useSortedData(data, defaultKey?, defaultDir?)` returns `{ sorted, sortKey, sortDir, onSort }`. Handles strings (locale-aware), numbers, booleans (true-first in asc), and nulls (always last).
+- `frontend/src/components/SortableHeader.jsx` — `<SortableHeader col="..." label="..." sortKey={sortKey} sortDir={sortDir} onSort={onSort} className="..." />` renders a `<th>` with ▲/▼/⇅ indicator.
+
+### Pages updated
+
+Every main list page uses client-side sorting via the hook above. The columns that are **not** made sortable (by design):
+- Action columns (Edit/Delete links)
+- `leaders` in GroupList (array of objects — no clear sort key)
+- Email/tel in GroupRecord group-members tab (hidden for some members)
+- RoleEditor privilege matrix (functional grid, not a data list)
+- UserEditor role-assignment checkboxes (functional grid)
+- MemberStatusList (single-column inline-edit table — minimal value)
+
+### Pattern for new list pages
+
+```jsx
+import SortableHeader from '../../components/SortableHeader.jsx';
+import { useSortedData } from '../../hooks/useSortedData.js';
+
+const { sorted, sortKey, sortDir, onSort } = useSortedData(myList);
+// In thead:
+<SortableHeader col="name" label="Name" sortKey={sortKey} sortDir={sortDir} onSort={onSort} className="px-4 py-2.5 font-normal" />
+// In tbody:
+{sorted.map((item, i) => ...)}
+```
