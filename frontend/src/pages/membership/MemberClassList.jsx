@@ -6,6 +6,8 @@ import { memberClasses as api } from '../../lib/api.js';
 import { useAuth } from '../../context/AuthContext.jsx';
 import NavBar from '../../components/NavBar.jsx';
 import PageHeader from '../../components/PageHeader.jsx';
+import SortableHeader from '../../components/SortableHeader.jsx';
+import { useSortedData } from '../../hooks/useSortedData.js';
 
 export default function MemberClassList() {
   const { can, tenant } = useAuth();
@@ -14,6 +16,8 @@ export default function MemberClassList() {
   const [loading,   setLoading]   = useState(true);
   const [error,     setError]     = useState(null);
   const [deleting,  setDeleting]  = useState(null);
+
+  const { sorted, sortKey, sortDir, onSort } = useSortedData(classList);
 
   useEffect(() => { load(); }, []);
 
@@ -61,16 +65,16 @@ export default function MemberClassList() {
               <table className="w-full text-sm bg-white min-w-max">
                 <thead>
                   <tr className="bg-slate-50 border-b border-slate-200 text-left text-slate-600 italic font-normal">
-                    <th className="px-4 py-2.5 font-normal">Name</th>
-                    <th className="px-4 py-2.5 font-normal text-center">Current</th>
-                    <th className="px-4 py-2.5 font-normal text-center">Joint</th>
-                    <th className="px-4 py-2.5 font-normal text-center">Associate</th>
-                    <th className="px-4 py-2.5 font-normal text-right">Fee (£)</th>
+                    <SortableHeader col="name"         label="Name"      sortKey={sortKey} sortDir={sortDir} onSort={onSort} className="px-4 py-2.5 font-normal" />
+                    <SortableHeader col="current"      label="Current"   sortKey={sortKey} sortDir={sortDir} onSort={onSort} className="px-4 py-2.5 font-normal text-center" />
+                    <SortableHeader col="is_joint"     label="Joint"     sortKey={sortKey} sortDir={sortDir} onSort={onSort} className="px-4 py-2.5 font-normal text-center" />
+                    <SortableHeader col="is_associate" label="Associate" sortKey={sortKey} sortDir={sortDir} onSort={onSort} className="px-4 py-2.5 font-normal text-center" />
+                    <SortableHeader col="fee"          label="Fee (£)"   sortKey={sortKey} sortDir={sortDir} onSort={onSort} className="px-4 py-2.5 font-normal text-right" />
                     <th className="px-4 py-2.5"></th>
                   </tr>
                 </thead>
                 <tbody>
-                  {classList.map((mc, i) => (
+                  {sorted.map((mc, i) => (
                     <tr key={mc.id} className={`border-b border-slate-100 ${i % 2 === 0 ? 'bg-yellow-50' : 'bg-white'}`}>
                       <td className="px-4 py-2.5">{mc.name}{mc.locked && <span className="ml-2 text-xs text-slate-400 italic">locked</span>}</td>
                       <td className="px-4 py-2.5 text-center">{mc.current    ? 'Y' : ''}</td>

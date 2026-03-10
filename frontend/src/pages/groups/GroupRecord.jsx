@@ -9,6 +9,8 @@ import { groups as groupsApi, faculties as facultiesApi, members as membersApi }
 import { useAuth } from '../../context/AuthContext.jsx';
 import NavBar from '../../components/NavBar.jsx';
 import PageHeader from '../../components/PageHeader.jsx';
+import SortableHeader from '../../components/SortableHeader.jsx';
+import { useSortedData } from '../../hooks/useSortedData.js';
 
 // ─── Details sub-component ────────────────────────────────────────────────
 
@@ -271,6 +273,7 @@ function GroupMembers({ groupId }) {
   const [addLoading,  setAddLoading]  = useState(false);
 
   const canManage = can('group_records_all', 'change');
+  const { sorted: sortedMembers, sortKey, sortDir, onSort } = useSortedData(groupMembers);
 
   useEffect(() => {
     load();
@@ -353,8 +356,8 @@ function GroupMembers({ groupId }) {
 
   if (loading) return <p className="text-center text-slate-500 py-8">Loading…</p>;
 
-  const joinedMembers  = groupMembers.filter((m) => !m.waiting_since);
-  const waitingMembers = groupMembers.filter((m) => m.waiting_since);
+  const joinedMembers  = sortedMembers.filter((m) => !m.waiting_since);
+  const waitingMembers = sortedMembers.filter((m) => m.waiting_since);
 
   // Compute which members can still be added (not already in group)
   const memberIdsInGroup = new Set(groupMembers.map((m) => m.member_id));
@@ -372,13 +375,13 @@ function GroupMembers({ groupId }) {
           <table className="w-full text-sm bg-white min-w-max">
             <thead>
               <tr className="bg-slate-50 border-b border-slate-200 text-left text-slate-600 italic font-normal">
-                <th className="px-3 py-2 font-normal">No</th>
-                <th className="px-3 py-2 font-normal">Name</th>
-                <th className="px-3 py-2 font-normal">Town</th>
+                <SortableHeader col="membership_number" label="No"     sortKey={sortKey} sortDir={sortDir} onSort={onSort} className="px-3 py-2 font-normal" />
+                <SortableHeader col="surname"           label="Name"   sortKey={sortKey} sortDir={sortDir} onSort={onSort} className="px-3 py-2 font-normal" />
+                <SortableHeader col="town"              label="Town"   sortKey={sortKey} sortDir={sortDir} onSort={onSort} className="px-3 py-2 font-normal" />
                 <th className="px-3 py-2 font-normal">Email</th>
                 <th className="px-3 py-2 font-normal">Tel</th>
-                <th className="px-3 py-2 font-normal">Status</th>
-                <th className="px-3 py-2 font-normal">Leader</th>
+                <SortableHeader col="status"            label="Status" sortKey={sortKey} sortDir={sortDir} onSort={onSort} className="px-3 py-2 font-normal" />
+                <SortableHeader col="is_leader"         label="Leader" sortKey={sortKey} sortDir={sortDir} onSort={onSort} className="px-3 py-2 font-normal" />
                 {canManage && <th className="px-3 py-2"></th>}
               </tr>
             </thead>

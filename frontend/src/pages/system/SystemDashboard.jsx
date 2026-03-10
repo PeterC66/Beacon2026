@@ -4,6 +4,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { system } from '../../lib/api.js';
+import SortableHeader from '../../components/SortableHeader.jsx';
+import { useSortedData } from '../../hooks/useSortedData.js';
 
 const EMPTY_FORM = { name: '', slug: '', adminEmail: '', adminName: '', adminPassword: '' };
 
@@ -12,6 +14,7 @@ export default function SystemDashboard() {
   const token     = sessionStorage.getItem('sysToken');
 
   const [tenants,  setTenants]  = useState([]);
+  const { sorted: sortedTenants, sortKey, sortDir, onSort } = useSortedData(tenants);
   const [loadErr,  setLoadErr]  = useState(null);
   const [showForm, setShowForm] = useState(false);
   const [form,     setForm]     = useState(EMPTY_FORM);
@@ -113,14 +116,14 @@ export default function SystemDashboard() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="text-left text-slate-500 border-b">
-                  <th className="pb-2 font-medium">Name</th>
-                  <th className="pb-2 font-medium">Slug</th>
-                  <th className="pb-2 font-medium">Status</th>
+                  <SortableHeader col="name"   label="Name"   sortKey={sortKey} sortDir={sortDir} onSort={onSort} className="pb-2 font-medium" />
+                  <SortableHeader col="slug"   label="Slug"   sortKey={sortKey} sortDir={sortDir} onSort={onSort} className="pb-2 font-medium" />
+                  <SortableHeader col="active" label="Status" sortKey={sortKey} sortDir={sortDir} onSort={onSort} className="pb-2 font-medium" />
                   <th className="pb-2"></th>
                 </tr>
               </thead>
               <tbody>
-                {tenants.map((t) => (
+                {sortedTenants.map((t) => (
                   <tr key={t.id} className="border-b last:border-0">
                     <td className="py-3">{t.name}</td>
                     <td className="py-3 font-mono text-slate-600">{t.slug}</td>
