@@ -6,6 +6,10 @@ import helmet from 'helmet';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import { rateLimit } from 'express-rate-limit';
+import { createRequire } from 'module';
+
+const require = createRequire(import.meta.url);
+const { version } = require('../package.json');
 
 import authRoutes          from './routes/auth.js';
 import userRoutes          from './routes/users.js';
@@ -50,7 +54,12 @@ app.use('/groups',          groupRoutes);
 app.use('/settings',        settingsRoutes);
 app.use('/finance',         financeRoutes);
 
-app.get('/health', (_req, res) => res.json({ status: 'ok' }));
+app.get('/health', (_req, res) => res.json({
+  status:  'ok',
+  version,
+  env:     process.env.NODE_ENV ?? 'development',
+  uptime:  Math.floor(process.uptime()),
+}));
 
 app.use(errorHandler);
 
