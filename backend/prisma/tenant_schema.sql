@@ -264,7 +264,7 @@ CREATE TABLE IF NOT EXISTS :schema.finance_accounts (
   created_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
   updated_at      TIMESTAMPTZ NOT NULL DEFAULT now()
 );
--- Backfill configure columns on existing tenants (safe; DEFAULT handles all rows)
+-- Backfill configure columns on existing tenants (DEFAULT handles all rows, safe to re-run)
 ALTER TABLE :schema.finance_accounts ADD COLUMN IF NOT EXISTS pending_config TEXT NOT NULL DEFAULT 'disabled';
 ALTER TABLE :schema.finance_accounts ADD COLUMN IF NOT EXISTS pending_types  TEXT[] NOT NULL DEFAULT '{}';
 ALTER TABLE :schema.finance_accounts ADD COLUMN IF NOT EXISTS enable_refunds BOOLEAN NOT NULL DEFAULT false;
