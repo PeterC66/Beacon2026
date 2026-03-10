@@ -146,6 +146,9 @@ those tables.
    `WHERE NOT EXISTS` when the target column has no UNIQUE constraint).
 4. The DDL loop in `migrateTenantSchemas()` has **per-statement** try/catch so
    one failing statement never prevents the rest from running.
+5. **No semicolons in SQL comments** — the migration splits `tenant_schema.sql`
+   on `;`, so a semicolon inside a `--` comment silently breaks the following
+   statement (Postgres error 42601 `syntax error at or near …`).
 
 ### Diagnosing "unexpected error" on a page
 
