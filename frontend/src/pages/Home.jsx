@@ -68,7 +68,7 @@ export default function Home() {
       items: [
         { label: 'System users',        to: can('users_list', 'view') ? '/users' : null },
         { label: 'Roles and privileges', to: can('role_record', 'view') ? '/roles' : null },
-        { label: 'System settings',     to: null },
+        { label: 'System settings',     to: can('settings', 'view') ? '/settings' : null },
         { label: 'System messages',     to: null },
         { label: 'Finance accounts',    to: null },
         { label: 'Finance categories',  to: null },

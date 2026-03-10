@@ -1,0 +1,104 @@
+// beacon2/backend/src/routes/settings.js
+
+import { Router } from 'express';
+import { z } from 'zod';
+import { requireAuth } from '../middleware/auth.js';
+import { requirePrivilege } from '../middleware/requirePrivilege.js';
+import { tenantQuery } from '../utils/db.js';
+
+const router = Router();
+router.use(requireAuth);
+
+const COLS = `
+  card_colour, email_cards, public_phone, public_email, home_page,
+  online_join_email, online_renew_email, fee_variation,
+  extended_membership_month, advance_renewals_weeks, grace_lapse_weeks,
+  deletion_years, default_payment_method, gift_aid_enabled,
+  gift_aid_online_renewals, default_town, default_county, default_std_code,
+  paypal_email, paypal_cancel_url, shared_address_warning, updated_at
+`;
+
+// ─── GET /settings ────────────────────────────────────────────────────────
+router.get('/', requirePrivilege('settings', 'view'), async (req, res, next) => {
+  try {
+    const [settings] = await tenantQuery(
+      req.user.tenantSlug,
+      `SELECT ${COLS} FROM tenant_settings WHERE id = 'singleton'`,
+    );
+    res.json(settings ?? {});
+  } catch (err) {
+    next(err);
+  }
+});
+
+// ─── PATCH /settings ──────────────────────────────────────────────────────
+const updateSchema = z.object({
+  cardColour:               z.string().min(1).optional(),
+  emailCards:               z.boolean().optional(),
+  publicPhone:              z.string().nullable().optional(),
+  publicEmail:              z.string().nullable().optional(),
+  homePage:                 z.string().nullable().optional(),
+  onlineJoinEmail:          z.string().nullable().optional(),
+  onlineRenewEmail:         z.string().nullable().optional(),
+  feeVariation:             z.enum(['same_all_year', 'varies_by_month']).optional(),
+  extendedMembershipMonth:  z.number().int().min(1).max(12).nullable().optional(),
+  advanceRenewalsWeeks:     z.number().int().min(0).max(52).optional(),
+  graceLapseWeeks:          z.number().int().min(0).max(52).optional(),
+  deletionYears:            z.number().int().min(2).max(7).optional(),
+  defaultPaymentMethod:     z.string().min(1).optional(),
+  giftAidEnabled:           z.boolean().optional(),
+  giftAidOnlineRenewals:    z.boolean().optional(),
+  defaultTown:              z.string().nullable().optional(),
+  defaultCounty:            z.string().nullable().optional(),
+  defaultStdCode:           z.string().nullable().optional(),
+  paypalEmail:              z.string().nullable().optional(),
+  paypalCancelUrl:          z.string().nullable().optional(),
+  sharedAddressWarning:     z.boolean().optional(),
+});
+
+router.patch('/', requirePrivilege('settings', 'change'), async (req, res, next) => {
+  try {
+    const data = updateSchema.parse(req.body);
+    const fields = [];
+    const values = [];
+    let i = 1;
+
+    if (data.cardColour              !== undefined) { fields.push(`card_colour = $${i++}`);               values.push(data.cardColour); }
+    if (data.emailCards              !== undefined) { fields.push(`email_cards = $${i++}`);               values.push(data.emailCards); }
+    if (data.publicPhone             !== undefined) { fields.push(`public_phone = $${i++}`);              values.push(data.publicPhone); }
+    if (data.publicEmail             !== undefined) { fields.push(`public_email = $${i++}`);              values.push(data.publicEmail); }
+    if (data.homePage                !== undefined) { fields.push(`home_page = $${i++}`);                 values.push(data.homePage); }
+    if (data.onlineJoinEmail         !== undefined) { fields.push(`online_join_email = $${i++}`);         values.push(data.onlineJoinEmail); }
+    if (data.onlineRenewEmail        !== undefined) { fields.push(`online_renew_email = $${i++}`);        values.push(data.onlineRenewEmail); }
+    if (data.feeVariation            !== undefined) { fields.push(`fee_variation = $${i++}`);             values.push(data.feeVariation); }
+    if (data.extendedMembershipMonth !== undefined) { fields.push(`extended_membership_month = $${i++}`); values.push(data.extendedMembershipMonth); }
+    if (data.advanceRenewalsWeeks    !== undefined) { fields.push(`advance_renewals_weeks = $${i++}`);    values.push(data.advanceRenewalsWeeks); }
+    if (data.graceLapseWeeks         !== undefined) { fields.push(`grace_lapse_weeks = $${i++}`);         values.push(data.graceLapseWeeks); }
+    if (data.deletionYears           !== undefined) { fields.push(`deletion_years = $${i++}`);            values.push(data.deletionYears); }
+    if (data.defaultPaymentMethod    !== undefined) { fields.push(`default_payment_method = $${i++}`);    values.push(data.defaultPaymentMethod); }
+    if (data.giftAidEnabled          !== undefined) { fields.push(`gift_aid_enabled = $${i++}`);          values.push(data.giftAidEnabled); }
+    if (data.giftAidOnlineRenewals   !== undefined) { fields.push(`gift_aid_online_renewals = $${i++}`);  values.push(data.giftAidOnlineRenewals); }
+    if (data.defaultTown             !== undefined) { fields.push(`default_town = $${i++}`);              values.push(data.defaultTown); }
+    if (data.defaultCounty           !== undefined) { fields.push(`default_county = $${i++}`);            values.push(data.defaultCounty); }
+    if (data.defaultStdCode          !== undefined) { fields.push(`default_std_code = $${i++}`);          values.push(data.defaultStdCode); }
+    if (data.paypalEmail             !== undefined) { fields.push(`paypal_email = $${i++}`);              values.push(data.paypalEmail); }
+    if (data.paypalCancelUrl         !== undefined) { fields.push(`paypal_cancel_url = $${i++}`);         values.push(data.paypalCancelUrl); }
+    if (data.sharedAddressWarning    !== undefined) { fields.push(`shared_address_warning = $${i++}`);    values.push(data.sharedAddressWarning); }
+
+    if (fields.length === 0) return res.status(400).json({ error: 'Nothing to update.' });
+
+    fields.push(`updated_at = now()`);
+
+    const [settings] = await tenantQuery(
+      req.user.tenantSlug,
+      `UPDATE tenant_settings SET ${fields.join(', ')} WHERE id = 'singleton'
+       RETURNING ${COLS}`,
+      values,
+    );
+    res.json(settings);
+  } catch (err) {
+    next(err);
+  }
+});
+
+export default router;

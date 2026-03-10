@@ -198,6 +198,13 @@ export const groups = {
   removeMember: (id, memberId)       => request(`/groups/${id}/members/${memberId}`, { method: 'DELETE' }),
 };
 
+// ─── Settings ─────────────────────────────────────────────────────────────
+
+export const settings = {
+  get:    ()     => request('/settings'),
+  update: (data) => request('/settings', { method: 'PATCH', body: JSON.stringify(data) }),
+};
+
 // ─── System admin (separate token, no tenant) ─────────────────────────────
 
 export const system = {

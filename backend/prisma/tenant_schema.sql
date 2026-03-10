@@ -210,6 +210,40 @@ CREATE TABLE IF NOT EXISTS :schema.group_members (
 );
 
 -- ─────────────────────────────────────────────
+-- TENANT SETTINGS  (single-row table)
+-- ─────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS :schema.tenant_settings (
+  id                        TEXT PRIMARY KEY DEFAULT 'singleton' CHECK (id = 'singleton'),
+  card_colour               TEXT NOT NULL DEFAULT '#0066cc',
+  email_cards               BOOLEAN NOT NULL DEFAULT false,
+  public_phone              TEXT,
+  public_email              TEXT,
+  home_page                 TEXT,
+  online_join_email         TEXT,
+  online_renew_email        TEXT,
+  fee_variation             TEXT NOT NULL DEFAULT 'same_all_year'
+                              CHECK (fee_variation IN ('same_all_year', 'varies_by_month')),
+  extended_membership_month INTEGER,           -- 1-12, or NULL = not enabled
+  advance_renewals_weeks    INTEGER NOT NULL DEFAULT 4,
+  grace_lapse_weeks         INTEGER NOT NULL DEFAULT 4,
+  deletion_years            INTEGER NOT NULL DEFAULT 7
+                              CHECK (deletion_years >= 2 AND deletion_years <= 7),
+  default_payment_method    TEXT NOT NULL DEFAULT 'Cheque',
+  gift_aid_enabled          BOOLEAN NOT NULL DEFAULT false,
+  gift_aid_online_renewals  BOOLEAN NOT NULL DEFAULT false,
+  default_town              TEXT,
+  default_county            TEXT,
+  default_std_code          TEXT,
+  paypal_email              TEXT,
+  paypal_cancel_url         TEXT,
+  shared_address_warning    BOOLEAN NOT NULL DEFAULT false,
+  updated_at                TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+-- Ensure every tenant has exactly one settings row
+INSERT INTO :schema.tenant_settings (id) VALUES ('singleton') ON CONFLICT (id) DO NOTHING;
+
+-- ─────────────────────────────────────────────
 -- INDEXES  (named so IF NOT EXISTS works)
 -- ─────────────────────────────────────────────
 CREATE INDEX IF NOT EXISTS :schema_idx_user_roles_user_id   ON :schema.user_roles (user_id);
