@@ -6,6 +6,8 @@ import { groups as groupsApi, faculties as facultiesApi } from '../../lib/api.js
 import { useAuth } from '../../context/AuthContext.jsx';
 import NavBar from '../../components/NavBar.jsx';
 import PageHeader from '../../components/PageHeader.jsx';
+import SortableHeader from '../../components/SortableHeader.jsx';
+import { useSortedData } from '../../hooks/useSortedData.js';
 
 const ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
 
@@ -14,6 +16,7 @@ export default function GroupList() {
   const navigate = useNavigate();
 
   const [groupList,   setGroupList]   = useState([]);
+  const { sorted, sortKey, sortDir, onSort } = useSortedData(groupList);
   const [faculties,   setFaculties]   = useState([]);
   const [loading,     setLoading]     = useState(true);
   const [error,       setError]       = useState(null);
@@ -120,17 +123,17 @@ export default function GroupList() {
                 <table className="w-full text-sm bg-white min-w-max">
                   <thead>
                     <tr className="bg-slate-50 border-b border-slate-200 text-left text-slate-600 italic font-normal">
-                      <th className="px-3 py-2 font-normal">Group</th>
-                      <th className="px-3 py-2 font-normal">When</th>
+                      <SortableHeader col="name"         label="Group"   sortKey={sortKey} sortDir={sortDir} onSort={onSort} className="px-3 py-2 font-normal" />
+                      <SortableHeader col="when_text"    label="When"    sortKey={sortKey} sortDir={sortDir} onSort={onSort} className="px-3 py-2 font-normal" />
                       <th className="px-3 py-2 font-normal">Leader(s)</th>
-                      <th className="px-3 py-2 font-normal">Members</th>
-                      {!activeOnly && <th className="px-3 py-2 font-normal">Status</th>}
-                      {faculties.length > 0 && <th className="px-3 py-2 font-normal">Faculty</th>}
+                      <SortableHeader col="member_count" label="Members" sortKey={sortKey} sortDir={sortDir} onSort={onSort} className="px-3 py-2 font-normal" />
+                      {!activeOnly && <SortableHeader col="status"       label="Status"  sortKey={sortKey} sortDir={sortDir} onSort={onSort} className="px-3 py-2 font-normal" />}
+                      {faculties.length > 0 && <SortableHeader col="faculty_name" label="Faculty" sortKey={sortKey} sortDir={sortDir} onSort={onSort} className="px-3 py-2 font-normal" />}
                       <th className="px-3 py-2"></th>
                     </tr>
                   </thead>
                   <tbody>
-                    {groupList.map((g, i) => (
+                    {sorted.map((g, i) => (
                       <tr
                         key={g.id}
                         className={`border-b border-slate-100 ${i % 2 === 0 ? 'bg-yellow-50' : 'bg-white'}`}

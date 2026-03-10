@@ -6,6 +6,8 @@ import { roles as rolesApi } from '../../lib/api.js';
 import { useAuth } from '../../context/AuthContext.jsx';
 import NavBar from '../../components/NavBar.jsx';
 import PageHeader from '../../components/PageHeader.jsx';
+import SortableHeader from '../../components/SortableHeader.jsx';
+import { useSortedData } from '../../hooks/useSortedData.js';
 
 export default function RoleList() {
   const { can, tenant } = useAuth();
@@ -14,6 +16,8 @@ export default function RoleList() {
   const [loading,  setLoading]  = useState(true);
   const [error,    setError]    = useState(null);
   const [deleting, setDeleting] = useState(null);
+
+  const { sorted, sortKey, sortDir, onSort } = useSortedData(roleList);
 
   useEffect(() => { load(); }, []);
 
@@ -62,14 +66,14 @@ export default function RoleList() {
               <table className="w-full text-sm bg-white min-w-max">
                 <thead>
                   <tr className="bg-slate-50 border-b border-slate-200 text-left text-slate-600 italic font-normal">
-                    <th className="px-4 py-2.5 font-normal">Role Name</th>
-                    <th className="px-4 py-2.5 font-normal text-center">Committee role</th>
-                    <th className="px-4 py-2.5 font-normal text-center">Users</th>
+                    <SortableHeader col="name"         label="Role Name"      sortKey={sortKey} sortDir={sortDir} onSort={onSort} className="px-4 py-2.5 font-normal" />
+                    <SortableHeader col="is_committee" label="Committee role" sortKey={sortKey} sortDir={sortDir} onSort={onSort} className="px-4 py-2.5 font-normal text-center" />
+                    <SortableHeader col="user_count"   label="Users"          sortKey={sortKey} sortDir={sortDir} onSort={onSort} className="px-4 py-2.5 font-normal text-center" />
                     {(can('role_record', 'view') || can('role_record', 'delete')) && <th className="px-4 py-2.5"></th>}
                   </tr>
                 </thead>
                 <tbody>
-                  {roleList.map((role, i) => (
+                  {sorted.map((role, i) => (
                     <tr key={role.id} className={`border-b border-slate-100 ${i % 2 === 0 ? 'bg-yellow-50' : 'bg-white'}`}>
                       <td className="px-4 py-2.5">{role.name}</td>
                       <td className="px-4 py-2.5 text-center">{role.is_committee ? 'Y' : ''}</td>

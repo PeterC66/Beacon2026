@@ -6,6 +6,8 @@ import { users as usersApi } from '../../lib/api.js';
 import { useAuth } from '../../context/AuthContext.jsx';
 import NavBar from '../../components/NavBar.jsx';
 import PageHeader from '../../components/PageHeader.jsx';
+import SortableHeader from '../../components/SortableHeader.jsx';
+import { useSortedData } from '../../hooks/useSortedData.js';
 
 export default function UserList() {
   const { can, tenant } = useAuth();
@@ -14,6 +16,8 @@ export default function UserList() {
   const [loading,  setLoading]  = useState(true);
   const [error,    setError]    = useState(null);
   const [deleting, setDeleting] = useState(null);
+
+  const { sorted, sortKey, sortDir, onSort } = useSortedData(userList);
 
   useEffect(() => { load(); }, []);
 
@@ -37,6 +41,7 @@ export default function UserList() {
     }
   }
 
+  const TH = 'px-4 py-2.5 font-normal';
   const navLinks = [
     { label: 'Home', to: '/' },
     ...(can('user_record', 'create') ? [{ label: 'Add User', to: '/users/new' }] : []),
@@ -62,15 +67,15 @@ export default function UserList() {
               <table className="w-full text-sm bg-white min-w-max">
                 <thead>
                   <tr className="bg-slate-50 border-b border-slate-200 text-left text-slate-600 italic font-normal">
-                    <th className="px-4 py-2.5 font-normal">Name</th>
-                    <th className="px-4 py-2.5 font-normal">Email</th>
-                    <th className="px-4 py-2.5 font-normal text-center">Active</th>
-                    <th className="px-4 py-2.5 font-normal">Roles</th>
+                    <SortableHeader col="name"   label="Name"   sortKey={sortKey} sortDir={sortDir} onSort={onSort} className={TH} />
+                    <SortableHeader col="email"  label="Email"  sortKey={sortKey} sortDir={sortDir} onSort={onSort} className={TH} />
+                    <SortableHeader col="active" label="Active" sortKey={sortKey} sortDir={sortDir} onSort={onSort} className={`${TH} text-center`} />
+                    <th className={TH}>Roles</th>
                     {(can('user_record', 'view') || can('user_record', 'delete')) && <th className="px-4 py-2.5"></th>}
                   </tr>
                 </thead>
                 <tbody>
-                  {userList.map((user, i) => (
+                  {sorted.map((user, i) => (
                     <tr key={user.id} className={`border-b border-slate-100 ${i % 2 === 0 ? 'bg-yellow-50' : 'bg-white'}`}>
                       <td className="px-4 py-2.5">{user.name}</td>
                       <td className="px-4 py-2.5">{user.email}</td>

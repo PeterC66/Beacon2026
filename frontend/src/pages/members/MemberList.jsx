@@ -6,6 +6,8 @@ import { members as membersApi, memberStatuses as statusApi, memberClasses as cl
 import { useAuth } from '../../context/AuthContext.jsx';
 import NavBar from '../../components/NavBar.jsx';
 import PageHeader from '../../components/PageHeader.jsx';
+import SortableHeader from '../../components/SortableHeader.jsx';
+import { useSortedData } from '../../hooks/useSortedData.js';
 
 const ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
 
@@ -14,6 +16,7 @@ export default function MemberList() {
   const navigate = useNavigate();
 
   const [memberList,  setMemberList]  = useState([]);
+  const { sorted, sortKey, sortDir, onSort } = useSortedData(memberList);
   const [statuses,    setStatuses]    = useState([]);
   const [classes,     setClasses]     = useState([]);
   const [loading,     setLoading]     = useState(true);
@@ -191,20 +194,20 @@ export default function MemberList() {
                 <table className="w-full text-sm bg-white min-w-max">
                   <thead>
                     <tr className="bg-slate-50 border-b border-slate-200 text-left text-slate-600 italic font-normal">
-                      <th className="px-3 py-2 font-normal">No</th>
-                      <th className="px-3 py-2 font-normal">Surname</th>
-                      <th className="px-3 py-2 font-normal">Forenames</th>
-                      <th className="px-3 py-2 font-normal">Known as</th>
-                      <th className="px-3 py-2 font-normal">Town</th>
-                      <th className="px-3 py-2 font-normal">Postcode</th>
-                      <th className="px-3 py-2 font-normal">Email</th>
-                      <th className="px-3 py-2 font-normal">Status</th>
-                      <th className="px-3 py-2 font-normal">Class</th>
+                      <SortableHeader col="membership_number" label="No"       sortKey={sortKey} sortDir={sortDir} onSort={onSort} className="px-3 py-2 font-normal" />
+                      <SortableHeader col="surname"           label="Surname"  sortKey={sortKey} sortDir={sortDir} onSort={onSort} className="px-3 py-2 font-normal" />
+                      <SortableHeader col="forenames"         label="Forenames" sortKey={sortKey} sortDir={sortDir} onSort={onSort} className="px-3 py-2 font-normal" />
+                      <SortableHeader col="known_as"          label="Known as" sortKey={sortKey} sortDir={sortDir} onSort={onSort} className="px-3 py-2 font-normal" />
+                      <SortableHeader col="town"              label="Town"     sortKey={sortKey} sortDir={sortDir} onSort={onSort} className="px-3 py-2 font-normal" />
+                      <SortableHeader col="postcode"          label="Postcode" sortKey={sortKey} sortDir={sortDir} onSort={onSort} className="px-3 py-2 font-normal" />
+                      <SortableHeader col="email"             label="Email"    sortKey={sortKey} sortDir={sortDir} onSort={onSort} className="px-3 py-2 font-normal" />
+                      <SortableHeader col="status"            label="Status"   sortKey={sortKey} sortDir={sortDir} onSort={onSort} className="px-3 py-2 font-normal" />
+                      <SortableHeader col="class"             label="Class"    sortKey={sortKey} sortDir={sortDir} onSort={onSort} className="px-3 py-2 font-normal" />
                       <th className="px-3 py-2"></th>
                     </tr>
                   </thead>
                   <tbody>
-                    {memberList.map((m, i) => (
+                    {sorted.map((m, i) => (
                       <tr
                         key={m.id}
                         ref={(el) => { if (el) rowRefs.current[m.surname?.[0]?.toUpperCase()] = el; }}
