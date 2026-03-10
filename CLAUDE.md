@@ -96,8 +96,21 @@ These already used Tailwind before the Option B migration. They use `bg-slate-10
 
 ## Session wrap-up
 
-At the end of any session that raised problems, learned something new, or required
-a non-obvious fix, **update this file** with the lessons learned before pushing.
+**This step is mandatory and must be in your TodoWrite list from the start of every session.**
+
+Add a todo item — "Update CLAUDE.md if anything new was learned" — at session start
+alongside your other planned tasks. Mark it complete only after explicitly checking
+whether anything in the session warrants documentation.
+
+At the end of every session:
+1. Review what was built or fixed.
+2. If anything new, non-obvious, or previously problematic was encountered, add it
+   to this file under a dated heading.
+3. Commit and push the updated CLAUDE.md along with (or just after) the code changes.
+4. **Tell the user** "I have updated CLAUDE.md with: [brief description]" (or "No
+   CLAUDE.md update needed this session" if nothing warranted it). This makes the
+   step visible and auditable.
+
 This keeps future sessions from repeating the same mistakes.
 
 ---
@@ -259,3 +272,107 @@ If any test fails, **do not stop and report success**. Instead:
 
 Repeat until the suite is green. If after two fix attempts the cause is still unclear,
 explain the failure to the user and ask for guidance rather than guessing further.
+
+---
+
+## Phone number and postcode validation (March 2026)
+
+### Phone numbers
+
+Install **`libphonenumber-js`** in the frontend (`npm install libphonenumber-js`).
+Validate with `isValidPhoneNumber(value, 'GB')`. Returns `false` for empty/null,
+so guard with `if (!value || !value.trim()) return null` first.
+
+```js
+import { isValidPhoneNumber } from 'libphonenumber-js';
+
+function validatePhone(value) {
+  if (!value || !value.trim()) return null;
+  try {
+    return isValidPhoneNumber(value, 'GB') ? null : 'Enter a valid UK phone number';
+  } catch {
+    return 'Enter a valid UK phone number';
+  }
+}
+```
+
+### UK postcodes
+
+Use this regex (covers GIR 0AA + all standard AN/ANN/AAN/AANA formats):
+
+```js
+const UK_POSTCODE_RE = /^(GIR\s?0AA|[A-Z]{1,2}[0-9][0-9A-Z]?\s?[0-9][ABD-HJLNP-UW-Z]{2})$/i;
+```
+
+### Showing all validation errors at once
+
+Do **not** rely on HTML `required` attributes for form validation — use `noValidate`
+on the `<form>` and a single `runValidation()` function that returns a flat
+`{ fieldName: 'error message' }` map. Call it at submit time and set all errors
+in one `setFieldErrors(errs)` call. Also call it on individual field blur to give
+early per-field feedback.
+
+```js
+// Pattern:
+const [fieldErrors, setFieldErrors] = useState({});
+
+function runValidation() {
+  const errs = {};
+  if (!form.foo.trim()) errs.foo = 'Foo is required';
+  // ... all fields ...
+  return errs;
+}
+
+async function handleSave(e) {
+  e.preventDefault();
+  const errs = runValidation();
+  if (Object.keys(errs).length > 0) { setFieldErrors(errs); return; }
+  // ... proceed with save ...
+}
+```
+
+---
+
+## Shared address and partner linking (March 2026)
+
+### Data model
+
+Two members can share a single `addresses` row by both having `address_id` pointing
+to the same record. `partner_id` is a separate bi-directional link on `members`.
+
+### `address_shared` flag
+
+`GET /members/:id` returns `address_shared: boolean` — true when the member's partner
+exists **and** both have the same `address_id`. Computed in SQL:
+
+```sql
+(p.id IS NOT NULL AND p.address_id = m.address_id) AS address_shared
+```
+
+### Editing a shared address (addressScope)
+
+When saving address edits for a member whose address is shared, the frontend asks
+*"Is this change for both X and Y, or just X?"* and sends `addressScope: 'both' | 'me-only'`
+in the PATCH body.
+
+- **`'both'`** — update the shared `addresses` row in place (both see the change)
+- **`'me-only'`** — INSERT a new `addresses` row (copying unchanged fields from the
+  shared base), link only this member to it; partner's `address_id` is untouched
+
+### Changing a member's partner (PATCH side-effects)
+
+When `partnerId` changes in a PATCH request the backend must:
+
+1. Validate `newPartnerId !== memberId` (can't be own partner)
+2. Look up Y's `address_id` → set `data._newAddressId` so X.address_id = Y.address_id
+3. `UPDATE members SET partner_id = X WHERE id = Y` (bi-directional)
+4. If old partner Z exists and Z ≠ Y: `UPDATE members SET partner_id = NULL WHERE id = Z`
+5. Note `current.address_id` as `oldAddressIdForCleanup`
+6. **Skip** applying `data.address` (address linking takes precedence over field edits)
+7. After the member UPDATE: if `oldAddressIdForCleanup` ≠ `newAddressId` and no other
+   member references `oldAddressIdForCleanup`, `DELETE FROM addresses` that row
+
+The frontend detects a partner change (`partnerChanged` state flag), fetches the new
+partner's full record via `membersApi.get()`, updates the address display fields, greys
+them out (pointer-events-none), and omits `address` from the PATCH body so the backend
+handles all linking.
