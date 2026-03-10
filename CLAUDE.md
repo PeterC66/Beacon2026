@@ -376,3 +376,63 @@ The frontend detects a partner change (`partnerChanged` state flag), fetches the
 partner's full record via `membersApi.get()`, updates the address display fields, greys
 them out (pointer-events-none), and omits `address` from the PATCH body so the backend
 handles all linking.
+
+---
+
+## System settings (March 2026)
+
+### Data model
+
+`tenant_settings` is a **single-row** table (enforced by `CHECK (id = 'singleton')`).
+The singleton row is automatically inserted by `tenant_schema.sql` via
+`INSERT … ON CONFLICT (id) DO NOTHING`, so every tenant gets it on first schema
+migration and every new tenant gets it at creation time.
+
+### Fields (all from Beacon 8.3 doc)
+
+| Field | Type | Notes |
+|-------|------|-------|
+| `card_colour` | TEXT | Hex colour for membership cards |
+| `email_cards` | BOOLEAN | Attach cards to online join/renew emails |
+| `public_phone`, `public_email` | TEXT | Public enquiry contact details |
+| `home_page` | TEXT | u3a website URL |
+| `online_join_email`, `online_renew_email` | TEXT | Online service enquiry emails |
+| `fee_variation` | TEXT | `'same_all_year'` or `'varies_by_month'` |
+| `extended_membership_month` | INTEGER (1–12) | Month new memberships include next year; NULL = disabled |
+| `advance_renewals_weeks` | INTEGER | Weeks before year-start renewals open |
+| `grace_lapse_weeks` | INTEGER | Weeks after year-start before members lapse |
+| `deletion_years` | INTEGER (2–7) | Years before long-term lapsed members can be bulk-deleted |
+| `default_payment_method` | TEXT | One of: Cash, Cheque, Standing Order, Direct Debit, Online, Other |
+| `gift_aid_enabled` | BOOLEAN | Enable Gift Aid claims |
+| `gift_aid_online_renewals` | BOOLEAN | Show Gift Aid tick boxes for online renewals |
+| `default_town`, `default_county`, `default_std_code` | TEXT | Pre-filled on new member record |
+| `paypal_email`, `paypal_cancel_url` | TEXT | PayPal integration (future) |
+| `shared_address_warning` | BOOLEAN | Warn if shared-address members have differing status/class |
+
+### "Hide Address from group leaders" setting
+
+This Beacon setting is **deprecated** (per the Feb 2026 Beacon update) and
+intentionally **not included** in Beacon2. It has been replaced by the
+per-group `show_addresses` column on the `groups` table.
+
+### Privilege resource
+
+Uses the existing `settings` privilege resource (actions: `view`, `change`).
+The `Administration` default role has both actions granted.
+
+### API
+
+- `GET  /settings`   — requires `settings:view`
+- `PATCH /settings`  — requires `settings:change`
+
+### Frontend
+
+`frontend/src/pages/settings/SystemSettings.jsx` — single-page form, grouped
+into sections: Membership Cards, Contact Details, Membership Year & Fees,
+Gift Aid, Defaults for New Members, Online Payments (PayPal), Member Record.
+Save button calls PATCH and reflects the returned (server-authoritative) values.
+
+### Test pattern note
+
+The SystemSettings page renders "System Settings" in **both** the NavBar
+breadcrumb and the page `<h1>`, so use `getAllByText` (not `getByText`) in tests.
