@@ -26,6 +26,12 @@ Each subfolder corresponds to one webpage from the Beacon User Guide: the page w
 printed to PDF, then the PDF was transcribed into Markdown, with all images kept
 alongside it in the same folder.
 
+**Naming note:** The section 8 index document is called **"Set-Up Operations"**
+(folder `8. System settings – u3a Beacon/`). Do not confuse it with the
+**System Settings screen** (doc `8.3 System Settings – u3a Beacon/`), which is
+the specific configuration page. "Set-Up Operations" is the broader section covering
+system users, roles, settings, system messages, finance accounts, etc.
+
 **Before using any folder in `docs/BeaconUG/`**, check whether it still contains PDF
 files. If it does, warn the user that those pages have not yet been transcribed and ask
 them to convert the PDFs to Markdown before you proceed — do not attempt to interpret
