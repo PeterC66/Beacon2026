@@ -117,7 +117,7 @@ export default function Login() {
         <a href="#forgot" className="text-blue-700 hover:underline">Click here.</a>
       </p>
 
-      <p className="mt-6 text-xs text-slate-400">v{__APP_VERSION__}</p>
+      <p className="mt-6 text-sm text-slate-600 font-medium">v{__APP_VERSION__}</p>
 
     </div>
   );

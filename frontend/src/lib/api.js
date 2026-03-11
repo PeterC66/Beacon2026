@@ -127,11 +127,13 @@ export const privileges = {
 // ─── Member classes ───────────────────────────────────────────────────────
 
 export const memberClasses = {
-  list:   ()         => request('/member-classes'),
-  get:    (id)       => request(`/member-classes/${id}`),
-  create: (data)     => request('/member-classes', { method: 'POST', body: JSON.stringify(data) }),
-  update: (id, data) => request(`/member-classes/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
-  delete: (id)       => request(`/member-classes/${id}`, { method: 'DELETE' }),
+  list:            ()         => request('/member-classes'),
+  get:             (id)       => request(`/member-classes/${id}`),
+  create:          (data)     => request('/member-classes', { method: 'POST', body: JSON.stringify(data) }),
+  update:          (id, data) => request(`/member-classes/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
+  delete:          (id)       => request(`/member-classes/${id}`, { method: 'DELETE' }),
+  getMonthlyFees:  (id)       => request(`/member-classes/${id}/monthly-fees`),
+  saveMonthlyFees: (id, data) => request(`/member-classes/${id}/monthly-fees`, { method: 'PUT', body: JSON.stringify(data) }),
 };
 
 // ─── Member statuses ──────────────────────────────────────────────────────
