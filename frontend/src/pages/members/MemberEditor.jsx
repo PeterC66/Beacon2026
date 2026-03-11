@@ -65,6 +65,22 @@ export default function MemberEditor() {
   // True when the partner dropdown was changed during this edit session
   const [partnerChanged, setPartnerChanged] = useState(false);
 
+  // ── A: New partner joining at the same time ──────────────────────────
+  const [newPartnerMode, setNewPartnerMode] = useState(false);
+  const [npForm, setNpForm] = useState({
+    title: '', forenames: '', surname: '', knownAs: '', email: '', mobile: '',
+    statusId: '', classId: '', joinedOn: '', nextRenewal: '', giftAidFrom: '',
+  });
+
+  // ── B: Renew existing partner prompt ─────────────────────────────────
+  const [partnerDueRenewal, setPartnerDueRenewal] = useState(false);  // show prompt
+  const [renewPartner,      setRenewPartner]      = useState(false);  // checkbox
+  const [partnerNewRenewal, setPartnerNewRenewal] = useState('');     // new date
+
+  // ── C: Partner class mismatch prompt ─────────────────────────────────
+  const [partnerClassMismatch, setPartnerClassMismatch] = useState(false);
+  const [partnerNewClassId,    setPartnerNewClassId]    = useState('');
+
   const selectedClass = classes.find((c) => c.id === form.classId);
   const isAssociate   = selectedClass?.is_associate ?? false;
   const classFee      = selectedClass?.fee ?? null;
@@ -153,6 +169,15 @@ export default function MemberEditor() {
     if (!form.classId)           errs.classId   = 'Class is required';
     if (!form.joinedOn)          errs.joinedOn  = 'Date joined is required';
 
+    // Validate new partner fields if in new-partner mode
+    if (isNew && newPartnerMode) {
+      if (!npForm.forenames.trim()) errs.npForenames = 'Partner forenames is required';
+      if (!npForm.surname.trim())   errs.npSurname   = 'Partner surname is required';
+      if (!npForm.statusId)         errs.npStatusId  = 'Partner status is required';
+      if (!npForm.classId)          errs.npClassId   = 'Partner class is required';
+      if (!npForm.joinedOn)         errs.npJoinedOn  = 'Partner joined date is required';
+    }
+
     // Postcode is required unless sharing a partner's address
     const skipPostcode = (isNew && !!form.existingPartnerId) || addressLocked;
     if (!skipPostcode) {
@@ -178,9 +203,16 @@ export default function MemberEditor() {
     const prevPartnerId = form.existingPartnerId;
     if (newPartnerId === prevPartnerId) return;
 
+    // Reset B/C state whenever partner changes
+    setPartnerDueRenewal(false);
+    setRenewPartner(false);
+    setPartnerNewRenewal('');
+    setPartnerClassMismatch(false);
+    setPartnerNewClassId('');
+
     if (!newPartnerId) {
       // Clearing the partner
-      if (!confirm(`Remove the partner link for ${form.forenames} ${form.surname}?`)) return;
+      if (!isNew && !confirm(`Remove the partner link for ${form.forenames} ${form.surname}?`)) return;
       setForm((prev) => ({ ...prev, existingPartnerId: '' }));
       setPartnerChanged(prevPartnerId !== '');
       setAddressShared(false);
@@ -194,12 +226,12 @@ export default function MemberEditor() {
       ? `${partnerRec.forenames} ${partnerRec.surname}`
       : 'this member';
 
-    if (!confirm(
+    if (!isNew && !confirm(
       `Link ${form.forenames} ${form.surname} with ${partnerDisplay} as partner?\n\n` +
       `${partnerDisplay}'s address will be used (their record will also be updated).`
     )) return;
 
-    // Fetch Y's full address
+    // Fetch Y's full record
     let partnerAddr = null;
     try {
       const partnerData = await membersApi.get(newPartnerId);
@@ -216,6 +248,25 @@ export default function MemberEditor() {
         };
         setPartnerName(partnerDisplay);
       }
+
+      // ── B: Check if partner's renewal is due ────────────────────────
+      if (isNew && partnerData.next_renewal) {
+        const today = new Date().toISOString().slice(0, 10);
+        const renewal = partnerData.next_renewal.slice(0, 10);
+        if (renewal <= today) {
+          setPartnerDueRenewal(true);
+          // Default new renewal to one year from their current renewal date
+          const nextYear = new Date(renewal);
+          nextYear.setFullYear(nextYear.getFullYear() + 1);
+          setPartnerNewRenewal(nextYear.toISOString().slice(0, 10));
+        }
+      }
+
+      // ── C: Check if partner's class differs from the new member's class ──
+      if (isNew && form.classId && partnerData.class_id && partnerData.class_id !== form.classId) {
+        setPartnerClassMismatch(true);
+        setPartnerNewClassId(form.classId); // suggest matching the new member's class
+      }
     } catch { /* ignore — address stays as-is */ }
 
     setForm((prev) => ({
@@ -225,6 +276,28 @@ export default function MemberEditor() {
     }));
     setPartnerChanged(true);
     setAddressShared(false); // address sharing is confirmed only after save+reload
+  }
+
+  // Toggle new-partner mode (A)
+  function handleNewPartnerToggle() {
+    const next = !newPartnerMode;
+    setNewPartnerMode(next);
+    if (next) {
+      // Clear existing partner selection when switching to new-partner mode
+      setForm((prev) => ({ ...prev, existingPartnerId: '' }));
+      // Pre-fill partner's dates and membership from primary form
+      setNpForm((prev) => ({
+        ...prev,
+        statusId:    form.statusId,
+        classId:     form.classId,
+        joinedOn:    form.joinedOn,
+        nextRenewal: form.nextRenewal,
+      }));
+    }
+  }
+
+  function setNp(field, value) {
+    setNpForm((prev) => ({ ...prev, [field]: value }));
   }
 
   async function handleSave(e) {
@@ -270,9 +343,34 @@ export default function MemberEditor() {
       },
     };
 
-    if (isNew && form.existingPartnerId) {
+    if (isNew && newPartnerMode && npForm.forenames) {
+      // A: New partner joining at the same time — address is shared from primary
+      payload.newPartner = {
+        title:       npForm.title       || undefined,
+        forenames:   npForm.forenames,
+        surname:     npForm.surname,
+        knownAs:     npForm.knownAs     || undefined,
+        email:       npForm.email       || undefined,
+        mobile:      npForm.mobile      || undefined,
+        statusId:    npForm.statusId    || payload.statusId,
+        classId:     npForm.classId     || payload.classId,
+        joinedOn:    npForm.joinedOn    || payload.joinedOn,
+        nextRenewal: npForm.nextRenewal || undefined,
+        giftAidFrom: npForm.giftAidFrom || undefined,
+      };
+    } else if (isNew && form.existingPartnerId) {
       payload.existingPartnerId = form.existingPartnerId;
       delete payload.address;
+
+      // B: Renew partner at the same time
+      if (renewPartner && partnerNewRenewal) {
+        payload.partnerRenewal = { nextRenewal: partnerNewRenewal };
+      }
+
+      // C: Update partner's class
+      if (partnerNewClassId && partnerNewClassId !== form.existingPartnerId) {
+        payload.partnerClassId = partnerNewClassId;
+      }
     }
 
     // Attach payment details if amount entered
@@ -538,29 +636,144 @@ export default function MemberEditor() {
               <label className={labelCls}>
                 Partner <span className="text-slate-400 font-normal">(shares this address)</span>
               </label>
-              <select
-                value={form.existingPartnerId}
-                onChange={(e) => handlePartnerChange(e.target.value)}
-                className={inputCls}
-              >
-                <option value="">— none —</option>
-                {allMembers
-                  .filter((m) => String(m.id) !== String(id))
-                  .map((m) => (
-                    <option key={m.id} value={m.id}>
-                      {m.membership_number} — {m.surname}, {m.forenames}
-                    </option>
-                  ))}
-              </select>
-              {form.existingPartnerId && isNew && (
-                <p className="text-xs text-slate-500 mt-1 italic">
-                  Partner's address will be shared. The address fields below are not used.
-                </p>
+
+              {/* A: New partner mode toggle (new member only) */}
+              {isNew && (
+                <div className="flex items-center gap-3 mb-2">
+                  <label className="flex items-center gap-2 text-sm cursor-pointer text-slate-600">
+                    <input type="checkbox" checked={newPartnerMode}
+                      onChange={handleNewPartnerToggle}
+                      className="rounded border-slate-300 text-blue-600 focus:ring-blue-500" />
+                    Another new member is joining at the same time (new partner)
+                  </label>
+                </div>
+              )}
+
+              {/* Existing-partner dropdown — hidden in new-partner mode */}
+              {!newPartnerMode && (
+                <>
+                  <select
+                    value={form.existingPartnerId}
+                    onChange={(e) => handlePartnerChange(e.target.value)}
+                    className={inputCls}
+                  >
+                    <option value="">— none —</option>
+                    {allMembers
+                      .filter((m) => String(m.id) !== String(id))
+                      .map((m) => (
+                        <option key={m.id} value={m.id}>
+                          {m.membership_number} — {m.surname}, {m.forenames}
+                        </option>
+                      ))}
+                  </select>
+                  {form.existingPartnerId && isNew && (
+                    <p className="text-xs text-slate-500 mt-1 italic">
+                      Partner's address will be shared. The address fields below are not used.
+                    </p>
+                  )}
+
+                  {/* B: Partner renewal due prompt */}
+                  {isNew && partnerDueRenewal && form.existingPartnerId && (
+                    <div className="mt-3 rounded-md bg-amber-50 border border-amber-200 p-3">
+                      <label className="flex items-start gap-2 text-sm cursor-pointer text-amber-800">
+                        <input type="checkbox" checked={renewPartner}
+                          onChange={(e) => setRenewPartner(e.target.checked)}
+                          className="mt-0.5 rounded border-amber-400 text-amber-600 focus:ring-amber-500" />
+                        <span><strong>{partnerName}'s</strong> membership renewal is due. Renew at the same time?</span>
+                      </label>
+                      {renewPartner && (
+                        <div className="mt-2 ml-6">
+                          <label className={labelCls}>New renewal date for {partnerName}</label>
+                          <DateInput value={partnerNewRenewal} onChange={setPartnerNewRenewal} className={inputCls} />
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* C: Partner class mismatch prompt */}
+                  {isNew && partnerClassMismatch && form.existingPartnerId && (
+                    <div className="mt-3 rounded-md bg-blue-50 border border-blue-200 p-3">
+                      <p className="text-sm text-blue-800 mb-2">
+                        <strong>{partnerName}</strong> is in a different membership class. Update their class?
+                      </p>
+                      <select value={partnerNewClassId} onChange={(e) => setPartnerNewClassId(e.target.value)} className={inputCls}>
+                        <option value="">— keep current class —</option>
+                        {classes.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+                      </select>
+                    </div>
+                  )}
+                </>
               )}
             </div>
 
-            {/* Address fields — locked when a new partner is pending */}
-            <div className={`grid grid-cols-1 sm:grid-cols-2 gap-4 ${(form.existingPartnerId && isNew) || addressLocked ? 'opacity-40 pointer-events-none' : ''}`}>
+            {/* A: New partner details form */}
+            {isNew && newPartnerMode && (
+              <div className="mb-4 rounded-md bg-slate-50 border border-slate-200 p-4 space-y-3">
+                <h3 className="text-sm font-semibold text-slate-700">New Partner's Details</h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className={labelCls}>Title</label>
+                    <select value={npForm.title} onChange={(e) => setNp('title', e.target.value)} className={inputCls}>
+                      {TITLES.map((t) => <option key={t} value={t}>{t || '—'}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <label className={labelCls}><strong>Forenames</strong></label>
+                    <input type="text" value={npForm.forenames} onChange={(e) => setNp('forenames', e.target.value)}
+                      className={fieldErrors.npForenames ? inputErrCls : inputCls} />
+                    {fieldErrors.npForenames && <p className={errMsgCls}>{fieldErrors.npForenames}</p>}
+                  </div>
+                  <div>
+                    <label className={labelCls}><strong>Surname</strong></label>
+                    <input type="text" value={npForm.surname} onChange={(e) => setNp('surname', e.target.value)}
+                      className={fieldErrors.npSurname ? inputErrCls : inputCls} />
+                    {fieldErrors.npSurname && <p className={errMsgCls}>{fieldErrors.npSurname}</p>}
+                  </div>
+                  <div>
+                    <label className={labelCls}>Known as</label>
+                    <input type="text" value={npForm.knownAs} onChange={(e) => setNp('knownAs', e.target.value)} className={inputCls} />
+                  </div>
+                  <div>
+                    <label className={labelCls}>Email</label>
+                    <input type="email" value={npForm.email} onChange={(e) => setNp('email', e.target.value)} className={inputCls} />
+                  </div>
+                  <div>
+                    <label className={labelCls}>Mobile</label>
+                    <input type="text" value={npForm.mobile} onChange={(e) => setNp('mobile', e.target.value)} className={inputCls} />
+                  </div>
+                  <div>
+                    <label className={labelCls}><strong>Status</strong></label>
+                    <select value={npForm.statusId} onChange={(e) => setNp('statusId', e.target.value)} className={inputCls}>
+                      <option value="">— select —</option>
+                      {statuses.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <label className={labelCls}><strong>Class</strong></label>
+                    <select value={npForm.classId} onChange={(e) => setNp('classId', e.target.value)} className={inputCls}>
+                      <option value="">— select —</option>
+                      {classes.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <label className={labelCls}><strong>Joined</strong></label>
+                    <DateInput value={npForm.joinedOn} onChange={(v) => setNp('joinedOn', v)} className={inputCls} />
+                  </div>
+                  <div>
+                    <label className={labelCls}>Next renewal</label>
+                    <DateInput value={npForm.nextRenewal} onChange={(v) => setNp('nextRenewal', v)} className={inputCls} />
+                  </div>
+                  <div>
+                    <label className={labelCls}>Gift Aid from</label>
+                    <DateInput value={npForm.giftAidFrom} onChange={(v) => setNp('giftAidFrom', v)} className={inputCls} />
+                  </div>
+                </div>
+                <p className="text-xs text-slate-400 italic">Address is shared with the primary member above.</p>
+              </div>
+            )}
+
+            {/* Address fields — locked when a new or existing partner is pending */}
+            <div className={`grid grid-cols-1 sm:grid-cols-2 gap-4 ${(form.existingPartnerId && isNew) || addressLocked || (isNew && newPartnerMode) ? 'opacity-40 pointer-events-none' : ''}`}>
               <div>
                 <label className={labelCls}>House / flat no.</label>
                 <input type="text" value={form.houseNo}
