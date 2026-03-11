@@ -93,12 +93,13 @@ export default function FinanceLedger() {
     });
   }, [sorted, view]);
 
-  // Totals
+  // Totals — in category view use the split category_amount, not the full transaction amount
   const totals = useMemo(() => {
-    const inTotal  = txns.filter((t) => t.type === 'in').reduce((s, t) => s + Number(t.amount), 0);
-    const outTotal = txns.filter((t) => t.type === 'out').reduce((s, t) => s + Number(t.amount), 0);
+    const amt = (t) => view === 'category' ? Number(t.category_amount ?? t.amount) : Number(t.amount);
+    const inTotal  = txns.filter((t) => t.type === 'in').reduce((s, t) => s + amt(t), 0);
+    const outTotal = txns.filter((t) => t.type === 'out').reduce((s, t) => s + amt(t), 0);
     return { in: inTotal, out: outTotal };
-  }, [txns]);
+  }, [txns, view]);
 
   const navLinks = [
     { label: 'Home', to: '/' },
@@ -224,8 +225,8 @@ export default function FinanceLedger() {
                           <td className="px-3 py-2 max-w-[200px] truncate" title={t.detail}>{t.detail}</td>
                           <td className="px-3 py-2 max-w-[160px] truncate" title={t.from_to}>{t.from_to}</td>
                           <td className="px-3 py-2">{t.payment_method}</td>
-                          <td className="px-3 py-2 text-right text-green-700">{t.type === 'in'  ? fmtAmount(t.amount) : ''}</td>
-                          <td className="px-3 py-2 text-right text-red-700"> {t.type === 'out' ? fmtAmount(t.amount) : ''}</td>
+                          <td className="px-3 py-2 text-right text-green-700">{t.type === 'in'  ? fmtAmount(view === 'category' ? t.category_amount : t.amount) : ''}</td>
+                          <td className="px-3 py-2 text-right text-red-700"> {t.type === 'out' ? fmtAmount(view === 'category' ? t.category_amount : t.amount) : ''}</td>
                           {view === 'account' && (
                             <td className={`px-3 py-2 text-right font-medium ${t._balance >= 0 ? 'text-slate-700' : 'text-red-600'}`}>
                               {fmtAmount(t._balance)}

@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { isValidPhoneNumber } from 'libphonenumber-js';
-import { members as membersApi, memberStatuses as statusApi, memberClasses as classApi, finance as financeApi } from '../../lib/api.js';
+import { members as membersApi, memberStatuses as statusApi, memberClasses as classApi, finance as financeApi, polls as pollsApi } from '../../lib/api.js';
 import { useAuth } from '../../context/AuthContext.jsx';
 import NavBar from '../../components/NavBar.jsx';
 import PageHeader from '../../components/PageHeader.jsx';
@@ -81,6 +81,16 @@ export default function MemberEditor() {
   const [partnerClassMismatch, setPartnerClassMismatch] = useState(false);
   const [partnerNewClassId,    setPartnerNewClassId]    = useState('');
 
+  // ── Groups & Ledger section ───────────────────────────────────────────
+  const [memberGroups,  setMemberGroups]  = useState([]);
+  const [memberTxns,    setMemberTxns]    = useState([]);
+  const [ledgerLoading, setLedgerLoading] = useState(false);
+
+  // ── Polls ─────────────────────────────────────────────────────────────
+  const [allPolls,      setAllPolls]      = useState([]);   // all polls in this u3a
+  const [memberPollIds, setMemberPollIds] = useState([]);   // polls this member is in
+  const [pollSaving,    setPollSaving]    = useState(false);
+
   const selectedClass = classes.find((c) => c.id === form.classId);
   const isAssociate   = selectedClass?.is_associate ?? false;
   const classFee      = selectedClass?.fee ?? null;
@@ -89,8 +99,8 @@ export default function MemberEditor() {
   const addressLocked = !isNew && partnerChanged && !!form.existingPartnerId;
 
   useEffect(() => {
-    Promise.all([statusApi.list(), classApi.list()])
-      .then(([s, c]) => { setStatuses(s); setClasses(c); })
+    Promise.all([statusApi.list(), classApi.list(), pollsApi.list()])
+      .then(([s, c, p]) => { setStatuses(s); setClasses(c); setAllPolls(p); })
       .catch(() => {});
 
     membersApi.list({ status: '' }).then(setAllMembers).catch(() => {});
@@ -108,6 +118,16 @@ export default function MemberEditor() {
     }
 
     if (!isNew) {
+      // Load groups and transactions for the Groups & Ledger section
+      setLedgerLoading(true);
+      Promise.all([
+        membersApi.getGroups(id),
+        financeApi.listTransactions({ memberId: id }),
+      ]).then(([grps, txns]) => {
+        setMemberGroups(grps);
+        setMemberTxns(txns);
+      }).catch(() => {}).finally(() => setLedgerLoading(false));
+
       membersApi.get(id)
         .then((m) => {
           setForm({
@@ -140,6 +160,7 @@ export default function MemberEditor() {
           if (m.partner_forenames || m.partner_surname) {
             setPartnerName(`${m.partner_forenames ?? ''} ${m.partner_surname ?? ''}`.trim());
           }
+          setMemberPollIds(m.poll_ids ?? []);
         })
         .catch((err) => setError(err.message))
         .finally(() => setLoading(false));
@@ -894,6 +915,133 @@ export default function MemberEditor() {
               )}
               {!form.payAmount && (
                 <p className="text-xs text-slate-400 mt-2 italic">Leave blank to skip recording a payment now.</p>
+              )}
+            </div>
+          )}
+
+          {/* ── Polls ───────────────────────────────────────────────── */}
+          {!isNew && allPolls.length > 0 && can('poll_set_up', 'view') && (
+            <div className={sectionCls}>
+              <h2 className="text-base font-semibold text-slate-700 mb-3">Polls</h2>
+              <div className="flex flex-wrap gap-4">
+                {allPolls.map((poll) => (
+                  <label key={poll.id} className="flex items-center gap-2 text-sm cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={memberPollIds.includes(poll.id)}
+                      disabled={pollSaving || !can('poll_set_up', 'change')}
+                      onChange={async (e) => {
+                        const newIds = e.target.checked
+                          ? [...memberPollIds, poll.id]
+                          : memberPollIds.filter((x) => x !== poll.id);
+                        setMemberPollIds(newIds);
+                        setPollSaving(true);
+                        try { await pollsApi.setForMember(id, newIds); }
+                        catch { setMemberPollIds(memberPollIds); } // revert on error
+                        finally { setPollSaving(false); }
+                      }}
+                      className="rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                    />
+                    {poll.name}
+                  </label>
+                ))}
+              </div>
+              {pollSaving && <p className="text-xs text-slate-400 mt-2">Saving…</p>}
+            </div>
+          )}
+
+          {/* ── Groups & Ledger ─────────────────────────────────────── */}
+          {!isNew && (
+            <div className={sectionCls}>
+              <h2 className="text-base font-semibold text-slate-700 mb-3">Groups and Ledger</h2>
+              {ledgerLoading ? (
+                <p className="text-sm text-slate-400">Loading…</p>
+              ) : (
+                <>
+                  {/* Groups */}
+                  <div className="mb-4">
+                    <h3 className="text-sm font-medium text-slate-600 mb-2">Groups</h3>
+                    {memberGroups.length === 0 ? (
+                      <p className="text-sm text-slate-400 italic">Not a member of any groups.</p>
+                    ) : (
+                      <div className="overflow-x-auto">
+                        <table className="w-full text-sm min-w-max">
+                          <thead>
+                            <tr className="bg-slate-50 border-b border-slate-200 text-left text-slate-600 italic">
+                              <th className="px-3 py-2 font-normal">Group name</th>
+                              <th className="px-3 py-2 font-normal">Role</th>
+                              <th className="px-3 py-2 font-normal">Status</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {memberGroups.map((g, i) => (
+                              <tr key={g.id} className={`border-b border-slate-100 ${i % 2 === 0 ? 'bg-yellow-50' : 'bg-white'}`}>
+                                <td className="px-3 py-1.5">
+                                  {can('group_records_all', 'view') ? (
+                                    <a href={`/groups/${g.id}`} className="text-blue-700 hover:underline">{g.name}</a>
+                                  ) : (
+                                    <span className={g.status === 'inactive' ? 'text-red-600' : ''}>{g.name}</span>
+                                  )}
+                                </td>
+                                <td className="px-3 py-1.5 text-slate-600">
+                                  {g.waiting_since ? 'Waiting list' : g.is_leader ? 'Leader' : 'Member'}
+                                </td>
+                                <td className="px-3 py-1.5">
+                                  {g.status === 'inactive'
+                                    ? <span className="text-red-600 font-medium">Inactive</span>
+                                    : <span className="text-slate-500">Active</span>}
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Transactions */}
+                  {can('finance_ledger', 'view') && (
+                    <div>
+                      <h3 className="text-sm font-medium text-slate-600 mb-2">Transactions</h3>
+                      {memberTxns.length === 0 ? (
+                        <p className="text-sm text-slate-400 italic">No transactions linked to this member.</p>
+                      ) : (
+                        <div className="overflow-x-auto">
+                          <table className="w-full text-sm min-w-max">
+                            <thead>
+                              <tr className="bg-slate-50 border-b border-slate-200 text-left text-slate-600 italic">
+                                <th className="px-3 py-2 font-normal">#</th>
+                                <th className="px-3 py-2 font-normal">Date</th>
+                                <th className="px-3 py-2 font-normal">Detail</th>
+                                <th className="px-3 py-2 font-normal">Account</th>
+                                <th className="px-3 py-2 font-normal text-right">In</th>
+                                <th className="px-3 py-2 font-normal text-right">Out</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {memberTxns.map((t, i) => (
+                                <tr key={t.id} className={`border-b border-slate-100 ${i % 2 === 0 ? 'bg-yellow-50' : 'bg-white'}`}>
+                                  <td className="px-3 py-1.5">
+                                    {can('finance_transactions', 'view') ? (
+                                      <a href={`/finance/transactions/${t.id}`} className="text-blue-700 hover:underline font-mono">{t.transaction_number}</a>
+                                    ) : (
+                                      <span className="font-mono">{t.transaction_number}</span>
+                                    )}
+                                  </td>
+                                  <td className="px-3 py-1.5 whitespace-nowrap">{t.date ? new Date(t.date).toLocaleDateString('en-GB') : ''}</td>
+                                  <td className="px-3 py-1.5 max-w-[200px] truncate" title={t.detail}>{t.detail}</td>
+                                  <td className="px-3 py-1.5 text-slate-600">{t.account_name}</td>
+                                  <td className="px-3 py-1.5 text-right text-green-700">{t.type === 'in'  ? `£${Number(t.amount).toFixed(2)}` : ''}</td>
+                                  <td className="px-3 py-1.5 text-right text-red-700"> {t.type === 'out' ? `£${Number(t.amount).toFixed(2)}` : ''}</td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </>
               )}
             </div>
           )}

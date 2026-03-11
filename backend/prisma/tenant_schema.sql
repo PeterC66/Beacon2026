@@ -357,3 +357,23 @@ CREATE INDEX IF NOT EXISTS :schema_idx_transactions_date    ON :schema.transacti
 CREATE INDEX IF NOT EXISTS :schema_idx_transactions_group   ON :schema.transactions (group_id);
 CREATE INDEX IF NOT EXISTS :schema_idx_txn_cats_txn         ON :schema.transaction_categories (transaction_id);
 CREATE INDEX IF NOT EXISTS :schema_idx_txn_cats_cat         ON :schema.transaction_categories (category_id);
+
+-- ─── Polls ────────────────────────────────────────────────────────────────
+
+CREATE TABLE IF NOT EXISTS :schema.polls (
+  id             TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
+  name           TEXT NOT NULL,
+  description    TEXT NOT NULL DEFAULT '',
+  member_can_set BOOLEAN NOT NULL DEFAULT false,
+  created_at     TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at     TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS :schema.poll_members (
+  poll_id   TEXT NOT NULL REFERENCES :schema.polls(id) ON DELETE CASCADE,
+  member_id TEXT NOT NULL REFERENCES :schema.members(id) ON DELETE CASCADE,
+  PRIMARY KEY (poll_id, member_id)
+);
+
+CREATE INDEX IF NOT EXISTS :schema_idx_poll_members_poll   ON :schema.poll_members (poll_id);
+CREATE INDEX IF NOT EXISTS :schema_idx_poll_members_member ON :schema.poll_members (member_id);

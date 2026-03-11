@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { members as membersApi, memberStatuses as statusApi, memberClasses as classApi } from '../../lib/api.js';
+import { members as membersApi, memberStatuses as statusApi, memberClasses as classApi, polls as pollsApi } from '../../lib/api.js';
 import { useAuth } from '../../context/AuthContext.jsx';
 import NavBar from '../../components/NavBar.jsx';
 import PageHeader from '../../components/PageHeader.jsx';
@@ -19,26 +19,36 @@ export default function MemberList() {
   const { sorted, sortKey, sortDir, onSort } = useSortedData(memberList);
   const [statuses,    setStatuses]    = useState([]);
   const [classes,     setClasses]     = useState([]);
+  const [polls,       setPolls]       = useState([]);
   const [loading,     setLoading]     = useState(true);
   const [error,       setError]       = useState(null);
 
   // Filters
-  const [selectedStatuses, setSelectedStatuses] = useState([]);   // status IDs
+  const [selectedStatuses, setSelectedStatuses] = useState([]);
   const [selectedClass,    setSelectedClass]    = useState('');
+  const [selectedPoll,     setSelectedPoll]     = useState('');
+  const [negatePoll,       setNegatePoll]       = useState(false);
   const [letter,           setLetter]           = useState('');
   const [searchInput,      setSearchInput]      = useState('');
   const [activeSearch,     setActiveSearch]     = useState('');
 
+  // Selection + bulk actions
+  const [selected,      setSelected]      = useState(new Set());
+  const [bulkAction,    setBulkAction]    = useState('');
+  const [addToPollId,   setAddToPollId]   = useState('');
+  const [bulkWorking,   setBulkWorking]   = useState(false);
+  const [bulkResult,    setBulkResult]    = useState(null);
+
   // Row refs for letter-jump
   const rowRefs = useRef({});
 
-  // Load statuses + classes once
+  // Load statuses, classes, polls once
   useEffect(() => {
-    Promise.all([statusApi.list(), classApi.list()])
-      .then(([s, c]) => {
+    Promise.all([statusApi.list(), classApi.list(), pollsApi.list()])
+      .then(([s, c, p]) => {
         setStatuses(s);
         setClasses(c);
-        // Default: show "Current" status only
+        setPolls(p);
         const current = s.find((x) => x.name === 'Current');
         if (current) setSelectedStatuses([current.id]);
       })
@@ -46,17 +56,21 @@ export default function MemberList() {
   }, []);
 
   // Load members whenever filters change
-  useEffect(() => { load(); }, [selectedStatuses, selectedClass, letter, activeSearch]);
+  useEffect(() => { load(); }, [selectedStatuses, selectedClass, selectedPoll, negatePoll, letter, activeSearch]);
 
   async function load() {
     setLoading(true);
     setError(null);
+    setSelected(new Set());
+    setBulkResult(null);
     try {
       const data = await membersApi.list({
-        status:  selectedStatuses.join(','),
-        classId: selectedClass,
+        status:     selectedStatuses.join(','),
+        classId:    selectedClass,
+        pollId:     selectedPoll,
+        negatePoll: negatePoll && selectedPoll ? true : false,
         letter,
-        q:       activeSearch,
+        q:          activeSearch,
       });
       setMemberList(data);
     } catch (err) {
@@ -89,10 +103,44 @@ export default function MemberList() {
     setSearchInput('');
   }
 
+  // Selection helpers
+  function toggleSelect(id) {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+  }
+
+  function selectAll()   { setSelected(new Set(sorted.map((m) => m.id))); }
+  function clearAll()    { setSelected(new Set()); }
+  function selectEmail() { setSelected(new Set(sorted.filter((m) => m.email).map((m) => m.id))); }
+  function selectNoEmail() { setSelected(new Set(sorted.filter((m) => !m.email).map((m) => m.id))); }
+
+  async function handleBulkDo() {
+    if (selected.size === 0) return;
+    if (bulkAction === 'add_to_poll') {
+      if (!addToPollId) return;
+      setBulkWorking(true);
+      setBulkResult(null);
+      try {
+        const result = await pollsApi.addMembers(addToPollId, [...selected]);
+        const pollName = polls.find((p) => p.id === addToPollId)?.name ?? 'poll';
+        setBulkResult({ type: 'success', msg: `${result.added} member${result.added !== 1 ? 's' : ''} added to "${pollName}".` });
+      } catch (err) {
+        setBulkResult({ type: 'error', msg: err.message });
+      } finally {
+        setBulkWorking(false);
+      }
+    }
+  }
+
   const navLinks = [
     { label: 'Home', to: '/' },
     ...(can('member_record', 'create') ? [{ label: 'Add New Member', to: '/members/new' }] : []),
   ];
+
+  const hasBulkPolls = can('poll_set_up', 'change') && polls.length > 0;
 
   return (
     <div className="min-h-screen pb-10">
@@ -121,7 +169,7 @@ export default function MemberList() {
             ))}
           </div>
 
-          {/* Class + search row */}
+          {/* Class + Poll + search row */}
           <div className="flex flex-wrap gap-3 items-end">
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">Class</label>
@@ -136,6 +184,35 @@ export default function MemberList() {
                 ))}
               </select>
             </div>
+
+            {polls.length > 0 && (
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Poll</label>
+                <div className="flex gap-2 items-center">
+                  <select
+                    value={selectedPoll}
+                    onChange={(e) => setSelectedPoll(e.target.value)}
+                    className="border border-slate-300 rounded px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="">All members</option>
+                    {polls.map((p) => (
+                      <option key={p.id} value={p.id}>{p.name}</option>
+                    ))}
+                  </select>
+                  {selectedPoll && (
+                    <label className="flex items-center gap-1.5 text-sm cursor-pointer whitespace-nowrap">
+                      <input
+                        type="checkbox"
+                        checked={negatePoll}
+                        onChange={(e) => setNegatePoll(e.target.checked)}
+                        className="rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                      />
+                      Negate poll
+                    </label>
+                  )}
+                </div>
+              </div>
+            )}
 
             <form onSubmit={handleSearch} className="flex gap-2 items-end">
               <div>
@@ -189,11 +266,25 @@ export default function MemberList() {
             <p className="text-center text-slate-500 py-6">No members found.</p>
           ) : (
             <>
-              <p className="text-sm text-slate-500 mb-1">{memberList.length} member{memberList.length !== 1 ? 's' : ''}</p>
-              <div className="overflow-x-auto rounded-lg shadow-sm">
+              {/* Select controls */}
+              <div className="flex flex-wrap gap-2 items-center mb-2">
+                <span className="text-sm text-slate-500">{memberList.length} member{memberList.length !== 1 ? 's' : ''}</span>
+                <span className="text-slate-300">|</span>
+                <span className="text-sm font-medium text-slate-600">Select:</span>
+                <button onClick={selectAll}    className="text-sm text-blue-700 hover:underline">All</button>
+                <button onClick={clearAll}     className="text-sm text-blue-700 hover:underline">Clear All</button>
+                <button onClick={selectEmail}  className="text-sm text-blue-700 hover:underline">Email only</button>
+                <button onClick={selectNoEmail} className="text-sm text-blue-700 hover:underline">Without email</button>
+                {selected.size > 0 && (
+                  <span className="text-sm font-medium text-blue-700 ml-2">{selected.size} selected</span>
+                )}
+              </div>
+
+              <div className="overflow-x-auto rounded-lg shadow-sm mb-3">
                 <table className="w-full text-sm bg-white min-w-max">
                   <thead>
                     <tr className="bg-slate-50 border-b border-slate-200 text-left text-slate-600 italic font-normal">
+                      <th className="px-2 py-2"></th>
                       <SortableHeader col="membership_number" label="No"       sortKey={sortKey} sortDir={sortDir} onSort={onSort} className="px-3 py-2 font-normal" />
                       <SortableHeader col="surname"           label="Surname"  sortKey={sortKey} sortDir={sortDir} onSort={onSort} className="px-3 py-2 font-normal" />
                       <SortableHeader col="forenames"         label="Forenames" sortKey={sortKey} sortDir={sortDir} onSort={onSort} className="px-3 py-2 font-normal" />
@@ -211,8 +302,16 @@ export default function MemberList() {
                       <tr
                         key={m.id}
                         ref={(el) => { if (el) rowRefs.current[m.surname?.[0]?.toUpperCase()] = el; }}
-                        className={`border-b border-slate-100 ${i % 2 === 0 ? 'bg-yellow-50' : 'bg-white'}`}
+                        className={`border-b border-slate-100 ${i % 2 === 0 ? 'bg-yellow-50' : 'bg-white'} ${selected.has(m.id) ? 'outline outline-2 outline-blue-400' : ''}`}
                       >
+                        <td className="px-2 py-2">
+                          <input
+                            type="checkbox"
+                            checked={selected.has(m.id)}
+                            onChange={() => toggleSelect(m.id)}
+                            className="rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                          />
+                        </td>
                         <td className="px-3 py-2 tabular-nums">{m.membership_number}</td>
                         <td className="px-3 py-2 font-medium">
                           {can('member_record', 'view') ? (
@@ -242,6 +341,53 @@ export default function MemberList() {
                   </tbody>
                 </table>
               </div>
+
+              {/* ── Bulk actions ──────────────────────────────────────── */}
+              {selected.size > 0 && (
+                <div className="bg-white/90 rounded-lg shadow-sm p-3 flex flex-wrap gap-3 items-end">
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">Do with {selected.size} selected member{selected.size !== 1 ? 's' : ''}</label>
+                    <select
+                      value={bulkAction}
+                      onChange={(e) => { setBulkAction(e.target.value); setBulkResult(null); }}
+                      className="border border-slate-300 rounded px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                      <option value="">— choose action —</option>
+                      {hasBulkPolls && <option value="add_to_poll">Add to poll</option>}
+                    </select>
+                  </div>
+
+                  {bulkAction === 'add_to_poll' && (
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-1">Poll</label>
+                      <select
+                        value={addToPollId}
+                        onChange={(e) => setAddToPollId(e.target.value)}
+                        className="border border-slate-300 rounded px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      >
+                        <option value="">— select poll —</option>
+                        {polls.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
+                      </select>
+                    </div>
+                  )}
+
+                  {bulkAction && (
+                    <button
+                      onClick={handleBulkDo}
+                      disabled={bulkWorking || (bulkAction === 'add_to_poll' && !addToPollId)}
+                      className="bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white rounded px-4 py-1.5 text-sm font-medium transition-colors"
+                    >
+                      {bulkWorking ? 'Working…' : 'Do with selected'}
+                    </button>
+                  )}
+
+                  {bulkResult && (
+                    <p className={`text-sm font-medium ${bulkResult.type === 'success' ? 'text-green-700' : 'text-red-600'}`}>
+                      {bulkResult.msg}
+                    </p>
+                  )}
+                </div>
+              )}
             </>
           )
         )}

@@ -63,6 +63,7 @@ describe('GET /members/:id', () => {
 
   it('returns 200 with full member record', async () => {
     tenantQuery.mockResolvedValueOnce([{ ...SAMPLE_MEMBER, add_line1: null, county: null }]);
+    tenantQuery.mockResolvedValueOnce([]);  // poll_ids query
 
     const res = await request(app).get('/members/m1').set('Authorization', AUTH);
 
