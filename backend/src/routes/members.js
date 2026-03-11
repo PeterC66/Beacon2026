@@ -97,6 +97,30 @@ router.get('/', requirePrivilege('members_list', 'view'), async (req, res, next)
   }
 });
 
+// ─── GET /members/validate ────────────────────────────────────────────────
+// Returns all members with their address data for client-side data quality checks.
+// Requires settings:view (admin only).
+
+router.get('/validate', requirePrivilege('member_data_validation', 'view'), async (req, res, next) => {
+  try {
+    const members = await tenantQuery(
+      req.user.tenantSlug,
+      `SELECT m.id, m.membership_number, m.forenames, m.surname,
+              m.status_id, m.class_id, m.joined_on, m.next_renewal,
+              m.email, m.mobile,
+              a.id         AS address_id,
+              a.house_no, a.street, a.add_line1, a.add_line2,
+              a.town, a.county, a.postcode, a.telephone
+       FROM members m
+       LEFT JOIN addresses a ON a.id = m.address_id
+       ORDER BY m.surname, m.forenames`,
+    );
+    res.json(members);
+  } catch (err) {
+    next(err);
+  }
+});
+
 // ─── GET /members/:id ─────────────────────────────────────────────────────
 
 router.get('/:id', requirePrivilege('member_record', 'view'), async (req, res, next) => {

@@ -104,6 +104,20 @@ CREATE TABLE IF NOT EXISTS :schema.member_classes (
 );
 
 -- ─────────────────────────────────────────────
+-- CLASS MONTHLY FEES (used when fee_variation = 'varies_by_month')
+-- month_index 1-12 = Jan-Dec, 13 = Renewals
+-- ─────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS :schema.class_monthly_fees (
+  id           TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
+  class_id     TEXT NOT NULL REFERENCES :schema.member_classes(id) ON DELETE CASCADE,
+  month_index  INTEGER NOT NULL CHECK (month_index BETWEEN 1 AND 13),
+  fee          NUMERIC(8,2),
+  gift_aid_fee NUMERIC(8,2),
+  UNIQUE (class_id, month_index)
+);
+CREATE INDEX IF NOT EXISTS :schema_idx_class_monthly_fees_class ON :schema.class_monthly_fees (class_id);
+
+-- ─────────────────────────────────────────────
 -- MEMBER STATUSES
 -- ─────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS :schema.member_statuses (

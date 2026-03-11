@@ -18,10 +18,15 @@ vi.mock('../context/AuthContext.jsx', () => ({
 
 vi.mock('../lib/api.js', () => ({
   memberClasses: {
-    get:    vi.fn().mockResolvedValue({}),
-    create: vi.fn().mockResolvedValue({}),
-    update: vi.fn().mockResolvedValue({}),
-    delete: vi.fn().mockResolvedValue({}),
+    get:             vi.fn().mockResolvedValue({}),
+    create:          vi.fn().mockResolvedValue({}),
+    update:          vi.fn().mockResolvedValue({}),
+    delete:          vi.fn().mockResolvedValue({}),
+    getMonthlyFees:  vi.fn().mockResolvedValue([]),
+    saveMonthlyFees: vi.fn().mockResolvedValue({}),
+  },
+  settings: {
+    get: vi.fn().mockResolvedValue({ fee_variation: 'same_all_year', gift_aid_enabled: false }),
   },
 }));
 

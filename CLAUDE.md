@@ -52,6 +52,27 @@ user to add it rather than assuming its contents.
 
 All work goes on a branch whose name starts with `claude/`. Never push directly to `main`.
 
+## Privileges for new functionality
+
+**Every new page or function must use a proper named privilege resource — never re-use `settings:view` as a general admin gate.**
+
+### Rule
+
+When building a new feature that users should be able to access:
+
+1. Add the resource to `backend/src/seed/privilegeResources.js` with appropriate actions (`view`, `change`, `create`, `delete`, or custom).
+2. Grant the privilege to the relevant default roles in `backend/src/seed/defaultRoles.js`. The **Administration** role always gets it. Consider whether **Membership Secretary**, **Treasurer**, or other roles should too.
+3. Update `backend/src/__tests__/helpers.js` → `ALL_PRIVS` to include the new `resource:action` strings.
+4. Use `requirePrivilege('resource', 'action')` on the backend route and `can('resource', 'action')` in the frontend guard.
+
+The migration system (`migrate.js`) automatically re-seeds privilege resources and re-syncs default role privileges on every server startup, so existing tenants pick up changes without manual intervention.
+
+### Current custom privilege resources (Beacon2-only, not in original Beacon)
+
+| Resource | Actions | Granted to |
+|----------|---------|------------|
+| `member_data_validation` | `view`, `change` | Administration, Membership Secretary |
+
 ## Key conventions
 
 - Always spell **u3a** in lowercase
@@ -631,3 +652,83 @@ financeApi.deleteTransaction(id)
 `backend/src/__tests__/helpers.js` `ALL_PRIVS` must include finance privileges.
 They were added in this session — if new finance privilege resources are added,
 update `ALL_PRIVS` accordingly.
+
+---
+
+## Validation UX patterns (March 2026)
+
+### Backend Zod errors → inline field errors
+
+The backend returns 422 with `{ error: 'Validation error', issues: [{path, message}, ...] }` for Zod failures. In `MemberEditor` (and should be applied to other forms), catch these and call `setFieldErrors()` to surface per-field errors instead of just showing "Validation error":
+
+```js
+} else if (err.status === 422 && err.body?.issues?.length) {
+  const newErrs = {};
+  for (const issue of err.body.issues) {
+    const key = issue.path.replace(/^address\./, '');
+    newErrs[key] = issue.message;
+  }
+  setFieldErrors((prev) => ({ ...prev, ...newErrs }));
+  setError('Please correct the errors highlighted below.');
+}
+```
+
+### Error message styling
+
+- `errMsgCls = 'text-sm text-red-600 mt-1 font-medium'` — not `text-xs`
+- Top-level error banner: `rounded-md bg-red-50 border border-red-300 px-4 py-3 text-red-700 text-sm font-medium text-center`
+
+### Postcode validation when sharing an address
+
+When `existingPartnerId` is set or `newPartnerMode` is true, skip ALL postcode validation (not just the "required" check) — the address is not sent to the backend.
+
+---
+
+## Member classes — varying fees by month (March 2026)
+
+`class_monthly_fees` table: 13 rows per class (month_index 1-12 = Jan-Dec, 13 = Renewals), each with `fee` and `gift_aid_fee`.
+
+- Schema: `backend/prisma/tenant_schema.sql` (idempotent)
+- Routes: `GET` and `PUT /member-classes/:id/monthly-fees`
+- Frontend: monthly fee grid shown in `MemberClassEditor` when system settings `fee_variation = 'varies_by_month'`
+- Auto-propagate: when the checkbox is ticked, typing a fee copies it to all subsequent months
+
+When `fee_variation = 'varies_by_month'`, the single `fee`/`gift_aid_fee` fields on the class record are hidden from the form (they are not meaningful in that mode).
+
+Delete guard: backend now checks member count before deleting a class; returns 409 with message "N members are assigned — make it non-current instead."
+
+---
+
+## Member data validator (March 2026)
+
+### Route
+
+`GET /members/validate` — requires `settings:view` — returns all members with their address fields. **Must stay above `GET /:id`** in members.js to avoid routing conflict.
+
+### Page
+
+`frontend/src/pages/admin/MemberValidator.jsx` at `/admin/validate-members`. Admin-only (shown in Misc section of Home only when `can('settings', 'view')`).
+
+### Validation rules (all client-side)
+
+| Check | Behaviour |
+|-------|-----------|
+| Postcode | Required; must match `UK_POSTCODE_RE` |
+| Email | Optional — missing is OK; present value must be `x@x.x` format |
+| Mobile / telephone | Optional — missing is OK; present value validated with `isValidPhoneNumber(v, 'GB')` |
+| status_id, class_id, joined_on | Must not be null/empty |
+
+### Fix method
+
+- **Inline** for postcode, email, mobile, telephone — input + Save button; on success local data updated so issue vanishes without re-fetch
+- **Link** for missing status/class/joined date — opens the member's edit record
+- "Open record →" link always present on every card
+- "Re-check now" button re-fetches and re-validates the full dataset
+
+### Extending the validator
+
+When a new member data field is added (e.g. a required date, a new contact field, a format-validated field), **add a corresponding check to `getIssues()` in `MemberValidator.jsx`**. If the field lives on the address table rather than the members table, ensure `GET /members/validate` returns it in its SQL select. Inline-editable fields need a `saveField()` branch to map them to the correct PATCH payload.
+
+### Congratulations state
+
+When `flagged.length === 0`, shows a green "All member data is valid!" banner with member count.

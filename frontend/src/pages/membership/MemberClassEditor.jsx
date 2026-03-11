@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { memberClasses as api } from '../../lib/api.js';
+import { memberClasses as api, settings as settingsApi } from '../../lib/api.js';
 import { useAuth } from '../../context/AuthContext.jsx';
 import NavBar from '../../components/NavBar.jsx';
 import PageHeader from '../../components/PageHeader.jsx';
@@ -13,18 +13,52 @@ const BLANK = {
   fee: '', giftAidFee: '',
 };
 
+// Month names: indices 1-12 = Jan-Dec, 13 = Renewals
+const MONTH_LABELS = [
+  '', 'January', 'February', 'March', 'April', 'May', 'June',
+  'July', 'August', 'September', 'October', 'November', 'December', 'Renewals',
+];
+
+/** Build a blank 13-row monthly fees array */
+function blankMonthlyFees() {
+  return Array.from({ length: 13 }, (_, i) => ({
+    monthIndex: i + 1,
+    fee: '',
+    giftAidFee: '',
+  }));
+}
+
 export default function MemberClassEditor() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { can, tenant } = useAuth();
   const isNew = !id || id === 'new';
 
-  const [form,    setForm]    = useState(BLANK);
-  const [locked,  setLocked]  = useState(false);
-  const [loading, setLoading] = useState(!isNew);
-  const [saving,  setSaving]  = useState(false);
-  const [deleting, setDeleting] = useState(false);
-  const [error,   setError]   = useState(null);
+  const [form,          setForm]          = useState(BLANK);
+  const [locked,        setLocked]        = useState(false);
+  const [loading,       setLoading]       = useState(!isNew);
+  const [saving,        setSaving]        = useState(false);
+  const [savingFees,    setSavingFees]    = useState(false);
+  const [deleting,      setDeleting]      = useState(false);
+  const [error,         setError]         = useState(null);
+  const [feesSaved,     setFeesSaved]     = useState(false);
+
+  // System fee variation setting
+  const [feeVariation,  setFeeVariation]  = useState('same_all_year');
+  const [giftAidEnabled, setGiftAidEnabled] = useState(false);
+
+  // Monthly fees (13 rows)
+  const [monthlyFees,   setMonthlyFees]   = useState(blankMonthlyFees());
+  const [autoProp,      setAutoProp]      = useState(false);
+
+  useEffect(() => {
+    settingsApi.get()
+      .then((s) => {
+        setFeeVariation(s.fee_variation ?? 'same_all_year');
+        setGiftAidEnabled(s.gift_aid_enabled ?? false);
+      })
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     if (isNew) return;
@@ -44,10 +78,36 @@ export default function MemberClassEditor() {
       })
       .catch((err) => setError(err.message))
       .finally(() => setLoading(false));
+
+    api.getMonthlyFees(id)
+      .then((rows) => {
+        if (rows.length > 0) {
+          const filled = blankMonthlyFees().map((blank) => {
+            const row = rows.find((r) => r.month_index === blank.monthIndex);
+            return row
+              ? { ...blank, fee: row.fee != null ? String(row.fee) : '', giftAidFee: row.gift_aid_fee != null ? String(row.gift_aid_fee) : '' }
+              : blank;
+          });
+          setMonthlyFees(filled);
+        }
+      })
+      .catch(() => {});
   }, [id]);
 
   function set(field, value) {
     setForm((prev) => ({ ...prev, [field]: value }));
+  }
+
+  function setMonthFee(monthIndex, field, value) {
+    setMonthlyFees((prev) => {
+      const next = prev.map((r) => r.monthIndex === monthIndex ? { ...r, [field]: value } : r);
+      // Auto-propagate to subsequent months if enabled
+      if (autoProp && value !== '') {
+        const startIdx = monthIndex - 1; // 0-based position
+        return next.map((r, i) => i >= startIdx ? { ...r, [field]: value } : r);
+      }
+      return next;
+    });
   }
 
   async function handleSave(e) {
@@ -78,6 +138,26 @@ export default function MemberClassEditor() {
     }
   }
 
+  async function handleSaveFees(e) {
+    e.preventDefault();
+    setSavingFees(true);
+    setError(null);
+    setFeesSaved(false);
+    try {
+      const fees = monthlyFees.map((r) => ({
+        monthIndex:  r.monthIndex,
+        fee:         r.fee !== '' ? Number(r.fee) : null,
+        giftAidFee:  r.giftAidFee !== '' ? Number(r.giftAidFee) : null,
+      }));
+      await api.saveMonthlyFees(id, { fees });
+      setFeesSaved(true);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setSavingFees(false);
+    }
+  }
+
   async function handleDelete() {
     if (!confirm(`Delete membership class "${form.name}"? This cannot be undone.`)) return;
     setDeleting(true);
@@ -95,6 +175,8 @@ export default function MemberClassEditor() {
     { label: 'Membership Classes', to: '/membership/classes' },
   ];
 
+  const inputCls = 'w-full border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500';
+
   if (loading) return (
     <div className="min-h-screen pb-10">
       <PageHeader tenant={tenant} />
@@ -108,13 +190,18 @@ export default function MemberClassEditor() {
       <PageHeader tenant={tenant} />
       <NavBar links={navLinks} />
 
-      <div className="max-w-lg mx-auto px-4 py-5">
-        <h1 className="text-xl font-bold text-center mb-4">
+      <div className="max-w-2xl mx-auto px-4 py-5 space-y-4">
+        <h1 className="text-xl font-bold text-center">
           {isNew ? 'Add Membership Class' : 'Edit Membership Class'}
         </h1>
 
-        {error && <p className="text-red-600 text-sm mb-4 text-center">{error}</p>}
+        {error && (
+          <div className="rounded-md bg-red-50 border border-red-300 px-4 py-3 text-red-700 text-sm font-medium text-center">
+            {error}
+          </div>
+        )}
 
+        {/* ── Class Record form ───────────────────────────────────────── */}
         <form onSubmit={handleSave} className="bg-white/90 rounded-lg shadow-sm p-4 sm:p-6 space-y-4">
 
           <div>
@@ -125,49 +212,52 @@ export default function MemberClassEditor() {
               onChange={(e) => set('name', e.target.value)}
               required
               maxLength={100}
-              className="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className={inputCls}
             />
+            <p className="text-xs text-slate-400 mt-1">Keep the name short if membership cards are printed (avoids overlap with barcode).</p>
           </div>
 
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1">
-              Explanation <span className="text-slate-400 font-normal">(shown to online joiners)</span>
+              Explanation <span className="text-slate-400 font-normal">(shown to members joining online)</span>
             </label>
             <textarea
               value={form.explanation}
               onChange={(e) => set('explanation', e.target.value)}
               rows={3}
-              className="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className={inputCls}
             />
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Fee per person (£)</label>
-            <input
-              type="number"
-              min="0"
-              step="0.01"
-              value={form.fee}
-              onChange={(e) => set('fee', e.target.value)}
-              className="w-40 border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Gift Aid eligible (£)</label>
-            <input
-              type="number"
-              min="0"
-              step="0.01"
-              value={form.giftAidFee}
-              onChange={(e) => set('giftAidFee', e.target.value)}
-              className="w-40 border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
+          {/* Fee fields — only shown when fee_variation = 'same_all_year' */}
+          {feeVariation === 'same_all_year' && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Fee per person (£)</label>
+                <input
+                  type="number" min="0" step="0.01"
+                  value={form.fee}
+                  onChange={(e) => set('fee', e.target.value)}
+                  className="w-40 border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+              {giftAidEnabled && (
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Gift Aid eligible (£)</label>
+                  <input
+                    type="number" min="0" step="0.01"
+                    value={form.giftAidFee}
+                    onChange={(e) => set('giftAidFee', e.target.value)}
+                    className="w-40 border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                  <p className="text-xs text-slate-400 mt-1">Must be ≤ fee per person.</p>
+                </div>
+              )}
+            </div>
+          )}
 
           <fieldset className="space-y-2 pt-1">
             <legend className="text-sm font-medium text-slate-700 mb-1">Options</legend>
-
             {[
               ['current',     'Current (may be used for new memberships)'],
               ['isJoint',     '1 of 2 people at same address (joint / family membership)'],
@@ -213,6 +303,83 @@ export default function MemberClassEditor() {
             </p>
           )}
         </form>
+
+        {/* ── Monthly fees panel — only when fee_variation = 'varies_by_month' and editing ── */}
+        {!isNew && feeVariation === 'varies_by_month' && (
+          <form onSubmit={handleSaveFees} className="bg-white/90 rounded-lg shadow-sm p-4 sm:p-6 space-y-4">
+            <div className="flex items-center justify-between flex-wrap gap-2">
+              <h2 className="text-sm font-semibold text-slate-700 uppercase tracking-wide">
+                Varying Membership Fees
+              </h2>
+              <label className="flex items-center gap-2 text-sm cursor-pointer text-slate-600">
+                <input
+                  type="checkbox"
+                  checked={autoProp}
+                  onChange={(e) => setAutoProp(e.target.checked)}
+                  className="rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                />
+                Auto-propagate
+              </label>
+            </div>
+
+            <p className="text-xs text-slate-500">
+              Enter fees left to right. If Auto-propagate is ticked, the value you type will be
+              copied automatically to all subsequent months.
+            </p>
+
+            <div className="overflow-x-auto">
+              <table className="min-w-max text-sm">
+                <thead>
+                  <tr className="bg-slate-50">
+                    <th className="px-3 py-2 text-left font-medium text-slate-600 whitespace-nowrap">Month</th>
+                    <th className="px-3 py-2 text-left font-medium text-slate-600 whitespace-nowrap">Fee per person (£)</th>
+                    {giftAidEnabled && (
+                      <th className="px-3 py-2 text-left font-medium text-slate-600 whitespace-nowrap">Gift Aid eligible (£)</th>
+                    )}
+                  </tr>
+                </thead>
+                <tbody>
+                  {monthlyFees.map((row, i) => (
+                    <tr key={row.monthIndex} className={i % 2 === 0 ? 'bg-yellow-50' : 'bg-white'}>
+                      <td className="px-3 py-1.5 whitespace-nowrap font-medium text-slate-700">
+                        {MONTH_LABELS[row.monthIndex]}
+                      </td>
+                      <td className="px-3 py-1.5">
+                        <input
+                          type="number" min="0" step="0.01"
+                          value={row.fee}
+                          onChange={(e) => setMonthFee(row.monthIndex, 'fee', e.target.value)}
+                          className="w-28 border border-slate-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        />
+                      </td>
+                      {giftAidEnabled && (
+                        <td className="px-3 py-1.5">
+                          <input
+                            type="number" min="0" step="0.01"
+                            value={row.giftAidFee}
+                            onChange={(e) => setMonthFee(row.monthIndex, 'giftAidFee', e.target.value)}
+                            className="w-28 border border-slate-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          />
+                        </td>
+                      )}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            <div className="flex items-center gap-4">
+              <button
+                type="submit"
+                disabled={savingFees}
+                className="bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white rounded px-5 py-2 text-sm font-medium transition-colors"
+              >
+                {savingFees ? 'Saving…' : 'Save Fees'}
+              </button>
+              {feesSaved && <span className="text-sm text-green-600 font-medium">Fees saved.</span>}
+            </div>
+          </form>
+        )}
       </div>
 
       <NavBar links={navLinks} />

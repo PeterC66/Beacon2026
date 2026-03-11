@@ -46,6 +46,7 @@ export const PRIVILEGE_RESOURCES = [
   r('letters_standard_messages', 'Letters: standard messages',      ['view', 'create', 'change', 'delete']),
   r('meetings',                  'Meetings',                        ['view', 'create', 'change', 'delete']),
   r('member_classes',            'Member classes',                  ['view', 'create', 'change', 'delete']),
+  r('member_data_validation',    'Member data validation',          ['view', 'change']),
   r('member_record',             'Member record',                   ['view', 'create', 'change', 'delete']),
   r('member_statuses',           'Member statuses',                 ['view', 'create', 'change', 'delete']),
   r('members_list',              'Members list',                    ['view', 'download']),

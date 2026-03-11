@@ -178,17 +178,16 @@ export default function MemberEditor() {
       if (!npForm.joinedOn)         errs.npJoinedOn  = 'Partner joined date is required';
     }
 
-    // Postcode is required unless sharing a partner's address
-    const skipPostcode = (isNew && !!form.existingPartnerId) || addressLocked;
+    // Postcode is required unless sharing a partner's address (existing or new)
+    const skipPostcode = (isNew && (!!form.existingPartnerId || newPartnerMode)) || addressLocked;
     if (!skipPostcode) {
       if (!form.postcode.trim()) {
         errs.postcode = 'Postcode is required';
       } else if (!isValidUKPostcode(form.postcode)) {
         errs.postcode = 'Enter a valid UK postcode (e.g. SW1A 1AA)';
       }
-    } else if (form.postcode.trim() && !isValidUKPostcode(form.postcode)) {
-      errs.postcode = 'Enter a valid UK postcode (e.g. SW1A 1AA)';
     }
+    // When address is shared we don't send it, so we don't validate postcode format
 
     const mobileErr = validatePhone(form.mobile);
     if (mobileErr) errs.mobile = mobileErr;
@@ -432,6 +431,16 @@ export default function MemberEditor() {
             setError(err2.message);
           }
         }
+      } else if (err.status === 422 && err.body?.issues?.length) {
+        // Map Zod field errors into inline field errors
+        const newErrs = {};
+        for (const issue of err.body.issues) {
+          // Flatten address.X paths to just X for the flat form state
+          const key = issue.path.replace(/^address\./, '');
+          newErrs[key] = issue.message;
+        }
+        setFieldErrors((prev) => ({ ...prev, ...newErrs }));
+        setError('Please correct the errors highlighted below.');
       } else {
         setError(err.message);
       }
@@ -470,7 +479,7 @@ export default function MemberEditor() {
   const inputErrCls = 'w-full border border-red-400 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-400';
   const labelCls   = 'block text-sm font-medium text-slate-700 mb-1';
   const sectionCls = 'bg-white/90 rounded-lg shadow-sm p-4 sm:p-6';
-  const errMsgCls  = 'text-xs text-red-600 mt-1';
+  const errMsgCls  = 'text-sm text-red-600 mt-1 font-medium';
 
   function ic(field) { return fieldErrors[field] ? inputErrCls : inputCls; }
 
@@ -484,7 +493,11 @@ export default function MemberEditor() {
           {isNew ? 'Add New Member' : `Member Record — ${form.forenames} ${form.surname}`}
         </h1>
 
-        {error && <p className="text-red-600 text-sm text-center">{error}</p>}
+        {error && (
+          <div className="rounded-md bg-red-50 border border-red-300 px-4 py-3 text-red-700 text-sm font-medium text-center">
+            {error}
+          </div>
+        )}
 
         <form onSubmit={handleSave} noValidate className="space-y-4">
 

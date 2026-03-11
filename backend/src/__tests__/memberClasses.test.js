@@ -140,6 +140,7 @@ describe('DELETE /member-classes/:id', () => {
 
   it('returns 200 when deleted successfully', async () => {
     tenantQuery.mockResolvedValueOnce([{ id: 'mc2', locked: false }]);
+    tenantQuery.mockResolvedValueOnce([{ n: 0 }]);   // member count check
     tenantQuery.mockResolvedValueOnce([]);
 
     const res = await request(app)
@@ -148,6 +149,18 @@ describe('DELETE /member-classes/:id', () => {
 
     expect(res.status).toBe(200);
     expect(res.body.message).toBe('Membership class deleted.');
+  });
+
+  it('returns 409 when class has members assigned', async () => {
+    tenantQuery.mockResolvedValueOnce([{ id: 'mc2', locked: false }]);
+    tenantQuery.mockResolvedValueOnce([{ n: 3 }]);  // 3 members assigned
+
+    const res = await request(app)
+      .delete('/member-classes/mc2')
+      .set('Authorization', AUTH);
+
+    expect(res.status).toBe(409);
+    expect(res.body.error).toMatch(/3 members are assigned/);
   });
 
   it('returns 409 when class is locked', async () => {
