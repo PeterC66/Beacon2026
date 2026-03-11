@@ -23,6 +23,7 @@ import FinanceCategories  from './pages/finance/FinanceCategories.jsx';
 import FinanceLedger      from './pages/finance/FinanceLedger.jsx';
 import TransactionEditor  from './pages/finance/TransactionEditor.jsx';
 import ConfigureAccount   from './pages/finance/ConfigureAccount.jsx';
+import MemberValidator    from './pages/admin/MemberValidator.jsx';
 
 function ProtectedRoute({ children }) {
   const { isLoggedIn } = useAuth();
@@ -65,6 +66,7 @@ export default function App() {
           <Route path="/finance/ledger"                      element={<ProtectedRoute><FinanceLedger /></ProtectedRoute>} />
           <Route path="/finance/transactions/new"            element={<ProtectedRoute><TransactionEditor /></ProtectedRoute>} />
           <Route path="/finance/transactions/:id"            element={<ProtectedRoute><TransactionEditor /></ProtectedRoute>} />
+          <Route path="/admin/validate-members"              element={<ProtectedRoute><MemberValidator /></ProtectedRoute>} />
         </Routes>
       </BrowserRouter>
     </AuthProvider>

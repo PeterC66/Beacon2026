@@ -157,11 +157,12 @@ export const members = {
     const query = qs.toString();
     return request(`/members${query ? '?' + query : ''}`);
   },
-  get:     (id)              => request(`/members/${id}`),
-  create:  (data, confirmed) =>
+  get:      (id)              => request(`/members/${id}`),
+  validate: ()               => request('/members/validate'),
+  create:   (data, confirmed) =>
     request(`/members${confirmed ? '?confirmed=1' : ''}`, { method: 'POST', body: JSON.stringify(data) }),
-  update:  (id, data)        => request(`/members/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
-  delete:  (id)              => request(`/members/${id}`, { method: 'DELETE' }),
+  update:   (id, data)        => request(`/members/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
+  delete:   (id)              => request(`/members/${id}`, { method: 'DELETE' }),
 };
 
 // ─── Faculties ────────────────────────────────────────────────────────────
