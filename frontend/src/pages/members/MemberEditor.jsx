@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { isValidPhoneNumber } from 'libphonenumber-js';
-import { members as membersApi, memberStatuses as statusApi, memberClasses as classApi } from '../../lib/api.js';
+import { members as membersApi, memberStatuses as statusApi, memberClasses as classApi, finance as financeApi } from '../../lib/api.js';
 import { useAuth } from '../../context/AuthContext.jsx';
 import NavBar from '../../components/NavBar.jsx';
 import PageHeader from '../../components/PageHeader.jsx';
@@ -17,7 +17,11 @@ const BLANK_FORM = {
   houseNo: '', street: '', addLine1: '', addLine2: '', town: '', county: '', postcode: '', telephone: '',
   // partner
   existingPartnerId: '',
+  // payment (new member only)
+  payAmount: '', payMethod: '', payAccountId: '', payRef: '',
 };
+
+const PAYMENT_METHODS = ['Cash', 'Cheque', 'Standing Order', 'Direct Debit', 'BACS', 'Online', 'Other'];
 
 const TITLES = ['', 'Mr', 'Mrs', 'Ms', 'Miss', 'Dr', 'Prof', 'Rev', 'Sir', 'Lady'];
 
@@ -47,6 +51,7 @@ export default function MemberEditor() {
   const [statuses,       setStatuses]       = useState([]);
   const [classes,        setClasses]        = useState([]);
   const [allMembers,     setAllMembers]     = useState([]);
+  const [accounts,       setAccounts]       = useState([]);
   const [loading,        setLoading]        = useState(!isNew);
   const [saving,         setSaving]         = useState(false);
   const [deleting,       setDeleting]       = useState(false);
@@ -62,6 +67,7 @@ export default function MemberEditor() {
 
   const selectedClass = classes.find((c) => c.id === form.classId);
   const isAssociate   = selectedClass?.is_associate ?? false;
+  const classFee      = selectedClass?.fee ?? null;
 
   // Address fields are read-only when a partner change is pending
   const addressLocked = !isNew && partnerChanged && !!form.existingPartnerId;
@@ -72,6 +78,18 @@ export default function MemberEditor() {
       .catch(() => {});
 
     membersApi.list({ status: '' }).then(setAllMembers).catch(() => {});
+
+    if (isNew) {
+      financeApi.listAccounts()
+        .then((accs) => {
+          const active = accs.filter((a) => a.active);
+          setAccounts(active);
+          // Pre-select the locked "Current" account if present
+          const current = active.find((a) => a.locked && a.name === 'Current');
+          if (current) set('payAccountId', String(current.id));
+        })
+        .catch(() => {});
+    }
 
     if (!isNew) {
       membersApi.get(id)
@@ -255,6 +273,29 @@ export default function MemberEditor() {
     if (isNew && form.existingPartnerId) {
       payload.existingPartnerId = form.existingPartnerId;
       delete payload.address;
+    }
+
+    // Attach payment details if amount entered
+    if (isNew && form.payAmount && form.payAccountId) {
+      const payAmt = parseFloat(form.payAmount);
+      if (!isNaN(payAmt) && payAmt > 0) {
+        // Warn if underpayment — user can proceed
+        if (classFee !== null && payAmt < classFee - 0.001) {
+          if (!confirm(
+            `The amount received (£${payAmt.toFixed(2)}) is less than the expected fee (£${classFee.toFixed(2)}).\n\n` +
+            `Continue and record the partial payment?`
+          )) {
+            setSaving(false);
+            return;
+          }
+        }
+        payload.payment = {
+          accountId: form.payAccountId,
+          amount:    payAmt,
+          method:    form.payMethod || undefined,
+          ref:       form.payRef    || undefined,
+        };
+      }
     }
 
     try {
@@ -574,6 +615,62 @@ export default function MemberEditor() {
               </div>
             </div>
           </div>
+
+          {/* ── iv) Payment (new member only) ───────────────────────── */}
+          {isNew && accounts.length > 0 && (
+            <div className={sectionCls}>
+              <h2 className="text-sm font-semibold text-slate-700 uppercase tracking-wide mb-3">Payment</h2>
+              {classFee !== null && (
+                <p className="text-sm text-slate-600 mb-3">
+                  Expected fee: <strong>£{Number(classFee).toFixed(2)}</strong>
+                  {classFee === 0 && <span className="text-slate-400 ml-1">(free membership)</span>}
+                </p>
+              )}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className={labelCls}>Amount received</label>
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm">£</span>
+                    <input
+                      type="number" min="0" step="0.01"
+                      value={form.payAmount}
+                      onChange={(e) => set('payAmount', e.target.value)}
+                      className={`${inputCls} pl-7`}
+                      placeholder="0.00"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className={labelCls}>Payment method</label>
+                  <select value={form.payMethod} onChange={(e) => set('payMethod', e.target.value)} className={inputCls}>
+                    <option value="">— select —</option>
+                    {PAYMENT_METHODS.map((m) => <option key={m} value={m}>{m}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label className={labelCls}>Account</label>
+                  <select value={form.payAccountId} onChange={(e) => set('payAccountId', e.target.value)} className={inputCls}>
+                    <option value="">— select —</option>
+                    {accounts.map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label className={labelCls}>Payment ref <span className="text-slate-400 font-normal">(e.g. cheque no.)</span></label>
+                  <input type="text" value={form.payRef}
+                    onChange={(e) => set('payRef', e.target.value)}
+                    className={inputCls} maxLength={100} />
+                </div>
+              </div>
+              {classFee !== null && form.payAmount && parseFloat(form.payAmount) > classFee + 0.001 && (
+                <p className="text-xs text-blue-600 mt-2">
+                  Amount exceeds expected fee — £{(parseFloat(form.payAmount) - classFee).toFixed(2)} will be recorded as a donation.
+                </p>
+              )}
+              {!form.payAmount && (
+                <p className="text-xs text-slate-400 mt-2 italic">Leave blank to skip recording a payment now.</p>
+              )}
+            </div>
+          )}
 
           {/* ── Buttons ─────────────────────────────────────────────── */}
           <div className="flex gap-3 flex-wrap">

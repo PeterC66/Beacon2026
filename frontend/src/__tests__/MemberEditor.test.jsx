@@ -20,6 +20,7 @@ vi.mock('../lib/api.js', () => ({
   members:       { get: vi.fn().mockResolvedValue({}), list: vi.fn().mockResolvedValue([]), create: vi.fn(), update: vi.fn(), delete: vi.fn() },
   memberStatuses: { list: vi.fn().mockResolvedValue([]) },
   memberClasses:  { list: vi.fn().mockResolvedValue([]) },
+  finance:        { listAccounts: vi.fn().mockResolvedValue([]) },
 }));
 
 describe('MemberEditor page (new member)', () => {

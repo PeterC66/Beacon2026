@@ -143,6 +143,13 @@ const addressSchema = z.object({
   telephone: z.string().optional(),
 });
 
+const paymentSchema = z.object({
+  accountId: z.string().min(1),
+  amount:    z.number().positive(),
+  method:    z.string().optional().nullable(),
+  ref:       z.string().optional().nullable(),
+});
+
 const createMemberSchema = z.object({
   title:       z.string().max(20).optional(),
   forenames:   z.string().min(1).max(100),
@@ -162,6 +169,8 @@ const createMemberSchema = z.object({
   // Address — either a new address object or an existing partner's id
   address:        addressSchema.optional(),
   existingPartnerId: z.string().optional(),  // reuse this member's address_id
+  // Optional payment — creates a financial transaction when provided
+  payment: paymentSchema.optional(),
 }).superRefine((val, ctx) => {
   // Postcode is required when not sharing a partner's address
   if (!val.existingPartnerId && !val.address?.postcode?.trim()) {
@@ -267,6 +276,75 @@ router.post('/', requirePrivilege('member_record', 'create'), async (req, res, n
         `UPDATE members SET partner_id = $1, updated_at = now() WHERE id = $2`,
         [member.id, data.existingPartnerId],
       );
+    }
+
+    // ── Create financial transaction if payment details provided ──────────
+    if (data.payment) {
+      const pay = data.payment;
+
+      // Fetch class fee (may be null if not set)
+      const [cls] = await tenantQuery(
+        slug,
+        `SELECT fee::float AS fee FROM member_classes WHERE id = $1`,
+        [data.classId],
+      );
+      const classFee = cls?.fee ?? null;
+
+      // Look up Membership and Donations category IDs by name
+      const cats = await tenantQuery(
+        slug,
+        `SELECT id, name FROM finance_categories WHERE name IN ('Membership', 'Donations') AND active = true`,
+        [],
+      );
+      const membershipCatId = cats.find((c) => c.name === 'Membership')?.id ?? null;
+      const donationsCatId  = cats.find((c) => c.name === 'Donations')?.id  ?? null;
+
+      // Build category split: if amount > class fee, excess goes to Donations
+      let categories;
+      const memberName = [data.title, data.forenames, data.surname].filter(Boolean).join(' ');
+
+      if (
+        classFee !== null &&
+        pay.amount > classFee + 0.001 &&
+        membershipCatId &&
+        donationsCatId
+      ) {
+        const donation = Math.round((pay.amount - classFee) * 100) / 100;
+        categories = [
+          { categoryId: membershipCatId, amount: classFee },
+          { categoryId: donationsCatId,  amount: donation },
+        ];
+      } else {
+        // All to Membership (or a fallback category if Membership is missing)
+        const catId = membershipCatId ?? donationsCatId;
+        if (!catId) throw AppError('No active Membership or Donations category found to record payment.', 500);
+        categories = [{ categoryId: catId, amount: pay.amount }];
+      }
+
+      const [txn] = await tenantQuery(
+        slug,
+        `INSERT INTO transactions
+           (account_id, date, type, from_to, amount, payment_method, payment_ref, member_id_1)
+         VALUES ($1, $2::date, 'in', $3, $4::numeric, $5, $6, $7)
+         RETURNING id, transaction_number`,
+        [
+          pay.accountId,
+          data.joinedOn,
+          memberName,
+          pay.amount,
+          pay.method ?? null,
+          pay.ref    ?? null,
+          member.id,
+        ],
+      );
+
+      for (const cat of categories) {
+        await tenantQuery(
+          slug,
+          `INSERT INTO transaction_categories (transaction_id, category_id, amount) VALUES ($1, $2, $3::numeric)`,
+          [txn.id, cat.categoryId, cat.amount],
+        );
+      }
     }
 
     res.status(201).json(member);
