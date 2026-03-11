@@ -232,17 +232,43 @@ router.delete('/categories/:id', requirePrivilege('finance_categories', 'delete'
 
 // ─── TRANSACTIONS ─────────────────────────────────────────────────────────
 
-// GET /finance/transactions?accountId=&categoryId=&groupId=&year=
+// GET /finance/transactions?accountId=&categoryId=&groupId=&memberId=&year=
 router.get('/transactions', requirePrivilege('finance_ledger', 'view'), async (req, res, next) => {
   try {
-    const { accountId, categoryId, groupId, year } = req.query;
+    const { accountId, categoryId, groupId, memberId, year } = req.query;
     const yearNum = year ? parseInt(year, 10) : new Date().getFullYear();
     const yearStart = `${yearNum}-01-01`;
     const yearEnd   = `${yearNum}-12-31`;
 
     let sql, params;
 
-    if (accountId) {
+    if (memberId) {
+      sql = `
+        SELECT t.id, t.transaction_number, t.account_id, t.date, t.type,
+               t.from_to, t.amount::float, t.payment_method, t.payment_ref,
+               t.detail, t.remarks, t.cleared_at,
+               t.member_id_1, t.member_id_2, t.group_id,
+               m1.forenames || ' ' || m1.surname AS member_1_name,
+               m2.forenames || ' ' || m2.surname AS member_2_name,
+               g.name AS group_name,
+               fa.name AS account_name,
+               COALESCE(
+                 json_agg(json_build_object('category_id', tc.category_id, 'name', fc.name, 'amount', tc.amount::float))
+                   FILTER (WHERE tc.id IS NOT NULL), '[]'
+               ) AS categories
+        FROM transactions t
+        LEFT JOIN members m1 ON m1.id = t.member_id_1
+        LEFT JOIN members m2 ON m2.id = t.member_id_2
+        LEFT JOIN groups g   ON g.id  = t.group_id
+        LEFT JOIN finance_accounts fa ON fa.id = t.account_id
+        LEFT JOIN transaction_categories tc ON tc.transaction_id = t.id
+        LEFT JOIN finance_categories fc ON fc.id = tc.category_id
+        WHERE (t.member_id_1 = $1 OR t.member_id_2 = $1)
+        GROUP BY t.id, m1.forenames, m1.surname, m2.forenames, m2.surname, g.name, fa.name
+        ORDER BY t.date, t.transaction_number`;
+      params = [memberId];
+
+    } else if (accountId) {
       sql = `
         SELECT t.id, t.transaction_number, t.account_id, t.date, t.type,
                t.from_to, t.amount::float, t.payment_method, t.payment_ref,

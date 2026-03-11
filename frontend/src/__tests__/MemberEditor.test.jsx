@@ -17,10 +17,10 @@ vi.mock('../context/AuthContext.jsx', () => ({
 }));
 
 vi.mock('../lib/api.js', () => ({
-  members:       { get: vi.fn().mockResolvedValue({}), list: vi.fn().mockResolvedValue([]), create: vi.fn(), update: vi.fn(), delete: vi.fn() },
+  members:       { get: vi.fn().mockResolvedValue({}), list: vi.fn().mockResolvedValue([]), validate: vi.fn().mockResolvedValue([]), getGroups: vi.fn().mockResolvedValue([]), create: vi.fn(), update: vi.fn(), delete: vi.fn() },
   memberStatuses: { list: vi.fn().mockResolvedValue([]) },
   memberClasses:  { list: vi.fn().mockResolvedValue([]) },
-  finance:        { listAccounts: vi.fn().mockResolvedValue([]) },
+  finance:        { listAccounts: vi.fn().mockResolvedValue([]), listTransactions: vi.fn().mockResolvedValue([]) },
 }));
 
 describe('MemberEditor page (new member)', () => {

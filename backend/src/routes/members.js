@@ -121,6 +121,26 @@ router.get('/validate', requirePrivilege('member_data_validation', 'view'), asyn
   }
 });
 
+// ─── GET /members/:id/groups ──────────────────────────────────────────────
+// Returns groups (and waiting list) the member belongs to.
+
+router.get('/:id/groups', requirePrivilege('member_record', 'view'), async (req, res, next) => {
+  try {
+    const rows = await tenantQuery(
+      req.user.tenantSlug,
+      `SELECT g.id, g.name, g.status, gm.is_leader, gm.waiting_since
+       FROM group_members gm
+       JOIN groups g ON g.id = gm.group_id
+       WHERE gm.member_id = $1
+       ORDER BY g.name`,
+      [req.params.id],
+    );
+    res.json(rows);
+  } catch (err) {
+    next(err);
+  }
+});
+
 // ─── GET /members/:id ─────────────────────────────────────────────────────
 
 router.get('/:id', requirePrivilege('member_record', 'view'), async (req, res, next) => {

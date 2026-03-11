@@ -163,6 +163,7 @@ export const members = {
     request(`/members${confirmed ? '?confirmed=1' : ''}`, { method: 'POST', body: JSON.stringify(data) }),
   update:   (id, data)        => request(`/members/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
   delete:   (id)              => request(`/members/${id}`, { method: 'DELETE' }),
+  getGroups: (id)             => request(`/members/${id}/groups`),
 };
 
 // ─── Faculties ────────────────────────────────────────────────────────────
@@ -220,6 +221,7 @@ export const finance = {
     if (params.accountId)  qs.set('accountId',  params.accountId);
     if (params.categoryId) qs.set('categoryId', params.categoryId);
     if (params.groupId)    qs.set('groupId',    params.groupId);
+    if (params.memberId)   qs.set('memberId',   params.memberId);
     if (params.year)       qs.set('year',       String(params.year));
     const query = qs.toString();
     return request(`/finance/transactions${query ? '?' + query : ''}`);
