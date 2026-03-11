@@ -143,6 +143,28 @@ const addressSchema = z.object({
   telephone: z.string().optional(),
 });
 
+const paymentSchema = z.object({
+  accountId: z.string().min(1),
+  amount:    z.number().positive(),
+  method:    z.string().optional().nullable(),
+  ref:       z.string().optional().nullable(),
+});
+
+// Minimal schema for a new partner joining at the same time — shares the primary member's address
+const newPartnerSchema = z.object({
+  title:       z.string().max(20).optional(),
+  forenames:   z.string().min(1).max(100),
+  surname:     z.string().min(1).max(100),
+  knownAs:     z.string().max(50).optional(),
+  email:       z.string().email().optional().or(z.literal('')),
+  mobile:      z.string().max(30).optional(),
+  statusId:    z.string().min(1),
+  classId:     z.string().min(1),
+  joinedOn:    z.string().min(1),
+  nextRenewal: z.string().optional(),
+  giftAidFrom: z.string().optional(),
+});
+
 const createMemberSchema = z.object({
   title:       z.string().max(20).optional(),
   forenames:   z.string().min(1).max(100),
@@ -159,12 +181,18 @@ const createMemberSchema = z.object({
   homeU3a:     z.string().max(100).optional(),
   notes:       z.string().optional(),
   hideContact: z.boolean().default(false),
-  // Address — either a new address object or an existing partner's id
-  address:        addressSchema.optional(),
-  existingPartnerId: z.string().optional(),  // reuse this member's address_id
+  // Address — either a new address object, an existing partner's id, or a new partner (shares primary's address)
+  address:           addressSchema.optional(),
+  existingPartnerId: z.string().optional(),
+  newPartner:        newPartnerSchema.optional(),   // A: two new members joining together
+  // Optional updates to an existing partner when linking
+  partnerClassId:    z.string().optional(),         // C: update partner's class
+  partnerRenewal:    z.object({ nextRenewal: z.string().min(1) }).optional(), // B: renew partner
+  // Optional payment — creates a financial transaction when provided
+  payment: paymentSchema.optional(),
 }).superRefine((val, ctx) => {
-  // Postcode is required when not sharing a partner's address
-  if (!val.existingPartnerId && !val.address?.postcode?.trim()) {
+  // Postcode is required when not sharing a partner's address and not adding a new partner
+  if (!val.existingPartnerId && !val.newPartner && !val.address?.postcode?.trim()) {
     ctx.addIssue({
       code: z.ZodIssueCode.custom,
       path: ['address', 'postcode'],
@@ -172,6 +200,50 @@ const createMemberSchema = z.object({
     });
   }
 });
+
+/** Create a financial transaction linked to a member. Splits overpayments into Membership + Donations. */
+async function createMemberPayment(slug, pay, memberId, memberName, joinedOn, classId) {
+  const [cls] = await tenantQuery(slug, `SELECT fee::float AS fee FROM member_classes WHERE id = $1`, [classId]);
+  const classFee = cls?.fee ?? null;
+
+  const cats = await tenantQuery(
+    slug,
+    `SELECT id, name FROM finance_categories WHERE name IN ('Membership', 'Donations') AND active = true`,
+    [],
+  );
+  const membershipCatId = cats.find((c) => c.name === 'Membership')?.id ?? null;
+  const donationsCatId  = cats.find((c) => c.name === 'Donations')?.id  ?? null;
+
+  let categories;
+  if (classFee !== null && pay.amount > classFee + 0.001 && membershipCatId && donationsCatId) {
+    const donation = Math.round((pay.amount - classFee) * 100) / 100;
+    categories = [
+      { categoryId: membershipCatId, amount: classFee },
+      { categoryId: donationsCatId,  amount: donation },
+    ];
+  } else {
+    const catId = membershipCatId ?? donationsCatId;
+    if (!catId) throw AppError('No active Membership or Donations category found to record payment.', 500);
+    categories = [{ categoryId: catId, amount: pay.amount }];
+  }
+
+  const [txn] = await tenantQuery(
+    slug,
+    `INSERT INTO transactions
+       (account_id, date, type, from_to, amount, payment_method, payment_ref, member_id_1)
+     VALUES ($1, $2::date, 'in', $3, $4::numeric, $5, $6, $7)
+     RETURNING id, transaction_number`,
+    [pay.accountId, joinedOn, memberName, pay.amount, pay.method ?? null, pay.ref ?? null, memberId],
+  );
+
+  for (const cat of categories) {
+    await tenantQuery(
+      slug,
+      `INSERT INTO transaction_categories (transaction_id, category_id, amount) VALUES ($1, $2, $3::numeric)`,
+      [txn.id, cat.categoryId, cat.amount],
+    );
+  }
+}
 
 router.post('/', requirePrivilege('member_record', 'create'), async (req, res, next) => {
   try {
@@ -260,13 +332,78 @@ router.post('/', requirePrivilege('member_record', 'create'), async (req, res, n
       ],
     );
 
-    // If partner specified, set partner_id on both sides (bi-directional)
+    // If existing partner specified, set partner_id on both sides (bi-directional)
     if (data.existingPartnerId) {
       await tenantQuery(
         slug,
         `UPDATE members SET partner_id = $1, updated_at = now() WHERE id = $2`,
         [member.id, data.existingPartnerId],
       );
+    }
+
+    // ── A: Create new partner joining at the same time (shares address) ───
+    if (data.newPartner) {
+      const np = data.newPartner;
+      const npInitials = deriveInitials(np.forenames);
+      const npEmail = np.email ? np.email.toLowerCase() : null;
+
+      const [partner] = await tenantQuery(
+        slug,
+        `INSERT INTO members
+           (title, forenames, surname, known_as, initials, email, mobile,
+            address_id, status_id, class_id, joined_on, next_renewal, gift_aid_from,
+            hide_contact, partner_id)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11::date,$12::date,$13::date,$14,$15)
+         RETURNING id, membership_number, forenames, surname`,
+        [
+          np.title      ?? null,
+          np.forenames,
+          np.surname,
+          np.knownAs    ?? null,
+          npInitials,
+          npEmail,
+          np.mobile     ?? null,
+          addressId,
+          np.statusId,
+          np.classId,
+          np.joinedOn   ?? null,
+          np.nextRenewal ?? null,
+          np.giftAidFrom ?? null,
+          false,
+          member.id,
+        ],
+      );
+
+      // Set primary member's partner_id to the new partner
+      await tenantQuery(
+        slug,
+        `UPDATE members SET partner_id = $1, updated_at = now() WHERE id = $2`,
+        [partner.id, member.id],
+      );
+    }
+
+    // ── B: Renew existing partner at the same time ────────────────────────
+    if (data.existingPartnerId && data.partnerRenewal) {
+      await tenantQuery(
+        slug,
+        `UPDATE members SET next_renewal = $1::date, updated_at = now() WHERE id = $2`,
+        [data.partnerRenewal.nextRenewal, data.existingPartnerId],
+      );
+    }
+
+    // ── C: Update existing partner's class if requested ───────────────────
+    if (data.existingPartnerId && data.partnerClassId) {
+      await tenantQuery(
+        slug,
+        `UPDATE members SET class_id = $1, updated_at = now() WHERE id = $2`,
+        [data.partnerClassId, data.existingPartnerId],
+      );
+    }
+
+    // ── Payment transaction for primary member ────────────────────────────
+    if (data.payment) {
+      const memberName = [data.title, data.forenames, data.surname].filter(Boolean).join(' ');
+      await createMemberPayment(slug, data.payment, member.id, memberName, data.joinedOn, data.classId);
     }
 
     res.status(201).json(member);
