@@ -675,3 +675,35 @@ When `existingPartnerId` is set or `newPartnerMode` is true, skip ALL postcode v
 When `fee_variation = 'varies_by_month'`, the single `fee`/`gift_aid_fee` fields on the class record are hidden from the form (they are not meaningful in that mode).
 
 Delete guard: backend now checks member count before deleting a class; returns 409 with message "N members are assigned — make it non-current instead."
+
+---
+
+## Member data validator (March 2026)
+
+### Route
+
+`GET /members/validate` — requires `settings:view` — returns all members with their address fields. **Must stay above `GET /:id`** in members.js to avoid routing conflict.
+
+### Page
+
+`frontend/src/pages/admin/MemberValidator.jsx` at `/admin/validate-members`. Admin-only (shown in Misc section of Home only when `can('settings', 'view')`).
+
+### Validation rules (all client-side)
+
+| Check | Behaviour |
+|-------|-----------|
+| Postcode | Required; must match `UK_POSTCODE_RE` |
+| Email | Optional — missing is OK; present value must be `x@x.x` format |
+| Mobile / telephone | Optional — missing is OK; present value validated with `isValidPhoneNumber(v, 'GB')` |
+| status_id, class_id, joined_on | Must not be null/empty |
+
+### Fix method
+
+- **Inline** for postcode, email, mobile, telephone — input + Save button; on success local data updated so issue vanishes without re-fetch
+- **Link** for missing status/class/joined date — opens the member's edit record
+- "Open record →" link always present on every card
+- "Re-check now" button re-fetches and re-validates the full dataset
+
+### Congratulations state
+
+When `flagged.length === 0`, shows a green "All member data is valid!" banner with member count.
