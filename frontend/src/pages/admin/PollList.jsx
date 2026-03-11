@@ -97,54 +97,52 @@ export default function PollList() {
   const inputCls = 'w-full border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500';
   const errCls   = 'w-full border border-red-400 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-400';
 
-  function FormRow() {
-    return (
-      <tr className="bg-blue-50 border-b border-slate-200">
-        <td className="px-3 py-2">
-          <input
-            type="text"
-            value={form.name}
-            onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
-            placeholder="Poll name"
-            className={formErr.name ? errCls : inputCls}
-            maxLength={100}
-            autoFocus
-          />
-          {formErr.name && <p className="text-sm text-red-600 mt-1">{formErr.name}</p>}
-        </td>
-        <td className="px-3 py-2">
-          <input
-            type="text"
-            value={form.description}
-            onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
-            placeholder="Description"
-            className={formErr.description ? errCls : inputCls}
-            maxLength={500}
-          />
-          {formErr.description && <p className="text-sm text-red-600 mt-1">{formErr.description}</p>}
-        </td>
-        <td className="px-3 py-2 text-center">
-          <input
-            type="checkbox"
-            checked={form.memberCanSet}
-            onChange={(e) => setForm((f) => ({ ...f, memberCanSet: e.target.checked }))}
-            className="rounded border-slate-300 text-blue-600 focus:ring-blue-500"
-          />
-        </td>
-        <td className="px-3 py-2 text-center">—</td>
-        <td className="px-3 py-2 text-right whitespace-nowrap">
-          <button onClick={handleSave} disabled={saving}
-            className="bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white rounded px-3 py-1 text-sm font-medium mr-2">
-            {saving ? 'Saving…' : 'Save Poll'}
-          </button>
-          <button onClick={cancelEdit}
-            className="border border-slate-300 rounded px-3 py-1 text-sm text-slate-600 hover:bg-slate-50">
-            Cancel
-          </button>
-        </td>
-      </tr>
-    );
-  }
+  function renderFormRow(key) { return (
+    <tr key={key} className="bg-blue-50 border-b border-slate-200">
+      <td className="px-3 py-2">
+        <input
+          type="text"
+          value={form.name}
+          onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
+          placeholder="Poll name"
+          className={formErr.name ? errCls : inputCls}
+          maxLength={100}
+          autoFocus
+        />
+        {formErr.name && <p className="text-sm text-red-600 mt-1">{formErr.name}</p>}
+      </td>
+      <td className="px-3 py-2">
+        <input
+          type="text"
+          value={form.description}
+          onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
+          placeholder="Description"
+          className={formErr.description ? errCls : inputCls}
+          maxLength={500}
+        />
+        {formErr.description && <p className="text-sm text-red-600 mt-1">{formErr.description}</p>}
+      </td>
+      <td className="px-3 py-2 text-center">
+        <input
+          type="checkbox"
+          checked={form.memberCanSet}
+          onChange={(e) => setForm((f) => ({ ...f, memberCanSet: e.target.checked }))}
+          className="rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+        />
+      </td>
+      <td className="px-3 py-2 text-center">—</td>
+      <td className="px-3 py-2 text-right whitespace-nowrap">
+        <button onClick={handleSave} disabled={saving}
+          className="bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white rounded px-3 py-1 text-sm font-medium mr-2">
+          {saving ? 'Saving…' : 'Save Poll'}
+        </button>
+        <button onClick={cancelEdit}
+          className="border border-slate-300 rounded px-3 py-1 text-sm text-slate-600 hover:bg-slate-50">
+          Cancel
+        </button>
+      </td>
+    </tr>
+  ); }
 
   return (
     <div className="min-h-screen pb-10">
@@ -176,7 +174,7 @@ export default function PollList() {
                 <tbody>
                   {list.map((poll, i) => (
                     editId === poll.id ? (
-                      <FormRow key={poll.id} />
+                      renderFormRow(poll.id)
                     ) : (
                       <tr key={poll.id} className={`border-b border-slate-100 ${i % 2 === 0 ? 'bg-yellow-50' : 'bg-white'}`}>
                         <td className="px-3 py-2 font-medium">{poll.name}</td>
@@ -200,7 +198,7 @@ export default function PollList() {
                       </tr>
                     )
                   ))}
-                  {editId === 'new' && <FormRow key="new" />}
+                  {editId === 'new' && renderFormRow('new')}
                   {list.length === 0 && editId !== 'new' && (
                     <tr>
                       <td colSpan={5} className="px-3 py-8 text-center text-slate-400 italic">No polls yet.</td>
