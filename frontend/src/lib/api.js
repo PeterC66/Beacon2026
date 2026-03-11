@@ -150,10 +150,12 @@ export const memberStatuses = {
 export const members = {
   list:    (params = {}) => {
     const qs = new URLSearchParams();
-    if (params.status)  qs.set('status',  params.status);
-    if (params.classId) qs.set('classId', params.classId);
-    if (params.q)       qs.set('q',       params.q);
-    if (params.letter)  qs.set('letter',  params.letter);
+    if (params.status)      qs.set('status',      params.status);
+    if (params.classId)     qs.set('classId',      params.classId);
+    if (params.pollId)      qs.set('pollId',       params.pollId);
+    if (params.negatePoll)  qs.set('negatePoll',   '1');
+    if (params.q)           qs.set('q',            params.q);
+    if (params.letter)      qs.set('letter',       params.letter);
     const query = qs.toString();
     return request(`/members${query ? '?' + query : ''}`);
   },
@@ -230,6 +232,18 @@ export const finance = {
   createTransaction: (data)     => request('/finance/transactions', { method: 'POST', body: JSON.stringify(data) }),
   updateTransaction: (id, data) => request(`/finance/transactions/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
   deleteTransaction: (id)       => request(`/finance/transactions/${id}`, { method: 'DELETE' }),
+};
+
+// ─── Polls ────────────────────────────────────────────────────────────────
+
+export const polls = {
+  list:         ()                 => request('/polls'),
+  create:       (data)             => request('/polls', { method: 'POST', body: JSON.stringify(data) }),
+  update:       (id, data)         => request(`/polls/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
+  delete:       (id)               => request(`/polls/${id}`, { method: 'DELETE' }),
+  clearAll:     (id)               => request(`/polls/${id}/clear`, { method: 'POST' }),
+  addMembers:   (id, memberIds)    => request(`/polls/${id}/members`, { method: 'POST', body: JSON.stringify({ memberIds }) }),
+  setForMember: (memberId, pollIds) => request(`/polls/by-member/${memberId}`, { method: 'PUT', body: JSON.stringify({ pollIds }) }),
 };
 
 // ─── Settings ─────────────────────────────────────────────────────────────

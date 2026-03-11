@@ -15,6 +15,7 @@ vi.mock('../lib/api.js', () => ({
   members:       { list: vi.fn().mockResolvedValue([]) },
   memberStatuses: { list: vi.fn().mockResolvedValue([]) },
   memberClasses:  { list: vi.fn().mockResolvedValue([]) },
+  polls:          { list: vi.fn().mockResolvedValue([]), addMembers: vi.fn() },
 }));
 
 describe('MemberList page', () => {

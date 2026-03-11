@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { isValidPhoneNumber } from 'libphonenumber-js';
-import { members as membersApi, memberStatuses as statusApi, memberClasses as classApi, finance as financeApi } from '../../lib/api.js';
+import { members as membersApi, memberStatuses as statusApi, memberClasses as classApi, finance as financeApi, polls as pollsApi } from '../../lib/api.js';
 import { useAuth } from '../../context/AuthContext.jsx';
 import NavBar from '../../components/NavBar.jsx';
 import PageHeader from '../../components/PageHeader.jsx';
@@ -86,6 +86,11 @@ export default function MemberEditor() {
   const [memberTxns,    setMemberTxns]    = useState([]);
   const [ledgerLoading, setLedgerLoading] = useState(false);
 
+  // ── Polls ─────────────────────────────────────────────────────────────
+  const [allPolls,      setAllPolls]      = useState([]);   // all polls in this u3a
+  const [memberPollIds, setMemberPollIds] = useState([]);   // polls this member is in
+  const [pollSaving,    setPollSaving]    = useState(false);
+
   const selectedClass = classes.find((c) => c.id === form.classId);
   const isAssociate   = selectedClass?.is_associate ?? false;
   const classFee      = selectedClass?.fee ?? null;
@@ -94,8 +99,8 @@ export default function MemberEditor() {
   const addressLocked = !isNew && partnerChanged && !!form.existingPartnerId;
 
   useEffect(() => {
-    Promise.all([statusApi.list(), classApi.list()])
-      .then(([s, c]) => { setStatuses(s); setClasses(c); })
+    Promise.all([statusApi.list(), classApi.list(), pollsApi.list()])
+      .then(([s, c, p]) => { setStatuses(s); setClasses(c); setAllPolls(p); })
       .catch(() => {});
 
     membersApi.list({ status: '' }).then(setAllMembers).catch(() => {});
@@ -155,6 +160,7 @@ export default function MemberEditor() {
           if (m.partner_forenames || m.partner_surname) {
             setPartnerName(`${m.partner_forenames ?? ''} ${m.partner_surname ?? ''}`.trim());
           }
+          setMemberPollIds(m.poll_ids ?? []);
         })
         .catch((err) => setError(err.message))
         .finally(() => setLoading(false));
@@ -910,6 +916,37 @@ export default function MemberEditor() {
               {!form.payAmount && (
                 <p className="text-xs text-slate-400 mt-2 italic">Leave blank to skip recording a payment now.</p>
               )}
+            </div>
+          )}
+
+          {/* ── Polls ───────────────────────────────────────────────── */}
+          {!isNew && allPolls.length > 0 && can('poll_set_up', 'view') && (
+            <div className={sectionCls}>
+              <h2 className="text-base font-semibold text-slate-700 mb-3">Polls</h2>
+              <div className="flex flex-wrap gap-4">
+                {allPolls.map((poll) => (
+                  <label key={poll.id} className="flex items-center gap-2 text-sm cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={memberPollIds.includes(poll.id)}
+                      disabled={pollSaving || !can('poll_set_up', 'change')}
+                      onChange={async (e) => {
+                        const newIds = e.target.checked
+                          ? [...memberPollIds, poll.id]
+                          : memberPollIds.filter((x) => x !== poll.id);
+                        setMemberPollIds(newIds);
+                        setPollSaving(true);
+                        try { await pollsApi.setForMember(id, newIds); }
+                        catch { setMemberPollIds(memberPollIds); } // revert on error
+                        finally { setPollSaving(false); }
+                      }}
+                      className="rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                    />
+                    {poll.name}
+                  </label>
+                ))}
+              </div>
+              {pollSaving && <p className="text-xs text-slate-400 mt-2">Saving…</p>}
             </div>
           )}
 

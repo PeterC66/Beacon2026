@@ -75,7 +75,7 @@ export default function Home() {
         { label: 'Finance categories',  to: can('finance_categories', 'view') ? '/finance/categories' : null },
         { label: 'Membership classes',  to: can('member_classes',  'view') ? '/membership/classes'  : null },
         { label: 'Member statuses',     to: can('member_statuses', 'view') ? '/membership/statuses' : null },
-        { label: 'Poll',                to: null },
+        { label: 'Poll',                to: can('poll_set_up', 'view') ? '/polls' : null },
       ],
     },
   ];

@@ -23,15 +23,17 @@ function deriveInitials(forenames) {
 
 // ─── GET /members ─────────────────────────────────────────────────────────
 // Query params:
-//   status   – comma-separated list of status IDs  (default: all)
-//   classId  – single class ID
-//   q        – free-text search
-//   letter   – single letter to filter surname start
+//   status      – comma-separated list of status IDs  (default: all)
+//   classId     – single class ID
+//   pollId      – filter to members in this poll
+//   negatePoll  – '1' to invert: members NOT in the poll
+//   q           – free-text search
+//   letter      – single letter to filter surname start
 
 router.get('/', requirePrivilege('members_list', 'view'), async (req, res, next) => {
   try {
     const slug = req.user.tenantSlug;
-    const { status, classId, q, letter } = req.query;
+    const { status, classId, pollId, negatePoll, q, letter } = req.query;
 
     const conditions = [];
     const params = [];
@@ -48,6 +50,15 @@ router.get('/', requirePrivilege('members_list', 'view'), async (req, res, next)
     if (classId) {
       conditions.push(`m.class_id = $${i++}`);
       params.push(classId);
+    }
+
+    if (pollId) {
+      if (negatePoll === '1') {
+        conditions.push(`m.id NOT IN (SELECT member_id FROM poll_members WHERE poll_id = $${i++})`);
+      } else {
+        conditions.push(`m.id IN (SELECT member_id FROM poll_members WHERE poll_id = $${i++})`);
+      }
+      params.push(pollId);
     }
 
     if (letter && /^[A-Z]$/i.test(letter)) {
@@ -168,6 +179,15 @@ router.get('/:id', requirePrivilege('member_record', 'view'), async (req, res, n
     );
 
     if (!member) throw AppError('Member not found.', 404);
+
+    // Attach current poll memberships
+    const pollRows = await tenantQuery(
+      slug,
+      `SELECT poll_id FROM poll_members WHERE member_id = $1`,
+      [req.params.id],
+    );
+    member.poll_ids = pollRows.map((r) => r.poll_id);
+
     res.json(member);
   } catch (err) {
     next(err);

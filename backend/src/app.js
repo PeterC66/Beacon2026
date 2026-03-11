@@ -23,6 +23,7 @@ import facultyRoutes       from './routes/faculties.js';
 import groupRoutes         from './routes/groups.js';
 import settingsRoutes      from './routes/settings.js';
 import financeRoutes       from './routes/finance.js';
+import pollRoutes          from './routes/polls.js';
 import { errorHandler } from './middleware/errorHandler.js';
 
 const app = express();
@@ -53,6 +54,7 @@ app.use('/faculties',       facultyRoutes);
 app.use('/groups',          groupRoutes);
 app.use('/settings',        settingsRoutes);
 app.use('/finance',         financeRoutes);
+app.use('/polls',           pollRoutes);
 
 app.get('/health', (_req, res) => res.json({
   status:  'ok',
