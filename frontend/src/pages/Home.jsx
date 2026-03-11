@@ -61,7 +61,7 @@ export default function Home() {
         { label: 'Data export & backup',  to: null },
         { label: 'E-mail delivery',       to: null },
         { label: 'Personal preferences',  to: null },
-        { label: 'Validate member data',  to: can('settings', 'view') ? '/admin/validate-members' : null },
+        { label: 'Validate member data',  to: can('member_data_validation', 'view') ? '/admin/validate-members' : null },
       ],
     },
     {

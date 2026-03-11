@@ -130,6 +130,8 @@ export const DEFAULT_ROLES = [
       { code: 'member_classes',           action: 'create' },
       { code: 'member_classes',           action: 'change' },
       { code: 'member_classes',           action: 'delete' },            // vced
+      { code: 'member_data_validation',   action: 'view' },
+      { code: 'member_data_validation',   action: 'change' },            // ve
       { code: 'member_record',            action: 'view' },
       { code: 'member_record',            action: 'create' },
       { code: 'member_record',            action: 'change' },
@@ -294,6 +296,8 @@ export const DEFAULT_ROLES = [
       { code: 'member_classes',           action: 'create' },
       { code: 'member_classes',           action: 'change' },
       { code: 'member_classes',           action: 'delete' },             // vced
+      { code: 'member_data_validation',   action: 'view' },
+      { code: 'member_data_validation',   action: 'change' },             // ve
       { code: 'member_record',            action: 'view' },
       { code: 'member_record',            action: 'create' },
       { code: 'member_record',            action: 'change' },

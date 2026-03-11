@@ -52,6 +52,27 @@ user to add it rather than assuming its contents.
 
 All work goes on a branch whose name starts with `claude/`. Never push directly to `main`.
 
+## Privileges for new functionality
+
+**Every new page or function must use a proper named privilege resource — never re-use `settings:view` as a general admin gate.**
+
+### Rule
+
+When building a new feature that users should be able to access:
+
+1. Add the resource to `backend/src/seed/privilegeResources.js` with appropriate actions (`view`, `change`, `create`, `delete`, or custom).
+2. Grant the privilege to the relevant default roles in `backend/src/seed/defaultRoles.js`. The **Administration** role always gets it. Consider whether **Membership Secretary**, **Treasurer**, or other roles should too.
+3. Update `backend/src/__tests__/helpers.js` → `ALL_PRIVS` to include the new `resource:action` strings.
+4. Use `requirePrivilege('resource', 'action')` on the backend route and `can('resource', 'action')` in the frontend guard.
+
+The migration system (`migrate.js`) automatically re-seeds privilege resources and re-syncs default role privileges on every server startup, so existing tenants pick up changes without manual intervention.
+
+### Current custom privilege resources (Beacon2-only, not in original Beacon)
+
+| Resource | Actions | Granted to |
+|----------|---------|------------|
+| `member_data_validation` | `view`, `change` | Administration, Membership Secretary |
+
 ## Key conventions
 
 - Always spell **u3a** in lowercase
@@ -703,6 +724,10 @@ Delete guard: backend now checks member count before deleting a class; returns 4
 - **Link** for missing status/class/joined date — opens the member's edit record
 - "Open record →" link always present on every card
 - "Re-check now" button re-fetches and re-validates the full dataset
+
+### Extending the validator
+
+When a new member data field is added (e.g. a required date, a new contact field, a format-validated field), **add a corresponding check to `getIssues()` in `MemberValidator.jsx`**. If the field lives on the address table rather than the members table, ensure `GET /members/validate` returns it in its SQL select. Inline-editable fields need a `saveField()` branch to map them to the correct PATCH payload.
 
 ### Congratulations state
 

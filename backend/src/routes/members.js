@@ -101,7 +101,7 @@ router.get('/', requirePrivilege('members_list', 'view'), async (req, res, next)
 // Returns all members with their address data for client-side data quality checks.
 // Requires settings:view (admin only).
 
-router.get('/validate', requirePrivilege('settings', 'view'), async (req, res, next) => {
+router.get('/validate', requirePrivilege('member_data_validation', 'view'), async (req, res, next) => {
   try {
     const members = await tenantQuery(
       req.user.tenantSlug,
