@@ -17,6 +17,25 @@ reference material in `docs/`) are present in the working branch before starting
 The full project brief is at `docs/FromBeacon/CLAUDE_CODE_PROMPT.md`. Read it at the
 start of any session where you are unsure what to build next.
 
+An up-to-date summary of **what has been built and what remains** is at
+`docs/FromBeacon/Beacon2 Project Definition.md`. Read this at the start of every
+session — it is maintained as a living document and is more accurate than the original
+prompt.
+
+## If a document is not in your branch
+
+If the user refers to a document that you cannot find in your working branch, check the
+`main` branch before concluding it does not exist. The user may have uploaded it directly
+to `main` without it having been merged into your branch yet:
+
+```bash
+git fetch origin main
+git merge origin/main --no-edit
+```
+
+Running this (as required by the Session startup rule above) will bring it in. If the
+file still does not appear after the merge, then ask the user to provide it.
+
 ## Reference documentation
 
 ### User Guide — `docs/BeaconUG/`
@@ -51,6 +70,35 @@ user to add it rather than assuming its contents.
 ## Development branch
 
 All work goes on a branch whose name starts with `claude/`. Never push directly to `main`.
+
+## Never define component functions inside other components
+
+Defining a React component function inside another component causes the inner component
+to be treated as a **new type** on every render. React unmounts and remounts it, which
+resets state and re-fires `autoFocus`. This manifests as focus jumping unexpectedly
+when typing.
+
+**Wrong** (causes remount on every keystroke):
+```jsx
+function ParentForm() {
+  function InnerRow() {         // ← new function reference every render
+    return <tr><td><input autoFocus /></td></tr>;
+  }
+  return <table><tbody><InnerRow /></tbody></table>;
+}
+```
+
+**Correct** — use a plain render function (not called with JSX tags):
+```jsx
+function ParentForm() {
+  function renderRow(key) {     // ← called as renderRow(key), not <RenderRow />
+    return <tr key={key}><td><input autoFocus /></td></tr>;
+  }
+  return <table><tbody>{renderRow('main')}</tbody></table>;
+}
+```
+
+Or extract to a top-level component (outside the parent function) and pass props.
 
 ## Privileges for new functionality
 
