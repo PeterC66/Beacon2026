@@ -1,4 +1,4 @@
-﻿# Beacon2 — Claude Code Project Prompt
+﻿# Beacon2 Project Definition
 
 ## What you are building
 
