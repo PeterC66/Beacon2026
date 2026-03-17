@@ -26,6 +26,7 @@ export const ALL_PRIVS = [
   'audit_trail:view', 'audit_trail:delete',
   'offices:view', 'offices:create', 'offices:change', 'offices:delete',
   'settings:view', 'settings:change',
+  'data_export_backup:view', 'data_export_backup:download', 'data_export_backup:restore',
 ];
 
 export const TEST_TENANT = 'test-u3a';

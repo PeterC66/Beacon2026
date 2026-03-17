@@ -817,3 +817,63 @@ When `flagged.length === 0`, shows a green "All member data is valid!" banner wi
 ### Frontend test note: multiple instances of same text
 
 When a heading label also appears on a submit button (e.g. "Change Password"), `getByText` throws "Found multiple elements". Use `getAllByText(...).length > 0` instead.
+
+---
+
+## Data Export & Backup (March 2026)
+
+### Architecture
+
+- Backend: `backend/src/routes/backup.js` — mounted at `/backup` in `app.js`
+- Frontend: `frontend/src/pages/misc/DataBackup.jsx` at `/backup`
+- Privilege: `data_export_backup` (actions: `view`, `download`, `restore`) — granted to Administration
+
+### Export — 8 options
+
+`GET /backup/export?type=<type>` streams an `.xlsx` file. Types:
+
+| type | label | sheets |
+|------|-------|--------|
+| `members` | Members and addresses | Members |
+| `finance` | Finance ledger with detail | Ledger, Detail |
+| `groups` | Groups, with members, venues and faculties | Groups, Group members, Venues, Faculties |
+| `calendar` | Calendar | Calendar (empty — not yet implemented) |
+| `system` | System users, roles and privileges | System Users, Roles, Privileges |
+| `officers` | u3a Officers | u3a Officers |
+| `settings` | Site settings and set up | Site Settings 1/2, Finance Accounts/Categories, Membership Classes/Fees, Member Statuses, Polls, Poll assignments, System Messages |
+| `all` | Backup all data | All of the above |
+
+The frontend uses `fetch()` with auth header → blob → `URL.createObjectURL` trigger download. This is the `requestBlob` helper in `api.js`. Direct browser navigation cannot be used because the auth token is in memory (not cookies).
+
+### Restore — two modes, auto-detected
+
+`POST /backup/restore` accepts a multipart `backup` file upload. Detection: if the `Members` sheet first column is `mkey` → Beacon (legacy); if `id` → Beacon2.
+
+- **Beacon2 restore**: UUIDs preserved; all FK-dependent tables re-inserted in order.
+- **Beacon restore**: Maps `mkey`/`gkey`/`tkey`/etc to new UUIDs. Partner detection via shared `akey` (exactly 2 members sharing an `akey` are linked as partners). Beacon month `0` in `Membership Fees` = Beacon2 `month_index` 13 (Renewals). Beacon ledger amounts: positive = `in`, negative = `out`.
+
+Both modes use a single `prisma.$transaction` with 5-minute timeout for atomicity.
+
+**User accounts/roles are NOT affected** by restore — only member, group, finance, settings, and related data is replaced.
+
+### Libraries
+
+- `exceljs` — Excel generation (write) and parsing (read), installed in backend
+- `multer` — multipart file upload handling, installed in backend
+
+### Sequences reset after restore
+
+After inserting all data, `membership_number_seq` and `transaction_number_seq` are reset to `MAX + 1` so new records get correct sequential numbers.
+
+### Beacon Site Settings mapping (partial)
+
+| Beacon key | Beacon2 column |
+|-----------|----------------|
+| `AdvRenewals` | `advance_renewals_weeks` |
+| `GraceLapse` | `grace_lapse_weeks` |
+| `GiftAidEnable` | `gift_aid_enabled` |
+| `GiftAidOnlineRenew` | `gift_aid_online_renewals` |
+| `DefaultTown/County/STD` | `default_town/county/std_code` |
+| `defaultPaymentMethod` (1–6) | `default_payment_method` (Cash/Cheque/SO/DD/Online/Other) |
+| `EnqTelephone/Email/NewMem/Renew` | `public_phone/email/online_join_email/online_renew_email` |
+| Site Settings 2 `paypal_account` | `paypal_email` |

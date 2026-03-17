@@ -28,6 +28,7 @@ export const DEFAULT_ROLES = [
       { code: 'calendar',                 action: 'download' },           // vo
       { code: 'data_export_backup',       action: 'view' },
       { code: 'data_export_backup',       action: 'download' },           // vo
+      { code: 'data_export_backup',       action: 'restore' },
 
       // Email
       { code: 'email',                    action: 'view' },

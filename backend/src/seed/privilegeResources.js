@@ -14,7 +14,7 @@ export const PRIVILEGE_RESOURCES = [
   r('audit_detail',              'Audit detail',                    ['view']),
   r('audit_trail',               'Audit trail',                     ['view', 'delete']),
   r('calendar',                  'Calendar',                        ['view', 'download']),
-  r('data_export_backup',        'Data export + backup',            ['view', 'download']),
+  r('data_export_backup',        'Data export + backup',            ['view', 'download', 'restore']),
   r('email',                     'E-mail',                          ['view', 'send']),
   r('email_addresses',           'E-mail addresses',                ['download']),
   r('email_delivery',            'E-mail delivery',                 ['view', 'all']),
