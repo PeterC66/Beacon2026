@@ -1034,3 +1034,13 @@ For locked-out tenants or post-restore access, system admin has a **"Set passwor
 - It is explicit and auditable (admin chooses when to use it)
 - It is scoped to a specific tenant
 - The password can be changed back by the tenant admin immediately
+
+---
+
+## Group Schedule — topic field and table design (March 2026)
+
+Per doc 5.3, the schedule table columns are always: Select | Date & Time | Until (end_time) | Venue | Topic | Enquiries (contact). The "Details" field is shown as an indented sub-row beneath each event, controlled by the "Show Detail" checkbox (not as a table column).
+
+The `topic` field is a short subject line, distinct from `details` (longer description). Both are TEXT columns on `group_events`.
+
+Time inputs use `step="900"` (15-minute intervals).
