@@ -17,6 +17,9 @@ import MemberList        from './pages/members/MemberList.jsx';
 import MemberEditor      from './pages/members/MemberEditor.jsx';
 import GroupList         from './pages/groups/GroupList.jsx';
 import GroupRecord       from './pages/groups/GroupRecord.jsx';
+import FacultyList       from './pages/groups/FacultyList.jsx';
+import VenueList         from './pages/groups/VenueList.jsx';
+import VenueEditor       from './pages/groups/VenueEditor.jsx';
 import SystemSettings    from './pages/settings/SystemSettings.jsx';
 import FinanceAccounts    from './pages/finance/FinanceAccounts.jsx';
 import FinanceCategories  from './pages/finance/FinanceCategories.jsx';
@@ -64,6 +67,10 @@ export default function App() {
           <Route path="/groups"       element={<ProtectedRoute><GroupList /></ProtectedRoute>} />
           <Route path="/groups/new"   element={<ProtectedRoute><GroupRecord /></ProtectedRoute>} />
           <Route path="/groups/:id"   element={<ProtectedRoute><GroupRecord /></ProtectedRoute>} />
+          <Route path="/faculties"    element={<ProtectedRoute><FacultyList /></ProtectedRoute>} />
+          <Route path="/venues"       element={<ProtectedRoute><VenueList /></ProtectedRoute>} />
+          <Route path="/venues/new"   element={<ProtectedRoute><VenueEditor /></ProtectedRoute>} />
+          <Route path="/venues/:id"   element={<ProtectedRoute><VenueEditor /></ProtectedRoute>} />
           <Route path="/settings"                        element={<ProtectedRoute><SystemSettings /></ProtectedRoute>} />
           <Route path="/finance/accounts"                    element={<ProtectedRoute><FinanceAccounts /></ProtectedRoute>} />
           <Route path="/finance/accounts/:id/configure"     element={<ProtectedRoute><ConfigureAccount /></ProtectedRoute>} />

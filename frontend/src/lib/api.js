@@ -183,6 +183,16 @@ export const faculties = {
   delete: (id)       => request(`/faculties/${id}`, { method: 'DELETE' }),
 };
 
+// ─── Venues ───────────────────────────────────────────────────────────────
+
+export const venues = {
+  list:   ()         => request('/venues'),
+  get:    (id)       => request(`/venues/${id}`),
+  create: (data)     => request('/venues', { method: 'POST', body: JSON.stringify(data) }),
+  update: (id, data) => request(`/venues/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
+  delete: (id)       => request(`/venues/${id}`, { method: 'DELETE' }),
+};
+
 // ─── Groups ───────────────────────────────────────────────────────────────
 
 export const groups = {
@@ -208,6 +218,11 @@ export const groups = {
   addMember:    (id, data)           => request(`/groups/${id}/members`, { method: 'POST', body: JSON.stringify(data) }),
   updateMember: (id, memberId, data) => request(`/groups/${id}/members/${memberId}`, { method: 'PATCH', body: JSON.stringify(data) }),
   removeMember: (id, memberId)       => request(`/groups/${id}/members/${memberId}`, { method: 'DELETE' }),
+
+  listEvents:   (id)             => request(`/groups/${id}/events`),
+  createEvents: (id, data)       => request(`/groups/${id}/events`, { method: 'POST', body: JSON.stringify(data) }),
+  updateEvent:  (id, evId, data) => request(`/groups/${id}/events/${evId}`, { method: 'PATCH', body: JSON.stringify(data) }),
+  deleteEvents: (id, ids)        => request(`/groups/${id}/events`, { method: 'DELETE', body: JSON.stringify({ ids }) }),
 };
 
 // ─── Finance ──────────────────────────────────────────────────────────────

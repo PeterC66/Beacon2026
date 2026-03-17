@@ -909,6 +909,10 @@ The `users` table has `email TEXT NOT NULL UNIQUE`. Beacon's System Users sheet 
 
 After inserting all data, `membership_number_seq` and `transaction_number_seq` are reset to `MAX + 1` so new records get correct sequential numbers.
 
+### Zero-amount transactions (Beacon restore)
+
+The `transactions.amount` constraint is `CHECK (amount >= 0)` (not `> 0`) to allow zero-amount transactions that exist in Beacon exports (e.g. free/honorary memberships). The `tenant_schema.sql` includes `ALTER TABLE ... DROP/ADD CONSTRAINT` statements so existing tenants are updated on the next server startup.
+
 ### Beacon Site Settings mapping (partial)
 
 | Beacon key | Beacon2 column |
@@ -921,3 +925,40 @@ After inserting all data, `membership_number_seq` and `transaction_number_seq` a
 | `defaultPaymentMethod` (1–6) | `default_payment_method` (Cash/Cheque/SO/DD/Online/Other) |
 | `EnqTelephone/Email/NewMem/Renew` | `public_phone/email/online_join_email/online_renew_email` |
 | Site Settings 2 `paypal_account` | `paypal_email` |
+
+---
+
+## Group Venues, Faculties, Schedule, Waiting List (March 2026)
+
+### Group Venues (doc 5.7)
+
+- DB table: `venues` in `tenant_schema.sql` — all fields optional except `name`; `private_address` and `accessible` booleans
+- Backend: `backend/src/routes/venues.js` mounted at `/venues` in `app.js`; privilege `group_venues` (view/create/change/delete)
+- Frontend: `VenueList.jsx` at `/venues`, `VenueEditor.jsx` at `/venues/new` and `/venues/:id`
+- Home.jsx: Venues link gated on `can('group_venues', 'view')`
+
+### Group Faculties (doc 5.8)
+
+- Backend CRUD already existed in `faculties.js`
+- Frontend: `FacultyList.jsx` at `/faculties` — inline edit (click Edit → input + Save/Cancel in the row), inline delete, add-new form below table
+- Home.jsx: Faculties link gated on `can('group_faculties', 'view')`
+
+### Group Schedule (doc 5.3)
+
+- DB table: `group_events` in `tenant_schema.sql` — FK to `groups`, optional FK to `venues`, `is_private` boolean
+- Backend: added to `groups.js` at sub-resource `/groups/:id/events`
+  - `GET` — list events ordered by date/time (joins venue name)
+  - `POST` — create single or recurring events; if `repeatEvery + repeatUnit + repeatUntil` supplied, generates multiple rows
+  - `PATCH /:eventId` — update individual event
+  - `DELETE` (body `{ ids }`) — bulk delete selected event IDs
+- Frontend: `GroupSchedule` component in `GroupRecord.jsx` (Schedule tab, now `available: !isNew`)
+  - Click blue date link to expand inline edit row
+  - Show Detail checkbox toggles contact/details columns
+  - Checkboxes + "Select all / Deselect all / Delete selected" for bulk delete
+  - Add Events form at bottom with recurrence fields (then every N days/weeks/months until date)
+
+### Waiting List (doc 5.10)
+
+- `PATCH /groups/:id/members/:memberId` extended to accept `{ waitingSince: null }` to promote a waiting member to a full member
+- Frontend `GroupMembers`: filter checkboxes (Joined members / Waiting list) appear when any waiting members exist; both sets shown in the same table with a "Waiting" column; "join group" button promotes; "remove" button removes
+- Members not on waiting list show "Make leader / Remove leader"; waiting members show "join group / remove"
