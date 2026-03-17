@@ -862,6 +862,34 @@ Both modes use a single `prisma.$transaction` with 5-minute timeout for atomicit
 
 The restore helpers (`clearTenantData`, `resetSequences`, `restoreBeacon2`, `restoreBeacon`) are named exports from `backup.js`, imported by `system.js`.
 
+### Critical: restore helpers need a Prisma transaction client
+
+All restore helpers accept a **Prisma transaction client** (`tx`) as their first argument and call `tx.$executeRawUnsafe()`. They do **not** accept a tenant slug.
+
+The restore route in `system.js` must wrap everything in `prisma.$transaction` with `SET search_path` before calling any helper:
+
+```js
+const schema = `u3a_${tenantSlug}`;
+await prisma.$transaction(async (tx) => {
+  await tx.$executeRawUnsafe(`SET search_path TO ${schema}, public`);
+  await clearTenantData(tx);
+  if (format === 'beacon2') {
+    await restoreBeacon2(tx, wb);  // calls resetSequences internally
+  } else {
+    await restoreBeacon(tx, wb);
+    await resetSequences(tx);
+  }
+}, { timeout: 300_000 });
+```
+
+### Backup filenames
+
+The backend sets `Content-Disposition: attachment; filename="..."` including tenant name and timestamp. The frontend `requestBlob()` reads this header — do **not** pass a client-generated filename.
+
+### New tenant: adminUsername required
+
+`createTenantSchema()` and the system.js Zod schema both require `adminUsername` (lowercase letters and numbers, `/^[a-z0-9]+$/`). The SystemDashboard create-tenant form has a username field that auto-strips invalid characters on input.
+
 ### Libraries
 
 - `exceljs` — Excel generation (write) and parsing (read), installed in backend
