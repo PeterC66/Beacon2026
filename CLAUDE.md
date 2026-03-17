@@ -1096,3 +1096,40 @@ The download route generates an Excel file using `exceljs` with a running balanc
 
 - `$pGROUPLEDGER = 1510` → `group_ledger_all`
 - `$pGROUPLEDGERASLEADER = 1520` → `group_ledger_as_leader`
+
+---
+
+## End-to-end (user acceptance) tests (March 2026)
+
+### Location
+
+`e2e/` — Playwright-based tests that run against a live staging deployment.
+
+### How to run
+
+```bash
+cd e2e
+npm install
+npx playwright install chromium
+cp .env.example .env   # fill in staging URL + credentials
+npm test
+```
+
+### Architecture
+
+- **`global-setup.js`** — runs once before all tests; creates (or resets) a dedicated test tenant via the system-admin API, then seeds a finance account and an extra member class.
+- **`fixtures/admin.js`** — extended Playwright fixture that logs in as the test-tenant admin before each test. Because Beacon2 stores the access token in memory only, a fresh login is needed per test (~200 ms overhead).
+- **`pages/`** — Page Object Models; use `getByRole`/`getByLabel`/`getByText` selectors for resilience against markup changes.
+- **`tests/01–11`** — specs numbered to match Beacon UG sections.
+
+### Test data
+
+Every test creates its own data (with a `Date.now()` suffix) and cleans up in the same test file. Tests within a file run serially so create→edit→delete sequences are reliable.
+
+### Extending
+
+When a new Beacon2 feature is built, add a new spec (or extend an existing one) that:
+1. References the corresponding Beacon UG section in the file header.
+2. Imports `{ test, expect }` from `../fixtures/admin.js`.
+3. Uses the `adminPage` fixture.
+4. If setup seed data is needed, add it to `global-setup.js`.

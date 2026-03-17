@@ -1,0 +1,16 @@
+{
+  "name": "beacon2-e2e",
+  "private": true,
+  "description": "End-to-end user tests for Beacon2 — run against a staging environment after each deployment.",
+  "scripts": {
+    "test": "playwright test",
+    "test:headed": "playwright test --headed",
+    "test:ui": "playwright test --ui",
+    "test:report": "playwright show-report",
+    "install-browsers": "playwright install chromium"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.43.0",
+    "dotenv": "^16.4.5"
+  }
+}
