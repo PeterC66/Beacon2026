@@ -962,3 +962,44 @@ The `transactions.amount` constraint is `CHECK (amount >= 0)` (not `> 0`) to all
 - `PATCH /groups/:id/members/:memberId` extended to accept `{ waitingSince: null }` to promote a waiting member to a full member
 - Frontend `GroupMembers`: filter checkboxes (Joined members / Waiting list) appear when any waiting members exist; both sets shown in the same table with a "Waiting" column; "join group" button promotes; "remove" button removes
 - Members not on waiting list show "Make leader / Remove leader"; waiting members show "join group / remove"
+
+---
+
+## Save success feedback pattern (March 2026)
+
+When a form saves successfully, show a transient green banner that auto-dismisses after 3 seconds:
+
+```jsx
+const [saved, setSaved] = useState(false);
+const savedTimer = useRef(null);
+
+// After successful save:
+setSaved(true);
+clearTimeout(savedTimer.current);
+savedTimer.current = setTimeout(() => setSaved(false), 3000);
+
+// In JSX (below the form, above buttons or at top of panel):
+{saved && (
+  <p className="text-green-700 text-sm font-medium bg-green-50 border border-green-200 rounded px-3 py-2">
+    ✓ Saved successfully.
+  </p>
+)}
+```
+
+Apply this pattern to any form that does PATCH/PUT saves (not just create flows).
+
+## Venue FK on groups (March 2026)
+
+The `groups` table has `venue_id TEXT REFERENCES venues(id) ON DELETE SET NULL` (added via safe `ALTER TABLE ... ADD COLUMN IF NOT EXISTS`). The venue is shown as a dropdown in GroupDetails populated from `venuesApi.list()`. The parent `GroupRecord` loads venues into `allVenues` state and passes `venues={allVenues}` to `<GroupDetails>`.
+
+## Max-members waiting list enforcement (March 2026)
+
+When `POST /groups/:id/members` is called, the route queries:
+```sql
+SELECT max_members, enable_waiting_list,
+       (SELECT COUNT(*)::int FROM group_members WHERE group_id = $1 AND waiting_since IS NULL) AS joined_count
+FROM groups WHERE id = $1
+```
+If `enable_waiting_list && max_members !== null && joined_count >= max_members`, the member is inserted with `waiting_since = CURRENT_DATE` instead of `NULL`. The frontend `addMember` flow does not need to know — the backend decides automatically.
+
+The test for `POST /groups/:id/members` needs a 4th mock: `{ max_members: null, enable_waiting_list: false, joined_count: 0 }` (the new group-info query).
