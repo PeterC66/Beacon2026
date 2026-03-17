@@ -5,10 +5,13 @@
 
 import { Router } from 'express';
 import { z } from 'zod';
+import multer from 'multer';
 import { requireSysAdmin } from '../middleware/auth.js';
 import { prisma } from '../utils/db.js';
 import { AppError } from '../middleware/errorHandler.js';
 import { createTenantSchema } from '../seed/createTenant.js';
+import { sheetRows, clearTenantData, resetSequences, restoreBeacon2, restoreBeacon } from './backup.js';
+import ExcelJS from 'exceljs';
 
 const router = Router();
 router.use(requireSysAdmin);
@@ -63,6 +66,52 @@ router.patch('/tenants/:id', async (req, res, next) => {
       data: { ...(name && { name }), ...(active !== undefined && { active }) },
     });
     res.json(tenant);
+  } catch (err) {
+    next(err);
+  }
+});
+
+// ─── POST /system/restore/:tenantSlug ────────────────────────────────────────
+// Restore a full tenant backup (Beacon2 or Beacon legacy format).
+// System-admin only (requireSysAdmin already applied above).
+
+const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 50 * 1024 * 1024 } });
+
+router.post('/restore/:tenantSlug', upload.single('backup'), async (req, res, next) => {
+  try {
+    const { tenantSlug } = req.params;
+    if (!/^[a-z0-9_]+$/.test(tenantSlug)) {
+      return next(AppError('Invalid tenant slug.', 400));
+    }
+    if (!req.file) {
+      return next(AppError('No backup file uploaded.', 400));
+    }
+
+    // Check tenant exists
+    const tenant = await prisma.sysTenant.findUnique({ where: { slug: tenantSlug } });
+    if (!tenant) return next(AppError('Tenant not found.', 404));
+
+    // Parse workbook from buffer
+    const wb = new ExcelJS.Workbook();
+    await wb.xlsx.load(req.file.buffer);
+
+    // Detect format: Members sheet first column header 'mkey' → Beacon; 'id' → Beacon2
+    const membersWs = wb.getWorksheet('Members');
+    if (!membersWs) return next(AppError('Invalid backup file: no Members sheet found.', 400));
+    const firstHeader = String(membersWs.getRow(1).getCell(1).value ?? '').trim().toLowerCase();
+    const format = firstHeader === 'mkey' ? 'beacon' : 'beacon2';
+
+    await clearTenantData(tenantSlug);
+
+    if (format === 'beacon2') {
+      await restoreBeacon2(tenantSlug, wb);
+    } else {
+      await restoreBeacon(tenantSlug, wb);
+    }
+
+    await resetSequences(tenantSlug);
+
+    res.json({ ok: true, format, message: `Restore complete (${format === 'beacon' ? 'migrated from Beacon' : 'Beacon2 format'}).` });
   } catch (err) {
     next(err);
   }

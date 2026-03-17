@@ -824,9 +824,11 @@ When a heading label also appears on a submit button (e.g. "Change Password"), `
 
 ### Architecture
 
-- Backend: `backend/src/routes/backup.js` — mounted at `/backup` in `app.js`
-- Frontend: `frontend/src/pages/misc/DataBackup.jsx` at `/backup`
-- Privilege: `data_export_backup` (actions: `view`, `download`, `restore`) — granted to Administration
+- Backend export: `backend/src/routes/backup.js` — mounted at `/backup` in `app.js`
+- Backend restore: `backend/src/routes/system.js` — `POST /system/restore/:tenantSlug` (system-admin only)
+- Frontend export: `frontend/src/pages/misc/DataBackup.jsx` at `/backup` (tenant user, needs `data_export_backup:view`)
+- Frontend restore: `frontend/src/pages/system/SystemDashboard.jsx` (system admin panel only)
+- Privilege: `data_export_backup` (actions: `view`, `download`, `restore`) — granted to Administration for export
 
 ### Export — 8 options
 
@@ -838,23 +840,27 @@ When a heading label also appears on a submit button (e.g. "Change Password"), `
 | `finance` | Finance ledger with detail | Ledger, Detail |
 | `groups` | Groups, with members, venues and faculties | Groups, Group members, Venues, Faculties |
 | `calendar` | Calendar | Calendar (empty — not yet implemented) |
-| `system` | System users, roles and privileges | System Users, Roles, Privileges |
+| `system` | System users, roles and privileges | System Users, User roles, Roles, Privileges |
 | `officers` | u3a Officers | u3a Officers |
 | `settings` | Site settings and set up | Site Settings 1/2, Finance Accounts/Categories, Membership Classes/Fees, Member Statuses, Polls, Poll assignments, System Messages |
 | `all` | Backup all data | All of the above |
 
 The frontend uses `fetch()` with auth header → blob → `URL.createObjectURL` trigger download. This is the `requestBlob` helper in `api.js`. Direct browser navigation cannot be used because the auth token is in memory (not cookies).
 
-### Restore — two modes, auto-detected
+Backup filenames include the tenant display name (slugified), type label, date and time, e.g. `oxfordshire_u3a_beacon2_backup_all_data_2026-03-17_14-30.xlsx`.
 
-`POST /backup/restore` accepts a multipart `backup` file upload. Detection: if the `Members` sheet first column is `mkey` → Beacon (legacy); if `id` → Beacon2.
+### Restore — two modes, auto-detected, system admin only
 
-- **Beacon2 restore**: UUIDs preserved; all FK-dependent tables re-inserted in order.
+`POST /system/restore/:tenantSlug` accepts a multipart `backup` file upload (system admin token required). Detection: if the `Members` sheet first column is `mkey` → Beacon (legacy); if `id` → Beacon2.
+
+- **Beacon2 restore**: UUIDs preserved; all FK-dependent tables re-inserted in order. Includes users/roles.
 - **Beacon restore**: Maps `mkey`/`gkey`/`tkey`/etc to new UUIDs. Partner detection via shared `akey` (exactly 2 members sharing an `akey` are linked as partners). Beacon month `0` in `Membership Fees` = Beacon2 `month_index` 13 (Renewals). Beacon ledger amounts: positive = `in`, negative = `out`.
 
 Both modes use a single `prisma.$transaction` with 5-minute timeout for atomicity.
 
-**User accounts/roles are NOT affected** by restore — only member, group, finance, settings, and related data is replaced.
+**User accounts/roles ARE included in the restore** — `clearTenantData` deletes users, roles, and privileges before restore.
+
+The restore helpers (`clearTenantData`, `resetSequences`, `restoreBeacon2`, `restoreBeacon`) are named exports from `backup.js`, imported by `system.js`.
 
 ### Libraries
 
