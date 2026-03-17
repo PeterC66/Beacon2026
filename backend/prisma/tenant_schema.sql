@@ -216,6 +216,29 @@ CREATE TABLE IF NOT EXISTS :schema.groups (
 );
 
 -- ─────────────────────────────────────────────
+-- VENUES
+-- ─────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS :schema.venues (
+  id               TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
+  name             TEXT NOT NULL,
+  address1         TEXT,
+  address2         TEXT,
+  town             TEXT,
+  county           TEXT,
+  postcode         TEXT,
+  telephone        TEXT,
+  email            TEXT,
+  website          TEXT,
+  notes            TEXT,
+  private_address  BOOLEAN NOT NULL DEFAULT false,
+  accessible       BOOLEAN NOT NULL DEFAULT false,
+  created_at       TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at       TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS :schema_idx_venues_name ON :schema.venues (name);
+
+-- ─────────────────────────────────────────────
 -- GROUP MEMBERS
 -- ─────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS :schema.group_members (
@@ -227,6 +250,26 @@ CREATE TABLE IF NOT EXISTS :schema.group_members (
   created_at    TIMESTAMPTZ NOT NULL DEFAULT now(),
   UNIQUE (group_id, member_id)
 );
+
+-- ─────────────────────────────────────────────
+-- GROUP EVENTS  (schedule)
+-- ─────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS :schema.group_events (
+  id         TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
+  group_id   TEXT NOT NULL REFERENCES :schema.groups(id) ON DELETE CASCADE,
+  event_date DATE NOT NULL,
+  start_time TIME,
+  end_time   TIME,
+  venue_id   TEXT REFERENCES :schema.venues(id) ON DELETE SET NULL,
+  contact    TEXT,
+  details    TEXT,
+  is_private BOOLEAN NOT NULL DEFAULT false,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS :schema_idx_group_events_group ON :schema.group_events (group_id);
+CREATE INDEX IF NOT EXISTS :schema_idx_group_events_date  ON :schema.group_events (event_date);
 
 -- ─────────────────────────────────────────────
 -- TENANT SETTINGS  (single-row table)

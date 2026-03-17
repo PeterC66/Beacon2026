@@ -13,16 +13,21 @@ vi.mock('../context/AuthContext.jsx', () => ({
 
 vi.mock('../lib/api.js', () => ({
   groups:    {
-    get:         vi.fn().mockResolvedValue({ id: 'g1', name: 'Watercolour', status: 'active', faculty_id: null }),
-    update:      vi.fn().mockResolvedValue({}),
-    delete:      vi.fn().mockResolvedValue({}),
-    listMembers: vi.fn().mockResolvedValue([]),
-    addMember:   vi.fn().mockResolvedValue({}),
+    get:          vi.fn().mockResolvedValue({ id: 'g1', name: 'Watercolour', status: 'active', faculty_id: null }),
+    update:       vi.fn().mockResolvedValue({}),
+    delete:       vi.fn().mockResolvedValue({}),
+    listMembers:  vi.fn().mockResolvedValue([]),
+    addMember:    vi.fn().mockResolvedValue({}),
     updateMember: vi.fn().mockResolvedValue({}),
     removeMember: vi.fn().mockResolvedValue({}),
+    listEvents:   vi.fn().mockResolvedValue([]),
+    createEvents: vi.fn().mockResolvedValue([]),
+    updateEvent:  vi.fn().mockResolvedValue({}),
+    deleteEvents: vi.fn().mockResolvedValue({}),
   },
   faculties: { list: vi.fn().mockResolvedValue([]) },
   members:   { list: vi.fn().mockResolvedValue([]) },
+  venues:    { list: vi.fn().mockResolvedValue([]) },
 }));
 
 describe('GroupRecord page — new group', () => {
