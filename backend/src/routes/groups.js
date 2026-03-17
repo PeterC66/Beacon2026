@@ -75,9 +75,10 @@ router.get('/:id', requirePrivilege('group_records_all', 'view'), async (req, re
   try {
     const [group] = await tenantQuery(
       req.user.tenantSlug,
-      `SELECT g.*, f.name AS faculty_name
+      `SELECT g.*, f.name AS faculty_name, v.name AS venue_name
        FROM groups g
        LEFT JOIN faculties f ON f.id = g.faculty_id
+       LEFT JOIN venues v ON v.id = g.venue_id
        WHERE g.id = $1`,
       [req.params.id],
     );
@@ -97,7 +98,7 @@ const groupSchema = z.object({
   whenText:            z.string().nullable().optional(),
   startTime:           z.string().nullable().optional(),  // "HH:MM"
   endTime:             z.string().nullable().optional(),
-  venue:               z.string().nullable().optional(),
+  venueId:             z.string().nullable().optional(),
   enquiries:           z.string().nullable().optional(),
   maxMembers:          z.number().int().positive().nullable().optional(),
   allowOnlineJoin:     z.boolean().default(false),
@@ -117,7 +118,7 @@ router.post('/', requirePrivilege('group_records_all', 'create'), async (req, re
     const [group] = await tenantQuery(
       slug,
       `INSERT INTO groups
-         (name, faculty_id, status, when_text, start_time, end_time, venue, enquiries,
+         (name, faculty_id, status, when_text, start_time, end_time, venue_id, enquiries,
           max_members, allow_online_join, enable_waiting_list, notify_leader,
           display_waiting_list, information, notes, show_addresses)
        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16)
@@ -129,7 +130,7 @@ router.post('/', requirePrivilege('group_records_all', 'create'), async (req, re
         data.whenText      ?? null,
         data.startTime     ?? null,
         data.endTime       ?? null,
-        data.venue         ?? null,
+        data.venueId       ?? null,
         data.enquiries     ?? null,
         data.maxMembers    ?? null,
         data.allowOnlineJoin,
@@ -156,7 +157,7 @@ const updateGroupSchema = z.object({
   whenText:            z.string().nullable().optional(),
   startTime:           z.string().nullable().optional(),
   endTime:             z.string().nullable().optional(),
-  venue:               z.string().nullable().optional(),
+  venueId:             z.string().nullable().optional(),
   enquiries:           z.string().nullable().optional(),
   maxMembers:          z.number().int().positive().nullable().optional(),
   allowOnlineJoin:     z.boolean().optional(),
@@ -175,7 +176,7 @@ const GROUP_FIELDS = [
   ['whenText',           'when_text'],
   ['startTime',          'start_time'],
   ['endTime',            'end_time'],
-  ['venue',              'venue'],
+  ['venueId',            'venue_id'],
   ['enquiries',          'enquiries'],
   ['maxMembers',         'max_members'],
   ['allowOnlineJoin',    'allow_online_join'],
@@ -320,11 +321,25 @@ router.post('/:id/members', requirePrivilege('group_records_all', 'change'), asy
     );
     if (existing) throw AppError('Member is already in this group.', 409);
 
+    // Determine whether to add to waiting list
+    const [groupInfo] = await tenantQuery(
+      slug,
+      `SELECT max_members, enable_waiting_list,
+              (SELECT COUNT(*)::int FROM group_members WHERE group_id = $1 AND waiting_since IS NULL) AS joined_count
+       FROM groups WHERE id = $1`,
+      [req.params.id],
+    );
+    const addToWaiting = groupInfo?.enable_waiting_list &&
+      groupInfo?.max_members !== null &&
+      groupInfo?.joined_count >= groupInfo?.max_members;
+
+    const waitingSince = addToWaiting ? new Date().toISOString().slice(0, 10) : null;
+
     const [gm] = await tenantQuery(
       slug,
-      `INSERT INTO group_members (group_id, member_id) VALUES ($1, $2)
+      `INSERT INTO group_members (group_id, member_id, waiting_since) VALUES ($1, $2, $3::date)
        RETURNING id, group_id, member_id, is_leader, waiting_since, created_at`,
-      [req.params.id, member.id],
+      [req.params.id, member.id, waitingSince],
     );
 
     res.status(201).json({
@@ -484,7 +499,7 @@ router.post('/:id/events', requirePrivilege('group_records_all', 'change'), asyn
         slug,
         `INSERT INTO group_events
            (group_id, event_date, start_time, end_time, venue_id, contact, details, is_private)
-         VALUES ($1,$2,$3,$4,$5,$6,$7,$8)
+         VALUES ($1,$2::date,$3::time,$4::time,$5,$6,$7,$8)
          RETURNING *`,
         [
           req.params.id,
@@ -518,10 +533,11 @@ const updateEventSchema = z.object({
   isPrivate:  z.boolean().optional(),
 });
 
+// [jsKey, col, cast?]
 const EVENT_FIELDS = [
-  ['eventDate', 'event_date'],
-  ['startTime', 'start_time'],
-  ['endTime',   'end_time'],
+  ['eventDate', 'event_date', '::date'],
+  ['startTime', 'start_time', '::time'],
+  ['endTime',   'end_time',   '::time'],
   ['venueId',   'venue_id'],
   ['contact',   'contact'],
   ['details',   'details'],
@@ -536,9 +552,9 @@ router.patch('/:id/events/:eventId', requirePrivilege('group_records_all', 'chan
     const setClauses = [];
     const values = [];
     let i = 1;
-    for (const [jsKey, col] of EVENT_FIELDS) {
+    for (const [jsKey, col, cast = ''] of EVENT_FIELDS) {
       if (data[jsKey] !== undefined) {
-        setClauses.push(`${col} = $${i++}`);
+        setClauses.push(`${col} = $${i++}${cast}`);
         values.push(data[jsKey] ?? null);
       }
     }

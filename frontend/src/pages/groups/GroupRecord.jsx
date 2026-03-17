@@ -3,7 +3,7 @@
 // Route /groups/new → create mode (Details only, no tabs)
 // Route /groups/:id → view/edit mode with Details + Members + Schedule tabs
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { groups as groupsApi, faculties as facultiesApi, members as membersApi, venues as venuesApi } from '../../lib/api.js';
 import { useAuth } from '../../context/AuthContext.jsx';
@@ -14,13 +14,13 @@ import { useSortedData } from '../../hooks/useSortedData.js';
 
 // ─── Details sub-component ────────────────────────────────────────────────
 
-function GroupDetails({ groupId, faculties, onSaved, onDeleted }) {
+function GroupDetails({ groupId, faculties, venues, onSaved, onDeleted }) {
   const { can } = useAuth();
   const isNew = !groupId;
 
   const EMPTY = {
     name: '', facultyId: '', status: 'active', whenText: '',
-    startTime: '', endTime: '', venue: '', enquiries: '',
+    startTime: '', endTime: '', venueId: '', enquiries: '',
     maxMembers: '', allowOnlineJoin: false, enableWaitingList: false,
     notifyLeader: false, displayWaitingList: false,
     information: '', notes: '', showAddresses: false,
@@ -30,6 +30,8 @@ function GroupDetails({ groupId, faculties, onSaved, onDeleted }) {
   const [loading, setLoading] = useState(!isNew);
   const [saving,  setSaving]  = useState(false);
   const [error,   setError]   = useState(null);
+  const [saved,   setSaved]   = useState(false);
+  const savedTimer = useRef(null);
 
   useEffect(() => {
     if (!groupId) return;
@@ -42,7 +44,7 @@ function GroupDetails({ groupId, faculties, onSaved, onDeleted }) {
         whenText:            g.when_text ?? '',
         startTime:           g.start_time ?? '',
         endTime:             g.end_time ?? '',
-        venue:               g.venue ?? '',
+        venueId:             g.venue_id ?? '',
         enquiries:           g.enquiries ?? '',
         maxMembers:          g.max_members != null ? String(g.max_members) : '',
         allowOnlineJoin:     g.allow_online_join ?? false,
@@ -73,7 +75,7 @@ function GroupDetails({ groupId, faculties, onSaved, onDeleted }) {
         whenText:            form.whenText || null,
         startTime:           form.startTime || null,
         endTime:             form.endTime || null,
-        venue:               form.venue || null,
+        venueId:             form.venueId || null,
         enquiries:           form.enquiries || null,
         maxMembers:          form.maxMembers ? parseInt(form.maxMembers, 10) : null,
         allowOnlineJoin:     form.allowOnlineJoin,
@@ -91,6 +93,11 @@ function GroupDetails({ groupId, faculties, onSaved, onDeleted }) {
         result = await groupsApi.update(groupId, payload);
       }
       onSaved(result);
+      if (!isNew) {
+        setSaved(true);
+        clearTimeout(savedTimer.current);
+        savedTimer.current = setTimeout(() => setSaved(false), 3000);
+      }
     } catch (err) {
       setError(err.message);
     } finally {
@@ -120,6 +127,11 @@ function GroupDetails({ groupId, faculties, onSaved, onDeleted }) {
   return (
     <form onSubmit={handleSave} className="space-y-4 max-w-2xl">
       {error && <p className="text-red-600 text-sm">{error}</p>}
+      {saved && (
+        <p className="text-green-700 text-sm font-medium bg-green-50 border border-green-200 rounded px-3 py-2">
+          ✓ Saved successfully.
+        </p>
+      )}
 
       {/* Name */}
       <div>
@@ -176,8 +188,11 @@ function GroupDetails({ groupId, faculties, onSaved, onDeleted }) {
       {/* Venue */}
       <div>
         <label className={labelCls}>Venue</label>
-        <input className={`${inputCls} w-full`} value={form.venue}
-          onChange={(e) => set('venue', e.target.value)} disabled={!canChange} />
+        <select className={`${inputCls} w-full`} value={form.venueId}
+          onChange={(e) => set('venueId', e.target.value)} disabled={!canChange}>
+          <option value="">— none —</option>
+          {venues.map((v) => <option key={v.id} value={v.id}>{v.name}{v.town ? `, ${v.town}` : ''}</option>)}
+        </select>
       </div>
 
       {/* Enquiries */}
@@ -960,6 +975,7 @@ export default function GroupRecord() {
   const [searchParams, setSearchParams] = useSearchParams();
   const { can, tenant } = useAuth();
   const [faculties, setFaculties] = useState([]);
+  const [allVenues, setAllVenues] = useState([]);
   const [groupName, setGroupName] = useState('');
 
   const isNew = id === undefined;
@@ -967,6 +983,7 @@ export default function GroupRecord() {
 
   useEffect(() => {
     facultiesApi.list().then(setFaculties).catch(() => {});
+    venuesApi.list().then(setAllVenues).catch(() => {});
   }, []);
 
   useEffect(() => {
@@ -1043,6 +1060,7 @@ export default function GroupRecord() {
             <GroupDetails
               groupId={isNew ? null : id}
               faculties={faculties}
+              venues={allVenues}
               onSaved={handleSaved}
               onDeleted={handleDeleted}
             />

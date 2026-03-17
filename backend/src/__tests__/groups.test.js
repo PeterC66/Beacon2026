@@ -170,6 +170,7 @@ describe('POST /groups/:id/members', () => {
       .mockResolvedValueOnce([{ id: 'g1' }])                                  // group exists
       .mockResolvedValueOnce([{ id: 'm1', membership_number: 42, forenames: 'Jane', surname: 'Doe' }])  // member lookup
       .mockResolvedValueOnce([])                                               // not already in group
+      .mockResolvedValueOnce([{ max_members: null, enable_waiting_list: false, joined_count: 0 }])  // max_members check
       .mockResolvedValueOnce([{ id: 'gm1', group_id: 'g1', member_id: 'm1', is_leader: false, waiting_since: null, created_at: new Date().toISOString() }]);
     const res = await request(app).post('/groups/g1/members').set('Authorization', AUTH).send({ memberId: 'm1' });
     expect(res.status).toBe(201);
