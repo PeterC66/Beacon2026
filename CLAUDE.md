@@ -780,3 +780,40 @@ When a new member data field is added (e.g. a required date, a new contact field
 ### Congratulations state
 
 When `flagged.length === 0`, shows a green "All member data is valid!" banner with member count.
+
+---
+
+## Audit log, u3a Officers, Personal Preferences (March 2026)
+
+### Audit log (doc 9.2a)
+
+- Backend: `GET /audit?from=&to=` (3-month cap, 500-row limit) + `DELETE /audit {before}` (delete-before-date)
+- Privilege resources: `audit_trail:view` and `audit_trail:delete`
+- Frontend: `frontend/src/pages/misc/AuditLog.jsx` at `/audit`
+- Route in Home.jsx: gated on `can('audit_trail', 'view')`
+- `logAudit()` in `backend/src/utils/audit.js` is a best-effort helper — wraps everything in try/catch so logging failures never block callers. Call without `await`.
+
+### u3a Officers (doc 9.3)
+
+- Backend: full CRUD + `GET /offices/members` (member list for dropdown with status for colouring)
+- Privilege resource: `offices` with actions `view`, `create`, `change`, `delete`
+- Frontend: `frontend/src/pages/misc/OfficerList.jsx` at `/officers`
+- Post-holder styling: red if status contains "Lapsed"; red + strikethrough if "Deceased" or "Resigned" (case-insensitive substring match)
+- Route in Home.jsx: gated on `can('offices', 'view')`
+
+### Personal Preferences (doc 9.1)
+
+- Frontend only: `frontend/src/pages/settings/PersonalPreferences.jsx` at `/preferences`
+- Always visible (no privilege gate) — every logged-in user can access
+- Three sections: (a) display prefs + inactivity timeout, (b) change password, (c) security Q&A
+- Display prefs stored in `localStorage` via `frontend/src/hooks/usePreferences.js` (key `beacon2_prefs`)
+  - `getPreferences()` — returns snapshot (not reactive)
+  - `savePreferences(updates)` — merges partial updates with defaults
+  - `formatMemberName(member)` — respects `displayFormat` setting
+- Inactivity timeout: wired in `AuthContext` via `useRef` timer. Resets on `mousemove`, `keydown`, `click`, `touchstart`. Dispatches `auth:expired` when timer fires.
+- Change password: calls `PATCH /auth/change-password`; shows 5-bar strength meter
+- Security Q&A: loads existing question via `GET /auth/qa`; saves hashed answer via `PATCH /auth/qa`
+
+### Frontend test note: multiple instances of same text
+
+When a heading label also appears on a submit button (e.g. "Change Password"), `getByText` throws "Found multiple elements". Use `getAllByText(...).length > 0` instead.
