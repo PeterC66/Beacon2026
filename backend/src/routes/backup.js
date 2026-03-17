@@ -1,33 +1,26 @@
 // beacon2/backend/src/routes/backup.js
-// Data export and restore (doc 9.5)
-// Export: 8 Excel options (members, finance, groups, calendar, system, officers, settings, all)
-// Restore: auto-detects Beacon (mkey-based) vs Beacon2 (UUID-based) backup
+// Data export (doc 9.5) — 8 Excel options, tenant-scoped.
+// Restore lives in system.js (system-admin only).
 
 import { Router } from 'express';
 import { requireAuth } from '../middleware/auth.js';
 import { requirePrivilege } from '../middleware/requirePrivilege.js';
 import { tenantQuery, prisma } from '../utils/db.js';
-import multer from 'multer';
 import ExcelJS from 'exceljs';
 import { v4 as uuid } from 'uuid';
 
 const router = Router();
 router.use(requireAuth);
 
-const upload = multer({
-  storage: multer.memoryStorage(),
-  limits: { fileSize: 50 * 1024 * 1024 },
-});
-
-// ── Utilities ──────────────────────────────────────────────────────────────────
+// ── Utilities (exported for system.js to use in restore) ──────────────────────
 
 /** Parse all rows from a worksheet into plain objects (row 1 = headers) */
-function sheetRows(ws) {
+export function sheetRows(ws) {
   if (!ws) return [];
   const rows = [];
   let headers = null;
   ws.eachRow((row, rowNum) => {
-    const vals = row.values.slice(1); // ExcelJS rows are 1-indexed; slice removes leading undefined
+    const vals = row.values.slice(1);
     if (rowNum === 1) {
       headers = vals.map((v) => String(v ?? '').trim());
     } else {
@@ -39,8 +32,7 @@ function sheetRows(ws) {
   return rows;
 }
 
-/** Parse date from ISO (YYYY-MM-DD) or UK (DD/MM/YYYY) string or Date → 'YYYY-MM-DD' or null */
-function parseDate(val) {
+export function parseDate(val) {
   if (val == null) return null;
   if (val instanceof Date) return isNaN(val.getTime()) ? null : val.toISOString().slice(0, 10);
   const s = String(val).trim();
@@ -51,32 +43,32 @@ function parseDate(val) {
   return null;
 }
 
-function parseBool(val) {
+export function parseBool(val) {
   return val === true || val === 1 || val === '1' || val === 'true';
 }
 
-function parseDec(val) {
+export function parseDec(val) {
   if (val == null || val === '') return null;
   const n = parseFloat(String(val));
   return isNaN(n) ? null : n;
 }
 
-function str(v) {
+export function str(v) {
   if (v == null) return null;
   const s = String(v);
   return s === '' ? null : s;
 }
 
-function dateToStr(v) {
+export function dateToStr(v) {
   if (!v) return null;
   if (v instanceof Date) return v.toISOString().slice(0, 10);
   return String(v).slice(0, 10) || null;
 }
 
-function boolInt(v) { return v ? 1 : 0; }
+export function boolInt(v) { return v ? 1 : 0; }
 
 /** Add a styled worksheet with given column keys and data rows */
-function addSheet(wb, name, columns, rows) {
+export function addSheet(wb, name, columns, rows) {
   const ws = wb.addWorksheet(name);
   ws.columns = columns.map((c) => ({
     header: c,
@@ -85,9 +77,7 @@ function addSheet(wb, name, columns, rows) {
   }));
   ws.getRow(1).font = { bold: true };
   ws.getRow(1).fill = {
-    type: 'pattern',
-    pattern: 'solid',
-    fgColor: { argb: 'FFD9E1F2' },
+    type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFD9E1F2' },
   };
   rows.forEach((r) => {
     const rowData = {};
@@ -99,7 +89,7 @@ function addSheet(wb, name, columns, rows) {
 
 // ── Export: sheet builders ─────────────────────────────────────────────────────
 
-async function buildMembersSheet(wb, slug) {
+export async function buildMembersSheet(wb, slug) {
   const rows = await tenantQuery(slug, `
     SELECT m.id, m.membership_number, m.title, m.forenames, m.surname, m.suffix,
            m.known_as, m.initials, m.mobile, m.email, m.home_u3a,
@@ -132,7 +122,7 @@ async function buildMembersSheet(wb, slug) {
   })));
 }
 
-async function buildFinanceSheets(wb, slug) {
+export async function buildFinanceSheets(wb, slug) {
   const [txns, cats] = await Promise.all([
     tenantQuery(slug, `
       SELECT t.id, t.transaction_number, t.date, t.type, t.from_to, t.amount,
@@ -167,7 +157,7 @@ async function buildFinanceSheets(wb, slug) {
   ], cats.map((r) => ({ ...r, amount: r.amount != null ? Number(r.amount) : null })));
 }
 
-async function buildGroupsSheets(wb, slug) {
+export async function buildGroupsSheets(wb, slug) {
   const [groups, gm, faculties] = await Promise.all([
     tenantQuery(slug, `
       SELECT g.id, g.name, g.faculty_id, f.name AS faculty_name, g.status,
@@ -211,11 +201,11 @@ async function buildGroupsSheets(wb, slug) {
     'forenames', 'surname', 'is_leader', 'waiting_since',
   ], gm.map((r) => ({
     ...r,
-    is_leader:    boolInt(r.is_leader),
+    is_leader:     boolInt(r.is_leader),
     waiting_since: dateToStr(r.waiting_since),
   })));
 
-  // Venues: Beacon2 stores venue as free text on group; no separate table
+  // Venues: no separate table in Beacon2 — venue is text on each group
   const wsV = wb.addWorksheet('Venues');
   wsV.addRow(['note']);
   wsV.addRow(['Beacon2 does not have a venues table. Venues are text on each group record.']);
@@ -223,31 +213,52 @@ async function buildGroupsSheets(wb, slug) {
   addSheet(wb, 'Faculties', ['id', 'name'], faculties);
 }
 
-async function buildCalendarSheet(wb) {
+export async function buildCalendarSheet(wb) {
   const ws = wb.addWorksheet('Calendar');
   ws.addRow(['note']);
   ws.addRow(['Calendar is not yet implemented in Beacon2.']);
 }
 
-async function buildSystemSheets(wb, slug) {
-  const [users, roles, privs] = await Promise.all([
-    tenantQuery(slug, `SELECT id, username, name, email FROM users ORDER BY name`),
-    tenantQuery(slug, `SELECT id, name, is_committee, notes FROM roles ORDER BY name`),
+export async function buildSystemSheets(wb, slug) {
+  const [users, userRoles, roles, privs] = await Promise.all([
+    // Include password_hash so it can be fully restored
     tenantQuery(slug, `
-      SELECT rp.role_id, r.name AS role_name, rp.resource_code, rp.action
+      SELECT id, username, name, email, password_hash, active, member_id
+      FROM users ORDER BY name
+    `),
+    tenantQuery(slug, `
+      SELECT ur.user_id, u.name AS user_name, ur.role_id, r.name AS role_name
+      FROM user_roles ur
+      JOIN users u ON ur.user_id = u.id
+      JOIN roles r ON ur.role_id = r.id
+      ORDER BY u.name, r.name
+    `),
+    tenantQuery(slug, `SELECT id, name, is_committee, notes FROM roles ORDER BY name`),
+    // Join privilege_resources to get resource code (resource_id is the FK)
+    tenantQuery(slug, `
+      SELECT rp.role_id, r.name AS role_name, pr.code AS resource_code, rp.action
       FROM role_privileges rp
       JOIN roles r ON rp.role_id = r.id
-      ORDER BY r.name, rp.resource_code, rp.action
+      JOIN privilege_resources pr ON rp.resource_id = pr.id
+      ORDER BY r.name, pr.code, rp.action
     `),
   ]);
 
-  addSheet(wb, 'System Users', ['id', 'username', 'name', 'email'], users);
+  addSheet(wb, 'System Users', [
+    'id', 'username', 'name', 'email', 'password_hash', 'active', 'member_id',
+  ], users.map((r) => ({ ...r, active: boolInt(r.active) })));
+
+  addSheet(wb, 'User roles', [
+    'user_id', 'user_name', 'role_id', 'role_name',
+  ], userRoles);
+
   addSheet(wb, 'Roles', ['id', 'name', 'is_committee', 'notes'],
     roles.map((r) => ({ ...r, is_committee: boolInt(r.is_committee) })));
+
   addSheet(wb, 'Privileges', ['role_id', 'role_name', 'resource_code', 'action'], privs);
 }
 
-async function buildOfficersSheet(wb, slug) {
+export async function buildOfficersSheet(wb, slug) {
   const rows = await tenantQuery(slug, `
     SELECT o.id, o.name, o.member_id, m.forenames AS member_forenames,
            m.surname AS member_surname, o.office_email, o.notify_online_join
@@ -262,7 +273,7 @@ async function buildOfficersSheet(wb, slug) {
   ], rows.map((r) => ({ ...r, notify_online_join: boolInt(r.notify_online_join) })));
 }
 
-async function buildSettingsSheets(wb, slug) {
+export async function buildSettingsSheets(wb, slug) {
   const [
     settings, accounts, categories, classes, fees,
     statuses, polls, pollMembers,
@@ -332,7 +343,6 @@ async function buildSettingsSheets(wb, slug) {
   ];
   addSheet(wb, 'Site Settings 1', ['setting', 'value'], settingsRows);
 
-  // Site Settings 2: not used in Beacon2 (all settings are in Site Settings 1)
   const ws2 = wb.addWorksheet('Site Settings 2');
   ws2.addRow(['note']);
   ws2.addRow(['Beacon2 stores all settings in Site Settings 1.']);
@@ -384,7 +394,6 @@ async function buildSettingsSheets(wb, slug) {
     'poll_id', 'poll_name', 'member_id', 'membership_number',
   ], pollMembers);
 
-  // System Messages not yet implemented
   const wsSM = wb.addWorksheet('System Messages');
   wsSM.addRow(['note']);
   wsSM.addRow(['System Messages are not yet implemented in Beacon2.']);
@@ -392,7 +401,7 @@ async function buildSettingsSheets(wb, slug) {
 
 // ── Export route ───────────────────────────────────────────────────────────────
 
-const EXPORT_TYPES = {
+export const EXPORT_TYPES = {
   members:  'members_and_addresses',
   finance:  'finance_ledger_with_detail',
   groups:   'groups_members_venues_faculties',
@@ -400,7 +409,7 @@ const EXPORT_TYPES = {
   system:   'system_users_roles_privileges',
   officers: 'u3a_officers',
   settings: 'site_settings_and_setup',
-  all:      'beacon2_backup_all_data',
+  all:      'backup_all_data',
 };
 
 router.get('/export', requirePrivilege('data_export_backup', 'download'), async (req, res, next) => {
@@ -410,6 +419,12 @@ router.get('/export', requirePrivilege('data_export_backup', 'download'), async 
   const slug = req.user.tenantSlug;
 
   try {
+    // Look up tenant display name for filename
+    const tenant = await prisma.sysTenant.findUnique({ where: { slug } });
+    const tenantName = tenant?.name
+      ? tenant.name.replace(/[^a-z0-9_]/gi, '_').replace(/__+/g, '_').toLowerCase()
+      : slug;
+
     const wb = new ExcelJS.Workbook();
     wb.creator = 'Beacon2';
     wb.created = new Date();
@@ -430,8 +445,12 @@ router.get('/export', requirePrivilege('data_export_backup', 'download'), async 
       await builders[type]();
     }
 
-    const date = new Date().toISOString().slice(0, 10);
-    const filename = `${EXPORT_TYPES[type]}_${date}.xlsx`;
+    // Filename: {tenantname}_{type}_{YYYY-MM-DD_HH-MM}.xlsx
+    const now = new Date();
+    const datePart = now.toISOString().slice(0, 10);
+    const timePart = now.toISOString().slice(11, 16).replace(':', '-');
+    const filename = `${tenantName}_${EXPORT_TYPES[type]}_${datePart}_${timePart}.xlsx`;
+
     res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
     res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
     await wb.xlsx.write(res);
@@ -441,9 +460,9 @@ router.get('/export', requirePrivilege('data_export_backup', 'download'), async 
   }
 });
 
-// ── Restore: helpers ───────────────────────────────────────────────────────────
+// ── Restore helpers (exported for system.js) ───────────────────────────────────
 
-async function clearTenantData(tx) {
+export async function clearTenantData(tx) {
   const statements = [
     'DELETE FROM poll_members',
     'DELETE FROM polls',
@@ -461,6 +480,10 @@ async function clearTenantData(tx) {
     'DELETE FROM class_monthly_fees',
     'DELETE FROM member_classes',
     'DELETE FROM member_statuses',
+    'DELETE FROM user_roles',
+    'DELETE FROM role_privileges',
+    'DELETE FROM roles',
+    'DELETE FROM users',
     'DELETE FROM audit_log',
     'DELETE FROM refresh_tokens',
   ];
@@ -469,7 +492,7 @@ async function clearTenantData(tx) {
   }
 }
 
-async function resetSequences(tx) {
+export async function resetSequences(tx) {
   await tx.$executeRawUnsafe(`
     SELECT setval('membership_number_seq',
       COALESCE((SELECT MAX(membership_number) FROM members), 0) + 1, false)
@@ -482,7 +505,7 @@ async function resetSequences(tx) {
 
 // ── Restore: Beacon2 format ────────────────────────────────────────────────────
 
-async function restoreBeacon2(tx, wb) {
+export async function restoreBeacon2(tx, wb) {
   const get = (name) => sheetRows(wb.getWorksheet(name));
 
   // 1. Member statuses
@@ -532,7 +555,7 @@ async function restoreBeacon2(tx, wb) {
     );
   }
 
-  // 5. Members (without partner_id to avoid self-ref constraint)
+  // 5. Members (without partner_id first)
   for (const r of membersData) {
     if (!r.id) continue;
     await tx.$executeRawUnsafe(
@@ -556,8 +579,7 @@ async function restoreBeacon2(tx, wb) {
   for (const r of membersData) {
     if (!r.id || !r.partner_id) continue;
     await tx.$executeRawUnsafe(
-      `UPDATE members SET partner_id = $1 WHERE id = $2`,
-      r.partner_id, r.id,
+      `UPDATE members SET partner_id = $1 WHERE id = $2`, r.partner_id, r.id,
     );
   }
 
@@ -597,8 +619,7 @@ async function restoreBeacon2(tx, wb) {
     await tx.$executeRawUnsafe(
       `INSERT INTO group_members (id, group_id, member_id, is_leader, waiting_since)
        VALUES ($1,$2,$3,$4,$5::date) ON CONFLICT (id) DO NOTHING`,
-      r.id, r.group_id, r.member_id,
-      parseBool(r.is_leader), parseDate(r.waiting_since),
+      r.id, r.group_id, r.member_id, parseBool(r.is_leader), parseDate(r.waiting_since),
     );
   }
 
@@ -688,13 +709,56 @@ async function restoreBeacon2(tx, wb) {
     );
   }
 
-  // 17. Settings
+  // 17. Roles
+  for (const r of get('Roles')) {
+    if (!r.id) continue;
+    await tx.$executeRawUnsafe(
+      `INSERT INTO roles (id, name, is_committee, notes)
+       VALUES ($1,$2,$3,$4) ON CONFLICT (id) DO NOTHING`,
+      r.id, String(r.name || ''), parseBool(r.is_committee), str(r.notes),
+    );
+  }
+
+  // 18. Privileges (role_privileges — look up resource_id from privilege_resources by code)
+  for (const r of get('Privileges')) {
+    if (!r.role_id || !r.resource_code || !r.action) continue;
+    await tx.$executeRawUnsafe(
+      `INSERT INTO role_privileges (id, role_id, resource_id, action)
+       SELECT gen_random_uuid()::text, $1, pr.id, $2
+       FROM privilege_resources pr WHERE pr.code = $3
+       ON CONFLICT (role_id, resource_id, action) DO NOTHING`,
+      r.role_id, String(r.action), String(r.resource_code),
+    );
+  }
+
+  // 19. Users
+  for (const r of get('System Users')) {
+    if (!r.id) continue;
+    await tx.$executeRawUnsafe(
+      `INSERT INTO users (id, username, name, email, password_hash, active, member_id)
+       VALUES ($1,$2,$3,$4,$5,$6,$7) ON CONFLICT (id) DO NOTHING`,
+      r.id, str(r.username), String(r.name || ''), String(r.email || ''),
+      str(r.password_hash), parseBool(r.active !== undefined ? r.active : 1), str(r.member_id),
+    );
+  }
+
+  // 20. User roles
+  for (const r of get('User roles')) {
+    if (!r.user_id || !r.role_id) continue;
+    await tx.$executeRawUnsafe(
+      `INSERT INTO user_roles (user_id, role_id)
+       VALUES ($1,$2) ON CONFLICT DO NOTHING`,
+      r.user_id, r.role_id,
+    );
+  }
+
+  // 21. Settings
   const settingsData = get('Site Settings 1');
   if (settingsData.length > 0) {
     const sm = Object.fromEntries(settingsData.map((r) => [String(r.setting || ''), r.value]));
-    const v = (key) => { const val = sm[key]; return (val == null || val === '') ? null : val; };
+    const v    = (key) => { const val = sm[key]; return (val == null || val === '') ? null : val; };
     const vBool = (key) => { const val = sm[key]; return val == null ? null : parseBool(val); };
-    const vInt = (key) => { const val = sm[key]; return (val != null && val !== '') ? parseInt(val) : null; };
+    const vInt  = (key) => { const val = sm[key]; return (val != null && val !== '') ? parseInt(val) : null; };
 
     await tx.$executeRawUnsafe(`
       UPDATE tenant_settings SET
@@ -737,27 +801,26 @@ async function restoreBeacon2(tx, wb) {
 
 // ── Restore: Beacon (legacy) format ───────────────────────────────────────────
 
-// Maps Beacon numeric payment method IDs to Beacon2 payment method names
 const BEACON_PAYMENT = {
   '1': 'Cash', '2': 'Cheque', '3': 'Standing Order',
   '4': 'Direct Debit', '5': 'Online', '6': 'Other',
 };
 
-async function restoreBeacon(tx, wb) {
+export async function restoreBeacon(tx, wb) {
   const get = (name) => sheetRows(wb.getWorksheet(name));
 
-  // ── Build ID maps (Beacon key → new UUID) ──────────────────────────────────
-  const statusMap  = {};  // stakey → { id, name }
-  const classMap   = {};  // mckey  → { id, name }
-  const addressMap = {};  // akey   → id
-  const memberMap  = {};  // mkey   → id
-  const memberByNo = {};  // mem_no → id
-  const facultyMap = {};  // gfkey  → id
-  const groupMap   = {};  // gkey   → id
-  const accountMap = {};  // acckey → id
-  const catMap     = {};  // catkey → id
-  const transMap   = {};  // tkey   → id
-  const pollMap    = {};  // pkey   → id
+  const statusMap  = {};
+  const classMap   = {};
+  const addressMap = {};
+  const memberMap  = {};
+  const memberByNo = {};
+  const facultyMap = {};
+  const groupMap   = {};
+  const accountMap = {};
+  const catMap     = {};
+  const transMap   = {};
+  const pollMap    = {};
+  const roleMap    = {};   // rkey → new UUID
 
   // 1. Member statuses
   for (const r of get('Member Statuses')) {
@@ -787,7 +850,7 @@ async function restoreBeacon(tx, wb) {
     );
   }
 
-  // 3. Class monthly fees (Beacon month=0 → Beacon2 month_index=13 = Renewals)
+  // 3. Class monthly fees
   for (const r of get('Membership Fees')) {
     const mckey = String(r.mckey || '').trim();
     const cm = classMap[mckey];
@@ -803,14 +866,14 @@ async function restoreBeacon(tx, wb) {
     );
   }
 
-  // 4. Addresses (group Members sheet by unique akey)
+  // 4. Addresses
   const memberRows = get('Members');
   const addrData = {};
   for (const r of memberRows) {
     const akey = String(r.akey || '').trim();
     if (!akey || addrData[akey]) continue;
     addrData[akey] = {
-      house_no: str(r.house), street:   str(r.address1),
+      house_no: str(r.house), street: str(r.address1),
       add_line1: str(r.address2), add_line2: str(r.address3),
       town: str(r.town), county: str(r.county),
       postcode: str(r.postcode), telephone: str(r.telephone),
@@ -827,14 +890,13 @@ async function restoreBeacon(tx, wb) {
     );
   }
 
-  // 5. Members (without partner_id)
+  // 5. Members
   const statusByName = Object.fromEntries(
     Object.values(statusMap).map((s) => [s.name.toLowerCase(), s.id]),
   );
   const classByName = Object.fromEntries(
     Object.values(classMap).map((c) => [c.name.toLowerCase(), c.id]),
   );
-  // Track who shares each akey for partner detection
   const membersByAkey = {};
   for (const r of memberRows) {
     const akey = String(r.akey || '').trim();
@@ -854,7 +916,7 @@ async function restoreBeacon(tx, wb) {
 
     const akey = String(r.akey || '').trim();
     const statusId = statusByName[String(r.status || '').toLowerCase()] || null;
-    const classId  = classByName[String(r.class  || '').toLowerCase()] || null;
+    const classId  = classByName[String(r.class || '').toLowerCase()]  || null;
 
     await tx.$executeRawUnsafe(
       `INSERT INTO members
@@ -872,7 +934,7 @@ async function restoreBeacon(tx, wb) {
     );
   }
 
-  // 6. Partner links (exactly 2 members sharing an akey → mark as partners)
+  // 6. Partner links
   for (const mkeyList of Object.values(membersByAkey)) {
     if (mkeyList.length !== 2) continue;
     const [id1, id2] = [memberMap[mkeyList[0]], memberMap[mkeyList[1]]];
@@ -888,19 +950,15 @@ async function restoreBeacon(tx, wb) {
     if (!gfkey) continue;
     const newId = uuid();
     facultyMap[gfkey] = newId;
-    await tx.$executeRawUnsafe(
-      `INSERT INTO faculties (id, name) VALUES ($1,$2)`,
-      newId, String(r.faculty || ''),
-    );
+    await tx.$executeRawUnsafe(`INSERT INTO faculties (id, name) VALUES ($1,$2)`, newId, String(r.faculty || ''));
   }
   const facultyByName = Object.fromEntries(
     facRows.map((r) => [String(r.faculty || '').trim().toLowerCase(), facultyMap[String(r.gfkey || '').trim()]]),
   );
 
-  // 8. Groups (deduplicate by gkey — Groups sheet may have multiple rows per group for each leader)
+  // 8. Groups
   const groupRows = get('Groups');
   const seenGroups = new Set();
-  // Build group name→id map for ledger lookup later
   const groupByName = {};
   for (const r of groupRows) {
     const gkey = String(r.gkey || '').trim();
@@ -910,7 +968,7 @@ async function restoreBeacon(tx, wb) {
     groupMap[gkey] = newId;
     groupByName[String(r.group_name || '').trim().toLowerCase()] = newId;
 
-    const facId = facultyByName[String(r.faculty || '').trim().toLowerCase()] || null;
+    const facId    = facultyByName[String(r.faculty || '').trim().toLowerCase()] || null;
     const isActive = String(r.status || '').toLowerCase() !== 'inactive';
 
     await tx.$executeRawUnsafe(
@@ -939,7 +997,7 @@ async function restoreBeacon(tx, wb) {
     if (seenGm.has(gmKey)) continue;
     seenGm.add(gmKey);
 
-    const waitingRaw = str(r.waiting);
+    const waitingRaw  = str(r.waiting);
     const waitingDate = (waitingRaw && waitingRaw !== '0') ? parseDate(waitingRaw) : null;
 
     await tx.$executeRawUnsafe(
@@ -986,7 +1044,7 @@ async function restoreBeacon(tx, wb) {
       .map((r) => [String(r.name || '').trim().toLowerCase(), catMap[String(r.catkey || '').trim()]]),
   );
 
-  // 12. Transactions (Beacon: positive amount = in, negative = out)
+  // 12. Transactions
   for (const r of get('Ledger')) {
     const tkey = String(r.tkey || '').trim();
     if (!tkey) continue;
@@ -997,7 +1055,7 @@ async function restoreBeacon(tx, wb) {
     const acctId = accountByName[String(r.account || '').trim().toLowerCase()] || null;
     if (!acctId) continue;
 
-    const newId = uuid();
+    const newId  = uuid();
     transMap[tkey] = newId;
 
     const groupId  = r.group ? (groupByName[String(r.group || '').trim().toLowerCase()] || null) : null;
@@ -1020,10 +1078,10 @@ async function restoreBeacon(tx, wb) {
 
   // 13. Transaction categories
   for (const r of get('Detail')) {
-    const tkey = String(r.tkey || '').trim();
+    const tkey  = String(r.tkey || '').trim();
     const txnId = transMap[tkey];
     if (!txnId) continue;
-    const catId = catByName[String(r.category || '').trim().toLowerCase()] || null;
+    const catId   = catByName[String(r.category || '').trim().toLowerCase()] || null;
     if (!catId) continue;
     const rawAmt = parseDec(r.amount);
     if (rawAmt == null) continue;
@@ -1072,14 +1130,58 @@ async function restoreBeacon(tx, wb) {
     );
   }
 
-  // 17. Settings from Beacon Site Settings 1
+  // 17. Roles (from Beacon Roles sheet)
+  const roleRows = get('Roles');
+  for (const r of roleRows) {
+    const rkey = String(r.rkey || '').trim();
+    if (!rkey) continue;
+    const newId = uuid();
+    roleMap[rkey] = newId;
+    await tx.$executeRawUnsafe(
+      `INSERT INTO roles (id, name, is_committee, notes) VALUES ($1,$2,$3,$4)`,
+      newId, String(r.r_name || ''), parseBool(r.committee_role), str(r.notes),
+    );
+  }
+
+  // 18. Users (from Beacon System Users — no passwords; accounts exist but can't log in until reset)
+  const userMap = {};  // ukey → newId
+  for (const r of get('System Users')) {
+    const ukey = String(r.ukey || '').trim();
+    if (!ukey) continue;
+    const newId = uuid();
+    userMap[ukey] = newId;
+    const mkey    = String(r.mkey || '').trim();
+    const memberId = mkey ? (memberMap[mkey] || null) : null;
+
+    await tx.$executeRawUnsafe(
+      `INSERT INTO users (id, name, email, username, active, member_id)
+       VALUES ($1,$2,$3,$4,$5,$6)`,
+      newId, String(r.fullname || ''), '',  // email unknown from Beacon export
+      str(r.username) || null, true, memberId,
+    );
+  }
+
+  // 19. User roles (Beacon: rkey is the primary role for each user)
+  for (const r of get('System Users')) {
+    const ukey = String(r.ukey || '').trim();
+    const rkey = String(r.rkey || '').trim();
+    const userId = userMap[ukey];
+    const roleId = roleMap[rkey];
+    if (!userId || !roleId) continue;
+    await tx.$executeRawUnsafe(
+      `INSERT INTO user_roles (user_id, role_id) VALUES ($1,$2) ON CONFLICT DO NOTHING`,
+      userId, roleId,
+    );
+  }
+
+  // 20. Settings
   const ss1 = get('Site Settings 1');
   const ss1Map = Object.fromEntries(ss1.map((r) => [String(r.name || ''), String(r.value ?? '')]));
 
   const updates = {
-    advance_renewals_weeks:   ss1Map['AdvRenewals']          ? parseInt(ss1Map['AdvRenewals'])          : null,
-    grace_lapse_weeks:        ss1Map['GraceLapse']           ? parseInt(ss1Map['GraceLapse'])           : null,
-    gift_aid_enabled:         ss1Map['GiftAidEnable']    != null ? ss1Map['GiftAidEnable'] === '1'     : null,
+    advance_renewals_weeks:   ss1Map['AdvRenewals']       ? parseInt(ss1Map['AdvRenewals'])       : null,
+    grace_lapse_weeks:        ss1Map['GraceLapse']        ? parseInt(ss1Map['GraceLapse'])        : null,
+    gift_aid_enabled:         ss1Map['GiftAidEnable']    != null ? ss1Map['GiftAidEnable']    === '1' : null,
     gift_aid_online_renewals: ss1Map['GiftAidOnlineRenew'] != null ? ss1Map['GiftAidOnlineRenew'] === '1' : null,
     default_town:             ss1Map['DefaultTown']  || null,
     default_county:           ss1Map['DefaultCounty'] || null,
@@ -1095,83 +1197,23 @@ async function restoreBeacon(tx, wb) {
   const params = [];
   let pi = 1;
   for (const [col, val] of Object.entries(updates)) {
-    if (val !== null) {
-      setClauses.push(`${col} = $${pi++}`);
-      params.push(val);
-    }
+    if (val !== null) { setClauses.push(`${col} = $${pi++}`); params.push(val); }
   }
   if (setClauses.length > 0) {
     await tx.$executeRawUnsafe(
-      `UPDATE tenant_settings SET ${setClauses.join(', ')} WHERE id = 'singleton'`,
-      ...params,
+      `UPDATE tenant_settings SET ${setClauses.join(', ')} WHERE id = 'singleton'`, ...params,
     );
   }
 
-  // PayPal from Site Settings 2
   const ss2 = get('Site Settings 2');
   const ss2Map = Object.fromEntries(ss2.map((r) => [String(r.setting || ''), String(r.value ?? '')]));
   if (ss2Map['paypal_account']) {
     await tx.$executeRawUnsafe(
-      `UPDATE tenant_settings SET paypal_email = $1 WHERE id = 'singleton'`,
-      ss2Map['paypal_account'],
+      `UPDATE tenant_settings SET paypal_email = $1 WHERE id = 'singleton'`, ss2Map['paypal_account'],
     );
   }
 
   await resetSequences(tx);
 }
-
-// ── Restore route ──────────────────────────────────────────────────────────────
-
-router.post(
-  '/restore',
-  requirePrivilege('data_export_backup', 'restore'),
-  upload.single('backup'),
-  async (req, res, next) => {
-    if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
-
-    try {
-      const wb = new ExcelJS.Workbook();
-      await wb.xlsx.load(req.file.buffer);
-
-      const membersWs = wb.getWorksheet('Members');
-      if (!membersWs) {
-        return res.status(400).json({ error: 'Invalid backup file: no Members sheet found' });
-      }
-
-      // Detect format from first column header of Members sheet
-      const firstCol = String((membersWs.getRow(1).values || [])[1] ?? '').trim();
-      let format;
-      if (firstCol === 'mkey')      format = 'beacon';
-      else if (firstCol === 'id')   format = 'beacon2';
-      else return res.status(400).json({
-        error: `Cannot determine backup format (Members first column: "${firstCol}")`,
-      });
-
-      const slug   = req.user.tenantSlug;
-      const schema = `u3a_${slug}`;
-
-      await prisma.$transaction(
-        async (tx) => {
-          await tx.$executeRawUnsafe(`SET search_path TO ${schema}, public`);
-          await clearTenantData(tx);
-          if (format === 'beacon2') {
-            await restoreBeacon2(tx, wb);
-          } else {
-            await restoreBeacon(tx, wb);
-          }
-        },
-        { timeout: 300_000 }, // 5-minute timeout for large backups
-      );
-
-      res.json({
-        ok: true,
-        format,
-        message: `Data restored successfully from ${format === 'beacon' ? 'Beacon' : 'Beacon2'} backup.`,
-      });
-    } catch (err) {
-      next(err);
-    }
-  },
-);
 
 export default router;

@@ -287,6 +287,16 @@ export const system = {
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
       body: JSON.stringify({ active }),
     }).then((r) => r.json().then((b) => { if (!r.ok) throw new Error(b.error ?? `HTTP ${r.status}`); return b; })),
+
+  restoreBackup: (token, tenantSlug, file) => {
+    const form = new FormData();
+    form.append('backup', file);
+    return fetch(`${BASE}/system/restore/${tenantSlug}`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}` },
+      body: form,
+    }).then((r) => r.json().then((b) => { if (!r.ok) throw new Error(b.error ?? `HTTP ${r.status}`); return b; }));
+  },
 };
 
 // ─── Audit log ────────────────────────────────────────────────────────────

@@ -12,7 +12,6 @@ vi.mock('../context/AuthContext.jsx', () => ({
 vi.mock('../lib/api.js', () => ({
   backup: {
     export:  vi.fn().mockResolvedValue(undefined),
-    restore: vi.fn().mockResolvedValue({ ok: true, format: 'beacon2', message: 'Restored.' }),
   },
 }));
 
@@ -41,11 +40,5 @@ describe('DataBackup page', () => {
   it('shows the Backup all data button', () => {
     const { getAllByText } = render(<MemoryRouter><DataBackup /></MemoryRouter>);
     expect(getAllByText('Backup all data').length).toBeGreaterThan(0);
-  });
-
-  it('shows the restore section with warning', () => {
-    const { getByText } = render(<MemoryRouter><DataBackup /></MemoryRouter>);
-    expect(getByText('Restore from Backup')).toBeInTheDocument();
-    expect(getByText(/permanently delete all current data/)).toBeInTheDocument();
   });
 });

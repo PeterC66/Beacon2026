@@ -35,6 +35,7 @@ export default function SystemLogin() {
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-slate-800">Beacon<span className="text-blue-600">2</span></h1>
           <p className="text-slate-500 text-sm mt-1">System administration</p>
+          <p className="text-slate-400 text-xs mt-0.5">v{__APP_VERSION__}</p>
         </div>
 
         {error && (
