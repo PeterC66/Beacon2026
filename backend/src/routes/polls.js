@@ -7,6 +7,7 @@ import { requireAuth } from '../middleware/auth.js';
 import { requirePrivilege } from '../middleware/requirePrivilege.js';
 import { tenantQuery } from '../utils/db.js';
 import { AppError } from '../middleware/errorHandler.js';
+import { logAudit } from '../utils/audit.js';
 
 const router = Router();
 router.use(requireAuth);
@@ -51,6 +52,7 @@ router.post('/', requirePrivilege('poll_set_up', 'create'), async (req, res, nex
        RETURNING id, name, description, member_can_set, 0 AS member_count`,
       [data.name, data.description, data.memberCanSet],
     );
+    logAudit(req.user.tenantSlug, { userId: req.user.userId, userName: req.user.name, action: 'create', entityType: 'poll', entityId: row.id, entityName: row.name });
     res.status(201).json(row);
   } catch (err) {
     if (err.code === '23505') return next(AppError('A poll with that name already exists.', 409));
@@ -74,6 +76,7 @@ router.patch('/:id', requirePrivilege('poll_set_up', 'change'), async (req, res,
        RETURNING id, name, description, member_can_set`,
       [data.name, data.description, data.memberCanSet, req.params.id],
     );
+    logAudit(slug, { userId: req.user.userId, userName: req.user.name, action: 'update', entityType: 'poll', entityId: row.id, entityName: row.name });
     res.json(row);
   } catch (err) {
     if (err.code === '23505') return next(AppError('A poll with that name already exists.', 409));
@@ -86,9 +89,10 @@ router.patch('/:id', requirePrivilege('poll_set_up', 'change'), async (req, res,
 router.delete('/:id', requirePrivilege('poll_set_up', 'delete'), async (req, res, next) => {
   try {
     const slug = req.user.tenantSlug;
-    const [existing] = await tenantQuery(slug, `SELECT id FROM polls WHERE id = $1`, [req.params.id]);
+    const [existing] = await tenantQuery(slug, `SELECT id, name FROM polls WHERE id = $1`, [req.params.id]);
     if (!existing) throw AppError('Poll not found.', 404);
     await tenantQuery(slug, `DELETE FROM polls WHERE id = $1`, [req.params.id]);
+    logAudit(slug, { userId: req.user.userId, userName: req.user.name, action: 'delete', entityType: 'poll', entityId: existing.id, entityName: existing.name });
     res.json({ message: 'Poll deleted.' });
   } catch (err) { next(err); }
 });
@@ -99,9 +103,10 @@ router.delete('/:id', requirePrivilege('poll_set_up', 'delete'), async (req, res
 router.post('/:id/clear', requirePrivilege('poll_set_up', 'change'), async (req, res, next) => {
   try {
     const slug = req.user.tenantSlug;
-    const [existing] = await tenantQuery(slug, `SELECT id FROM polls WHERE id = $1`, [req.params.id]);
+    const [existing] = await tenantQuery(slug, `SELECT id, name FROM polls WHERE id = $1`, [req.params.id]);
     if (!existing) throw AppError('Poll not found.', 404);
     await tenantQuery(slug, `DELETE FROM poll_members WHERE poll_id = $1`, [req.params.id]);
+    logAudit(slug, { userId: req.user.userId, userName: req.user.name, action: 'clear', entityType: 'poll', entityId: existing.id, entityName: existing.name });
     res.json({ message: 'All assignments cleared.' });
   } catch (err) { next(err); }
 });

@@ -6,6 +6,7 @@ import { requireAuth } from '../middleware/auth.js';
 import { requirePrivilege } from '../middleware/requirePrivilege.js';
 import { tenantQuery } from '../utils/db.js';
 import { AppError } from '../middleware/errorHandler.js';
+import { logAudit } from '../utils/audit.js';
 
 const router = Router();
 router.use(requireAuth);
@@ -470,6 +471,7 @@ router.post('/', requirePrivilege('member_record', 'create'), async (req, res, n
       await createMemberPayment(slug, data.payment, member.id, memberName, data.joinedOn, data.classId);
     }
 
+    logAudit(slug, { userId: req.user.userId, userName: req.user.name, action: 'create', entityType: 'member', entityId: member.id, entityName: `${data.forenames} ${data.surname}` });
     res.status(201).json(member);
   } catch (err) {
     next(err);
@@ -700,6 +702,7 @@ router.patch('/:id', requirePrivilege('member_record', 'change'), async (req, re
       }
     }
 
+    logAudit(slug, { userId: req.user.userId, userName: req.user.name, action: 'update', entityType: 'member', entityId: member.id });
     res.json({ message: 'Member updated.', id: member.id, membership_number: member.membership_number });
   } catch (err) {
     next(err);
@@ -743,6 +746,7 @@ router.delete('/:id', requirePrivilege('member_record', 'delete'), async (req, r
       }
     }
 
+    logAudit(slug, { userId: req.user.userId, userName: req.user.name, action: 'delete', entityType: 'member', entityId: memberId });
     res.json({ message: 'Member deleted.' });
   } catch (err) {
     next(err);

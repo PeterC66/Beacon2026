@@ -377,3 +377,38 @@ CREATE TABLE IF NOT EXISTS :schema.poll_members (
 
 CREATE INDEX IF NOT EXISTS :schema_idx_poll_members_poll   ON :schema.poll_members (poll_id);
 CREATE INDEX IF NOT EXISTS :schema_idx_poll_members_member ON :schema.poll_members (member_id);
+
+-- ─── Audit log ────────────────────────────────────────────────────────────
+
+CREATE TABLE IF NOT EXISTS :schema.audit_log (
+  id          TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
+  user_id     TEXT,
+  user_name   TEXT NOT NULL,
+  action      TEXT NOT NULL,
+  entity_type TEXT NOT NULL,
+  entity_id   TEXT,
+  entity_name TEXT,
+  detail      TEXT,
+  created_at  TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS :schema_idx_audit_log_created ON :schema.audit_log (created_at);
+
+-- ─── Offices ──────────────────────────────────────────────────────────────
+
+CREATE TABLE IF NOT EXISTS :schema.offices (
+  id                 TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
+  name               TEXT NOT NULL,
+  member_id          TEXT REFERENCES :schema.members(id) ON DELETE SET NULL,
+  office_email       TEXT,
+  notify_online_join BOOLEAN NOT NULL DEFAULT false,
+  created_at         TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at         TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS :schema_idx_offices_member ON :schema.offices (member_id);
+
+-- ─── Security Q&A on users ────────────────────────────────────────────────
+
+ALTER TABLE :schema.users ADD COLUMN IF NOT EXISTS security_question TEXT;
+ALTER TABLE :schema.users ADD COLUMN IF NOT EXISTS security_answer_hash TEXT;

@@ -7,6 +7,7 @@ import { requirePrivilege } from '../middleware/requirePrivilege.js';
 import { tenantQuery } from '../utils/db.js';
 import { AppError } from '../middleware/errorHandler.js';
 import { invalidateUserSessions } from '../utils/redis.js';
+import { logAudit } from '../utils/audit.js';
 
 const router = Router();
 router.use(requireAuth);
@@ -77,6 +78,7 @@ router.post('/', requirePrivilege('role_record', 'create'), async (req, res, nex
        RETURNING id, name, is_committee, notes, created_at`,
       [data.name, data.isCommittee, data.notes ?? null],
     );
+    logAudit(req.user.tenantSlug, { userId: req.user.userId, userName: req.user.name, action: 'create', entityType: 'role', entityId: role.id, entityName: role.name });
     res.status(201).json(role);
   } catch (err) {
     next(err);
@@ -112,6 +114,7 @@ router.patch('/:id', requirePrivilege('role_record', 'change'), async (req, res,
       values,
     );
     if (!role) throw AppError('Role not found.', 404);
+    logAudit(req.user.tenantSlug, { userId: req.user.userId, userName: req.user.name, action: 'update', entityType: 'role', entityId: role.id, entityName: role.name });
     res.json(role);
   } catch (err) {
     next(err);
@@ -123,10 +126,11 @@ router.delete('/:id', requirePrivilege('role_record', 'delete'), async (req, res
   try {
     const [role] = await tenantQuery(
       req.user.tenantSlug,
-      `DELETE FROM roles WHERE id = $1 RETURNING id`,
+      `DELETE FROM roles WHERE id = $1 RETURNING id, name`,
       [req.params.id],
     );
     if (!role) throw AppError('Role not found.', 404);
+    logAudit(req.user.tenantSlug, { userId: req.user.userId, userName: req.user.name, action: 'delete', entityType: 'role', entityId: role.id, entityName: role.name });
     res.json({ message: 'Role deleted.' });
   } catch (err) {
     next(err);
@@ -152,7 +156,7 @@ router.put('/:id/privileges', requirePrivilege('role_record', 'change'), async (
     const slug = req.user.tenantSlug;
 
     // Verify role exists
-    const [role] = await tenantQuery(slug, `SELECT id FROM roles WHERE id = $1`, [roleId]);
+    const [role] = await tenantQuery(slug, `SELECT id, name FROM roles WHERE id = $1`, [roleId]);
     if (!role) throw AppError('Role not found.', 404);
 
     // Replace all privileges in a single transaction
@@ -174,6 +178,7 @@ router.put('/:id/privileges', requirePrivilege('role_record', 'change'), async (
     );
     await Promise.all(affectedUsers.map((u) => invalidateUserSessions(slug, u.user_id)));
 
+    logAudit(slug, { userId: req.user.userId, userName: req.user.name, action: 'update', entityType: 'role', entityId: role.id, entityName: role.name });
     res.json({ message: 'Privileges updated.', count: privileges.length });
   } catch (err) {
     next(err);

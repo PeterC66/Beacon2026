@@ -23,6 +23,8 @@ export const ALL_PRIVS = [
   'finance_ledger:view',
   'finance_transactions:view', 'finance_transactions:create', 'finance_transactions:change', 'finance_transactions:delete',
   'poll_set_up:view', 'poll_set_up:create', 'poll_set_up:change', 'poll_set_up:delete',
+  'audit_trail:view', 'audit_trail:delete',
+  'offices:view', 'offices:create', 'offices:change', 'offices:delete',
   'settings:view', 'settings:change',
 ];
 

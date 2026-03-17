@@ -5,6 +5,7 @@ import { z } from 'zod';
 import { requireAuth } from '../middleware/auth.js';
 import { requirePrivilege } from '../middleware/requirePrivilege.js';
 import { tenantQuery } from '../utils/db.js';
+import { logAudit } from '../utils/audit.js';
 
 const router = Router();
 router.use(requireAuth);
@@ -95,6 +96,7 @@ router.patch('/', requirePrivilege('settings', 'change'), async (req, res, next)
        RETURNING ${COLS}`,
       values,
     );
+    logAudit(req.user.tenantSlug, { userId: req.user.userId, userName: req.user.name, action: 'update', entityType: 'setting', entityId: 'singleton', entityName: 'System Settings' });
     res.json(settings);
   } catch (err) {
     next(err);

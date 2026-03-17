@@ -1,8 +1,9 @@
 // beacon2/frontend/src/context/AuthContext.jsx
 // Provides authentication state and actions to the whole app.
 
-import { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { createContext, useContext, useState, useEffect, useRef, useCallback } from 'react';
 import { auth as authApi, setAuth, clearAuth } from '../lib/api.js';
+import { getPreferences } from '../hooks/usePreferences.js';
 
 const AuthContext = createContext(null);
 
@@ -13,7 +14,34 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(false);
   const [error,   setError]   = useState(null);
 
-  // Listen for auth:expired events fired by the API client
+  // ── Inactivity timeout ────────────────────────────────────────────────
+  const inactivityTimer = useRef(null);
+
+  const resetInactivityTimer = useCallback(() => {
+    if (!user) return;
+    if (inactivityTimer.current) clearTimeout(inactivityTimer.current);
+    const minutes = getPreferences().inactivityTimeout;
+    inactivityTimer.current = setTimeout(() => {
+      // Fire auth:expired to trigger logout
+      window.dispatchEvent(new Event('auth:expired'));
+    }, minutes * 60 * 1000);
+  }, [user]);
+
+  useEffect(() => {
+    if (!user) {
+      if (inactivityTimer.current) clearTimeout(inactivityTimer.current);
+      return;
+    }
+    const events = ['mousemove', 'keydown', 'click', 'touchstart'];
+    events.forEach((ev) => window.addEventListener(ev, resetInactivityTimer, { passive: true }));
+    resetInactivityTimer();
+    return () => {
+      events.forEach((ev) => window.removeEventListener(ev, resetInactivityTimer));
+      if (inactivityTimer.current) clearTimeout(inactivityTimer.current);
+    };
+  }, [user, resetInactivityTimer]);
+
+  // Listen for auth:expired events fired by the API client or inactivity timer
   useEffect(() => {
     const handler = () => {
       setUser(null);

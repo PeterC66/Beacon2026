@@ -54,13 +54,13 @@ export default function Home() {
     {
       title: 'Misc',
       items: [
-        { label: 'Audit log',             to: null },
+        { label: 'Audit log',             to: can('audit_trail', 'view') ? '/audit' : null },
         { label: 'Gift aid log',          to: null },
-        { label: 'u3a Officers',          to: null },
+        { label: 'u3a Officers',          to: can('offices', 'view') ? '/officers' : null },
         { label: 'Public links',          to: null },
         { label: 'Data export & backup',  to: null },
         { label: 'E-mail delivery',       to: null },
-        { label: 'Personal preferences',  to: null },
+        { label: 'Personal preferences',  to: '/preferences' },
         { label: 'Validate member data',  to: can('member_data_validation', 'view') ? '/admin/validate-members' : null },
       ],
     },
