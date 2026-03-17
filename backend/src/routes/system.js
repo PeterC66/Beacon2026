@@ -10,7 +10,7 @@ import { requireSysAdmin } from '../middleware/auth.js';
 import { prisma } from '../utils/db.js';
 import { AppError } from '../middleware/errorHandler.js';
 import { createTenantSchema } from '../seed/createTenant.js';
-import { sheetRows, clearTenantData, resetSequences, restoreBeacon2, restoreBeacon } from './backup.js';
+import { clearTenantData, resetSequences, restoreBeacon2, restoreBeacon } from './backup.js';
 import ExcelJS from 'exceljs';
 
 const router = Router();
@@ -36,6 +36,7 @@ const newTenantSchema = z.object({
   adminEmail:     z.string().email(),
   adminName:      z.string().min(1),
   adminPassword:  z.string().min(8),
+  adminUsername:  z.string().regex(/^[a-z0-9]+$/, 'Username must be lowercase letters and numbers only'),
 });
 
 router.post('/tenants', async (req, res, next) => {
@@ -101,15 +102,17 @@ router.post('/restore/:tenantSlug', upload.single('backup'), async (req, res, ne
     const firstHeader = String(membersWs.getRow(1).getCell(1).value ?? '').trim().toLowerCase();
     const format = firstHeader === 'mkey' ? 'beacon' : 'beacon2';
 
-    await clearTenantData(tenantSlug);
-
-    if (format === 'beacon2') {
-      await restoreBeacon2(tenantSlug, wb);
-    } else {
-      await restoreBeacon(tenantSlug, wb);
-    }
-
-    await resetSequences(tenantSlug);
+    const schema = `u3a_${tenantSlug}`;
+    await prisma.$transaction(async (tx) => {
+      await tx.$executeRawUnsafe(`SET search_path TO ${schema}, public`);
+      await clearTenantData(tx);
+      if (format === 'beacon2') {
+        await restoreBeacon2(tx, wb);
+      } else {
+        await restoreBeacon(tx, wb);
+        await resetSequences(tx);
+      }
+    }, { timeout: 300_000 });
 
     res.json({ ok: true, format, message: `Restore complete (${format === 'beacon' ? 'migrated from Beacon' : 'Beacon2 format'}).` });
   } catch (err) {
