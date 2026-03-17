@@ -644,9 +644,9 @@ function GroupSchedule({ groupId, groupData }) {
   function startEdit(ev) {
     setEditId(ev.id);
     setEditForm({
-      eventDate: ev.event_date ?? '',
-      startTime: ev.start_time ?? '',
-      endTime:   ev.end_time ?? '',
+      eventDate: ev.event_date ? String(ev.event_date).slice(0, 10) : '',
+      startTime: ev.start_time ? String(ev.start_time).slice(0, 5) : '',
+      endTime:   ev.end_time   ? String(ev.end_time).slice(0, 5)   : '',
       venueId:   ev.venue_id ?? '',
       contact:   ev.contact ?? '',
       details:   ev.details ?? '',
@@ -717,13 +717,14 @@ function GroupSchedule({ groupId, groupData }) {
 
   function fmtDate(d) {
     if (!d) return '';
-    const [y, m, day] = d.split('-');
+    const s = String(d).slice(0, 10); // handles full ISO timestamp or plain date
+    const [y, m, day] = s.split('-');
     return `${day}/${m}/${y}`;
   }
 
   function fmtTime(t) {
     if (!t) return '';
-    return t.slice(0, 5);
+    return String(t).slice(0, 5);
   }
 
   if (loading) return <p className="text-center text-slate-500 py-8">Loading…</p>;

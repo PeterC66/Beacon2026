@@ -1003,3 +1003,34 @@ FROM groups WHERE id = $1
 If `enable_waiting_list && max_members !== null && joined_count >= max_members`, the member is inserted with `waiting_since = CURRENT_DATE` instead of `NULL`. The frontend `addMember` flow does not need to know — the backend decides automatically.
 
 The test for `POST /groups/:id/members` needs a 4th mock: `{ max_members: null, enable_waiting_list: false, joined_count: 0 }` (the new group-info query).
+
+---
+
+## PostgreSQL DATE/TIME columns return JavaScript Date objects via $queryRawUnsafe (March 2026)
+
+When `event_date DATE` or similar columns are returned from `$queryRawUnsafe`, Prisma/pg serialises them as full ISO-8601 timestamps (`2026-03-26T00:00:00.000Z`), not plain `YYYY-MM-DD` strings. When these values reach the frontend:
+
+- **Display**: always normalise with `.slice(0, 10)` before splitting on `-`  
+- **Form fields** (`<input type="date">`): set `value` to `String(ev.event_date).slice(0, 10)` — the browser rejects the full ISO string and shows blank  
+- **Time columns** (`HH:MM:SS`): already plain strings; `.slice(0, 5)` is sufficient for display
+
+Pattern:
+```js
+function fmtDate(d) {
+  if (!d) return '';
+  const s = String(d).slice(0, 10); // handles ISO timestamp or plain date
+  const [y, m, day] = s.split('-');
+  return `${day}/${m}/${y}`;
+}
+// In startEdit:
+eventDate: ev.event_date ? String(ev.event_date).slice(0, 10) : '',
+```
+
+## Beacon restore: default password and system admin "Set password" (March 2026)
+
+Beacon exports do not contain password hashes. On restore, all imported users are given the default password `Beacon2!` (constant `BEACON_DEFAULT_PASSWORD` exported from `backup.js`). The restore success message tells the system admin this.
+
+For locked-out tenants or post-restore access, system admin has a **"Set password"** button per tenant (`POST /system/tenants/:id/set-temp-password`) that sets the password for ALL users in that tenant. This is preferable to a permanent master-user backdoor because:
+- It is explicit and auditable (admin chooses when to use it)
+- It is scoped to a specific tenant
+- The password can be changed back by the tenant admin immediately

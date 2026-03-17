@@ -100,6 +100,20 @@ export default function SystemDashboard() {
     }
   };
 
+  const handleSetTempPassword = async (tenant) => {
+    const pw = window.prompt(
+      `Set a temporary password for ALL users in "${tenant.name}".\n\nEnter the temporary password (min 6 chars):`,
+    );
+    if (!pw) return;
+    if (pw.length < 6) { alert('Password must be at least 6 characters.'); return; }
+    try {
+      const result = await system.setTempPassword(token, tenant.id, pw);
+      setSuccess(`Temporary password set for ${result.updated} user(s) in "${tenant.name}": ${result.users.join(', ')}`);
+    } catch (err) {
+      setLoadErr(err.message);
+    }
+  };
+
   function handleRestoreFileChange(e) {
     setRestoreFile(e.target.files[0] || null);
     setRestoreResult(null);
@@ -197,6 +211,13 @@ export default function SystemDashboard() {
                         className="text-xs text-slate-500 hover:text-slate-800 underline"
                       >
                         {t.active ? 'Disable' : 'Enable'}
+                      </button>
+                      <button
+                        onClick={() => handleSetTempPassword(t)}
+                        className="text-xs text-amber-600 hover:text-amber-800 underline"
+                        title="Set a temporary password for all users in this tenant"
+                      >
+                        Set password
                       </button>
                       <button
                         onClick={() => handleDeleteTenant(t)}
@@ -306,11 +327,8 @@ export default function SystemDashboard() {
           )}
 
           {restoreResult && (
-            <div className="mb-4 rounded-md bg-green-50 border border-green-300 px-4 py-3 text-green-800 text-sm font-medium">
+            <div className="mb-4 rounded-md bg-green-50 border border-green-300 px-4 py-3 text-green-800 text-sm font-medium whitespace-pre-line">
               ✓ {restoreResult.message}
-              {restoreResult.format === 'beacon' && (
-                <span className="ml-2 text-xs font-normal">(migrated from Beacon)</span>
-              )}
             </div>
           )}
 

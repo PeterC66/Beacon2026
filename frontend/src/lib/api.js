@@ -318,6 +318,13 @@ export const system = {
       method: 'DELETE',
       headers: { Authorization: `Bearer ${token}` },
     }).then((r) => r.json().then((b) => { if (!r.ok) throw new Error(b.error ?? `HTTP ${r.status}`); return b; })),
+
+  setTempPassword: (token, id, password) =>
+    fetch(`${BASE}/system/tenants/${id}/set-temp-password`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ password }),
+    }).then((r) => r.json().then((b) => { if (!r.ok) throw new Error(b.error ?? `HTTP ${r.status}`); return b; })),
 };
 
 // ─── Audit log ────────────────────────────────────────────────────────────

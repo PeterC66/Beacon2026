@@ -7,10 +7,11 @@ import { Router } from 'express';
 import { z } from 'zod';
 import multer from 'multer';
 import { requireSysAdmin } from '../middleware/auth.js';
-import { prisma } from '../utils/db.js';
+import { prisma, tenantQuery } from '../utils/db.js';
+import { hashPassword } from '../utils/password.js';
 import { AppError } from '../middleware/errorHandler.js';
 import { createTenantSchema } from '../seed/createTenant.js';
-import { clearTenantData, resetSequences, restoreBeacon2, restoreBeacon } from './backup.js';
+import { clearTenantData, resetSequences, restoreBeacon2, restoreBeacon, BEACON_DEFAULT_PASSWORD } from './backup.js';
 import ExcelJS from 'exceljs';
 
 const router = Router();
@@ -90,6 +91,27 @@ router.delete('/tenants/:id', async (req, res, next) => {
   }
 });
 
+// ─── POST /system/tenants/:id/set-temp-password ──────────────────────────────
+// Sets the password of ALL users in a tenant to a supplied temporary password.
+// Useful for accessing a tenant after a Beacon restore or when all admins are locked out.
+router.post('/tenants/:id/set-temp-password', async (req, res, next) => {
+  try {
+    const { password } = z.object({ password: z.string().min(6) }).parse(req.body);
+    const tenant = await prisma.sysTenant.findUnique({ where: { id: req.params.id } });
+    if (!tenant) throw AppError('Tenant not found.', 404);
+
+    const hash = await hashPassword(password);
+    const result = await tenantQuery(
+      tenant.slug,
+      `UPDATE users SET password_hash = $1 RETURNING username, name`,
+      [hash],
+    );
+    res.json({ ok: true, updated: result.length, users: result.map((u) => u.username || u.name) });
+  } catch (err) {
+    next(err);
+  }
+});
+
 // ─── POST /system/restore/:tenantSlug ────────────────────────────────────────
 // Restore a full tenant backup (Beacon2 or Beacon legacy format).
 // System-admin only (requireSysAdmin already applied above).
@@ -132,7 +154,10 @@ router.post('/restore/:tenantSlug', upload.single('backup'), async (req, res, ne
       }
     }, { timeout: 300_000 });
 
-    res.json({ ok: true, format, message: `Restore complete (${format === 'beacon' ? 'migrated from Beacon' : 'Beacon2 format'}).` });
+    const msg = format === 'beacon'
+      ? `Restore complete (migrated from Beacon).\nImported users have been given the temporary password: ${BEACON_DEFAULT_PASSWORD}\nPlease ask each user to change their password after first login.`
+      : 'Restore complete (Beacon2 format).';
+    res.json({ ok: true, format, message: msg });
   } catch (err) {
     next(err);
   }
