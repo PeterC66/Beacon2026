@@ -312,6 +312,12 @@ export const system = {
       body: form,
     }).then((r) => r.json().then((b) => { if (!r.ok) throw new Error(b.error ?? `HTTP ${r.status}`); return b; }));
   },
+
+  deleteTenant: (token, id) =>
+    fetch(`${BASE}/system/tenants/${id}`, {
+      method: 'DELETE',
+      headers: { Authorization: `Bearer ${token}` },
+    }).then((r) => r.json().then((b) => { if (!r.ok) throw new Error(b.error ?? `HTTP ${r.status}`); return b; })),
 };
 
 // ─── Audit log ────────────────────────────────────────────────────────────

@@ -81,6 +81,25 @@ export default function SystemDashboard() {
     }
   };
 
+  const handleDeleteTenant = async (tenant) => {
+    const confirmed = window.confirm(
+      `PERMANENTLY DELETE tenant "${tenant.name}" (${tenant.slug})?\n\nThis will drop all data for this u3a and cannot be undone. Type the slug to confirm.`,
+    );
+    if (!confirmed) return;
+    const slug = window.prompt(`Type the slug "${tenant.slug}" to confirm deletion:`);
+    if (slug !== tenant.slug) {
+      alert('Slug did not match. Deletion cancelled.');
+      return;
+    }
+    try {
+      await system.deleteTenant(token, tenant.id);
+      setSuccess(`Tenant "${tenant.name}" permanently deleted.`);
+      loadTenants();
+    } catch (err) {
+      setLoadErr(err.message);
+    }
+  };
+
   function handleRestoreFileChange(e) {
     setRestoreFile(e.target.files[0] || null);
     setRestoreResult(null);
@@ -172,12 +191,18 @@ export default function SystemDashboard() {
                         {t.active ? 'Active' : 'Disabled'}
                       </span>
                     </td>
-                    <td className="py-3 text-right">
+                    <td className="py-3 text-right space-x-4">
                       <button
                         onClick={() => toggleActive(t)}
                         className="text-xs text-slate-500 hover:text-slate-800 underline"
                       >
                         {t.active ? 'Disable' : 'Enable'}
+                      </button>
+                      <button
+                        onClick={() => handleDeleteTenant(t)}
+                        className="text-xs text-red-500 hover:text-red-700 underline"
+                      >
+                        Delete
                       </button>
                     </td>
                   </tr>

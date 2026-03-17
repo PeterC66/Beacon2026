@@ -72,6 +72,24 @@ router.patch('/tenants/:id', async (req, res, next) => {
   }
 });
 
+// ─── DELETE /system/tenants/:id ───────────────────────────────────────────
+// Permanently deletes a tenant: drops the Postgres schema and removes the record.
+router.delete('/tenants/:id', async (req, res, next) => {
+  try {
+    const tenant = await prisma.sysTenant.findUnique({ where: { id: req.params.id } });
+    if (!tenant) throw AppError('Tenant not found.', 404);
+
+    const schemaName = `u3a_${tenant.slug}`;
+    // Drop schema and all its contents
+    await prisma.$executeRawUnsafe(`DROP SCHEMA IF EXISTS "${schemaName}" CASCADE`);
+    await prisma.sysTenant.delete({ where: { id: req.params.id } });
+
+    res.json({ ok: true, message: `Tenant "${tenant.name}" deleted.` });
+  } catch (err) {
+    next(err);
+  }
+});
+
 // ─── POST /system/restore/:tenantSlug ────────────────────────────────────────
 // Restore a full tenant backup (Beacon2 or Beacon legacy format).
 // System-admin only (requireSysAdmin already applied above).
