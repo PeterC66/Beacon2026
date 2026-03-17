@@ -923,8 +923,10 @@ export async function restoreBeacon(tx, wb) {
          (id, membership_number, title, forenames, surname, suffix, known_as, initials,
           mobile, email, home_u3a, joined_on, next_renewal, gift_aid_from, notes, hide_contact,
           status_id, class_id, address_id)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12::date,$13::date,$14::date,$15,$16,$17,$18,$19)`,
-      newId, isNaN(memNo) ? 0 : memNo, str(r.title),
+       VALUES ($1,
+         CASE WHEN $2::integer IS NULL THEN nextval('membership_number_seq') ELSE $2::integer END,
+         $3,$4,$5,$6,$7,$8,$9,$10,$11,$12::date,$13::date,$14::date,$15,$16,$17,$18,$19)`,
+      newId, isNaN(memNo) ? null : memNo, str(r.title),
       String(r.forename || ''), String(r.surname || ''),
       str(r.suffix), str(r.known_as), str(r.initials),
       str(r.mobile), str(r['e-mail']), str(r.affiliation),
@@ -1152,11 +1154,13 @@ export async function restoreBeacon(tx, wb) {
     userMap[ukey] = newId;
     const mkey    = String(r.mkey || '').trim();
     const memberId = mkey ? (memberMap[mkey] || null) : null;
+    // email is unknown from Beacon export; use a unique placeholder so NOT NULL UNIQUE is satisfied
+    const placeholderEmail = `${newId}@beacon-migrated.invalid`;
 
     await tx.$executeRawUnsafe(
       `INSERT INTO users (id, name, email, username, active, member_id)
        VALUES ($1,$2,$3,$4,$5,$6)`,
-      newId, String(r.fullname || ''), '',  // email unknown from Beacon export
+      newId, String(r.fullname || ''), placeholderEmail,
       str(r.username) || null, true, memberId,
     );
   }

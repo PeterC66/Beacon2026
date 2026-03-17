@@ -37,6 +37,7 @@ app.use(helmet());
 app.use(cors({
   origin: process.env.CORS_ORIGIN,
   credentials: true,
+  exposedHeaders: ['Content-Disposition'],
 }));
 app.use(express.json());
 app.use(cookieParser());
