@@ -809,6 +809,85 @@ const BEACON_PAYMENT = {
 
 export const BEACON_DEFAULT_PASSWORD = 'Beacon2!';
 
+// ── Beacon privkey → Beacon2 (resource_code, action) mapping ─────────────────
+// Beacon stores privileges as  privkey = base + digit
+// where digit: 1=view 2=create 3=change 4=delete 5=extra(download/send/etc.)
+// Source: docs/FromBeacon/privileges.php
+const BEACON_PRIV_BASE = {
+  1010: { code: 'members_list',              extra: 'download' },
+  1020: { code: 'member_record' },
+  1030: { code: 'groups_list' },
+  1040: { code: 'group_records_all',         extra: 'download_members' },
+  1050: { code: 'group_records_as_leader',   extra: 'download_members' },
+  1060: { code: 'group_records_as_member' },
+  1110: { code: 'users_list' },
+  1120: { code: 'user_record' },
+  // 1130/1140 were obsolete PHP variable names later reassigned to 1340/1350
+  1140: { code: 'role_record' },             // old $pROLERECORD (safety net)
+  1150: { code: 'audit_trail' },
+  1160: { code: 'audit_detail' },
+  1170: { code: 'members_non_renewals',      extra: 'lapse' },
+  1180: { code: 'members_delete_expired' },
+  1190: { code: 'members_recent',            extra: 'download' },
+  1200: { code: 'membership_cards',          extra: 'download_and_mark' },
+  1230: { code: 'settings' },
+  1240: { code: 'address_labels',            extra: 'download' },
+  1250: { code: 'poll_set_up' },
+  1260: { code: 'gift_aid_declaration',      extra: 'download_and_mark' },
+  1270: { code: 'membership_renewals',       extra: 'renew' },
+  1310: { code: 'group_leaders',             extra: 'email_labels' },
+  1320: { code: 'email',                     extra: 'send' },
+  1340: { code: 'roles_list' },
+  1350: { code: 'role_record' },
+  1360: { code: 'finance_ledger',            extra: 'download' },
+  1370: { code: 'finance_transfer_money' },
+  1380: { code: 'finance_batches' },
+  1390: { code: 'finance_reconcile',         extra: 'reconcile' },
+  1400: { code: 'finance_statement',         extra: 'download' },
+  1410: { code: 'finance_transactions' },
+  1420: { code: 'addresses_export',          extra: 'download' },
+  1430: { code: 'membership_statistics',     extra: 'download' },
+  1440: { code: 'finance_accounts' },
+  1450: { code: 'finance_categories' },
+  1460: { code: 'group_faculties' },
+  1470: { code: 'group_venues' },
+  1480: { code: 'member_classes' },
+  1490: { code: 'letters',                   extra: 'download' },
+  1500: { code: 'member_statuses' },
+  1510: { code: 'group_ledger_all',          extra: 'download' },
+  1520: { code: 'group_ledger_as_leader',    extra: 'download' },
+  1530: { code: 'meetings' },
+  1540: { code: 'calendar',                  extra: 'download' },
+  1550: { code: 'email_standard_messages' },
+  1560: { code: 'system_messages' },
+  1570: { code: 'public_links' },
+  1580: { code: 'groups_add_by_name' },
+  1590: { code: 'groups_add_by_name_leader' },
+  1600: { code: 'groups_add_by_no' },
+  1610: { code: 'groups_add_by_no_leader' },
+  1620: { code: 'email_addresses',           extra: 'download' },
+  1630: { code: 'offices' },
+  1640: { code: 'data_export_backup',        extra: 'download' },
+  1650: { code: 'letters_standard_messages' },
+  1660: { code: 'email_delivery',            extra: 'all' },
+  1670: { code: 'group_statement',           extra: 'download' },
+  // 1680 ($pMEMNEWNOTIFY) has no Beacon2 equivalent
+};
+
+function beaconPrivkeyToBeacon2(privkey) {
+  const digit = privkey % 10;     // 1–5
+  const base  = privkey - digit;  // e.g. 1411 → base 1410
+  const entry = BEACON_PRIV_BASE[base];
+  if (!entry) return null;        // unknown / obsolete base — skip silently
+  const { code, extra } = entry;
+  if (digit === 1) return { code, action: 'view' };
+  if (digit === 2) return { code, action: 'create' };
+  if (digit === 3) return { code, action: 'change' };
+  if (digit === 4) return { code, action: 'delete' };
+  if (digit === 5) return extra ? { code, action: extra } : null;
+  return null;
+}
+
 export async function restoreBeacon(tx, wb) {
   const get = (name) => sheetRows(wb.getWorksheet(name));
 
@@ -1181,6 +1260,25 @@ export async function restoreBeacon(tx, wb) {
     await tx.$executeRawUnsafe(
       `INSERT INTO user_roles (user_id, role_id) VALUES ($1,$2) ON CONFLICT DO NOTHING`,
       userId, roleId,
+    );
+  }
+
+  // 19.5. Role privileges (from Beacon Privileges sheet — rkey + privkey)
+  // Each privkey is decoded to a Beacon2 (resource_code, action) pair via BEACON_PRIV_BASE.
+  // The resource_id is resolved inline from privilege_resources; unknown privkeys are skipped.
+  for (const r of get('Privileges')) {
+    const rkey    = String(r.rkey    || '').trim();
+    const privkey = parseInt(r.privkey) || 0;
+    const roleId  = roleMap[rkey];
+    if (!roleId || !privkey) continue;
+    const mapped = beaconPrivkeyToBeacon2(privkey);
+    if (!mapped) continue;
+    await tx.$executeRawUnsafe(
+      `INSERT INTO role_privileges (id, role_id, resource_id, action)
+       SELECT gen_random_uuid()::text, $1, pr.id, $2
+       FROM privilege_resources pr WHERE pr.code = $3
+       ON CONFLICT (role_id, resource_id, action) DO NOTHING`,
+      roleId, mapped.action, mapped.code,
     );
   }
 
