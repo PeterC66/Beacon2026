@@ -274,6 +274,8 @@ CREATE TABLE IF NOT EXISTS :schema.group_events (
 CREATE INDEX IF NOT EXISTS :schema_idx_group_events_group ON :schema.group_events (group_id);
 CREATE INDEX IF NOT EXISTS :schema_idx_group_events_date  ON :schema.group_events (event_date);
 
+ALTER TABLE :schema.group_events ADD COLUMN IF NOT EXISTS topic TEXT;
+
 -- ─────────────────────────────────────────────
 -- TENANT SETTINGS  (single-row table)
 -- ─────────────────────────────────────────────
