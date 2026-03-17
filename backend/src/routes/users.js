@@ -155,6 +155,20 @@ router.delete('/:id', requirePrivilege('user_record', 'delete'), async (req, res
       throw AppError('You cannot delete your own account.', 400);
     }
 
+    // Prevent deleting the last user who has the Administration role
+    const [adminInfo] = await tenantQuery(
+      req.user.tenantSlug,
+      `SELECT
+        (SELECT COUNT(*) FROM user_roles ur JOIN roles r ON ur.role_id = r.id
+         WHERE r.name = 'Administration') AS total_admins,
+        (SELECT COUNT(*) FROM user_roles ur JOIN roles r ON ur.role_id = r.id
+         WHERE ur.user_id = $1 AND r.name = 'Administration') AS is_admin`,
+      [req.params.id],
+    );
+    if (parseInt(adminInfo?.is_admin || 0) > 0 && parseInt(adminInfo?.total_admins || 0) <= 1) {
+      throw AppError('Cannot delete the last user with the Administration role. Assign the role to another user first.', 400);
+    }
+
     await invalidateUserSessions(req.user.tenantSlug, req.params.id);
 
     const [user] = await tenantQuery(

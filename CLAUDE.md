@@ -886,6 +886,16 @@ await prisma.$transaction(async (tx) => {
 
 The backend sets `Content-Disposition: attachment; filename="..."` including tenant name and timestamp. The frontend `requestBlob()` reads this header — do **not** pass a client-generated filename.
 
+`Content-Disposition` is a non-"safe" header that browsers only expose when the server includes it in `Access-Control-Expose-Headers`. The CORS config in `app.js` must include `exposedHeaders: ['Content-Disposition']` — without this the browser sees `null` for the header and the file downloads as `download.xlsx`.
+
+### Beacon restore: placeholder email for imported users
+
+The `users` table has `email TEXT NOT NULL UNIQUE`. Beacon's System Users sheet does not include email addresses. When importing Beacon users, each gets a unique placeholder email `{uuid}@beacon-migrated.invalid` so the constraint is satisfied. These users can log in by username but cannot receive emails until an admin sets a real email.
+
+### Delete-last-admin guard
+
+`DELETE /users/:id` checks whether the target user is the last holder of the Administration role before deleting. Returns 400 "Cannot delete the last user with the Administration role" if so. This check runs before self-deletion is checked (self-deletion returns 400 first).
+
 ### New tenant: adminUsername required
 
 `createTenantSchema()` and the system.js Zod schema both require `adminUsername` (lowercase letters and numbers, `/^[a-z0-9]+$/`). The SystemDashboard create-tenant form has a username field that auto-strips invalid characters on input.

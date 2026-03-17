@@ -157,6 +157,8 @@ describe('DELETE /users/:id', () => {
   beforeEach(() => vi.clearAllMocks());
 
   it('returns 200 when deleted', async () => {
+    // admin check: user is not an admin
+    tenantQuery.mockResolvedValueOnce([{ total_admins: '2', is_admin: '0' }]);
     tenantQuery.mockResolvedValueOnce([{ id: 'u2' }]);
 
     const res = await request(app)
@@ -175,7 +177,21 @@ describe('DELETE /users/:id', () => {
     expect(res.status).toBe(400);
   });
 
+  it('returns 400 when deleting the last admin', async () => {
+    // admin check: user is the only admin
+    tenantQuery.mockResolvedValueOnce([{ total_admins: '1', is_admin: '1' }]);
+
+    const res = await request(app)
+      .delete('/users/u-admin')
+      .set('Authorization', AUTH);
+
+    expect(res.status).toBe(400);
+    expect(res.body.error).toMatch(/last user/i);
+  });
+
   it('returns 404 when user does not exist', async () => {
+    // admin check: not an admin
+    tenantQuery.mockResolvedValueOnce([{ total_admins: '2', is_admin: '0' }]);
     tenantQuery.mockResolvedValueOnce([]);
 
     const res = await request(app)
