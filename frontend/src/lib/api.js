@@ -223,6 +223,17 @@ export const groups = {
   createEvents: (id, data)       => request(`/groups/${id}/events`, { method: 'POST', body: JSON.stringify(data) }),
   updateEvent:  (id, evId, data) => request(`/groups/${id}/events/${evId}`, { method: 'PATCH', body: JSON.stringify(data) }),
   deleteEvents: (id, ids)        => request(`/groups/${id}/events`, { method: 'DELETE', body: JSON.stringify({ ids }) }),
+
+  getLedger: (id, params = {}) => {
+    const qs = new URLSearchParams();
+    if (params.from) qs.set('from', params.from);
+    if (params.to)   qs.set('to',   params.to);
+    const query = qs.toString();
+    return request(`/groups/${id}/ledger${query ? '?' + query : ''}`);
+  },
+  createLedgerEntry:  (id, data)          => request(`/groups/${id}/ledger`, { method: 'POST', body: JSON.stringify(data) }),
+  updateLedgerEntry:  (id, entryId, data) => request(`/groups/${id}/ledger/${entryId}`, { method: 'PATCH', body: JSON.stringify(data) }),
+  deleteLedgerEntry:  (id, entryId)       => request(`/groups/${id}/ledger/${entryId}`, { method: 'DELETE' }),
 };
 
 // ─── Finance ──────────────────────────────────────────────────────────────
@@ -354,7 +365,7 @@ export const offices = {
 
 /** Download an export as a blob (sends auth header, triggers browser download).
  *  Filename is read from the server's Content-Disposition header. */
-async function requestBlob(path) {
+export async function requestBlob(path) {
   const headers = {
     ...(accessToken && { Authorization: `Bearer ${accessToken}` }),
     ...(tenantSlug  && { 'x-tenant-slug': tenantSlug }),
