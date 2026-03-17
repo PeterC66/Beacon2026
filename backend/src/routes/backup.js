@@ -6,6 +6,7 @@ import { Router } from 'express';
 import { requireAuth } from '../middleware/auth.js';
 import { requirePrivilege } from '../middleware/requirePrivilege.js';
 import { tenantQuery, prisma } from '../utils/db.js';
+import { hashPassword } from '../utils/password.js';
 import ExcelJS from 'exceljs';
 import { v4 as uuid } from 'uuid';
 
@@ -806,8 +807,13 @@ const BEACON_PAYMENT = {
   '4': 'Direct Debit', '5': 'Online', '6': 'Other',
 };
 
+export const BEACON_DEFAULT_PASSWORD = 'Beacon2!';
+
 export async function restoreBeacon(tx, wb) {
   const get = (name) => sheetRows(wb.getWorksheet(name));
+
+  // Pre-hash the default password once (bcrypt is slow by design)
+  const defaultPasswordHash = await hashPassword(BEACON_DEFAULT_PASSWORD);
 
   const statusMap  = {};
   const classMap   = {};
@@ -1158,10 +1164,10 @@ export async function restoreBeacon(tx, wb) {
     const placeholderEmail = `${newId}@beacon-migrated.invalid`;
 
     await tx.$executeRawUnsafe(
-      `INSERT INTO users (id, name, email, username, active, member_id)
-       VALUES ($1,$2,$3,$4,$5,$6)`,
+      `INSERT INTO users (id, name, email, username, password_hash, active, member_id)
+       VALUES ($1,$2,$3,$4,$5,$6,$7)`,
       newId, String(r.fullname || ''), placeholderEmail,
-      str(r.username) || null, true, memberId,
+      str(r.username) || null, defaultPasswordHash, true, memberId,
     );
   }
 
