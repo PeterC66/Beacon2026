@@ -573,7 +573,7 @@ function GroupSchedule({ groupId, groupData }) {
   // Add-event form
   const EMPTY_EV = {
     eventDate: '', startTime: '', endTime: '', venueId: '',
-    contact: '', details: '', isPrivate: false,
+    topic: '', contact: '', details: '', isPrivate: false,
     repeatEvery: '', repeatUnit: 'weeks', repeatUntil: '',
   };
   const [addForm,   setAddForm]   = useState(EMPTY_EV);
@@ -622,6 +622,7 @@ function GroupSchedule({ groupId, groupData }) {
         startTime:   addForm.startTime || null,
         endTime:     addForm.endTime || null,
         venueId:     addForm.venueId || null,
+        topic:       addForm.topic || null,
         contact:     addForm.contact || null,
         details:     addForm.details || null,
         isPrivate:   addForm.isPrivate,
@@ -645,9 +646,10 @@ function GroupSchedule({ groupId, groupData }) {
     setEditId(ev.id);
     setEditForm({
       eventDate: ev.event_date ? String(ev.event_date).slice(0, 10) : '',
-      startTime: ev.start_time ? String(ev.start_time).slice(0, 5) : '',
-      endTime:   ev.end_time   ? String(ev.end_time).slice(0, 5)   : '',
+      startTime: normaliseTime(ev.start_time),
+      endTime:   normaliseTime(ev.end_time),
       venueId:   ev.venue_id ?? '',
+      topic:     ev.topic ?? '',
       contact:   ev.contact ?? '',
       details:   ev.details ?? '',
       isPrivate: ev.is_private ?? false,
@@ -670,6 +672,7 @@ function GroupSchedule({ groupId, groupData }) {
         startTime: editForm.startTime || null,
         endTime:   editForm.endTime || null,
         venueId:   editForm.venueId || null,
+        topic:     editForm.topic || null,
         contact:   editForm.contact || null,
         details:   editForm.details || null,
         isPrivate: editForm.isPrivate,
@@ -722,9 +725,13 @@ function GroupSchedule({ groupId, groupData }) {
     return `${day}/${m}/${y}`;
   }
 
-  function fmtTime(t) {
+  // PostgreSQL TIME columns come back as "1970-01-01T16:19:00.000Z" via $queryRawUnsafe
+  function normaliseTime(t) {
     if (!t) return '';
-    return String(t).slice(0, 5);
+    const s = String(t);
+    const tIdx = s.indexOf('T');
+    if (tIdx !== -1) return s.slice(tIdx + 1, tIdx + 6); // extract HH:MM from ISO timestamp
+    return s.slice(0, 5); // plain "HH:MM:SS" → "HH:MM"
   }
 
   if (loading) return <p className="text-center text-slate-500 py-8">Loading…</p>;
@@ -769,19 +776,25 @@ function GroupSchedule({ groupId, groupData }) {
               <tr className="bg-slate-50 border-b border-slate-200 text-left text-slate-600 italic font-normal">
                 {canManage && <th className="px-3 py-2 w-8"></th>}
                 <th className="px-3 py-2 font-normal">Date &amp; Time</th>
+                <th className="px-3 py-2 font-normal">Until</th>
                 <th className="px-3 py-2 font-normal">Venue</th>
-                {showDetail && <th className="px-3 py-2 font-normal">Contact</th>}
-                {showDetail && <th className="px-3 py-2 font-normal">Details</th>}
+                <th className="px-3 py-2 font-normal">Topic</th>
+                <th className="px-3 py-2 font-normal">Enquiries</th>
                 {canManage && <th className="px-3 py-2"></th>}
               </tr>
             </thead>
             <tbody>
               {events.map((ev, i) => {
+                const rowBg = i % 2 === 0 ? 'bg-yellow-50' : 'bg-white';
+                // Total non-checkbox non-actions columns: Date&Time + Until + Venue + Topic + Enquiries = 5
+                const dataColSpan = 5;
+                const totalColSpan = (canManage ? 2 : 0) + dataColSpan;
+
                 if (editId === ev.id) {
                   return (
                     <tr key={ev.id} className="border-b border-slate-100 bg-blue-50">
                       {canManage && <td className="px-3 py-2"></td>}
-                      <td className="px-3 py-2" colSpan={showDetail ? 4 : 2}>
+                      <td className="px-3 py-2" colSpan={dataColSpan + (canManage ? 1 : 0)}>
                         <div className="flex flex-wrap gap-2 items-end">
                           <div>
                             <label className={labelCls}>Date *</label>
@@ -790,12 +803,12 @@ function GroupSchedule({ groupId, groupData }) {
                           </div>
                           <div>
                             <label className={labelCls}>Start</label>
-                            <input type="time" className={inputCls} value={editForm.startTime}
+                            <input type="time" step="900" className={inputCls} value={editForm.startTime}
                               onChange={(e) => setEditForm((p) => ({ ...p, startTime: e.target.value }))} />
                           </div>
                           <div>
-                            <label className={labelCls}>End</label>
-                            <input type="time" className={inputCls} value={editForm.endTime}
+                            <label className={labelCls}>Until</label>
+                            <input type="time" step="900" className={inputCls} value={editForm.endTime}
                               onChange={(e) => setEditForm((p) => ({ ...p, endTime: e.target.value }))} />
                           </div>
                           <div>
@@ -806,8 +819,13 @@ function GroupSchedule({ groupId, groupData }) {
                               {venues.map((v) => <option key={v.id} value={v.id}>{v.name}</option>)}
                             </select>
                           </div>
+                          <div className="min-w-40">
+                            <label className={labelCls}>Topic</label>
+                            <input className={`${inputCls} w-full`} value={editForm.topic}
+                              onChange={(e) => setEditForm((p) => ({ ...p, topic: e.target.value }))} />
+                          </div>
                           <div>
-                            <label className={labelCls}>Contact</label>
+                            <label className={labelCls}>Enquiries</label>
                             <input className={inputCls} value={editForm.contact}
                               onChange={(e) => setEditForm((p) => ({ ...p, contact: e.target.value }))} />
                           </div>
@@ -834,44 +852,53 @@ function GroupSchedule({ groupId, groupData }) {
                           </button>
                         </div>
                       </td>
-                      {canManage && <td></td>}
                     </tr>
                   );
                 }
 
                 return (
-                  <tr key={ev.id} className={`border-b border-slate-100 ${i % 2 === 0 ? 'bg-yellow-50' : 'bg-white'}`}>
-                    {canManage && (
-                      <td className="px-3 py-2">
-                        <input type="checkbox" className={cbCls}
-                          checked={selected.has(ev.id)}
-                          onChange={() => toggleSelect(ev.id)} />
-                      </td>
-                    )}
-                    <td className="px-3 py-2">
-                      {canManage ? (
-                        <button onClick={() => startEdit(ev)}
-                          className="text-blue-700 hover:underline text-left">
-                          {fmtDate(ev.event_date)}
-                          {ev.start_time ? ` ${fmtTime(ev.start_time)}` : ''}
-                          {ev.end_time ? `–${fmtTime(ev.end_time)}` : ''}
-                        </button>
-                      ) : (
-                        <span>
-                          {fmtDate(ev.event_date)}
-                          {ev.start_time ? ` ${fmtTime(ev.start_time)}` : ''}
-                          {ev.end_time ? `–${fmtTime(ev.end_time)}` : ''}
-                        </span>
+                  <>
+                    <tr key={ev.id} className={`border-b border-slate-100 ${rowBg}`}>
+                      {canManage && (
+                        <td className="px-3 py-2">
+                          <input type="checkbox" className={cbCls}
+                            checked={selected.has(ev.id)}
+                            onChange={() => toggleSelect(ev.id)} />
+                        </td>
                       )}
-                      {ev.is_private && <span className="ml-2 text-xs text-slate-400">(private)</span>}
-                    </td>
-                    <td className="px-3 py-2 text-slate-600">
-                      {ev.venue_name ?? ''}
-                    </td>
-                    {showDetail && <td className="px-3 py-2 text-slate-600">{ev.contact ?? ''}</td>}
-                    {showDetail && <td className="px-3 py-2 text-slate-600">{ev.details ?? ''}</td>}
-                    {canManage && <td className="px-3 py-2 text-right"></td>}
-                  </tr>
+                      <td className="px-3 py-2">
+                        {canManage ? (
+                          <button onClick={() => startEdit(ev)}
+                            className="text-blue-700 hover:underline text-left whitespace-nowrap">
+                            {fmtDate(ev.event_date)}
+                            {ev.start_time ? ` ${normaliseTime(ev.start_time)}` : ''}
+                          </button>
+                        ) : (
+                          <span className="whitespace-nowrap">
+                            {fmtDate(ev.event_date)}
+                            {ev.start_time ? ` ${normaliseTime(ev.start_time)}` : ''}
+                          </span>
+                        )}
+                        {ev.is_private && <span className="ml-2 text-xs text-slate-400">(private)</span>}
+                      </td>
+                      <td className="px-3 py-2 text-slate-600 whitespace-nowrap">
+                        {normaliseTime(ev.end_time)}
+                      </td>
+                      <td className="px-3 py-2 text-slate-600">{ev.venue_name ?? ''}</td>
+                      <td className="px-3 py-2 text-slate-700">{ev.topic ?? ''}</td>
+                      <td className="px-3 py-2 text-slate-600">{ev.contact ?? ''}</td>
+                      {canManage && <td className="px-3 py-2"></td>}
+                    </tr>
+                    {showDetail && ev.details && (
+                      <tr key={`${ev.id}-detail`} className={rowBg}>
+                        {canManage && <td></td>}
+                        <td colSpan={dataColSpan} className="px-3 pb-2 pt-0 text-xs text-slate-500 italic">
+                          {ev.details}
+                        </td>
+                        {canManage && <td></td>}
+                      </tr>
+                    )}
+                  </>
                 );
               })}
             </tbody>
@@ -888,18 +915,18 @@ function GroupSchedule({ groupId, groupData }) {
           <form onSubmit={handleAdd} noValidate className="space-y-3">
             <div className="flex flex-wrap gap-3 items-end">
               <div>
-                <label className={labelCls}>First date &amp; time *</label>
+                <label className={labelCls}>First date *</label>
                 <input type="date" className={inputCls} required value={addForm.eventDate}
                   onChange={(e) => setAdd('eventDate', e.target.value)} />
               </div>
               <div>
                 <label className={labelCls}>Start time</label>
-                <input type="time" className={inputCls} value={addForm.startTime}
+                <input type="time" step="900" className={inputCls} value={addForm.startTime}
                   onChange={(e) => setAdd('startTime', e.target.value)} />
               </div>
               <div>
-                <label className={labelCls}>End time</label>
-                <input type="time" className={inputCls} value={addForm.endTime}
+                <label className={labelCls}>Until</label>
+                <input type="time" step="900" className={inputCls} value={addForm.endTime}
                   onChange={(e) => setAdd('endTime', e.target.value)} />
               </div>
               <div>
@@ -913,8 +940,13 @@ function GroupSchedule({ groupId, groupData }) {
             </div>
 
             <div className="flex flex-wrap gap-3 items-end">
+              <div className="min-w-40 flex-1">
+                <label className={labelCls}>Topic</label>
+                <input className={`${inputCls} w-full`} value={addForm.topic}
+                  onChange={(e) => setAdd('topic', e.target.value)} />
+              </div>
               <div>
-                <label className={labelCls}>Contact</label>
+                <label className={labelCls}>Enquiries</label>
                 <input className={inputCls} value={addForm.contact}
                   onChange={(e) => setAdd('contact', e.target.value)} />
               </div>

@@ -431,7 +431,7 @@ router.get('/:id/events', requirePrivilege('group_records_all', 'view'), async (
       slug,
       `SELECT ge.id, ge.event_date, ge.start_time, ge.end_time,
               ge.venue_id, v.name AS venue_name,
-              ge.contact, ge.details, ge.is_private,
+              ge.topic, ge.contact, ge.details, ge.is_private,
               ge.created_at, ge.updated_at
        FROM group_events ge
        LEFT JOIN venues v ON v.id = ge.venue_id
@@ -453,6 +453,7 @@ const eventSchema = z.object({
   startTime:  z.string().nullable().optional(),
   endTime:    z.string().nullable().optional(),
   venueId:    z.string().nullable().optional(),
+  topic:      z.string().nullable().optional(),
   contact:    z.string().nullable().optional(),
   details:    z.string().nullable().optional(),
   isPrivate:  z.boolean().default(false),
@@ -498,8 +499,8 @@ router.post('/:id/events', requirePrivilege('group_records_all', 'change'), asyn
       const [ev] = await tenantQuery(
         slug,
         `INSERT INTO group_events
-           (group_id, event_date, start_time, end_time, venue_id, contact, details, is_private)
-         VALUES ($1,$2::date,$3::time,$4::time,$5,$6,$7,$8)
+           (group_id, event_date, start_time, end_time, venue_id, topic, contact, details, is_private)
+         VALUES ($1,$2::date,$3::time,$4::time,$5,$6,$7,$8,$9)
          RETURNING *`,
         [
           req.params.id,
@@ -507,6 +508,7 @@ router.post('/:id/events', requirePrivilege('group_records_all', 'change'), asyn
           data.startTime  ?? null,
           data.endTime    ?? null,
           data.venueId    ?? null,
+          data.topic      ?? null,
           data.contact    ?? null,
           data.details    ?? null,
           data.isPrivate,
@@ -528,6 +530,7 @@ const updateEventSchema = z.object({
   startTime:  z.string().nullable().optional(),
   endTime:    z.string().nullable().optional(),
   venueId:    z.string().nullable().optional(),
+  topic:      z.string().nullable().optional(),
   contact:    z.string().nullable().optional(),
   details:    z.string().nullable().optional(),
   isPrivate:  z.boolean().optional(),
@@ -539,6 +542,7 @@ const EVENT_FIELDS = [
   ['startTime', 'start_time', '::time'],
   ['endTime',   'end_time',   '::time'],
   ['venueId',   'venue_id'],
+  ['topic',     'topic'],
   ['contact',   'contact'],
   ['details',   'details'],
   ['isPrivate', 'is_private'],
