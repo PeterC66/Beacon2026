@@ -84,12 +84,18 @@ export class ApiError extends Error {
 // ─── Auth ─────────────────────────────────────────────────────────────────
 
 export const auth = {
-  login:   (tenantSlug, username, password) =>
+  login:          (tenantSlug, username, password) =>
     request('/auth/login', { method: 'POST', body: JSON.stringify({ tenantSlug, username, password }) }),
-  logout:  () =>
+  logout:         () =>
     request('/auth/logout', { method: 'POST' }),
-  refresh: () =>
+  refresh:        () =>
     request('/auth/refresh', { method: 'POST' }),
+  changePassword: (currentPassword, newPassword) =>
+    request('/auth/change-password', { method: 'POST', body: JSON.stringify({ currentPassword, newPassword }) }),
+  updateQA:       (question, answer) =>
+    request('/auth/qa', { method: 'PATCH', body: JSON.stringify({ question, answer }) }),
+  getQA:          () =>
+    request('/auth/qa'),
 };
 
 // ─── Users ────────────────────────────────────────────────────────────────
@@ -281,4 +287,27 @@ export const system = {
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
       body: JSON.stringify({ active }),
     }).then((r) => r.json().then((b) => { if (!r.ok) throw new Error(b.error ?? `HTTP ${r.status}`); return b; })),
+};
+
+// ─── Audit log ────────────────────────────────────────────────────────────
+
+export const audit = {
+  list:         ({ from, to } = {}) => {
+    const qs = new URLSearchParams();
+    if (from) qs.set('from', from);
+    if (to)   qs.set('to',   to);
+    const q = qs.toString();
+    return request(`/audit${q ? '?' + q : ''}`);
+  },
+  deleteBefore: (before) => request('/audit', { method: 'DELETE', body: JSON.stringify({ before }) }),
+};
+
+// ─── Offices ──────────────────────────────────────────────────────────────
+
+export const offices = {
+  list:        ()         => request('/offices'),
+  listMembers: ()         => request('/offices/members'),
+  create:      (data)     => request('/offices', { method: 'POST', body: JSON.stringify(data) }),
+  update:      (id, data) => request(`/offices/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
+  delete:      (id)       => request(`/offices/${id}`, { method: 'DELETE' }),
 };

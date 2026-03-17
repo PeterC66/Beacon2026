@@ -5,6 +5,9 @@ import { Router } from 'express';
 import { z } from 'zod';
 import { loginUser, logoutUser, refreshTokens, loginSysAdmin } from '../services/authService.js';
 import { requireAuth } from '../middleware/auth.js';
+import { tenantQuery } from '../utils/db.js';
+import { verifyPassword, hashPassword } from '../utils/password.js';
+import { AppError } from '../middleware/errorHandler.js';
 
 const router = Router();
 
@@ -99,6 +102,70 @@ router.post('/system/login', async (req, res, next) => {
   } catch (err) {
     next(err);
   }
+});
+
+// ─── POST /auth/change-password ───────────────────────────────────────────
+// Allows a logged-in user to change their own password.
+
+const changePwSchema = z.object({
+  currentPassword: z.string().min(1),
+  newPassword:     z.string().min(8),
+});
+
+router.post('/change-password', requireAuth, async (req, res, next) => {
+  try {
+    const { currentPassword, newPassword } = changePwSchema.parse(req.body);
+    const slug = req.user.tenantSlug;
+    const [user] = await tenantQuery(slug, `SELECT id, password_hash FROM users WHERE id = $1`, [req.user.userId]);
+    if (!user) throw AppError('User not found.', 404);
+
+    const valid = await verifyPassword(currentPassword, user.password_hash);
+    if (!valid) throw AppError('Current password is incorrect.', 400);
+
+    const newHash = await hashPassword(newPassword);
+    await tenantQuery(slug, `UPDATE users SET password_hash = $1, updated_at = now() WHERE id = $2`, [newHash, user.id]);
+    res.json({ message: 'Password changed.' });
+  } catch (err) { next(err); }
+});
+
+// ─── PATCH /auth/qa ───────────────────────────────────────────────────────
+// Allows a logged-in user to update their security question and answer.
+
+const qaSchema = z.object({
+  question: z.string().min(1).max(200),
+  answer:   z.string().min(1).max(200),
+});
+
+router.patch('/qa', requireAuth, async (req, res, next) => {
+  try {
+    const { question, answer } = qaSchema.parse(req.body);
+    const slug = req.user.tenantSlug;
+    const [user] = await tenantQuery(slug, `SELECT id FROM users WHERE id = $1`, [req.user.userId]);
+    if (!user) throw AppError('User not found.', 404);
+
+    const answerHash = await hashPassword(answer);
+    await tenantQuery(
+      slug,
+      `UPDATE users SET security_question = $1, security_answer_hash = $2, updated_at = now() WHERE id = $3`,
+      [question, answerHash, user.id],
+    );
+    res.json({ message: 'Security Q&A updated.' });
+  } catch (err) { next(err); }
+});
+
+// ─── GET /auth/qa ─────────────────────────────────────────────────────────
+// Returns the current user's security question (not the answer hash).
+
+router.get('/qa', requireAuth, async (req, res, next) => {
+  try {
+    const slug = req.user.tenantSlug;
+    const [user] = await tenantQuery(
+      slug,
+      `SELECT security_question FROM users WHERE id = $1`,
+      [req.user.userId],
+    );
+    res.json({ question: user?.security_question ?? null });
+  } catch (err) { next(err); }
 });
 
 export default router;

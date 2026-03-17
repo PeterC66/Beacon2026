@@ -8,6 +8,7 @@ import { tenantQuery } from '../utils/db.js';
 import { hashPassword } from '../utils/password.js';
 import { AppError } from '../middleware/errorHandler.js';
 import { invalidateUserSessions } from '../utils/redis.js';
+import { logAudit } from '../utils/audit.js';
 
 const router = Router();
 
@@ -93,6 +94,7 @@ router.post('/', requirePrivilege('user_record', 'create'), async (req, res, nex
       );
     }
 
+    logAudit(req.user.tenantSlug, { userId: req.user.userId, userName: req.user.name, action: 'create', entityType: 'user', entityId: user.id, entityName: user.name });
     res.status(201).json(user);
   } catch (err) {
     next(err);
@@ -138,6 +140,7 @@ router.patch('/:id', requirePrivilege('user_record', 'change'), async (req, res,
       await invalidateUserSessions(req.user.tenantSlug, req.params.id);
     }
 
+    logAudit(req.user.tenantSlug, { userId: req.user.userId, userName: req.user.name, action: 'update', entityType: 'user', entityId: user.id, entityName: user.name });
     res.json(user);
   } catch (err) {
     next(err);
@@ -156,11 +159,12 @@ router.delete('/:id', requirePrivilege('user_record', 'delete'), async (req, res
 
     const [user] = await tenantQuery(
       req.user.tenantSlug,
-      `DELETE FROM users WHERE id = $1 RETURNING id`,
+      `DELETE FROM users WHERE id = $1 RETURNING id, name`,
       [req.params.id],
     );
     if (!user) throw AppError('User not found.', 404);
 
+    logAudit(req.user.tenantSlug, { userId: req.user.userId, userName: req.user.name, action: 'delete', entityType: 'user', entityId: user.id, entityName: user.name });
     res.json({ message: 'User deleted.' });
   } catch (err) {
     next(err);

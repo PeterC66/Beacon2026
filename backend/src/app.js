@@ -24,6 +24,8 @@ import groupRoutes         from './routes/groups.js';
 import settingsRoutes      from './routes/settings.js';
 import financeRoutes       from './routes/finance.js';
 import pollRoutes          from './routes/polls.js';
+import auditRoutes         from './routes/audit.js';
+import officeRoutes        from './routes/offices.js';
 import { errorHandler } from './middleware/errorHandler.js';
 
 const app = express();
@@ -55,6 +57,8 @@ app.use('/groups',          groupRoutes);
 app.use('/settings',        settingsRoutes);
 app.use('/finance',         financeRoutes);
 app.use('/polls',           pollRoutes);
+app.use('/audit',           auditRoutes);
+app.use('/offices',         officeRoutes);
 
 app.get('/health', (_req, res) => res.json({
   status:  'ok',
