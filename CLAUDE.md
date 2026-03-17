@@ -909,6 +909,10 @@ The `users` table has `email TEXT NOT NULL UNIQUE`. Beacon's System Users sheet 
 
 After inserting all data, `membership_number_seq` and `transaction_number_seq` are reset to `MAX + 1` so new records get correct sequential numbers.
 
+### Zero-amount transactions (Beacon restore)
+
+The `transactions.amount` constraint is `CHECK (amount >= 0)` (not `> 0`) to allow zero-amount transactions that exist in Beacon exports (e.g. free/honorary memberships). The `tenant_schema.sql` includes `ALTER TABLE ... DROP/ADD CONSTRAINT` statements so existing tenants are updated on the next server startup.
+
 ### Beacon Site Settings mapping (partial)
 
 | Beacon key | Beacon2 column |
