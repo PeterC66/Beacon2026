@@ -312,7 +312,7 @@ CREATE TABLE IF NOT EXISTS :schema.transactions (
   date               DATE NOT NULL DEFAULT CURRENT_DATE,
   type               TEXT NOT NULL CHECK (type IN ('in', 'out')),
   from_to            TEXT,                     -- person/body received from or paid to
-  amount             NUMERIC(10,2) NOT NULL CHECK (amount > 0),
+  amount             NUMERIC(10,2) NOT NULL CHECK (amount >= 0),
   payment_method     TEXT,
   payment_ref        TEXT,                     -- cheque number or other reference
   detail             TEXT,                     -- concise description shown in ledger
@@ -324,6 +324,10 @@ CREATE TABLE IF NOT EXISTS :schema.transactions (
   created_at         TIMESTAMPTZ NOT NULL DEFAULT now(),
   updated_at         TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+
+-- Relax amount constraint to allow zero-amount transactions (e.g. free memberships from Beacon)
+ALTER TABLE :schema.transactions DROP CONSTRAINT IF EXISTS transactions_amount_check;
+ALTER TABLE :schema.transactions ADD CONSTRAINT transactions_amount_check CHECK (amount >= 0);
 
 -- ─────────────────────────────────────────────
 -- TRANSACTION CATEGORY SPLITS
