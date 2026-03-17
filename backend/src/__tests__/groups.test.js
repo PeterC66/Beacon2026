@@ -229,3 +229,100 @@ describe('DELETE /groups/:id/members/:memberId', () => {
     expect(res.status).toBe(404);
   });
 });
+
+// ── GET /groups/:id/ledger ─────────────────────────────────────────────────
+
+const SAMPLE_ENTRY = {
+  id: 'e1', group_id: 'g1', entry_date: '2026-01-10',
+  payee: 'Art shop', detail: 'Brushes', money_in: null, money_out: '12.50',
+  created_at: new Date().toISOString(), updated_at: new Date().toISOString(),
+};
+
+describe('GET /groups/:id/ledger', () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it('returns broughtForward and entries', async () => {
+    tenantQuery
+      .mockResolvedValueOnce([{ bf: '5.00' }])  // broughtForward sum (aliased as bf in SQL)
+      .mockResolvedValueOnce([SAMPLE_ENTRY]);    // entries
+    const res = await request(app).get('/groups/g1/ledger').set('Authorization', AUTH);
+    expect(res.status).toBe(200);
+    expect(res.body.broughtForward).toBe(5);
+    expect(res.body.entries[0].payee).toBe('Art shop');
+  });
+
+  it('returns 401 without token', async () => {
+    const res = await request(app).get('/groups/g1/ledger');
+    expect(res.status).toBe(401);
+  });
+
+  it('returns 403 without ledger privilege', async () => {
+    const res = await request(app)
+      .get('/groups/g1/ledger')
+      .set('Authorization', makeAuthHeader({ privileges: [] }));
+    expect(res.status).toBe(403);
+  });
+});
+
+// ── POST /groups/:id/ledger ────────────────────────────────────────────────
+
+describe('POST /groups/:id/ledger', () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it('creates an entry', async () => {
+    tenantQuery.mockResolvedValueOnce([{ ...SAMPLE_ENTRY, id: 'e2' }]);
+    const res = await request(app)
+      .post('/groups/g1/ledger')
+      .set('Authorization', AUTH)
+      .send({ entryDate: '2026-01-10', payee: 'Art shop', moneyOut: 12.50 });
+    expect(res.status).toBe(201);
+    expect(res.body.id).toBe('e2');
+  });
+
+  it('returns 422 when entryDate is missing', async () => {
+    const res = await request(app)
+      .post('/groups/g1/ledger')
+      .set('Authorization', AUTH)
+      .send({ payee: 'Someone' });
+    expect(res.status).toBe(422);
+  });
+});
+
+// ── PATCH /groups/:id/ledger/:entryId ─────────────────────────────────────
+
+describe('PATCH /groups/:id/ledger/:entryId', () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it('updates an entry', async () => {
+    tenantQuery.mockResolvedValueOnce([{ ...SAMPLE_ENTRY, payee: 'Updated' }]);
+    const res = await request(app)
+      .patch('/groups/g1/ledger/e1')
+      .set('Authorization', AUTH)
+      .send({ payee: 'Updated' });
+    expect(res.status).toBe(200);
+    expect(res.body.payee).toBe('Updated');
+  });
+
+  it('returns 404 when entry not found', async () => {
+    tenantQuery.mockResolvedValueOnce([]);
+    const res = await request(app)
+      .patch('/groups/g1/ledger/unknown')
+      .set('Authorization', AUTH)
+      .send({ payee: 'X' });
+    expect(res.status).toBe(404);
+  });
+});
+
+// ── DELETE /groups/:id/ledger/:entryId ────────────────────────────────────
+
+describe('DELETE /groups/:id/ledger/:entryId', () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it('deletes an entry', async () => {
+    tenantQuery.mockResolvedValueOnce([]);
+    const res = await request(app)
+      .delete('/groups/g1/ledger/e1')
+      .set('Authorization', AUTH);
+    expect(res.status).toBe(204);
+  });
+});

@@ -19,6 +19,8 @@ export const ALL_PRIVS = [
   'group_records_all:view', 'group_records_all:create', 'group_records_all:change', 'group_records_all:delete',
   'group_faculties:view', 'group_faculties:create', 'group_faculties:change', 'group_faculties:delete',
   'group_venues:view', 'group_venues:create', 'group_venues:change', 'group_venues:delete',
+  'group_ledger_all:view', 'group_ledger_all:create', 'group_ledger_all:change', 'group_ledger_all:delete', 'group_ledger_all:download',
+  'group_ledger_as_leader:view', 'group_ledger_as_leader:create', 'group_ledger_as_leader:change', 'group_ledger_as_leader:delete', 'group_ledger_as_leader:download',
   'finance_accounts:view', 'finance_accounts:create', 'finance_accounts:change', 'finance_accounts:delete',
   'finance_categories:view', 'finance_categories:create', 'finance_categories:change', 'finance_categories:delete',
   'finance_ledger:view',

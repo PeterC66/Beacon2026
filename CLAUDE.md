@@ -1044,3 +1044,55 @@ Per doc 5.3, the schedule table columns are always: Select | Date & Time | Until
 The `topic` field is a short subject line, distinct from `details` (longer description). Both are TEXT columns on `group_events`.
 
 Time inputs use `step="900"` (15-minute intervals).
+
+---
+
+## Group Ledger (doc 5.5) (March 2026)
+
+### Architecture
+
+A per-group money in/out ledger entirely independent from the Finance Ledger.
+
+### DB table
+
+`group_ledger_entries` in `tenant_schema.sql` — fields: `id`, `group_id`, `entry_date DATE`, `payee TEXT`, `detail TEXT`, `money_in NUMERIC(10,2)`, `money_out NUMERIC(10,2)`, `created_at`, `updated_at`. Two indexes on `group_id` and `entry_date`.
+
+### Backend routes (in `groups.js`)
+
+| Route | Privilege check |
+|-------|----------------|
+| `GET /:id/ledger?from=&to=` | `hasLedgerAccess(req, groupId, 'view')` |
+| `POST /:id/ledger` | `hasLedgerAccess(req, groupId, 'create')` |
+| `PATCH /:id/ledger/:entryId` | `hasLedgerAccess(req, groupId, 'change')` |
+| `DELETE /:id/ledger/:entryId` | `hasLedgerAccess(req, groupId, 'delete')` |
+| `GET /:id/ledger/download` | `hasLedgerAccess(req, groupId, 'download')` |
+
+`GET /ledger` returns `{ broughtForward: number, entries: [...] }`. `broughtForward` is the net balance of entries BEFORE the `from` date, computed server-side.
+
+`hasLedgerAccess(req, groupId, action)` — checks `group_ledger_all:action` OR (`group_ledger_as_leader:action` AND user's linked member is a leader of that group via a DB join).
+
+The download route generates an Excel file using `exceljs` with a running balance column.
+
+### Frontend component
+
+`GroupLedger` — defined as a top-level function in `GroupRecord.jsx` (not nested). Shows:
+- Date range filter (From/To, defaulting to current calendar year Jan 1–Dec 31)
+- Table: Brought Forward row | entries with Date, Payee, Detail, In, Out, Running Balance columns | edit/delete links
+- Inline edit form (expands the row in place)
+- Add Transaction form at bottom
+
+### Privilege resources
+
+`group_ledger_all` and `group_ledger_as_leader`, each with actions `view`, `create`, `change`, `delete`, `download`.
+
+- **Administration** and **Groups Co-ordinator** get `group_ledger_all` (all actions)
+- **Group Leader** gets `group_ledger_as_leader` (view, create, change, delete — no download)
+
+### `requestBlob` export
+
+`frontend/src/lib/api.js` exports `requestBlob` (was previously a private function). Import it directly for blob downloads.
+
+### Beacon privkey mapping for group ledger
+
+- `$pGROUPLEDGER = 1510` → `group_ledger_all`
+- `$pGROUPLEDGERASLEADER = 1520` → `group_ledger_as_leader`

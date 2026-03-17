@@ -277,6 +277,24 @@ CREATE INDEX IF NOT EXISTS :schema_idx_group_events_date  ON :schema.group_event
 ALTER TABLE :schema.group_events ADD COLUMN IF NOT EXISTS topic TEXT;
 
 -- ─────────────────────────────────────────────
+-- GROUP LEDGER ENTRIES  (doc 5.5 — separate from Finance Ledger)
+-- ─────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS :schema.group_ledger_entries (
+  id          TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
+  group_id    TEXT NOT NULL REFERENCES :schema.groups(id) ON DELETE CASCADE,
+  entry_date  DATE NOT NULL,
+  payee       TEXT,
+  detail      TEXT,
+  money_in    NUMERIC(10,2),
+  money_out   NUMERIC(10,2),
+  created_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at  TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS :schema_idx_gle_group ON :schema.group_ledger_entries (group_id);
+CREATE INDEX IF NOT EXISTS :schema_idx_gle_date  ON :schema.group_ledger_entries (entry_date);
+
+-- ─────────────────────────────────────────────
 -- TENANT SETTINGS  (single-row table)
 -- ─────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS :schema.tenant_settings (
