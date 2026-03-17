@@ -12,6 +12,7 @@ import { hashPassword } from '../utils/password.js';
 import { AppError } from '../middleware/errorHandler.js';
 import { createTenantSchema } from '../seed/createTenant.js';
 import { clearTenantData, resetSequences, restoreBeacon2, restoreBeacon, BEACON_DEFAULT_PASSWORD } from './backup.js';
+import { syncDefaultRolePrivileges } from '../utils/migrate.js';
 import ExcelJS from 'exceljs';
 
 const router = Router();
@@ -153,6 +154,12 @@ router.post('/restore/:tenantSlug', upload.single('backup'), async (req, res, ne
         await resetSequences(tx);
       }
     }, { timeout: 300_000 });
+
+    // Ensure default-named roles (Administration, Treasurer, etc.) have their
+    // canonical privileges.  For Beacon restores this is essential because the
+    // Beacon export has no privileges sheet — roles are created but empty.
+    // For Beacon2 restores it fills any gaps from backups predating new resources.
+    await syncDefaultRolePrivileges(tenantSlug);
 
     const msg = format === 'beacon'
       ? `Restore complete (migrated from Beacon).\nImported users have been given the temporary password: ${BEACON_DEFAULT_PASSWORD}\nPlease ask each user to change their password after first login.`
