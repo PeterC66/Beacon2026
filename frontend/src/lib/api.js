@@ -324,8 +324,9 @@ export const offices = {
 
 // ─── Backup ────────────────────────────────────────────────────────────────
 
-/** Download an export as a blob (sends auth header, triggers browser download) */
-async function requestBlob(path, filename) {
+/** Download an export as a blob (sends auth header, triggers browser download).
+ *  Filename is read from the server's Content-Disposition header. */
+async function requestBlob(path) {
   const headers = {
     ...(accessToken && { Authorization: `Bearer ${accessToken}` }),
     ...(tenantSlug  && { 'x-tenant-slug': tenantSlug }),
@@ -334,6 +335,12 @@ async function requestBlob(path, filename) {
   if (!res.ok) {
     const body = await res.json().catch(() => ({}));
     throw new ApiError(body.error ?? `HTTP ${res.status}`, res.status, body);
+  }
+  let filename = 'download.xlsx';
+  const cd = res.headers.get('Content-Disposition');
+  if (cd) {
+    const m = cd.match(/filename="([^"]+)"/);
+    if (m) filename = m[1];
   }
   const blob = await res.blob();
   const url  = URL.createObjectURL(blob);
@@ -362,26 +369,6 @@ async function requestMultipart(path, formData) {
   return res.json();
 }
 
-const EXPORT_FILENAMES = {
-  members:  'members_and_addresses',
-  finance:  'finance_ledger_with_detail',
-  groups:   'groups_members_venues_faculties',
-  calendar: 'calendar',
-  system:   'system_users_roles_privileges',
-  officers: 'u3a_officers',
-  settings: 'site_settings_and_setup',
-  all:      'beacon2_backup_all_data',
-};
-
 export const backup = {
-  export: (type) => {
-    const date = new Date().toISOString().slice(0, 10);
-    const base = EXPORT_FILENAMES[type] || type;
-    return requestBlob(`/backup/export?type=${type}`, `${base}_${date}.xlsx`);
-  },
-  restore: (file) => {
-    const form = new FormData();
-    form.append('backup', file);
-    return requestMultipart('/backup/restore', form);
-  },
+  export: (type) => requestBlob(`/backup/export?type=${type}`),
 };

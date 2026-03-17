@@ -7,7 +7,7 @@ import { system } from '../../lib/api.js';
 import SortableHeader from '../../components/SortableHeader.jsx';
 import { useSortedData } from '../../hooks/useSortedData.js';
 
-const EMPTY_FORM = { name: '', slug: '', adminEmail: '', adminName: '', adminPassword: '' };
+const EMPTY_FORM = { name: '', slug: '', adminEmail: '', adminName: '', adminPassword: '', adminUsername: '' };
 
 export default function SystemDashboard() {
   const navigate  = useNavigate();
@@ -232,6 +232,17 @@ export default function SystemDashboard() {
                   <input name="adminEmail" type="email" value={form.adminEmail} onChange={handleChange} required
                     className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
                 </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Username</label>
+                <input name="adminUsername" value={form.adminUsername}
+                  onChange={(e) => setForm((f) => ({ ...f, adminUsername: e.target.value.toLowerCase().replace(/[^a-z0-9]/g, '') }))}
+                  required pattern="[a-z0-9]+"
+                  title="Lowercase letters and numbers only"
+                  placeholder="e.g. jsmith"
+                  className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                <p className="text-xs text-slate-400 mt-1">Used to log in. Lowercase letters and numbers only.</p>
               </div>
 
               <div>

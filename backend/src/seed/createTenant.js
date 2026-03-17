@@ -20,9 +20,9 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
  *  4. Seed default roles with their default privileges
  *  5. Create the first admin user
  *
- * @param {{ name, slug, adminEmail, adminName, adminPassword }} params
+ * @param {{ name, slug, adminEmail, adminName, adminPassword, adminUsername }} params
  */
-export async function createTenantSchema({ name, slug, adminEmail, adminName, adminPassword }) {
+export async function createTenantSchema({ name, slug, adminEmail, adminName, adminPassword, adminUsername }) {
   // 1. Create the tenant record
   const tenant = await prisma.sysTenant.create({ data: { name, slug } });
 
@@ -95,8 +95,8 @@ export async function createTenantSchema({ name, slug, adminEmail, adminName, ad
   const passwordHash = await hashPassword(adminPassword);
   const [user] = await tenantQuery(
     slug,
-    `INSERT INTO users (email, name, password_hash, active) VALUES ($1, $2, $3, true) RETURNING id`,
-    [adminEmail.toLowerCase(), adminName, passwordHash],
+    `INSERT INTO users (email, username, name, password_hash, active) VALUES ($1, $2, $3, $4, true) RETURNING id`,
+    [adminEmail.toLowerCase(), adminUsername ?? null, adminName, passwordHash],
   );
 
   // Find Administration role and assign it
