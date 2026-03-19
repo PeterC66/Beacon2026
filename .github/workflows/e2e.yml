@@ -8,7 +8,7 @@
 # Required repository secrets (Settings → Secrets and variables → Actions):
 #   BEACON2_BASE_URL             — frontend URL  e.g. https://beacon2.onrender.com
 #   BEACON2_API_URL              — backend URL   e.g. https://beacon2-api.onrender.com
-#   BEACON2_SYSADMIN_USERNAME    — system-admin username
+#   BEACON2_SYSADMIN_EMAIL       — system-admin email address
 #   BEACON2_SYSADMIN_PASSWORD    — system-admin password
 #   BEACON2_TEST_ADMIN_PASSWORD  — password for the dedicated E2E test tenant admin
 #
@@ -47,7 +47,7 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
           cache: 'npm'
           cache-dependency-path: e2e/package-lock.json
 
@@ -64,7 +64,7 @@ jobs:
         env:
           BEACON2_BASE_URL:             ${{ secrets.BEACON2_BASE_URL }}
           BEACON2_API_URL:              ${{ secrets.BEACON2_API_URL }}
-          BEACON2_SYSADMIN_USERNAME:    ${{ secrets.BEACON2_SYSADMIN_USERNAME }}
+          BEACON2_SYSADMIN_EMAIL:       ${{ secrets.BEACON2_SYSADMIN_EMAIL }}
           BEACON2_SYSADMIN_PASSWORD:    ${{ secrets.BEACON2_SYSADMIN_PASSWORD }}
           BEACON2_TEST_ADMIN_PASSWORD:  ${{ secrets.BEACON2_TEST_ADMIN_PASSWORD }}
           # Optional overrides — leave unset to use the defaults in global-setup.js
