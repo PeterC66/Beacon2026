@@ -1419,3 +1419,88 @@ Fallback: user's email from `users` table if no member is linked.
 ### Privilege resources (already existed)
 
 `email:view/send`, `email_delivery:view/all`, `email_standard_messages:view/create/change/delete`, `email_addresses:download` — all granted to Administration role.
+
+---
+
+## Download filename standard (March 2026)
+
+**All download endpoints must include the tenant name as the first segment of the filename.**
+
+Use this pattern:
+```js
+const tenantPart = req.user.tenantSlug.replace(/^u3a_/, ''); // e.g. 'oxford_u3a'
+const stamp = new Date().toISOString().slice(0, 10);          // YYYY-MM-DD
+const filename = `${tenantPart}_${type}_${stamp}.xlsx`;
+```
+
+This was standardised in March 2026. The routes already following this pattern:
+- `addressExport.js` — uses `slugPart` (same derivation, uses `-` separator)
+- `backup.js` — uses display name from tenant_settings
+- `finance.js` — Financial Statement, Groups Statement (fixed March 2026)
+- `groups.js` — Group Ledger, Group Members download (fixed/added March 2026)
+- `members.js` — Members download (added March 2026)
+
+---
+
+## Unsaved changes warning — `useUnsavedChanges` hook (March 2026)
+
+**Every full-page edit form must use `useUnsavedChanges` to warn the user before navigating away with unsaved data.**
+
+The hook is at `frontend/src/hooks/useUnsavedChanges.js`. It handles both in-app (React Router) and browser-level (`beforeunload`) navigation.
+
+### Usage
+
+```js
+import { useUnsavedChanges } from '../../hooks/useUnsavedChanges.js';
+
+const { markDirty, markClean } = useUnsavedChanges();
+
+// Call markDirty() in any field change handler:
+function set(field, value) { markDirty(); setForm((prev) => ({ ...prev, [field]: value })); }
+
+// Call markClean() on successful save or cancel, BEFORE any navigate():
+markClean();
+setForm(EMPTY);
+// or
+markClean();
+navigate('/somewhere');
+```
+
+### Which forms use it
+
+As of March 2026: `MemberEditor`, `SystemSettings`, `TransactionEditor`, `RoleEditor`, `VenueEditor`, `UserEditor`, `MemberClassEditor`, `GroupRecord` (GroupDetails), `PersonalPreferences`, `TransferMoney`.
+
+### Pages that do NOT need it
+
+- Pure list pages (MemberList, GroupList, etc.)
+- Inline table edit rows (FinanceAccounts, OfficerList, FacultyList — short inline edits, no navigation risk)
+- Filter/report pages (AuditLog, FinancialStatement, etc.)
+
+---
+
+## Member list, Group Members, and Officers — select + email + download (March 2026)
+
+### Pattern for list pages with email + download
+
+All three list pages follow the same pattern:
+
+1. **Selection** — `const [selected, setSelected] = useState(new Set())` keyed by member/office ID
+2. **Select controls** — "Select All / Clear / Email only / Without email" buttons above the table
+3. **Checkbox column** — leftmost column in the table
+4. **Bulk action bar** — visible when `selected.size > 0`; contains Send Email button and/or download options
+5. **Send Email** — stores selected member IDs in `sessionStorage.emailComposeMemberIds`, navigates to `/email/compose`
+
+### Download field picker
+
+Both MemberList and GroupMembers expose a field picker (array of checkboxes) before downloading. Defaults are pre-ticked. The field list is defined as a module-level constant (`DOWNLOAD_FIELDS` / `GROUP_DL_FIELDS`).
+
+### Backend download endpoints
+
+- `GET /members/download?format=excel|pdf|email-csv&ids=...&fields=...` — requires `members_list:view`
+- `GET /groups/:id/members/download?format=excel|pdf&ids=...&fields=...` — requires `group_records_all:view`
+
+PDF output uses pdfkit in landscape A4. Excel uses ExcelJS. Email CSV is plain text (one email per line).
+
+### Officers email (OfficerList)
+
+Officers list has checkboxes + "Select" column header toggle + Send E-mail button. Only non-vacant offices (those with a `member_id`) are selectable. The send stores the officer's linked **member_id** (not the office ID) in sessionStorage.

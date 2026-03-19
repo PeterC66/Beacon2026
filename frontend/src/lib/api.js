@@ -198,6 +198,10 @@ export const members = {
   renew:           (data)    => request('/members/renew', { method: 'POST', body: JSON.stringify(data) }),
   listNonRenewals: (mode)    => request(`/members/non-renewals?mode=${mode}`),
   lapse:           (memberIds) => request('/members/lapse', { method: 'POST', body: JSON.stringify({ memberIds }) }),
+  download: (format, ids, fields) => {
+    const qs = new URLSearchParams({ format, ids: ids.join(','), fields: fields.join(',') });
+    return requestBlob(`/members/download?${qs}`);
+  },
   create:   (data, confirmed) =>
     request(`/members${confirmed ? '?confirmed=1' : ''}`, { method: 'POST', body: JSON.stringify(data) }),
   update:   (id, data)        => request(`/members/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
@@ -249,6 +253,10 @@ export const groups = {
   addMember:    (id, data)           => request(`/groups/${id}/members`, { method: 'POST', body: JSON.stringify(data) }),
   updateMember: (id, memberId, data) => request(`/groups/${id}/members/${memberId}`, { method: 'PATCH', body: JSON.stringify(data) }),
   removeMember: (id, memberId)       => request(`/groups/${id}/members/${memberId}`, { method: 'DELETE' }),
+  downloadMembers: (id, format, ids, fields) => {
+    const qs = new URLSearchParams({ format, ids: ids.join(','), fields: fields.join(',') });
+    return requestBlob(`/groups/${id}/members/download?${qs}`);
+  },
 
   listEvents:   (id)             => request(`/groups/${id}/events`),
   createEvents: (id, data)       => request(`/groups/${id}/events`, { method: 'POST', body: JSON.stringify(data) }),

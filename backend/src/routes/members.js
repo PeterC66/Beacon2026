@@ -2,6 +2,8 @@
 
 import { Router } from 'express';
 import { z } from 'zod';
+import ExcelJS from 'exceljs';
+import PDFDocument from 'pdfkit';
 import { requireAuth } from '../middleware/auth.js';
 import { requirePrivilege } from '../middleware/requirePrivilege.js';
 import { tenantQuery } from '../utils/db.js';
@@ -567,6 +569,133 @@ router.get('/validate', requirePrivilege('member_data_validation', 'view'), asyn
   } catch (err) {
     next(err);
   }
+});
+
+// ─── GET /members/download ────────────────────────────────────────────────
+// Download selected members as Excel, PDF, or email-CSV.
+// Query params: format (excel|pdf|email-csv), ids (comma-separated), fields (comma-separated)
+
+const MEMBER_FIELD_DEFS = {
+  membership_number: { label: 'Membership No', get: (m) => String(m.membership_number ?? '') },
+  title:        { label: 'Title',       get: (m) => m.title ?? '' },
+  forenames:    { label: 'Forenames',   get: (m) => m.forenames ?? '' },
+  known_as:     { label: 'Known As',    get: (m) => m.known_as ?? '' },
+  surname:      { label: 'Surname',     get: (m) => m.surname ?? '' },
+  email:        { label: 'Email',       get: (m) => m.email ?? '' },
+  mobile:       { label: 'Mobile',      get: (m) => m.mobile ?? '' },
+  telephone:    { label: 'Telephone',   get: (m) => m.telephone ?? '' },
+  address:      { label: 'Address',     get: (m) => [m.house_no, m.street, m.add_line1, m.add_line2].filter(Boolean).join(', ') },
+  town:         { label: 'Town',        get: (m) => m.town ?? '' },
+  county:       { label: 'County',      get: (m) => m.county ?? '' },
+  postcode:     { label: 'Postcode',    get: (m) => m.postcode ?? '' },
+  country:      { label: 'Country',     get: (m) => m.country ?? '' },
+  status:       { label: 'Status',      get: (m) => m.status ?? '' },
+  class:        { label: 'Class',       get: (m) => m.class ?? '' },
+  joined_on:    { label: 'Joined',      get: (m) => m.joined_on    ? String(m.joined_on).slice(0, 10)    : '' },
+  next_renewal: { label: 'Next Renewal',get: (m) => m.next_renewal ? String(m.next_renewal).slice(0, 10) : '' },
+};
+
+function buildMemberPdf(rows, cols, title) {
+  const PAGE_W = 841.89; const PAGE_H = 595.28; // A4 landscape
+  const MARGIN = 36; const FONT_SZ = 7; const ROW_H = 13;
+  const usableW = PAGE_W - MARGIN * 2;
+  const colW = usableW / cols.length;
+
+  const doc = new PDFDocument({ margin: MARGIN, size: 'A4', layout: 'landscape', autoFirstPage: true });
+
+  function drawHeader(y) {
+    doc.font('Helvetica-Bold').fontSize(FONT_SZ);
+    cols.forEach((f, idx) => {
+      doc.text(MEMBER_FIELD_DEFS[f].label, MARGIN + idx * colW, y, { width: colW - 3, lineBreak: false, ellipsis: true });
+    });
+    return y + ROW_H;
+  }
+
+  let y = MARGIN + 4;
+  doc.font('Helvetica-Bold').fontSize(9).text(title, MARGIN, y, { lineBreak: false });
+  y += 16;
+  y = drawHeader(y);
+  doc.moveTo(MARGIN, y - 2).lineTo(PAGE_W - MARGIN, y - 2).strokeColor('#aaaaaa').stroke();
+
+  doc.font('Helvetica').fontSize(FONT_SZ);
+  for (const m of rows) {
+    if (y + ROW_H > PAGE_H - MARGIN) {
+      doc.addPage({ size: 'A4', layout: 'landscape' });
+      y = MARGIN + 4;
+      y = drawHeader(y);
+      doc.moveTo(MARGIN, y - 2).lineTo(PAGE_W - MARGIN, y - 2).strokeColor('#aaaaaa').stroke();
+      doc.font('Helvetica').fontSize(FONT_SZ);
+    }
+    cols.forEach((f, idx) => {
+      doc.text(MEMBER_FIELD_DEFS[f].get(m), MARGIN + idx * colW, y, { width: colW - 3, lineBreak: false, ellipsis: true });
+    });
+    y += ROW_H;
+  }
+  doc.end();
+  return doc;
+}
+
+router.get('/download', requirePrivilege('members_list', 'view'), async (req, res, next) => {
+  try {
+    const { format = 'excel', ids = '', fields = '' } = req.query;
+    const slug = req.user.tenantSlug;
+    const memberIds = ids.split(',').map((s) => s.trim()).filter(Boolean);
+    if (!memberIds.length) throw AppError('No member IDs provided.', 400);
+
+    const rows = await tenantQuery(slug,
+      `SELECT m.id, m.membership_number, m.title, m.forenames, m.surname, m.known_as,
+              m.email, m.mobile,
+              ms.name AS status, mc.name AS class,
+              a.house_no, a.street, a.add_line1, a.add_line2,
+              a.town, a.county, a.postcode, a.country, a.telephone,
+              m.joined_on, m.next_renewal
+       FROM members m
+       LEFT JOIN member_statuses ms ON ms.id = m.status_id
+       LEFT JOIN member_classes  mc ON mc.id = m.class_id
+       LEFT JOIN addresses        a ON a.id  = m.address_id
+       WHERE m.id = ANY($1::text[])
+       ORDER BY m.surname, m.forenames`,
+      [memberIds],
+    );
+
+    const tenantPart = slug.replace(/^u3a_/, '');
+    const stamp = new Date().toISOString().slice(0, 10);
+
+    if (format === 'email-csv') {
+      const content = rows.map((m) => m.email).filter(Boolean).join('\n');
+      res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+      res.setHeader('Content-Disposition', `attachment; filename="${tenantPart}_member_emails_${stamp}.csv"`);
+      return res.send(content);
+    }
+
+    const activeCols = fields.split(',').map((s) => s.trim()).filter((f) => f && MEMBER_FIELD_DEFS[f]);
+    const cols = activeCols.length ? activeCols : Object.keys(MEMBER_FIELD_DEFS);
+
+    if (format === 'excel') {
+      const wb = new ExcelJS.Workbook();
+      const ws = wb.addWorksheet('Members');
+      ws.columns = cols.map((f) => ({ header: MEMBER_FIELD_DEFS[f].label, width: 20 }));
+      ws.getRow(1).font = { bold: true };
+      for (const m of rows) ws.addRow(cols.map((f) => MEMBER_FIELD_DEFS[f].get(m)));
+      res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+      res.setHeader('Content-Disposition', `attachment; filename="${tenantPart}_members_${stamp}.xlsx"`);
+      await wb.xlsx.write(res);
+      return res.end();
+    }
+
+    if (format === 'pdf') {
+      const doc = buildMemberPdf(rows, cols, `Members — ${stamp}`);
+      const chunks = [];
+      doc.on('data', (c) => chunks.push(c));
+      await new Promise((resolve) => doc.on('end', resolve));
+      const buf = Buffer.concat(chunks);
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader('Content-Disposition', `attachment; filename="${tenantPart}_members_${stamp}.pdf"`);
+      return res.send(buf);
+    }
+
+    throw AppError('Invalid format.', 400);
+  } catch (err) { next(err); }
 });
 
 // ─── GET /members/:id/groups ──────────────────────────────────────────────
