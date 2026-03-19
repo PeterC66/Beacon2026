@@ -41,6 +41,10 @@ import RecentMembers      from './pages/members/RecentMembers.jsx';
 import MemberStatistics   from './pages/members/MemberStatistics.jsx';
 import MembershipRenewals from './pages/membership/MembershipRenewals.jsx';
 import NonRenewals        from './pages/membership/NonRenewals.jsx';
+import EmailCompose        from './pages/email/EmailCompose.jsx';
+import EmailDelivery       from './pages/email/EmailDelivery.jsx';
+import EmailDeliveryDetail from './pages/email/EmailDeliveryDetail.jsx';
+import EmailUnblocker      from './pages/email/EmailUnblocker.jsx';
 
 function ProtectedRoute({ children }) {
   const { isLoggedIn } = useAuth();
@@ -102,6 +106,10 @@ export default function App() {
           <Route path="/officers"                            element={<ProtectedRoute><OfficerList /></ProtectedRoute>} />
           <Route path="/backup"                              element={<ProtectedRoute><DataBackup /></ProtectedRoute>} />
           <Route path="/preferences"                         element={<ProtectedRoute><PersonalPreferences /></ProtectedRoute>} />
+          <Route path="/email/compose"                       element={<ProtectedRoute><EmailCompose /></ProtectedRoute>} />
+          <Route path="/email/delivery"                      element={<ProtectedRoute><EmailDelivery /></ProtectedRoute>} />
+          <Route path="/email/delivery/:id"                  element={<ProtectedRoute><EmailDeliveryDetail /></ProtectedRoute>} />
+          <Route path="/email/unblocker"                     element={<ProtectedRoute><EmailUnblocker /></ProtectedRoute>} />
         </Routes>
       </BrowserRouter>
     </AuthProvider>

@@ -471,3 +471,41 @@ async function requestMultipart(path, formData) {
 export const backup = {
   export: (type) => requestBlob(`/backup/export?type=${type}`),
 };
+
+// ─── Email ─────────────────────────────────────────────────────────────────
+
+export const email = {
+  getFromAddresses: () => request('/email/from-addresses'),
+
+  listStandardMessages: () => request('/email/standard-messages'),
+  saveStandardMessage:  (data) => request('/email/standard-messages', { method: 'POST', body: JSON.stringify(data) }),
+  deleteStandardMessage:(id)   => request(`/email/standard-messages/${id}`, { method: 'DELETE' }),
+
+  /** Send email. data = { memberIds, subject, body, fromEmail, replyTo, copyToSelf }; attachments = File[] */
+  send: (data, attachments = []) => {
+    if (attachments.length === 0) {
+      // Send as JSON if no attachments
+      return request('/email/send', { method: 'POST', body: JSON.stringify(data) });
+    }
+    // Multipart when attachments present
+    const form = new FormData();
+    form.append('data', JSON.stringify(data));
+    for (const f of attachments) form.append('attachments', f);
+    const headers = {
+      ...(typeof window !== 'undefined' && {}), // no Content-Type — browser sets with boundary
+    };
+    return requestMultipart('/email/send', form);
+  },
+
+  listDelivery: (params = {}) => {
+    const qs = new URLSearchParams();
+    if (params.from) qs.set('from', params.from);
+    if (params.to)   qs.set('to',   params.to);
+    const q = qs.toString();
+    return request(`/email/delivery${q ? '?' + q : ''}`);
+  },
+  getDelivery:        (batchId)  => request(`/email/delivery/${batchId}`),
+  refreshDelivery:    (batchId)  => request(`/email/delivery/${batchId}/refresh`, { method: 'POST' }),
+
+  unblock: (emailAddr) => request('/email/unblocker', { method: 'POST', body: JSON.stringify({ email: emailAddr }) }),
+};

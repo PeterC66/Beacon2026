@@ -492,3 +492,46 @@ CREATE INDEX IF NOT EXISTS :schema_idx_offices_member ON :schema.offices (member
 
 ALTER TABLE :schema.users ADD COLUMN IF NOT EXISTS security_question TEXT;
 ALTER TABLE :schema.users ADD COLUMN IF NOT EXISTS security_answer_hash TEXT;
+
+-- ─── Email batches + recipients ───────────────────────────────────────────
+
+CREATE TABLE IF NOT EXISTS :schema.email_batches (
+  id              TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
+  user_id         TEXT NOT NULL,
+  subject         TEXT NOT NULL,
+  body            TEXT NOT NULL,
+  from_email      TEXT NOT NULL,
+  reply_to        TEXT NOT NULL,
+  recipient_count INTEGER NOT NULL DEFAULT 0,
+  sent_at         TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS :schema_idx_email_batches_user_id ON :schema.email_batches (user_id);
+CREATE INDEX IF NOT EXISTS :schema_idx_email_batches_sent_at ON :schema.email_batches (sent_at DESC);
+
+CREATE TABLE IF NOT EXISTS :schema.email_recipients (
+  id                  TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
+  batch_id            TEXT NOT NULL REFERENCES :schema.email_batches(id) ON DELETE CASCADE,
+  member_id           TEXT,
+  email_address       TEXT NOT NULL,
+  display_name        TEXT NOT NULL DEFAULT '',
+  status              TEXT NOT NULL DEFAULT 'Despatched',
+  sendgrid_message_id TEXT,
+  error_message       TEXT,
+  updated_at          TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS :schema_idx_email_recipients_batch ON :schema.email_recipients (batch_id);
+
+-- ─── Standard email message templates ────────────────────────────────────
+
+CREATE TABLE IF NOT EXISTS :schema.standard_messages (
+  id         TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
+  name       TEXT NOT NULL,
+  subject    TEXT NOT NULL DEFAULT '',
+  body       TEXT NOT NULL DEFAULT '',
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE UNIQUE INDEX IF NOT EXISTS :schema_idx_standard_messages_name ON :schema.standard_messages (name);
