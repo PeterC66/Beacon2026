@@ -11,13 +11,14 @@ beacon2/
 │   ├── src/
 │   │   ├── server.js          Entry point (migrate → seed → listen)
 │   │   ├── app.js             Pure Express app (imported by tests)
-│   │   ├── routes/            auth  users  roles  privileges  system
+│   │   ├── routes/            auth  users  roles  members  groups  finance
+│   │   │                      settings  polls  backup  email  venues  ...
 │   │   ├── middleware/        auth  requirePrivilege  errorHandler
 │   │   ├── services/          authService
-│   │   ├── utils/             db  jwt  password  redis  migrate
+│   │   ├── utils/             db  jwt  password  redis  migrate  audit
 │   │   ├── seed/              system admin + per-tenant defaults
 │   │   └── __tests__/        vitest + supertest (no real DB needed)
-│   ├── prisma/                system-level schema (SysTenant, SysAdmin)
+│   ├── prisma/                system schema + tenant DDL
 │   └── vitest.config.js
 │
 ├── frontend/                  React 18 + Vite 5 + Tailwind CSS 3
@@ -25,10 +26,14 @@ beacon2/
 │   │   ├── App.jsx            Route tree
 │   │   ├── context/           AuthContext (in-memory token)
 │   │   ├── lib/               api.js (auto token refresh)
-│   │   ├── components/        PageHeader  NavBar  BeaconLogo
-│   │   ├── pages/             Login  Home  users/*  roles/*  system/*
+│   │   ├── components/        PageHeader  NavBar  SortableHeader  DateInput
+│   │   ├── hooks/             useSortedData  usePreferences  useUnsavedChanges
+│   │   ├── pages/             Login  Home  members/*  groups/*  finance/*
+│   │   │                      email/*  settings/*  admin/*  misc/*  ...
 │   │   └── __tests__/        vitest + React Testing Library smoke tests
 │   └── vite.config.js         also used as vitest config
+│
+├── e2e/                       Playwright end-to-end tests
 │
 ├── docs/
 │   ├── BeaconUG/              Beacon User Guide pages (Markdown + images)
@@ -37,7 +42,9 @@ beacon2/
 ├── .github/workflows/ci.yml   Runs backend + frontend tests on every push
 ├── render.yaml                Render blueprint (backend + Postgres)
 ├── DEPLOYMENT.md              Step-by-step deployment guide (Render + Vercel)
-└── CLAUDE.md                  Instructions for Claude Code
+├── CLAUDE.md                  Instructions for Claude Code (session workflow)
+├── CLAUDE-STANDARDS.md        Cross-cutting development checklist
+└── CLAUDE-REFERENCE.md        Detailed implementation notes by module
 ```
 
 ## Quick start (local development)
@@ -74,10 +81,10 @@ The frontend expects the API at `VITE_API_URL` (defaults to `http://localhost:30
 ```bash
 cd backend  && npm test   # vitest — no real DB required (fully mocked)
 cd frontend && npm test   # vitest + React Testing Library smoke tests
+cd e2e      && npm test   # Playwright against staging (needs .env)
 ```
 
-CI runs both suites automatically on every push to a `claude/**` branch via
-`.github/workflows/ci.yml`.
+CI runs backend + frontend tests automatically on every push to a `claude/**` branch.
 
 ## Creating a u3a tenant
 
@@ -91,6 +98,7 @@ curl -X POST http://localhost:3001/system/tenants \
     "name": "Oxfordshire u3a",
     "slug": "oxfordshire",
     "adminEmail": "admin@oxfordshireu3a.org",
+    "adminUsername": "admin",
     "adminName": "Site Administrator",
     "adminPassword": "change-me-immediately"
   }'
@@ -105,10 +113,12 @@ resources, creates the five default roles, and sets up the first admin user.
 |---|---|
 | **Multi-tenancy** | Each u3a gets its own PostgreSQL schema (`u3a_<slug>`). All tenant queries go through `tenantQuery()` in `utils/db.js`. |
 | **Auth** | Short-lived JWT access tokens (15 min, in memory) + long-lived refresh tokens in httpOnly cookies. |
-| **Privileges** | Embedded in the JWT at login. Role changes invalidate affected sessions via Redis (or expire naturally after 15 min if Redis is disabled). |
+| **Privileges** | Embedded in the JWT at login. Role changes invalidate affected sessions via Redis (or expire naturally). |
 | **Roles** | Fully configurable per u3a — names, committee flag, and privilege sets can all be edited. |
 | **Validation** | All request bodies validated with Zod before any DB access. |
 | **SQL** | Parameterised queries only — never string concatenation. |
+| **Email** | SendGrid — token substitution, attachments, delivery tracking. |
+| **Export** | ExcelJS (spreadsheets), PDFKit (labels/reports). |
 
 ## Deployment
 
@@ -117,16 +127,35 @@ Render (backend + Postgres) and Vercel (frontend) — no command-line knowledge 
 
 ## Modules implemented
 
-- [x] Authentication (login, logout, token refresh)
-- [x] System admin UI (tenant create / activate / deactivate)
-- [x] Users (CRUD, role assignment)
+- [x] Authentication (username login, token refresh, inactivity timeout)
+- [x] System admin UI (tenant CRUD, restore from backup, set-temp-password)
+- [x] Users (CRUD, role assignment, username-based)
 - [x] Roles (CRUD, privilege matrix editor)
 - [x] Privileges (full resource × action matrix, per role)
+- [x] Members (list, record, add, partner/address sharing, validation)
+- [x] Member classes and statuses (CRUD, monthly fee grid)
+- [x] Membership renewals and non-renewals (bulk operations)
+- [x] Recent members and statistics
+- [x] Addresses export and label printing
+- [x] Groups (list, record, members, schedule, ledger, venues, faculties)
+- [x] Finance (accounts, categories, ledger, transactions, transfers, reconciliation)
+- [x] Financial statement and groups statement
+- [x] Email (compose, templates, delivery tracking, unblocker)
+- [x] Audit log
+- [x] u3a Officers
+- [x] Personal preferences (display, password, security Q&A)
+- [x] Data export & backup / restore (Beacon2 + legacy Beacon format)
+- [x] Polls (setup, member assignment)
+- [x] System settings
 
-## Next modules (suggested order)
+## Remaining modules
 
-1. Members
-2. Groups
-3. Finance
-4. Email
-5. Data migration from Beacon
+- [ ] Membership cards
+- [ ] Calendar
+- [ ] Credit batches
+- [ ] Gift Aid (declaration + log)
+- [ ] Public links
+- [ ] System messages
+- [ ] Letters & documents
+- [ ] Meetings
+- [ ] Members Portal (self-service)
