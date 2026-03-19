@@ -206,3 +206,63 @@ describe('DELETE /members/:id', () => {
     expect(res.status).toBe(404);
   });
 });
+
+// ── GET /members/recent ────────────────────────────────────────────────────
+
+describe('GET /members/recent', () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it('returns 200 with recent members', async () => {
+    tenantQuery.mockResolvedValueOnce([
+      { id: 'm1', forenames: 'John', surname: 'Smith', joined_on: '2026-03-01', class_name: 'Individual', status_name: 'Current' },
+    ]);
+    const res = await request(app)
+      .get('/members/recent?from=2026-03-01&to=2026-03-19')
+      .set('Authorization', AUTH);
+    expect(res.status).toBe(200);
+    expect(res.body).toHaveLength(1);
+    expect(res.body[0].surname).toBe('Smith');
+  });
+
+  it('returns 403 when privilege missing', async () => {
+    const res = await request(app)
+      .get('/members/recent')
+      .set('Authorization', makeAuthHeader({ privileges: [] }));
+    expect(res.status).toBe(403);
+  });
+});
+
+// ── GET /members/statistics ────────────────────────────────────────────────
+
+describe('GET /members/statistics', () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it('returns 200 with statistics', async () => {
+    // settings
+    tenantQuery.mockResolvedValueOnce([{ year_start_month: 1, year_start_day: 1, advance_renewals_weeks: 4, grace_lapse_weeks: 4 }]);
+    // classStats
+    tenantQuery.mockResolvedValueOnce([{ id: 'mc1', name: 'Individual', sort_order: 1, total: 5, with_email: 4, first_year: 2, second_year_plus: 3 }]);
+    // statusCounts
+    tenantQuery.mockResolvedValueOnce([{ current_not_renewed: 1, lapsed_count: 2 }]);
+    // groupStats
+    tenantQuery.mockResolvedValueOnce([{ active_groups: 3, avg_members: '8.5' }]);
+    // notInGroup
+    tenantQuery.mockResolvedValueOnce([{ count: 2 }]);
+    // renewStats
+    tenantQuery.mockResolvedValueOnce([{ id: 'mc1', name: 'Individual', sort_order: 1, not_renewed: 1, new_members: 2 }]);
+
+    const res = await request(app)
+      .get('/members/statistics')
+      .set('Authorization', AUTH);
+    expect(res.status).toBe(200);
+    expect(res.body.activeGroups).toBe(3);
+    expect(res.body.totalCurrent).toBe(5);
+  });
+
+  it('returns 403 when privilege missing', async () => {
+    const res = await request(app)
+      .get('/members/statistics')
+      .set('Authorization', makeAuthHeader({ privileges: [] }));
+    expect(res.status).toBe(403);
+  });
+});

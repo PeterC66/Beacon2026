@@ -1133,3 +1133,33 @@ When a new Beacon2 feature is built, add a new spec (or extend an existing one) 
 2. Imports `{ test, expect }` from `../fixtures/admin.js`.
 3. Uses the `adminPage` fixture.
 4. If setup seed data is needed, add it to `global-setup.js`.
+
+---
+
+## Recent Members and Statistics (March 2026 — doc 4.4 and 4.9)
+
+### Membership year start setting
+
+`tenant_settings` now has `year_start_month INTEGER DEFAULT 1` and `year_start_day INTEGER DEFAULT 1` (added via safe `ALTER TABLE ... ADD COLUMN IF NOT EXISTS`). These are exposed in `GET/PATCH /settings` and editable in the Membership Year & Fees section of SystemSettings.
+
+The statistics backend computes the current membership year start date from these: if `month/day` is in the future this calendar year, use last year; otherwise use this year.
+
+### Statistics backend (GET /members/statistics)
+
+Returns six parallel queries combined into one JSON response:
+1. Settings (year start, advance weeks, grace weeks)
+2. `classStats` — per-class counts for current members (total, with_email, first_year, second_year_plus)
+3. `statusCounts` — current_not_renewed (next_renewal < year_start), lapsed_count
+4. `groupStats` — active_groups, avg_members
+5. `notInGroup` — current members with no active group membership
+6. `renewStats` — per-class not_renewed and new_members for the from/to date range
+
+Current members are identified by `status ILIKE '%Current%'`; lapsed by `status ILIKE '%Lapsed%'`.
+
+### Route ordering note
+
+`GET /members/recent` and `GET /members/statistics` must be placed **above** `GET /members/:id` in the router, just like `/validate`. This is already the case.
+
+### Frontend test: multiple instances of "Recent Members"
+
+"Recent Members" appears in both the NavBar breadcrumb and the `<h1>`, so use `getAllByText(...).length > 0` not `getByText(...)` in tests. The same principle applies to "Statistics" if it appears in multiple places.
