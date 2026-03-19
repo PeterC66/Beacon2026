@@ -15,11 +15,13 @@ const btnDanger  = 'border border-red-300 text-red-600 hover:bg-red-50 rounded p
 
 export default function FinanceAccounts() {
   const { can, tenant } = useAuth();
-  const [accounts, setAccounts]     = useState([]);
-  const [loading,  setLoading]      = useState(true);
-  const [error,    setError]        = useState(null);
-  const [newName,  setNewName]      = useState('');
-  const [adding,   setAdding]       = useState(false);
+  const [accounts,  setAccounts]    = useState([]);
+  const [loading,   setLoading]     = useState(true);
+  const [error,     setError]       = useState(null);
+  const [newName,   setNewName]     = useState('');
+  const [adding,    setAdding]      = useState(false);
+  const [editBF,    setEditBF]      = useState({});    // { accountId: '123.45' }
+  const [savingBF,  setSavingBF]    = useState(null);  // accountId being saved
 
   useEffect(() => { load(); }, []);
 
@@ -48,6 +50,18 @@ export default function FinanceAccounts() {
       const updated = await financeApi.updateAccount(acc.id, { active: !acc.active });
       setAccounts((prev) => prev.map((a) => a.id === acc.id ? { ...a, ...updated } : a));
     } catch (err) { alert(err.message); }
+  }
+
+  async function handleSaveBF(acc) {
+    const val = parseFloat(editBF[acc.id]);
+    if (isNaN(val)) return;
+    setSavingBF(acc.id);
+    try {
+      const updated = await financeApi.updateAccount(acc.id, { balance_brought_forward: val });
+      setAccounts((prev) => prev.map((a) => a.id === acc.id ? { ...a, ...updated } : a));
+      setEditBF((prev) => { const n = { ...prev }; delete n[acc.id]; return n; });
+    } catch (err) { alert(err.message); }
+    finally { setSavingBF(null); }
   }
 
   async function handleDelete(acc) {
@@ -84,13 +98,14 @@ export default function FinanceAccounts() {
                 <tr className="bg-slate-50 border-b border-slate-200 text-left text-slate-600 italic font-normal">
                   <th className="px-4 py-2.5 font-normal">Account</th>
                   <th className="px-4 py-2.5 font-normal text-center">Active</th>
+                  <th className="px-4 py-2.5 font-normal text-right">Balance b/f (£)</th>
                   <th className="px-4 py-2.5"></th>
                   <th className="px-4 py-2.5"></th>
                 </tr>
               </thead>
               <tbody>
                 {accounts.length === 0 && (
-                  <tr><td colSpan={4} className="px-4 py-4 text-center text-slate-400">No accounts yet.</td></tr>
+                  <tr><td colSpan={5} className="px-4 py-4 text-center text-slate-400">No accounts yet.</td></tr>
                 )}
                 {accounts.map((acc, i) => (
                   <tr key={acc.id} className={`border-b border-slate-100 ${i % 2 === 0 ? 'bg-yellow-50' : 'bg-white'}`}>
@@ -105,6 +120,32 @@ export default function FinanceAccounts() {
                         disabled={!canChange || acc.locked}
                         className="w-4 h-4 accent-blue-600"
                       />
+                    </td>
+                    <td className="px-4 py-2.5 text-right">
+                      {canChange ? (
+                        editBF[acc.id] !== undefined ? (
+                          <span className="flex items-center justify-end gap-1">
+                            <input type="number" step="0.01"
+                              value={editBF[acc.id]}
+                              onChange={(e) => setEditBF((prev) => ({ ...prev, [acc.id]: e.target.value }))}
+                              className="border border-slate-300 rounded px-2 py-0.5 text-sm w-24 text-right focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            />
+                            <button onClick={() => handleSaveBF(acc)} disabled={savingBF === acc.id}
+                              className="text-xs text-blue-600 hover:underline">save</button>
+                            <button onClick={() => setEditBF((p) => { const n={...p}; delete n[acc.id]; return n; })}
+                              className="text-xs text-slate-400 hover:text-slate-600">✕</button>
+                          </span>
+                        ) : (
+                          <button onClick={() => setEditBF((p) => ({ ...p, [acc.id]: String(acc.balance_brought_forward ?? 0) }))}
+                            className="font-mono text-sm text-slate-700 hover:underline">
+                            {Number(acc.balance_brought_forward ?? 0).toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                          </button>
+                        )
+                      ) : (
+                        <span className="font-mono text-sm">
+                          {Number(acc.balance_brought_forward ?? 0).toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        </span>
+                      )}
                     </td>
                     <td className="px-4 py-2.5">
                       {canChange && (
