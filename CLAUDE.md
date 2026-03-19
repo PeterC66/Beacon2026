@@ -1324,3 +1324,98 @@ Both added via safe `ALTER TABLE … ADD COLUMN IF NOT EXISTS`.
 ### Financial year — existing settings
 
 The financial year start (`year_start_month`, `year_start_day`) already existed in `tenant_settings`. No new columns were needed for the financial statement feature.
+
+---
+
+## Email (docs 6.1–6.1.5) (March 2026)
+
+### Architecture
+
+- Backend: `backend/src/routes/email.js` — mounted at `/email` in `app.js`
+- Token utility: `backend/src/utils/emailTokens.js`
+- SendGrid package: `@sendgrid/mail` (installed in backend); env var `SENDGRID_API_KEY`
+- From address: always `noreply@u3abeacon.org.uk`; Reply-To = sender's chosen address
+
+### DB tables
+
+| Table | Notes |
+|-------|-------|
+| `email_batches` | One row per Send click; stores user_id, subject, body, from_email, reply_to, recipient_count, sent_at |
+| `email_recipients` | One row per recipient; stores status, sendgrid_message_id |
+| `standard_messages` | Named templates; name has UNIQUE index (upsert on save) |
+
+### Token substitution (`emailTokens.js`)
+
+Case-insensitive replacement. Supported tokens:
+
+| Token | Source field |
+|-------|-------------|
+| `#FAM` | `known_as` or first word of `forenames` |
+| `#FORENAME` | `forenames` |
+| `#SURNAME` | `surname` |
+| `#TITLE` | `title` |
+| `#MEMNO` | `membership_number` |
+| `#U3ANAME` | tenant display name from `tenant_settings` |
+| `#EMAIL` | `email` |
+| `#TELEPHONE` | `addresses.telephone` (shared) |
+| `#MOBILE` | `mobile` |
+| `#ADDRESSV` | address lines joined with `\n` |
+| `#RENEW` | `next_renewal` as DD/MM/YYYY |
+| `#MEMCLASS` | member class name |
+| `#AFFILIATION` | `home_u3a` |
+| `#EMERGENCY` | '' (not yet in schema) |
+| `#PFAM` … `#PMOBILE` | Partner equivalents |
+
+### Backend routes
+
+| Route | Privilege | Notes |
+|-------|-----------|-------|
+| `GET /email/from-addresses` | `email:send` | Member email + office emails for the logged-in user |
+| `GET /email/standard-messages` | `email_standard_messages:view` | List templates |
+| `POST /email/standard-messages` | `email_standard_messages:create` | Upsert by name |
+| `DELETE /email/standard-messages/:id` | `email_standard_messages:delete` | |
+| `POST /email/send` | `email:send` | Multipart (with attachments) or JSON (without) |
+| `GET /email/delivery` | `email_delivery:view` | Own batches; all batches if has `email_delivery:all` |
+| `GET /email/delivery/:batchId` | `email_delivery:view` | Batch + recipients |
+| `POST /email/delivery/:batchId/refresh` | `email_delivery:view` | Re-query SendGrid Activity Feed API |
+| `POST /email/unblocker` | `email_delivery:all` | Remove address from SendGrid bounce + spam lists |
+
+### Send flow
+
+1. Fetch member rows with address + partner data (single JOIN query)
+2. Fetch tenant display name from `tenant_settings`
+3. For each recipient with a valid email: resolve tokens, send via `sgMail.send()`
+4. Store batch + recipient rows; all start as 'Despatched'; failures stored as 'Invalid'
+
+### Attachment handling
+
+`multer.memoryStorage()` — files held in RAM, converted to base64, passed to SendGrid, then discarded. 20 MB total limit. Multer passes through non-multipart requests unchanged (so JSON requests without attachments work via `express.json()` parsing).
+
+### Delivery status refresh
+
+`POST /email/delivery/:batchId/refresh` calls `GET /v3/messages/{msg_id}` on the SendGrid Activity Feed API per recipient. Requires the Email Activity Feed add-on on the SendGrid plan. Degrades gracefully (skips API errors for individual recipients).
+
+### From address selection
+
+`GET /email/from-addresses` looks up:
+1. The user's linked member record email (via `users.member_id`)
+2. Any office emails from `offices` table where `member_id` matches
+
+Fallback: user's email from `users` table if no member is linked.
+
+### Frontend pages
+
+| File | Route | Notes |
+|------|-------|-------|
+| `EmailCompose.jsx` | `/email/compose` | Reads member IDs from `sessionStorage` key `emailComposeMemberIds` |
+| `EmailDelivery.jsx` | `/email/delivery` | Date-filtered list of own batches (last 50) |
+| `EmailDeliveryDetail.jsx` | `/email/delivery/:id` | Per-recipient status with Refresh button |
+| `EmailUnblocker.jsx` | `/email/unblocker` | Admin only (`email_delivery:all`) |
+
+### Integration with member lists
+
+`MemberList.jsx` bulk actions now includes "Send email" (shown when user has `email:send`). Clicking it stores selected IDs in `sessionStorage.emailComposeMemberIds` and navigates to `/email/compose`.
+
+### Privilege resources (already existed)
+
+`email:view/send`, `email_delivery:view/all`, `email_standard_messages:view/create/change/delete`, `email_addresses:download` — all granted to Administration role.
