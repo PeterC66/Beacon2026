@@ -176,7 +176,7 @@ router.get('/statistics', requirePrivilege('membership_statistics', 'view'), asy
     // Section 2: Current members by class
     const classStats = await tenantQuery(
       slug,
-      `SELECT mc.id, mc.name, mc.sort_order,
+      `SELECT mc.id, mc.name,
               COUNT(m.id)::int                                    AS total,
               COUNT(m.id) FILTER (WHERE m.email IS NOT NULL AND m.email <> '')::int AS with_email,
               COUNT(m.id) FILTER (WHERE m.joined_on >= $1::date)::int               AS first_year,
@@ -186,8 +186,8 @@ router.get('/statistics', requirePrivilege('membership_statistics', 'view'), asy
                            AND m.status_id IN (
                                SELECT id FROM member_statuses WHERE name ILIKE '%Current%'
                            )
-       GROUP BY mc.id, mc.name, mc.sort_order
-       ORDER BY mc.sort_order, mc.name`,
+       GROUP BY mc.id, mc.name
+       ORDER BY mc.name`,
       [yearStartIso],
     );
 
@@ -241,7 +241,7 @@ router.get('/statistics', requirePrivilege('membership_statistics', 'view'), asy
 
     const renewStats = await tenantQuery(
       slug,
-      `SELECT mc.id, mc.name, mc.sort_order,
+      `SELECT mc.id, mc.name,
               COUNT(m.id) FILTER (
                 WHERE m.status_id IN (SELECT id FROM member_statuses WHERE name ILIKE '%Current%')
                   AND m.next_renewal IS NOT NULL
@@ -254,8 +254,8 @@ router.get('/statistics', requirePrivilege('membership_statistics', 'view'), asy
               )::int AS new_members
        FROM member_classes mc
        LEFT JOIN members m ON m.class_id = mc.id
-       GROUP BY mc.id, mc.name, mc.sort_order
-       ORDER BY mc.sort_order, mc.name`,
+       GROUP BY mc.id, mc.name
+       ORDER BY mc.name`,
       [fromDate, toDate],
     );
 
