@@ -119,6 +119,11 @@ export default function MemberList() {
 
   async function handleBulkDo() {
     if (selected.size === 0) return;
+    if (bulkAction === 'send_email') {
+      sessionStorage.setItem('emailComposeMemberIds', JSON.stringify([...selected]));
+      navigate('/email/compose');
+      return;
+    }
     if (bulkAction === 'add_to_poll') {
       if (!addToPollId) return;
       setBulkWorking(true);
@@ -353,6 +358,7 @@ export default function MemberList() {
                       className="border border-slate-300 rounded px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                     >
                       <option value="">— choose action —</option>
+                      {can('email', 'send') && <option value="send_email">Send email</option>}
                       {hasBulkPolls && <option value="add_to_poll">Add to poll</option>}
                     </select>
                   </div>

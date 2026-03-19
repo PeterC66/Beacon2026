@@ -40,6 +40,10 @@ export const ALL_PRIVS = [
   'data_export_backup:view', 'data_export_backup:download', 'data_export_backup:restore',
   'addresses_export:view', 'addresses_export:download',
   'address_labels:download',
+  'email:view', 'email:send',
+  'email_delivery:view', 'email_delivery:all',
+  'email_standard_messages:view', 'email_standard_messages:create', 'email_standard_messages:change', 'email_standard_messages:delete',
+  'email_addresses:download',
 ];
 
 export const TEST_TENANT = 'test-u3a';
