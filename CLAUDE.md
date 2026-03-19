@@ -1269,3 +1269,58 @@ the backend directory. The package is declared in `package.json` but was missing
 { label: 'Membership renewals', to: can('membership_renewals', 'view') ? '/membership/renewals' : null },
 { label: 'Non-renewals',        to: can('members_non_renewals', 'view') ? '/membership/non-renewals' : null },
 ```
+
+---
+
+## Transfer Money, Reconcile Account, Financial Statement, Groups Statement (March 2026 — docs 7.3, 7.5, 7.6, 7.7)
+
+### DB additions
+
+- `transactions.transfer_id TEXT` — shared UUID linking two paired transfer transactions
+- `finance_accounts.balance_brought_forward NUMERIC(10,2) DEFAULT 0` — account opening balance before Beacon2 started
+
+Both added via safe `ALTER TABLE … ADD COLUMN IF NOT EXISTS`.
+
+### Transfer Money (7.3)
+
+- Backend: `GET/POST/PATCH/DELETE /finance/transfers` — privilege `finance_transfer_money`
+- A transfer creates two `transactions` rows sharing the same `transfer_id`: type=`out` for from_account, type=`in` for to_account
+- Deleting either leg via `/transfers/:transferId` deletes both; the existing `PATCH /transactions/:id` and `DELETE /transactions/:id` routes return 400 if the transaction has a `transfer_id`
+- Frontend: `TransferMoney.jsx` at `/finance/transfers` — combined form + list page
+- The `listTransfers` query filters `WHERE t_out.type = 'out'` to avoid duplicate rows per transfer
+
+### Reconcile Account (7.5)
+
+- Backend: `GET /finance/reconcile?accountId=` returns `{ account, clearedBalance, uncleared }`
+- `clearedBalance = account.balance_brought_forward + SUM(cleared in - cleared out)`
+- `POST /finance/reconcile` body: `{ accountId, statementDate, transactionIds }` — sets `cleared_at = statementDate`
+- Balance difference is computed client-side; reconcile button available even if diff ≠ 0 (with warning)
+- Frontend: `ReconcileAccount.jsx` at `/finance/reconcile`
+
+### Financial Statement (7.6)
+
+- Backend: `GET /finance/statement?accountId=&year=` and `GET /finance/statement/download?...&format=xlsx`
+- `accountId='all'` combines all active accounts
+- Financial year bounds computed from `tenant_settings.year_start_month/day`; year named by calendar year at start
+- Opening balance = sum of `balance_brought_forward` + net of all transactions before year start
+- Category breakdown uses `transaction_categories JOIN finance_categories`; totals include uncategorized transactions
+- Download uses ExcelJS; outputs Receipts section, Payments section, Balance Sheet
+- Year selector: current year minus 5 years
+- Frontend: `FinancialStatement.jsx` at `/finance/statement`
+- Previous year comparison and membership count deferred per agreed scope
+
+### Groups Statement (7.7)
+
+- Backend: `GET /finance/groups-statement?from=&to=&showTransactions=` and download
+- Queries `group_ledger_entries` (separate from main transactions); figures do NOT link to main Finance Ledger
+- Optional `showTransactions` returns per-group entries as a parallel array
+- Download uses ExcelJS; group rows optionally followed by indented transaction rows; totals row at end
+- Frontend: `GroupsStatement.jsx` at `/finance/groups-statement`
+
+### Finance Accounts — balance b/f
+
+`GET /finance/accounts` now returns `balance_brought_forward`. The `FinanceAccounts.jsx` page has an inline-editable column for it (click the value to edit, save/cancel inline). The `POST` and `PATCH /accounts/:id` routes accept `balance_brought_forward`.
+
+### Financial year — existing settings
+
+The financial year start (`year_start_month`, `year_start_day`) already existed in `tenant_settings`. No new columns were needed for the financial statement feature.
