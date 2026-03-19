@@ -1,8 +1,8 @@
 // beacon2/frontend/src/pages/misc/OfficerList.jsx
 // u3a Officers (offices and post holders) — doc 9.3
-// Email sending is excluded from this implementation.
 
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { offices as officesApi } from '../../lib/api.js';
 import { useAuth } from '../../context/AuthContext.jsx';
 import NavBar from '../../components/NavBar.jsx';
@@ -29,6 +29,7 @@ function holderStyle(status) {
 
 export default function OfficerList() {
   const { can, tenant } = useAuth();
+  const navigate = useNavigate();
   const [list,     setList]     = useState([]);
   const [members,  setMembers]  = useState([]);
   const [loading,  setLoading]  = useState(true);
@@ -38,8 +39,37 @@ export default function OfficerList() {
   const [form,     setForm]     = useState(BLANK);
   const [saving,   setSaving]   = useState(false);
   const [formErr,  setFormErr]  = useState({});
+  const [selected, setSelected] = useState(new Set()); // Set of office ids
 
   const navLinks = [{ label: 'Home', to: '/' }];
+
+  // Only non-vacant offices can be selected for email
+  const selectable = list.filter((o) => o.member_id);
+
+  function toggleAll() {
+    if (selected.size === selectable.length && selectable.length > 0) {
+      setSelected(new Set());
+    } else {
+      setSelected(new Set(selectable.map((o) => o.id)));
+    }
+  }
+
+  function toggleOne(id) {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
+
+  function sendEmail() {
+    const memberIds = list
+      .filter((o) => selected.has(o.id) && o.member_id)
+      .map((o) => o.member_id);
+    sessionStorage.setItem('emailComposeMemberIds', JSON.stringify(memberIds));
+    navigate('/email/compose');
+  }
 
   useEffect(() => { loadAll(); }, []);
 
@@ -123,6 +153,7 @@ export default function OfficerList() {
 
   function renderEditRow(key) { return (
     <tr key={key} className="bg-blue-50 border-b border-slate-200">
+      <td className="px-3 py-2 text-center"></td>
       <td className="px-3 py-2">
         <input type="text" value={form.name} autoFocus
           onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
@@ -190,10 +221,28 @@ export default function OfficerList() {
               </div>
             )}
 
+            {/* Bulk action bar */}
+            {can('email', 'send') && selected.size > 0 && (
+              <div className="flex items-center gap-3 mb-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                <span className="text-sm text-slate-600">{selected.size} selected</span>
+                <button onClick={sendEmail}
+                  className="bg-blue-600 hover:bg-blue-700 text-white rounded px-4 py-1.5 text-sm font-medium transition-colors">
+                  Send E-mail
+                </button>
+              </div>
+            )}
+
             <div className="overflow-x-auto rounded-lg shadow-sm mb-4">
               <table className="w-full text-sm bg-white min-w-max">
                 <thead>
                   <tr className="bg-slate-50 border-b border-slate-200 text-left text-slate-600 italic font-normal">
+                    <th className="px-3 py-2.5 font-normal text-center">
+                      {can('email', 'send') && selectable.length > 0 && (
+                        <button onClick={toggleAll} className="text-blue-600 hover:underline text-xs font-normal not-italic">
+                          {selected.size === selectable.length && selectable.length > 0 ? 'Clear' : 'Select'}
+                        </button>
+                      )}
+                    </th>
                     <th className="px-3 py-2.5 font-normal">Office</th>
                     <th className="px-3 py-2.5 font-normal">Post Holder</th>
                     <th className="px-3 py-2.5 font-normal">Office Email</th>
@@ -208,7 +257,14 @@ export default function OfficerList() {
                       renderEditRow(office.id)
                     ) : (
                       <tr key={office.id}
-                        className={`border-b border-slate-100 ${i % 2 === 0 ? 'bg-yellow-50' : 'bg-white'}`}>
+                        className={`border-b border-slate-100 ${selected.has(office.id) ? 'outline outline-2 outline-blue-400' : i % 2 === 0 ? 'bg-yellow-50' : 'bg-white'}`}>
+                        <td className="px-3 py-2 text-center">
+                          {office.member_id && can('email', 'send') && (
+                            <input type="checkbox" checked={selected.has(office.id)}
+                              onChange={() => toggleOne(office.id)}
+                              className="rounded border-slate-300 text-blue-600 focus:ring-blue-500" />
+                          )}
+                        </td>
                         <td className="px-3 py-2 font-medium">{office.name}</td>
                         <td className="px-3 py-2">
                           {office.member_forenames || office.member_surname ? (
@@ -236,7 +292,7 @@ export default function OfficerList() {
                   ))}
                   {list.length === 0 && editId !== 'new' && (
                     <tr>
-                      <td colSpan={5} className="px-3 py-8 text-center text-slate-400 italic">No offices yet.</td>
+                      <td colSpan={6} className="px-3 py-8 text-center text-slate-400 italic">No offices yet.</td>
                     </tr>
                   )}
                 </tbody>

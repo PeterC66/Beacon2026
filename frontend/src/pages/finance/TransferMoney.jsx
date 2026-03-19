@@ -4,6 +4,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { finance as financeApi, requestBlob } from '../../lib/api.js';
 import { useAuth } from '../../context/AuthContext.jsx';
+import { useUnsavedChanges } from '../../hooks/useUnsavedChanges.js';
 import NavBar from '../../components/NavBar.jsx';
 import PageHeader from '../../components/PageHeader.jsx';
 
@@ -43,6 +44,7 @@ export default function TransferMoney() {
   const [formError, setFormError] = useState(null);
   const [saved,     setSaved]     = useState(false);
   const savedTimer = useRef(null);
+  const { markDirty, markClean } = useUnsavedChanges();
 
   useEffect(() => { load(); }, []);
 
@@ -59,7 +61,7 @@ export default function TransferMoney() {
     finally { setLoading(false); }
   }
 
-  function set(field, value) { setForm((prev) => ({ ...prev, [field]: value })); }
+  function set(field, value) { markDirty(); setForm((prev) => ({ ...prev, [field]: value })); }
 
   function validate() {
     if (!form.date)            return 'Date is required.';
@@ -93,6 +95,7 @@ export default function TransferMoney() {
       } else {
         await financeApi.createTransfer(payload);
       }
+      markClean();
       setSaved(true);
       clearTimeout(savedTimer.current);
       savedTimer.current = setTimeout(() => setSaved(false), 3000);
@@ -122,6 +125,7 @@ export default function TransferMoney() {
   }
 
   function handleCancel() {
+    markClean();
     setEditId(null);
     setForm(EMPTY_FORM);
     setFormError(null);

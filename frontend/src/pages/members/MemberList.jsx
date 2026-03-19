@@ -3,6 +3,26 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { members as membersApi, memberStatuses as statusApi, memberClasses as classApi, polls as pollsApi } from '../../lib/api.js';
+
+const DOWNLOAD_FIELDS = [
+  { key: 'membership_number', label: 'Membership No', default: true },
+  { key: 'title',             label: 'Title',         default: false },
+  { key: 'forenames',         label: 'Forenames',     default: true },
+  { key: 'known_as',          label: 'Known As',      default: false },
+  { key: 'surname',           label: 'Surname',       default: true },
+  { key: 'email',             label: 'Email',         default: true },
+  { key: 'mobile',            label: 'Mobile',        default: true },
+  { key: 'telephone',         label: 'Telephone',     default: false },
+  { key: 'address',           label: 'Address',       default: false },
+  { key: 'town',              label: 'Town',          default: true },
+  { key: 'county',            label: 'County',        default: false },
+  { key: 'postcode',          label: 'Postcode',      default: true },
+  { key: 'country',           label: 'Country',       default: false },
+  { key: 'status',            label: 'Status',        default: true },
+  { key: 'class',             label: 'Class',         default: true },
+  { key: 'joined_on',         label: 'Joined',        default: false },
+  { key: 'next_renewal',      label: 'Next Renewal',  default: false },
+];
 import { useAuth } from '../../context/AuthContext.jsx';
 import NavBar from '../../components/NavBar.jsx';
 import PageHeader from '../../components/PageHeader.jsx';
@@ -38,6 +58,11 @@ export default function MemberList() {
   const [addToPollId,   setAddToPollId]   = useState('');
   const [bulkWorking,   setBulkWorking]   = useState(false);
   const [bulkResult,    setBulkResult]    = useState(null);
+
+  // Downloads
+  const [dlFields,      setDlFields]      = useState(new Set(DOWNLOAD_FIELDS.filter((f) => f.default).map((f) => f.key)));
+  const [downloading,   setDownloading]   = useState(false);
+  const [dlError,       setDlError]       = useState(null);
 
   // Row refs for letter-jump
   const rowRefs = useRef({});
@@ -137,6 +162,28 @@ export default function MemberList() {
       } finally {
         setBulkWorking(false);
       }
+    }
+  }
+
+  function toggleDlField(key) {
+    setDlFields((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key); else next.add(key);
+      return next;
+    });
+  }
+
+  async function handleDownload(format) {
+    const ids = selected.size > 0 ? [...selected] : sorted.map((m) => m.id);
+    const fields = format === 'email-csv' ? [] : DOWNLOAD_FIELDS.filter((f) => dlFields.has(f.key)).map((f) => f.key);
+    setDownloading(true);
+    setDlError(null);
+    try {
+      await membersApi.download(format, ids, fields);
+    } catch (err) {
+      setDlError(err.message);
+    } finally {
+      setDownloading(false);
     }
   }
 
@@ -349,48 +396,83 @@ export default function MemberList() {
 
               {/* ── Bulk actions ──────────────────────────────────────── */}
               {selected.size > 0 && (
-                <div className="bg-white/90 rounded-lg shadow-sm p-3 flex flex-wrap gap-3 items-end">
-                  <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">Do with {selected.size} selected member{selected.size !== 1 ? 's' : ''}</label>
-                    <select
-                      value={bulkAction}
-                      onChange={(e) => { setBulkAction(e.target.value); setBulkResult(null); }}
-                      className="border border-slate-300 rounded px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    >
-                      <option value="">— choose action —</option>
-                      {can('email', 'send') && <option value="send_email">Send email</option>}
-                      {hasBulkPolls && <option value="add_to_poll">Add to poll</option>}
-                    </select>
-                  </div>
-
-                  {bulkAction === 'add_to_poll' && (
+                <div className="bg-white/90 rounded-lg shadow-sm p-3 space-y-3">
+                  <div className="flex flex-wrap gap-3 items-end">
                     <div>
-                      <label className="block text-sm font-medium text-slate-700 mb-1">Poll</label>
+                      <label className="block text-sm font-medium text-slate-700 mb-1">Do with {selected.size} selected member{selected.size !== 1 ? 's' : ''}</label>
                       <select
-                        value={addToPollId}
-                        onChange={(e) => setAddToPollId(e.target.value)}
+                        value={bulkAction}
+                        onChange={(e) => { setBulkAction(e.target.value); setBulkResult(null); setDlError(null); }}
                         className="border border-slate-300 rounded px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                       >
-                        <option value="">— select poll —</option>
-                        {polls.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
+                        <option value="">— choose action —</option>
+                        {can('email', 'send') && <option value="send_email">Send email</option>}
+                        {hasBulkPolls && <option value="add_to_poll">Add to poll</option>}
+                        <option value="download_excel">Download Excel</option>
+                        <option value="download_pdf">Download PDF</option>
+                        <option value="download_emails">Download email addresses</option>
                       </select>
                     </div>
-                  )}
 
-                  {bulkAction && (
-                    <button
-                      onClick={handleBulkDo}
-                      disabled={bulkWorking || (bulkAction === 'add_to_poll' && !addToPollId)}
-                      className="bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white rounded px-4 py-1.5 text-sm font-medium transition-colors"
-                    >
-                      {bulkWorking ? 'Working…' : 'Do with selected'}
-                    </button>
-                  )}
+                    {bulkAction === 'add_to_poll' && (
+                      <div>
+                        <label className="block text-sm font-medium text-slate-700 mb-1">Poll</label>
+                        <select
+                          value={addToPollId}
+                          onChange={(e) => setAddToPollId(e.target.value)}
+                          className="border border-slate-300 rounded px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        >
+                          <option value="">— select poll —</option>
+                          {polls.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
+                        </select>
+                      </div>
+                    )}
 
-                  {bulkResult && (
-                    <p className={`text-sm font-medium ${bulkResult.type === 'success' ? 'text-green-700' : 'text-red-600'}`}>
-                      {bulkResult.msg}
-                    </p>
+                    {(bulkAction === 'send_email' || bulkAction === 'add_to_poll') && (
+                      <button
+                        onClick={handleBulkDo}
+                        disabled={bulkWorking || (bulkAction === 'add_to_poll' && !addToPollId)}
+                        className="bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white rounded px-4 py-1.5 text-sm font-medium transition-colors"
+                      >
+                        {bulkWorking ? 'Working…' : 'Do with selected'}
+                      </button>
+                    )}
+
+                    {bulkAction === 'download_emails' && (
+                      <button onClick={() => handleDownload('email-csv')} disabled={downloading}
+                        className="bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white rounded px-4 py-1.5 text-sm font-medium transition-colors">
+                        {downloading ? 'Downloading…' : 'Download'}
+                      </button>
+                    )}
+
+                    {bulkResult && (
+                      <p className={`text-sm font-medium ${bulkResult.type === 'success' ? 'text-green-700' : 'text-red-600'}`}>
+                        {bulkResult.msg}
+                      </p>
+                    )}
+                    {dlError && <p className="text-sm text-red-600 font-medium">{dlError}</p>}
+                  </div>
+
+                  {/* Field picker for Excel / PDF downloads */}
+                  {(bulkAction === 'download_excel' || bulkAction === 'download_pdf') && (
+                    <div className="border border-slate-200 rounded p-3 bg-slate-50">
+                      <p className="text-sm font-medium text-slate-700 mb-2">Fields to include:</p>
+                      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-x-4 gap-y-1 mb-3">
+                        {DOWNLOAD_FIELDS.map((f) => (
+                          <label key={f.key} className="flex items-center gap-1.5 text-sm cursor-pointer">
+                            <input type="checkbox" checked={dlFields.has(f.key)}
+                              onChange={() => toggleDlField(f.key)}
+                              className="rounded border-slate-300 text-blue-600 focus:ring-blue-500" />
+                            {f.label}
+                          </label>
+                        ))}
+                      </div>
+                      <button onClick={() => handleDownload(bulkAction === 'download_excel' ? 'excel' : 'pdf')}
+                        disabled={downloading || dlFields.size === 0}
+                        className="bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white rounded px-4 py-1.5 text-sm font-medium transition-colors">
+                        {downloading ? 'Downloading…' : `Download ${bulkAction === 'download_excel' ? 'Excel' : 'PDF'}`}
+                      </button>
+                    </div>
                   )}
                 </div>
               )}

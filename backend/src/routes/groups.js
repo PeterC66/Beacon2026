@@ -3,6 +3,7 @@
 import { Router } from 'express';
 import { z } from 'zod';
 import ExcelJS from 'exceljs';
+import PDFDocument from 'pdfkit';
 import { requireAuth } from '../middleware/auth.js';
 import { requirePrivilege } from '../middleware/requirePrivilege.js';
 import { tenantQuery } from '../utils/db.js';
@@ -275,6 +276,126 @@ router.get('/:id/members', requirePrivilege('group_records_all', 'view'), async 
   } catch (err) {
     next(err);
   }
+});
+
+// ─── GET /groups/:id/members/download ────────────────────────────────────
+// Download selected group members as Excel or PDF.
+// Query params: format (excel|pdf), ids (comma-separated member IDs), fields (comma-separated)
+
+const GROUP_MEMBER_FIELD_DEFS = {
+  membership_number: { label: 'Membership No', get: (m) => String(m.membership_number ?? '') },
+  title:        { label: 'Title',       get: (m) => m.title ?? '' },
+  forenames:    { label: 'Forenames',   get: (m) => m.forenames ?? '' },
+  known_as:     { label: 'Known As',    get: (m) => m.known_as ?? '' },
+  surname:      { label: 'Surname',     get: (m) => m.surname ?? '' },
+  email:        { label: 'Email',       get: (m) => m.email ?? '' },
+  mobile:       { label: 'Mobile',      get: (m) => m.mobile ?? '' },
+  telephone:    { label: 'Telephone',   get: (m) => m.telephone ?? '' },
+  address:      { label: 'Address',     get: (m) => [m.house_no, m.street].filter(Boolean).join(', ') },
+  town:         { label: 'Town',        get: (m) => m.town ?? '' },
+  postcode:     { label: 'Postcode',    get: (m) => m.postcode ?? '' },
+  status:       { label: 'Status',      get: (m) => m.status ?? '' },
+  is_leader:    { label: 'Leader',      get: (m) => m.is_leader ? 'Yes' : '' },
+  waiting_since:{ label: 'Waiting',     get: (m) => m.waiting_since ? String(m.waiting_since).slice(0, 10) : '' },
+};
+
+router.get('/:id/members/download', requirePrivilege('group_records_all', 'view'), async (req, res, next) => {
+  try {
+    const { format = 'excel', ids = '', fields = '' } = req.query;
+    const slug = req.user.tenantSlug;
+    const groupId = req.params.id;
+
+    const [group] = await tenantQuery(slug, `SELECT id, name FROM groups WHERE id = $1`, [groupId]);
+    if (!group) throw AppError('Group not found.', 404);
+
+    const memberIds = ids.split(',').map((s) => s.trim()).filter(Boolean);
+
+    const rows = await tenantQuery(slug,
+      `SELECT gm.member_id, gm.is_leader, gm.waiting_since,
+              m.membership_number, m.title, m.forenames, m.surname, m.known_as,
+              m.email, m.mobile,
+              ms.name AS status,
+              a.house_no, a.street, a.town, a.postcode, a.telephone
+       FROM group_members gm
+       JOIN members m ON m.id = gm.member_id
+       LEFT JOIN member_statuses ms ON ms.id = m.status_id
+       LEFT JOIN addresses a ON a.id = m.address_id
+       WHERE gm.group_id = $1
+         AND ($2::text[] IS NULL OR gm.member_id = ANY($2::text[]))
+       ORDER BY m.surname, m.forenames`,
+      [groupId, memberIds.length ? memberIds : null],
+    );
+
+    const tenantPart = slug.replace(/^u3a_/, '');
+    const safeName   = group.name.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+    const stamp      = new Date().toISOString().slice(0, 10);
+
+    const activeCols = fields.split(',').map((s) => s.trim()).filter((f) => f && GROUP_MEMBER_FIELD_DEFS[f]);
+    const cols = activeCols.length ? activeCols : Object.keys(GROUP_MEMBER_FIELD_DEFS);
+
+    if (format === 'excel') {
+      const wb = new ExcelJS.Workbook();
+      const ws = wb.addWorksheet('Group Members');
+      ws.columns = cols.map((f) => ({ header: GROUP_MEMBER_FIELD_DEFS[f].label, width: 20 }));
+      ws.getRow(1).font = { bold: true };
+      for (const m of rows) ws.addRow(cols.map((f) => GROUP_MEMBER_FIELD_DEFS[f].get(m)));
+      res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+      res.setHeader('Content-Disposition', `attachment; filename="${tenantPart}_${safeName}_members_${stamp}.xlsx"`);
+      await wb.xlsx.write(res);
+      return res.end();
+    }
+
+    if (format === 'pdf') {
+      const PAGE_W = 841.89; const PAGE_H = 595.28;
+      const MARGIN = 36; const FONT_SZ = 7; const ROW_H = 13;
+      const usableW = PAGE_W - MARGIN * 2;
+      const colW = usableW / cols.length;
+      const title = `${group.name} — Members — ${stamp}`;
+
+      const doc = new PDFDocument({ margin: MARGIN, size: 'A4', layout: 'landscape', autoFirstPage: true });
+      const chunks = [];
+      doc.on('data', (c) => chunks.push(c));
+      const done = new Promise((resolve) => doc.on('end', resolve));
+
+      function drawHeader(y) {
+        doc.font('Helvetica-Bold').fontSize(FONT_SZ);
+        cols.forEach((f, idx) => {
+          doc.text(GROUP_MEMBER_FIELD_DEFS[f].label, MARGIN + idx * colW, y, { width: colW - 3, lineBreak: false, ellipsis: true });
+        });
+        return y + ROW_H;
+      }
+
+      let y = MARGIN + 4;
+      doc.font('Helvetica-Bold').fontSize(9).text(title, MARGIN, y, { lineBreak: false });
+      y += 16;
+      y = drawHeader(y);
+      doc.moveTo(MARGIN, y - 2).lineTo(PAGE_W - MARGIN, y - 2).strokeColor('#aaaaaa').stroke();
+
+      doc.font('Helvetica').fontSize(FONT_SZ);
+      for (const m of rows) {
+        if (y + ROW_H > PAGE_H - MARGIN) {
+          doc.addPage({ size: 'A4', layout: 'landscape' });
+          y = MARGIN + 4;
+          y = drawHeader(y);
+          doc.moveTo(MARGIN, y - 2).lineTo(PAGE_W - MARGIN, y - 2).strokeColor('#aaaaaa').stroke();
+          doc.font('Helvetica').fontSize(FONT_SZ);
+        }
+        cols.forEach((f, idx) => {
+          doc.text(GROUP_MEMBER_FIELD_DEFS[f].get(m), MARGIN + idx * colW, y, { width: colW - 3, lineBreak: false, ellipsis: true });
+        });
+        y += ROW_H;
+      }
+
+      doc.end();
+      await done;
+      const buf = Buffer.concat(chunks);
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader('Content-Disposition', `attachment; filename="${tenantPart}_${safeName}_members_${stamp}.pdf"`);
+      return res.send(buf);
+    }
+
+    throw AppError('Invalid format.', 400);
+  } catch (err) { next(err); }
 });
 
 // ─── POST /groups/:id/members ─────────────────────────────────────────────
@@ -784,9 +905,10 @@ router.get('/:id/ledger/download', async (req, res, next) => {
       });
     }
 
-    const safeName  = groupName.replace(/[^a-z0-9]/gi, '_').toLowerCase();
-    const dateStr   = new Date().toISOString().slice(0, 10);
-    const filename  = `${safeName}_ledger_${dateStr}.xlsx`;
+    const tenantPart = req.user.tenantSlug.replace(/^u3a_/, '');
+    const safeName   = groupName.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+    const dateStr    = new Date().toISOString().slice(0, 10);
+    const filename   = `${tenantPart}_${safeName}_ledger_${dateStr}.xlsx`;
 
     res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
     res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);

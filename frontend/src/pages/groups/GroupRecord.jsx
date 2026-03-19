@@ -280,8 +280,26 @@ function GroupDetails({ groupId, faculties, venues, onSaved, onDeleted }) {
 
 // ─── Members sub-component ────────────────────────────────────────────────
 
+const GROUP_DL_FIELDS = [
+  { key: 'membership_number', label: 'Membership No', default: true },
+  { key: 'title',             label: 'Title',         default: false },
+  { key: 'forenames',         label: 'Forenames',     default: true },
+  { key: 'known_as',          label: 'Known As',      default: false },
+  { key: 'surname',           label: 'Surname',       default: true },
+  { key: 'email',             label: 'Email',         default: true },
+  { key: 'mobile',            label: 'Mobile',        default: true },
+  { key: 'telephone',         label: 'Telephone',     default: false },
+  { key: 'address',           label: 'Address',       default: false },
+  { key: 'town',              label: 'Town',          default: true },
+  { key: 'postcode',          label: 'Postcode',      default: true },
+  { key: 'status',            label: 'Status',        default: true },
+  { key: 'is_leader',         label: 'Leader',        default: false },
+  { key: 'waiting_since',     label: 'Waiting Since', default: false },
+];
+
 function GroupMembers({ groupId }) {
   const { can } = useAuth();
+  const navigate = useNavigate();
   const [groupMembers, setGroupMembers] = useState([]);
   const [allMembers,   setAllMembers]   = useState([]);
   const [loading,      setLoading]      = useState(true);
@@ -295,6 +313,15 @@ function GroupMembers({ groupId }) {
   // Filter checkboxes
   const [showJoined,  setShowJoined]  = useState(true);
   const [showWaiting, setShowWaiting] = useState(true);
+
+  // Selection
+  const [selected,   setSelected]   = useState(new Set());
+
+  // Downloads
+  const [dlAction,   setDlAction]   = useState('');
+  const [dlFields,   setDlFields]   = useState(new Set(GROUP_DL_FIELDS.filter((f) => f.default).map((f) => f.key)));
+  const [downloading, setDownloading] = useState(false);
+  const [dlError,    setDlError]    = useState(null);
 
   const canManage = can('group_records_all', 'change');
   const { sorted: sortedMembers, sortKey, sortDir, onSort } = useSortedData(groupMembers);
@@ -382,6 +409,33 @@ function GroupMembers({ groupId }) {
     }
   }
 
+  function toggleSelect(memberId) {
+    setSelected((prev) => { const n = new Set(prev); n.has(memberId) ? n.delete(memberId) : n.add(memberId); return n; });
+  }
+
+  function sendEmail() {
+    sessionStorage.setItem('emailComposeMemberIds', JSON.stringify([...selected]));
+    navigate('/email/compose');
+  }
+
+  function toggleDlField(key) {
+    setDlFields((prev) => { const n = new Set(prev); n.has(key) ? n.delete(key) : n.add(key); return n; });
+  }
+
+  async function handleDownload(format) {
+    const ids = selected.size > 0 ? [...selected] : visibleMembers.map((m) => m.member_id);
+    const fields = GROUP_DL_FIELDS.filter((f) => dlFields.has(f.key)).map((f) => f.key);
+    setDownloading(true);
+    setDlError(null);
+    try {
+      await groupsApi.downloadMembers(groupId, format, ids, fields);
+    } catch (err) {
+      setDlError(err.message);
+    } finally {
+      setDownloading(false);
+    }
+  }
+
   // Determine row class based on member status
   function rowStyle(m) {
     if (m.status === 'Resigned' || m.status === 'Deceased') return 'line-through text-red-500';
@@ -428,6 +482,23 @@ function GroupMembers({ groupId }) {
         </div>
       )}
 
+      {/* ── Select controls ─────────────────────────────────────────── */}
+      {visibleMembers.length > 0 && (
+        <div className="flex flex-wrap gap-2 items-center text-sm">
+          <span className="text-slate-500">{visibleMembers.length} member{visibleMembers.length !== 1 ? 's' : ''}</span>
+          <span className="text-slate-300">|</span>
+          <span className="font-medium text-slate-600">Select:</span>
+          <button onClick={() => setSelected(new Set(visibleMembers.map((m) => m.member_id)))}
+            className="text-blue-700 hover:underline">All</button>
+          <button onClick={() => setSelected(new Set())} className="text-blue-700 hover:underline">Clear</button>
+          <button onClick={() => setSelected(new Set(visibleMembers.filter((m) => m.email).map((m) => m.member_id)))}
+            className="text-blue-700 hover:underline">Email only</button>
+          <button onClick={() => setSelected(new Set(visibleMembers.filter((m) => !m.email).map((m) => m.member_id)))}
+            className="text-blue-700 hover:underline">Without email</button>
+          {selected.size > 0 && <span className="font-medium text-blue-700">{selected.size} selected</span>}
+        </div>
+      )}
+
       {/* ── Combined members table ─────────────────────────────────── */}
       {visibleMembers.length === 0 ? (
         <p className="text-slate-500 text-sm">No members to display.</p>
@@ -436,6 +507,7 @@ function GroupMembers({ groupId }) {
           <table className="w-full text-sm bg-white min-w-max">
             <thead>
               <tr className="bg-slate-50 border-b border-slate-200 text-left text-slate-600 italic font-normal">
+                <th className="px-2 py-2"></th>
                 <SortableHeader col="membership_number" label="No"      sortKey={sortKey} sortDir={sortDir} onSort={onSort} className="px-3 py-2 font-normal" />
                 <SortableHeader col="surname"           label="Name"    sortKey={sortKey} sortDir={sortDir} onSort={onSort} className="px-3 py-2 font-normal" />
                 <SortableHeader col="town"              label="Town"    sortKey={sortKey} sortDir={sortDir} onSort={onSort} className="px-3 py-2 font-normal" />
@@ -451,7 +523,11 @@ function GroupMembers({ groupId }) {
             </thead>
             <tbody>
               {visibleMembers.map((m, i) => (
-                <tr key={m.member_id} className={`border-b border-slate-100 ${i % 2 === 0 ? 'bg-yellow-50' : 'bg-white'}`}>
+                <tr key={m.member_id} className={`border-b border-slate-100 ${selected.has(m.member_id) ? 'outline outline-2 outline-blue-400' : i % 2 === 0 ? 'bg-yellow-50' : 'bg-white'}`}>
+                  <td className="px-2 py-2">
+                    <input type="checkbox" checked={selected.has(m.member_id)} onChange={() => toggleSelect(m.member_id)}
+                      className="rounded border-slate-300 text-blue-600 focus:ring-blue-500" />
+                  </td>
                   <td className="px-3 py-2 tabular-nums">{m.membership_number}</td>
                   <td className={`px-3 py-2 ${rowStyle(m)}`}>
                     {m.is_leader && <span className="text-blue-600 font-medium mr-1">★</span>}
@@ -499,6 +575,51 @@ function GroupMembers({ groupId }) {
               ))}
             </tbody>
           </table>
+        </div>
+      )}
+
+      {/* ── Bulk actions (email + download) ────────────────────────── */}
+      {visibleMembers.length > 0 && (
+        <div className="bg-white/90 rounded-lg shadow-sm p-3 space-y-3">
+          <div className="flex flex-wrap gap-3 items-end">
+            {can('email', 'send') && selected.size > 0 && (
+              <button onClick={sendEmail}
+                className="bg-blue-600 hover:bg-blue-700 text-white rounded px-4 py-1.5 text-sm font-medium transition-colors">
+                Send E-mail ({selected.size})
+              </button>
+            )}
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Download</label>
+              <select value={dlAction} onChange={(e) => { setDlAction(e.target.value); setDlError(null); }}
+                className="border border-slate-300 rounded px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <option value="">— choose format —</option>
+                <option value="excel">Download Excel</option>
+                <option value="pdf">Download PDF</option>
+              </select>
+            </div>
+            {dlError && <p className="text-sm text-red-600 font-medium">{dlError}</p>}
+          </div>
+
+          {(dlAction === 'excel' || dlAction === 'pdf') && (
+            <div className="border border-slate-200 rounded p-3 bg-slate-50">
+              <p className="text-sm font-medium text-slate-700 mb-2">
+                Fields to include {selected.size > 0 ? `(${selected.size} selected members)` : '(all visible members)'}:
+              </p>
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-x-4 gap-y-1 mb-3">
+                {GROUP_DL_FIELDS.map((f) => (
+                  <label key={f.key} className="flex items-center gap-1.5 text-sm cursor-pointer">
+                    <input type="checkbox" checked={dlFields.has(f.key)} onChange={() => toggleDlField(f.key)}
+                      className="rounded border-slate-300 text-blue-600 focus:ring-blue-500" />
+                    {f.label}
+                  </label>
+                ))}
+              </div>
+              <button onClick={() => handleDownload(dlAction)} disabled={downloading || dlFields.size === 0}
+                className="bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white rounded px-4 py-1.5 text-sm font-medium transition-colors">
+                {downloading ? 'Downloading…' : `Download ${dlAction === 'excel' ? 'Excel' : 'PDF'}`}
+              </button>
+            </div>
+          )}
         </div>
       )}
 

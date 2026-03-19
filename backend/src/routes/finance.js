@@ -887,8 +887,9 @@ router.get('/statement/download', requirePrivilege('finance_statement', 'downloa
     ws.addRow(['Less: Total Payments',              Number(d.totalOut).toFixed(2)]);
     ws.addRow(['Closing Balance',                   Number(d.closingBalance).toFixed(2)]).font = { bold: true };
 
-    const safeLabel = d.accountLabel.replace(/[^a-zA-Z0-9]/g, '_').slice(0, 20);
-    const filename  = `statement_${safeLabel}_${d.yearNum}.xlsx`;
+    const tenantPart = req.user.tenantSlug.replace(/^u3a_/, '');
+    const safeLabel  = d.accountLabel.replace(/[^a-zA-Z0-9]/g, '_').slice(0, 20);
+    const filename   = `${tenantPart}_statement_${safeLabel}_${d.yearNum}.xlsx`;
     res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
     res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
     await wb.xlsx.write(res);
@@ -995,7 +996,8 @@ router.get('/groups-statement/download', requirePrivilege('group_statement', 'do
     const totRow = ws.addRow(['TOTAL', '', Number(totIn).toFixed(2), Number(totOut).toFixed(2), Number(totIn - totOut).toFixed(2)]);
     totRow.font = { bold: true };
 
-    const filename = `groups_statement_${from}_to_${to}.xlsx`;
+    const tenantPart = req.user.tenantSlug.replace(/^u3a_/, '');
+    const filename   = `${tenantPart}_groups_statement_${from}_to_${to}.xlsx`;
     res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
     res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
     await wb.xlsx.write(res);
