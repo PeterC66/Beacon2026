@@ -1,13 +1,14 @@
 // beacon2/frontend/src/pages/finance/TransactionEditor.jsx
 // Add or edit a financial transaction — implements Beacon doc 7.2.
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { finance as financeApi, groups as groupsApi, members as membersApi } from '../../lib/api.js';
 import { useAuth } from '../../context/AuthContext.jsx';
 import NavBar from '../../components/NavBar.jsx';
 import PageHeader from '../../components/PageHeader.jsx';
 import DateInput from '../../components/DateInput.jsx';
+import { useUnsavedChanges } from '../../hooks/useUnsavedChanges.js';
 
 const PAYMENT_METHODS = ['', 'Cash', 'Cheque', 'Standing Order', 'Direct Debit', 'Online', 'Other'];
 
@@ -49,6 +50,9 @@ export default function TransactionEditor() {
   const [error,      setError]      = useState(null);
   const [cleared,    setCleared]    = useState(false);
   const [txnNumber,  setTxnNumber]  = useState(null);
+  const [saved,      setSaved]      = useState(false);
+  const savedTimer = useRef(null);
+  const { markDirty, markClean } = useUnsavedChanges();
 
   // Load reference data
   useEffect(() => {
@@ -110,7 +114,7 @@ export default function TransactionEditor() {
     load();
   }, [id, isNew]);
 
-  const set = (k, v) => setForm((f) => ({ ...f, [k]: v }));
+  const set = (k, v) => { markDirty(); setForm((f) => ({ ...f, [k]: v })); };
 
   const catTotal = useMemo(() => {
     return Object.values(catAmounts).reduce((s, v) => {
@@ -183,15 +187,26 @@ export default function TransactionEditor() {
       if (isNew) {
         const result = await financeApi.createTransaction(payload);
         if (addAnother) {
-          // Reset form but keep account, date, type, payment_method
-          setForm((f) => ({ ...BLANK, account_id: f.account_id, date: f.date, type: f.type, payment_method: f.payment_method }));
-          setCatAmounts({});
+          markClean();
+          setSaved(true);
+          clearTimeout(savedTimer.current);
+          savedTimer.current = setTimeout(() => {
+            setSaved(false);
+            // Reset form but keep account, date, type, payment_method
+            setForm((f) => ({ ...BLANK, account_id: f.account_id, date: f.date, type: f.type, payment_method: f.payment_method }));
+            setCatAmounts({});
+          }, 1000);
         } else {
-          navigate(`/finance/transactions/${result.id}`);
+          markClean();
+          setSaved(true);
+          clearTimeout(savedTimer.current);
+          savedTimer.current = setTimeout(() => navigate(`/finance/transactions/${result.id}`), 1200);
         }
       } else {
-        await financeApi.updateTransaction(id, payload);
-        navigate(`/finance/transactions/${id}`);
+        markClean();
+        setSaved(true);
+        clearTimeout(savedTimer.current);
+        savedTimer.current = setTimeout(() => navigate(`/finance/transactions/${id}`), 1200);
       }
     } catch (err) {
       setError(err.message);
@@ -206,6 +221,7 @@ export default function TransactionEditor() {
     setError(null);
     try {
       await financeApi.deleteTransaction(id);
+      markClean();
       navigate('/finance/ledger');
     } catch (err) {
       setError(err.message);
@@ -248,6 +264,11 @@ export default function TransactionEditor() {
         )}
 
         {error && <p className="text-center text-red-600 py-2 mb-2">Error: {error}</p>}
+        {saved && (
+          <p className="text-green-700 text-sm font-medium bg-green-50 border border-green-200 rounded px-3 py-2 text-center mb-2">
+            ✓ Saved successfully.
+          </p>
+        )}
 
         <form onSubmit={(e) => handleSave(e, false)} noValidate>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-white/90 rounded-lg shadow-sm p-4 sm:p-6 mb-4">
@@ -497,7 +518,7 @@ export default function TransactionEditor() {
                             min="0"
                             step="0.01"
                             value={catAmounts[cat.id] ?? ''}
-                            onChange={(e) => setCatAmounts((prev) => ({ ...prev, [cat.id]: e.target.value }))}
+                            onChange={(e) => { markDirty(); setCatAmounts((prev) => ({ ...prev, [cat.id]: e.target.value })); }}
                             disabled={cleared}
                             className="border border-slate-300 rounded px-2 py-1 text-sm w-32 focus:outline-none focus:ring-2 focus:ring-blue-500"
                             placeholder="0.00"

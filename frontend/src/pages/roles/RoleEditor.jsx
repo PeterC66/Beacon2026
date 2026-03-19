@@ -1,12 +1,13 @@
 // beacon2/frontend/src/pages/roles/RoleEditor.jsx
 // Edit a role's name, committee flag, and privilege matrix.
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { roles as rolesApi, privileges as privsApi } from '../../lib/api.js';
 import { useAuth } from '../../context/AuthContext.jsx';
 import NavBar from '../../components/NavBar.jsx';
 import PageHeader from '../../components/PageHeader.jsx';
+import { useUnsavedChanges } from '../../hooks/useUnsavedChanges.js';
 
 const inputCls = 'w-full border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-slate-50 disabled:text-slate-500';
 
@@ -25,7 +26,12 @@ export default function RoleEditor() {
   const [savingRole,  setSavingRole]  = useState(false);
   const [savingPrivs, setSavingPrivs] = useState(false);
   const [deleting,    setDeleting]    = useState(false);
+  const [savedRole,   setSavedRole]   = useState(false);
+  const [savedPrivs,  setSavedPrivs]  = useState(false);
   const [error,       setError]       = useState(null);
+  const savedRoleTimer  = useRef(null);
+  const savedPrivsTimer = useRef(null);
+  const { markDirty, markClean } = useUnsavedChanges();
 
   useEffect(() => {
     async function load() {
@@ -59,6 +65,7 @@ export default function RoleEditor() {
   const STANDARD_ACTIONS = ['view', 'create', 'change', 'delete'];
 
   const toggle = useCallback((resourceId, action) => {
+    markDirty();
     const key = `${resourceId}:${action}`;
     setGranted((prev) => {
       const next = { ...prev };
@@ -76,6 +83,7 @@ export default function RoleEditor() {
   }, []);
 
   const toggleColumn = useCallback((action) => {
+    markDirty();
     setGranted((prev) => {
       const next     = { ...prev };
       const eligible = resources.filter((r) => r.actions.includes(action));
@@ -90,6 +98,7 @@ export default function RoleEditor() {
   }, [resources]);
 
   const toggleOtherColumn = useCallback(() => {
+    markDirty();
     setGranted((prev) => {
       const next  = { ...prev };
       const pairs = resources.flatMap((r) =>
@@ -106,6 +115,7 @@ export default function RoleEditor() {
   }, [resources]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const toggleRow = useCallback((resourceId, possibleActions) => {
+    markDirty();
     setGranted((prev) => {
       const next  = { ...prev };
       const allOn = possibleActions.every((a) => next[`${resourceId}:${a}`]);
@@ -122,9 +132,16 @@ export default function RoleEditor() {
     try {
       if (isNew) {
         const created = await rolesApi.create({ name: name.trim(), isCommittee, notes });
-        navigate(`/roles/${created.id}`);
+        markClean();
+        setSavedRole(true);
+        clearTimeout(savedRoleTimer.current);
+        savedRoleTimer.current = setTimeout(() => navigate(`/roles/${created.id}`), 1200);
       } else {
         await rolesApi.update(id, { name: name.trim(), isCommittee, notes });
+        markClean();
+        setSavedRole(true);
+        clearTimeout(savedRoleTimer.current);
+        savedRoleTimer.current = setTimeout(() => setSavedRole(false), 3000);
       }
     } catch (err) {
       setError(err.message);
@@ -142,6 +159,10 @@ export default function RoleEditor() {
         return { resourceId, action };
       });
       await rolesApi.setPrivileges(id, privilegeList);
+      markClean();
+      setSavedPrivs(true);
+      clearTimeout(savedPrivsTimer.current);
+      savedPrivsTimer.current = setTimeout(() => setSavedPrivs(false), 3000);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -227,7 +248,7 @@ export default function RoleEditor() {
             <input
               type="text"
               value={name}
-              onChange={(e) => setName(e.target.value)}
+              onChange={(e) => { markDirty(); setName(e.target.value); }}
               disabled={!canEdit}
               className={`${inputCls} max-w-sm`}
             />
@@ -238,7 +259,7 @@ export default function RoleEditor() {
             <input
               type="checkbox"
               checked={isCommittee}
-              onChange={(e) => setIsCommittee(e.target.checked)}
+              onChange={(e) => { markDirty(); setIsCommittee(e.target.checked); }}
               disabled={!canEdit}
               className="w-5 h-5 rounded border-slate-300 accent-blue-600"
             />
@@ -248,7 +269,7 @@ export default function RoleEditor() {
             <label className="block text-sm font-medium text-slate-700 mb-1">Notes</label>
             <textarea
               value={notes}
-              onChange={(e) => setNotes(e.target.value)}
+              onChange={(e) => { markDirty(); setNotes(e.target.value); }}
               disabled={!canEdit}
               rows={3}
               className={`${inputCls} max-w-sm resize-y`}
@@ -257,6 +278,12 @@ export default function RoleEditor() {
 
           {isNew && (
             <p className="text-xs text-slate-400 italic">New record</p>
+          )}
+
+          {savedRole && (
+            <p className="text-green-700 text-sm font-medium bg-green-50 border border-green-200 rounded px-3 py-2">
+              ✓ Role saved.
+            </p>
           )}
 
           {canEdit && (
@@ -361,6 +388,11 @@ export default function RoleEditor() {
 
             {canEdit && (
               <div className="text-center mt-4">
+                {savedPrivs && (
+                  <p className="text-green-700 text-sm font-medium bg-green-50 border border-green-200 rounded px-3 py-2 mb-3">
+                    ✓ Privileges saved.
+                  </p>
+                )}
                 <button
                   onClick={handleSavePrivileges}
                   disabled={savingPrivs}

@@ -1,12 +1,13 @@
 // beacon2/frontend/src/pages/groups/VenueEditor.jsx
 // Add / Edit a group venue (5.7)
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { venues as venuesApi } from '../../lib/api.js';
 import { useAuth } from '../../context/AuthContext.jsx';
 import NavBar from '../../components/NavBar.jsx';
 import PageHeader from '../../components/PageHeader.jsx';
+import { useUnsavedChanges } from '../../hooks/useUnsavedChanges.js';
 
 const EMPTY = {
   name: '', address1: '', address2: '', town: '', county: '', postcode: '',
@@ -24,7 +25,10 @@ export default function VenueEditor() {
   const [form,    setForm]    = useState(EMPTY);
   const [loading, setLoading] = useState(!isNew);
   const [saving,  setSaving]  = useState(false);
+  const [saved,   setSaved]   = useState(false);
   const [error,   setError]   = useState(null);
+  const savedTimer = useRef(null);
+  const { markDirty, markClean } = useUnsavedChanges();
 
   const canChange = isNew ? can('group_venues', 'create') : can('group_venues', 'change');
   const canDelete = !isNew && can('group_venues', 'delete');
@@ -52,6 +56,7 @@ export default function VenueEditor() {
   }, [id]);
 
   function set(field, value) {
+    markDirty();
     setForm((prev) => ({ ...prev, [field]: value }));
   }
 
@@ -76,11 +81,13 @@ export default function VenueEditor() {
       };
       if (isNew) {
         await venuesApi.create(payload);
-        navigate('/venues');
       } else {
         await venuesApi.update(id, payload);
-        navigate('/venues');
       }
+      markClean();
+      setSaved(true);
+      clearTimeout(savedTimer.current);
+      savedTimer.current = setTimeout(() => navigate('/venues'), 1200);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -92,6 +99,7 @@ export default function VenueEditor() {
     if (!window.confirm(`Delete venue "${form.name}"? This cannot be undone.`)) return;
     try {
       await venuesApi.delete(id);
+      markClean();
       navigate('/venues');
     } catch (err) {
       setError(err.message);
@@ -129,6 +137,12 @@ export default function VenueEditor() {
 
         <div className="bg-white/90 rounded-lg shadow-sm p-4 sm:p-6">
           {error && <p className="text-red-600 text-sm mb-3">{error}</p>}
+
+          {saved && (
+            <p className="text-green-700 text-sm font-medium bg-green-50 border border-green-200 rounded px-3 py-2 text-center mb-3">
+              ✓ Saved successfully.
+            </p>
+          )}
 
           <form onSubmit={handleSave} noValidate className="space-y-4">
 

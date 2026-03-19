@@ -11,6 +11,7 @@ import NavBar from '../../components/NavBar.jsx';
 import PageHeader from '../../components/PageHeader.jsx';
 import SortableHeader from '../../components/SortableHeader.jsx';
 import { useSortedData } from '../../hooks/useSortedData.js';
+import { useUnsavedChanges } from '../../hooks/useUnsavedChanges.js';
 
 // ─── Details sub-component ────────────────────────────────────────────────
 
@@ -25,6 +26,8 @@ function GroupDetails({ groupId, faculties, venues, onSaved, onDeleted }) {
     notifyLeader: false, displayWaitingList: false,
     information: '', notes: '', showAddresses: false,
   };
+
+  const { markDirty, markClean } = useUnsavedChanges();
 
   const [form,    setForm]    = useState(EMPTY);
   const [loading, setLoading] = useState(!isNew);
@@ -60,6 +63,7 @@ function GroupDetails({ groupId, faculties, venues, onSaved, onDeleted }) {
   }, [groupId]);
 
   function set(field, value) {
+    markDirty();
     setForm((prev) => ({ ...prev, [field]: value }));
   }
 
@@ -94,6 +98,7 @@ function GroupDetails({ groupId, faculties, venues, onSaved, onDeleted }) {
       }
       onSaved(result);
       if (!isNew) {
+        markClean();
         setSaved(true);
         clearTimeout(savedTimer.current);
         savedTimer.current = setTimeout(() => setSaved(false), 3000);
