@@ -221,7 +221,7 @@ router.get('/statistics', requirePrivilege('membership_statistics', 'view'), asy
          WHERE waiting_since IS NULL
          GROUP BY group_id
        ) gm_counts ON gm_counts.group_id = g.id
-       WHERE g.status = 'Active'`,
+       WHERE g.status = 'active'`,
     );
 
     const [notInGroup] = await tenantQuery(
