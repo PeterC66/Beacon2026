@@ -194,6 +194,10 @@ export const members = {
     if (params.to)   qs.set('to',   params.to);
     return request(`/members/statistics${qs.toString() ? '?' + qs.toString() : ''}`);
   },
+  listRenewals:    ()        => request('/members/renewals'),
+  renew:           (data)    => request('/members/renew', { method: 'POST', body: JSON.stringify(data) }),
+  listNonRenewals: (mode)    => request(`/members/non-renewals?mode=${mode}`),
+  lapse:           (memberIds) => request('/members/lapse', { method: 'POST', body: JSON.stringify({ memberIds }) }),
   create:   (data, confirmed) =>
     request(`/members${confirmed ? '?confirmed=1' : ''}`, { method: 'POST', body: JSON.stringify(data) }),
   update:   (id, data)        => request(`/members/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),

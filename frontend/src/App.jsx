@@ -33,8 +33,10 @@ import AuditLog           from './pages/misc/AuditLog.jsx';
 import OfficerList        from './pages/misc/OfficerList.jsx';
 import DataBackup         from './pages/misc/DataBackup.jsx';
 import PersonalPreferences from './pages/settings/PersonalPreferences.jsx';
-import RecentMembers     from './pages/members/RecentMembers.jsx';
-import MemberStatistics  from './pages/members/MemberStatistics.jsx';
+import RecentMembers      from './pages/members/RecentMembers.jsx';
+import MemberStatistics   from './pages/members/MemberStatistics.jsx';
+import MembershipRenewals from './pages/membership/MembershipRenewals.jsx';
+import NonRenewals        from './pages/membership/NonRenewals.jsx';
 
 function ProtectedRoute({ children }) {
   const { isLoggedIn } = useAuth();
@@ -60,6 +62,8 @@ export default function App() {
           <Route path="/users"      element={<ProtectedRoute><UserList /></ProtectedRoute>} />
           <Route path="/users/new"  element={<ProtectedRoute><UserEditor /></ProtectedRoute>} />
           <Route path="/users/:id"  element={<ProtectedRoute><UserEditor /></ProtectedRoute>} />
+          <Route path="/membership/renewals"     element={<ProtectedRoute><MembershipRenewals /></ProtectedRoute>} />
+          <Route path="/membership/non-renewals" element={<ProtectedRoute><NonRenewals /></ProtectedRoute>} />
           <Route path="/membership/classes"      element={<ProtectedRoute><MemberClassList /></ProtectedRoute>} />
           <Route path="/membership/classes/new"  element={<ProtectedRoute><MemberClassEditor /></ProtectedRoute>} />
           <Route path="/membership/classes/:id"  element={<ProtectedRoute><MemberClassEditor /></ProtectedRoute>} />

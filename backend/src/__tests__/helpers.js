@@ -30,6 +30,8 @@ export const ALL_PRIVS = [
   'offices:view', 'offices:create', 'offices:change', 'offices:delete',
   'members_recent:view', 'members_recent:download',
   'membership_statistics:view', 'membership_statistics:download',
+  'membership_renewals:view', 'membership_renewals:renew',
+  'members_non_renewals:view', 'members_non_renewals:lapse',
   'settings:view', 'settings:change',
   'data_export_backup:view', 'data_export_backup:download', 'data_export_backup:restore',
   'addresses_export:view', 'addresses_export:download',

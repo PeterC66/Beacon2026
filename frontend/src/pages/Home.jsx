@@ -20,9 +20,9 @@ export default function Home() {
       items: [
         { label: 'Members',             to: can('members_list', 'view')   ? '/members'     : null },
         { label: 'Add new member',      to: can('member_record', 'create') ? '/members/new' : null },
-        { label: 'Membership renewals', to: null },
+        { label: 'Membership renewals', to: can('membership_renewals', 'view') ? '/membership/renewals' : null },
         { label: 'Recent members',      to: can('members_recent', 'view') ? '/members/recent' : null },
-        { label: 'Non-renewals',        to: null },
+        { label: 'Non-renewals',        to: can('members_non_renewals', 'view') ? '/membership/non-renewals' : null },
         { label: 'Membership cards',    to: null },
         { label: 'Addresses export',    to: can('addresses_export', 'view') ? '/addresses-export' : null },
         { label: 'Statistics',          to: can('membership_statistics', 'view') ? '/members/statistics' : null },
