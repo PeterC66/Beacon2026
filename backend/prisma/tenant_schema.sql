@@ -325,6 +325,10 @@ CREATE TABLE IF NOT EXISTS :schema.tenant_settings (
   updated_at                TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
+-- Add membership year start columns idempotently
+ALTER TABLE :schema.tenant_settings ADD COLUMN IF NOT EXISTS year_start_month INTEGER NOT NULL DEFAULT 1;
+ALTER TABLE :schema.tenant_settings ADD COLUMN IF NOT EXISTS year_start_day   INTEGER NOT NULL DEFAULT 1;
+
 -- Ensure every tenant has exactly one settings row
 INSERT INTO :schema.tenant_settings (id) VALUES ('singleton') ON CONFLICT (id) DO NOTHING;
 
