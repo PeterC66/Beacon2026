@@ -182,6 +182,18 @@ export const members = {
   },
   get:      (id)              => request(`/members/${id}`),
   validate: ()               => request('/members/validate'),
+  recent:   (params = {}) => {
+    const qs = new URLSearchParams();
+    if (params.from) qs.set('from', params.from);
+    if (params.to)   qs.set('to',   params.to);
+    return request(`/members/recent${qs.toString() ? '?' + qs.toString() : ''}`);
+  },
+  statistics: (params = {}) => {
+    const qs = new URLSearchParams();
+    if (params.from) qs.set('from', params.from);
+    if (params.to)   qs.set('to',   params.to);
+    return request(`/members/statistics${qs.toString() ? '?' + qs.toString() : ''}`);
+  },
   create:   (data, confirmed) =>
     request(`/members${confirmed ? '?confirmed=1' : ''}`, { method: 'POST', body: JSON.stringify(data) }),
   update:   (id, data)        => request(`/members/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
