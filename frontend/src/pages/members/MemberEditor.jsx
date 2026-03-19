@@ -188,15 +188,17 @@ export default function MemberEditor() {
     if (!form.surname.trim())    errs.surname   = 'Surname is required';
     if (!form.statusId)          errs.statusId  = 'Status is required';
     if (!form.classId)           errs.classId   = 'Class is required';
-    if (!form.joinedOn)          errs.joinedOn  = 'Date joined is required';
+    if (!form.joinedOn)          errs.joinedOn    = 'Date joined is required';
+    if (isNew && !form.nextRenewal) errs.nextRenewal = 'Next renewal date is required';
 
     // Validate new partner fields if in new-partner mode
     if (isNew && newPartnerMode) {
-      if (!npForm.forenames.trim()) errs.npForenames = 'Partner forenames is required';
-      if (!npForm.surname.trim())   errs.npSurname   = 'Partner surname is required';
-      if (!npForm.statusId)         errs.npStatusId  = 'Partner status is required';
-      if (!npForm.classId)          errs.npClassId   = 'Partner class is required';
-      if (!npForm.joinedOn)         errs.npJoinedOn  = 'Partner joined date is required';
+      if (!npForm.forenames.trim())  errs.npForenames  = 'Partner forenames is required';
+      if (!npForm.surname.trim())    errs.npSurname    = 'Partner surname is required';
+      if (!npForm.statusId)          errs.npStatusId   = 'Partner status is required';
+      if (!npForm.classId)           errs.npClassId    = 'Partner class is required';
+      if (!npForm.joinedOn)          errs.npJoinedOn   = 'Partner joined date is required';
+      if (!npForm.nextRenewal)       errs.npNextRenewal = 'Partner next renewal date is required';
     }
 
     // Postcode is required unless sharing a partner's address (existing or new)
@@ -557,10 +559,11 @@ export default function MemberEditor() {
                 {fieldErrors.joinedOn && <p className={errMsgCls}>{fieldErrors.joinedOn}</p>}
               </div>
               <div>
-                <label className={labelCls}>Next renewal</label>
+                <label className={labelCls}><strong>Next renewal</strong>{isNew && <span className="text-red-500 ml-1">*</span>}</label>
                 <DateInput value={form.nextRenewal}
                   onChange={(v) => set('nextRenewal', v)}
-                  className={inputCls} />
+                  className={isNew ? ic('nextRenewal') : inputCls} />
+                {fieldErrors.nextRenewal && <p className={errMsgCls}>{fieldErrors.nextRenewal}</p>}
               </div>
             </div>
           </div>
@@ -794,8 +797,9 @@ export default function MemberEditor() {
                     <DateInput value={npForm.joinedOn} onChange={(v) => setNp('joinedOn', v)} className={inputCls} />
                   </div>
                   <div>
-                    <label className={labelCls}>Next renewal</label>
-                    <DateInput value={npForm.nextRenewal} onChange={(v) => setNp('nextRenewal', v)} className={inputCls} />
+                    <label className={labelCls}><strong>Next renewal</strong><span className="text-red-500 ml-1">*</span></label>
+                    <DateInput value={npForm.nextRenewal} onChange={(v) => setNp('nextRenewal', v)} className={fieldErrors.npNextRenewal ? ic('npNextRenewal') : inputCls} />
+                    {fieldErrors.npNextRenewal && <p className={errMsgCls}>{fieldErrors.npNextRenewal}</p>}
                   </div>
                   <div>
                     <label className={labelCls}>Gift Aid from</label>

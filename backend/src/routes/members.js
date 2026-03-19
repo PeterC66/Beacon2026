@@ -431,7 +431,7 @@ router.post('/renew', requirePrivilege('membership_renewals', 'renew'), async (r
           [data.accountId, fromTo, amount, data.paymentMethod, memberId],
         );
 
-        logAudit(slug, req.user.userId, 'update', 'member', memberId, { renewed: true, newNextRenewal });
+        logAudit(slug, { userId: req.user.userId, userName: req.user.name, action: 'renew', entityType: 'member', entityId: memberId, detail: JSON.stringify({ newNextRenewal }) });
         renewed.push({ memberId, newNextRenewal, transactionNumber: txn.transaction_number });
       } catch (err) {
         errors.push({ memberId, error: err.message });
@@ -542,7 +542,7 @@ router.post('/lapse', requirePrivilege('members_non_renewals', 'lapse'), async (
       [lapsedStatus.id, memberIds],
     );
 
-    logAudit(slug, req.user.userId, 'update', 'member', memberIds.join(','), { lapsed: true });
+    logAudit(slug, { userId: req.user.userId, userName: req.user.name, action: 'lapse', entityType: 'member', entityId: memberIds.join(',') });
     res.json({ lapsed: memberIds.length });
   } catch (err) {
     next(err);
@@ -662,7 +662,7 @@ const newPartnerSchema = z.object({
   statusId:    z.string().min(1),
   classId:     z.string().min(1),
   joinedOn:    z.string().min(1),
-  nextRenewal: z.string().optional(),
+  nextRenewal: z.string().min(1, 'Next renewal date is required'),
   giftAidFrom: z.string().optional(),
 });
 
@@ -677,7 +677,7 @@ const createMemberSchema = z.object({
   statusId:    z.string().min(1),
   classId:     z.string().min(1),
   joinedOn:    z.string().min(1, 'Date joined is required'),  // ISO date string
-  nextRenewal: z.string().optional(),
+  nextRenewal: z.string().min(1, 'Next renewal date is required'),
   giftAidFrom: z.string().optional(),
   homeU3a:     z.string().max(100).optional(),
   notes:       z.string().optional(),
