@@ -241,7 +241,7 @@ describe('GET /members/statistics', () => {
     // settings
     tenantQuery.mockResolvedValueOnce([{ year_start_month: 1, year_start_day: 1, advance_renewals_weeks: 4, grace_lapse_weeks: 4 }]);
     // classStats
-    tenantQuery.mockResolvedValueOnce([{ id: 'mc1', name: 'Individual', sort_order: 1, total: 5, with_email: 4, first_year: 2, second_year_plus: 3 }]);
+    tenantQuery.mockResolvedValueOnce([{ id: 'mc1', name: 'Individual', total: 5, with_email: 4, first_year: 2, second_year_plus: 3 }]);
     // statusCounts
     tenantQuery.mockResolvedValueOnce([{ current_not_renewed: 1, lapsed_count: 2 }]);
     // groupStats
@@ -249,7 +249,7 @@ describe('GET /members/statistics', () => {
     // notInGroup
     tenantQuery.mockResolvedValueOnce([{ count: 2 }]);
     // renewStats
-    tenantQuery.mockResolvedValueOnce([{ id: 'mc1', name: 'Individual', sort_order: 1, not_renewed: 1, new_members: 2 }]);
+    tenantQuery.mockResolvedValueOnce([{ id: 'mc1', name: 'Individual', not_renewed: 1, new_members: 2 }]);
 
     const res = await request(app)
       .get('/members/statistics')
