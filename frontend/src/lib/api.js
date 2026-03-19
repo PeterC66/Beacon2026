@@ -151,6 +151,21 @@ export const memberStatuses = {
   delete: (id)       => request(`/member-statuses/${id}`, { method: 'DELETE' }),
 };
 
+// ─── Address Export ───────────────────────────────────────────────────────────
+
+export const addressExport = {
+  list: (params = {}) => {
+    const qs = new URLSearchParams();
+    if (params.status)     qs.set('status',     params.status);
+    if (params.classId)    qs.set('classId',    params.classId);
+    if (params.pollId)     qs.set('pollId',     params.pollId);
+    if (params.negatePoll) qs.set('negatePoll', params.negatePoll);
+    if (params.groupId)    qs.set('groupId',    params.groupId);
+    const query = qs.toString();
+    return request(`/address-export${query ? '?' + query : ''}`);
+  },
+};
+
 // ─── Members ──────────────────────────────────────────────────────────────
 
 export const members = {
@@ -167,6 +182,22 @@ export const members = {
   },
   get:      (id)              => request(`/members/${id}`),
   validate: ()               => request('/members/validate'),
+  recent:   (params = {}) => {
+    const qs = new URLSearchParams();
+    if (params.from) qs.set('from', params.from);
+    if (params.to)   qs.set('to',   params.to);
+    return request(`/members/recent${qs.toString() ? '?' + qs.toString() : ''}`);
+  },
+  statistics: (params = {}) => {
+    const qs = new URLSearchParams();
+    if (params.from) qs.set('from', params.from);
+    if (params.to)   qs.set('to',   params.to);
+    return request(`/members/statistics${qs.toString() ? '?' + qs.toString() : ''}`);
+  },
+  listRenewals:    ()        => request('/members/renewals'),
+  renew:           (data)    => request('/members/renew', { method: 'POST', body: JSON.stringify(data) }),
+  listNonRenewals: (mode)    => request(`/members/non-renewals?mode=${mode}`),
+  lapse:           (memberIds) => request('/members/lapse', { method: 'POST', body: JSON.stringify({ memberIds }) }),
   create:   (data, confirmed) =>
     request(`/members${confirmed ? '?confirmed=1' : ''}`, { method: 'POST', body: JSON.stringify(data) }),
   update:   (id, data)        => request(`/members/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),

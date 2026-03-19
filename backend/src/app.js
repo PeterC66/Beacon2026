@@ -28,6 +28,7 @@ import pollRoutes          from './routes/polls.js';
 import auditRoutes         from './routes/audit.js';
 import officeRoutes        from './routes/offices.js';
 import backupRoutes        from './routes/backup.js';
+import addressExportRoutes from './routes/addressExport.js';
 import { errorHandler } from './middleware/errorHandler.js';
 
 const app = express();
@@ -64,6 +65,7 @@ app.use('/polls',           pollRoutes);
 app.use('/audit',           auditRoutes);
 app.use('/offices',         officeRoutes);
 app.use('/backup',          backupRoutes);
+app.use('/address-export',  addressExportRoutes);
 
 app.get('/health', (_req, res) => res.json({
   status:  'ok',

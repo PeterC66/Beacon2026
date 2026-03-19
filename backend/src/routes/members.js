@@ -113,6 +113,442 @@ router.get('/', requirePrivilege('members_list', 'view'), async (req, res, next)
 // Returns all members with their address data for client-side data quality checks.
 // Requires settings:view (admin only).
 
+// ─── GET /members/recent ──────────────────────────────────────────────────
+// Returns members who joined in the given date range.
+// Query params: from (ISO date), to (ISO date). Defaults: last 30 days.
+
+router.get('/recent', requirePrivilege('members_recent', 'view'), async (req, res, next) => {
+  try {
+    const slug = req.user.tenantSlug;
+    const toDate   = req.query.to   || new Date().toISOString().slice(0, 10);
+    const fromDate = req.query.from || (() => {
+      const d = new Date(); d.setDate(d.getDate() - 30); return d.toISOString().slice(0, 10);
+    })();
+
+    const rows = await tenantQuery(
+      slug,
+      `SELECT m.id, m.membership_number, m.forenames, m.surname, m.email, m.mobile,
+              m.joined_on,
+              mc.name AS class_name,
+              ms.name AS status_name
+       FROM members m
+       LEFT JOIN member_classes   mc ON mc.id = m.class_id
+       LEFT JOIN member_statuses  ms ON ms.id = m.status_id
+       WHERE m.joined_on >= $1::date
+         AND m.joined_on <= $2::date
+       ORDER BY m.joined_on DESC, m.surname, m.forenames`,
+      [fromDate, toDate],
+    );
+    res.json(rows);
+  } catch (err) {
+    next(err);
+  }
+});
+
+// ─── GET /members/statistics ──────────────────────────────────────────────
+// Returns membership and group statistics.
+// Query params: from, to — date range for section 4 (Members by Renew Date).
+
+router.get('/statistics', requirePrivilege('membership_statistics', 'view'), async (req, res, next) => {
+  try {
+    const slug = req.user.tenantSlug;
+
+    // Fetch settings for year start and renewal periods
+    const [cfg] = await tenantQuery(
+      slug,
+      `SELECT year_start_month, year_start_day, advance_renewals_weeks, grace_lapse_weeks
+       FROM tenant_settings WHERE id = 'singleton'`,
+    );
+    const yearStartMonth = cfg?.year_start_month ?? 1;
+    const yearStartDay   = cfg?.year_start_day   ?? 1;
+    const advanceWeeks   = cfg?.advance_renewals_weeks ?? 4;
+    const graceLapse     = cfg?.grace_lapse_weeks      ?? 4;
+
+    // Compute current membership year start date
+    const now = new Date();
+    const thisYear = now.getFullYear();
+    const candidateStart = new Date(thisYear, yearStartMonth - 1, yearStartDay);
+    const yearStartDate = candidateStart <= now
+      ? candidateStart
+      : new Date(thisYear - 1, yearStartMonth - 1, yearStartDay);
+    const yearStartIso = yearStartDate.toISOString().slice(0, 10);
+
+    // Section 2: Current members by class
+    const classStats = await tenantQuery(
+      slug,
+      `SELECT mc.id, mc.name,
+              COUNT(m.id)::int                                    AS total,
+              COUNT(m.id) FILTER (WHERE m.email IS NOT NULL AND m.email <> '')::int AS with_email,
+              COUNT(m.id) FILTER (WHERE m.joined_on >= $1::date)::int               AS first_year,
+              COUNT(m.id) FILTER (WHERE m.joined_on <  $1::date)::int               AS second_year_plus
+       FROM member_classes mc
+       LEFT JOIN members m ON m.class_id = mc.id
+                           AND m.status_id IN (
+                               SELECT id FROM member_statuses WHERE name ILIKE '%Current%'
+                           )
+       GROUP BY mc.id, mc.name
+       ORDER BY mc.name`,
+      [yearStartIso],
+    );
+
+    const totalCurrent = classStats.reduce((s, r) => s + r.total, 0);
+
+    // Section 1: General member status counts
+    const [statusCounts] = await tenantQuery(
+      slug,
+      `SELECT
+         COUNT(*) FILTER (
+           WHERE status_id IN (SELECT id FROM member_statuses WHERE name ILIKE '%Current%')
+             AND (next_renewal IS NULL OR next_renewal < $1::date)
+         )::int AS current_not_renewed,
+         COUNT(*) FILTER (
+           WHERE status_id IN (SELECT id FROM member_statuses WHERE name ILIKE '%Lapsed%')
+         )::int AS lapsed_count
+       FROM members`,
+      [yearStartIso],
+    );
+
+    // Section 3: Active groups
+    const [groupStats] = await tenantQuery(
+      slug,
+      `SELECT
+         COUNT(*)::int AS active_groups,
+         COALESCE(AVG(gm_counts.cnt), 0)::numeric(10,1) AS avg_members
+       FROM groups g
+       LEFT JOIN (
+         SELECT group_id, COUNT(*)::int AS cnt
+         FROM group_members
+         WHERE waiting_since IS NULL
+         GROUP BY group_id
+       ) gm_counts ON gm_counts.group_id = g.id
+       WHERE g.status = 'active'`,
+    );
+
+    const [notInGroup] = await tenantQuery(
+      slug,
+      `SELECT COUNT(*)::int AS count
+       FROM members m
+       WHERE status_id IN (SELECT id FROM member_statuses WHERE name ILIKE '%Current%')
+         AND NOT EXISTS (
+           SELECT 1 FROM group_members gm
+           WHERE gm.member_id = m.id AND gm.waiting_since IS NULL
+         )`,
+    );
+
+    // Section 4: Members by Renew Date
+    const toDate   = req.query.to   || now.toISOString().slice(0, 10);
+    const fromDate = req.query.from || yearStartIso;
+
+    const renewStats = await tenantQuery(
+      slug,
+      `SELECT mc.id, mc.name,
+              COUNT(m.id) FILTER (
+                WHERE m.status_id IN (SELECT id FROM member_statuses WHERE name ILIKE '%Current%')
+                  AND m.next_renewal IS NOT NULL
+                  AND m.next_renewal >= $1::date
+                  AND m.next_renewal <= $2::date
+              )::int AS not_renewed,
+              COUNT(m.id) FILTER (
+                WHERE m.joined_on >= $1::date
+                  AND m.joined_on <= $2::date
+              )::int AS new_members
+       FROM member_classes mc
+       LEFT JOIN members m ON m.class_id = mc.id
+       GROUP BY mc.id, mc.name
+       ORDER BY mc.name`,
+      [fromDate, toDate],
+    );
+
+    res.json({
+      yearStart: yearStartIso,
+      advanceRenewalsWeeks: advanceWeeks,
+      graceLapseWeeks:      graceLapse,
+      currentNotRenewed:    statusCounts?.current_not_renewed ?? 0,
+      lapsedCount:          statusCounts?.lapsed_count        ?? 0,
+      totalCurrent,
+      classStats,
+      activeGroups:         groupStats?.active_groups ?? 0,
+      avgGroupMembers:      groupStats?.avg_members   ?? 0,
+      membersNotInGroup:    notInGroup?.count          ?? 0,
+      renewStats,
+      renewFrom:  fromDate,
+      renewTo:    toDate,
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// ─── GET /members/renewals ────────────────────────────────────────────────
+// Lists Current and Lapsed members with fee info for the renewals screen.
+// Also returns year boundaries so the client can filter by period.
+
+router.get('/renewals', requirePrivilege('membership_renewals', 'view'), async (req, res, next) => {
+  try {
+    const slug = req.user.tenantSlug;
+
+    const [cfg] = await tenantQuery(
+      slug,
+      `SELECT year_start_month, year_start_day, advance_renewals_weeks
+       FROM tenant_settings WHERE id = 'singleton'`,
+    );
+    const ysm  = cfg?.year_start_month     ?? 1;
+    const ysd  = cfg?.year_start_day       ?? 1;
+    const advW = cfg?.advance_renewals_weeks ?? 4;
+
+    const now = new Date();
+    const yr  = now.getFullYear();
+    const candidateStart = new Date(yr, ysm - 1, ysd);
+    const yearStart = candidateStart <= now
+      ? candidateStart
+      : new Date(yr - 1, ysm - 1, ysd);
+
+    const prevYearStart = new Date(yearStart);
+    prevYearStart.setFullYear(prevYearStart.getFullYear() - 1);
+
+    const nextYearStart = new Date(yearStart);
+    nextYearStart.setFullYear(nextYearStart.getFullYear() + 1);
+
+    // "Next year" tab only visible within advance_renewals_weeks before nextYearStart
+    const advanceStart = new Date(nextYearStart);
+    advanceStart.setDate(advanceStart.getDate() - advW * 7);
+    const showNextYear = now >= advanceStart;
+
+    const rows = await tenantQuery(
+      slug,
+      `SELECT m.id, m.membership_number, m.forenames, m.surname, m.known_as,
+              ms.id   AS status_id, ms.name AS status_name,
+              mc.id   AS class_id,  mc.name AS class_name,
+              mc.fee, mc.gift_aid_fee,
+              m.next_renewal, m.gift_aid_from, m.partner_id,
+              p.forenames AS partner_forenames, p.surname AS partner_surname
+       FROM members m
+       LEFT JOIN member_statuses ms ON ms.id = m.status_id
+       LEFT JOIN member_classes  mc ON mc.id = m.class_id
+       LEFT JOIN members          p ON p.id  = m.partner_id
+       WHERE ms.name ILIKE '%Current%' OR ms.name ILIKE '%Lapsed%'
+       ORDER BY m.surname, m.forenames`,
+    );
+
+    res.json({
+      members: rows,
+      yearStart:     yearStart.toISOString().slice(0, 10),
+      prevYearStart: prevYearStart.toISOString().slice(0, 10),
+      nextYearStart: nextYearStart.toISOString().slice(0, 10),
+      showNextYear,
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// ─── POST /members/renew ──────────────────────────────────────────────────
+// Bulk-renews the given members: advances next_renewal by 1 year, sets
+// status to Current if Lapsed, creates a finance transaction for each.
+
+const renewSchema = z.object({
+  memberIds:      z.array(z.string().min(1)).min(1),
+  accountId:      z.string().min(1),
+  paymentMethod:  z.string().min(1),
+  amounts:        z.record(z.string(), z.number().positive()),
+  giftAidChanges: z.record(z.string(), z.boolean()).optional(),
+  yearStart:      z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+});
+
+router.post('/renew', requirePrivilege('membership_renewals', 'renew'), async (req, res, next) => {
+  try {
+    const slug = req.user.tenantSlug;
+    const data = renewSchema.parse(req.body);
+
+    // Find the "Current" status id to upgrade Lapsed members
+    const [currentStatus] = await tenantQuery(
+      slug,
+      `SELECT id FROM member_statuses WHERE name ILIKE '%Current%' ORDER BY name LIMIT 1`,
+    );
+    if (!currentStatus) throw new AppError('No "Current" member status found.', 400);
+
+    const renewed = [];
+    const errors  = [];
+
+    for (const memberId of data.memberIds) {
+      try {
+        // Fetch member to get current next_renewal and status
+        const [m] = await tenantQuery(
+          slug,
+          `SELECT m.id, m.forenames, m.surname, m.next_renewal, m.status_id,
+                  ms.name AS status_name, m.gift_aid_from
+           FROM members m
+           LEFT JOIN member_statuses ms ON ms.id = m.status_id
+           WHERE m.id = $1`,
+          [memberId],
+        );
+        if (!m) { errors.push({ memberId, error: 'Member not found' }); continue; }
+
+        // New next_renewal = current next_renewal + 1 year (or yearStart + 1 year if null)
+        const base = m.next_renewal
+          ? String(m.next_renewal).slice(0, 10)
+          : data.yearStart;
+        const baseDate = new Date(base);
+        baseDate.setFullYear(baseDate.getFullYear() + 1);
+        const newNextRenewal = baseDate.toISOString().slice(0, 10);
+
+        // Should we set to Current?
+        const isLapsed = (m.status_name ?? '').toLowerCase().includes('lapsed');
+        const newStatusId = isLapsed ? currentStatus.id : m.status_id;
+
+        // Gift Aid update
+        const gaChange = data.giftAidChanges?.[memberId];
+        let giftAidFrom;
+        if (gaChange === true && !m.gift_aid_from) {
+          giftAidFrom = 'TODAY';
+        } else if (gaChange === false) {
+          giftAidFrom = null;
+        } else {
+          giftAidFrom = m.gift_aid_from ? String(m.gift_aid_from).slice(0, 10) : null;
+        }
+
+        // Update member record
+        await tenantQuery(
+          slug,
+          `UPDATE members
+           SET next_renewal  = $1::date,
+               status_id     = $2,
+               gift_aid_from = $3::date,
+               updated_at    = now()
+           WHERE id = $4`,
+          [newNextRenewal, newStatusId, giftAidFrom === 'TODAY' ? new Date().toISOString().slice(0, 10) : giftAidFrom, memberId],
+        );
+
+        // Create finance transaction (no category splits — user can categorize via ledger)
+        const amount = data.amounts[memberId];
+        const fromTo = `${m.forenames} ${m.surname}`;
+        const [txn] = await tenantQuery(
+          slug,
+          `INSERT INTO transactions
+             (account_id, date, type, from_to, amount, payment_method, member_id_1)
+           VALUES ($1, CURRENT_DATE, 'in', $2, $3::numeric, $4, $5)
+           RETURNING id, transaction_number`,
+          [data.accountId, fromTo, amount, data.paymentMethod, memberId],
+        );
+
+        logAudit(slug, req.user.userId, 'update', 'member', memberId, { renewed: true, newNextRenewal });
+        renewed.push({ memberId, newNextRenewal, transactionNumber: txn.transaction_number });
+      } catch (err) {
+        errors.push({ memberId, error: err.message });
+      }
+    }
+
+    res.json({ renewed, errors });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// ─── GET /members/non-renewals ────────────────────────────────────────────
+// mode=this_year  — Current members whose next_renewal < current year start
+// mode=long_term  — All members whose next_renewal is older than deletion_years
+
+router.get('/non-renewals', requirePrivilege('members_non_renewals', 'view'), async (req, res, next) => {
+  try {
+    const slug = req.user.tenantSlug;
+    const mode = req.query.mode === 'long_term' ? 'long_term' : 'this_year';
+
+    const [cfg] = await tenantQuery(
+      slug,
+      `SELECT year_start_month, year_start_day, grace_lapse_weeks, deletion_years
+       FROM tenant_settings WHERE id = 'singleton'`,
+    );
+    const ysm          = cfg?.year_start_month   ?? 1;
+    const ysd          = cfg?.year_start_day     ?? 1;
+    const graceLapse   = cfg?.grace_lapse_weeks  ?? 4;
+    const deletionYrs  = cfg?.deletion_years     ?? 7;
+
+    const now = new Date();
+    const yr  = now.getFullYear();
+    const candidateStart = new Date(yr, ysm - 1, ysd);
+    const yearStart = candidateStart <= now
+      ? candidateStart
+      : new Date(yr - 1, ysm - 1, ysd);
+    const yearStartIso = yearStart.toISOString().slice(0, 10);
+
+    let rows;
+    if (mode === 'this_year') {
+      rows = await tenantQuery(
+        slug,
+        `SELECT m.id, m.membership_number, m.forenames, m.surname,
+                ms.name AS status_name,
+                mc.name AS class_name,
+                m.next_renewal, m.email, m.mobile
+         FROM members m
+         LEFT JOIN member_statuses ms ON ms.id = m.status_id
+         LEFT JOIN member_classes  mc ON mc.id = m.class_id
+         WHERE ms.name ILIKE '%Current%'
+           AND (m.next_renewal IS NULL OR m.next_renewal < $1::date)
+         ORDER BY m.surname, m.forenames`,
+        [yearStartIso],
+      );
+    } else {
+      // Compute cutoff date in JS to avoid PostgreSQL interval casting issues
+      const cutoff = new Date();
+      cutoff.setFullYear(cutoff.getFullYear() - deletionYrs);
+      const cutoffIso = cutoff.toISOString().slice(0, 10);
+
+      rows = await tenantQuery(
+        slug,
+        `SELECT m.id, m.membership_number, m.forenames, m.surname,
+                ms.name AS status_name,
+                mc.name AS class_name,
+                m.next_renewal, m.email, m.mobile
+         FROM members m
+         LEFT JOIN member_statuses ms ON ms.id = m.status_id
+         LEFT JOIN member_classes  mc ON mc.id = m.class_id
+         WHERE m.next_renewal IS NOT NULL
+           AND m.next_renewal < $1::date
+         ORDER BY m.next_renewal, m.surname`,
+        [cutoffIso],
+      );
+    }
+
+    res.json({
+      members: rows,
+      mode,
+      yearStart:    yearStartIso,
+      graceLapse,
+      deletionYears: deletionYrs,
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// ─── POST /members/lapse ──────────────────────────────────────────────────
+// Changes status to the "Lapsed" status for the given member IDs.
+
+router.post('/lapse', requirePrivilege('members_non_renewals', 'lapse'), async (req, res, next) => {
+  try {
+    const slug = req.user.tenantSlug;
+    const { memberIds } = z.object({ memberIds: z.array(z.string()).min(1) }).parse(req.body);
+
+    const [lapsedStatus] = await tenantQuery(
+      slug,
+      `SELECT id FROM member_statuses WHERE name ILIKE '%Lapsed%' ORDER BY name LIMIT 1`,
+    );
+    if (!lapsedStatus) throw new AppError('No "Lapsed" member status found.', 400);
+
+    await tenantQuery(
+      slug,
+      `UPDATE members SET status_id = $1, updated_at = now()
+       WHERE id = ANY($2::text[])`,
+      [lapsedStatus.id, memberIds],
+    );
+
+    logAudit(slug, req.user.userId, 'update', 'member', memberIds.join(','), { lapsed: true });
+    res.json({ lapsed: memberIds.length });
+  } catch (err) {
+    next(err);
+  }
+});
+
 router.get('/validate', requirePrivilege('member_data_validation', 'view'), async (req, res, next) => {
   try {
     const members = await tenantQuery(
