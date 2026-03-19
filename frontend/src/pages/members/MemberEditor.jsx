@@ -664,17 +664,33 @@ export default function MemberEditor() {
                   onChange={(e) => set('knownAs', e.target.value)}
                   className={inputCls} />
               </div>
-              <div>
-                <label className={labelCls}>Suffix <span className="text-slate-400 font-normal">(e.g. MBE)</span></label>
-                <input type="text" value={form.suffix}
-                  onChange={(e) => set('suffix', e.target.value)}
-                  className={inputCls} maxLength={30} />
-              </div>
-              <div>
-                <label className={labelCls}>Email</label>
-                <input type="email" value={form.email}
-                  onChange={(e) => set('email', e.target.value)}
-                  className={inputCls} />
+              <div className="sm:col-span-2 grid grid-cols-[1fr_2fr_auto] gap-4 items-end">
+                <div>
+                  <label className={labelCls}>Suffix <span className="text-slate-400 font-normal">(e.g. MBE)</span></label>
+                  <input type="text" value={form.suffix}
+                    onChange={(e) => set('suffix', e.target.value)}
+                    className={inputCls} maxLength={30} />
+                </div>
+                <div>
+                  <label className={labelCls}>Email</label>
+                  <input type="email" value={form.email}
+                    onChange={(e) => set('email', e.target.value)}
+                    className={inputCls} />
+                </div>
+                <div>
+                  {form.email && can('email', 'send') && (
+                    <button type="button"
+                      onClick={() => {
+                        sessionStorage.setItem('emailComposeMemberIds', JSON.stringify([id]));
+                        navigate('/email/compose');
+                      }}
+                      className="border border-blue-300 text-blue-600 hover:bg-blue-50 rounded px-3 py-2 text-sm transition-colors whitespace-nowrap"
+                      title="Send email to this member"
+                    >
+                      Send email
+                    </button>
+                  )}
+                </div>
               </div>
               <div>
                 <label className={labelCls}>Mobile</label>

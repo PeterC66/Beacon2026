@@ -268,6 +268,12 @@ which requires categories). Users can categorize later.
 - Download field picker (checkboxes before download)
 - `GET /members/download?format=excel|pdf|email-csv&ids=...&fields=...`
 
+### MemberEditor — email button
+
+- "Send email" button shown beside the Email field when the member has an email
+  address and the user has `email:send` privilege
+- Uses the same `sessionStorage.emailComposeMemberIds` pattern as the member list
+
 ---
 
 ## 6. Groups module
@@ -366,6 +372,12 @@ All in `tenant_schema.sql` (idempotent):
 
 - Calendar year (Jan 1–Dec 31) for year filtering
 - Running balance: client-side `useMemo`, meaningful only in account view sorted by date asc
+- **Opening balance (BF)**: when viewing by account, backend returns
+  `{ transactions, openingBalance }` instead of a plain array.
+  `openingBalance = balance_brought_forward + net of all prior-year transactions`.
+  Frontend shows a "Balance brought forward" row at the top of the table.
+- **Locked accounts** can still have `balance_brought_forward` edited; only
+  name/active/sort_order are blocked by the lock check
 
 ### Transfer Money (doc 7.3)
 
@@ -411,7 +423,8 @@ financeApi.listAccounts() / .createAccount(data) / .updateAccount(id, data) / .d
 
 ### Architecture
 
-- Backend: `email.js` at `/email`; token utility: `emailTokens.js`
+- Backend: `email.js` at `/email`; uses `requireAuth` middleware (router-level)
+  plus per-route `requirePrivilege`; token utility: `emailTokens.js`
 - SendGrid: `@sendgrid/mail`; env var `SENDGRID_API_KEY`
 - From: always `noreply@u3abeacon.org.uk`; Reply-To = sender's chosen address
 

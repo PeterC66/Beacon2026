@@ -32,6 +32,7 @@ export default function FinanceLedger() {
   const [selId,       setSelId]       = useState('');
   const [groupFilter, setGroupFilter] = useState('');
   const [txns,        setTxns]        = useState([]);
+  const [openingBal,  setOpeningBal]  = useState(0);
   const [loading,     setLoading]     = useState(false);
   const [error,       setError]       = useState(null);
 
@@ -55,7 +56,7 @@ export default function FinanceLedger() {
   }, []);
 
   // Reset selection when view changes
-  useEffect(() => { setSelId(''); setTxns([]); setGroupFilter(''); }, [view]);
+  useEffect(() => { setSelId(''); setTxns([]); setOpeningBal(0); setGroupFilter(''); }, [view]);
 
   const filteredGroups = useMemo(() => {
     const q = groupFilter.trim().toLowerCase();
@@ -74,7 +75,15 @@ export default function FinanceLedger() {
         if (view === 'account')  params.accountId  = selId;
         if (view === 'category') params.categoryId = selId;
         if (view === 'group')    params.groupId    = selId;
-        setTxns(await financeApi.listTransactions(params));
+        const result = await financeApi.listTransactions(params);
+        // Account view returns { transactions, openingBalance }; others return array
+        if (result && !Array.isArray(result) && result.transactions) {
+          setTxns(result.transactions);
+          setOpeningBal(result.openingBalance ?? 0);
+        } else {
+          setTxns(result);
+          setOpeningBal(0);
+        }
       } catch (err) { setError(err.message); }
       finally { setLoading(false); }
     }
@@ -84,14 +93,14 @@ export default function FinanceLedger() {
   // Running balance (only meaningful when sorted by date asc, for account view)
   const withBalance = useMemo(() => {
     if (view !== 'account') return sorted;
-    let balance = 0;
+    let balance = openingBal;
     return sorted.map((t) => {
       const amt = Number(t.amount);
       if (t.type === 'in')  balance += amt;
       if (t.type === 'out') balance -= amt;
       return { ...t, _balance: balance };
     });
-  }, [sorted, view]);
+  }, [sorted, view, openingBal]);
 
   // Totals — in category view use the split category_amount, not the full transaction amount
   const totals = useMemo(() => {
@@ -187,8 +196,10 @@ export default function FinanceLedger() {
 
         {!loading && selId && !error && (
           <>
-            {txns.length === 0 ? (
+            {txns.length === 0 && view !== 'account' ? (
               <p className="text-center text-slate-400 py-8">No transactions found for this {view} in {year}.</p>
+            ) : txns.length === 0 && view === 'account' ? (
+              <p className="text-center text-slate-400 py-8">No transactions found for this {view} in {year}. Opening balance: {fmtAmount(openingBal)}</p>
             ) : (
               <>
                 <div className="overflow-x-auto rounded-lg shadow-sm">
@@ -207,6 +218,17 @@ export default function FinanceLedger() {
                       </tr>
                     </thead>
                     <tbody>
+                      {view === 'account' && (
+                        <tr className="bg-slate-100 border-b border-slate-200 italic text-slate-600">
+                          <td className="px-3 py-2"></td>
+                          <td className="px-3 py-2"></td>
+                          <td className="px-3 py-2" colSpan={3}>Balance brought forward</td>
+                          <td className="px-3 py-2"></td>
+                          <td className="px-3 py-2"></td>
+                          <td className="px-3 py-2 text-right font-medium text-slate-700">{fmtAmount(openingBal)}</td>
+                          <td className="px-3 py-2"></td>
+                        </tr>
+                      )}
                       {withBalance.map((t, i) => (
                         <tr key={t.id} className={`border-b border-slate-100 ${i % 2 === 0 ? 'bg-yellow-50' : 'bg-white'}`}>
                           <td className="px-3 py-2">
