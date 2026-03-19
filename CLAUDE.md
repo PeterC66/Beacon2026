@@ -7,8 +7,7 @@
 | **This file (`CLAUDE.md`)** | Session setup, workflow rules, key conventions | Every session (auto-loaded) |
 | **`CLAUDE-STANDARDS.md`** | Cross-cutting checklist for all new code | Before starting any implementation |
 | **`CLAUDE-REFERENCE.md`** | Detailed implementation notes by module | When working on a specific module |
-| **`docs/FromBeacon/Beacon2 Project Definition.md`** | What has been built and what remains | Every session — living document |
-| **`docs/FromBeacon/CLAUDE_CODE_PROMPT.md`** | Full project brief | When unsure what to build next |
+| **`Beacon2 Project Definition.md`** | What has been built and what remains | Every session — living document |
 
 ---
 
@@ -24,7 +23,7 @@ git merge origin/main --no-edit
 This ensures that any files uploaded directly to `main` (design docs, prompts,
 reference material in `docs/`) are present in the working branch before starting work.
 
-Read `docs/FromBeacon/Beacon2 Project Definition.md` at the start of every session.
+Read `Beacon2 Project Definition.md` at the start of every session.
 
 ## If a document is not in your branch
 
