@@ -1,6 +1,6 @@
 // beacon2/frontend/src/pages/members/MemberEditor.jsx
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { isValidPhoneNumber } from 'libphonenumber-js';
 import { members as membersApi, memberStatuses as statusApi, memberClasses as classApi, finance as financeApi, polls as pollsApi, settings as settingsApi } from '../../lib/api.js';
@@ -8,6 +8,7 @@ import { useAuth } from '../../context/AuthContext.jsx';
 import NavBar from '../../components/NavBar.jsx';
 import PageHeader from '../../components/PageHeader.jsx';
 import DateInput from '../../components/DateInput.jsx';
+import { useUnsavedChanges } from '../../hooks/useUnsavedChanges.js';
 
 const BLANK_FORM = {
   title: '', forenames: '', surname: '', knownAs: '', suffix: '', email: '',
@@ -84,8 +85,11 @@ export default function MemberEditor() {
   const [accounts,       setAccounts]       = useState([]);
   const [loading,        setLoading]        = useState(!isNew);
   const [saving,         setSaving]         = useState(false);
+  const [saved,          setSaved]          = useState(false);
+  const savedTimer                          = useRef(null);
   const [deleting,       setDeleting]       = useState(false);
   const [error,          setError]          = useState(null);
+  const { markDirty, markClean } = useUnsavedChanges();
   // All inline validation errors — keyed by field name
   const [fieldErrors,    setFieldErrors]    = useState({});
   // Whether the current address is shared with the linked partner (from server)
@@ -219,6 +223,7 @@ export default function MemberEditor() {
 
   function set(field, value) {
     setForm((prev) => ({ ...prev, [field]: value }));
+    markDirty();
     // Clear the error for the field as soon as the user edits it
     if (fieldErrors[field]) {
       setFieldErrors((prev) => ({ ...prev, [field]: null }));
@@ -492,12 +497,16 @@ export default function MemberEditor() {
 
         await membersApi.update(id, patchPayload);
       }
-      navigate('/members');
+      markClean();
+      setSaved(true);
+      clearTimeout(savedTimer.current);
+      savedTimer.current = setTimeout(() => navigate('/members'), 1200);
     } catch (err) {
       if (err.status === 409 && err.body?.code === 'DUPLICATE_NAME') {
         if (confirm(`A member named "${form.forenames} ${form.surname}" already exists. Create anyway?`)) {
           try {
             await membersApi.create(payload, true);
+            markClean();
             navigate('/members');
             return;
           } catch (err2) {
@@ -566,6 +575,11 @@ export default function MemberEditor() {
           {isNew ? 'Add New Member' : `Member Record — ${form.forenames} ${form.surname}`}
         </h1>
 
+        {saved && (
+          <p className="text-green-700 text-sm font-medium bg-green-50 border border-green-200 rounded px-3 py-2 text-center">
+            ✓ Member record saved.
+          </p>
+        )}
         {error && (
           <div className="rounded-md bg-red-50 border border-red-300 px-4 py-3 text-red-700 text-sm font-medium text-center">
             {error}

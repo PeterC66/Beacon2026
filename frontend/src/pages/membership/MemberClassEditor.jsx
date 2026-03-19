@@ -1,11 +1,12 @@
 // beacon2/frontend/src/pages/membership/MemberClassEditor.jsx
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { memberClasses as api, settings as settingsApi } from '../../lib/api.js';
 import { useAuth } from '../../context/AuthContext.jsx';
 import NavBar from '../../components/NavBar.jsx';
 import PageHeader from '../../components/PageHeader.jsx';
+import { useUnsavedChanges } from '../../hooks/useUnsavedChanges.js';
 
 const BLANK = {
   name: '', current: true, explanation: '',
@@ -34,10 +35,14 @@ export default function MemberClassEditor() {
   const { can, tenant } = useAuth();
   const isNew = !id || id === 'new';
 
+  const { markDirty, markClean } = useUnsavedChanges();
+  const savedTimer = useRef(null);
+
   const [form,          setForm]          = useState(BLANK);
   const [locked,        setLocked]        = useState(false);
   const [loading,       setLoading]       = useState(!isNew);
   const [saving,        setSaving]        = useState(false);
+  const [saved,         setSaved]         = useState(false);
   const [savingFees,    setSavingFees]    = useState(false);
   const [deleting,      setDeleting]      = useState(false);
   const [error,         setError]         = useState(null);
@@ -96,9 +101,11 @@ export default function MemberClassEditor() {
 
   function set(field, value) {
     setForm((prev) => ({ ...prev, [field]: value }));
+    markDirty();
   }
 
   function setMonthFee(monthIndex, field, value) {
+    markDirty();
     setMonthlyFees((prev) => {
       const next = prev.map((r) => r.monthIndex === monthIndex ? { ...r, [field]: value } : r);
       // Auto-propagate to subsequent months if enabled
@@ -130,7 +137,10 @@ export default function MemberClassEditor() {
       } else {
         await api.update(id, payload);
       }
-      navigate('/membership/classes');
+      markClean();
+      setSaved(true);
+      clearTimeout(savedTimer.current);
+      savedTimer.current = setTimeout(() => navigate('/membership/classes'), 1200);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -150,6 +160,7 @@ export default function MemberClassEditor() {
         giftAidFee:  r.giftAidFee !== '' ? Number(r.giftAidFee) : null,
       }));
       await api.saveMonthlyFees(id, { fees });
+      markClean();
       setFeesSaved(true);
     } catch (err) {
       setError(err.message);
@@ -163,6 +174,7 @@ export default function MemberClassEditor() {
     setDeleting(true);
     try {
       await api.delete(id);
+      markClean();
       navigate('/membership/classes');
     } catch (err) {
       setError(err.message);
@@ -275,6 +287,12 @@ export default function MemberClassEditor() {
               </label>
             ))}
           </fieldset>
+
+          {saved && (
+            <p className="text-green-700 text-sm font-medium bg-green-50 border border-green-200 rounded px-3 py-2 text-center">
+              ✓ Saved successfully.
+            </p>
+          )}
 
           <div className="flex gap-3 pt-2">
             <button

@@ -6,6 +6,7 @@ import { useAuth } from '../../context/AuthContext.jsx';
 import PageHeader from '../../components/PageHeader.jsx';
 import NavBar from '../../components/NavBar.jsx';
 import { settings as settingsApi } from '../../lib/api.js';
+import { useUnsavedChanges } from '../../hooks/useUnsavedChanges.js';
 
 const MONTHS = [
   'January', 'February', 'March', 'April', 'May', 'June',
@@ -136,6 +137,7 @@ function SectionHeading({ children }) {
 // ─── Main component ───────────────────────────────────────────────────────
 export default function SystemSettings() {
   const { tenant, can } = useAuth();
+  const { markDirty, markClean } = useUnsavedChanges();
 
   const [form,    setForm]    = useState(toForm({}));
   const [loading, setLoading] = useState(true);
@@ -154,6 +156,7 @@ export default function SystemSettings() {
     const { name, value, type, checked } = e.target;
     setForm((prev) => ({ ...prev, [name]: type === 'checkbox' ? checked : value }));
     setSuccess(false);
+    markDirty();
   }
 
   async function handleSave(e) {
@@ -164,6 +167,7 @@ export default function SystemSettings() {
     try {
       const updated = await settingsApi.update(toPayload(form));
       setForm(toForm(updated));
+      markClean();
       setSuccess(true);
     } catch (err) {
       setError(err.message);

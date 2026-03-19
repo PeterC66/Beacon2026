@@ -1,12 +1,13 @@
 // beacon2/frontend/src/pages/users/UserEditor.jsx
 // Create or edit a system user and their role assignments.
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { users as usersApi, roles as rolesApi } from '../../lib/api.js';
 import { useAuth } from '../../context/AuthContext.jsx';
 import NavBar from '../../components/NavBar.jsx';
 import PageHeader from '../../components/PageHeader.jsx';
+import { useUnsavedChanges } from '../../hooks/useUnsavedChanges.js';
 
 const inputCls = 'w-full border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-slate-50 disabled:text-slate-500';
 
@@ -27,7 +28,10 @@ export default function UserEditor() {
   const [origRoleIds,  setOrigRoleIds]  = useState(new Set());
   const [loading,      setLoading]      = useState(!isNew);
   const [saving,       setSaving]       = useState(false);
+  const [saved,        setSaved]        = useState(false);
   const [error,        setError]        = useState(null);
+  const savedTimer = useRef(null);
+  const { markDirty, markClean } = useUnsavedChanges();
 
   useEffect(() => {
     async function load() {
@@ -56,6 +60,7 @@ export default function UserEditor() {
   }, [id, isNew]);
 
   function toggleRole(roleId) {
+    markDirty();
     setAssignedIds((prev) => {
       const next = new Set(prev);
       if (next.has(roleId)) next.delete(roleId);
@@ -84,7 +89,10 @@ export default function UserEditor() {
           active,
           roleIds: [...assignedIds],
         });
-        navigate(`/users/${created.id}`);
+        markClean();
+        setSaved(true);
+        clearTimeout(savedTimer.current);
+        savedTimer.current = setTimeout(() => navigate(`/users/${created.id}`), 1200);
       } else {
         const patch = { name: name.trim(), email: email.trim(), username: username.trim() || null, active };
         if (password) patch.password = password;
@@ -97,7 +105,10 @@ export default function UserEditor() {
           ...toRemove.map((rid) => usersApi.removeRole(id, rid)),
         ]);
 
-        navigate('/users');
+        markClean();
+        setSaved(true);
+        clearTimeout(savedTimer.current);
+        savedTimer.current = setTimeout(() => navigate('/users'), 1200);
       }
     } catch (err) {
       setError(err.message);
@@ -142,12 +153,18 @@ export default function UserEditor() {
           </div>
         )}
 
+        {saved && (
+          <p className="mb-4 text-green-700 text-sm font-medium bg-green-50 border border-green-200 rounded px-3 py-2 text-center">
+            ✓ Saved successfully.
+          </p>
+        )}
+
         {/* User details card */}
         <div className="bg-white/90 rounded-lg shadow-sm p-4 sm:p-6 mb-6 space-y-4">
 
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1">Name</label>
-            <input type="text" value={name} onChange={(e) => setName(e.target.value)}
+            <input type="text" value={name} onChange={(e) => { markDirty(); setName(e.target.value); }}
               disabled={!canEdit} className={inputCls} />
           </div>
 
@@ -158,7 +175,7 @@ export default function UserEditor() {
             <input
               type="text"
               value={username}
-              onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9]/g, ''))}
+              onChange={(e) => { markDirty(); setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9]/g, '')); }}
               disabled={!canEdit}
               placeholder="e.g. jbloggs"
               className={`${inputCls} font-mono`}
@@ -168,7 +185,7 @@ export default function UserEditor() {
 
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1">Email</label>
-            <input type="email" value={email} onChange={(e) => setEmail(e.target.value)}
+            <input type="email" value={email} onChange={(e) => { markDirty(); setEmail(e.target.value); }}
               disabled={!canEdit} className={inputCls} />
           </div>
 
@@ -180,7 +197,7 @@ export default function UserEditor() {
               <input
                 type={showPw ? 'text' : 'password'}
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                onChange={(e) => { markDirty(); setPassword(e.target.value); }}
                 disabled={!canEdit}
                 placeholder={isNew ? 'Required' : 'Leave blank to keep current'}
                 className={`${inputCls} pr-10`}
@@ -201,7 +218,7 @@ export default function UserEditor() {
             <input
               type="checkbox"
               checked={active}
-              onChange={(e) => setActive(e.target.checked)}
+              onChange={(e) => { markDirty(); setActive(e.target.checked); }}
               disabled={!canEdit}
               className="w-5 h-5 rounded border-slate-300 accent-blue-600"
             />
@@ -217,7 +234,7 @@ export default function UserEditor() {
                 {saving ? 'Saving…' : 'Save user'}
               </button>
               <button
-                onClick={() => navigate('/users')}
+                onClick={() => { markClean(); navigate('/users'); }}
                 className="px-5 py-2 border border-slate-300 rounded text-sm text-slate-700 hover:bg-slate-50 transition-colors"
               >
                 Cancel
@@ -269,7 +286,7 @@ export default function UserEditor() {
                   {saving ? 'Saving…' : 'Save user'}
                 </button>
                 <button
-                  onClick={() => navigate('/users')}
+                  onClick={() => { markClean(); navigate('/users'); }}
                   className="px-5 py-2 border border-slate-300 rounded text-sm text-slate-700 hover:bg-slate-50 transition-colors"
                 >
                   Cancel

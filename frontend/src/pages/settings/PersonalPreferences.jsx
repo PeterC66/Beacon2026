@@ -7,6 +7,7 @@ import { useAuth } from '../../context/AuthContext.jsx';
 import NavBar from '../../components/NavBar.jsx';
 import PageHeader from '../../components/PageHeader.jsx';
 import { getPreferences, savePreferences } from '../../hooks/usePreferences.js';
+import { useUnsavedChanges } from '../../hooks/useUnsavedChanges.js';
 
 // ── Helpers ──────────────────────────────────────────────────────────────
 
@@ -28,6 +29,7 @@ const STRENGTH_BARS   = ['', 'bg-red-500', 'bg-orange-400', 'bg-yellow-400', 'bg
 export default function PersonalPreferences() {
   const { tenant } = useAuth();
   const navLinks = [{ label: 'Home', to: '/' }];
+  const { markDirty, markClean } = useUnsavedChanges();
 
   // ── Section a: display prefs ────────────────────────────────────────
   const [prefs,      setPrefs]      = useState(getPreferences());
@@ -36,6 +38,7 @@ export default function PersonalPreferences() {
   function handleSavePrefs(e) {
     e.preventDefault();
     savePreferences(prefs);
+    markClean();
     setPrefsSaved(true);
     setTimeout(() => setPrefsSaved(false), 2500);
   }
@@ -64,6 +67,7 @@ export default function PersonalPreferences() {
     setPwErr({});
     try {
       await authApi.changePassword(pwForm.current, pwForm.newPw);
+      markClean();
       setPwMsg({ type: 'success', text: 'Password changed successfully.' });
       setPwForm({ current: '', newPw: '', confirm: '' });
     } catch (err) {
@@ -100,6 +104,7 @@ export default function PersonalPreferences() {
     setQaErr({});
     try {
       await authApi.updateQA(qa.question.trim(), qa.answer.trim());
+      markClean();
       setQaMsg({ type: 'success', text: 'Security Q&A updated.' });
       setQa((q) => ({ ...q, answer: '' }));
     } catch (err) {
@@ -129,7 +134,7 @@ export default function PersonalPreferences() {
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">Sort names by</label>
               <select value={prefs.sortBy}
-                onChange={(e) => setPrefs((p) => ({ ...p, sortBy: e.target.value }))}
+                onChange={(e) => { markDirty(); setPrefs((p) => ({ ...p, sortBy: e.target.value })); }}
                 className={inputCls}>
                 <option value="surname">Surname</option>
                 <option value="forename">Forename</option>
@@ -139,7 +144,7 @@ export default function PersonalPreferences() {
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">Display format</label>
               <select value={prefs.displayFormat}
-                onChange={(e) => setPrefs((p) => ({ ...p, displayFormat: e.target.value }))}
+                onChange={(e) => { markDirty(); setPrefs((p) => ({ ...p, displayFormat: e.target.value })); }}
                 className={inputCls}>
                 <option value="surname_first">Surname, Forename (e.g. Smith, John)</option>
                 <option value="forename_first">Forename Surname (e.g. John Smith)</option>
@@ -152,7 +157,7 @@ export default function PersonalPreferences() {
               </label>
               <input type="number" min={5} max={99}
                 value={prefs.inactivityTimeout}
-                onChange={(e) => setPrefs((p) => ({ ...p, inactivityTimeout: parseInt(e.target.value, 10) || 20 }))}
+                onChange={(e) => { markDirty(); setPrefs((p) => ({ ...p, inactivityTimeout: parseInt(e.target.value, 10) || 20 })); }}
                 className={inputCls} style={{ width: '6rem' }} />
               <p className="text-xs text-slate-500 mt-1">
                 After this many minutes of inactivity you will be logged out automatically.
@@ -178,7 +183,7 @@ export default function PersonalPreferences() {
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">Current password</label>
               <input type="password" value={pwForm.current} autoComplete="current-password"
-                onChange={(e) => setPwForm((f) => ({ ...f, current: e.target.value }))}
+                onChange={(e) => { markDirty(); setPwForm((f) => ({ ...f, current: e.target.value })); }}
                 className={pwErr.current ? errInCls : inputCls} />
               {pwErr.current && <p className={errMsgCls}>{pwErr.current}</p>}
             </div>
@@ -186,7 +191,7 @@ export default function PersonalPreferences() {
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">New password</label>
               <input type="password" value={pwForm.newPw} autoComplete="new-password"
-                onChange={(e) => setPwForm((f) => ({ ...f, newPw: e.target.value }))}
+                onChange={(e) => { markDirty(); setPwForm((f) => ({ ...f, newPw: e.target.value })); }}
                 className={pwErr.newPw ? errInCls : inputCls} />
               {pwForm.newPw && (
                 <div className="mt-2 space-y-1">
@@ -207,7 +212,7 @@ export default function PersonalPreferences() {
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">Confirm new password</label>
               <input type="password" value={pwForm.confirm} autoComplete="new-password"
-                onChange={(e) => setPwForm((f) => ({ ...f, confirm: e.target.value }))}
+                onChange={(e) => { markDirty(); setPwForm((f) => ({ ...f, confirm: e.target.value })); }}
                 className={pwErr.confirm ? errInCls : inputCls} />
               {pwErr.confirm && <p className={errMsgCls}>{pwErr.confirm}</p>}
               {!pwErr.confirm && pwForm.confirm && pwForm.newPw === pwForm.confirm && (
@@ -239,7 +244,7 @@ export default function PersonalPreferences() {
               <label className="block text-sm font-medium text-slate-700 mb-1">Question</label>
               <input type="text" value={qa.question} maxLength={200}
                 placeholder="e.g. What was the name of your first pet?"
-                onChange={(e) => setQa((q) => ({ ...q, question: e.target.value }))}
+                onChange={(e) => { markDirty(); setQa((q) => ({ ...q, question: e.target.value })); }}
                 className={qaErr.question ? errInCls : inputCls} />
               {qaErr.question && <p className={errMsgCls}>{qaErr.question}</p>}
             </div>
@@ -248,7 +253,7 @@ export default function PersonalPreferences() {
               <label className="block text-sm font-medium text-slate-700 mb-1">Answer</label>
               <input type="text" value={qa.answer} maxLength={200}
                 placeholder="Your answer (remember the format)"
-                onChange={(e) => setQa((q) => ({ ...q, answer: e.target.value }))}
+                onChange={(e) => { markDirty(); setQa((q) => ({ ...q, answer: e.target.value })); }}
                 className={qaErr.answer ? errInCls : inputCls} />
               {qaErr.answer && <p className={errMsgCls}>{qaErr.answer}</p>}
             </div>
