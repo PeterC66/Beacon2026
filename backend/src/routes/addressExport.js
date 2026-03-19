@@ -118,11 +118,11 @@ async function fetchMembers(slug, query) {
   return tenantQuery(
     slug,
     `SELECT m.id, m.title, m.forenames, m.known_as, m.surname,
-            m.email, m.mobile, m.telephone,
+            m.email, m.mobile,
             m.status_id, m.class_id, m.membership_number,
             m.address_id,
             a.house_no, a.street, a.add_line1, a.add_line2,
-            a.town, a.county, a.postcode, a.telephone AS addr_telephone
+            a.town, a.county, a.postcode, a.telephone
      FROM members m
      LEFT JOIN addresses a ON a.id = m.address_id
      ${where}
@@ -137,11 +137,11 @@ async function fetchMembersById(slug, ids) {
   return tenantQuery(
     slug,
     `SELECT m.id, m.title, m.forenames, m.known_as, m.surname,
-            m.email, m.mobile, m.telephone,
+            m.email, m.mobile,
             m.status_id, m.class_id, m.membership_number,
             m.address_id,
             a.house_no, a.street, a.add_line1, a.add_line2,
-            a.town, a.county, a.postcode, a.telephone AS addr_telephone
+            a.town, a.county, a.postcode, a.telephone
      FROM members m
      LEFT JOIN addresses a ON a.id = m.address_id
      WHERE m.id = ANY($1::text[])
@@ -259,7 +259,7 @@ router.get('/download', requirePrivilege('addresses_export', 'download'), async 
     for (const g of groups) {
       const name = combinedName(g.members);
       const addrLine1 = [g.house_no, g.street].filter(Boolean).join(' ');
-      const tel = g.addr_telephone || g.members[0]?.telephone || '';
+      const tel = g.telephone || '';
       ws.addRow({
         name,
         addr1:    addrLine1,
