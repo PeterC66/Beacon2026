@@ -160,10 +160,13 @@ describe('GET /finance/transactions', () => {
   beforeEach(() => vi.clearAllMocks());
 
   it('returns 200 when accountId provided', async () => {
-    tenantQuery.mockResolvedValueOnce([SAMPLE_TXN]);
+    tenantQuery.mockResolvedValueOnce([SAMPLE_TXN]);                      // transactions query
+    tenantQuery.mockResolvedValueOnce([{ balance_brought_forward: 0 }]);  // account BF query
+    tenantQuery.mockResolvedValueOnce([{ net: 0 }]);                      // prior-year net query
     const res = await request(app).get('/finance/transactions?accountId=a1&year=2026').set('Authorization', AUTH);
     expect(res.status).toBe(200);
-    expect(res.body[0].transaction_number).toBe(1);
+    expect(res.body.transactions[0].transaction_number).toBe(1);
+    expect(res.body.openingBalance).toBe(0);
   });
 
   it('returns empty array when no filter provided', async () => {

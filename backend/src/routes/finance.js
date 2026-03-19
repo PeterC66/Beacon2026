@@ -57,9 +57,13 @@ router.patch('/accounts/:id', requirePrivilege('finance_accounts', 'change'), as
       [req.params.id],
     );
     if (!current) throw AppError('Account not found.', 404);
-    if (current.locked) throw AppError('This account is locked and cannot be changed.', 400);
 
     const data = accountSchema.partial().parse(req.body);
+
+    // Locked accounts only allow balance_brought_forward to be changed
+    const onlyBF = Object.keys(data).every((k) => k === 'balance_brought_forward');
+    if (current.locked && !onlyBF) throw AppError('This account is locked — only the balance brought forward can be changed.', 400);
+
     const fields = [];
     const values = [];
     let i = 1;
@@ -350,6 +354,25 @@ router.get('/transactions', requirePrivilege('finance_ledger', 'view'), async (r
     }
 
     const rows = await tenantQuery(req.user.tenantSlug, sql, params);
+
+    // For account view, also compute the opening balance (BF + net of prior-year transactions)
+    if (accountId) {
+      const [acc] = await tenantQuery(
+        req.user.tenantSlug,
+        `SELECT balance_brought_forward::float FROM finance_accounts WHERE id = $1`,
+        [accountId],
+      );
+      const bf = acc?.balance_brought_forward ?? 0;
+      const [priorNet] = await tenantQuery(
+        req.user.tenantSlug,
+        `SELECT COALESCE(SUM(CASE WHEN type='in' THEN amount ELSE -amount END), 0)::float AS net
+         FROM transactions WHERE account_id = $1 AND date < $2::date`,
+        [accountId, yearStart],
+      );
+      const openingBalance = bf + (priorNet?.net ?? 0);
+      return res.json({ transactions: rows, openingBalance });
+    }
+
     res.json(rows);
   } catch (err) { next(err); }
 });
