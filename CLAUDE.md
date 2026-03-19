@@ -1136,6 +1136,46 @@ When a new Beacon2 feature is built, add a new spec (or extend an existing one) 
 
 ---
 
+## Addresses Export and Label Printing (March 2026)
+
+### Architecture
+
+- Backend: `backend/src/routes/addressExport.js` — mounted at `/address-export` in `app.js`
+- Frontend: `frontend/src/pages/members/AddressesExport.jsx` at `/addresses-export`
+- PDF generation: `pdfkit` package installed in backend (installed March 2026)
+- Privilege resources: `addresses_export` (view/download) and `address_labels` (download) — already in `privilegeResources.js` and `defaultRoles.js`
+
+### Endpoints
+
+| Route | Privilege | Description |
+|-------|-----------|-------------|
+| `GET /address-export` | `addresses_export:view` | List members (with filters) for selection |
+| `GET /address-export/download?format=...&ids=...` | `addresses_export:download` | Download Excel/CSV/TSV/TAM |
+| `GET /address-export/labels?ids=...&cols=...&...` | `address_labels:download` | Download PDF labels |
+
+### Filters supported
+
+`status` (comma-separated IDs), `classId`, `pollId`, `negatePoll` (`'1'`), `groupId`
+
+### Label settings
+
+Default: 3 columns, 7 rows, 70mm wide, 38mm high, 10mm top offset, 7mm left offset, 9pt font.
+Saved in `localStorage` under key `beacon2_label_settings`.
+
+### PDF label generation (PDFKit)
+
+- A4 page (595.28pt × 841.89pt), margin=0
+- Converts mm → points using factor `72/25.4`
+- Partners sharing the same `address_id` are combined into one label (same surname → "Title Init1 & Title Init2 Surname"; different surnames → full name & full name)
+- Multi-page: new page added when all label positions on current page are filled
+
+### NavBar prop
+
+`NavBar` accepts a `links` prop (not `items`). Passing `items` causes "Cannot read properties of undefined (reading 'map')" crash.
+
+### Test note
+
+"Addresses Export" appears in both the NavBar breadcrumb and the `<h1>`, so use `getAllByText` not `getByText` in tests.
 ## Recent Members and Statistics (March 2026 — doc 4.4 and 4.9)
 
 ### Membership year start setting
