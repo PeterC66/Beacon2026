@@ -15,6 +15,7 @@ import MemberClassEditor from './pages/membership/MemberClassEditor.jsx';
 import MemberStatusList  from './pages/membership/MemberStatusList.jsx';
 import MemberList        from './pages/members/MemberList.jsx';
 import MemberEditor      from './pages/members/MemberEditor.jsx';
+import AddressesExport   from './pages/members/AddressesExport.jsx';
 import GroupList         from './pages/groups/GroupList.jsx';
 import GroupRecord       from './pages/groups/GroupRecord.jsx';
 import FacultyList       from './pages/groups/FacultyList.jsx';
@@ -32,6 +33,8 @@ import AuditLog           from './pages/misc/AuditLog.jsx';
 import OfficerList        from './pages/misc/OfficerList.jsx';
 import DataBackup         from './pages/misc/DataBackup.jsx';
 import PersonalPreferences from './pages/settings/PersonalPreferences.jsx';
+import RecentMembers     from './pages/members/RecentMembers.jsx';
+import MemberStatistics  from './pages/members/MemberStatistics.jsx';
 
 function ProtectedRoute({ children }) {
   const { isLoggedIn } = useAuth();
@@ -61,9 +64,12 @@ export default function App() {
           <Route path="/membership/classes/new"  element={<ProtectedRoute><MemberClassEditor /></ProtectedRoute>} />
           <Route path="/membership/classes/:id"  element={<ProtectedRoute><MemberClassEditor /></ProtectedRoute>} />
           <Route path="/membership/statuses"     element={<ProtectedRoute><MemberStatusList /></ProtectedRoute>} />
-          <Route path="/members"      element={<ProtectedRoute><MemberList /></ProtectedRoute>} />
-          <Route path="/members/new"  element={<ProtectedRoute><MemberEditor /></ProtectedRoute>} />
-          <Route path="/members/:id"  element={<ProtectedRoute><MemberEditor /></ProtectedRoute>} />
+          <Route path="/members"             element={<ProtectedRoute><MemberList /></ProtectedRoute>} />
+          <Route path="/members/new"         element={<ProtectedRoute><MemberEditor /></ProtectedRoute>} />
+          <Route path="/members/recent"       element={<ProtectedRoute><RecentMembers /></ProtectedRoute>} />
+          <Route path="/members/statistics"   element={<ProtectedRoute><MemberStatistics /></ProtectedRoute>} />
+          <Route path="/members/:id"         element={<ProtectedRoute><MemberEditor /></ProtectedRoute>} />
+          <Route path="/addresses-export"    element={<ProtectedRoute><AddressesExport /></ProtectedRoute>} />
           <Route path="/groups"       element={<ProtectedRoute><GroupList /></ProtectedRoute>} />
           <Route path="/groups/new"   element={<ProtectedRoute><GroupRecord /></ProtectedRoute>} />
           <Route path="/groups/:id"   element={<ProtectedRoute><GroupRecord /></ProtectedRoute>} />

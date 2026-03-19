@@ -36,6 +36,8 @@ const DEFAULTS = {
   paypal_email:              '',
   paypal_cancel_url:         '',
   shared_address_warning:    false,
+  year_start_month:          1,
+  year_start_day:            1,
 };
 
 function toForm(s) {
@@ -61,6 +63,8 @@ function toForm(s) {
     paypal_email:              s.paypal_email              ?? '',
     paypal_cancel_url:         s.paypal_cancel_url         ?? '',
     shared_address_warning:    s.shared_address_warning    ?? DEFAULTS.shared_address_warning,
+    year_start_month:          s.year_start_month          ?? DEFAULTS.year_start_month,
+    year_start_day:            s.year_start_day            ?? DEFAULTS.year_start_day,
   };
 }
 
@@ -87,6 +91,8 @@ function toPayload(f) {
     paypalEmail:              f.paypal_email    || null,
     paypalCancelUrl:          f.paypal_cancel_url || null,
     sharedAddressWarning:     f.shared_address_warning,
+    yearStartMonth:           Number(f.year_start_month),
+    yearStartDay:             Number(f.year_start_day),
   };
 }
 
@@ -280,6 +286,33 @@ export default function SystemSettings() {
             {/* ── Membership Year & Fees ── */}
             <section className="bg-white/90 rounded-lg shadow-sm p-4 sm:p-6 space-y-4">
               <SectionHeading>Membership Year &amp; Fees</SectionHeading>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <Field label="Membership year start — month">
+                  <select
+                    name="year_start_month"
+                    value={form.year_start_month}
+                    onChange={handleChange}
+                    disabled={!canChange}
+                    className={SELECT}
+                  >
+                    {MONTHS.map((m, idx) => (
+                      <option key={m} value={idx + 1}>{m}</option>
+                    ))}
+                  </select>
+                </Field>
+                <Field label="Membership year start — day">
+                  <input
+                    type="number"
+                    name="year_start_day"
+                    value={form.year_start_day}
+                    onChange={handleChange}
+                    disabled={!canChange}
+                    min="1"
+                    max="31"
+                    className={INPUT}
+                  />
+                </Field>
+              </div>
               <Field label="Membership fees">
                 <select
                   name="fee_variation"

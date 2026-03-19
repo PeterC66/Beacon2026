@@ -113,6 +113,172 @@ router.get('/', requirePrivilege('members_list', 'view'), async (req, res, next)
 // Returns all members with their address data for client-side data quality checks.
 // Requires settings:view (admin only).
 
+// ─── GET /members/recent ──────────────────────────────────────────────────
+// Returns members who joined in the given date range.
+// Query params: from (ISO date), to (ISO date). Defaults: last 30 days.
+
+router.get('/recent', requirePrivilege('members_recent', 'view'), async (req, res, next) => {
+  try {
+    const slug = req.user.tenantSlug;
+    const toDate   = req.query.to   || new Date().toISOString().slice(0, 10);
+    const fromDate = req.query.from || (() => {
+      const d = new Date(); d.setDate(d.getDate() - 30); return d.toISOString().slice(0, 10);
+    })();
+
+    const rows = await tenantQuery(
+      slug,
+      `SELECT m.id, m.membership_number, m.forenames, m.surname, m.email, m.mobile,
+              m.joined_on,
+              mc.name AS class_name,
+              ms.name AS status_name
+       FROM members m
+       LEFT JOIN member_classes   mc ON mc.id = m.class_id
+       LEFT JOIN member_statuses  ms ON ms.id = m.status_id
+       WHERE m.joined_on >= $1::date
+         AND m.joined_on <= $2::date
+       ORDER BY m.joined_on DESC, m.surname, m.forenames`,
+      [fromDate, toDate],
+    );
+    res.json(rows);
+  } catch (err) {
+    next(err);
+  }
+});
+
+// ─── GET /members/statistics ──────────────────────────────────────────────
+// Returns membership and group statistics.
+// Query params: from, to — date range for section 4 (Members by Renew Date).
+
+router.get('/statistics', requirePrivilege('membership_statistics', 'view'), async (req, res, next) => {
+  try {
+    const slug = req.user.tenantSlug;
+
+    // Fetch settings for year start and renewal periods
+    const [cfg] = await tenantQuery(
+      slug,
+      `SELECT year_start_month, year_start_day, advance_renewals_weeks, grace_lapse_weeks
+       FROM tenant_settings WHERE id = 'singleton'`,
+    );
+    const yearStartMonth = cfg?.year_start_month ?? 1;
+    const yearStartDay   = cfg?.year_start_day   ?? 1;
+    const advanceWeeks   = cfg?.advance_renewals_weeks ?? 4;
+    const graceLapse     = cfg?.grace_lapse_weeks      ?? 4;
+
+    // Compute current membership year start date
+    const now = new Date();
+    const thisYear = now.getFullYear();
+    const candidateStart = new Date(thisYear, yearStartMonth - 1, yearStartDay);
+    const yearStartDate = candidateStart <= now
+      ? candidateStart
+      : new Date(thisYear - 1, yearStartMonth - 1, yearStartDay);
+    const yearStartIso = yearStartDate.toISOString().slice(0, 10);
+
+    // Section 2: Current members by class
+    const classStats = await tenantQuery(
+      slug,
+      `SELECT mc.id, mc.name,
+              COUNT(m.id)::int                                    AS total,
+              COUNT(m.id) FILTER (WHERE m.email IS NOT NULL AND m.email <> '')::int AS with_email,
+              COUNT(m.id) FILTER (WHERE m.joined_on >= $1::date)::int               AS first_year,
+              COUNT(m.id) FILTER (WHERE m.joined_on <  $1::date)::int               AS second_year_plus
+       FROM member_classes mc
+       LEFT JOIN members m ON m.class_id = mc.id
+                           AND m.status_id IN (
+                               SELECT id FROM member_statuses WHERE name ILIKE '%Current%'
+                           )
+       GROUP BY mc.id, mc.name
+       ORDER BY mc.name`,
+      [yearStartIso],
+    );
+
+    const totalCurrent = classStats.reduce((s, r) => s + r.total, 0);
+
+    // Section 1: General member status counts
+    const [statusCounts] = await tenantQuery(
+      slug,
+      `SELECT
+         COUNT(*) FILTER (
+           WHERE status_id IN (SELECT id FROM member_statuses WHERE name ILIKE '%Current%')
+             AND (next_renewal IS NULL OR next_renewal < $1::date)
+         )::int AS current_not_renewed,
+         COUNT(*) FILTER (
+           WHERE status_id IN (SELECT id FROM member_statuses WHERE name ILIKE '%Lapsed%')
+         )::int AS lapsed_count
+       FROM members`,
+      [yearStartIso],
+    );
+
+    // Section 3: Active groups
+    const [groupStats] = await tenantQuery(
+      slug,
+      `SELECT
+         COUNT(*)::int AS active_groups,
+         COALESCE(AVG(gm_counts.cnt), 0)::numeric(10,1) AS avg_members
+       FROM groups g
+       LEFT JOIN (
+         SELECT group_id, COUNT(*)::int AS cnt
+         FROM group_members
+         WHERE waiting_since IS NULL
+         GROUP BY group_id
+       ) gm_counts ON gm_counts.group_id = g.id
+       WHERE g.status = 'active'`,
+    );
+
+    const [notInGroup] = await tenantQuery(
+      slug,
+      `SELECT COUNT(*)::int AS count
+       FROM members m
+       WHERE status_id IN (SELECT id FROM member_statuses WHERE name ILIKE '%Current%')
+         AND NOT EXISTS (
+           SELECT 1 FROM group_members gm
+           WHERE gm.member_id = m.id AND gm.waiting_since IS NULL
+         )`,
+    );
+
+    // Section 4: Members by Renew Date
+    const toDate   = req.query.to   || now.toISOString().slice(0, 10);
+    const fromDate = req.query.from || yearStartIso;
+
+    const renewStats = await tenantQuery(
+      slug,
+      `SELECT mc.id, mc.name,
+              COUNT(m.id) FILTER (
+                WHERE m.status_id IN (SELECT id FROM member_statuses WHERE name ILIKE '%Current%')
+                  AND m.next_renewal IS NOT NULL
+                  AND m.next_renewal >= $1::date
+                  AND m.next_renewal <= $2::date
+              )::int AS not_renewed,
+              COUNT(m.id) FILTER (
+                WHERE m.joined_on >= $1::date
+                  AND m.joined_on <= $2::date
+              )::int AS new_members
+       FROM member_classes mc
+       LEFT JOIN members m ON m.class_id = mc.id
+       GROUP BY mc.id, mc.name
+       ORDER BY mc.name`,
+      [fromDate, toDate],
+    );
+
+    res.json({
+      yearStart: yearStartIso,
+      advanceRenewalsWeeks: advanceWeeks,
+      graceLapseWeeks:      graceLapse,
+      currentNotRenewed:    statusCounts?.current_not_renewed ?? 0,
+      lapsedCount:          statusCounts?.lapsed_count        ?? 0,
+      totalCurrent,
+      classStats,
+      activeGroups:         groupStats?.active_groups ?? 0,
+      avgGroupMembers:      groupStats?.avg_members   ?? 0,
+      membersNotInGroup:    notInGroup?.count          ?? 0,
+      renewStats,
+      renewFrom:  fromDate,
+      renewTo:    toDate,
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
 router.get('/validate', requirePrivilege('member_data_validation', 'view'), async (req, res, next) => {
   try {
     const members = await tenantQuery(

@@ -28,8 +28,12 @@ export const ALL_PRIVS = [
   'poll_set_up:view', 'poll_set_up:create', 'poll_set_up:change', 'poll_set_up:delete',
   'audit_trail:view', 'audit_trail:delete',
   'offices:view', 'offices:create', 'offices:change', 'offices:delete',
+  'members_recent:view', 'members_recent:download',
+  'membership_statistics:view', 'membership_statistics:download',
   'settings:view', 'settings:change',
   'data_export_backup:view', 'data_export_backup:download', 'data_export_backup:restore',
+  'addresses_export:view', 'addresses_export:download',
+  'address_labels:download',
 ];
 
 export const TEST_TENANT = 'test-u3a';

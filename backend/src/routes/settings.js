@@ -16,7 +16,8 @@ const COLS = `
   extended_membership_month, advance_renewals_weeks, grace_lapse_weeks,
   deletion_years, default_payment_method, gift_aid_enabled,
   gift_aid_online_renewals, default_town, default_county, default_std_code,
-  paypal_email, paypal_cancel_url, shared_address_warning, updated_at
+  paypal_email, paypal_cancel_url, shared_address_warning,
+  year_start_month, year_start_day, updated_at
 `;
 
 // ─── GET /settings ────────────────────────────────────────────────────────
@@ -55,6 +56,8 @@ const updateSchema = z.object({
   paypalEmail:              z.string().nullable().optional(),
   paypalCancelUrl:          z.string().nullable().optional(),
   sharedAddressWarning:     z.boolean().optional(),
+  yearStartMonth:           z.number().int().min(1).max(12).optional(),
+  yearStartDay:             z.number().int().min(1).max(31).optional(),
 });
 
 router.patch('/', requirePrivilege('settings', 'change'), async (req, res, next) => {
@@ -85,6 +88,8 @@ router.patch('/', requirePrivilege('settings', 'change'), async (req, res, next)
     if (data.paypalEmail             !== undefined) { fields.push(`paypal_email = $${i++}`);              values.push(data.paypalEmail); }
     if (data.paypalCancelUrl         !== undefined) { fields.push(`paypal_cancel_url = $${i++}`);         values.push(data.paypalCancelUrl); }
     if (data.sharedAddressWarning    !== undefined) { fields.push(`shared_address_warning = $${i++}`);    values.push(data.sharedAddressWarning); }
+    if (data.yearStartMonth          !== undefined) { fields.push(`year_start_month = $${i++}`);           values.push(data.yearStartMonth); }
+    if (data.yearStartDay            !== undefined) { fields.push(`year_start_day = $${i++}`);             values.push(data.yearStartDay); }
 
     if (fields.length === 0) return res.status(400).json({ error: 'Nothing to update.' });
 

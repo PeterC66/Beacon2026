@@ -1133,3 +1133,73 @@ When a new Beacon2 feature is built, add a new spec (or extend an existing one) 
 2. Imports `{ test, expect }` from `../fixtures/admin.js`.
 3. Uses the `adminPage` fixture.
 4. If setup seed data is needed, add it to `global-setup.js`.
+
+---
+
+## Addresses Export and Label Printing (March 2026)
+
+### Architecture
+
+- Backend: `backend/src/routes/addressExport.js` — mounted at `/address-export` in `app.js`
+- Frontend: `frontend/src/pages/members/AddressesExport.jsx` at `/addresses-export`
+- PDF generation: `pdfkit` package installed in backend (installed March 2026)
+- Privilege resources: `addresses_export` (view/download) and `address_labels` (download) — already in `privilegeResources.js` and `defaultRoles.js`
+
+### Endpoints
+
+| Route | Privilege | Description |
+|-------|-----------|-------------|
+| `GET /address-export` | `addresses_export:view` | List members (with filters) for selection |
+| `GET /address-export/download?format=...&ids=...` | `addresses_export:download` | Download Excel/CSV/TSV/TAM |
+| `GET /address-export/labels?ids=...&cols=...&...` | `address_labels:download` | Download PDF labels |
+
+### Filters supported
+
+`status` (comma-separated IDs), `classId`, `pollId`, `negatePoll` (`'1'`), `groupId`
+
+### Label settings
+
+Default: 3 columns, 7 rows, 70mm wide, 38mm high, 10mm top offset, 7mm left offset, 9pt font.
+Saved in `localStorage` under key `beacon2_label_settings`.
+
+### PDF label generation (PDFKit)
+
+- A4 page (595.28pt × 841.89pt), margin=0
+- Converts mm → points using factor `72/25.4`
+- Partners sharing the same `address_id` are combined into one label (same surname → "Title Init1 & Title Init2 Surname"; different surnames → full name & full name)
+- Multi-page: new page added when all label positions on current page are filled
+
+### NavBar prop
+
+`NavBar` accepts a `links` prop (not `items`). Passing `items` causes "Cannot read properties of undefined (reading 'map')" crash.
+
+### Test note
+
+"Addresses Export" appears in both the NavBar breadcrumb and the `<h1>`, so use `getAllByText` not `getByText` in tests.
+## Recent Members and Statistics (March 2026 — doc 4.4 and 4.9)
+
+### Membership year start setting
+
+`tenant_settings` now has `year_start_month INTEGER DEFAULT 1` and `year_start_day INTEGER DEFAULT 1` (added via safe `ALTER TABLE ... ADD COLUMN IF NOT EXISTS`). These are exposed in `GET/PATCH /settings` and editable in the Membership Year & Fees section of SystemSettings.
+
+The statistics backend computes the current membership year start date from these: if `month/day` is in the future this calendar year, use last year; otherwise use this year.
+
+### Statistics backend (GET /members/statistics)
+
+Returns six parallel queries combined into one JSON response:
+1. Settings (year start, advance weeks, grace weeks)
+2. `classStats` — per-class counts for current members (total, with_email, first_year, second_year_plus)
+3. `statusCounts` — current_not_renewed (next_renewal < year_start), lapsed_count
+4. `groupStats` — active_groups, avg_members
+5. `notInGroup` — current members with no active group membership
+6. `renewStats` — per-class not_renewed and new_members for the from/to date range
+
+Current members are identified by `status ILIKE '%Current%'`; lapsed by `status ILIKE '%Lapsed%'`.
+
+### Route ordering note
+
+`GET /members/recent` and `GET /members/statistics` must be placed **above** `GET /members/:id` in the router, just like `/validate`. This is already the case.
+
+### Frontend test: multiple instances of "Recent Members"
+
+"Recent Members" appears in both the NavBar breadcrumb and the `<h1>`, so use `getAllByText(...).length > 0` not `getByText(...)` in tests. The same principle applies to "Statistics" if it appears in multiple places.
