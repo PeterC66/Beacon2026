@@ -295,6 +295,34 @@ export const finance = {
   createTransaction: (data)     => request('/finance/transactions', { method: 'POST', body: JSON.stringify(data) }),
   updateTransaction: (id, data) => request(`/finance/transactions/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
   deleteTransaction: (id)       => request(`/finance/transactions/${id}`, { method: 'DELETE' }),
+
+  // Transfers
+  listTransfers:   ()              => request('/finance/transfers'),
+  getTransfer:     (id)            => request(`/finance/transfers/${id}`),
+  createTransfer:  (data)          => request('/finance/transfers', { method: 'POST', body: JSON.stringify(data) }),
+  updateTransfer:  (id, data)      => request(`/finance/transfers/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
+  deleteTransfer:  (id)            => request(`/finance/transfers/${id}`, { method: 'DELETE' }),
+
+  // Reconcile
+  getReconcileData: (accountId)    => request(`/finance/reconcile?accountId=${encodeURIComponent(accountId)}`),
+  reconcile:        (data)         => request('/finance/reconcile', { method: 'POST', body: JSON.stringify(data) }),
+
+  // Financial Statement
+  getStatement: (accountId, year) => {
+    const qs = new URLSearchParams();
+    qs.set('accountId', accountId);
+    if (year) qs.set('year', String(year));
+    return request(`/finance/statement?${qs.toString()}`);
+  },
+
+  // Groups Statement
+  getGroupsStatement: (params = {}) => {
+    const qs = new URLSearchParams();
+    if (params.from)             qs.set('from', params.from);
+    if (params.to)               qs.set('to',   params.to);
+    if (params.showTransactions) qs.set('showTransactions', '1');
+    return request(`/finance/groups-statement?${qs.toString()}`);
+  },
 };
 
 // ─── Polls ────────────────────────────────────────────────────────────────

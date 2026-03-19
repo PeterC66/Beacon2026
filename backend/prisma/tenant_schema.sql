@@ -399,6 +399,12 @@ CREATE TABLE IF NOT EXISTS :schema.transactions (
 ALTER TABLE :schema.transactions DROP CONSTRAINT IF EXISTS transactions_amount_check;
 ALTER TABLE :schema.transactions ADD CONSTRAINT transactions_amount_check CHECK (amount >= 0);
 
+-- Transfer money: links paired transactions (both share the same transfer_id UUID)
+ALTER TABLE :schema.transactions ADD COLUMN IF NOT EXISTS transfer_id TEXT;
+
+-- Balance brought forward per account (balance before Beacon2 started tracking)
+ALTER TABLE :schema.finance_accounts ADD COLUMN IF NOT EXISTS balance_brought_forward NUMERIC(10,2) NOT NULL DEFAULT 0;
+
 -- ─────────────────────────────────────────────
 -- TRANSACTION CATEGORY SPLITS
 -- ─────────────────────────────────────────────
