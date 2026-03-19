@@ -13,8 +13,8 @@ loadDotenv();
 const API   = process.env.BEACON2_API_URL   ?? 'http://localhost:3001';
 const SLUG  = process.env.BEACON2_TEST_TENANT_SLUG  ?? 'e2etest';
 const NAME  = process.env.BEACON2_TEST_TENANT_NAME  ?? 'E2E Test u3a';
-const SADM_USER = process.env.BEACON2_SYSADMIN_USERNAME ?? 'sysadmin';
-const SADM_PASS = process.env.BEACON2_SYSADMIN_PASSWORD ?? 'changeme';
+const SADM_EMAIL = process.env.BEACON2_SYSADMIN_EMAIL ?? 'admin@beacon2.example';
+const SADM_PASS  = process.env.BEACON2_SYSADMIN_PASSWORD ?? 'changeme';
 const ADM_USER  = process.env.BEACON2_TEST_ADMIN_USERNAME ?? 'testadmin';
 const ADM_PASS  = process.env.BEACON2_TEST_ADMIN_PASSWORD ?? 'TestAdmin99!';
 const ADM_NAME  = process.env.BEACON2_TEST_ADMIN_NAME     ?? 'Test Administrator';
@@ -46,7 +46,7 @@ async function apiCall(path, { method = 'GET', body, token, tenantSlug } = {}) {
 async function sysAdminLogin() {
   const { status, body } = await apiCall('/auth/system/login', {
     method: 'POST',
-    body: { username: SADM_USER, password: SADM_PASS },
+    body: { email: SADM_EMAIL, password: SADM_PASS },
   });
   if (status !== 200) {
     throw new Error(`System-admin login failed (${status}): ${JSON.stringify(body)}`);
