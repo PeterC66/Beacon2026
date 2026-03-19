@@ -1,0 +1,358 @@
+// beacon2/frontend/src/pages/membership/NonRenewals.jsx
+// Doc 4.6 — Non-renewals (Lapsed, Resigned, Deceased members)
+
+import { useState, useEffect, useMemo } from 'react';
+import { Link } from 'react-router-dom';
+import { members as membersApi } from '../../lib/api.js';
+import { useAuth } from '../../context/AuthContext.jsx';
+import PageHeader from '../../components/PageHeader.jsx';
+import NavBar from '../../components/NavBar.jsx';
+import { useSortedData } from '../../hooks/useSortedData.js';
+import SortableHeader from '../../components/SortableHeader.jsx';
+
+function fmtDate(d) {
+  if (!d) return '—';
+  const s = String(d).slice(0, 10);
+  const [y, m, day] = s.split('-');
+  return `${day}/${m}/${y}`;
+}
+
+export default function NonRenewals() {
+  const { can } = useAuth();
+
+  const [mode,         setMode]         = useState('this_year');
+  const [data,         setData]         = useState(null);   // { members, yearStart, graceLapse, deletionYears }
+  const [loading,      setLoading]      = useState(true);
+  const [error,        setError]        = useState(null);
+
+  const [selected,     setSelected]     = useState(new Set());
+  const [confirming,   setConfirming]   = useState(false);  // 'lapse' | 'delete' | false
+  const [processing,   setProcessing]   = useState(false);
+  const [result,       setResult]       = useState(null);   // { lapsed?, deleted?, errors? }
+
+  const { sorted, sortKey, sortDir, onSort } = useSortedData(
+    data?.members ?? [],
+    'surname',
+    'asc',
+  );
+
+  useEffect(() => {
+    load(mode);
+  }, [mode]);
+
+  async function load(m) {
+    setLoading(true);
+    setError(null);
+    setSelected(new Set());
+    setResult(null);
+    try {
+      const res = await membersApi.listNonRenewals(m);
+      setData(res);
+    } catch (e) {
+      setError(e.message ?? 'Failed to load');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  function toggleAll() {
+    if (selected.size === sorted.length && sorted.length > 0) {
+      setSelected(new Set());
+    } else {
+      setSelected(new Set(sorted.map((m) => m.id)));
+    }
+  }
+
+  function toggleOne(id) {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
+
+  async function handleLapse() {
+    if (selected.size === 0) return;
+    setProcessing(true);
+    setConfirming(false);
+    try {
+      const res = await membersApi.lapse([...selected]);
+      setResult({ lapsed: res.lapsed });
+      await load(mode);
+    } catch (e) {
+      setResult({ errors: [e.message ?? 'Lapse failed'] });
+    } finally {
+      setProcessing(false);
+    }
+  }
+
+  async function handleDelete() {
+    if (selected.size === 0) return;
+    setProcessing(true);
+    setConfirming(false);
+    const ids = [...selected];
+    const errors = [];
+    let deleted = 0;
+    for (const id of ids) {
+      try {
+        await membersApi.delete(id);
+        deleted++;
+      } catch (e) {
+        errors.push(e.message ?? `Delete failed for member ${id}`);
+      }
+    }
+    setResult({ deleted, errors: errors.length ? errors : undefined });
+    await load(mode);
+    setProcessing(false);
+  }
+
+  const allSelected = sorted.length > 0 && selected.size === sorted.length;
+  const canLapse  = can('members_non_renewals', 'lapse');
+
+  const thCls = 'px-3 py-2.5 text-left font-normal text-slate-600';
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-slate-100 to-blue-50">
+      <PageHeader />
+      <NavBar links={[{ label: 'Home', to: '/' }, { label: 'Non-renewals' }]} />
+
+      <div className="max-w-6xl mx-auto px-4 py-6 space-y-4">
+        <h1 className="text-2xl font-semibold text-slate-800">Non-renewals</h1>
+
+        {/* Mode selector */}
+        <div className="bg-white/90 rounded-lg shadow-sm p-4 flex flex-wrap gap-4 items-center">
+          <span className="text-sm font-medium text-slate-700">Show:</span>
+          <label className="flex items-center gap-2 text-sm cursor-pointer">
+            <input
+              type="radio"
+              name="mode"
+              value="this_year"
+              checked={mode === 'this_year'}
+              onChange={() => setMode('this_year')}
+              className="accent-blue-600"
+            />
+            Members who did not renew this year
+          </label>
+          <label className="flex items-center gap-2 text-sm cursor-pointer">
+            <input
+              type="radio"
+              name="mode"
+              value="long_term"
+              checked={mode === 'long_term'}
+              onChange={() => setMode('long_term')}
+              className="accent-blue-600"
+            />
+            Members who have not renewed for {data?.deletionYears ?? '…'} years
+          </label>
+        </div>
+
+        {/* Info banners */}
+        {data && mode === 'this_year' && (
+          <p className="text-sm text-slate-600 bg-blue-50 border border-blue-200 rounded px-3 py-2">
+            Showing Current members with a renewal date before the membership year start
+            ({fmtDate(data.yearStart)}).
+            Grace period: {data.graceLapse} week{data.graceLapse !== 1 ? 's' : ''}.
+          </p>
+        )}
+        {data && mode === 'long_term' && (
+          <p className="text-sm text-slate-600 bg-blue-50 border border-blue-200 rounded px-3 py-2">
+            Showing all members who have not renewed in the last {data.deletionYears} year{data.deletionYears !== 1 ? 's' : ''}.
+            Care should be taken not to delete members who have given Gift Aid consent within 7 years.
+          </p>
+        )}
+
+        {/* Result banner */}
+        {result && (
+          <div className={`rounded-md border px-4 py-3 text-sm font-medium ${
+            result.errors?.length
+              ? 'bg-red-50 border-red-300 text-red-700'
+              : 'bg-green-50 border-green-200 text-green-700'
+          }`}>
+            {result.lapsed != null && `✓ ${result.lapsed} member${result.lapsed !== 1 ? 's' : ''} lapsed.`}
+            {result.deleted != null && `✓ ${result.deleted} member${result.deleted !== 1 ? 's' : ''} deleted.`}
+            {result.errors?.map((e, i) => <div key={i}>{e}</div>)}
+          </div>
+        )}
+
+        {loading && <p className="text-slate-500 text-sm">Loading…</p>}
+        {error   && <p className="text-red-600 text-sm">{error}</p>}
+
+        {!loading && data && (
+          <>
+            <div className="bg-white/90 rounded-lg shadow-sm overflow-x-auto">
+              <table className="min-w-max w-full text-sm">
+                <thead className="bg-slate-50 border-b border-slate-200">
+                  <tr>
+                    <th className="px-3 py-2.5">
+                      <input
+                        type="checkbox"
+                        checked={allSelected}
+                        onChange={toggleAll}
+                        aria-label="Select all"
+                        className="accent-blue-600"
+                      />
+                    </th>
+                    <SortableHeader col="membership_number" label="No."      sortKey={sortKey} sortDir={sortDir} onSort={onSort} className={thCls} />
+                    <SortableHeader col="surname"           label="Surname"   sortKey={sortKey} sortDir={sortDir} onSort={onSort} className={thCls} />
+                    <SortableHeader col="forenames"         label="Forenames" sortKey={sortKey} sortDir={sortDir} onSort={onSort} className={thCls} />
+                    <SortableHeader col="class_name"        label="Class"     sortKey={sortKey} sortDir={sortDir} onSort={onSort} className={thCls} />
+                    <SortableHeader col="status_name"       label="Status"    sortKey={sortKey} sortDir={sortDir} onSort={onSort} className={thCls} />
+                    <SortableHeader col="next_renewal"      label="Next Renewal" sortKey={sortKey} sortDir={sortDir} onSort={onSort} className={thCls} />
+                    <th className={thCls}>Email</th>
+                    <th className={thCls}>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {sorted.length === 0 && (
+                    <tr>
+                      <td colSpan={9} className="px-3 py-6 text-center text-slate-500">
+                        {mode === 'this_year'
+                          ? 'No current members with overdue renewals.'
+                          : `No members with renewals older than ${data.deletionYears} years.`}
+                      </td>
+                    </tr>
+                  )}
+                  {sorted.map((m, i) => (
+                    <tr key={m.id} className={i % 2 === 0 ? 'bg-yellow-50' : 'bg-white'}>
+                      <td className="px-3 py-1.5">
+                        <input
+                          type="checkbox"
+                          checked={selected.has(m.id)}
+                          onChange={() => toggleOne(m.id)}
+                          className="accent-blue-600"
+                        />
+                      </td>
+                      <td className="px-3 py-1.5">{m.membership_number}</td>
+                      <td className="px-3 py-1.5 font-medium">{m.surname}</td>
+                      <td className="px-3 py-1.5">{m.forenames}</td>
+                      <td className="px-3 py-1.5">{m.class_name}</td>
+                      <td className="px-3 py-1.5">{m.status_name}</td>
+                      <td className="px-3 py-1.5">{fmtDate(m.next_renewal)}</td>
+                      <td className="px-3 py-1.5">{m.email || '—'}</td>
+                      <td className="px-3 py-1.5">
+                        <Link
+                          to={`/members/${m.id}`}
+                          className="text-blue-600 hover:underline text-xs"
+                        >
+                          Edit
+                        </Link>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Bulk action bar */}
+            {sorted.length > 0 && canLapse && (
+              <div className="bg-white/90 rounded-lg shadow-sm p-4 flex flex-wrap gap-3 items-center">
+                <span className="text-sm text-slate-600">
+                  {selected.size} of {sorted.length} selected
+                </span>
+                {mode === 'this_year' && (
+                  <button
+                    onClick={() => selected.size > 0 && setConfirming('lapse')}
+                    disabled={selected.size === 0 || processing}
+                    className="bg-orange-600 hover:bg-orange-700 disabled:bg-orange-300 text-white rounded px-5 py-2 text-sm font-medium transition-colors"
+                  >
+                    Lapse selected
+                  </button>
+                )}
+                {mode === 'long_term' && (
+                  <button
+                    onClick={() => selected.size > 0 && setConfirming('delete')}
+                    disabled={selected.size === 0 || processing}
+                    className="border border-red-300 text-red-600 hover:bg-red-50 rounded px-5 py-2 text-sm font-medium transition-colors disabled:opacity-50"
+                  >
+                    Delete selected
+                  </button>
+                )}
+                {processing && <span className="text-sm text-slate-500">Processing…</span>}
+              </div>
+            )}
+          </>
+        )}
+
+        {/* Guidance notes */}
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-sm text-slate-700 space-y-2">
+          <p className="font-semibold">Guidance</p>
+          <p>
+            <strong>Resigned</strong> — use when a member has indicated they will not be continuing.
+            Update their Member Record directly.
+          </p>
+          <p>
+            <strong>Lapsed</strong> — use for members who have not renewed by the end of the grace
+            period. Lapsed members often renew at a later date, so their record should be kept.
+          </p>
+          <p>
+            <strong>Deceased</strong> — remove the email address from the Member Record to avoid
+            emails being sent. If they shared an address, change the 'Share address with' to
+            &lt;no-one&gt;.
+          </p>
+          <p>
+            It is important to lapse non-renewals promptly — otherwise the u3a Beacon licence,
+            TAT subscription and TAM magazine costs will still be included in invoices.
+          </p>
+        </div>
+      </div>
+
+      {/* Lapse confirmation dialog */}
+      {confirming === 'lapse' && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-xl max-w-sm w-full p-6 space-y-4">
+            <h2 className="text-lg font-semibold text-slate-800">Confirm Lapse</h2>
+            <p className="text-sm text-slate-600">
+              Change the status of <strong>{selected.size}</strong> member
+              {selected.size !== 1 ? 's' : ''} from Current to Lapsed?
+              This cannot be undone automatically.
+            </p>
+            <div className="flex gap-3 justify-end">
+              <button
+                onClick={() => setConfirming(false)}
+                className="border border-slate-300 text-slate-700 hover:bg-slate-50 rounded px-4 py-2 text-sm"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleLapse}
+                className="bg-orange-600 hover:bg-orange-700 text-white rounded px-4 py-2 text-sm font-medium"
+              >
+                Lapse
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete confirmation dialog */}
+      {confirming === 'delete' && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-xl max-w-sm w-full p-6 space-y-4">
+            <h2 className="text-lg font-semibold text-slate-800">Confirm Delete</h2>
+            <p className="text-sm text-slate-600">
+              Permanently delete <strong>{selected.size}</strong> member record
+              {selected.size !== 1 ? 's' : ''}?
+              This action cannot be undone. Ensure members with Gift Aid consent within
+              7 years are not deleted.
+            </p>
+            <div className="flex gap-3 justify-end">
+              <button
+                onClick={() => setConfirming(false)}
+                className="border border-slate-300 text-slate-700 hover:bg-slate-50 rounded px-4 py-2 text-sm"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDelete}
+                className="bg-red-600 hover:bg-red-700 text-white rounded px-4 py-2 text-sm font-medium"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}

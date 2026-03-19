@@ -1203,3 +1203,69 @@ Current members are identified by `status ILIKE '%Current%'`; lapsed by `status 
 ### Frontend test: multiple instances of "Recent Members"
 
 "Recent Members" appears in both the NavBar breadcrumb and the `<h1>`, so use `getAllByText(...).length > 0` not `getByText(...)` in tests. The same principle applies to "Statistics" if it appears in multiple places.
+
+---
+
+## Membership Renewals and Non-renewals (March 2026 — docs 4.5 and 4.6)
+
+### Backend routes added to members.js
+
+| Route | Privilege | Notes |
+|-------|-----------|-------|
+| `GET /members/renewals` | `membership_renewals:view` | Returns members + year boundaries |
+| `POST /members/renew` | `membership_renewals:renew` | Bulk renew; inserts finance transactions directly |
+| `GET /members/non-renewals?mode=` | `members_non_renewals:view` | `this_year` or `long_term` modes |
+| `POST /members/lapse` | `members_non_renewals:lapse` | Bulk-updates status to Lapsed |
+
+All placed **above** `GET /members/validate` which is above `GET /members/:id`.
+
+### Finance transactions in POST /renew
+
+The `POST /finance/transactions` route enforces `categories.min(1)` in its Zod schema.
+For bulk renewals, transactions are inserted **directly via SQL** in the `/renew` handler
+(bypassing the finance route), with no category splits. Users can categorize later via TransactionEditor.
+
+```sql
+INSERT INTO transactions
+  (account_id, date, type, from_to, amount, payment_method, member_id_1)
+VALUES ($1, CURRENT_DATE, 'in', $2, $3::numeric, $4, $5)
+RETURNING id, transaction_number
+```
+
+### Year boundary computation
+
+Done in JavaScript to avoid PostgreSQL interval casting issues:
+- `yearStart`, `prevYearStart`, `nextYearStart` computed from `year_start_month`/`year_start_day` settings
+- `showNextYear` = advance renewals period is currently open (within `advance_renewals_weeks` of next year)
+- Passed to SQL as `$1::date`
+
+### Non-renewals modes
+
+- **`this_year`**: Current members whose `next_renewal < yearStart` (not yet Lapsed)
+- **`long_term`**: All members whose `next_renewal` is before a cutoff computed as `now - deletion_years`
+
+### Lapse bulk action
+
+`POST /members/lapse` uses `UPDATE ... WHERE id = ANY($2::text[])` for efficiency.
+Finds Lapsed status via `WHERE name ILIKE '%Lapsed%'`.
+
+### pdfkit missing from backend node_modules
+
+If backend tests fail with `Error: Failed to load url pdfkit`, run `npm install pdfkit` in
+the backend directory. The package is declared in `package.json` but was missing from
+`node_modules` (possibly due to a branch divergence).
+
+### Frontend pages
+
+- `frontend/src/pages/membership/MembershipRenewals.jsx` — period tabs (current/prev/next year),
+  account + payment method selectors, per-member table with gift aid checkbox and received amount input,
+  confirmation dialog, bulk renew + add-to-poll actions
+- `frontend/src/pages/membership/NonRenewals.jsx` — radio mode selector (this year / long term),
+  sortable table, Lapse action (this_year mode), Delete action (long_term mode), confirmation dialogs
+
+### Home.jsx links
+
+```js
+{ label: 'Membership renewals', to: can('membership_renewals', 'view') ? '/membership/renewals' : null },
+{ label: 'Non-renewals',        to: can('members_non_renewals', 'view') ? '/membership/non-renewals' : null },
+```

@@ -266,3 +266,105 @@ describe('GET /members/statistics', () => {
     expect(res.status).toBe(403);
   });
 });
+
+// ── GET /members/renewals ──────────────────────────────────────────────────
+
+describe('GET /members/renewals', () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it('returns 200 with renewal list and year boundaries', async () => {
+    tenantQuery.mockResolvedValueOnce([{ year_start_month: 1, year_start_day: 1, advance_renewals_weeks: 4 }]);
+    tenantQuery.mockResolvedValueOnce([
+      { id: 'm1', forenames: 'John', surname: 'Smith', class_name: 'Individual', status_name: 'Current', next_renewal: '2026-01-01', fee: '25.00', gift_aid_fee: '20.00', gift_aid_from: null, partner_id: null },
+    ]);
+    const res = await request(app).get('/members/renewals').set('Authorization', AUTH);
+    expect(res.status).toBe(200);
+    expect(res.body.members).toHaveLength(1);
+    expect(res.body.yearStart).toBeDefined();
+  });
+
+  it('returns 403 when privilege missing', async () => {
+    const res = await request(app).get('/members/renewals').set('Authorization', makeAuthHeader({ privileges: [] }));
+    expect(res.status).toBe(403);
+  });
+});
+
+// ── POST /members/renew ────────────────────────────────────────────────────
+
+describe('POST /members/renew', () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it('returns 200 with renewed list', async () => {
+    // current status query
+    tenantQuery.mockResolvedValueOnce([{ id: 'st_current' }]);
+    // fetch member
+    tenantQuery.mockResolvedValueOnce([{ id: 'm1', forenames: 'John', surname: 'Smith', next_renewal: '2026-01-01', status_id: 'st_current', status_name: 'Current', gift_aid_from: null }]);
+    // update member
+    tenantQuery.mockResolvedValueOnce([]);
+    // create transaction
+    tenantQuery.mockResolvedValueOnce([{ id: 'txn1', transaction_number: 42 }]);
+
+    const res = await request(app)
+      .post('/members/renew')
+      .set('Authorization', AUTH)
+      .send({ memberIds: ['m1'], accountId: 'acc1', paymentMethod: 'Cash', amounts: { m1: 25 }, yearStart: '2026-01-01' });
+    expect(res.status).toBe(200);
+    expect(res.body.renewed).toHaveLength(1);
+    expect(res.body.renewed[0].transactionNumber).toBe(42);
+  });
+
+  it('returns 403 when privilege missing', async () => {
+    const res = await request(app)
+      .post('/members/renew')
+      .set('Authorization', makeAuthHeader({ privileges: [] }))
+      .send({ memberIds: ['m1'], accountId: 'acc1', paymentMethod: 'Cash', amounts: { m1: 25 }, yearStart: '2026-01-01' });
+    expect(res.status).toBe(403);
+  });
+});
+
+// ── GET /members/non-renewals ──────────────────────────────────────────────
+
+describe('GET /members/non-renewals', () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it('returns 200 with this_year mode', async () => {
+    tenantQuery.mockResolvedValueOnce([{ year_start_month: 1, year_start_day: 1, grace_lapse_weeks: 4, deletion_years: 7 }]);
+    tenantQuery.mockResolvedValueOnce([
+      { id: 'm1', forenames: 'Alice', surname: 'Jones', status_name: 'Current', next_renewal: '2025-01-01' },
+    ]);
+    const res = await request(app).get('/members/non-renewals?mode=this_year').set('Authorization', AUTH);
+    expect(res.status).toBe(200);
+    expect(res.body.members).toHaveLength(1);
+    expect(res.body.mode).toBe('this_year');
+  });
+
+  it('returns 403 when privilege missing', async () => {
+    const res = await request(app).get('/members/non-renewals').set('Authorization', makeAuthHeader({ privileges: [] }));
+    expect(res.status).toBe(403);
+  });
+});
+
+// ── POST /members/lapse ────────────────────────────────────────────────────
+
+describe('POST /members/lapse', () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it('returns 200 with lapse count', async () => {
+    tenantQuery.mockResolvedValueOnce([{ id: 'st_lapsed' }]);
+    tenantQuery.mockResolvedValueOnce([]);
+    const res = await request(app)
+      .post('/members/lapse')
+      .set('Authorization', AUTH)
+      .send({ memberIds: ['m1', 'm2'] });
+    expect(res.status).toBe(200);
+    expect(res.body.lapsed).toBe(2);
+  });
+
+  it('returns 403 when privilege missing', async () => {
+    const res = await request(app)
+      .post('/members/lapse')
+      .set('Authorization', makeAuthHeader({ privileges: [] }))
+      .send({ memberIds: ['m1'] });
+    expect(res.status).toBe(403);
+  });
+});
