@@ -106,10 +106,16 @@ See `CLAUDE-REFERENCE.md` §12 for test architecture and patterns.
 
 **This step is mandatory and must be in your TodoWrite list from the start of every session.**
 
+Add a todo item — "Update project docs if anything new was learned" — at session start
+alongside your other planned tasks. Mark it complete only after explicitly checking.
+
 At the end of every session:
 1. Review what was built or fixed.
-2. If anything new/non-obvious was encountered, add it to `CLAUDE-REFERENCE.md` under the
-   appropriate module section (or to `CLAUDE-STANDARDS.md` if it's a cross-cutting rule).
+2. If anything new/non-obvious was encountered:
+   - **Module-specific** implementation details → add to `CLAUDE-REFERENCE.md` under the
+     appropriate section.
+   - **Cross-cutting** rules or patterns → add to `CLAUDE-STANDARDS.md`.
+   - **Workflow/session** changes → update this file (`CLAUDE.md`).
 3. Commit and push the updated file(s) along with code changes.
 4. **Tell the user** what was updated (or "No documentation update needed this session").
 
