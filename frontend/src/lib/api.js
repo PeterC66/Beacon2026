@@ -151,6 +151,21 @@ export const memberStatuses = {
   delete: (id)       => request(`/member-statuses/${id}`, { method: 'DELETE' }),
 };
 
+// ─── Address Export ───────────────────────────────────────────────────────────
+
+export const addressExport = {
+  list: (params = {}) => {
+    const qs = new URLSearchParams();
+    if (params.status)     qs.set('status',     params.status);
+    if (params.classId)    qs.set('classId',    params.classId);
+    if (params.pollId)     qs.set('pollId',     params.pollId);
+    if (params.negatePoll) qs.set('negatePoll', params.negatePoll);
+    if (params.groupId)    qs.set('groupId',    params.groupId);
+    const query = qs.toString();
+    return request(`/address-export${query ? '?' + query : ''}`);
+  },
+};
+
 // ─── Members ──────────────────────────────────────────────────────────────
 
 export const members = {
