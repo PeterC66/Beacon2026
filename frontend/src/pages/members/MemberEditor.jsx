@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { isValidPhoneNumber } from 'libphonenumber-js';
-import { members as membersApi, memberStatuses as statusApi, memberClasses as classApi, finance as financeApi, polls as pollsApi } from '../../lib/api.js';
+import { members as membersApi, memberStatuses as statusApi, memberClasses as classApi, finance as financeApi, polls as pollsApi, settings as settingsApi } from '../../lib/api.js';
 import { useAuth } from '../../context/AuthContext.jsx';
 import NavBar from '../../components/NavBar.jsx';
 import PageHeader from '../../components/PageHeader.jsx';
@@ -41,6 +41,36 @@ function validatePhone(value) {
   }
 }
 
+/**
+ * Compute next renewal date from joined date and year-config settings.
+ * Returns an ISO date string (YYYY-MM-DD) or '' if inputs are missing.
+ *
+ * Formula:
+ *   1. Find the next occurrence of (yearStartMonth/yearStartDay) after joinedOn.
+ *   2. If extendedMembershipMonth is set and join calendar-month >= that month,
+ *      add one extra year (member's first term covers the following year too).
+ */
+function computeNextRenewal(joinedOnIso, config) {
+  if (!joinedOnIso || !config) return '';
+  const { yearStartMonth, yearStartDay, extendedMembershipMonth } = config;
+  // Parse in local time to avoid UTC-offset surprises on the date boundary
+  const [jy, jm, jd] = joinedOnIso.split('-').map(Number);
+  const joinDate      = new Date(jy, jm - 1, jd);
+  const joinMonth     = jm; // calendar month 1-12
+
+  // First occurrence of year-start on or after the join date
+  const thisYrStart = new Date(jy, yearStartMonth - 1, yearStartDay);
+  let renewalYear   = joinDate >= thisYrStart ? jy + 1 : jy;
+
+  // Extended membership: if joined in month >= extendedMembershipMonth, skip one more year
+  if (extendedMembershipMonth != null && joinMonth >= extendedMembershipMonth) {
+    renewalYear += 1;
+  }
+
+  const d = new Date(renewalYear, yearStartMonth - 1, yearStartDay);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
 export default function MemberEditor() {
   const { id }    = useParams();
   const navigate  = useNavigate();
@@ -64,6 +94,9 @@ export default function MemberEditor() {
   const [partnerName,    setPartnerName]    = useState('');
   // True when the partner dropdown was changed during this edit session
   const [partnerChanged, setPartnerChanged] = useState(false);
+
+  // ── Year config for auto-computing next renewal ───────────────────────
+  const [yearConfig, setYearConfig] = useState(null);
 
   // ── A: New partner joining at the same time ──────────────────────────
   const [newPartnerMode, setNewPartnerMode] = useState(false);
@@ -98,6 +131,21 @@ export default function MemberEditor() {
   // Address fields are read-only when a partner change is pending
   const addressLocked = !isNew && partnerChanged && !!form.existingPartnerId;
 
+  // Auto-compute nextRenewal for new member form when joinedOn or yearConfig changes
+  useEffect(() => {
+    if (!isNew || !form.joinedOn || !yearConfig) return;
+    const computed = computeNextRenewal(form.joinedOn, yearConfig);
+    if (computed) set('nextRenewal', computed);
+  }, [form.joinedOn, yearConfig]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Auto-compute nextRenewal for the new-partner sub-form
+  useEffect(() => {
+    if (!isNew || !newPartnerMode || !yearConfig) return;
+    const joinDate = npForm.joinedOn || form.joinedOn;
+    const computed = computeNextRenewal(joinDate, yearConfig);
+    if (computed) setNpForm((prev) => ({ ...prev, nextRenewal: computed }));
+  }, [npForm.joinedOn, form.joinedOn, newPartnerMode, yearConfig]); // eslint-disable-line react-hooks/exhaustive-deps
+
   useEffect(() => {
     Promise.all([statusApi.list(), classApi.list(), pollsApi.list()])
       .then(([s, c, p]) => { setStatuses(s); setClasses(c); setAllPolls(p); })
@@ -106,6 +154,8 @@ export default function MemberEditor() {
     membersApi.list({ status: '' }).then(setAllMembers).catch(() => {});
 
     if (isNew) {
+      settingsApi.getYearConfig().then(setYearConfig).catch(() => {});
+
       financeApi.listAccounts()
         .then((accs) => {
           const active = accs.filter((a) => a.active);

@@ -20,6 +20,26 @@ const COLS = `
   year_start_month, year_start_day, updated_at
 `;
 
+// ─── GET /settings/year-config ────────────────────────────────────────────
+// Returns only the year-start fields needed to compute next-renewal dates.
+// No privilege required — any authenticated user creating a member needs this.
+router.get('/year-config', async (req, res, next) => {
+  try {
+    const [row] = await tenantQuery(
+      req.user.tenantSlug,
+      `SELECT year_start_month, year_start_day, extended_membership_month
+       FROM tenant_settings WHERE id = 'singleton'`,
+    );
+    res.json({
+      yearStartMonth:          row?.year_start_month          ?? 1,
+      yearStartDay:            row?.year_start_day            ?? 1,
+      extendedMembershipMonth: row?.extended_membership_month ?? null,
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
 // ─── GET /settings ────────────────────────────────────────────────────────
 router.get('/', requirePrivilege('settings', 'view'), async (req, res, next) => {
   try {

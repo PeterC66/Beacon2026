@@ -22,6 +22,7 @@ vi.mock('../lib/api.js', () => ({
   memberClasses:  { list: vi.fn().mockResolvedValue([]) },
   finance:        { listAccounts: vi.fn().mockResolvedValue([]), listTransactions: vi.fn().mockResolvedValue([]) },
   polls:          { list: vi.fn().mockResolvedValue([]), setForMember: vi.fn() },
+  settings:       { getYearConfig: vi.fn().mockResolvedValue({ yearStartMonth: 1, yearStartDay: 1, extendedMembershipMonth: null }) },
 }));
 
 describe('MemberEditor page (new member)', () => {

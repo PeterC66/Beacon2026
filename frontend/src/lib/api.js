@@ -312,8 +312,9 @@ export const polls = {
 // ─── Settings ─────────────────────────────────────────────────────────────
 
 export const settings = {
-  get:    ()     => request('/settings'),
-  update: (data) => request('/settings', { method: 'PATCH', body: JSON.stringify(data) }),
+  get:           ()     => request('/settings'),
+  update:        (data) => request('/settings', { method: 'PATCH', body: JSON.stringify(data) }),
+  getYearConfig: ()     => request('/settings/year-config'),
 };
 
 // ─── System admin (separate token, no tenant) ─────────────────────────────
