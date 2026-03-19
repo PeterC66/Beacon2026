@@ -1,6 +1,6 @@
 {
   "name": "beacon2-backend",
-  "version": "0.4.6",
+  "version": "0.4.7",
   "description": "Beacon2 API server",
   "type": "module",
   "main": "src/app.js",
