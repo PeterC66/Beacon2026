@@ -315,6 +315,23 @@ export const finance = {
   getReconcileData: (accountId)    => request(`/finance/reconcile?accountId=${encodeURIComponent(accountId)}`),
   reconcile:        (data)         => request('/finance/reconcile', { method: 'POST', body: JSON.stringify(data) }),
 
+  // Credit Batches
+  listBatches: (params = {}) => {
+    const qs = new URLSearchParams();
+    qs.set('accountId', params.accountId);
+    if (params.mode) qs.set('mode', params.mode);
+    if (params.date) qs.set('date', params.date);
+    return request(`/finance/batches?${qs.toString()}`);
+  },
+  getBatch:         (id)       => request(`/finance/batches/${id}`),
+  getUnbatched:     (accountId) => request(`/finance/batches/unbatched?accountId=${encodeURIComponent(accountId)}`),
+  createBatch:      (data)     => request('/finance/batches', { method: 'POST', body: JSON.stringify(data) }),
+  addToBatch:       (id, transactionIds) =>
+    request(`/finance/batches/${id}/transactions`, { method: 'POST', body: JSON.stringify({ transactionIds }) }),
+  removeFromBatch:  (id, transactionIds) =>
+    request(`/finance/batches/${id}/transactions`, { method: 'DELETE', body: JSON.stringify({ transactionIds }) }),
+  deleteBatch:      (id)       => request(`/finance/batches/${id}`, { method: 'DELETE' }),
+
   // Financial Statement
   getStatement: (accountId, year) => {
     const qs = new URLSearchParams();
@@ -436,6 +453,7 @@ export const audit = {
     const q = qs.toString();
     return request(`/audit${q ? '?' + q : ''}`);
   },
+  get:          (id)     => request(`/audit/${encodeURIComponent(id)}`),
   deleteBefore: (before) => request('/audit', { method: 'DELETE', body: JSON.stringify({ before }) }),
 };
 

@@ -53,6 +53,24 @@ router.get('/', requirePrivilege('audit_trail', 'view'), async (req, res, next) 
   } catch (err) { next(err); }
 });
 
+// ─── GET /audit/:id ───────────────────────────────────────────────────────
+// Returns a single audit entry by ID.
+
+router.get('/:id', requirePrivilege('audit_trail', 'view'), async (req, res, next) => {
+  try {
+    const slug = req.user.tenantSlug;
+    const rows = await tenantQuery(
+      slug,
+      `SELECT id, user_id, user_name, action, entity_type, entity_id, entity_name, detail, created_at
+       FROM audit_log
+       WHERE id = $1`,
+      [req.params.id],
+    );
+    if (!rows.length) throw AppError('Audit entry not found.', 404);
+    res.json(rows[0]);
+  } catch (err) { next(err); }
+});
+
 // ─── DELETE /audit ────────────────────────────────────────────────────────
 // Body: { before: 'YYYY-MM-DD' }
 // Deletes all entries strictly before the given date.

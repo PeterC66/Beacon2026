@@ -113,6 +113,7 @@ export default function FinanceLedger() {
   const navLinks = [
     { label: 'Home', to: '/' },
     ...(can('finance_transactions', 'create') ? [{ label: 'Add transaction', to: '/finance/transactions/new' }] : []),
+    ...(can('finance_batches', 'view') ? [{ label: 'Credit batches', to: '/finance/batches' }] : []),
   ];
 
   const TH = 'px-3 py-2.5 font-normal';
@@ -272,16 +273,24 @@ export default function FinanceLedger() {
                   </table>
                 </div>
 
-                {can('finance_transactions', 'create') && (
-                  <div className="mt-4 text-center">
+                <div className="mt-4 flex justify-center gap-3">
+                  {can('finance_transactions', 'create') && (
                     <button
                       onClick={() => navigate(`/finance/transactions/new${selId && view === 'account' ? `?accountId=${selId}` : ''}`)}
                       className="bg-blue-600 hover:bg-blue-700 text-white rounded px-5 py-2 text-sm font-medium transition-colors"
                     >
                       Add transaction
                     </button>
-                  </div>
-                )}
+                  )}
+                  {can('finance_batches', 'create') && view === 'account' && selId && (
+                    <button
+                      onClick={() => navigate(`/finance/batches?account=${selId}&mode=create`)}
+                      className="border border-indigo-400 text-indigo-700 hover:bg-indigo-50 rounded px-5 py-2 text-sm font-medium transition-colors"
+                    >
+                      Add batch
+                    </button>
+                  )}
+                </div>
               </>
             )}
           </>

@@ -45,6 +45,7 @@ export const ALL_PRIVS = [
   'email_standard_messages:view', 'email_standard_messages:create', 'email_standard_messages:change', 'email_standard_messages:delete',
   'email_addresses:download',
   'gift_aid_declaration:view', 'gift_aid_declaration:download_and_mark',
+  'finance_batches:view', 'finance_batches:create', 'finance_batches:delete',
 ];
 
 export const TEST_TENANT = 'test-u3a';
