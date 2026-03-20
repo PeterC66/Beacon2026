@@ -942,6 +942,48 @@ Currently generates fake paymentId and redirects to own confirmation endpoint.
   `confirmPayment`, `portalRegister`, `portalVerifyEmail`, `portalLogin`,
   `portalForgotPassword`, `portalResetPassword`
 
+---
+
+## 16. Calendar module
+
+### Data model
+
+Open meetings reuse the `group_events` table with `group_id = NULL`.
+The `group_id` column was made nullable via `ALTER TABLE ... ALTER COLUMN group_id DROP NOT NULL`
+in `tenant_schema.sql`. No separate table is needed.
+
+### Backend routes (`backend/src/routes/calendar.js`)
+
+| Route | Privilege | Purpose |
+|-------|-----------|---------|
+| `GET /calendar/events` | `calendar:view` | List all events across groups + open meetings; filters: `from`, `to`, `memberId`, `venueId`, `groupId` |
+| `GET /calendar/events/pdf` | `calendar:download` | Same filters, returns PDF download |
+| `GET /calendar/members/search` | `calendar:view` | Member name search for filter autocomplete (`?q=...`, min 2 chars, limit 20) |
+| `GET /calendar/open-events` | `meetings:view` | List open meetings (group_id IS NULL) |
+| `POST /calendar/open-events` | `meetings:create` | Create open meeting(s) with recurrence |
+| `PATCH /calendar/open-events/:id` | `meetings:change` | Update single open meeting |
+| `DELETE /calendar/open-events` | `meetings:delete` | Bulk delete by ids array |
+
+### Frontend pages
+
+| File | Route | Description |
+|------|-------|-------------|
+| `frontend/src/pages/groups/Calendar.jsx` | `/calendar` | Main calendar view with filters, date range, PDF download |
+| `frontend/src/pages/groups/OpenMeetings.jsx` | `/calendar/open-meetings` | Open meetings CRUD (same pattern as GroupSchedule) |
+
+### Privileges
+
+- `calendar` resource: `[view, download]` — already seeded in `privilegeResources.js`
+- `meetings` resource: `[view, create, change, delete]` — already seeded
+- Both are granted to Administration, Groups Coordinator, and Group Leaders roles in `defaultRoles.js`
+
+### Key decisions
+
+- **Open meetings** share the `group_events` table (nullable `group_id`) rather than a separate table
+- **Member filter** uses search/autocomplete (not dropdown) for scalability with large memberships
+- **Date/time click** in calendar navigates to Group Record Schedule tab (`/groups/:id?tab=schedule`), not inline edit
+- **Map links** use Google Maps (`google.com/maps/search/?api=1&query=POSTCODE`)
+
 ### Deferred items (in KNOWN-ISSUES.md)
 
 - Joint membership online joining
