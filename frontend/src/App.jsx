@@ -36,6 +36,7 @@ import CreditBatches      from './pages/finance/CreditBatches.jsx';
 import MemberValidator    from './pages/admin/MemberValidator.jsx';
 import PollList           from './pages/admin/PollList.jsx';
 import AuditLog           from './pages/misc/AuditLog.jsx';
+import AuditRecord        from './pages/misc/AuditRecord.jsx';
 import OfficerList        from './pages/misc/OfficerList.jsx';
 import DataBackup         from './pages/misc/DataBackup.jsx';
 import PersonalPreferences from './pages/settings/PersonalPreferences.jsx';
@@ -107,6 +108,7 @@ export default function App() {
           <Route path="/admin/validate-members"              element={<ProtectedRoute><MemberValidator /></ProtectedRoute>} />
           <Route path="/polls"                               element={<ProtectedRoute><PollList /></ProtectedRoute>} />
           <Route path="/audit"                               element={<ProtectedRoute><AuditLog /></ProtectedRoute>} />
+          <Route path="/audit/:id"                            element={<ProtectedRoute><AuditRecord /></ProtectedRoute>} />
           <Route path="/officers"                            element={<ProtectedRoute><OfficerList /></ProtectedRoute>} />
           <Route path="/backup"                              element={<ProtectedRoute><DataBackup /></ProtectedRoute>} />
           <Route path="/preferences"                         element={<ProtectedRoute><PersonalPreferences /></ProtectedRoute>} />

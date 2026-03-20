@@ -2,11 +2,13 @@
 // Audit log viewer — doc 9.2(a)
 
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { audit as auditApi } from '../../lib/api.js';
 import { useAuth } from '../../context/AuthContext.jsx';
 import NavBar from '../../components/NavBar.jsx';
 import PageHeader from '../../components/PageHeader.jsx';
 import DateInput from '../../components/DateInput.jsx';
+import { ENTITY_ROUTES } from './auditHelpers.js';
 
 function isoToday() {
   return new Date().toISOString().slice(0, 10);
@@ -25,6 +27,7 @@ const ACTION_LABELS = {
 };
 
 export default function AuditLog() {
+  const navigate = useNavigate();
   const { can, tenant } = useAuth();
   const [entries,    setEntries]    = useState([]);
   const [loading,    setLoading]    = useState(true);
@@ -128,26 +131,40 @@ export default function AuditLog() {
                   <thead>
                     <tr className="bg-slate-50 border-b border-slate-200 text-left text-slate-600 italic font-normal">
                       <th className="px-3 py-2.5 font-normal whitespace-nowrap">When</th>
-                      <th className="px-3 py-2.5 font-normal">User</th>
+                      <th className="px-3 py-2.5 font-normal">By</th>
                       <th className="px-3 py-2.5 font-normal">Action</th>
-                      <th className="px-3 py-2.5 font-normal">Type</th>
+                      <th className="px-3 py-2.5 font-normal">Target</th>
+                      <th className="px-3 py-2.5 font-normal">Key</th>
                       <th className="px-3 py-2.5 font-normal">Record</th>
-                      <th className="px-3 py-2.5 font-normal">Detail</th>
+                      <th className="px-3 py-2.5 font-normal">Entity</th>
                     </tr>
                   </thead>
                   <tbody>
                     {entries.map((e, i) => {
                       const act = ACTION_LABELS[e.action] ?? { label: e.action, cls: 'bg-slate-100 text-slate-700' };
+                      const entityRoute = ENTITY_ROUTES[e.entity_type];
+                      const canView = entityRoute && e.entity_id;
                       return (
                         <tr key={e.id} className={`border-b border-slate-100 ${i % 2 === 0 ? 'bg-yellow-50' : 'bg-white'}`}>
-                          <td className="px-3 py-2 whitespace-nowrap tabular-nums text-slate-500 text-xs">{formatDate(e.created_at)}</td>
+                          <td className="px-3 py-2 whitespace-nowrap tabular-nums text-xs">
+                            <button type="button" className="text-blue-700 hover:underline" onClick={() => navigate(`/audit/${e.id}`)}>
+                              {formatDate(e.created_at)}
+                            </button>
+                          </td>
                           <td className="px-3 py-2 whitespace-nowrap">{e.user_name}</td>
                           <td className="px-3 py-2 whitespace-nowrap">
                             <span className={`inline-block px-2 py-0.5 rounded text-xs font-medium ${act.cls}`}>{act.label}</span>
                           </td>
+                          <td className="px-3 py-2">{e.entity_name ?? ''}</td>
+                          <td className="px-3 py-2 text-slate-600">{e.entity_id ?? ''}</td>
+                          <td className="px-3 py-2">
+                            {canView && (
+                              <button type="button" className="text-blue-700 hover:underline" onClick={() => navigate(`${entityRoute}/${e.entity_id}`)}>
+                                view
+                              </button>
+                            )}
+                          </td>
                           <td className="px-3 py-2 capitalize text-slate-600">{e.entity_type}</td>
-                          <td className="px-3 py-2">{e.entity_name ?? e.entity_id ?? ''}</td>
-                          <td className="px-3 py-2 text-slate-500 max-w-xs truncate" title={e.detail ?? ''}>{e.detail ?? ''}</td>
                         </tr>
                       );
                     })}

@@ -453,6 +453,7 @@ export const audit = {
     const q = qs.toString();
     return request(`/audit${q ? '?' + q : ''}`);
   },
+  get:          (id)     => request(`/audit/${encodeURIComponent(id)}`),
   deleteBefore: (before) => request('/audit', { method: 'DELETE', body: JSON.stringify({ before }) }),
 };
 
