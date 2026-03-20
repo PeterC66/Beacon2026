@@ -1,14 +1,14 @@
 // beacon2/frontend/src/hooks/useUnsavedChanges.js
 
 import { useContext, useEffect, useRef, useState } from 'react';
-import { UNSAFE_NavigationContext as NavigationContext } from 'react-router-dom';
+import { useBlocker, UNSAFE_DataRouterContext as DataRouterContext } from 'react-router-dom';
 
 /**
  * Warns the user before leaving a page with unsaved changes.
  *
- * Uses the internal UNSAFE_NavigationContext to intercept React Router
- * in-app navigation (works with BrowserRouter, not just data routers).
- * Also installs a beforeunload handler for browser-level navigation.
+ * Uses React Router's useBlocker (data router) to intercept in-app navigation.
+ * Falls back to beforeunload-only when not inside a data router (e.g. tests
+ * using MemoryRouter).
  *
  * Returns { markDirty, markClean }:
  *   - markDirty()  — call whenever a form field changes
@@ -18,7 +18,6 @@ import { UNSAFE_NavigationContext as NavigationContext } from 'react-router-dom'
  * programmatic navigation is not blocked by the dirty guard.
  */
 export function useUnsavedChanges() {
-  // isDirtyRef is updated synchronously; isDirty state drives the effect lifecycle
   const isDirtyRef = useRef(false);
   const [isDirty, setIsDirty] = useState(false);
 
@@ -32,31 +31,27 @@ export function useUnsavedChanges() {
     setIsDirty(false);
   }
 
-  // In-app navigation blocker via UNSAFE_NavigationContext
-  const navCtx = useContext(NavigationContext);
-  const navigator = navCtx?.navigator;
+  // Detect whether we are inside a data router (createBrowserRouter /
+  // createMemoryRouter).  The context is stable for the lifetime of the
+  // component, so the conditional hook call below will always follow
+  // the same branch — the rules-of-hooks invariant is satisfied.
+  const hasDataRouter = !!useContext(DataRouterContext);
 
-  useEffect(() => {
-    if (!isDirty || typeof navigator?.block !== 'function') return;
+  if (hasDataRouter) {
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    const blocker = useBlocker(() => isDirtyRef.current);
 
-    const unblock = navigator.block((tx) => {
-      // Check ref (updated synchronously by markClean) rather than the
-      // stale isDirty closure — allows save handlers to markClean() then
-      // navigate() without triggering the dialog.
-      if (!isDirtyRef.current) {
-        unblock();
-        tx.retry();
-        return;
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    useEffect(() => {
+      if (blocker.state === 'blocked') {
+        if (window.confirm('You have unsaved changes. Leave this page and discard them?')) {
+          blocker.proceed();
+        } else {
+          blocker.reset();
+        }
       }
-      if (window.confirm('You have unsaved changes. Leave this page and discard them?')) {
-        unblock();
-        tx.retry();
-      }
-      // else: navigation is cancelled (user clicked Cancel)
-    });
-
-    return unblock;
-  }, [navigator, isDirty]); // eslint-disable-line react-hooks/exhaustive-deps
+    }, [blocker]);
+  }
 
   // Browser-level navigation (refresh, close tab, browser back to external site)
   useEffect(() => {

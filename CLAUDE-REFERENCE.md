@@ -638,7 +638,14 @@ savedTimer.current = setTimeout(() => setSaved(false), 3000);
 Every full-page edit form must use it. Call `markDirty()` on change, `markClean()` before
 navigate on save/cancel. Currently on: MemberEditor, SystemSettings, TransactionEditor,
 RoleEditor, VenueEditor, UserEditor, MemberClassEditor, GroupRecord, PersonalPreferences,
-TransferMoney.
+TransferMoney, PublicLinks.
+
+**Router requirement:** The hook uses React Router's `useBlocker` for in-app navigation
+blocking, which requires a **data router** (`createBrowserRouter` in `App.jsx`). The app
+was converted from `<BrowserRouter>` to `createBrowserRouter` to enable this. In tests
+using `MemoryRouter` (non-data router), the hook gracefully falls back to
+`beforeunload`-only protection. The conditional `useBlocker` call is safe because the
+router context is stable for the lifetime of a component instance.
 
 ### Sortable columns
 
