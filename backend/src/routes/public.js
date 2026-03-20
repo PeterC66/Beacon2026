@@ -49,7 +49,10 @@ router.get('/:slug/join-config', async (req, res, next) => {
     );
 
     if (!settings?.online_joining_enabled) {
-      return res.status(403).json({ error: 'Online joining is not enabled for this organisation.' });
+      return res.status(403).json({
+        error: `Online joining is not enabled for ${req.tenant.name}.`,
+        u3aName: req.tenant.name,
+      });
     }
 
     const classes = await tenantQuery(
@@ -109,7 +112,7 @@ router.post('/:slug/join', async (req, res, next) => {
     );
 
     if (!settings?.online_joining_enabled) {
-      return res.status(403).json({ error: 'Online joining is not enabled.' });
+      return res.status(403).json({ error: `Online joining is not enabled for ${req.tenant.name}.` });
     }
 
     // Verify the class is valid and available online

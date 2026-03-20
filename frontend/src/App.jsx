@@ -1,6 +1,6 @@
 // beacon2/frontend/src/App.jsx
 
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { createBrowserRouter, RouterProvider, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext.jsx';
 import Login           from './pages/Login.jsx';
 import Home            from './pages/Home.jsx';
@@ -64,82 +64,82 @@ function ProtectedRoute({ children }) {
   return isLoggedIn ? children : <Navigate to="/login" replace />;
 }
 
+const router = createBrowserRouter([
+  { path: '/login', element: <Login /> },
+
+  // System admin routes (auth handled inside pages via sessionStorage)
+  { path: '/system/login', element: <SystemLogin /> },
+  { path: '/system',       element: <SystemDashboard /> },
+
+  // Protected tenant routes
+  { path: '/',           element: <ProtectedRoute><Home /></ProtectedRoute> },
+  { path: '/roles',      element: <ProtectedRoute><RoleList /></ProtectedRoute> },
+  { path: '/roles/new',  element: <ProtectedRoute><RoleEditor /></ProtectedRoute> },
+  { path: '/roles/:id',  element: <ProtectedRoute><RoleEditor /></ProtectedRoute> },
+  { path: '/users',      element: <ProtectedRoute><UserList /></ProtectedRoute> },
+  { path: '/users/new',  element: <ProtectedRoute><UserEditor /></ProtectedRoute> },
+  { path: '/users/:id',  element: <ProtectedRoute><UserEditor /></ProtectedRoute> },
+  { path: '/membership/renewals',     element: <ProtectedRoute><MembershipRenewals /></ProtectedRoute> },
+  { path: '/membership/non-renewals', element: <ProtectedRoute><NonRenewals /></ProtectedRoute> },
+  { path: '/membership/classes',      element: <ProtectedRoute><MemberClassList /></ProtectedRoute> },
+  { path: '/membership/classes/new',  element: <ProtectedRoute><MemberClassEditor /></ProtectedRoute> },
+  { path: '/membership/classes/:id',  element: <ProtectedRoute><MemberClassEditor /></ProtectedRoute> },
+  { path: '/membership/statuses',     element: <ProtectedRoute><MemberStatusList /></ProtectedRoute> },
+  { path: '/members',             element: <ProtectedRoute><MemberList /></ProtectedRoute> },
+  { path: '/members/new',         element: <ProtectedRoute><MemberEditor /></ProtectedRoute> },
+  { path: '/members/recent',       element: <ProtectedRoute><RecentMembers /></ProtectedRoute> },
+  { path: '/members/statistics',   element: <ProtectedRoute><MemberStatistics /></ProtectedRoute> },
+  { path: '/members/:id',         element: <ProtectedRoute><MemberEditor /></ProtectedRoute> },
+  { path: '/addresses-export',    element: <ProtectedRoute><AddressesExport /></ProtectedRoute> },
+  { path: '/groups',       element: <ProtectedRoute><GroupList /></ProtectedRoute> },
+  { path: '/groups/new',   element: <ProtectedRoute><GroupRecord /></ProtectedRoute> },
+  { path: '/groups/:id',   element: <ProtectedRoute><GroupRecord /></ProtectedRoute> },
+  { path: '/faculties',    element: <ProtectedRoute><FacultyList /></ProtectedRoute> },
+  { path: '/venues',       element: <ProtectedRoute><VenueList /></ProtectedRoute> },
+  { path: '/venues/new',   element: <ProtectedRoute><VenueEditor /></ProtectedRoute> },
+  { path: '/venues/:id',   element: <ProtectedRoute><VenueEditor /></ProtectedRoute> },
+  { path: '/settings',                        element: <ProtectedRoute><SystemSettings /></ProtectedRoute> },
+  { path: '/finance/accounts',                    element: <ProtectedRoute><FinanceAccounts /></ProtectedRoute> },
+  { path: '/finance/accounts/:id/configure',     element: <ProtectedRoute><ConfigureAccount /></ProtectedRoute> },
+  { path: '/finance/categories',                  element: <ProtectedRoute><FinanceCategories /></ProtectedRoute> },
+  { path: '/finance/ledger',                      element: <ProtectedRoute><FinanceLedger /></ProtectedRoute> },
+  { path: '/finance/transactions/new',            element: <ProtectedRoute><TransactionEditor /></ProtectedRoute> },
+  { path: '/finance/transactions/:id',            element: <ProtectedRoute><TransactionEditor /></ProtectedRoute> },
+  { path: '/finance/transfers',                   element: <ProtectedRoute><TransferMoney /></ProtectedRoute> },
+  { path: '/finance/reconcile',                   element: <ProtectedRoute><ReconcileAccount /></ProtectedRoute> },
+  { path: '/finance/statement',                   element: <ProtectedRoute><FinancialStatement /></ProtectedRoute> },
+  { path: '/finance/groups-statement',            element: <ProtectedRoute><GroupsStatement /></ProtectedRoute> },
+  { path: '/finance/gift-aid',                      element: <ProtectedRoute><GiftAidDeclaration /></ProtectedRoute> },
+  { path: '/finance/batches',                       element: <ProtectedRoute><CreditBatches /></ProtectedRoute> },
+  { path: '/admin/validate-members',              element: <ProtectedRoute><MemberValidator /></ProtectedRoute> },
+  { path: '/polls',                               element: <ProtectedRoute><PollList /></ProtectedRoute> },
+  { path: '/audit',                               element: <ProtectedRoute><AuditLog /></ProtectedRoute> },
+  { path: '/audit/:id',                            element: <ProtectedRoute><AuditRecord /></ProtectedRoute> },
+  { path: '/gift-aid-log',                         element: <ProtectedRoute><GiftAidLog /></ProtectedRoute> },
+  { path: '/officers',                            element: <ProtectedRoute><OfficerList /></ProtectedRoute> },
+  { path: '/backup',                              element: <ProtectedRoute><DataBackup /></ProtectedRoute> },
+  { path: '/preferences',                         element: <ProtectedRoute><PersonalPreferences /></ProtectedRoute> },
+  { path: '/email/compose',                       element: <ProtectedRoute><EmailCompose /></ProtectedRoute> },
+  { path: '/email/delivery',                      element: <ProtectedRoute><EmailDelivery /></ProtectedRoute> },
+  { path: '/email/delivery/:id',                  element: <ProtectedRoute><EmailDeliveryDetail /></ProtectedRoute> },
+  { path: '/email/unblocker',                     element: <ProtectedRoute><EmailUnblocker /></ProtectedRoute> },
+  { path: '/system-messages',                       element: <ProtectedRoute><SystemMessages /></ProtectedRoute> },
+  { path: '/public-links',                          element: <ProtectedRoute><PublicLinks /></ProtectedRoute> },
+
+  // Public pages (no auth required)
+  { path: '/public/:slug/join',                     element: <JoinForm /> },
+  { path: '/public/:slug/join-complete',            element: <JoinComplete /> },
+  { path: '/public/:slug/portal',                   element: <PortalLogin /> },
+  { path: '/public/:slug/portal/register',          element: <PortalRegister /> },
+  { path: '/public/:slug/portal/verify',            element: <PortalVerifyEmail /> },
+  { path: '/public/:slug/portal/forgot-password',   element: <PortalForgotPassword /> },
+  { path: '/public/:slug/portal/reset-password',    element: <PortalResetPassword /> },
+]);
+
 export default function App() {
   return (
     <AuthProvider>
-      <BrowserRouter>
-        <Routes>
-          <Route path="/login" element={<Login />} />
-
-          {/* System admin routes (auth handled inside pages via sessionStorage) */}
-          <Route path="/system/login" element={<SystemLogin />} />
-          <Route path="/system"       element={<SystemDashboard />} />
-
-          {/* Protected tenant routes */}
-          <Route path="/"           element={<ProtectedRoute><Home /></ProtectedRoute>} />
-          <Route path="/roles"      element={<ProtectedRoute><RoleList /></ProtectedRoute>} />
-          <Route path="/roles/new"  element={<ProtectedRoute><RoleEditor /></ProtectedRoute>} />
-          <Route path="/roles/:id"  element={<ProtectedRoute><RoleEditor /></ProtectedRoute>} />
-          <Route path="/users"      element={<ProtectedRoute><UserList /></ProtectedRoute>} />
-          <Route path="/users/new"  element={<ProtectedRoute><UserEditor /></ProtectedRoute>} />
-          <Route path="/users/:id"  element={<ProtectedRoute><UserEditor /></ProtectedRoute>} />
-          <Route path="/membership/renewals"     element={<ProtectedRoute><MembershipRenewals /></ProtectedRoute>} />
-          <Route path="/membership/non-renewals" element={<ProtectedRoute><NonRenewals /></ProtectedRoute>} />
-          <Route path="/membership/classes"      element={<ProtectedRoute><MemberClassList /></ProtectedRoute>} />
-          <Route path="/membership/classes/new"  element={<ProtectedRoute><MemberClassEditor /></ProtectedRoute>} />
-          <Route path="/membership/classes/:id"  element={<ProtectedRoute><MemberClassEditor /></ProtectedRoute>} />
-          <Route path="/membership/statuses"     element={<ProtectedRoute><MemberStatusList /></ProtectedRoute>} />
-          <Route path="/members"             element={<ProtectedRoute><MemberList /></ProtectedRoute>} />
-          <Route path="/members/new"         element={<ProtectedRoute><MemberEditor /></ProtectedRoute>} />
-          <Route path="/members/recent"       element={<ProtectedRoute><RecentMembers /></ProtectedRoute>} />
-          <Route path="/members/statistics"   element={<ProtectedRoute><MemberStatistics /></ProtectedRoute>} />
-          <Route path="/members/:id"         element={<ProtectedRoute><MemberEditor /></ProtectedRoute>} />
-          <Route path="/addresses-export"    element={<ProtectedRoute><AddressesExport /></ProtectedRoute>} />
-          <Route path="/groups"       element={<ProtectedRoute><GroupList /></ProtectedRoute>} />
-          <Route path="/groups/new"   element={<ProtectedRoute><GroupRecord /></ProtectedRoute>} />
-          <Route path="/groups/:id"   element={<ProtectedRoute><GroupRecord /></ProtectedRoute>} />
-          <Route path="/faculties"    element={<ProtectedRoute><FacultyList /></ProtectedRoute>} />
-          <Route path="/venues"       element={<ProtectedRoute><VenueList /></ProtectedRoute>} />
-          <Route path="/venues/new"   element={<ProtectedRoute><VenueEditor /></ProtectedRoute>} />
-          <Route path="/venues/:id"   element={<ProtectedRoute><VenueEditor /></ProtectedRoute>} />
-          <Route path="/settings"                        element={<ProtectedRoute><SystemSettings /></ProtectedRoute>} />
-          <Route path="/finance/accounts"                    element={<ProtectedRoute><FinanceAccounts /></ProtectedRoute>} />
-          <Route path="/finance/accounts/:id/configure"     element={<ProtectedRoute><ConfigureAccount /></ProtectedRoute>} />
-          <Route path="/finance/categories"                  element={<ProtectedRoute><FinanceCategories /></ProtectedRoute>} />
-          <Route path="/finance/ledger"                      element={<ProtectedRoute><FinanceLedger /></ProtectedRoute>} />
-          <Route path="/finance/transactions/new"            element={<ProtectedRoute><TransactionEditor /></ProtectedRoute>} />
-          <Route path="/finance/transactions/:id"            element={<ProtectedRoute><TransactionEditor /></ProtectedRoute>} />
-          <Route path="/finance/transfers"                   element={<ProtectedRoute><TransferMoney /></ProtectedRoute>} />
-          <Route path="/finance/reconcile"                   element={<ProtectedRoute><ReconcileAccount /></ProtectedRoute>} />
-          <Route path="/finance/statement"                   element={<ProtectedRoute><FinancialStatement /></ProtectedRoute>} />
-          <Route path="/finance/groups-statement"            element={<ProtectedRoute><GroupsStatement /></ProtectedRoute>} />
-          <Route path="/finance/gift-aid"                      element={<ProtectedRoute><GiftAidDeclaration /></ProtectedRoute>} />
-          <Route path="/finance/batches"                       element={<ProtectedRoute><CreditBatches /></ProtectedRoute>} />
-          <Route path="/admin/validate-members"              element={<ProtectedRoute><MemberValidator /></ProtectedRoute>} />
-          <Route path="/polls"                               element={<ProtectedRoute><PollList /></ProtectedRoute>} />
-          <Route path="/audit"                               element={<ProtectedRoute><AuditLog /></ProtectedRoute>} />
-          <Route path="/audit/:id"                            element={<ProtectedRoute><AuditRecord /></ProtectedRoute>} />
-          <Route path="/gift-aid-log"                         element={<ProtectedRoute><GiftAidLog /></ProtectedRoute>} />
-          <Route path="/officers"                            element={<ProtectedRoute><OfficerList /></ProtectedRoute>} />
-          <Route path="/backup"                              element={<ProtectedRoute><DataBackup /></ProtectedRoute>} />
-          <Route path="/preferences"                         element={<ProtectedRoute><PersonalPreferences /></ProtectedRoute>} />
-          <Route path="/email/compose"                       element={<ProtectedRoute><EmailCompose /></ProtectedRoute>} />
-          <Route path="/email/delivery"                      element={<ProtectedRoute><EmailDelivery /></ProtectedRoute>} />
-          <Route path="/email/delivery/:id"                  element={<ProtectedRoute><EmailDeliveryDetail /></ProtectedRoute>} />
-          <Route path="/email/unblocker"                     element={<ProtectedRoute><EmailUnblocker /></ProtectedRoute>} />
-          <Route path="/system-messages"                       element={<ProtectedRoute><SystemMessages /></ProtectedRoute>} />
-          <Route path="/public-links"                          element={<ProtectedRoute><PublicLinks /></ProtectedRoute>} />
-
-          {/* Public pages (no auth required) */}
-          <Route path="/public/:slug/join"                     element={<JoinForm />} />
-          <Route path="/public/:slug/join-complete"            element={<JoinComplete />} />
-          <Route path="/public/:slug/portal"                   element={<PortalLogin />} />
-          <Route path="/public/:slug/portal/register"          element={<PortalRegister />} />
-          <Route path="/public/:slug/portal/verify"            element={<PortalVerifyEmail />} />
-          <Route path="/public/:slug/portal/forgot-password"   element={<PortalForgotPassword />} />
-          <Route path="/public/:slug/portal/reset-password"    element={<PortalResetPassword />} />
-        </Routes>
-      </BrowserRouter>
+      <RouterProvider router={router} />
     </AuthProvider>
   );
 }

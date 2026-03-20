@@ -28,6 +28,12 @@ active tenant on every server startup.
 4. DDL loop has per-statement try/catch
 5. **No semicolons in SQL comments** — migration splits on `;`
 
+After DDL, the migration also re-seeds privilege resources and calls
+`syncDefaultRolePrivileges()` to additively grant any newly-defined privileges
+to the default roles (Administration, etc.). This means adding a new privilege
+resource and granting it in `defaultRoles.js` is all that's needed — existing
+tenants pick it up on next server restart.
+
 ### Diagnosing "unexpected error"
 
 Check server logs for `[timestamp] METHOD /path: Error: ...`. Common causes:
@@ -638,7 +644,14 @@ savedTimer.current = setTimeout(() => setSaved(false), 3000);
 Every full-page edit form must use it. Call `markDirty()` on change, `markClean()` before
 navigate on save/cancel. Currently on: MemberEditor, SystemSettings, TransactionEditor,
 RoleEditor, VenueEditor, UserEditor, MemberClassEditor, GroupRecord, PersonalPreferences,
-TransferMoney.
+TransferMoney, PublicLinks.
+
+**Router requirement:** The hook uses React Router's `useBlocker` for in-app navigation
+blocking, which requires a **data router** (`createBrowserRouter` in `App.jsx`). The app
+was converted from `<BrowserRouter>` to `createBrowserRouter` to enable this. In tests
+using `MemoryRouter` (non-data router), the hook gracefully falls back to
+`beforeunload`-only protection. The conditional `useBlocker` call is safe because the
+router context is stable for the lifetime of a component instance.
 
 ### Sortable columns
 
