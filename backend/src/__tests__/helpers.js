@@ -46,6 +46,8 @@ export const ALL_PRIVS = [
   'email_addresses:download',
   'gift_aid_declaration:view', 'gift_aid_declaration:download_and_mark',
   'finance_batches:view', 'finance_batches:create', 'finance_batches:delete',
+  'public_links:view', 'public_links:change',
+  'system_messages:view', 'system_messages:change',
 ];
 
 export const TEST_TENANT = 'test-u3a';

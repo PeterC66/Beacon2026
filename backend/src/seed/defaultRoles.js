@@ -165,7 +165,8 @@ export const DEFAULT_ROLES = [
       { code: 'poll_set_up',              action: 'create' },
       { code: 'poll_set_up',              action: 'change' },
       { code: 'poll_set_up',              action: 'delete' },            // vced
-      { code: 'public_links',             action: 'view' },              // v
+      { code: 'public_links',             action: 'view' },
+      { code: 'public_links',             action: 'change' },            // ve
 
       // Roles
       { code: 'role_record',              action: 'view' },

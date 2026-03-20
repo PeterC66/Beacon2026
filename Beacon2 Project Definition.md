@@ -96,6 +96,18 @@ Beacon2 is a ground-up rebuild with these goals:
 - **System users** — CRUD, role assignment, username-based login
 - **Polls** — CRUD; member list filter; bulk assign
 
+### Online Joining and Portal module
+- **Online joining** — public form for new members; class selection, personal details,
+  address, Gift Aid consent; PayPal payment stub; creates member with Applicant status,
+  promotes to Current on payment confirmation; finance transaction creation;
+  confirmation email + officer notifications
+- **Portal registration/login** — separate auth on members table; identity verification
+  (memno + name + postcode); email verification flow; password reset flow
+- **System messages** — admin page for editing auto-sent email templates (joining
+  confirmation, officer notification); token substitution support
+- **Public links** — admin page with online joining toggle, privacy policy URL,
+  copyable public URLs, PayPal status indicator
+
 ### Admin / Misc module
 - **Audit log** — date-filtered view + delete-before-date; clickable When → Audit Record detail; clickable Record → entity view
 - **Gift Aid log** — date-filtered view of Gift Aid consent given/withdrawn; member filter dropdown
@@ -149,9 +161,10 @@ backend/
     routes/                auth  users  roles  privileges  system  members
                            memberClasses  memberStatuses  groups  venues
                            faculties  settings  finance  polls  backup
-                           addressExport  email  giftAid
+                           addressExport  email  giftAid  systemMessages
+                           publicLinks  public
     services/              authService
-    utils/                 db  jwt  password  redis  migrate  audit  emailTokens
+    utils/                 db  jwt  password  redis  migrate  audit  emailTokens  paypal
     seed/                  index  createTenant  privilegeResources  defaultRoles
     __tests__/             helpers  health  auth  users  roles  members  groups
                            finance  polls  (+ more)
@@ -175,12 +188,15 @@ frontend/
                            MembershipRenewals  NonRenewals
                            RecentMembers  Statistics
       misc/                AuditLog  AuditRecord  auditHelpers  GiftAidLog  OfficerList  DataBackup
+                           PublicLinks
       roles/               RoleList  RoleEditor
-      settings/            SystemSettings  PersonalPreferences
+      settings/            SystemSettings  PersonalPreferences  SystemMessages
       system/              SystemLogin  SystemDashboard
       users/               UserList  UserEditor
       email/               EmailCompose  EmailDelivery  EmailDeliveryDetail
                            EmailUnblocker
+      public/              JoinForm  JoinComplete  PortalLogin  PortalRegister
+                           PortalVerifyEmail  PortalForgotPassword  PortalResetPassword
 
 e2e/                       Playwright E2E tests against staging
 docs/
@@ -194,23 +210,14 @@ docs/
 
 Greyed-out items in `Home.jsx` (i.e. `to: null`) are the remaining roadmap:
 
-**Membership:**
-- Membership cards
-
-**Groups:**
-- Calendar
-
-**Misc:**
-- Public links
-
-**Set-up:**
-- System messages
-
 **Not yet started:**
 - Letters & documents
 - Meetings
+- Membership cards
+- Calendar
 - Data migration tool (standalone import from Beacon — restore already handles this)
-- Members Portal (self-service for members)
+- Members Portal — full self-service features (registration/login built; view/update details,
+  renewal, group browsing still to do)
 
 ---
 

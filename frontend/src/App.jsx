@@ -49,6 +49,15 @@ import EmailCompose        from './pages/email/EmailCompose.jsx';
 import EmailDelivery       from './pages/email/EmailDelivery.jsx';
 import EmailDeliveryDetail from './pages/email/EmailDeliveryDetail.jsx';
 import EmailUnblocker      from './pages/email/EmailUnblocker.jsx';
+import SystemMessages      from './pages/settings/SystemMessages.jsx';
+import PublicLinks         from './pages/misc/PublicLinks.jsx';
+import JoinForm            from './pages/public/JoinForm.jsx';
+import JoinComplete        from './pages/public/JoinComplete.jsx';
+import PortalLogin         from './pages/public/PortalLogin.jsx';
+import PortalRegister      from './pages/public/PortalRegister.jsx';
+import PortalVerifyEmail   from './pages/public/PortalVerifyEmail.jsx';
+import PortalForgotPassword from './pages/public/PortalForgotPassword.jsx';
+import PortalResetPassword  from './pages/public/PortalResetPassword.jsx';
 
 function ProtectedRoute({ children }) {
   const { isLoggedIn } = useAuth();
@@ -118,6 +127,17 @@ export default function App() {
           <Route path="/email/delivery"                      element={<ProtectedRoute><EmailDelivery /></ProtectedRoute>} />
           <Route path="/email/delivery/:id"                  element={<ProtectedRoute><EmailDeliveryDetail /></ProtectedRoute>} />
           <Route path="/email/unblocker"                     element={<ProtectedRoute><EmailUnblocker /></ProtectedRoute>} />
+          <Route path="/system-messages"                       element={<ProtectedRoute><SystemMessages /></ProtectedRoute>} />
+          <Route path="/public-links"                          element={<ProtectedRoute><PublicLinks /></ProtectedRoute>} />
+
+          {/* Public pages (no auth required) */}
+          <Route path="/public/:slug/join"                     element={<JoinForm />} />
+          <Route path="/public/:slug/join-complete"            element={<JoinComplete />} />
+          <Route path="/public/:slug/portal"                   element={<PortalLogin />} />
+          <Route path="/public/:slug/portal/register"          element={<PortalRegister />} />
+          <Route path="/public/:slug/portal/verify"            element={<PortalVerifyEmail />} />
+          <Route path="/public/:slug/portal/forgot-password"   element={<PortalForgotPassword />} />
+          <Route path="/public/:slug/portal/reset-password"    element={<PortalResetPassword />} />
         </Routes>
       </BrowserRouter>
     </AuthProvider>

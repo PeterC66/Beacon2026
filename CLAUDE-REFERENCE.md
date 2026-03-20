@@ -825,3 +825,115 @@ Not the same as the System Settings screen (doc `8.3`).
 
 Selected files from original Beacon codebase. Ask user to add missing files.
 
+---
+
+## 16. Online Joining and Portal Auth (docs 10.1, 10.2)
+
+### Overview
+
+Public-facing pages for new members to join online and existing members to register
+for portal access. All public routes are unauthenticated and resolve tenants from
+a URL slug (`/public/:slug/...`).
+
+### Public route architecture
+
+- Backend: `public.js` at `/public` — **no auth middleware**
+- `resolveTenant` middleware on all routes: looks up tenant by slug via `prisma.sysTenant.findUnique`,
+  attaches `req.tenantSlug` and `req.tenantSchema`
+- All DB queries use `tenantQuery()` with the resolved schema
+
+### Online Joining flow (doc 10.1)
+
+1. `GET /:slug/join-config` — returns u3a name, membership classes, Gift Aid flag,
+   privacy policy URL, default town/county
+2. `POST /:slug/join` — validates form (Zod), creates address row, computes `next_renewal`
+   from year-start settings, creates member with **Applicant** status, calls PayPal stub,
+   returns `{ paymentId, redirectUrl, memberId }`
+3. `POST /:slug/payment-confirm` — verifies payment via stub, updates status to **Current**,
+   creates finance transaction (PayPal account + Membership category), sends confirmation
+   email to member + notification to officers with `notify_online_join = true`
+
+### Portal authentication (doc 10.2 — registration/login only)
+
+Separate auth system on the `members` table (not `system_users`):
+
+| Column | Purpose |
+|--------|---------|
+| `portal_email` | Login email |
+| `portal_password_hash` | bcrypt hash |
+| `portal_email_verified` | Must be true to log in |
+| `portal_verification_token/expires` | Email verification |
+| `portal_reset_token/expires` | Password reset |
+
+**Routes:**
+- `POST /:slug/portal/register` — identity verification (memno + name + postcode + email),
+  sets portal credentials, sends verification email
+- `POST /:slug/portal/verify-email` — confirms token
+- `POST /:slug/portal/login` — email + password → JWT with `isPortal: true`
+- `POST /:slug/portal/forgot-password` — anti-enumeration (always "if account exists…")
+- `POST /:slug/portal/reset-password` — validates token, hashes new password
+
+**Password requirements**: 10–72 chars, upper + lower + numeric.
+
+### PayPal stub (`utils/paypal.js`)
+
+Two functions with clear interfaces for future real implementation:
+- `initiatePayment({ amount, description, memberRef, returnUrl, cancelUrl, paypalEmail })`
+  → `{ paymentId, redirectUrl }`
+- `verifyPaymentNotification({ paymentId, rawBody })`
+  → `{ verified, grossAmount, fee, payerEmail, status }`
+
+Currently generates fake paymentId and redirects to own confirmation endpoint.
+
+### System Messages (admin page)
+
+- DB: `system_messages` table — pre-defined templates with well-known IDs, seeded on migration
+- Backend: `systemMessages.js` at `/system-messages`; privileges `system_messages:view/change`
+- Frontend: `SystemMessages.jsx` at `/system-messages` — inline editing of subject/body
+- Token reference panel shows available substitutions (#FORENAME, #SURNAME, #MEMNO, etc.)
+- Current messages: `online_join_confirm`, `online_join_officer_notify`
+
+### Public Links (admin page)
+
+- Backend: `publicLinks.js` at `/public-links`; privileges `public_links:view/change`
+- Frontend: `PublicLinks.jsx` at `/public-links` — toggle online joining, privacy policy URL,
+  copyable public URLs, PayPal status indicator
+- Reads `online_joining_enabled` and `privacy_policy_url` from `tenant_settings`
+
+### Database additions (`tenant_schema.sql`)
+
+- `system_messages` table with seeded rows
+- `tenant_settings` columns: `online_joining_enabled`, `privacy_policy_url`
+- `members` columns: `portal_email`, `portal_password_hash`, `portal_email_verified`,
+  `portal_verification_token/expires`, `portal_reset_token/expires`
+- Index: `idx_members_portal_email` (partial, WHERE portal_email IS NOT NULL)
+- Seeded member status: **Applicant**
+
+### Frontend public pages
+
+| Page | Route | Purpose |
+|------|-------|---------|
+| `JoinForm.jsx` | `/public/:slug/join` | Public joining form |
+| `JoinComplete.jsx` | `/public/:slug/join-complete` | Payment confirmation |
+| `PortalLogin.jsx` | `/public/:slug/portal` | Portal login |
+| `PortalRegister.jsx` | `/public/:slug/portal/register` | Identity verification + password |
+| `PortalVerifyEmail.jsx` | `/public/:slug/portal/verify` | Email token verification |
+| `PortalForgotPassword.jsx` | `/public/:slug/portal/forgot-password` | Request reset link |
+| `PortalResetPassword.jsx` | `/public/:slug/portal/reset-password` | Set new password |
+
+### API client (`api.js`)
+
+- `systemMessages.list()`, `systemMessages.update(id, data)` — authenticated
+- `publicLinks.get()`, `publicLinks.update(data)` — authenticated
+- `publicApi.*` — direct fetch (no auth token): `getJoinConfig`, `submitJoin`,
+  `confirmPayment`, `portalRegister`, `portalVerifyEmail`, `portalLogin`,
+  `portalForgotPassword`, `portalResetPassword`
+
+### Deferred items (in KNOWN-ISSUES.md)
+
+- Joint membership online joining
+- Full Members Portal features (view/update own details, renewal, group browsing)
+- Full Public Links configuration (renewing, portal toggle)
+- Real PayPal API integration
+- Shared email handling in portal registration
+

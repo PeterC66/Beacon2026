@@ -17,7 +17,8 @@ const COLS = `
   deletion_years, default_payment_method, gift_aid_enabled,
   gift_aid_online_renewals, default_town, default_county, default_std_code,
   paypal_email, paypal_cancel_url, shared_address_warning,
-  year_start_month, year_start_day, updated_at
+  year_start_month, year_start_day, online_joining_enabled,
+  privacy_policy_url, updated_at
 `;
 
 // ─── GET /settings/year-config ────────────────────────────────────────────
@@ -98,6 +99,8 @@ const updateSchema = z.object({
   sharedAddressWarning:     z.boolean().optional(),
   yearStartMonth:           z.number().int().min(1).max(12).optional(),
   yearStartDay:             z.number().int().min(1).max(31).optional(),
+  onlineJoiningEnabled:     z.boolean().optional(),
+  privacyPolicyUrl:         z.string().nullable().optional(),
 });
 
 router.patch('/', requirePrivilege('settings', 'change'), async (req, res, next) => {
@@ -130,6 +133,8 @@ router.patch('/', requirePrivilege('settings', 'change'), async (req, res, next)
     if (data.sharedAddressWarning    !== undefined) { fields.push(`shared_address_warning = $${i++}`);    values.push(data.sharedAddressWarning); }
     if (data.yearStartMonth          !== undefined) { fields.push(`year_start_month = $${i++}`);           values.push(data.yearStartMonth); }
     if (data.yearStartDay            !== undefined) { fields.push(`year_start_day = $${i++}`);             values.push(data.yearStartDay); }
+    if (data.onlineJoiningEnabled    !== undefined) { fields.push(`online_joining_enabled = $${i++}`);     values.push(data.onlineJoiningEnabled); }
+    if (data.privacyPolicyUrl        !== undefined) { fields.push(`privacy_policy_url = $${i++}`);         values.push(data.privacyPolicyUrl); }
 
     if (fields.length === 0) return res.status(400).json({ error: 'Nothing to update.' });
 

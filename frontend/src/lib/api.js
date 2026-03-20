@@ -531,6 +531,86 @@ export const backup = {
 
 // ─── Email ─────────────────────────────────────────────────────────────────
 
+// ─── System Messages ──────────────────────────────────────────────────────
+
+export const systemMessages = {
+  list:   ()         => request('/system-messages'),
+  update: (id, data) => request(`/system-messages/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
+};
+
+// ─── Public Links ─────────────────────────────────────────────────────────
+
+export const publicLinks = {
+  get:    () => request('/public-links'),
+  update: (data) => request('/public-links', { method: 'PATCH', body: JSON.stringify(data) }),
+};
+
+// ─── Public (unauthenticated) ─────────────────────────────────────────────
+// These use direct fetch (no auth token) since they're public pages.
+
+export const publicApi = {
+  getJoinConfig: (slug) =>
+    fetch(`${BASE}/public/${slug}/join-config`).then((r) =>
+      r.json().then((b) => { if (!r.ok) throw new Error(b.error ?? `HTTP ${r.status}`); return b; }),
+    ),
+  submitJoin: (slug, data) =>
+    fetch(`${BASE}/public/${slug}/join`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    }).then((r) =>
+      r.json().then((b) => { if (!r.ok) throw new Error(b.error ?? `HTTP ${r.status}`); return b; }),
+    ),
+  confirmPayment: (slug, data) =>
+    fetch(`${BASE}/public/${slug}/payment-confirm`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    }).then((r) =>
+      r.json().then((b) => { if (!r.ok) throw new Error(b.error ?? `HTTP ${r.status}`); return b; }),
+    ),
+  portalRegister: (slug, data) =>
+    fetch(`${BASE}/public/${slug}/portal/register`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    }).then((r) =>
+      r.json().then((b) => { if (!r.ok) throw new Error(b.error ?? `HTTP ${r.status}`); return b; }),
+    ),
+  portalVerifyEmail: (slug, token) =>
+    fetch(`${BASE}/public/${slug}/portal/verify-email`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token }),
+    }).then((r) =>
+      r.json().then((b) => { if (!r.ok) throw new Error(b.error ?? `HTTP ${r.status}`); return b; }),
+    ),
+  portalLogin: (slug, email, password) =>
+    fetch(`${BASE}/public/${slug}/portal/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password }),
+    }).then((r) =>
+      r.json().then((b) => { if (!r.ok) throw new Error(b.error ?? `HTTP ${r.status}`); return b; }),
+    ),
+  portalForgotPassword: (slug, email) =>
+    fetch(`${BASE}/public/${slug}/portal/forgot-password`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email }),
+    }).then((r) =>
+      r.json().then((b) => { if (!r.ok) throw new Error(b.error ?? `HTTP ${r.status}`); return b; }),
+    ),
+  portalResetPassword: (slug, token, password) =>
+    fetch(`${BASE}/public/${slug}/portal/reset-password`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token, password }),
+    }).then((r) =>
+      r.json().then((b) => { if (!r.ok) throw new Error(b.error ?? `HTTP ${r.status}`); return b; }),
+    ),
+};
+
 export const email = {
   getFromAddresses: () => request('/email/from-addresses'),
 
