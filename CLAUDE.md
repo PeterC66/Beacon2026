@@ -101,6 +101,13 @@ See `CLAUDE-REFERENCE.md` §12 for test architecture and patterns.
 
 ---
 
+## Deferred items
+
+Any time work is deferred or descoped, add it to `KNOWN-ISSUES.md` with enough context
+to pick it up later (what, why deferred, relevant doc refs).
+
+---
+
 ## Session wrap-up
 
 **This step is mandatory and must be in your TodoWrite list from the start of every session.**
