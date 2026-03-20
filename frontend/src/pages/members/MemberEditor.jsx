@@ -118,6 +118,9 @@ export default function MemberEditor() {
   const [partnerClassMismatch, setPartnerClassMismatch] = useState(false);
   const [partnerNewClassId,    setPartnerNewClassId]    = useState('');
 
+  // ── Gift Aid checkbox (new member only) ──────────────────────────────
+  const [giftAidTick,   setGiftAidTick]   = useState(false);
+
   // ── Groups & Ledger section ───────────────────────────────────────────
   const [memberGroups,  setMemberGroups]  = useState([]);
   const [memberTxns,    setMemberTxns]    = useState([]);
@@ -152,13 +155,32 @@ export default function MemberEditor() {
 
   useEffect(() => {
     Promise.all([statusApi.list(), classApi.list(), pollsApi.list()])
-      .then(([s, c, p]) => { setStatuses(s); setClasses(c); setAllPolls(p); })
+      .then(([s, c, p]) => {
+        setStatuses(s);
+        setClasses(c);
+        setAllPolls(p);
+        // Auto-set status to "Current" for new members
+        if (isNew && s.length > 0) {
+          const current = s.find((st) => st.name.toLowerCase() === 'current');
+          if (current) setForm((prev) => ({ ...prev, statusId: prev.statusId || String(current.id) }));
+        }
+      })
       .catch(() => {});
 
     membersApi.list({ status: '' }).then(setAllMembers).catch(() => {});
 
     if (isNew) {
       settingsApi.getYearConfig().then(setYearConfig).catch(() => {});
+
+      // Pre-fill default town, county, and STD code from system settings
+      settingsApi.getNewMemberDefaults().then((defaults) => {
+        setForm((prev) => ({
+          ...prev,
+          town:      prev.town      || defaults.defaultTown    || '',
+          county:    prev.county    || defaults.defaultCounty  || '',
+          telephone: prev.telephone || defaults.defaultStdCode || '',
+        }));
+      }).catch(() => {});
 
       financeApi.listAccounts()
         .then((accs) => {
@@ -404,7 +426,7 @@ export default function MemberEditor() {
       classId:     form.classId,
       joinedOn:    form.joinedOn    || undefined,
       nextRenewal: form.nextRenewal || undefined,
-      giftAidFrom: form.giftAidFrom || undefined,
+      giftAidFrom: isNew ? (giftAidTick ? new Date().toISOString().slice(0, 10) : undefined) : (form.giftAidFrom || undefined),
       homeU3a:     isAssociate ? (form.homeU3a || undefined) : undefined,
       notes:       form.notes       || undefined,
       hideContact: form.hideContact,
@@ -415,7 +437,7 @@ export default function MemberEditor() {
         addLine2:  form.addLine2  || undefined,
         town:      form.town      || undefined,
         county:    form.county    || undefined,
-        postcode:  form.postcode  || undefined,
+        postcode:  form.postcode  ? form.postcode.trim().toUpperCase() : undefined,
         telephone: form.telephone || undefined,
       },
     };
@@ -592,17 +614,19 @@ export default function MemberEditor() {
           <div className={sectionCls}>
             <h2 className="text-sm font-semibold text-slate-700 uppercase tracking-wide mb-3">Membership</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label className={labelCls}><strong>Status</strong></label>
-                <select value={form.statusId}
-                  onChange={(e) => set('statusId', e.target.value)}
-                  onBlur={() => handleBlur('statusId')}
-                  className={ic('statusId')}>
-                  <option value="">— select —</option>
-                  {statuses.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
-                </select>
-                {fieldErrors.statusId && <p className={errMsgCls}>{fieldErrors.statusId}</p>}
-              </div>
+              {!isNew && (
+                <div>
+                  <label className={labelCls}><strong>Status</strong></label>
+                  <select value={form.statusId}
+                    onChange={(e) => set('statusId', e.target.value)}
+                    onBlur={() => handleBlur('statusId')}
+                    className={ic('statusId')}>
+                    <option value="">— select —</option>
+                    {statuses.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
+                  </select>
+                  {fieldErrors.statusId && <p className={errMsgCls}>{fieldErrors.statusId}</p>}
+                </div>
+              )}
               <div>
                 <label className={labelCls}><strong>Class</strong></label>
                 <select value={form.classId}
@@ -708,13 +732,15 @@ export default function MemberEditor() {
                     className={inputCls} maxLength={100} />
                 </div>
               )}
-              <div>
-                <label className={labelCls}>Gift Aid from</label>
-                <DateInput value={form.giftAidFrom}
-                  onChange={(v) => set('giftAidFrom', v)}
-                  max={new Date().toISOString().slice(0, 10)}
-                  className={inputCls} />
-              </div>
+              {!isNew && (
+                <div>
+                  <label className={labelCls}>Gift Aid from</label>
+                  <DateInput value={form.giftAidFrom}
+                    onChange={(v) => set('giftAidFrom', v)}
+                    max={new Date().toISOString().slice(0, 10)}
+                    className={inputCls} />
+                </div>
+              )}
             </div>
 
             <div className="mt-4">
@@ -730,6 +756,15 @@ export default function MemberEditor() {
                 className="rounded border-slate-300 text-blue-600 focus:ring-blue-500" />
               Hide contact details from group leaders
             </label>
+
+            {isNew && (
+              <label className="flex items-center gap-2 mt-3 text-sm cursor-pointer">
+                <input type="checkbox" checked={giftAidTick}
+                  onChange={(e) => setGiftAidTick(e.target.checked)}
+                  className="rounded border-slate-300 text-blue-600 focus:ring-blue-500" />
+                Tick if eligible for Gift Aid claim (if applicable)
+              </label>
+            )}
           </div>
 
           {/* ── iii) Address ─────────────────────────────────────────── */}

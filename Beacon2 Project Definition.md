@@ -43,7 +43,9 @@ Beacon2 is a ground-up rebuild with these goals:
 - **Member record** — full edit: personal details, address (sharing/partner linking),
   phone/email/postcode validation, status, class, dates (DateInput), Gift Aid, partner
   linking (bidirectional, auto-shares address), poll tick boxes, groups & ledger tab
-- **Add New Member** — same form, creates membership payment entry
+- **Add New Member** — dedicated form with auto-Current status, Gift Aid tickbox,
+  default town/county/STD code pre-fill from system settings, postcode auto-uppercase,
+  creates membership payment entry
 - **Member classes** — CRUD; monthly fee grid when `fee_variation = 'varies_by_month'`;
   delete guard
 - **Member statuses** — inline rename
@@ -96,6 +98,7 @@ Beacon2 is a ground-up rebuild with these goals:
 
 ### Admin / Misc module
 - **Audit log** — date-filtered view + delete-before-date; clickable When → Audit Record detail; clickable Record → entity view
+- **Gift Aid log** — date-filtered view of Gift Aid consent given/withdrawn; member filter dropdown
 - **u3a Officers** — CRUD; email sending; status-based styling
 - **Personal preferences** — display prefs, change password, security Q&A, inactivity timeout
 - **Data export & backup** — 8 export types (Excel); full restore (Beacon2 + Beacon format)
@@ -171,7 +174,7 @@ frontend/
       membership/          MemberClassList  MemberClassEditor  MemberStatusList
                            MembershipRenewals  NonRenewals
                            RecentMembers  Statistics
-      misc/                AuditLog  AuditRecord  auditHelpers  OfficerList  DataBackup
+      misc/                AuditLog  AuditRecord  auditHelpers  GiftAidLog  OfficerList  DataBackup
       roles/               RoleList  RoleEditor
       settings/            SystemSettings  PersonalPreferences
       system/              SystemLogin  SystemDashboard
@@ -198,7 +201,6 @@ Greyed-out items in `Home.jsx` (i.e. `to: null`) are the remaining roadmap:
 - Calendar
 
 **Misc:**
-- Gift Aid log
 - Public links
 
 **Set-up:**

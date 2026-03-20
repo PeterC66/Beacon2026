@@ -487,6 +487,14 @@ router.post('/renew', requirePrivilege('membership_renewals', 'renew'), async (r
         );
 
         logAudit(slug, { userId: req.user.userId, userName: req.user.name, action: 'renew', entityType: 'member', entityId: memberId, detail: JSON.stringify({ newNextRenewal }) });
+
+        // Gift Aid consent audit
+        if (gaChange === true && !m.gift_aid_from) {
+          logAudit(slug, { userId: req.user.userId, userName: req.user.name, action: 'gift_aid_consent', entityType: 'member', entityId: memberId, entityName: `${m.forenames} ${m.surname}`, detail: JSON.stringify({ giftAidFrom: new Date().toISOString().slice(0, 10) }) });
+        } else if (gaChange === false && m.gift_aid_from) {
+          logAudit(slug, { userId: req.user.userId, userName: req.user.name, action: 'gift_aid_withdrawn', entityType: 'member', entityId: memberId, entityName: `${m.forenames} ${m.surname}`, detail: JSON.stringify({ previousGiftAidFrom: String(m.gift_aid_from).slice(0, 10) }) });
+        }
+
         renewed.push({ memberId, newNextRenewal, transactionNumber: txn.transaction_number });
       } catch (err) {
         errors.push({ memberId, error: err.message });
@@ -976,7 +984,7 @@ router.post('/', requirePrivilege('member_record', 'create'), async (req, res, n
           addr.houseNo   ?? null, addr.street   ?? null,
           addr.addLine1  ?? null, addr.addLine2  ?? null,
           addr.town      ?? null, addr.county    ?? null,
-          addr.postcode  ?? null, addr.telephone ?? null,
+          addr.postcode ? addr.postcode.trim().toUpperCase() : null, addr.telephone ?? null,
         ],
       );
       addressId = newAddr.id;
@@ -1093,6 +1101,12 @@ router.post('/', requirePrivilege('member_record', 'create'), async (req, res, n
     }
 
     logAudit(slug, { userId: req.user.userId, userName: req.user.name, action: 'create', entityType: 'member', entityId: member.id, entityName: `${data.forenames} ${data.surname}` });
+
+    // Gift Aid consent audit entry
+    if (data.giftAidFrom) {
+      logAudit(slug, { userId: req.user.userId, userName: req.user.name, action: 'gift_aid_consent', entityType: 'member', entityId: member.id, entityName: `${data.forenames} ${data.surname}`, detail: JSON.stringify({ giftAidFrom: data.giftAidFrom }) });
+    }
+
     res.status(201).json(member);
   } catch (err) {
     next(err);
@@ -1149,8 +1163,8 @@ router.patch('/:id', requirePrivilege('member_record', 'change'), async (req, re
     // Fetch current member to get address_id and partner's address_id
     const [current] = await tenantQuery(
       slug,
-      `SELECT m.id, m.address_id, m.forenames, m.partner_id,
-              p.address_id AS partner_address_id
+      `SELECT m.id, m.address_id, m.forenames, m.surname, m.partner_id,
+              m.gift_aid_from, p.address_id AS partner_address_id
        FROM members m
        LEFT JOIN members p ON p.id = m.partner_id
        WHERE m.id = $1`,
@@ -1245,7 +1259,7 @@ router.patch('/:id', requirePrivilege('member_record', 'change'), async (req, re
             addr.addLine2  !== undefined ? addr.addLine2  : (base.add_line2 ?? null),
             addr.town      !== undefined ? addr.town      : (base.town      ?? null),
             addr.county    !== undefined ? addr.county    : (base.county    ?? null),
-            addr.postcode  !== undefined ? addr.postcode  : (base.postcode  ?? null),
+            addr.postcode  !== undefined ? (addr.postcode ? addr.postcode.trim().toUpperCase() : addr.postcode) : (base.postcode  ?? null),
             addr.telephone !== undefined ? addr.telephone : (base.telephone ?? null),
           ],
         );
@@ -1261,7 +1275,7 @@ router.patch('/:id', requirePrivilege('member_record', 'change'), async (req, re
         if (addr.addLine2  !== undefined) { addrFields.push(`add_line2 = $${ai++}`);  addrVals.push(addr.addLine2); }
         if (addr.town      !== undefined) { addrFields.push(`town = $${ai++}`);       addrVals.push(addr.town); }
         if (addr.county    !== undefined) { addrFields.push(`county = $${ai++}`);     addrVals.push(addr.county); }
-        if (addr.postcode  !== undefined) { addrFields.push(`postcode = $${ai++}`);   addrVals.push(addr.postcode); }
+        if (addr.postcode  !== undefined) { addrFields.push(`postcode = $${ai++}`);   addrVals.push(addr.postcode ? addr.postcode.trim().toUpperCase() : addr.postcode); }
         if (addr.telephone !== undefined) { addrFields.push(`telephone = $${ai++}`);  addrVals.push(addr.telephone); }
         if (addrFields.length) {
           addrFields.push(`updated_at = now()`);
@@ -1324,6 +1338,18 @@ router.patch('/:id', requirePrivilege('member_record', 'change'), async (req, re
     }
 
     logAudit(slug, { userId: req.user.userId, userName: req.user.name, action: 'update', entityType: 'member', entityId: member.id });
+
+    // Gift Aid consent audit entry — log when gift_aid_from is set or cleared
+    if (data.giftAidFrom !== undefined) {
+      const oldGa = current.gift_aid_from ? String(current.gift_aid_from).slice(0, 10) : null;
+      const newGa = data.giftAidFrom || null;
+      if (newGa !== oldGa) {
+        const memberName = `${data.forenames ?? current.forenames} ${data.surname ?? current.surname}`;
+        const action = newGa ? 'gift_aid_consent' : 'gift_aid_withdrawn';
+        logAudit(slug, { userId: req.user.userId, userName: req.user.name, action, entityType: 'member', entityId: member.id, entityName: memberName, detail: JSON.stringify({ giftAidFrom: newGa, previousGiftAidFrom: oldGa }) });
+      }
+    }
+
     res.json({ message: 'Member updated.', id: member.id, membership_number: member.membership_number });
   } catch (err) {
     next(err);

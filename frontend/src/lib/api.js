@@ -368,6 +368,14 @@ export const giftAid = {
     }),
   mark: (ids) =>
     request('/gift-aid/mark', { method: 'POST', body: JSON.stringify({ ids }) }),
+  log: (params = {}) => {
+    const qs = new URLSearchParams();
+    if (params.from)     qs.set('from', params.from);
+    if (params.to)       qs.set('to', params.to);
+    if (params.memberId) qs.set('memberId', params.memberId);
+    const q = qs.toString();
+    return request(`/gift-aid/log${q ? '?' + q : ''}`);
+  },
 };
 
 // ─── Polls ────────────────────────────────────────────────────────────────
@@ -387,7 +395,8 @@ export const polls = {
 export const settings = {
   get:           ()     => request('/settings'),
   update:        (data) => request('/settings', { method: 'PATCH', body: JSON.stringify(data) }),
-  getYearConfig: ()     => request('/settings/year-config'),
+  getYearConfig:        () => request('/settings/year-config'),
+  getNewMemberDefaults: () => request('/settings/new-member-defaults'),
 };
 
 // ─── System admin (separate token, no tenant) ─────────────────────────────
