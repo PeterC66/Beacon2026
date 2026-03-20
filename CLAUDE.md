@@ -83,6 +83,10 @@ unconverted PDFs — warn the user if found. If docs for a feature don't exist, 
 **Naming note:** Section 8 index = "Set-Up Operations" (folder `8. System settings`),
 not the System Settings screen (doc `8.3`).
 
+**Truncated images** Some .png images within the md folders are truncated to the right.
+For these there is a .jpg with the same name that is a screenshot of the manual.
+Make sure you look at the .jpg for the complete image.
+
 ### Legacy Beacon source — `docs/FromBeacon/`
 
 Selected files from the original codebase. Ask user to add missing files.
