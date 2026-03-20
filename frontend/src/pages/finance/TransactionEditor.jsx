@@ -51,6 +51,9 @@ export default function TransactionEditor() {
   const [cleared,    setCleared]    = useState(false);
   const [txnNumber,  setTxnNumber]  = useState(null);
   const [saved,      setSaved]      = useState(false);
+  const [batchId,    setBatchId]    = useState(null);
+  const [batchRef,   setBatchRef]   = useState(null);
+  const [removeBatch, setRemoveBatch] = useState(false);
   const savedTimer = useRef(null);
   const { markDirty, markClean } = useUnsavedChanges();
 
@@ -99,6 +102,8 @@ export default function TransactionEditor() {
         });
         setCleared(!!t.cleared_at);
         setTxnNumber(t.transaction_number);
+        setBatchId(t.batch_id ?? null);
+        setBatchRef(t.batch_ref ?? null);
         // populate category amounts
         const amounts = {};
         if (Array.isArray(t.categories)) {
@@ -150,7 +155,7 @@ export default function TransactionEditor() {
       .filter(([, v]) => parseFloat(v) > 0)
       .map(([category_id, v]) => ({ category_id, amount: parseFloat(v) }));
 
-    return {
+    const payload = {
       account_id:     form.account_id     || undefined,
       date:           form.date           || undefined,
       type:           form.type,
@@ -165,6 +170,8 @@ export default function TransactionEditor() {
       group_id:       form.group_id       || null,
       categories:     cats,
     };
+    if (removeBatch) payload.batch_id = null;
+    return payload;
   }
 
   function validate() {
@@ -531,6 +538,26 @@ export default function TransactionEditor() {
               </div>
             )}
           </div>
+
+          {/* Credit Batch membership */}
+          {!isNew && batchId && (
+            <div className="bg-white/90 rounded-lg shadow-sm p-4 sm:p-6 mb-4">
+              <h2 className="text-sm font-semibold text-slate-700 mb-2">Credit Batch</h2>
+              <p className="text-sm text-slate-600 mb-2">
+                This transaction belongs to batch <span className="font-medium">{batchRef}</span>.
+              </p>
+              {!cleared && (
+                <label className="flex items-center gap-2 text-sm">
+                  <input
+                    type="checkbox"
+                    checked={removeBatch}
+                    onChange={(e) => { markDirty(); setRemoveBatch(e.target.checked); }}
+                  />
+                  Remove from batch on save
+                </label>
+              )}
+            </div>
+          )}
 
           {/* Actions */}
           {!cleared && (

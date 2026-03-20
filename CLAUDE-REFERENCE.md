@@ -762,7 +762,52 @@ These tokens only appear in the token panel when navigating from the GA page.
 
 ---
 
-## 14. Reference documentation
+## 14. Credit Batches module (doc 7.4)
+
+### Data model
+
+- `credit_batches` table: `id`, `batch_ref`, `account_id` (FK), `created_at`
+- `batch_ref` is UNIQUE per account (compound unique on `account_id` + `batch_ref`)
+- `transactions.batch_id` FK to `credit_batches.id` ON DELETE SET NULL
+- Only "in" type, uncleared, unbatched transactions can be added to a batch
+
+### Backend routes (all in `finance.js` at `/finance/batches`)
+
+| Method | Path | Privilege | Purpose |
+|--------|------|-----------|---------|
+| GET | `/batches?accountId=&mode=&date=` | `finance_batches:view` | List batches (uncleared or since date) |
+| GET | `/batches/unbatched?accountId=` | `finance_batches:view` | Uncleared 'in' txns not in any batch |
+| GET | `/batches/:id` | `finance_batches:view` | Batch detail with member transactions |
+| POST | `/batches` | `finance_batches:create` | Create batch with selected transactions |
+| POST | `/batches/:id/transactions` | `finance_batches:create` | Add transactions to existing batch |
+| DELETE | `/batches/:id/transactions` | `finance_batches:create` | Remove transactions from batch |
+| DELETE | `/batches/:id` | `finance_batches:delete` | Delete empty uncleared batch |
+
+**Route ordering**: `/batches/unbatched` must be defined before `/batches/:id` to
+avoid Express matching "unbatched" as an `:id` parameter.
+
+### Reconciliation integration
+
+- `GET /finance/reconcile` returns unbatched uncleared transactions plus batch
+  summary rows (with `is_batch: true`, `txn_count`, summed `amount`)
+- `POST /finance/reconcile` accepts `batchIds` array; clearing a batch sets
+  `cleared_at` on all member transactions
+
+### Frontend
+
+- **CreditBatches page** (`/finance/batches`): list, detail, create modes;
+  account selector; batch table with status badges
+- **FinanceLedger**: "Add batch" button (account view only, requires `finance_batches:create`)
+- **TransactionEditor**: shows batch info panel; "Remove from batch on save" checkbox
+- **ReconcileAccount**: batch rows appear as single indigo-highlighted entries
+
+### Deletion rules
+
+Only empty batches (zero transactions) can be deleted. Remove all transactions first.
+
+---
+
+## 15. Reference documentation
 
 ### User Guide — `docs/BeaconUG/`
 

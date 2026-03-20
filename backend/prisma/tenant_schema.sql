@@ -410,6 +410,21 @@ ALTER TABLE :schema.transactions ADD COLUMN IF NOT EXISTS gift_aid_claimed_at DA
 ALTER TABLE :schema.finance_accounts ADD COLUMN IF NOT EXISTS balance_brought_forward NUMERIC(10,2) NOT NULL DEFAULT 0;
 
 -- ─────────────────────────────────────────────
+-- CREDIT BATCHES
+-- ─────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS :schema.credit_batches (
+  id          TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
+  batch_ref   TEXT NOT NULL,
+  account_id  TEXT NOT NULL REFERENCES :schema.finance_accounts(id),
+  created_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
+  UNIQUE (account_id, batch_ref)
+);
+
+-- Link transactions to a credit batch
+ALTER TABLE :schema.transactions ADD COLUMN IF NOT EXISTS batch_id TEXT
+  REFERENCES :schema.credit_batches(id) ON DELETE SET NULL;
+
+-- ─────────────────────────────────────────────
 -- TRANSACTION CATEGORY SPLITS
 -- ─────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS :schema.transaction_categories (

@@ -45,7 +45,7 @@ export default function Home() {
         { label: 'Ledger (by group)',    to: can('finance_ledger', 'view') ? '/finance/ledger?view=group'    : null },
         { label: 'Add transaction',      to: can('finance_transactions', 'create') ? '/finance/transactions/new' : null },
         { label: 'Transfer money',       to: can('finance_transfer_money', 'view') ? '/finance/transfers' : null },
-        { label: 'Credit batches',       to: null },
+        { label: 'Credit batches',       to: can('finance_batches', 'view') ? '/finance/batches' : null },
         { label: 'Reconcile account',    to: can('finance_reconcile', 'view') ? '/finance/reconcile' : null },
         { label: 'Financial statement',  to: can('finance_statement', 'view') ? '/finance/statement' : null },
         { label: 'Groups statement',     to: can('group_statement', 'view') ? '/finance/groups-statement' : null },

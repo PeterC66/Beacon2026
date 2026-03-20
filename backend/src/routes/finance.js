@@ -9,6 +9,7 @@ import { requireAuth } from '../middleware/auth.js';
 import { requirePrivilege } from '../middleware/requirePrivilege.js';
 import { tenantQuery } from '../utils/db.js';
 import { AppError } from '../middleware/errorHandler.js';
+import { logAudit } from '../utils/audit.js';
 
 const router = Router();
 router.use(requireAuth);
@@ -386,6 +387,7 @@ router.get('/transactions/:id', requirePrivilege('finance_transactions', 'view')
               t.from_to, t.amount::float, t.payment_method, t.payment_ref,
               t.detail, t.remarks, t.cleared_at,
               t.member_id_1, t.member_id_2, t.group_id,
+              t.batch_id, cb.batch_ref,
               m1.forenames || ' ' || m1.surname AS member_1_name,
               m2.forenames || ' ' || m2.surname AS member_2_name,
               g.name AS group_name,
@@ -399,10 +401,11 @@ router.get('/transactions/:id', requirePrivilege('finance_transactions', 'view')
        LEFT JOIN members m2 ON m2.id = t.member_id_2
        LEFT JOIN groups g   ON g.id  = t.group_id
        LEFT JOIN finance_accounts fa ON fa.id = t.account_id
+       LEFT JOIN credit_batches cb ON cb.id = t.batch_id
        LEFT JOIN transaction_categories tc ON tc.transaction_id = t.id
        LEFT JOIN finance_categories fc ON fc.id = tc.category_id
        WHERE t.id = $1
-       GROUP BY t.id, m1.forenames, m1.surname, m2.forenames, m2.surname, g.name, fa.name`,
+       GROUP BY t.id, m1.forenames, m1.surname, m2.forenames, m2.surname, g.name, fa.name, cb.batch_ref`,
       [req.params.id],
     );
     if (!txn) throw AppError('Transaction not found.', 404);
@@ -472,6 +475,7 @@ router.post('/transactions', requirePrivilege('finance_transactions', 'create'),
 // PATCH /finance/transactions/:id
 const updateTxnSchema = createTxnSchema.partial().extend({
   categories: z.array(txnCategorySchema).min(1).optional(),
+  batch_id:   z.string().nullable().optional(),
 });
 
 router.patch('/transactions/:id', requirePrivilege('finance_transactions', 'change'), async (req, res, next) => {
@@ -511,6 +515,7 @@ router.patch('/transactions/:id', requirePrivilege('finance_transactions', 'chan
     if (data.member_id_1    !== undefined) { fields.push(`member_id_1 = $${i++}`);    values.push(data.member_id_1); }
     if (data.member_id_2    !== undefined) { fields.push(`member_id_2 = $${i++}`);    values.push(data.member_id_2); }
     if (data.group_id       !== undefined) { fields.push(`group_id = $${i++}`);       values.push(data.group_id); }
+    if (data.batch_id       !== undefined) { fields.push(`batch_id = $${i++}`);       values.push(data.batch_id); }
 
     if (fields.length > 0) {
       fields.push(`updated_at = now()`);
@@ -743,16 +748,53 @@ router.get('/reconcile', requirePrivilege('finance_reconcile', 'view'), async (r
     );
     const clearedBalance = account.balance_brought_forward + (bal?.net ?? 0);
 
-    const uncleared = await tenantQuery(
+    // Uncleared transactions NOT in a batch
+    const unbatched = await tenantQuery(
       req.user.tenantSlug,
       `SELECT id, transaction_number, date, type, from_to,
-              amount::float, payment_method, payment_ref, detail, transfer_id,
-              CASE WHEN transfer_id IS NOT NULL THEN true ELSE false END AS is_transfer
+              amount::float, payment_method, payment_ref, detail, transfer_id, batch_id,
+              CASE WHEN transfer_id IS NOT NULL THEN true ELSE false END AS is_transfer,
+              false AS is_batch
        FROM transactions
-       WHERE account_id = $1 AND cleared_at IS NULL
+       WHERE account_id = $1 AND cleared_at IS NULL AND batch_id IS NULL
        ORDER BY date, transaction_number`,
       [accountId],
     );
+
+    // Uncleared batches (all member transactions uncleared)
+    const batches = await tenantQuery(
+      req.user.tenantSlug,
+      `SELECT cb.id, cb.batch_ref,
+              COUNT(t.id)::int AS txn_count,
+              SUM(t.amount)::float AS total_amount,
+              MIN(t.date) AS earliest_date,
+              MAX(t.date) AS latest_date
+       FROM credit_batches cb
+       JOIN transactions t ON t.batch_id = cb.id
+       WHERE cb.account_id = $1 AND t.cleared_at IS NULL
+       GROUP BY cb.id, cb.batch_ref
+       HAVING COUNT(t.id) > 0
+       ORDER BY MIN(t.date)`,
+      [accountId],
+    );
+
+    // Build combined uncleared list: individual transactions + batch summary rows
+    const batchRows = batches.map((b) => ({
+      id: b.id,
+      batch_ref: b.batch_ref,
+      date: b.earliest_date,
+      type: 'in',
+      from_to: `Batch: ${b.batch_ref}`,
+      amount: b.total_amount,
+      txn_count: b.txn_count,
+      is_batch: true,
+      is_transfer: false,
+    }));
+
+    const uncleared = [...unbatched, ...batchRows].sort((a, b) => {
+      const da = String(a.date || '').localeCompare(String(b.date || ''));
+      return da !== 0 ? da : (a.transaction_number ?? 0) - (b.transaction_number ?? 0);
+    });
 
     res.json({ account, clearedBalance, uncleared });
   } catch (err) { next(err); }
@@ -762,12 +804,15 @@ const reconcileSchema = z.object({
   accountId:      z.string().min(1),
   statementDate:  z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
   transactionIds: z.array(z.string()),
+  batchIds:       z.array(z.string()).optional(),
 });
 
-// POST /finance/reconcile — mark selected transactions as cleared
+// POST /finance/reconcile — mark selected transactions (and batches) as cleared
 router.post('/reconcile', requirePrivilege('finance_reconcile', 'reconcile'), async (req, res, next) => {
   try {
     const data = reconcileSchema.parse(req.body);
+
+    // Clear individual transactions
     if (data.transactionIds.length > 0) {
       await tenantQuery(
         req.user.tenantSlug,
@@ -776,6 +821,17 @@ router.post('/reconcile', requirePrivilege('finance_reconcile', 'reconcile'), as
         [data.statementDate, data.transactionIds, data.accountId],
       );
     }
+
+    // Clear all transactions in selected batches
+    if (data.batchIds?.length > 0) {
+      await tenantQuery(
+        req.user.tenantSlug,
+        `UPDATE transactions SET cleared_at = $1::date, updated_at = now()
+         WHERE batch_id = ANY($2::text[]) AND account_id = $3 AND cleared_at IS NULL`,
+        [data.statementDate, data.batchIds, data.accountId],
+      );
+    }
+
     res.json({ message: 'Reconciliation saved.' });
   } catch (err) { next(err); }
 });
@@ -1025,6 +1081,230 @@ router.get('/groups-statement/download', requirePrivilege('group_statement', 'do
     res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
     await wb.xlsx.write(res);
     res.end();
+  } catch (err) { next(err); }
+});
+
+// ─── CREDIT BATCHES (doc 7.4) ─────────────────────────────────────────────
+
+// GET /finance/batches?accountId=&mode=uncleared|since&date=
+router.get('/batches', requirePrivilege('finance_batches', 'view'), async (req, res, next) => {
+  try {
+    const { accountId, mode, date } = req.query;
+    if (!accountId) throw AppError('accountId is required.', 400);
+
+    let whereClause;
+    let params;
+
+    if (mode === 'since' && date) {
+      // All batches created since a given date
+      whereClause = `cb.account_id = $1 AND cb.created_at >= $2::date`;
+      params = [accountId, date];
+    } else {
+      // Default: uncleared batches (at least one uncleared transaction)
+      whereClause = `cb.account_id = $1
+        AND EXISTS (SELECT 1 FROM transactions t WHERE t.batch_id = cb.id AND t.cleared_at IS NULL)`;
+      params = [accountId];
+    }
+
+    const rows = await tenantQuery(
+      req.user.tenantSlug,
+      `SELECT cb.id, cb.batch_ref, cb.account_id, cb.created_at,
+              COUNT(t.id)::int AS txn_count,
+              COALESCE(SUM(t.amount), 0)::float AS total_amount,
+              COUNT(t.id) FILTER (WHERE t.cleared_at IS NOT NULL)::int AS cleared_count,
+              MIN(t.date) AS earliest_date,
+              MAX(t.date) AS latest_date
+       FROM credit_batches cb
+       LEFT JOIN transactions t ON t.batch_id = cb.id
+       WHERE ${whereClause}
+       GROUP BY cb.id, cb.batch_ref, cb.account_id, cb.created_at
+       ORDER BY cb.created_at DESC`,
+      params,
+    );
+
+    res.json(rows);
+  } catch (err) { next(err); }
+});
+
+// GET /finance/batches/unbatched?accountId= — uncleared 'in' transactions not in any batch
+// (must be before /:id to avoid "unbatched" being matched as an id)
+router.get('/batches/unbatched', requirePrivilege('finance_batches', 'view'), async (req, res, next) => {
+  try {
+    const { accountId } = req.query;
+    if (!accountId) throw AppError('accountId is required.', 400);
+
+    const rows = await tenantQuery(
+      req.user.tenantSlug,
+      `SELECT t.id, t.transaction_number, t.date, t.type, t.from_to,
+              t.amount::float, t.payment_method, t.payment_ref, t.detail,
+              t.transfer_id,
+              CASE WHEN t.transfer_id IS NOT NULL THEN true ELSE false END AS is_transfer
+       FROM transactions t
+       WHERE t.account_id = $1
+         AND t.type = 'in'
+         AND t.cleared_at IS NULL
+         AND t.batch_id IS NULL
+       ORDER BY t.date, t.transaction_number`,
+      [accountId],
+    );
+
+    res.json(rows);
+  } catch (err) { next(err); }
+});
+
+// GET /finance/batches/:id — batch detail with member transactions
+router.get('/batches/:id', requirePrivilege('finance_batches', 'view'), async (req, res, next) => {
+  try {
+    const [batch] = await tenantQuery(
+      req.user.tenantSlug,
+      `SELECT id, batch_ref, account_id, created_at FROM credit_batches WHERE id = $1`,
+      [req.params.id],
+    );
+    if (!batch) throw AppError('Batch not found.', 404);
+
+    const transactions = await tenantQuery(
+      req.user.tenantSlug,
+      `SELECT t.id, t.transaction_number, t.date, t.type, t.from_to,
+              t.amount::float, t.payment_method, t.payment_ref, t.detail,
+              t.cleared_at, t.transfer_id,
+              CASE WHEN t.transfer_id IS NOT NULL THEN true ELSE false END AS is_transfer
+       FROM transactions t
+       WHERE t.batch_id = $1
+       ORDER BY t.date, t.transaction_number`,
+      [req.params.id],
+    );
+
+    res.json({ ...batch, transactions });
+  } catch (err) { next(err); }
+});
+
+// POST /finance/batches — create a new batch with selected transactions
+const createBatchSchema = z.object({
+  account_id:     z.string().min(1),
+  batch_ref:      z.string().min(1).max(100),
+  transactionIds: z.array(z.string().min(1)).min(1),
+});
+
+router.post('/batches', requirePrivilege('finance_batches', 'create'), async (req, res, next) => {
+  try {
+    const data = createBatchSchema.parse(req.body);
+
+    // Ensure batch_ref is unique per account
+    const [existing] = await tenantQuery(
+      req.user.tenantSlug,
+      `SELECT id FROM credit_batches WHERE account_id = $1 AND batch_ref = $2`,
+      [data.account_id, data.batch_ref],
+    );
+    if (existing) throw AppError('A batch with that reference already exists for this account.', 409);
+
+    const [batch] = await tenantQuery(
+      req.user.tenantSlug,
+      `INSERT INTO credit_batches (batch_ref, account_id) VALUES ($1, $2) RETURNING id, batch_ref, account_id, created_at`,
+      [data.batch_ref, data.account_id],
+    );
+
+    // Assign transactions to the batch
+    await tenantQuery(
+      req.user.tenantSlug,
+      `UPDATE transactions SET batch_id = $1, updated_at = now()
+       WHERE id = ANY($2::text[]) AND account_id = $3 AND cleared_at IS NULL AND batch_id IS NULL`,
+      [batch.id, data.transactionIds, data.account_id],
+    );
+
+    logAudit(req.user.tenantSlug, {
+      userId: req.user.userId, userName: req.user.name,
+      action: 'create', entityType: 'credit_batch', entityId: batch.id,
+      detail: JSON.stringify({ batch_ref: data.batch_ref, txnCount: data.transactionIds.length }),
+    });
+
+    res.status(201).json(batch);
+  } catch (err) {
+    if (err.name === 'ZodError') return res.status(422).json({ error: 'Validation failed.', issues: err.issues });
+    next(err);
+  }
+});
+
+// POST /finance/batches/:id/transactions — add transactions to an existing batch
+const addToBatchSchema = z.object({
+  transactionIds: z.array(z.string().min(1)).min(1),
+});
+
+router.post('/batches/:id/transactions', requirePrivilege('finance_batches', 'create'), async (req, res, next) => {
+  try {
+    const data = addToBatchSchema.parse(req.body);
+    const [batch] = await tenantQuery(
+      req.user.tenantSlug,
+      `SELECT id, account_id FROM credit_batches WHERE id = $1`,
+      [req.params.id],
+    );
+    if (!batch) throw AppError('Batch not found.', 404);
+
+    const result = await tenantQuery(
+      req.user.tenantSlug,
+      `UPDATE transactions SET batch_id = $1, updated_at = now()
+       WHERE id = ANY($2::text[]) AND account_id = $3 AND cleared_at IS NULL AND batch_id IS NULL
+       RETURNING id`,
+      [batch.id, data.transactionIds, batch.account_id],
+    );
+
+    res.json({ added: result.length });
+  } catch (err) {
+    if (err.name === 'ZodError') return res.status(422).json({ error: 'Validation failed.', issues: err.issues });
+    next(err);
+  }
+});
+
+// DELETE /finance/batches/:id/transactions — remove transactions from a batch
+const removeTxnsSchema = z.object({
+  transactionIds: z.array(z.string().min(1)).min(1),
+});
+
+router.delete('/batches/:id/transactions', requirePrivilege('finance_batches', 'create'), async (req, res, next) => {
+  try {
+    const data = removeTxnsSchema.parse(req.body);
+    const result = await tenantQuery(
+      req.user.tenantSlug,
+      `UPDATE transactions SET batch_id = NULL, updated_at = now()
+       WHERE id = ANY($1::text[]) AND batch_id = $2
+       RETURNING id`,
+      [data.transactionIds, req.params.id],
+    );
+    res.json({ removed: result.length });
+  } catch (err) {
+    if (err.name === 'ZodError') return res.status(422).json({ error: 'Validation failed.', issues: err.issues });
+    next(err);
+  }
+});
+
+// DELETE /finance/batches/:id — delete an empty uncleared batch
+router.delete('/batches/:id', requirePrivilege('finance_batches', 'delete'), async (req, res, next) => {
+  try {
+    const [batch] = await tenantQuery(
+      req.user.tenantSlug,
+      `SELECT cb.id,
+              COUNT(t.id)::int AS txn_count,
+              COUNT(t.id) FILTER (WHERE t.cleared_at IS NOT NULL)::int AS cleared_count
+       FROM credit_batches cb
+       LEFT JOIN transactions t ON t.batch_id = cb.id
+       WHERE cb.id = $1
+       GROUP BY cb.id`,
+      [req.params.id],
+    );
+    if (!batch) throw AppError('Batch not found.', 404);
+    if (batch.txn_count > 0) throw AppError('Cannot delete a batch that still contains transactions. Remove all transactions first.', 400);
+
+    await tenantQuery(
+      req.user.tenantSlug,
+      `DELETE FROM credit_batches WHERE id = $1`,
+      [req.params.id],
+    );
+
+    logAudit(req.user.tenantSlug, {
+      userId: req.user.userId, userName: req.user.name,
+      action: 'delete', entityType: 'credit_batch', entityId: req.params.id,
+    });
+
+    res.json({ message: 'Batch deleted.' });
   } catch (err) { next(err); }
 });
 

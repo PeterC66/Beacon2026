@@ -89,8 +89,10 @@ export default function ReconcileAccount() {
     }
     setSaving(true);
     try {
-      const ids = (data.uncleared ?? []).filter((t) => selected[t.id]).map((t) => t.id);
-      await financeApi.reconcile({ accountId, statementDate, transactionIds: ids });
+      const selectedItems = (data.uncleared ?? []).filter((t) => selected[t.id]);
+      const transactionIds = selectedItems.filter((t) => !t.is_batch).map((t) => t.id);
+      const batchIds       = selectedItems.filter((t) => t.is_batch).map((t) => t.id);
+      await financeApi.reconcile({ accountId, statementDate, transactionIds, batchIds });
       setSaved(true);
       setTimeout(() => setSaved(false), 3000);
       // Reload
@@ -217,23 +219,33 @@ export default function ReconcileAccount() {
                   )}
                   {data.uncleared.map((t, i) => (
                     <tr key={t.id}
-                      className={`border-b border-slate-100 cursor-pointer ${selected[t.id] ? 'bg-blue-50' : i % 2 === 0 ? 'bg-yellow-50' : 'bg-white'}`}
+                      className={`border-b border-slate-100 cursor-pointer ${selected[t.id] ? 'bg-blue-50' : t.is_batch ? 'bg-indigo-50' : i % 2 === 0 ? 'bg-yellow-50' : 'bg-white'}`}
                       onClick={() => toggleTxn(t.id)}>
                       <td className="px-3 py-2 text-center">
                         <input type="checkbox" checked={!!selected[t.id]} readOnly
                           className="w-4 h-4 accent-blue-600" />
                       </td>
-                      <td className="px-4 py-2 font-mono text-xs text-slate-500">{t.transaction_number}</td>
+                      <td className="px-4 py-2 font-mono text-xs text-slate-500">
+                        {t.is_batch ? '' : t.transaction_number}
+                      </td>
                       <td className="px-4 py-2 whitespace-nowrap">{fmtDate(t.date)}</td>
                       <td className="px-4 py-2">
-                        <span className={`text-xs font-medium px-1.5 py-0.5 rounded ${t.type === 'in' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
-                          {t.type === 'in' ? 'In' : 'Out'}
-                        </span>
-                        {t.is_transfer && <span className="ml-1 text-xs text-slate-400">transfer</span>}
+                        {t.is_batch ? (
+                          <span className="text-xs font-medium px-1.5 py-0.5 rounded bg-indigo-100 text-indigo-700">
+                            Batch ({t.txn_count})
+                          </span>
+                        ) : (
+                          <>
+                            <span className={`text-xs font-medium px-1.5 py-0.5 rounded ${t.type === 'in' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                              {t.type === 'in' ? 'In' : 'Out'}
+                            </span>
+                            {t.is_transfer && <span className="ml-1 text-xs text-slate-400">transfer</span>}
+                          </>
+                        )}
                       </td>
                       <td className="px-4 py-2 text-slate-600">{t.from_to ?? ''}</td>
-                      <td className="px-4 py-2 text-slate-600">{t.detail ?? ''}</td>
-                      <td className="px-4 py-2 text-slate-500">{t.payment_ref ?? ''}</td>
+                      <td className="px-4 py-2 text-slate-600">{t.is_batch ? t.batch_ref : (t.detail ?? '')}</td>
+                      <td className="px-4 py-2 text-slate-500">{t.is_batch ? '' : (t.payment_ref ?? '')}</td>
                       <td className="px-4 py-2 text-right font-mono text-green-700">
                         {t.type === 'in' ? fmtAmt(t.amount) : ''}
                       </td>

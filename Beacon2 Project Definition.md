@@ -69,7 +69,11 @@ Beacon2 is a ground-up rebuild with these goals:
 - **Financial ledger** — account/category/group views; year selector; running balance
 - **Transaction editor** — full form; category splits; cleared lock
 - **Transfer money** — paired transactions with shared transfer_id
-- **Reconcile account** — mark transactions as cleared against statement
+- **Credit batches** — group incoming transactions into batches for simpler
+  reconciliation; create/view/delete batches; add/remove transactions; batches
+  appear as single rows in reconciliation
+- **Reconcile account** — mark transactions as cleared against statement;
+  supports clearing whole batches in one tick
 - **Financial statement** — per-account or all-accounts; year selector; download Excel
 - **Groups statement** — per-group ledger summary; optional transactions; download
 
@@ -192,9 +196,6 @@ Greyed-out items in `Home.jsx` (i.e. `to: null`) are the remaining roadmap:
 
 **Groups:**
 - Calendar
-
-**Finance:**
-- Credit batches
 
 **Misc:**
 - Gift Aid log
