@@ -333,6 +333,26 @@ export const finance = {
   },
 };
 
+// ─── Gift Aid ─────────────────────────────────────────────────────────────
+
+export const giftAid = {
+  list: (params = {}) => {
+    const qs = new URLSearchParams();
+    if (params.year)           qs.set('year', String(params.year));
+    if (params.excludeClaimed !== undefined) qs.set('excludeClaimed', params.excludeClaimed ? '1' : '0');
+    const q = qs.toString();
+    return request(`/gift-aid${q ? '?' + q : ''}`);
+  },
+  download: (ids, from, to) =>
+    requestBlob('/gift-aid/download', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ids, from, to }),
+    }),
+  mark: (ids) =>
+    request('/gift-aid/mark', { method: 'POST', body: JSON.stringify({ ids }) }),
+};
+
 // ─── Polls ────────────────────────────────────────────────────────────────
 
 export const polls = {
@@ -432,13 +452,15 @@ export const offices = {
 // ─── Backup ────────────────────────────────────────────────────────────────
 
 /** Download an export as a blob (sends auth header, triggers browser download).
- *  Filename is read from the server's Content-Disposition header. */
-export async function requestBlob(path) {
+ *  Filename is read from the server's Content-Disposition header.
+ *  Accepts optional fetch options (method, body, extra headers) for POST downloads. */
+export async function requestBlob(path, options = {}) {
   const headers = {
     ...(accessToken && { Authorization: `Bearer ${accessToken}` }),
     ...(tenantSlug  && { 'x-tenant-slug': tenantSlug }),
+    ...options.headers,
   };
-  const res = await fetch(`${BASE}${path}`, { headers, credentials: 'include' });
+  const res = await fetch(`${BASE}${path}`, { ...options, headers, credentials: 'include' });
   if (!res.ok) {
     const body = await res.json().catch(() => ({}));
     throw new ApiError(body.error ?? `HTTP ${res.status}`, res.status, body);

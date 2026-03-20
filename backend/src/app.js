@@ -30,6 +30,7 @@ import officeRoutes        from './routes/offices.js';
 import backupRoutes        from './routes/backup.js';
 import addressExportRoutes from './routes/addressExport.js';
 import emailRoutes         from './routes/email.js';
+import giftAidRoutes       from './routes/giftAid.js';
 import { errorHandler } from './middleware/errorHandler.js';
 
 const app = express();
@@ -68,6 +69,7 @@ app.use('/offices',         officeRoutes);
 app.use('/backup',          backupRoutes);
 app.use('/address-export',  addressExportRoutes);
 app.use('/email',           emailRoutes);
+app.use('/gift-aid',        giftAidRoutes);
 
 app.get('/health', (_req, res) => res.json({
   status:  'ok',

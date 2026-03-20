@@ -31,6 +31,7 @@ import TransferMoney      from './pages/finance/TransferMoney.jsx';
 import ReconcileAccount   from './pages/finance/ReconcileAccount.jsx';
 import FinancialStatement from './pages/finance/FinancialStatement.jsx';
 import GroupsStatement    from './pages/finance/GroupsStatement.jsx';
+import GiftAidDeclaration from './pages/finance/GiftAidDeclaration.jsx';
 import MemberValidator    from './pages/admin/MemberValidator.jsx';
 import PollList           from './pages/admin/PollList.jsx';
 import AuditLog           from './pages/misc/AuditLog.jsx';
@@ -100,6 +101,7 @@ export default function App() {
           <Route path="/finance/reconcile"                   element={<ProtectedRoute><ReconcileAccount /></ProtectedRoute>} />
           <Route path="/finance/statement"                   element={<ProtectedRoute><FinancialStatement /></ProtectedRoute>} />
           <Route path="/finance/groups-statement"            element={<ProtectedRoute><GroupsStatement /></ProtectedRoute>} />
+          <Route path="/finance/gift-aid"                      element={<ProtectedRoute><GiftAidDeclaration /></ProtectedRoute>} />
           <Route path="/admin/validate-members"              element={<ProtectedRoute><MemberValidator /></ProtectedRoute>} />
           <Route path="/polls"                               element={<ProtectedRoute><PollList /></ProtectedRoute>} />
           <Route path="/audit"                               element={<ProtectedRoute><AuditLog /></ProtectedRoute>} />

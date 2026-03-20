@@ -15,6 +15,49 @@ router.use(requireAuth);
 
 // ─── helpers ──────────────────────────────────────────────────────────────
 
+/** Look up the Gift Aid eligible amount for a member at a given date.
+ *  Returns null if GA is not enabled, member has no GA declaration, or no GA fee configured.
+ */
+async function resolveGiftAidAmount(slug, memberId, classId, transactionDate) {
+  // Check if GA is enabled
+  const [settings] = await tenantQuery(
+    slug,
+    `SELECT gift_aid_enabled, fee_variation FROM tenant_settings WHERE id = 'singleton'`,
+  );
+  if (!settings?.gift_aid_enabled) return null;
+
+  // Check if member has a GA declaration at or before the transaction date
+  const [m] = await tenantQuery(
+    slug,
+    `SELECT gift_aid_from FROM members WHERE id = $1`,
+    [memberId],
+  );
+  if (!m?.gift_aid_from) return null;
+  const gaFrom = String(m.gift_aid_from).slice(0, 10);
+  const txDate = String(transactionDate).slice(0, 10);
+  if (gaFrom > txDate) return null;
+
+  // Look up the GA fee from the class
+  if (settings.fee_variation === 'varies_by_month') {
+    // Month-specific: find the fee for the transaction month
+    const txMonth = new Date(txDate).getMonth() + 1; // 1-12
+    const [monthFee] = await tenantQuery(
+      slug,
+      `SELECT gift_aid_fee::float FROM class_monthly_fees WHERE class_id = $1 AND month_index = $2`,
+      [classId, txMonth],
+    );
+    return monthFee?.gift_aid_fee ?? null;
+  }
+
+  // Standard: use the class-level gift_aid_fee
+  const [cls] = await tenantQuery(
+    slug,
+    `SELECT gift_aid_fee::float FROM member_classes WHERE id = $1`,
+    [classId],
+  );
+  return cls?.gift_aid_fee ?? null;
+}
+
 /** Derive initials from a forenames string: "William John" → "WJ" */
 function deriveInitials(forenames) {
   return (forenames ?? '')
@@ -378,7 +421,7 @@ router.post('/renew', requirePrivilege('membership_renewals', 'renew'), async (r
         const [m] = await tenantQuery(
           slug,
           `SELECT m.id, m.forenames, m.surname, m.next_renewal, m.status_id,
-                  ms.name AS status_name, m.gift_aid_from
+                  ms.name AS status_name, m.gift_aid_from, m.class_id
            FROM members m
            LEFT JOIN member_statuses ms ON ms.id = m.status_id
            WHERE m.id = $1`,
@@ -424,13 +467,23 @@ router.post('/renew', requirePrivilege('membership_renewals', 'renew'), async (r
         // Create finance transaction (no category splits — user can categorize via ledger)
         const amount = data.amounts[memberId];
         const fromTo = `${m.forenames} ${m.surname}`;
+
+        // Resolve Gift Aid eligible amount (uses the member's gift_aid_from after any update above)
+        const effectiveGaFrom = giftAidFrom === 'TODAY'
+          ? new Date().toISOString().slice(0, 10)
+          : giftAidFrom;
+        let gaAmount = null;
+        if (effectiveGaFrom && m.class_id) {
+          gaAmount = await resolveGiftAidAmount(slug, memberId, m.class_id, new Date().toISOString().slice(0, 10));
+        }
+
         const [txn] = await tenantQuery(
           slug,
           `INSERT INTO transactions
-             (account_id, date, type, from_to, amount, payment_method, member_id_1)
-           VALUES ($1, CURRENT_DATE, 'in', $2, $3::numeric, $4, $5)
+             (account_id, date, type, from_to, amount, payment_method, member_id_1, gift_aid_amount)
+           VALUES ($1, CURRENT_DATE, 'in', $2, $3::numeric, $4, $5, $6::numeric)
            RETURNING id, transaction_number`,
-          [data.accountId, fromTo, amount, data.paymentMethod, memberId],
+          [data.accountId, fromTo, amount, data.paymentMethod, memberId, gaAmount],
         );
 
         logAudit(slug, { userId: req.user.userId, userName: req.user.name, action: 'renew', entityType: 'member', entityId: memberId, detail: JSON.stringify({ newNextRenewal }) });
@@ -857,13 +910,16 @@ async function createMemberPayment(slug, pay, memberId, memberName, joinedOn, cl
     categories = [{ categoryId: catId, amount: pay.amount }];
   }
 
+  // Resolve Gift Aid eligible amount
+  const gaAmount = await resolveGiftAidAmount(slug, memberId, classId, joinedOn);
+
   const [txn] = await tenantQuery(
     slug,
     `INSERT INTO transactions
-       (account_id, date, type, from_to, amount, payment_method, payment_ref, member_id_1)
-     VALUES ($1, $2::date, 'in', $3, $4::numeric, $5, $6, $7)
+       (account_id, date, type, from_to, amount, payment_method, payment_ref, member_id_1, gift_aid_amount)
+     VALUES ($1, $2::date, 'in', $3, $4::numeric, $5, $6, $7, $8::numeric)
      RETURNING id, transaction_number`,
-    [pay.accountId, joinedOn, memberName, pay.amount, pay.method ?? null, pay.ref ?? null, memberId],
+    [pay.accountId, joinedOn, memberName, pay.amount, pay.method ?? null, pay.ref ?? null, memberId, gaAmount],
   );
 
   for (const cat of categories) {

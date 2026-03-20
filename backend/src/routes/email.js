@@ -7,7 +7,7 @@ import sgMail from '@sendgrid/mail';
 import { tenantQuery } from '../utils/db.js';
 import { requirePrivilege } from '../middleware/requirePrivilege.js';
 import { requireAuth } from '../middleware/auth.js';
-import { resolveTokens } from '../utils/emailTokens.js';
+import { resolveTokens, fmtDate } from '../utils/emailTokens.js';
 
 const router = Router();
 router.use(requireAuth);
@@ -197,12 +197,13 @@ router.get('/from-addresses', requirePrivilege('email', 'send'), async (req, res
 // ─── Send email ───────────────────────────────────────────────────────────
 
 const sendSchema = z.object({
-  memberIds:   z.array(z.string()).min(1),
-  subject:     z.string().min(1).max(500),
-  body:        z.string().min(1),
-  fromEmail:   z.string().email(),
-  replyTo:     z.string().email(),
-  copyToSelf:  z.boolean().default(false),
+  memberIds:     z.array(z.string()).min(1),
+  subject:       z.string().min(1).max(500),
+  body:          z.string().min(1),
+  fromEmail:     z.string().email(),
+  replyTo:       z.string().email(),
+  copyToSelf:    z.boolean().default(false),
+  giftAidDates:  z.object({ from: z.string(), to: z.string() }).optional(),
 });
 
 // POST /email/send  (multipart — attachments optional)
@@ -221,13 +222,37 @@ router.post('/send',
     const parsed = sendSchema.safeParse(bodyData);
     if (!parsed.success) return res.status(422).json({ error: 'Validation error', issues: parsed.error.issues.map((i) => ({ path: i.path.join('.'), message: i.message })) });
 
-    const { memberIds, subject, body, fromEmail, replyTo, copyToSelf } = parsed.data;
+    const { memberIds, subject, body, fromEmail, replyTo, copyToSelf, giftAidDates } = parsed.data;
 
     try {
       const [members, u3aName] = await Promise.all([
         fetchMembersForEmail(req.tenantSlug, memberIds),
         getTenantDisplayName(req.tenantSlug),
       ]);
+
+      // Pre-build Gift Aid tokens per member if sending from GA page
+      let gaTokensByMemberId = {};
+      if (giftAidDates) {
+        const gaRows = await tenantQuery(
+          req.tenantSlug,
+          `SELECT t.member_id_1, t.date, t.gift_aid_amount::float,
+                  m.gift_aid_from
+           FROM transactions t
+           JOIN members m ON m.id = t.member_id_1
+           WHERE t.type = 'in'
+             AND t.gift_aid_amount IS NOT NULL AND t.gift_aid_amount > 0
+             AND m.gift_aid_from IS NOT NULL AND m.gift_aid_from <= t.date
+             AND t.date BETWEEN $1::date AND $2::date
+           ORDER BY t.date`,
+          [giftAidDates.from, giftAidDates.to],
+        );
+        for (const r of gaRows) {
+          if (!gaTokensByMemberId[r.member_id_1]) {
+            gaTokensByMemberId[r.member_id_1] = { giftAidFrom: r.gift_aid_from, items: [] };
+          }
+          gaTokensByMemberId[r.member_id_1].items.push(r);
+        }
+      }
 
       // Build recipients — only members with a valid email
       const recipients = members.filter((m) => m.email && m.email.includes('@'));
@@ -249,7 +274,17 @@ router.post('/send',
 
       const sendResults = await Promise.allSettled(
         recipients.map(async (member) => {
-          const { subject: resolvedSubject, body: resolvedBody } = resolveTokens(subject, body, member, u3aName);
+          // Build Gift Aid extra tokens for this member
+          let extraTokens;
+          if (giftAidDates) {
+            const ga = gaTokensByMemberId[member.id];
+            const gaDate = ga ? fmtDate(ga.giftAidFrom) : '';
+            const gaList = ga
+              ? ga.items.map((i) => `${fmtDate(i.date)} £${Number(i.gift_aid_amount).toFixed(2)}`).join(', ')
+              : '';
+            extraTokens = { '#GIFTAID': gaDate, '#GIFTAIDLIST': gaList };
+          }
+          const { subject: resolvedSubject, body: resolvedBody } = resolveTokens(subject, body, member, u3aName, extraTokens);
           const htmlBody = resolvedBody.replace(/\n/g, '<br>');
           const msg = {
             to:         { email: member.email, name: `${member.forenames} ${member.surname}`.trim() },

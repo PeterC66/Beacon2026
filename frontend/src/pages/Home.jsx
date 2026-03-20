@@ -49,7 +49,7 @@ export default function Home() {
         { label: 'Reconcile account',    to: can('finance_reconcile', 'view') ? '/finance/reconcile' : null },
         { label: 'Financial statement',  to: can('finance_statement', 'view') ? '/finance/statement' : null },
         { label: 'Groups statement',     to: can('group_statement', 'view') ? '/finance/groups-statement' : null },
-        { label: 'Gift Aid declaration', to: null },
+        { label: 'Gift Aid declaration', to: can('gift_aid_declaration', 'view') ? '/finance/gift-aid' : null },
       ],
     },
     {

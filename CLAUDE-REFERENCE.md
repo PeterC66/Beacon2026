@@ -706,7 +706,63 @@ Tests numbered to match Beacon UG sections.
 
 ---
 
-## 13. Reference documentation
+## 13. Gift Aid module (doc 7.8)
+
+### Data model
+
+- `transactions.gift_aid_amount NUMERIC(10,2)` — GA-eligible portion, stored at transaction time
+- `transactions.gift_aid_claimed_at DATE` — set when user marks transactions as claimed
+- `members.gift_aid_from DATE` — member's GA declaration date
+- `member_classes.gift_aid_fee NUMERIC(8,2)` — GA-eligible portion of fee
+- `class_monthly_fees.gift_aid_fee` — month-specific GA fee (when `fee_variation = 'varies_by_month'`)
+- `tenant_settings.gift_aid_enabled` — master switch
+
+### Gift Aid amount population
+
+`resolveGiftAidAmount()` in `members.js` computes the GA amount at transaction time:
+1. Checks `gift_aid_enabled` in settings
+2. Checks member has `gift_aid_from <= transaction_date`
+3. Looks up `gift_aid_fee` from class (or `class_monthly_fees` by month when varies_by_month)
+4. Returns the amount (or `null` if not eligible)
+
+Called from `createMemberPayment()` (add new member) and `POST /members/renew` (bulk renewal).
+
+### Backend routes (`giftAid.js` at `/gift-aid`)
+
+| Route | Privilege | Notes |
+|-------|-----------|-------|
+| `GET /gift-aid` | `gift_aid_declaration:view` | Lists GA-eligible transactions; filters: `year`, `excludeClaimed` |
+| `POST /gift-aid/download` | `gift_aid_declaration:download_and_mark` | Excel with HMRC columns (Title, First Name, Last Name, House Name/No, Postcode, Date, Amount) |
+| `POST /gift-aid/mark` | `gift_aid_declaration:download_and_mark` | Sets `gift_aid_claimed_at = today` |
+
+### Financial year bounds
+
+Uses `year_start_month`/`year_start_day` from `tenant_settings` via `computeYearBounds()`.
+`currentFinancialYear()` determines the current year based on today vs year start.
+
+### Email tokens
+
+When sending from the GA declaration page, `giftAidDates` is passed in the send request.
+The email route fetches GA transactions per member and builds:
+- `#GIFTAID` — formatted GA declaration date (e.g. `03/03/2025`)
+- `#GIFTAIDLIST` — comma-separated list of date+amount pairs (e.g. `11/03/2023 £20.00, 20/09/2023 £25.00`)
+
+These tokens only appear in the token panel when navigating from the GA page.
+
+### Frontend
+
+- Page: `GiftAidDeclaration.jsx` at `/finance/gift-aid`
+- Home link gated by `gift_aid_declaration:view`
+- Selection → Download Excel / Mark as Claimed / Send Email
+- Uses `requestBlob()` with POST (extended to support method/body/headers)
+
+### Known issues
+
+- Joint/family membership GA logic is deferred (see `KNOWN-ISSUES.md`)
+
+---
+
+## 14. Reference documentation
 
 ### User Guide — `docs/BeaconUG/`
 
