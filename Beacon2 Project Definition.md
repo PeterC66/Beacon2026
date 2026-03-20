@@ -73,6 +73,11 @@ Beacon2 is a ground-up rebuild with these goals:
 - **Financial statement** — per-account or all-accounts; year selector; download Excel
 - **Groups statement** — per-group ledger summary; optional transactions; download
 
+### Gift Aid module
+- **Gift Aid declaration** — financial-year filtered view of GA-eligible transactions;
+  row selection; download Excel (HMRC column format); mark as claimed; send email
+  with `#GIFTAID` and `#GIFTAIDLIST` tokens
+
 ### Email module
 - **Email compose** — member selection, token substitution, attachments (SendGrid)
 - **Standard messages** — CRUD templates
@@ -137,7 +142,7 @@ backend/
     routes/                auth  users  roles  privileges  system  members
                            memberClasses  memberStatuses  groups  venues
                            faculties  settings  finance  polls  backup
-                           addressExport  email
+                           addressExport  email  giftAid
     services/              authService
     utils/                 db  jwt  password  redis  migrate  audit  emailTokens
     seed/                  index  createTenant  privilegeResources  defaultRoles
@@ -156,7 +161,7 @@ frontend/
       admin/               MemberValidator  PollList
       finance/             FinanceAccounts  FinanceCategories  FinanceLedger
                            TransactionEditor  TransferMoney  ReconcileAccount
-                           FinancialStatement  GroupsStatement
+                           FinancialStatement  GroupsStatement  GiftAidDeclaration
       groups/              GroupList  GroupRecord
       members/             MemberList  MemberEditor  AddressesExport
       membership/          MemberClassList  MemberClassEditor  MemberStatusList
@@ -190,7 +195,6 @@ Greyed-out items in `Home.jsx` (i.e. `to: null`) are the remaining roadmap:
 
 **Finance:**
 - Credit batches
-- Gift Aid declaration
 
 **Misc:**
 - Gift Aid log

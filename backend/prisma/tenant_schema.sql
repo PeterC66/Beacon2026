@@ -402,6 +402,10 @@ ALTER TABLE :schema.transactions ADD CONSTRAINT transactions_amount_check CHECK 
 -- Transfer money: links paired transactions (both share the same transfer_id UUID)
 ALTER TABLE :schema.transactions ADD COLUMN IF NOT EXISTS transfer_id TEXT;
 
+-- Gift Aid: eligible amount stored at transaction time, and claimed date
+ALTER TABLE :schema.transactions ADD COLUMN IF NOT EXISTS gift_aid_amount NUMERIC(10,2);
+ALTER TABLE :schema.transactions ADD COLUMN IF NOT EXISTS gift_aid_claimed_at DATE;
+
 -- Balance brought forward per account (balance before Beacon2 started tracking)
 ALTER TABLE :schema.finance_accounts ADD COLUMN IF NOT EXISTS balance_brought_forward NUMERIC(10,2) NOT NULL DEFAULT 0;
 

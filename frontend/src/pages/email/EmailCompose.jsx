@@ -58,6 +58,7 @@ export default function EmailCompose() {
   const [sending,   setSending]   = useState(false);
   const [error,     setError]     = useState(null);
   const [sent,      setSent]      = useState(null); // { batchId, sent, failed }
+  const [giftAidDates, setGiftAidDates] = useState(null); // { from, to } when sent from GA page
 
   const bodyRef = useRef(null);
   const subjectRef = useRef(null);
@@ -70,6 +71,15 @@ export default function EmailCompose() {
         const ids = JSON.parse(stored);
         setMemberIds(ids);
         sessionStorage.removeItem('emailComposeMemberIds');
+      }
+    } catch {}
+
+    // Read Gift Aid dates from sessionStorage (set by GA declaration page)
+    try {
+      const gaDates = sessionStorage.getItem('emailGiftAidDates');
+      if (gaDates) {
+        setGiftAidDates(JSON.parse(gaDates));
+        sessionStorage.removeItem('emailGiftAidDates');
       }
     } catch {}
 
@@ -153,10 +163,9 @@ export default function EmailCompose() {
     setSending(true);
     setError(null);
     try {
-      const result = await emailApi.send(
-        { memberIds, subject, body, fromEmail, replyTo: fromEmail, copyToSelf },
-        attachments,
-      );
+      const sendData = { memberIds, subject, body, fromEmail, replyTo: fromEmail, copyToSelf };
+      if (giftAidDates) sendData.giftAidDates = giftAidDates;
+      const result = await emailApi.send(sendData, attachments);
       setSent(result);
     } catch (err) {
       setError(err.message);
@@ -378,6 +387,27 @@ export default function EmailCompose() {
                   </button>
                 ))}
               </div>
+              {giftAidDates && (
+                <>
+                  <h3 className="text-sm font-bold text-slate-700 mt-4 mb-2">Gift Aid Tokens</h3>
+                  <div className="space-y-1">
+                    {[
+                      { token: '#GIFTAID',     desc: 'Gift Aid declaration date' },
+                      { token: '#GIFTAIDLIST', desc: 'Gift Aid eligible amounts' },
+                    ].map((t) => (
+                      <button
+                        key={t.token}
+                        type="button"
+                        onClick={() => insertToken(t.token)}
+                        className="w-full text-left px-2 py-1 rounded hover:bg-blue-50"
+                      >
+                        <span className="text-blue-700 font-mono text-xs font-bold">{t.token}</span>
+                        <span className="text-slate-500 text-xs ml-2">{t.desc}</span>
+                      </button>
+                    ))}
+                  </div>
+                </>
+              )}
             </div>
           </div>
         </div>

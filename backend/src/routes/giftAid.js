@@ -1,0 +1,236 @@
+// beacon2/backend/src/routes/giftAid.js
+// Gift Aid declaration: list eligible transactions, download Excel, mark as claimed.
+
+import { Router } from 'express';
+import { z } from 'zod';
+import ExcelJS from 'exceljs';
+import { tenantQuery } from '../utils/db.js';
+import { requireAuth } from '../middleware/auth.js';
+import { requirePrivilege } from '../middleware/requirePrivilege.js';
+import { logAudit } from '../utils/audit.js';
+
+const router = Router();
+router.use(requireAuth);
+
+/** Compute financial year bounds from settings. */
+function computeYearBounds(yearNum, startMonth, startDay) {
+  const m = String(startMonth).padStart(2, '0');
+  const d = String(startDay).padStart(2, '0');
+  const yearStart = `${yearNum}-${m}-${d}`;
+  const next = new Date(Date.UTC(yearNum + 1, startMonth - 1, startDay));
+  next.setUTCDate(next.getUTCDate() - 1);
+  const yearEnd = next.toISOString().slice(0, 10);
+  return { yearStart, yearEnd };
+}
+
+/** Determine the current financial year number based on today and year start settings. */
+function currentFinancialYear(startMonth, startDay) {
+  const now = new Date();
+  const y = now.getFullYear();
+  const thisYearStart = new Date(y, startMonth - 1, startDay);
+  return now >= thisYearStart ? y : y - 1;
+}
+
+/** Fetch Gift Aid eligible transactions within a date range.
+ *  A transaction is eligible when:
+ *  - type = 'in' (a payment received)
+ *  - member_id_1 is set (linked to a member)
+ *  - gift_aid_amount > 0
+ *  - the member's gift_aid_from is set and <= the transaction date
+ */
+async function fetchDeclarationRows(tenantSlug, from, to, excludeClaimed) {
+  let whereClause = `
+    t.type = 'in'
+    AND t.member_id_1 IS NOT NULL
+    AND t.gift_aid_amount IS NOT NULL
+    AND t.gift_aid_amount > 0
+    AND m.gift_aid_from IS NOT NULL
+    AND m.gift_aid_from <= t.date
+    AND t.date BETWEEN $1::date AND $2::date`;
+
+  if (excludeClaimed) {
+    whereClause += `\n    AND t.gift_aid_claimed_at IS NULL`;
+  }
+
+  const rows = await tenantQuery(
+    tenantSlug,
+    `SELECT t.id, t.transaction_number, t.date, t.gift_aid_amount::float,
+            t.gift_aid_claimed_at,
+            m.id AS member_id, m.title, m.forenames, m.surname,
+            m.membership_number, m.gift_aid_from, m.email,
+            a.house_no, a.postcode
+     FROM transactions t
+     JOIN members m ON m.id = t.member_id_1
+     LEFT JOIN addresses a ON a.id = m.address_id
+     WHERE ${whereClause}
+     ORDER BY m.surname, m.forenames, t.date`,
+    [from, to],
+  );
+
+  return rows;
+}
+
+// ─── LIST ──────────────────────────────────────────────────────────────────
+
+// GET /gift-aid?year=&excludeClaimed=
+router.get('/', requirePrivilege('gift_aid_declaration', 'view'), async (req, res, next) => {
+  try {
+    const slug = req.user.tenantSlug;
+    const [settings] = await tenantQuery(
+      slug,
+      `SELECT year_start_month, year_start_day, gift_aid_enabled
+       FROM tenant_settings WHERE id = 'singleton'`,
+    );
+
+    if (!settings?.gift_aid_enabled) {
+      return res.json({ enabled: false, rows: [], yearNum: null });
+    }
+
+    const startMonth = settings.year_start_month;
+    const startDay   = settings.year_start_day;
+    const yearNum    = req.query.year
+      ? parseInt(req.query.year, 10)
+      : currentFinancialYear(startMonth, startDay);
+
+    const { yearStart, yearEnd } = computeYearBounds(yearNum, startMonth, startDay);
+    const excludeClaimed = req.query.excludeClaimed !== '0';
+
+    const rows = await fetchDeclarationRows(slug, yearStart, yearEnd, excludeClaimed);
+
+    res.json({
+      enabled: true,
+      rows,
+      yearNum,
+      yearStart,
+      yearEnd,
+      startMonth,
+      startDay,
+    });
+  } catch (err) { next(err); }
+});
+
+// ─── DOWNLOAD EXCEL ─────────────────────────────────────────────────────
+
+const downloadSchema = z.object({
+  ids: z.array(z.string().min(1)).min(1),
+  from: z.string().min(1),
+  to: z.string().min(1),
+});
+
+// POST /gift-aid/download  body: { ids, from, to }
+router.post('/download', requirePrivilege('gift_aid_declaration', 'download_and_mark'), async (req, res, next) => {
+  try {
+    const data = downloadSchema.parse(req.body);
+    const slug = req.user.tenantSlug;
+
+    // Fetch all rows in the date range, then filter to selected IDs
+    const allRows = await fetchDeclarationRows(slug, data.from, data.to, false);
+    const idSet = new Set(data.ids);
+    const rows = allRows.filter((r) => idSet.has(r.id));
+
+    if (rows.length === 0) {
+      return res.status(400).json({ error: 'No matching transactions found.' });
+    }
+
+    // Build Excel workbook matching HMRC column format
+    const wb = new ExcelJS.Workbook();
+    const ws = wb.addWorksheet('Gift Aid');
+
+    ws.columns = [
+      { header: 'Title',              key: 'title',     width: 10 },
+      { header: 'First Name',         key: 'firstName', width: 20 },
+      { header: 'Last Name',          key: 'lastName',  width: 20 },
+      { header: 'House Name or No',   key: 'houseNo',   width: 20 },
+      { header: 'Postcode',           key: 'postcode',  width: 12 },
+      { header: 'Date',               key: 'date',      width: 14 },
+      { header: 'Amount',             key: 'amount',    width: 12 },
+    ];
+
+    ws.getRow(1).font = { bold: true };
+    ws.getRow(1).fill = {
+      type: 'pattern', pattern: 'solid',
+      fgColor: { argb: 'FFE2EFDA' },
+    };
+
+    for (const r of rows) {
+      // Format date as DD/MM/YYYY
+      const dateStr = r.date ? fmtDate(r.date) : '';
+      ws.addRow({
+        title:     r.title || '',
+        firstName: (r.forenames || '').split(' ')[0] || '',
+        lastName:  r.surname || '',
+        houseNo:   r.house_no || '',
+        postcode:  r.postcode || '',
+        date:      dateStr,
+        amount:    Number(r.gift_aid_amount).toFixed(2),
+      });
+    }
+
+    const tenantPart = slug.replace(/^u3a_/, '');
+    const filename = `${tenantPart}-gift-aid-declaration.xlsx`;
+
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    const buffer = await wb.xlsx.writeBuffer();
+    res.send(buffer);
+  } catch (err) {
+    if (err.name === 'ZodError') {
+      return res.status(422).json({ error: 'Validation failed.', issues: err.issues });
+    }
+    next(err);
+  }
+});
+
+// ─── MARK AS CLAIMED ────────────────────────────────────────────────────
+
+const markSchema = z.object({
+  ids: z.array(z.string().min(1)).min(1),
+});
+
+// POST /gift-aid/mark  body: { ids }
+router.post('/mark', requirePrivilege('gift_aid_declaration', 'download_and_mark'), async (req, res, next) => {
+  try {
+    const data = markSchema.parse(req.body);
+    const slug = req.user.tenantSlug;
+    const today = new Date().toISOString().slice(0, 10);
+
+    const result = await tenantQuery(
+      slug,
+      `UPDATE transactions
+       SET gift_aid_claimed_at = $1::date, updated_at = now()
+       WHERE id = ANY($2::text[])
+         AND gift_aid_amount IS NOT NULL
+         AND gift_aid_amount > 0
+         AND gift_aid_claimed_at IS NULL
+       RETURNING id`,
+      [today, data.ids],
+    );
+
+    logAudit(slug, {
+      userId: req.user.userId,
+      userName: req.user.name,
+      action: 'gift_aid_mark',
+      entityType: 'transactions',
+      detail: JSON.stringify({ count: result.length, date: today }),
+    });
+
+    res.json({ marked: result.length });
+  } catch (err) {
+    if (err.name === 'ZodError') {
+      return res.status(422).json({ error: 'Validation failed.', issues: err.issues });
+    }
+    next(err);
+  }
+});
+
+// ─── Helpers ────────────────────────────────────────────────────────────
+
+function fmtDate(d) {
+  if (!d) return '';
+  const s = String(d).slice(0, 10);
+  const [y, m, day] = s.split('-');
+  if (!y || !m || !day) return '';
+  return `${day}/${m}/${y}`;
+}
+
+export default router;

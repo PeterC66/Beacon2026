@@ -101,11 +101,17 @@ function applyTokens(text, tokenMap) {
 /**
  * Resolve all tokens in subject and body for a single member.
  * Returns { subject, body } with tokens replaced.
+ * @param {object} [extraTokens] - optional extra token map (e.g. Gift Aid tokens)
  */
-export function resolveTokens(subject, body, member, u3aName) {
-  const map = buildTokenMap(member, u3aName);
+export function resolveTokens(subject, body, member, u3aName, extraTokens) {
+  const map = { ...buildTokenMap(member, u3aName), ...extraTokens };
   return {
     subject: applyTokens(subject, map),
     body:    applyTokens(body,    map),
   };
 }
+
+/**
+ * Format a date for display (exported for reuse).
+ */
+export { fmtDate };
