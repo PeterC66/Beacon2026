@@ -223,6 +223,52 @@ router.post('/mark', requirePrivilege('gift_aid_declaration', 'download_and_mark
   }
 });
 
+// ─── GIFT AID LOG — doc 9.2(b) ─────────────────────────────────────────
+// GET /gift-aid/log?from=&to=&memberId=
+// Returns audit entries for gift_aid_consent and gift_aid_withdrawn actions.
+
+router.get('/log', requirePrivilege('gift_aid_declaration', 'view'), async (req, res, next) => {
+  try {
+    const slug = req.user.tenantSlug;
+
+    // Default window: 3 months ago → today
+    const now   = new Date();
+    const dfrom = new Date(now);
+    dfrom.setMonth(dfrom.getMonth() - 3);
+
+    const fromStr = req.query.from || dfrom.toISOString().slice(0, 10);
+    const toStr   = req.query.to   || now.toISOString().slice(0, 10);
+
+    let sql = `
+      SELECT id, user_name, action, entity_id, entity_name, detail, created_at
+      FROM audit_log
+      WHERE action IN ('gift_aid_consent', 'gift_aid_withdrawn')
+        AND created_at >= $1::date
+        AND created_at <  $2::date + INTERVAL '1 day'`;
+    const params = [fromStr, toStr];
+
+    if (req.query.memberId) {
+      sql += `\n        AND entity_id = $3`;
+      params.push(req.query.memberId);
+    }
+
+    sql += `\n      ORDER BY created_at DESC LIMIT 500`;
+
+    const rows = await tenantQuery(slug, sql, params);
+
+    // Also return a list of members who have entries, for the member filter dropdown
+    const members = await tenantQuery(
+      slug,
+      `SELECT DISTINCT entity_id AS id, entity_name AS name
+       FROM audit_log
+       WHERE action IN ('gift_aid_consent', 'gift_aid_withdrawn')
+       ORDER BY entity_name`,
+    );
+
+    res.json({ rows, members });
+  } catch (err) { next(err); }
+});
+
 // ─── Helpers ────────────────────────────────────────────────────────────
 
 function fmtDate(d) {

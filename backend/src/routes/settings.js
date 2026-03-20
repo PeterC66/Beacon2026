@@ -40,6 +40,26 @@ router.get('/year-config', async (req, res, next) => {
   }
 });
 
+// ─── GET /settings/new-member-defaults ────────────────────────────────────
+// Returns default town, county, and STD code for pre-filling the Add New Member form.
+// No privilege required — any authenticated user creating a member needs this.
+router.get('/new-member-defaults', async (req, res, next) => {
+  try {
+    const [row] = await tenantQuery(
+      req.user.tenantSlug,
+      `SELECT default_town, default_county, default_std_code
+       FROM tenant_settings WHERE id = 'singleton'`,
+    );
+    res.json({
+      defaultTown:    row?.default_town    ?? '',
+      defaultCounty:  row?.default_county  ?? '',
+      defaultStdCode: row?.default_std_code ?? '',
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
 // ─── GET /settings ────────────────────────────────────────────────────────
 router.get('/', requirePrivilege('settings', 'view'), async (req, res, next) => {
   try {

@@ -560,9 +560,12 @@ the browser sees `null` and downloads as `download.xlsx`.
 
 ### Audit log (doc 9.2a)
 
-- `GET /audit?from=&to=` (3-month cap, 500-row limit) + `DELETE /audit {before}`
+- `GET /audit?from=&to=` (3-month cap, 500-row limit) + `GET /audit/:id` + `DELETE /audit {before}`
 - Privileges: `audit_trail:view` and `audit_trail:delete`
-- Frontend: `AuditLog.jsx` at `/audit`
+- Frontend: `AuditLog.jsx` at `/audit` — table columns match Beacon: When, By, Action, Target, Key, Record, Entity
+- `AuditRecord.jsx` at `/audit/:id` — detail view showing full audit entry
+- `auditHelpers.js` — `ENTITY_ROUTES` map (entity_type → frontend route prefix) used for "view" links
+- Clickable When → navigates to Audit Record detail; clickable Record "view" → navigates to entity page
 - `logAudit()` in `backend/src/utils/audit.js` — best-effort (try/catch), call without `await`
 
 ### u3a Officers (doc 9.3)

@@ -56,7 +56,7 @@ export default function Home() {
       title: 'Misc',
       items: [
         { label: 'Audit log',             to: can('audit_trail', 'view') ? '/audit' : null },
-        { label: 'Gift aid log',          to: null },
+        { label: 'Gift aid log',          to: can('gift_aid_declaration', 'view') ? '/gift-aid-log' : null },
         { label: 'u3a Officers',          to: can('offices', 'view') ? '/officers' : null },
         { label: 'Public links',          to: null },
         { label: 'Data export & backup',  to: can('data_export_backup', 'view') ? '/backup' : null },
