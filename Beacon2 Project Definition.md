@@ -95,7 +95,7 @@ Beacon2 is a ground-up rebuild with these goals:
 - **Polls** — CRUD; member list filter; bulk assign
 
 ### Admin / Misc module
-- **Audit log** — date-filtered view + delete-before-date
+- **Audit log** — date-filtered view + delete-before-date; clickable When → Audit Record detail; clickable Record → entity view
 - **u3a Officers** — CRUD; email sending; status-based styling
 - **Personal preferences** — display prefs, change password, security Q&A, inactivity timeout
 - **Data export & backup** — 8 export types (Excel); full restore (Beacon2 + Beacon format)
@@ -171,7 +171,7 @@ frontend/
       membership/          MemberClassList  MemberClassEditor  MemberStatusList
                            MembershipRenewals  NonRenewals
                            RecentMembers  Statistics
-      misc/                AuditLog  OfficerList  DataBackup
+      misc/                AuditLog  AuditRecord  auditHelpers  OfficerList  DataBackup
       roles/               RoleList  RoleEditor
       settings/            SystemSettings  PersonalPreferences
       system/              SystemLogin  SystemDashboard
