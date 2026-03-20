@@ -554,3 +554,50 @@ CREATE TABLE IF NOT EXISTS :schema.standard_messages (
 );
 
 CREATE UNIQUE INDEX IF NOT EXISTS :schema_idx_standard_messages_name ON :schema.standard_messages (name);
+
+-- ─── System messages (pre-defined auto-sent email templates) ────────────
+-- Separate from standard_messages which are user-created templates.
+-- System messages have well-known IDs and are seeded on tenant creation.
+
+CREATE TABLE IF NOT EXISTS :schema.system_messages (
+  id         TEXT PRIMARY KEY,
+  name       TEXT NOT NULL,
+  subject    TEXT NOT NULL DEFAULT '',
+  body       TEXT NOT NULL DEFAULT '',
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- Seed default system messages (idempotent)
+INSERT INTO :schema.system_messages (id, name, subject, body) VALUES
+  ('online_join_confirm', 'Online Joining Confirmation',
+   'Welcome to #U3ANAME',
+   'Dear #FORENAME,\n\nThank you for joining #U3ANAME. Your membership number is #MEMNO.\n\nYour membership class is #MEMCLASS.\n\nIf you have any questions, please contact us.\n\nKind regards,\n#U3ANAME')
+ON CONFLICT (id) DO NOTHING;
+
+INSERT INTO :schema.system_messages (id, name, subject, body) VALUES
+  ('online_join_officer_notify', 'Online Joining Officer Notification',
+   'New online member: #FORENAME #SURNAME',
+   'A new member has joined online:\n\nName: #TITLE #FORENAME #SURNAME\nMembership Number: #MEMNO\nClass: #MEMCLASS\nEmail: #EMAIL')
+ON CONFLICT (id) DO NOTHING;
+
+-- ─── Public Links settings on tenant_settings ──────────────────────────
+
+ALTER TABLE :schema.tenant_settings ADD COLUMN IF NOT EXISTS online_joining_enabled BOOLEAN NOT NULL DEFAULT false;
+ALTER TABLE :schema.tenant_settings ADD COLUMN IF NOT EXISTS privacy_policy_url TEXT;
+
+-- ─── Portal auth columns on members ─────────────────────────────────────
+
+ALTER TABLE :schema.members ADD COLUMN IF NOT EXISTS portal_email TEXT;
+ALTER TABLE :schema.members ADD COLUMN IF NOT EXISTS portal_password_hash TEXT;
+ALTER TABLE :schema.members ADD COLUMN IF NOT EXISTS portal_email_verified BOOLEAN NOT NULL DEFAULT false;
+ALTER TABLE :schema.members ADD COLUMN IF NOT EXISTS portal_verification_token TEXT;
+ALTER TABLE :schema.members ADD COLUMN IF NOT EXISTS portal_verification_expires TIMESTAMPTZ;
+ALTER TABLE :schema.members ADD COLUMN IF NOT EXISTS portal_reset_token TEXT;
+ALTER TABLE :schema.members ADD COLUMN IF NOT EXISTS portal_reset_expires TIMESTAMPTZ;
+
+CREATE INDEX IF NOT EXISTS :schema_idx_members_portal_email ON :schema.members (portal_email) WHERE portal_email IS NOT NULL;
+
+-- ─── Seed Applicant status (for online joining) ─────────────────────────
+
+INSERT INTO :schema.member_statuses (name) VALUES ('Applicant')
+ON CONFLICT (name) DO NOTHING;

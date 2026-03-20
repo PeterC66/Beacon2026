@@ -31,6 +31,9 @@ import backupRoutes        from './routes/backup.js';
 import addressExportRoutes from './routes/addressExport.js';
 import emailRoutes         from './routes/email.js';
 import giftAidRoutes       from './routes/giftAid.js';
+import systemMessageRoutes from './routes/systemMessages.js';
+import publicLinksRoutes   from './routes/publicLinks.js';
+import publicRoutes        from './routes/public.js';
 import { errorHandler } from './middleware/errorHandler.js';
 
 const app = express();
@@ -70,6 +73,9 @@ app.use('/backup',          backupRoutes);
 app.use('/address-export',  addressExportRoutes);
 app.use('/email',           emailRoutes);
 app.use('/gift-aid',        giftAidRoutes);
+app.use('/system-messages', systemMessageRoutes);
+app.use('/public-links',    publicLinksRoutes);
+app.use('/public',          publicRoutes);
 
 app.get('/health', (_req, res) => res.json({
   status:  'ok',
