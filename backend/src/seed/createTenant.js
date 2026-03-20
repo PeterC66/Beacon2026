@@ -50,7 +50,8 @@ export async function createTenantSchema({ name, slug, adminEmail, adminName, ad
     await tenantQuery(
       slug,
       `INSERT INTO privilege_resources (id, code, label, actions)
-       VALUES ($1, $2, $3, $4) ON CONFLICT DO NOTHING`,
+       VALUES ($1, $2, $3, $4)
+       ON CONFLICT (code) DO UPDATE SET label = EXCLUDED.label, actions = EXCLUDED.actions`,
       [resource.id, resource.code, resource.label, resource.actions],
     );
   }

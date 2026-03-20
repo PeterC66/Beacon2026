@@ -94,12 +94,13 @@ async function migrateTenantSchemas() {
 
     // Re-seed default data — these run even if some DDL steps had warnings
     try {
-      // Re-seed privilege resources (ON CONFLICT DO NOTHING keeps existing rows)
+      // Re-seed privilege resources — upsert so new actions are picked up
       for (const resource of PRIVILEGE_RESOURCES) {
         await tenantQuery(
           slug,
           `INSERT INTO privilege_resources (id, code, label, actions)
-           VALUES ($1, $2, $3, $4) ON CONFLICT DO NOTHING`,
+           VALUES ($1, $2, $3, $4)
+           ON CONFLICT (code) DO UPDATE SET label = EXCLUDED.label, actions = EXCLUDED.actions`,
           [resource.id, resource.code, resource.label, resource.actions],
         );
       }
