@@ -259,7 +259,7 @@ CREATE TABLE IF NOT EXISTS :schema.group_members (
 -- ─────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS :schema.group_events (
   id         TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
-  group_id   TEXT NOT NULL REFERENCES :schema.groups(id) ON DELETE CASCADE,
+  group_id   TEXT REFERENCES :schema.groups(id) ON DELETE CASCADE,
   event_date DATE NOT NULL,
   start_time TIME,
   end_time   TIME,
@@ -270,6 +270,9 @@ CREATE TABLE IF NOT EXISTS :schema.group_events (
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+
+-- Allow open meetings (group_id = NULL)
+ALTER TABLE :schema.group_events ALTER COLUMN group_id DROP NOT NULL;
 
 CREATE INDEX IF NOT EXISTS :schema_idx_group_events_group ON :schema.group_events (group_id);
 CREATE INDEX IF NOT EXISTS :schema_idx_group_events_date  ON :schema.group_events (event_date);

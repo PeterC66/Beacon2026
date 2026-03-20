@@ -51,6 +51,8 @@ import EmailDeliveryDetail from './pages/email/EmailDeliveryDetail.jsx';
 import EmailUnblocker      from './pages/email/EmailUnblocker.jsx';
 import SystemMessages      from './pages/settings/SystemMessages.jsx';
 import PublicLinks         from './pages/misc/PublicLinks.jsx';
+import Calendar            from './pages/groups/Calendar.jsx';
+import OpenMeetings        from './pages/groups/OpenMeetings.jsx';
 import JoinForm            from './pages/public/JoinForm.jsx';
 import JoinComplete        from './pages/public/JoinComplete.jsx';
 import PortalLogin         from './pages/public/PortalLogin.jsx';
@@ -125,6 +127,8 @@ const router = createBrowserRouter([
   { path: '/email/unblocker',                     element: <ProtectedRoute><EmailUnblocker /></ProtectedRoute> },
   { path: '/system-messages',                       element: <ProtectedRoute><SystemMessages /></ProtectedRoute> },
   { path: '/public-links',                          element: <ProtectedRoute><PublicLinks /></ProtectedRoute> },
+  { path: '/calendar',                               element: <ProtectedRoute><Calendar /></ProtectedRoute> },
+  { path: '/calendar/open-meetings',                  element: <ProtectedRoute><OpenMeetings /></ProtectedRoute> },
 
   // Public pages (no auth required)
   { path: '/public/:slug/join',                     element: <JoinForm /> },

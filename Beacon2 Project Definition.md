@@ -108,6 +108,15 @@ Beacon2 is a ground-up rebuild with these goals:
 - **Public links** — admin page with online joining toggle, privacy policy URL,
   copyable public URLs, PayPal status indicator
 
+### Calendar module
+- **Calendar page** — chronological view of all group events + open meetings within date range
+  (default: next 3 months); filters by all / member (search autocomplete) / venue / group;
+  Show Detail toggle; clickable date/time → Group Schedule tab; clickable group/venue → record;
+  Google Maps link for venues with postcode; Download PDF
+- **Open Meetings** — events not tied to any group (group_id = NULL in group_events);
+  add/edit/delete with recurrence support; same UI pattern as Group Schedule;
+  controlled by `meetings` privilege resource
+
 ### Admin / Misc module
 - **Audit log** — date-filtered view + delete-before-date; clickable When → Audit Record detail; clickable Record → entity view
 - **Gift Aid log** — date-filtered view of Gift Aid consent given/withdrawn; member filter dropdown
@@ -214,7 +223,7 @@ Greyed-out items in `Home.jsx` (i.e. `to: null`) are the remaining roadmap:
 - Letters & documents
 - Meetings
 - Membership cards
-- Calendar
+- ~~Calendar~~ (done)
 - Data migration tool (standalone import from Beacon — restore already handles this)
 - Members Portal — full self-service features (registration/login built; view/update details,
   renewal, group browsing still to do)

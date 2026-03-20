@@ -48,6 +48,8 @@ export const ALL_PRIVS = [
   'finance_batches:view', 'finance_batches:create', 'finance_batches:delete',
   'public_links:view', 'public_links:change',
   'system_messages:view', 'system_messages:change',
+  'calendar:view', 'calendar:download',
+  'meetings:view', 'meetings:create', 'meetings:change', 'meetings:delete',
 ];
 
 export const TEST_TENANT = 'test-u3a';

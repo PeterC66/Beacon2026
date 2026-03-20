@@ -34,7 +34,7 @@ export default function Home() {
         { label: 'Groups',    to: can('groups_list',    'view') ? '/groups'    : null },
         { label: 'Venues',    to: can('group_venues',   'view') ? '/venues'    : null },
         { label: 'Faculties', to: can('group_faculties','view') ? '/faculties' : null },
-        { label: 'Calendar',  to: null },
+        { label: 'Calendar',  to: can('calendar', 'view') ? '/calendar' : null },
       ],
     },
     {

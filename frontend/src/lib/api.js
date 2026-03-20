@@ -538,6 +538,38 @@ export const systemMessages = {
   update: (id, data) => request(`/system-messages/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
 };
 
+// ─── Calendar ─────────────────────────────────────────────────────────────
+
+export const calendar = {
+  listEvents: (params = {}) => {
+    const qs = new URLSearchParams();
+    if (params.from)     qs.set('from',     params.from);
+    if (params.to)       qs.set('to',       params.to);
+    if (params.memberId) qs.set('memberId', params.memberId);
+    if (params.venueId)  qs.set('venueId',  params.venueId);
+    if (params.groupId)  qs.set('groupId',  params.groupId);
+    const q = qs.toString();
+    return request(`/calendar/events${q ? '?' + q : ''}`);
+  },
+  downloadPdf: (params = {}) => {
+    const qs = new URLSearchParams();
+    if (params.from)     qs.set('from',     params.from);
+    if (params.to)       qs.set('to',       params.to);
+    if (params.memberId) qs.set('memberId', params.memberId);
+    if (params.venueId)  qs.set('venueId',  params.venueId);
+    if (params.groupId)  qs.set('groupId',  params.groupId);
+    const q = qs.toString();
+    return requestBlob(`/calendar/events/pdf${q ? '?' + q : ''}`);
+  },
+  searchMembers: (q) => request(`/calendar/members/search?q=${encodeURIComponent(q)}`),
+
+  // Open meetings
+  listOpenEvents:  ()             => request('/calendar/open-events'),
+  createOpenEvents:(data)         => request('/calendar/open-events', { method: 'POST', body: JSON.stringify(data) }),
+  updateOpenEvent: (id, data)     => request(`/calendar/open-events/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
+  deleteOpenEvents:(ids)          => request('/calendar/open-events', { method: 'DELETE', body: JSON.stringify({ ids }) }),
+};
+
 // ─── Public Links ─────────────────────────────────────────────────────────
 
 export const publicLinks = {
