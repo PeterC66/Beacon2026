@@ -104,6 +104,9 @@ async function migrateTenantSchemas() {
         );
       }
 
+      // Re-seed default role privileges (additive — ON CONFLICT DO NOTHING)
+      await syncDefaultRolePrivileges(slug);
+
       // Re-seed locked member statuses
       for (const statusName of ['Current', 'Lapsed', 'Resigned', 'Deceased']) {
         await tenantQuery(

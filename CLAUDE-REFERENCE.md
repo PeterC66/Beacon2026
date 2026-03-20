@@ -28,6 +28,12 @@ active tenant on every server startup.
 4. DDL loop has per-statement try/catch
 5. **No semicolons in SQL comments** — migration splits on `;`
 
+After DDL, the migration also re-seeds privilege resources and calls
+`syncDefaultRolePrivileges()` to additively grant any newly-defined privileges
+to the default roles (Administration, etc.). This means adding a new privilege
+resource and granting it in `defaultRoles.js` is all that's needed — existing
+tenants pick it up on next server restart.
+
 ### Diagnosing "unexpected error"
 
 Check server logs for `[timestamp] METHOD /path: Error: ...`. Common causes:
