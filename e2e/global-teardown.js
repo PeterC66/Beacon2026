@@ -19,13 +19,13 @@ function readSlug() {
     const state = JSON.parse(readFileSync(STATE_PATH, 'utf8'));
     return state.slug;
   } catch { /* state file missing — use env/default */ }
-  return process.env.BEACON2_TEST_TENANT_SLUG ?? 'e2etest';
+  return process.env.BEACON2_TEST_TENANT_SLUG || 'e2etest';
 }
 
-const API       = process.env.BEACON2_API_URL ?? 'http://localhost:3001';
+const API       = process.env.BEACON2_API_URL || 'http://localhost:3001';
 const SLUG      = readSlug();
-const SADM_USER = process.env.BEACON2_SYSADMIN_USERNAME ?? 'sysadmin';
-const SADM_PASS = process.env.BEACON2_SYSADMIN_PASSWORD ?? 'changeme';
+const SADM_USER = process.env.BEACON2_SYSADMIN_USERNAME || 'sysadmin';
+const SADM_PASS = process.env.BEACON2_SYSADMIN_PASSWORD || 'changeme';
 
 async function apiCall(path, { method = 'GET', body, token } = {}) {
   const headers = { 'Content-Type': 'application/json' };

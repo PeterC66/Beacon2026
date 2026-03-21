@@ -24,11 +24,11 @@ function readSlug() {
     const state = JSON.parse(readFileSync(resolve(__dirname, '../.e2e-state.json'), 'utf8'));
     return state.slug;
   } catch { /* state file missing — use env/default */ }
-  return process.env.BEACON2_TEST_TENANT_SLUG ?? 'e2etest';
+  return process.env.BEACON2_TEST_TENANT_SLUG || 'e2etest';
 }
 const SLUG     = readSlug();
-const USERNAME = process.env.BEACON2_TEST_ADMIN_USERNAME ?? 'testadmin';
-const PASSWORD = process.env.BEACON2_TEST_ADMIN_PASSWORD ?? 'TestAdmin99!';
+const USERNAME = process.env.BEACON2_TEST_ADMIN_USERNAME || 'testadmin';
+const PASSWORD = process.env.BEACON2_TEST_ADMIN_PASSWORD || 'TestAdmin99!';
 
 test.describe('Login', () => {
   test('valid credentials reach the home page', async ({ page }) => {
