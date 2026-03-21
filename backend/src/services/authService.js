@@ -144,7 +144,7 @@ export async function refreshTokens(tenantSlug, refreshToken) {
     [user.id, newHash, expiresAt],
   );
 
-  return { accessToken: newAccessToken, refreshToken: newRefreshToken };
+  return { accessToken: newAccessToken, refreshToken: newRefreshToken, user: { id: user.id, name: user.name, email: user.email } };
 }
 
 // ─── Logout ───────────────────────────────────────────────────────────────

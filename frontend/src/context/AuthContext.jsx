@@ -2,10 +2,16 @@
 // Provides authentication state and actions to the whole app.
 
 import { createContext, useContext, useState, useEffect, useRef, useCallback } from 'react';
-import { auth as authApi, setAuth, clearAuth } from '../lib/api.js';
+import { auth as authApi, setAuth, clearAuth, restoreSession } from '../lib/api.js';
 import { getPreferences } from '../hooks/usePreferences.js';
 
 const AuthContext = createContext(null);
+
+// Read the beacon_last_u3a cookie (set on successful login by Login.jsx)
+function getLastU3aCookie() {
+  const match = document.cookie.split('; ').find((c) => c.startsWith('beacon_last_u3a='));
+  return match ? decodeURIComponent(match.split('=')[1]) : '';
+}
 
 export function AuthProvider({ children }) {
   const [user,    setUser]    = useState(null);   // { id, name, email }
@@ -13,6 +19,21 @@ export function AuthProvider({ children }) {
   const [privs,   setPrivs]   = useState([]);     // string[] of "resource:action"
   const [loading, setLoading] = useState(false);
   const [error,   setError]   = useState(null);
+  const [restoring, setRestoring] = useState(true); // true while checking refresh cookie
+
+  // ── Session restoration on mount ──────────────────────────────────────
+  useEffect(() => {
+    const slug = getLastU3aCookie();
+    if (!slug) { setRestoring(false); return; }
+    restoreSession(slug).then((data) => {
+      if (data) {
+        const payload = parseJwt(data.accessToken);
+        setUser(data.user);
+        setTenant(slug);
+        setPrivs(payload.privileges ?? []);
+      }
+    }).finally(() => setRestoring(false));
+  }, []);
 
   // ── Inactivity timeout ────────────────────────────────────────────────
   const inactivityTimer = useRef(null);
@@ -89,6 +110,10 @@ export function AuthProvider({ children }) {
   const can = useCallback((resource, action) => {
     return privs.includes(`${resource}:${action}`);
   }, [privs]);
+
+  // While restoring session from refresh cookie, render nothing to avoid
+  // flashing the login page before auth state is known.
+  if (restoring) return null;
 
   return (
     <AuthContext.Provider value={{ user, tenant, privs, loading, error, login, logout, can, isLoggedIn: !!user }}>
