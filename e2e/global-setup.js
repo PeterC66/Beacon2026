@@ -7,12 +7,22 @@
 // and the default "Individual" member class are seeded automatically when a
 // tenant is created — no manual seeding needed for those.
 
+import { writeFileSync } from 'node:fs';
+import { resolve, dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { config as loadDotenv } from 'dotenv';
 loadDotenv();
 
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const STATE_PATH = resolve(__dirname, '.e2e-state.json');
+
 const API   = process.env.BEACON2_API_URL             || 'http://localhost:3001';
-const SLUG  = process.env.BEACON2_TEST_TENANT_SLUG    || 'e2etest';
-const NAME  = process.env.BEACON2_TEST_TENANT_NAME    || 'E2E Test u3a';
+// Generate a short unique suffix (last 6 hex chars of timestamp) so parallel or
+// repeated runs don't collide on the slug.  Override via env var if a fixed slug
+// is preferred.
+const RUN_ID = Date.now().toString(16).slice(-6);
+const SLUG  = process.env.BEACON2_TEST_TENANT_SLUG    || `e2e_${RUN_ID}`;
+const NAME  = process.env.BEACON2_TEST_TENANT_NAME    || `E2E Test u3a ${RUN_ID}`;
 const SADM_EMAIL = process.env.BEACON2_SYSADMIN_EMAIL    || 'admin@beacon2.example';
 const SADM_PASS  = process.env.BEACON2_SYSADMIN_PASSWORD || 'changeme';
 const ADM_USER  = process.env.BEACON2_TEST_ADMIN_USERNAME || 'testadmin';
@@ -143,7 +153,7 @@ async function seedMemberClass(tenantToken) {
     method: 'POST',
     token: tenantToken,
     tenantSlug: SLUG,
-    body: { name: 'Joint', current: true, fee: '20.00', giftAidFee: '0.00' },
+    body: { name: 'Joint', current: true, fee: 20, giftAidFee: 0 },
   });
   if (status === 201) {
     console.log('[setup] Member class "Joint" created.');
@@ -165,6 +175,9 @@ export default async function globalSetup() {
   const tenantToken = await tenantAdminLogin();
   await seedFinanceAccount(tenantToken);
   await seedMemberClass(tenantToken);
+
+  // Persist the generated slug so test fixtures and teardown can read it.
+  writeFileSync(STATE_PATH, JSON.stringify({ slug: SLUG }));
 
   console.log('[setup] Global setup complete.\n');
 }
