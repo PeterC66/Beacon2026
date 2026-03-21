@@ -10,15 +10,15 @@
 import { config as loadDotenv } from 'dotenv';
 loadDotenv();
 
-const API   = process.env.BEACON2_API_URL   ?? 'http://localhost:3001';
-const SLUG  = process.env.BEACON2_TEST_TENANT_SLUG  ?? 'e2etest';
-const NAME  = process.env.BEACON2_TEST_TENANT_NAME  ?? 'E2E Test u3a';
-const SADM_EMAIL = process.env.BEACON2_SYSADMIN_EMAIL ?? 'admin@beacon2.example';
-const SADM_PASS  = process.env.BEACON2_SYSADMIN_PASSWORD ?? 'changeme';
-const ADM_USER  = process.env.BEACON2_TEST_ADMIN_USERNAME ?? 'testadmin';
-const ADM_PASS  = process.env.BEACON2_TEST_ADMIN_PASSWORD ?? 'TestAdmin99!';
-const ADM_NAME  = process.env.BEACON2_TEST_ADMIN_NAME     ?? 'Test Administrator';
-const ADM_EMAIL = process.env.BEACON2_TEST_ADMIN_EMAIL    ?? 'testadmin@beacon2-e2e.invalid';
+const API   = process.env.BEACON2_API_URL             || 'http://localhost:3001';
+const SLUG  = process.env.BEACON2_TEST_TENANT_SLUG    || 'e2etest';
+const NAME  = process.env.BEACON2_TEST_TENANT_NAME    || 'E2E Test u3a';
+const SADM_EMAIL = process.env.BEACON2_SYSADMIN_EMAIL    || 'admin@beacon2.example';
+const SADM_PASS  = process.env.BEACON2_SYSADMIN_PASSWORD || 'changeme';
+const ADM_USER  = process.env.BEACON2_TEST_ADMIN_USERNAME || 'testadmin';
+const ADM_PASS  = process.env.BEACON2_TEST_ADMIN_PASSWORD || 'TestAdmin99!';
+const ADM_NAME  = process.env.BEACON2_TEST_ADMIN_NAME     || 'Test Administrator';
+const ADM_EMAIL = process.env.BEACON2_TEST_ADMIN_EMAIL    || 'testadmin@beacon2-e2e.invalid';
 
 // ── Helpers ──────────────────────────────────────────────────────────────
 
