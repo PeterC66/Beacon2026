@@ -21,7 +21,7 @@ export class LoginPage {
 
   async loginAndWait(tenantSlug, username, password) {
     await this.login(tenantSlug, username, password);
-    await this.page.waitForURL('/', { timeout: 10_000 });
+    await this.page.waitForURL('/', { timeout: 30_000 });
   }
 
   errorMessage() {

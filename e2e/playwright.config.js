@@ -12,6 +12,13 @@ export default defineConfig({
   testDir: './tests',
   testMatch: '**/*.spec.js',
 
+  // Per-test timeout (default 30 s is tight for cold-start scenarios)
+  timeout: process.env.CI ? 60_000 : 30_000,
+
+  expect: {
+    timeout: process.env.CI ? 15_000 : 5_000,
+  },
+
   // Fail fast: stop after first test failure in CI
   // Remove for full runs: maxFailures: 1,
 
@@ -40,13 +47,14 @@ export default defineConfig({
     // Standard viewport
     viewport: { width: 1280, height: 800 },
 
-    // Give pages up to 10 s to load
-    navigationTimeout: 10_000,
-    actionTimeout: 8_000,
+    // Generous timeouts for Render free-tier cold starts
+    navigationTimeout: process.env.CI ? 30_000 : 10_000,
+    actionTimeout:     process.env.CI ? 15_000 :  8_000,
   },
 
   // Global setup creates (or resets) the test tenant before any tests run.
-  // Global teardown is optional — leave the tenant in place for debugging.
+  // Allow up to 3 minutes for global setup (cold-start warm-up + tenant creation).
+  globalTimeout: 180_000,
   globalSetup: './global-setup.js',
   // globalTeardown: './global-teardown.js',
 

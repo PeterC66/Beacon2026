@@ -30,7 +30,27 @@ const ADM_PASS  = process.env.BEACON2_TEST_ADMIN_PASSWORD || 'TestAdmin99!';
 const ADM_NAME  = process.env.BEACON2_TEST_ADMIN_NAME     || 'Test Administrator';
 const ADM_EMAIL = process.env.BEACON2_TEST_ADMIN_EMAIL    || 'testadmin@beacon2-e2e.invalid';
 
+const BASE_URL = process.env.BEACON2_BASE_URL || 'http://localhost:5173';
+
 // ── Helpers ──────────────────────────────────────────────────────────────
+
+/** Poll the frontend until it responds (handles Render free-tier cold starts). */
+async function waitForFrontend(url, maxWaitMs = 120_000) {
+  const start = Date.now();
+  const interval = 5_000;
+  console.log(`[setup] Waiting for frontend at ${url} …`);
+  while (Date.now() - start < maxWaitMs) {
+    try {
+      const res = await fetch(url, { signal: AbortSignal.timeout(10_000) });
+      if (res.ok) {
+        console.log(`[setup] Frontend is ready (${Math.round((Date.now() - start) / 1000)}s).`);
+        return;
+      }
+    } catch { /* not ready yet */ }
+    await new Promise((r) => setTimeout(r, interval));
+  }
+  throw new Error(`Frontend at ${url} did not respond within ${maxWaitMs / 1000}s`);
+}
 
 async function apiCall(path, { method = 'GET', body, token, tenantSlug } = {}) {
   const headers = { 'Content-Type': 'application/json' };
@@ -169,6 +189,12 @@ export default async function globalSetup() {
   console.log(`[setup]   API URL    : ${API}`);
   console.log(`[setup]   Tenant slug: ${SLUG}`);
   console.log(`[setup]   Admin user : ${ADM_USER}`);
+
+  // Warm up both frontend and backend (Render free-tier cold starts)
+  await Promise.all([
+    waitForFrontend(BASE_URL),
+    waitForFrontend(API, 120_000),
+  ]);
 
   const sysToken    = await sysAdminLogin();
   await ensureTestTenant(sysToken);
