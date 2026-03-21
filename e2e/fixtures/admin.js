@@ -3,11 +3,24 @@
 // test-tenant admin user.  Import { test, expect } from here instead of
 // '@playwright/test' in every spec file.
 
+import { readFileSync } from 'node:fs';
+import { resolve, dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { test as base, expect } from '@playwright/test';
 import { config as loadDotenv } from 'dotenv';
 loadDotenv();
 
-const SLUG     = process.env.BEACON2_TEST_TENANT_SLUG  ?? 'e2etest';
+const __dirname = dirname(fileURLToPath(import.meta.url));
+
+// Read the slug written by global-setup; fall back to env var / default.
+function readSlug() {
+  try {
+    const state = JSON.parse(readFileSync(resolve(__dirname, '../.e2e-state.json'), 'utf8'));
+    return state.slug;
+  } catch { /* state file missing — use env/default */ }
+  return process.env.BEACON2_TEST_TENANT_SLUG ?? 'e2etest';
+}
+const SLUG     = readSlug();
 const USERNAME = process.env.BEACON2_TEST_ADMIN_USERNAME ?? 'testadmin';
 const PASSWORD = process.env.BEACON2_TEST_ADMIN_PASSWORD ?? 'TestAdmin99!';
 

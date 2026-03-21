@@ -21,3 +21,6 @@ Thumbs.db
 # Editor
 .vscode/
 .idea/
+
+# E2E test state (generated per run)
+e2e/.e2e-state.json

@@ -5,11 +5,25 @@
 //
 // To enable: uncomment globalTeardown in playwright.config.js
 
+import { readFileSync, unlinkSync } from 'node:fs';
+import { resolve, dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { config as loadDotenv } from 'dotenv';
 loadDotenv();
 
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const STATE_PATH = resolve(__dirname, '.e2e-state.json');
+
+function readSlug() {
+  try {
+    const state = JSON.parse(readFileSync(STATE_PATH, 'utf8'));
+    return state.slug;
+  } catch { /* state file missing — use env/default */ }
+  return process.env.BEACON2_TEST_TENANT_SLUG ?? 'e2etest';
+}
+
 const API       = process.env.BEACON2_API_URL ?? 'http://localhost:3001';
-const SLUG      = process.env.BEACON2_TEST_TENANT_SLUG ?? 'e2etest';
+const SLUG      = readSlug();
 const SADM_USER = process.env.BEACON2_SYSADMIN_USERNAME ?? 'sysadmin';
 const SADM_PASS = process.env.BEACON2_SYSADMIN_PASSWORD ?? 'changeme';
 
@@ -39,4 +53,7 @@ export default async function globalTeardown() {
 
   const { status } = await apiCall(`/system/tenants/${tenant.id}`, { method: 'DELETE', token: sysToken });
   console.log(`[teardown] Delete status: ${status}`);
+
+  // Clean up state file
+  try { unlinkSync(STATE_PATH); } catch { /* already gone */ }
 }
