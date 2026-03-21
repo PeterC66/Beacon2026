@@ -53,8 +53,9 @@ export default function Login() {
 
       <form onSubmit={handleSubmit} className="mt-4 w-full max-w-xs space-y-3">
         <div>
-          <label className="block text-sm font-medium text-slate-700 mb-1">u3a</label>
+          <label htmlFor="tenantSlug" className="block text-sm font-medium text-slate-700 mb-1">u3a</label>
           <input
+            id="tenantSlug"
             name="tenantSlug"
             value={form.tenantSlug}
             onChange={handleChange}
@@ -65,8 +66,9 @@ export default function Login() {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-slate-700 mb-1">Username</label>
+          <label htmlFor="username" className="block text-sm font-medium text-slate-700 mb-1">Username</label>
           <input
+            id="username"
             name="username"
             type="text"
             value={form.username}
@@ -78,9 +80,10 @@ export default function Login() {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-slate-700 mb-1">Password</label>
+          <label htmlFor="password" className="block text-sm font-medium text-slate-700 mb-1">Password</label>
           <div className="relative">
             <input
+              id="password"
               name="password"
               type={showPw ? 'text' : 'password'}
               value={form.password}
