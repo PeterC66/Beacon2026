@@ -44,3 +44,13 @@ Items noted during development that need addressing in future sessions.
 5. **Shared email address handling** — When two members share an email address,
    the portal registration and login flow needs special handling (doc 10.2
    section c). Deferred to a later phase.
+
+---
+
+## Accessibility / E2E
+
+1. **Form labels missing `htmlFor`/`id` association** — ~106 `<label>` elements
+   across ~33 files lack `htmlFor` attributes (and their inputs lack `id`).
+   This breaks Playwright `getByLabel()` and hurts screen-reader accessibility.
+   Login.jsx was fixed; remaining forms should be fixed incrementally as E2E
+   tests are written for each page.
