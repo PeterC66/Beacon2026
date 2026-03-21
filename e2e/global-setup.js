@@ -34,22 +34,23 @@ const BASE_URL = process.env.BEACON2_BASE_URL || 'http://localhost:5173';
 
 // ── Helpers ──────────────────────────────────────────────────────────────
 
-/** Poll the frontend until it responds (handles Render free-tier cold starts). */
-async function waitForFrontend(url, maxWaitMs = 120_000) {
+/** Poll a URL until it responds (handles Render free-tier cold starts).
+ *  Any HTTP response (including 404) counts as "alive" — we just need the
+ *  server process to be accepting connections. */
+async function waitForService(url, label, maxWaitMs = 120_000) {
   const start = Date.now();
   const interval = 5_000;
-  console.log(`[setup] Waiting for frontend at ${url} …`);
+  console.log(`[setup] Waiting for ${label} at ${url} …`);
   while (Date.now() - start < maxWaitMs) {
     try {
-      const res = await fetch(url, { signal: AbortSignal.timeout(10_000) });
-      if (res.ok) {
-        console.log(`[setup] Frontend is ready (${Math.round((Date.now() - start) / 1000)}s).`);
-        return;
-      }
-    } catch { /* not ready yet */ }
+      await fetch(url, { signal: AbortSignal.timeout(10_000) });
+      // Any response means the service is up
+      console.log(`[setup] ${label} is ready (${Math.round((Date.now() - start) / 1000)}s).`);
+      return;
+    } catch { /* not ready yet — network error / timeout */ }
     await new Promise((r) => setTimeout(r, interval));
   }
-  throw new Error(`Frontend at ${url} did not respond within ${maxWaitMs / 1000}s`);
+  throw new Error(`${label} at ${url} did not respond within ${maxWaitMs / 1000}s`);
 }
 
 async function apiCall(path, { method = 'GET', body, token, tenantSlug } = {}) {
@@ -192,8 +193,8 @@ export default async function globalSetup() {
 
   // Warm up both frontend and backend (Render free-tier cold starts)
   await Promise.all([
-    waitForFrontend(BASE_URL),
-    waitForFrontend(API, 120_000),
+    waitForService(BASE_URL, 'Frontend'),
+    waitForService(`${API}/health`, 'Backend'),
   ]);
 
   const sysToken    = await sysAdminLogin();
