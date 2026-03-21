@@ -37,7 +37,7 @@ export default defineConfig({
 
   use: {
     // Frontend base URL — set in .env or environment
-    baseURL: process.env.BEACON2_BASE_URL ?? 'http://localhost:5173',
+    baseURL: process.env.BEACON2_BASE_URL || 'http://localhost:5173',
 
     // Capture screenshots and traces on failure
     screenshot: 'only-on-failure',
