@@ -80,7 +80,7 @@ router.post('/refresh', async (req, res, next) => {
     const result = await refreshTokens(tenantSlug, refreshToken);
 
     res.cookie(COOKIE_NAME, result.refreshToken, cookieOptions);
-    res.json({ accessToken: result.accessToken });
+    res.json({ accessToken: result.accessToken, user: result.user });
   } catch (err) {
     next(err);
   }

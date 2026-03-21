@@ -73,6 +73,31 @@ async function tryRefresh() {
   return false;
 }
 
+/**
+ * Attempt to restore a session using the httpOnly refresh cookie.
+ * Unlike tryRefresh(), this works before tenantSlug is set — the caller
+ * provides the slug (e.g. from the beacon_last_u3a cookie).
+ * Returns { accessToken, user } on success, or null.
+ */
+export async function restoreSession(slug) {
+  if (!slug) return null;
+  try {
+    const res = await fetch(`${BASE}/auth/refresh`, {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'x-tenant-slug': slug },
+    });
+    if (!res.ok) return null;
+    const data = await res.json();
+    if (data?.accessToken) {
+      accessToken = data.accessToken;
+      tenantSlug  = slug;
+      return data;
+    }
+  } catch {}
+  return null;
+}
+
 export class ApiError extends Error {
   constructor(message, status, body = {}) {
     super(message);
