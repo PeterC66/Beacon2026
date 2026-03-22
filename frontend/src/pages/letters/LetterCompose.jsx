@@ -9,7 +9,7 @@ import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Underline from '@tiptap/extension-underline';
 import TextAlign from '@tiptap/extension-text-align';
-import TextStyle from '@tiptap/extension-text-style';
+import { TextStyle } from '@tiptap/extension-text-style';
 import { Extension } from '@tiptap/core';
 import { letters as lettersApi, members as membersApi } from '../../lib/api.js';
 import { useAuth } from '../../context/AuthContext.jsx';
