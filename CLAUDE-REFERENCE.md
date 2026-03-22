@@ -1039,3 +1039,50 @@ next `year_start_month/year_start_day`. "Advance expiry" adds one year.
 - Auto-attaching cards to online joining/renewal confirmation emails (`email_cards` setting)
 - Members Portal "Order a replacement card" (doc 10.2.5)
 
+---
+
+## 19. Letters module (docs 6.2, 6.2.1, 6.2.2)
+
+### Overview
+
+Letters are one-page personalised documents generated as a PDF (one page per member).
+They use the same token system as emails (`#FORENAME`, `#SURNAME`, `#ADDRESSV`, etc.)
+and support standard letter templates for reuse.
+
+### Data model
+
+- `standard_letters` table: `id`, `name` (UNIQUE), `body` (TipTap JSON string),
+  `created_at`, `updated_at`
+
+### Backend routes (`/letters`)
+
+| Method | Path | Privilege | Purpose |
+|--------|------|-----------|---------|
+| GET | `/standard-letters` | `letters_standard_messages:view` | List templates |
+| POST | `/standard-letters` | `letters_standard_messages:create` | Save/upsert template |
+| DELETE | `/standard-letters/:id` | `letters_standard_messages:delete` | Delete template |
+| POST | `/download` | `letters:download` | Generate PDF |
+
+### PDF generation
+
+- Uses **pdfmake v0.2** (not v0.3 which has broken Node.js server-side support)
+- Import pattern: `const PdfPrinter = require('pdfmake/src/printer')` via `createRequire`
+- Fonts loaded from `pdfmake/build/vfs_fonts` as base64 Buffers
+- Converts TipTap JSON → pdfmake content array via `tiptapToPdfContent()`
+- Token resolution via `buildTokenMap()` + `applyTokens()` from `emailTokens.js`
+- Page breaks inserted between members
+
+### Frontend
+
+- **LetterCompose.jsx**: TipTap rich text editor with toolbar (bold, italic, underline,
+  alignment, font size), token sidebar, recipients list, standard letter CRUD
+- Entry point: "Send Letter" bulk action on MemberList → `sessionStorage.letterComposeMemberIds`
+- Font sizes: Small (10pt), Normal (12pt), Large (14pt), Huge (18pt)
+- Standard letter body stored as stringified TipTap JSON
+
+### Dependencies
+
+- **Backend**: `pdfmake@0.2.18`
+- **Frontend**: `@tiptap/react`, `@tiptap/starter-kit`, `@tiptap/extension-text-align`,
+  `@tiptap/extension-underline`, `@tiptap/extension-text-style`, `@tiptap/pm`
+

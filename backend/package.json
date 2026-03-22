@@ -1,6 +1,6 @@
 {
   "name": "beacon2-backend",
-  "version": "0.5.10",
+  "version": "0.5.11",
   "description": "Beacon2 API server",
   "type": "module",
   "main": "src/app.js",
@@ -31,6 +31,7 @@
     "jsonwebtoken": "^9.0.2",
     "multer": "^2.1.1",
     "pdfkit": "^0.18.0",
+    "pdfmake": "^0.2.18",
     "redis": "^4.6.10",
     "uuid": "^9.0.0",
     "zod": "^3.22.4"

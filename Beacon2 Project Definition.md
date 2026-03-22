@@ -224,7 +224,7 @@ docs/
 Greyed-out items in `Home.jsx` (i.e. `to: null`) are the remaining roadmap:
 
 **Not yet started:**
-- Letters & documents
+- ~~Letters~~ (done — docs 6.2, 6.2.1, 6.2.2)
 - Meetings
 - ~~Membership cards~~ (done)
 - ~~Calendar~~ (done)

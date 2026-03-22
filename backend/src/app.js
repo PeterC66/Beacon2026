@@ -36,6 +36,7 @@ import publicLinksRoutes   from './routes/publicLinks.js';
 import publicRoutes        from './routes/public.js';
 import calendarRoutes      from './routes/calendar.js';
 import membershipCardRoutes from './routes/membershipCards.js';
+import letterRoutes         from './routes/letters.js';
 import { errorHandler } from './middleware/errorHandler.js';
 
 const app = express();
@@ -80,6 +81,7 @@ app.use('/public-links',    publicLinksRoutes);
 app.use('/public',          publicRoutes);
 app.use('/calendar',        calendarRoutes);
 app.use('/membership-cards', membershipCardRoutes);
+app.use('/letters',          letterRoutes);
 
 app.get('/health', (_req, res) => res.json({
   status:  'ok',
