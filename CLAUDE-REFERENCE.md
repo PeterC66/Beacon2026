@@ -933,7 +933,9 @@ Currently generates fake paymentId and redirects to own confirmation endpoint.
 - Backend: `systemMessages.js` at `/system-messages`; privileges `system_messages:view/change`
 - Frontend: `SystemMessages.jsx` at `/system-messages` — inline editing of subject/body
 - Token reference panel shows available substitutions (#FORENAME, #SURNAME, #MEMNO, etc.)
-- Current messages: `online_join_confirm`, `online_join_officer_notify`
+- Current messages: `online_join_confirm`, `online_join_officer_notify`,
+  `gift_aid_payment`, `online_renewal_confirm`, `card_replacement_confirm`,
+  `home_page_notice` (body only, no subject)
 
 ### Public Links (admin page)
 
