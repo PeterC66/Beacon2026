@@ -1,6 +1,6 @@
 // beacon2/frontend/src/__tests__/UserEditor.test.jsx
 import { describe, it, expect, vi } from 'vitest';
-import { render } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import UserEditor from '../pages/users/UserEditor.jsx';
 
@@ -12,7 +12,10 @@ vi.mock('../context/AuthContext.jsx', () => ({
 }));
 
 vi.mock('../lib/api.js', () => ({
-  users: { get: vi.fn().mockResolvedValue({ name: '', email: '', username: '', active: true, roles: [] }) },
+  users: {
+    get: vi.fn().mockResolvedValue({ name: '', email: '', username: '', active: true, is_site_admin: false, member_id: '', member_name: '', roles: [] }),
+    availableMembers: vi.fn().mockResolvedValue([]),
+  },
   roles: { list: vi.fn().mockResolvedValue([]) },
 }));
 
@@ -27,8 +30,8 @@ describe('UserEditor page (new user)', () => {
     expect(container).toBeTruthy();
   });
 
-  it('shows the Add User heading', () => {
-    const { getByText } = render(<MemoryRouter><UserEditor /></MemoryRouter>);
-    expect(getByText('Add User')).toBeInTheDocument();
+  it('shows the Add New User heading', async () => {
+    render(<MemoryRouter><UserEditor /></MemoryRouter>);
+    expect(await screen.findByText('Add New User')).toBeInTheDocument();
   });
 });

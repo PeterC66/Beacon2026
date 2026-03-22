@@ -83,6 +83,7 @@ export default function MemberEditor() {
   const [classes,        setClasses]        = useState([]);
   const [allMembers,     setAllMembers]     = useState([]);
   const [accounts,       setAccounts]       = useState([]);
+  const payDefaults                        = useRef({ defaultMethod: '', mappings: {} });
   const [loading,        setLoading]        = useState(!isNew);
   const [saving,         setSaving]         = useState(false);
   const [saved,          setSaved]          = useState(false);
@@ -182,15 +183,22 @@ export default function MemberEditor() {
         }));
       }).catch(() => {});
 
-      financeApi.listAccounts()
-        .then((accs) => {
-          const active = accs.filter((a) => a.active);
-          setAccounts(active);
-          // Pre-select the locked "Current" account if present
-          const current = active.find((a) => a.locked && a.name === 'Current');
-          if (current) set('payAccountId', String(current.id));
-        })
-        .catch(() => {});
+      Promise.all([
+        financeApi.listAccounts(),
+        financeApi.getPaymentMethodDefaults().catch(() => ({ defaultMethod: '', mappings: {} })),
+      ]).then(([accs, defaults]) => {
+        const active = accs.filter((a) => a.active);
+        setAccounts(active);
+        payDefaults.current = defaults;
+        // Pre-select default payment method and its mapped account
+        if (defaults.defaultMethod) {
+          set('payMethod', defaults.defaultMethod);
+          const mappedAccId = defaults.mappings[defaults.defaultMethod];
+          if (mappedAccId && active.some((a) => a.id === mappedAccId)) {
+            set('payAccountId', mappedAccId);
+          }
+        }
+      }).catch(() => {});
     }
 
     if (!isNew) {
@@ -1008,7 +1016,14 @@ export default function MemberEditor() {
                 </div>
                 <div>
                   <label className={labelCls}>Payment method</label>
-                  <select value={form.payMethod} onChange={(e) => set('payMethod', e.target.value)} className={inputCls}>
+                  <select value={form.payMethod} onChange={(e) => {
+                    const method = e.target.value;
+                    set('payMethod', method);
+                    const mappedAccId = payDefaults.current.mappings[method];
+                    if (mappedAccId && accounts.some((a) => a.id === mappedAccId)) {
+                      set('payAccountId', mappedAccId);
+                    }
+                  }} className={inputCls}>
                     <option value="">— select —</option>
                     {PAYMENT_METHODS.map((m) => <option key={m} value={m}>{m}</option>)}
                   </select>

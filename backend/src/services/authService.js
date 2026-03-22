@@ -27,14 +27,14 @@ export async function loginUser(tenantSlug, username, password) {
   //    (fallback allows existing users without a username set to still log in)
   let [user] = await tenantQuery(
     tenantSlug,
-    `SELECT id, email, name, password_hash, active FROM users WHERE username = $1`,
+    `SELECT id, email, name, password_hash, active, is_site_admin FROM users WHERE username = $1`,
     [username.toLowerCase()],
   );
 
   if (!user) {
     [user] = await tenantQuery(
       tenantSlug,
-      `SELECT id, email, name, password_hash, active FROM users WHERE email = $1`,
+      `SELECT id, email, name, password_hash, active, is_site_admin FROM users WHERE email = $1`,
       [username.toLowerCase()],
     );
   }
@@ -49,7 +49,10 @@ export async function loginUser(tenantSlug, username, password) {
   }
 
   // 3. Compute effective privileges (union across all assigned roles)
-  const privileges = await computePrivileges(tenantSlug, user.id);
+  //    Site admin gets ALL privileges (doc 8.1)
+  const privileges = user.is_site_admin
+    ? await computeAllPrivileges(tenantSlug)
+    : await computePrivileges(tenantSlug, user.id);
 
   // 4. Issue tokens
   const tokenPayload = {
@@ -57,6 +60,7 @@ export async function loginUser(tenantSlug, username, password) {
     tenantSlug,
     name: user.name,
     privileges,
+    isSiteAdmin: user.is_site_admin || false,
   };
 
   const accessToken = signAccessToken(tokenPayload);
@@ -122,16 +126,18 @@ export async function refreshTokens(tenantSlug, refreshToken) {
   );
 
   // Re-compute privileges (may have changed since last login)
-  const privileges = await computePrivileges(tenantSlug, stored.user_id);
-
   const [user] = await tenantQuery(
     tenantSlug,
-    `SELECT id, name, email FROM users WHERE id = $1`,
+    `SELECT id, name, email, is_site_admin FROM users WHERE id = $1`,
     [stored.user_id],
   );
 
+  const privileges = user?.is_site_admin
+    ? await computeAllPrivileges(tenantSlug)
+    : await computePrivileges(tenantSlug, stored.user_id);
+
   // Issue new tokens
-  const newAccessToken = signAccessToken({ userId: user.id, tenantSlug, name: user.name, privileges });
+  const newAccessToken = signAccessToken({ userId: user.id, tenantSlug, name: user.name, privileges, isSiteAdmin: user.is_site_admin || false });
   const newRefreshToken = signRefreshToken({ userId: user.id, tenantSlug });
 
   const newHash = hashToken(newRefreshToken);
@@ -201,6 +207,19 @@ export async function computePrivileges(tenantSlug, userId) {
     [userId],
   );
 
+  return rows.map((r) => `${r.code}:${r.action}`);
+}
+
+/**
+ * Return ALL defined privilege strings for a tenant.
+ * Used for the Site Administrator who has full access (doc 8.1).
+ */
+export async function computeAllPrivileges(tenantSlug) {
+  const rows = await tenantQuery(
+    tenantSlug,
+    `SELECT pr.code, unnest(pr.actions) AS action
+     FROM privilege_resources pr`,
+  );
   return rows.map((r) => `${r.code}:${r.action}`);
 }
 

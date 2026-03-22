@@ -27,7 +27,8 @@ import FinanceCategories  from './pages/finance/FinanceCategories.jsx';
 import FinanceLedger      from './pages/finance/FinanceLedger.jsx';
 import TransactionEditor  from './pages/finance/TransactionEditor.jsx';
 import TransactionRefund  from './pages/finance/TransactionRefund.jsx';
-import ConfigureAccount   from './pages/finance/ConfigureAccount.jsx';
+import ConfigureAccount       from './pages/finance/ConfigureAccount.jsx';
+import PaymentMethodDefaults from './pages/finance/PaymentMethodDefaults.jsx';
 import TransferMoney      from './pages/finance/TransferMoney.jsx';
 import ReconcileAccount   from './pages/finance/ReconcileAccount.jsx';
 import FinancialStatement from './pages/finance/FinancialStatement.jsx';
@@ -107,6 +108,7 @@ const router = createBrowserRouter([
   { path: '/settings',                        element: <ProtectedRoute><SystemSettings /></ProtectedRoute> },
   { path: '/finance/accounts',                    element: <ProtectedRoute><FinanceAccounts /></ProtectedRoute> },
   { path: '/finance/accounts/:id/configure',     element: <ProtectedRoute><ConfigureAccount /></ProtectedRoute> },
+  { path: '/finance/payment-method-defaults',    element: <ProtectedRoute><PaymentMethodDefaults /></ProtectedRoute> },
   { path: '/finance/categories',                  element: <ProtectedRoute><FinanceCategories /></ProtectedRoute> },
   { path: '/finance/ledger',                      element: <ProtectedRoute><FinanceLedger /></ProtectedRoute> },
   { path: '/finance/transactions/new',            element: <ProtectedRoute><TransactionEditor /></ProtectedRoute> },
