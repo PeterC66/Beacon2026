@@ -64,8 +64,16 @@ import PortalRegister      from './pages/public/PortalRegister.jsx';
 import PortalVerifyEmail   from './pages/public/PortalVerifyEmail.jsx';
 import PortalForgotPassword from './pages/public/PortalForgotPassword.jsx';
 import PortalResetPassword  from './pages/public/PortalResetPassword.jsx';
+import ChangePassword       from './pages/ChangePassword.jsx';
 
 function ProtectedRoute({ children }) {
+  const { isLoggedIn, mustChangePassword } = useAuth();
+  if (!isLoggedIn) return <Navigate to="/login" replace />;
+  if (mustChangePassword) return <Navigate to="/change-password" replace />;
+  return children;
+}
+
+function AuthRequired({ children }) {
   const { isLoggedIn } = useAuth();
   return isLoggedIn ? children : <Navigate to="/login" replace />;
 }
@@ -76,6 +84,9 @@ const router = createBrowserRouter([
   // System admin routes (auth handled inside pages via sessionStorage)
   { path: '/system/login', element: <SystemLogin /> },
   { path: '/system',       element: <SystemDashboard /> },
+
+  // Force-change-password (requires login but not subject to mustChangePassword redirect)
+  { path: '/change-password', element: <AuthRequired><ChangePassword /></AuthRequired> },
 
   // Protected tenant routes
   { path: '/',           element: <ProtectedRoute><Home /></ProtectedRoute> },

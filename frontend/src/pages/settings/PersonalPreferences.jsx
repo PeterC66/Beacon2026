@@ -15,11 +15,12 @@ function scorePassword(pw) {
   if (!pw) return { score: 0, hints: [] };
   const hints = [];
   let score = 0;
-  if (pw.length >= 8)  { score++; } else { hints.push('At least 8 characters'); }
-  if (pw.length >= 12) { score++; }
+  if (pw.length >= 10) { score++; } else { hints.push('At least 10 characters'); }
+  if (pw.length >= 14) { score++; }
   if (/[A-Z]/.test(pw)) { score++; } else { hints.push('Include an uppercase letter'); }
+  if (/[a-z]/.test(pw)) { score++; } else { hints.push('Include a lowercase letter'); }
   if (/[0-9]/.test(pw)) { score++; } else { hints.push('Include a number'); }
-  if (/[^A-Za-z0-9]/.test(pw)) { score++; } else { hints.push('Include a special character'); }
+  if (/\s/.test(pw)) { hints.push('No spaces allowed'); }
   return { score, hints };
 }
 
@@ -53,7 +54,11 @@ export default function PersonalPreferences() {
   function validatePw() {
     const errs = {};
     if (!pwForm.current)         errs.current = 'Enter your current password.';
-    if (pwForm.newPw.length < 8) errs.newPw   = 'New password must be at least 8 characters.';
+    if (pwForm.newPw.length < 10) errs.newPw   = 'New password must be at least 10 characters.';
+    if (/\s/.test(pwForm.newPw)) errs.newPw   = 'Password must not contain spaces.';
+    if (!/[A-Z]/.test(pwForm.newPw)) errs.newPw = 'Password must include an uppercase letter.';
+    if (!/[a-z]/.test(pwForm.newPw)) errs.newPw = 'Password must include a lowercase letter.';
+    if (!/[0-9]/.test(pwForm.newPw)) errs.newPw = 'Password must include a number.';
     if (pwForm.newPw !== pwForm.confirm) errs.confirm = 'Passwords do not match.';
     return errs;
   }

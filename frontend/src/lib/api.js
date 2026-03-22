@@ -117,6 +117,12 @@ export const auth = {
     request('/auth/refresh', { method: 'POST' }),
   changePassword: (currentPassword, newPassword) =>
     request('/auth/change-password', { method: 'POST', body: JSON.stringify({ currentPassword, newPassword }) }),
+  forceChangePassword: (newPassword, question, answer) =>
+    request('/auth/force-change-password', { method: 'POST', body: JSON.stringify({ newPassword, question, answer }) }),
+  recover:        (tenantSlug, forename, surname, postcode, email) =>
+    request('/auth/recover', { method: 'POST', body: JSON.stringify({ tenantSlug, forename, surname, postcode, email }) }),
+  recoverVerify:  (tenantSlug, userId, answer) =>
+    request('/auth/recover/verify', { method: 'POST', body: JSON.stringify({ tenantSlug, userId, answer }) }),
   updateQA:       (question, answer) =>
     request('/auth/qa', { method: 'PATCH', body: JSON.stringify({ question, answer }) }),
   getQA:          () =>
