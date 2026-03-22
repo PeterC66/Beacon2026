@@ -1366,9 +1366,11 @@ async function getGroupsStatementData(tenantSlug, from, to) {
   const groups = await tenantQuery(
     tenantSlug,
     `SELECT g.id, g.name, g.status,
+            COALESCE((SELECT SUM(COALESCE(b.money_in, 0)) - SUM(COALESCE(b.money_out, 0))
+                      FROM group_ledger_entries b
+                      WHERE b.group_id = g.id AND b.entry_date < $1::date), 0)::float AS bf,
             COALESCE(SUM(e.money_in),  0)::float AS total_in,
-            COALESCE(SUM(e.money_out), 0)::float AS total_out,
-            COALESCE(SUM(e.money_in), 0)::float - COALESCE(SUM(e.money_out), 0)::float AS balance
+            COALESCE(SUM(e.money_out), 0)::float AS total_out
      FROM groups g
      LEFT JOIN group_ledger_entries e ON e.group_id = g.id
        AND e.entry_date BETWEEN $1::date AND $2::date
@@ -1376,6 +1378,10 @@ async function getGroupsStatementData(tenantSlug, from, to) {
      ORDER BY g.name`,
     [from, to],
   );
+  // Compute balance as B/F + In - Out
+  for (const g of groups) {
+    g.balance = g.bf + g.total_in - g.total_out;
+  }
   return groups;
 }
 
@@ -1427,16 +1433,23 @@ router.get('/groups-statement/download', requirePrivilege('group_statement', 'do
 
     const wb = new ExcelJS.Workbook();
     const ws = wb.addWorksheet('Groups Statement');
-    ws.columns = [{ width: 30 }, { width: 12 }, { width: 12 }, { width: 12 }, { width: 12 }, { width: 15 }];
+    ws.columns = [{ width: 30 }, { width: 12 }, { width: 12 }, { width: 12 }, { width: 15 }, { width: 12 }];
 
     ws.addRow([`Groups Statement — ${from} to ${to}`]).font = { bold: true, size: 13 };
     ws.addRow([]);
 
-    const hdr = ws.addRow(['Group', 'Status', 'In (£)', 'Out (£)', 'Balance (£)']);
+    const hdr = ws.addRow(['Group', 'B/F', 'In (£)', 'Out (£)', 'Balance (£)', 'Status']);
     hdr.font = { bold: true };
 
     for (const g of groups) {
-      const gRow = ws.addRow([g.name, g.status, Number(g.total_in).toFixed(2), Number(g.total_out).toFixed(2), Number(g.balance).toFixed(2)]);
+      const gRow = ws.addRow([
+        g.name,
+        g.bf !== 0 ? Number(g.bf).toFixed(2) : '',
+        Number(g.total_in).toFixed(2),
+        Number(g.total_out).toFixed(2),
+        Number(g.balance).toFixed(2),
+        g.status,
+      ]);
       gRow.font = { bold: true };
 
       if (entries && entriesByGroup[g.id]) {
@@ -1453,9 +1466,16 @@ router.get('/groups-statement/download', requirePrivilege('group_statement', 'do
 
     // Totals row
     ws.addRow([]);
+    const totBf  = groups.reduce((s, g) => s + g.bf,        0);
     const totIn  = groups.reduce((s, g) => s + g.total_in,  0);
     const totOut = groups.reduce((s, g) => s + g.total_out, 0);
-    const totRow = ws.addRow(['TOTAL', '', Number(totIn).toFixed(2), Number(totOut).toFixed(2), Number(totIn - totOut).toFixed(2)]);
+    const totRow = ws.addRow([
+      'TOTAL',
+      Number(totBf).toFixed(2),
+      Number(totIn).toFixed(2),
+      Number(totOut).toFixed(2),
+      Number(totBf + totIn - totOut).toFixed(2),
+    ]);
     totRow.font = { bold: true };
 
     const tenantPart = req.user.tenantSlug.replace(/^u3a_/, '');
