@@ -711,7 +711,7 @@ the browser sees `null` and downloads as `download.xlsx`.
 No custom CSS classes. Infrastructure:
 - `frontend/tailwind.config.js` — content: `./index.html`, `./src/**/*.{js,jsx}`
 - `frontend/postcss.config.cjs` — `.cjs` because `package.json` has `"type": "module"`
-- `frontend/src/index.css` — `@tailwind` directives + background-image rule
+- `frontend/src/index.css` — `@tailwind` directives + background-image rule + theme CSS
 
 Design decisions:
 - Clean slate/blue palette (not old Beacon yellow/grey)
@@ -733,10 +733,27 @@ Design decisions:
 - Error text: `text-sm text-red-600 mt-1 font-medium`
 - Error banner: `rounded-md bg-red-50 border border-red-300 px-4 py-3 text-red-700 text-sm font-medium text-center`
 
+### Display preferences — text size & colour themes
+
+User-selectable via Personal Preferences page (doc 9.1). Stored in localStorage
+(`beacon2_prefs`). Architecture:
+
+- `usePreferences.js` — `textSize` and `colorTheme` fields alongside existing prefs
+- `ThemeProvider.jsx` — reads prefs, renders a `<div>` with `data-theme` / `data-text-size`
+  attributes; listens for `beacon2-prefs-changed` custom event for same-tab updates
+- `index.css` — CSS rules scoped to `.beacon-themed-content[data-theme="..."]`
+- `App.jsx` — `ThemedLayout` layout route wraps all protected routes in ThemeProvider
+
+**Exclusion mechanism:** `PageHeader` and `NavBar` carry `beacon-no-theme` class.
+Theme CSS uses `:not(.beacon-no-theme)` selectors so header/nav are never restyled.
+
+Text sizes: `small` (0.875rem), `normal` (1rem), `large` (1.125rem), `xlarge` (1.25rem).
+Themes: `default`, `high-contrast`, `warm`, `green`, `dark`.
+
 ### Shared components
 
-- `PageHeader` — logo + tenant name + version (`text-xl sm:text-4xl`)
-- `NavBar` — glass-effect backdrop, blue links, `–` separator. Accepts `links` prop (not `items`)
+- `PageHeader` — logo + tenant name + version (`text-xl sm:text-4xl`). Has `beacon-no-theme` class.
+- `NavBar` — glass-effect backdrop, blue links, `–` separator. Accepts `links` prop (not `items`). Has `beacon-no-theme` class.
 - `SortableHeader` + `useSortedData` — sortable columns with ▲/▼/⇅ indicator
 - `DateInput` — UK dd/mm/yyyy display, ISO value, calendar picker button
 - `ScrollButtons` — dual fixed-position scroll-to-top/bottom buttons (doc 6 "Table Lists").
