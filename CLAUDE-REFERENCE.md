@@ -442,6 +442,20 @@ All in `tenant_schema.sql` (idempotent):
   `TransactionEditor.jsx` shows refund/refunded banners and "Refund this transaction"
   nav link on eligible transactions; read-only mode for refunded/refund transactions
 
+### Payment Method Defaults (doc 8.6c)
+
+- Table `payment_method_defaults` — `payment_method` TEXT PK, `account_id` TEXT, `updated_at`
+- Special key `_default_method` stores the overall default payment method name in `account_id`
+- All other rows map a payment method name (e.g. 'Cash') to a default `account_id`
+- `GET /finance/payment-method-defaults` returns `{ defaultMethod, mappings }`
+- `PUT /finance/payment-method-defaults` upserts all rows; validates account IDs exist
+- Privilege: `finance_accounts:change` (no new privilege needed)
+- Frontend: `PaymentMethodDefaults.jsx` at `/finance/payment-method-defaults`
+- Linked from `FinanceAccounts.jsx` at top and bottom of the page
+- Consumers: `MemberEditor.jsx` (new member payment) and `MembershipRenewals.jsx`
+  both fetch defaults on load, pre-select default method + mapped account, and
+  auto-switch account when payment method changes
+
 ### Transfer Money (doc 7.3)
 
 - Routes: `GET/POST/PATCH/DELETE /finance/transfers` — privilege `finance_transfer_money`

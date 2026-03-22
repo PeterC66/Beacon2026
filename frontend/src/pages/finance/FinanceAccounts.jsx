@@ -2,7 +2,7 @@
 // Finance accounts management — 8.6 Finance Set-up, section 1.
 
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { finance as financeApi } from '../../lib/api.js';
 import { useAuth } from '../../context/AuthContext.jsx';
 import NavBar from '../../components/NavBar.jsx';
@@ -88,6 +88,7 @@ export default function FinanceAccounts() {
     } catch (err) { alert(err.message); }
   }
 
+  const navigate  = useNavigate();
   const canChange = can('finance_accounts', 'change');
   const canCreate = can('finance_accounts', 'create');
   const canDelete = can('finance_accounts', 'delete');
@@ -103,6 +104,14 @@ export default function FinanceAccounts() {
         <p className="text-sm text-slate-500 text-center mb-5">
           Each account corresponds to a bank account, PayPal account, cash or similar.
         </p>
+
+        {!loading && !error && (
+          <p className="text-right mb-3">
+            <Link to="/finance/payment-method-defaults" className="text-sm text-blue-600 hover:underline">
+              Membership Payment Method Defaults
+            </Link>
+          </p>
+        )}
 
         {loading && <p className="text-center text-slate-500">Loading…</p>}
         {error   && <p className="text-center text-red-600">Error: {error}</p>}
@@ -218,6 +227,14 @@ export default function FinanceAccounts() {
             />
             Display Group brought forward balances at the start of the financial year
           </label>
+        )}
+
+        {!loading && !error && (
+          <p className="text-right mt-3">
+            <Link to="/finance/payment-method-defaults" className="text-sm text-blue-600 hover:underline">
+              Membership Payment Method Defaults
+            </Link>
+          </p>
         )}
       </div>
 

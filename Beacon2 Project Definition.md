@@ -77,7 +77,9 @@ Beacon2 is a ground-up rebuild with these goals:
 
 ### Finance module
 - **Finance accounts** — CRUD, locked protection, active toggle, balance b/f,
-  Group B/F tickbox (7.10.6 / 8.6)
+  Group B/F tickbox (7.10.6 / 8.6); Membership Payment Method Defaults page
+  (doc 8.6c) — default payment method and per-type default account; auto-populates
+  MemberEditor and MembershipRenewals; auto-switches account on method change
 - **Finance categories** — same pattern
 - **Financial ledger** — account/category/group views; year selector; running balance;
   group view shows per-group B/F rows when enabled (7.10.6)
