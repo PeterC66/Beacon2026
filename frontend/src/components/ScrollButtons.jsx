@@ -55,11 +55,21 @@ export default function ScrollButtons({ containerRef }) {
     update();
     window.addEventListener('scroll', update, { passive: true });
     window.addEventListener('resize', update, { passive: true });
+
+    // Re-check when the container itself resizes (e.g. data loads async)
+    const el = containerRef?.current;
+    let ro;
+    if (el && typeof ResizeObserver !== 'undefined') {
+      ro = new ResizeObserver(update);
+      ro.observe(el);
+    }
+
     return () => {
       window.removeEventListener('scroll', update);
       window.removeEventListener('resize', update);
+      if (ro) ro.disconnect();
     };
-  }, [update]);
+  }, [update, containerRef]);
 
   const scrollToTop = () => {
     const el = containerRef?.current;
