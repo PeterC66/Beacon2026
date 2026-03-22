@@ -65,6 +65,7 @@ import PortalVerifyEmail   from './pages/public/PortalVerifyEmail.jsx';
 import PortalForgotPassword from './pages/public/PortalForgotPassword.jsx';
 import PortalResetPassword  from './pages/public/PortalResetPassword.jsx';
 import ChangePassword       from './pages/ChangePassword.jsx';
+import CustomFields         from './pages/settings/CustomFields.jsx';
 
 function ProtectedRoute({ children }) {
   const { isLoggedIn, mustChangePassword } = useAuth();
@@ -133,6 +134,7 @@ const router = createBrowserRouter([
   { path: '/finance/batches',                       element: <ProtectedRoute><CreditBatches /></ProtectedRoute> },
   { path: '/admin/validate-members',              element: <ProtectedRoute><MemberValidator /></ProtectedRoute> },
   { path: '/polls',                               element: <ProtectedRoute><PollList /></ProtectedRoute> },
+  { path: '/custom-fields',                       element: <ProtectedRoute><CustomFields /></ProtectedRoute> },
   { path: '/audit',                               element: <ProtectedRoute><AuditLog /></ProtectedRoute> },
   { path: '/audit/:id',                            element: <ProtectedRoute><AuditRecord /></ProtectedRoute> },
   { path: '/gift-aid-log',                         element: <ProtectedRoute><GiftAidLog /></ProtectedRoute> },

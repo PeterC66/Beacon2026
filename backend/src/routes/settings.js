@@ -61,6 +61,26 @@ router.get('/new-member-defaults', async (req, res, next) => {
   }
 });
 
+// ─── GET /settings/custom-field-labels ───────────────────────────────────
+// Returns the custom field labels. No special privilege — any authenticated
+// user viewing a member record needs these.
+router.get('/custom-field-labels', async (req, res, next) => {
+  try {
+    const [row] = await tenantQuery(
+      req.user.tenantSlug,
+      `SELECT custom_field_label_1, custom_field_label_2,
+              custom_field_label_3, custom_field_label_4
+       FROM tenant_settings WHERE id = 'singleton'`,
+    );
+    res.json({
+      label1: row?.custom_field_label_1 ?? '',
+      label2: row?.custom_field_label_2 ?? '',
+      label3: row?.custom_field_label_3 ?? '',
+      label4: row?.custom_field_label_4 ?? '',
+    });
+  } catch (err) { next(err); }
+});
+
 // ─── GET /settings ────────────────────────────────────────────────────────
 router.get('/', requirePrivilege('settings', 'view'), async (req, res, next) => {
   try {
