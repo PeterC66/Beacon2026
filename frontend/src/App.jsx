@@ -45,6 +45,7 @@ import RecentMembers      from './pages/members/RecentMembers.jsx';
 import MemberStatistics   from './pages/members/MemberStatistics.jsx';
 import MembershipRenewals from './pages/membership/MembershipRenewals.jsx';
 import NonRenewals        from './pages/membership/NonRenewals.jsx';
+import MembershipCards    from './pages/membership/MembershipCards.jsx';
 import EmailCompose        from './pages/email/EmailCompose.jsx';
 import EmailDelivery       from './pages/email/EmailDelivery.jsx';
 import EmailDeliveryDetail from './pages/email/EmailDeliveryDetail.jsx';
@@ -87,6 +88,7 @@ const router = createBrowserRouter([
   { path: '/membership/classes/new',  element: <ProtectedRoute><MemberClassEditor /></ProtectedRoute> },
   { path: '/membership/classes/:id',  element: <ProtectedRoute><MemberClassEditor /></ProtectedRoute> },
   { path: '/membership/statuses',     element: <ProtectedRoute><MemberStatusList /></ProtectedRoute> },
+  { path: '/membership/cards',       element: <ProtectedRoute><MembershipCards /></ProtectedRoute> },
   { path: '/members',             element: <ProtectedRoute><MemberList /></ProtectedRoute> },
   { path: '/members/new',         element: <ProtectedRoute><MemberEditor /></ProtectedRoute> },
   { path: '/members/recent',       element: <ProtectedRoute><RecentMembers /></ProtectedRoute> },

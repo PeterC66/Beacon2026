@@ -1,6 +1,6 @@
 {
   "name": "beacon2-backend",
-  "version": "0.5.9",
+  "version": "0.5.10",
   "description": "Beacon2 API server",
   "type": "module",
   "main": "src/app.js",
@@ -20,6 +20,7 @@
     "@prisma/client": "^5.0.0",
     "@sendgrid/mail": "^8.1.6",
     "bcrypt": "^5.1.1",
+    "bwip-js": "^4.8.0",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
     "dotenv": "^16.3.1",

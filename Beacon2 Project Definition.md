@@ -54,6 +54,10 @@ Beacon2 is a ground-up rebuild with these goals:
 - **Statistics** — per-class counts, status breakdown, group stats, renewal stats
 - **Membership renewals** — period tabs, bulk renew with finance transactions
 - **Non-renewals** — this year / long term modes; bulk lapse / delete
+- **Membership cards** — card-printed tracking; radio-button filters (outstanding/poll/all);
+  download PDF cards (85×54mm, 10 per A4, Code 128 barcode); blank cards PDF;
+  Excel card data export; send card by email; mark-as-printed flow;
+  advance expiry to next year option
 - **Addresses export** — filtered download (Excel/CSV/TSV/TAM) + PDF label printing
 
 ### Groups module
@@ -222,7 +226,7 @@ Greyed-out items in `Home.jsx` (i.e. `to: null`) are the remaining roadmap:
 **Not yet started:**
 - Letters & documents
 - Meetings
-- Membership cards
+- ~~Membership cards~~ (done)
 - ~~Calendar~~ (done)
 - Data migration tool (standalone import from Beacon — restore already handles this)
 - Members Portal — full self-service features (registration/login built; view/update details,

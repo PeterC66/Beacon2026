@@ -47,6 +47,16 @@ Items noted during development that need addressing in future sessions.
 
 ---
 
+## Membership Cards (doc 4.7)
+
+1. **Auto-attach cards to confirmation emails** — `email_cards` setting exists in
+   tenant_settings but the integration with the online joining/renewal confirmation
+   email flow is not yet implemented. Ref: doc 4.7 section about System Settings.
+
+2. **Members Portal: Order replacement card** — doc 10.2.5 describes a portal feature
+   where members can order a replacement membership card. Not yet built; requires
+   the Members Portal self-service features to be completed first.
+
 ## Accessibility / E2E
 
 1. **Form labels missing `htmlFor`/`id` association** — ~106 `<label>` elements

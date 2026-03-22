@@ -50,6 +50,7 @@ export const ALL_PRIVS = [
   'system_messages:view', 'system_messages:change',
   'calendar:view', 'calendar:download',
   'meetings:view', 'meetings:create', 'meetings:change', 'meetings:delete',
+  'membership_cards:view', 'membership_cards:download_and_mark',
 ];
 
 export const TEST_TENANT = 'test-u3a';
