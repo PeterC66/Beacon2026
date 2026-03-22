@@ -97,6 +97,11 @@ export default function MemberEditor() {
   const [addressShared,  setAddressShared]  = useState(false);
   // Display name of the linked partner (from server)
   const [partnerName,    setPartnerName]    = useState('');
+  // Partner's status/class for shared address warning
+  const [partnerStatusId, setPartnerStatusId] = useState('');
+  const [partnerClassId,  setPartnerClassId2] = useState('');
+  // System setting: warn when saving shared address with differing status/class
+  const sharedAddrWarn = useRef(false);
   // True when the partner dropdown was changed during this edit session
   const [partnerChanged, setPartnerChanged] = useState(false);
 
@@ -201,6 +206,11 @@ export default function MemberEditor() {
       }).catch(() => {});
     }
 
+    // Load shared address warning setting
+    settingsApi.get().then((s) => {
+      sharedAddrWarn.current = !!s.shared_address_warning;
+    }).catch(() => {});
+
     if (!isNew) {
       // Load groups and transactions for the Groups & Ledger section
       setLedgerLoading(true);
@@ -244,6 +254,8 @@ export default function MemberEditor() {
           if (m.partner_forenames || m.partner_surname) {
             setPartnerName(`${m.partner_forenames ?? ''} ${m.partner_surname ?? ''}`.trim());
           }
+          setPartnerStatusId(m.partner_status_id ?? '');
+          setPartnerClassId2(m.partner_class_id ?? '');
           setMemberPollIds(m.poll_ids ?? []);
         })
         .catch((err) => setError(err.message))
@@ -523,6 +535,16 @@ export default function MemberEditor() {
             `Click OK for both, Cancel for just ${thisName}.`
           );
           patchPayload.addressScope = choice ? 'both' : 'me-only';
+        }
+
+        // Shared address warning: alert if partner has different status or class
+        if (sharedAddrWarn.current && addressShared && partnerName && !partnerChanged) {
+          const statusDiff = partnerStatusId && form.statusId && partnerStatusId !== form.statusId;
+          const classDiff  = partnerClassId2 && form.classId && partnerClassId2 !== form.classId;
+          if (statusDiff || classDiff) {
+            const diffs = [statusDiff && 'status', classDiff && 'class'].filter(Boolean).join(' and ');
+            alert(`Note: ${partnerName} shares this address but has a different ${diffs}.`);
+          }
         }
 
         await membersApi.update(id, patchPayload);

@@ -3,7 +3,7 @@
 
 import { useState, useEffect, useMemo, useRef } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
-import { finance as financeApi, groups as groupsApi, members as membersApi } from '../../lib/api.js';
+import { finance as financeApi, groups as groupsApi, members as membersApi, settings as settingsApi } from '../../lib/api.js';
 import { useAuth } from '../../context/AuthContext.jsx';
 import NavBar from '../../components/NavBar.jsx';
 import PageHeader from '../../components/PageHeader.jsx';
@@ -70,16 +70,21 @@ export default function TransactionEditor() {
   useEffect(() => {
     async function loadRef() {
       try {
-        const [acc, cat, grp, mem] = await Promise.all([
+        const [acc, cat, grp, mem, sysSettings] = await Promise.all([
           financeApi.listAccounts(),
           financeApi.listCategories(),
           groupsApi.list(),
           membersApi.list(),
+          isNew ? settingsApi.get().catch(() => null) : null,
         ]);
         setAccounts(acc.filter((a) => a.active));
         setCategories(cat.filter((c) => c.active));
         setGroups(grp);
         setAllMembers(mem);
+        // Pre-fill default payment method from system settings for new transactions
+        if (isNew && sysSettings?.default_payment_method) {
+          setForm((f) => f.payment_method ? f : { ...f, payment_method: sysSettings.default_payment_method });
+        }
       } catch (err) {
         setError(err.message);
       }

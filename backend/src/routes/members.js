@@ -796,12 +796,16 @@ router.get('/:id', requirePrivilege('member_record', 'view'), async (req, res, n
               a.town, a.county, a.postcode, a.telephone,
               p.forenames AS partner_forenames, p.surname AS partner_surname,
               p.membership_number AS partner_number,
+              p.status_id AS partner_status_id, ps.name AS partner_status_name,
+              p.class_id AS partner_class_id, pc.name AS partner_class_name,
               (p.id IS NOT NULL AND p.address_id = m.address_id) AS address_shared
        FROM members m
        LEFT JOIN member_statuses ms ON ms.id = m.status_id
        LEFT JOIN member_classes  mc ON mc.id = m.class_id
        LEFT JOIN addresses        a ON a.id  = m.address_id
        LEFT JOIN members          p ON p.id  = m.partner_id
+       LEFT JOIN member_statuses ps ON ps.id = p.status_id
+       LEFT JOIN member_classes  pc ON pc.id = p.class_id
        WHERE m.id = $1`,
       [req.params.id],
     );

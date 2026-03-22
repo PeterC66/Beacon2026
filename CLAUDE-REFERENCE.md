@@ -183,10 +183,33 @@ function fmtDate(d) {
 
 "Hide Address from group leaders" is **deprecated** — replaced by per-group `show_addresses`.
 
+### Settings wired into the system
+
+| Setting | Where consumed |
+|---------|---------------|
+| `card_colour` | Membership card PDF rendering (`membershipCards.js`) |
+| `fee_variation` | Fee lookup logic in member creation/gift aid |
+| `extended_membership_month` | Renewal date computation (`MemberEditor.jsx`) |
+| `advance_renewals_weeks` | Renewal tab visibility (`members.js`) |
+| `grace_lapse_weeks` | Non-renewals/statistics display |
+| `deletion_years` | Non-renewals deletion cutoff |
+| `default_town/county/std_code` | Pre-fill new member and online join forms |
+| `gift_aid_enabled` | Controls gift aid features system-wide |
+| `paypal_email/cancel_url` | PayPal payment flow |
+| `year_start_month/day` | Core membership year calculations everywhere |
+| `default_payment_method` | Fallback pre-fill in TransactionEditor for new transactions |
+| `shared_address_warning` | Alert in MemberEditor when saving shared address with differing partner status/class |
+| `online_join_email` | Reply-to on joining confirmation emails + displayed on JoinForm |
+| `online_renew_email` | Reply-to on renewal emails (when online renewals implemented) |
+
+**Deferred**: `public_phone/email`, `home_page`, `email_cards`, `gift_aid_online_renewals` — see KNOWN-ISSUES.md.
+
 ### API
 
 - `GET /settings` — requires `settings:view`
 - `PATCH /settings` — requires `settings:change`
+- `GET /settings/year-config` — no privilege (any authenticated user)
+- `GET /settings/new-member-defaults` — no privilege (any authenticated user)
 
 ### Test note
 

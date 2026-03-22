@@ -319,6 +319,13 @@ export default function JoinForm() {
               </p>
             )}
 
+            {config?.onlineJoinEmail && (
+              <p className="text-xs text-slate-500 mb-4">
+                For enquiries about joining, please contact{' '}
+                <a href={`mailto:${config.onlineJoinEmail}`} className="text-blue-700 hover:underline">{config.onlineJoinEmail}</a>.
+              </p>
+            )}
+
             <button
               type="submit"
               disabled={submitting}
