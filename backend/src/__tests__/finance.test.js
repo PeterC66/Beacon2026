@@ -202,6 +202,7 @@ describe('POST /finance/transactions', () => {
 
   it('creates transaction and returns 201', async () => {
     tenantQuery
+      .mockResolvedValueOnce([{ pending_config: 'disabled', pending_types: [] }])  // account lookup
       .mockResolvedValueOnce([{ id: 't1', transaction_number: 1 }])  // INSERT
       .mockResolvedValueOnce([]);                                       // INSERT category
     const payload = {
@@ -211,6 +212,23 @@ describe('POST /finance/transactions', () => {
     const res = await request(app).post('/finance/transactions').set('Authorization', AUTH).send(payload);
     expect(res.status).toBe(201);
     expect(res.body.transaction_number).toBe(1);
+  });
+
+  it('auto-sets pending for by_type config', async () => {
+    tenantQuery
+      .mockResolvedValueOnce([{ pending_config: 'by_type', pending_types: ['BACS'] }])
+      .mockResolvedValueOnce([{ id: 't2', transaction_number: 2 }])
+      .mockResolvedValueOnce([]);
+    const payload = {
+      account_id: 'a1', date: '2026-03-01', type: 'in',
+      amount: 15, payment_method: 'BACS',
+      categories: [{ category_id: 'c1', amount: 15 }],
+    };
+    const res = await request(app).post('/finance/transactions').set('Authorization', AUTH).send(payload);
+    expect(res.status).toBe(201);
+    // The INSERT call should include pending=true as the last param
+    const insertCall = tenantQuery.mock.calls[1];
+    expect(insertCall[2][12]).toBe(true); // pending param
   });
 
   it('returns 400 when category amounts do not sum to total', async () => {
@@ -252,5 +270,58 @@ describe('DELETE /finance/transactions/:id', () => {
     tenantQuery.mockResolvedValueOnce([]);
     const res = await request(app).delete('/finance/transactions/unknown').set('Authorization', AUTH);
     expect(res.status).toBe(404);
+  });
+});
+
+// ── PATCH /finance/transactions/bulk-pending ─────────────────────────────
+
+describe('PATCH /finance/transactions/bulk-pending', () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it('confirms pending transactions', async () => {
+    tenantQuery
+      .mockResolvedValueOnce([{ id: 't1', cleared_at: null, transfer_id: null, batch_id: null }])
+      .mockResolvedValueOnce([]);
+    const res = await request(app)
+      .patch('/finance/transactions/bulk-pending')
+      .set('Authorization', AUTH)
+      .send({ ids: ['t1'], pending: false });
+    expect(res.status).toBe(200);
+    expect(res.body.count).toBe(1);
+  });
+
+  it('rejects cleared transactions', async () => {
+    tenantQuery.mockResolvedValueOnce([{ id: 't1', cleared_at: '2026-01-01', transfer_id: null, batch_id: null }]);
+    const res = await request(app)
+      .patch('/finance/transactions/bulk-pending')
+      .set('Authorization', AUTH)
+      .send({ ids: ['t1'], pending: true });
+    expect(res.status).toBe(400);
+  });
+
+  it('rejects transfer transactions', async () => {
+    tenantQuery.mockResolvedValueOnce([{ id: 't1', cleared_at: null, transfer_id: 'tf1', batch_id: null }]);
+    const res = await request(app)
+      .patch('/finance/transactions/bulk-pending')
+      .set('Authorization', AUTH)
+      .send({ ids: ['t1'], pending: true });
+    expect(res.status).toBe(400);
+  });
+
+  it('rejects batched transactions', async () => {
+    tenantQuery.mockResolvedValueOnce([{ id: 't1', cleared_at: null, transfer_id: null, batch_id: 'b1' }]);
+    const res = await request(app)
+      .patch('/finance/transactions/bulk-pending')
+      .set('Authorization', AUTH)
+      .send({ ids: ['t1'], pending: false });
+    expect(res.status).toBe(400);
+  });
+
+  it('returns 422 when ids array is empty', async () => {
+    const res = await request(app)
+      .patch('/finance/transactions/bulk-pending')
+      .set('Authorization', AUTH)
+      .send({ ids: [], pending: true });
+    expect(res.status).toBe(422);
   });
 });

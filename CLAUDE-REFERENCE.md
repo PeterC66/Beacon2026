@@ -349,7 +349,7 @@ All in `tenant_schema.sql` (idempotent):
 | `finance_accounts` | `active`, `locked`, `sort_order`, `balance_brought_forward` |
 | `finance_categories` | same pattern as accounts |
 | `transaction_number_seq` | sequential integer |
-| `transactions` | `type IN ('in','out')`, `amount >= 0`, `cleared_at DATE`, `transfer_id TEXT` |
+| `transactions` | `type IN ('in','out')`, `amount >= 0`, `cleared_at DATE`, `transfer_id TEXT`, `pending BOOLEAN` |
 | `transaction_categories` | splits; `SUM(amount)` must equal `transactions.amount` |
 
 ### Backend routes (`finance.js`)
@@ -359,6 +359,7 @@ All in `tenant_schema.sql` (idempotent):
 | `GET/POST/PATCH/DELETE /finance/accounts` | `finance_accounts:*` |
 | `GET/POST/PATCH/DELETE /finance/categories` | `finance_categories:*` |
 | `GET /finance/transactions` (ledger query) | `finance_ledger:view` |
+| `PATCH /finance/transactions/bulk-pending` | `finance_transactions:change` |
 | `GET/POST/PATCH/DELETE /finance/transactions/:id` | `finance_transactions:*` |
 
 **Rules enforced server-side:**
@@ -399,6 +400,25 @@ All in `tenant_schema.sql` (idempotent):
 - `clearedBalance = balance_brought_forward + SUM(cleared in - cleared out)`
 - `POST /finance/reconcile` sets `cleared_at = statementDate` for selected transactions
 - Frontend: `ReconcileAccount.jsx` at `/finance/reconcile`
+
+### Pending Transactions (docs 7.10.5, 8.6d)
+
+- `transactions.pending BOOLEAN NOT NULL DEFAULT false` — added via `ALTER TABLE`
+- Account-level config in `finance_accounts`: `pending_config` (`disabled`/`optional`/`by_type`),
+  `pending_types TEXT[]` (e.g. `['BACS', 'Standing Order']`)
+- **Auto-pending on creation**: backend reads account config. `disabled` → always false,
+  `by_type` → set true if payment_method is in `pending_types`, `optional` → use client value
+- **Transfers cannot be pending** — blocked in both PATCH and bulk-pending endpoints
+- **Ledger display**: Cleared column shows "Pending" (amber text) for pending rows;
+  Balance column is blank for pending rows; running balance skips pending transactions
+- **Bulk actions**: checkbox column in account view, "Confirm / Make pending" dropdown,
+  `PATCH /finance/transactions/bulk-pending` endpoint. Eligibility: not cleared, not batched,
+  not a transfer. Route defined **before** `/transactions/:id` to avoid Express param match.
+- **Financial Statement**: all queries add `AND pending = false`; returns `pendingCount`;
+  frontend shows amber warning banner when `pendingCount > 0`
+- **Opening balance** (both ledger and statement): excludes pending transactions
+- **Payment methods aligned**: `TransactionEditor` uses same list as `ConfigureAccount`
+  (`Cheque, Cash, PayPal, Standing Order, Direct Debit, BACS, Debit card, Account transfer, Credit card`)
 
 ### Financial Statement (doc 7.6)
 

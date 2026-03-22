@@ -106,6 +106,14 @@ export default function FinancialStatement() {
 
         {error && <p className="rounded-md bg-red-50 border border-red-300 px-4 py-3 text-red-700 text-sm mb-4">{error}</p>}
 
+        {data && data.pendingCount > 0 && (
+          <div className="bg-amber-50 border border-amber-300 rounded-lg px-4 py-3 text-amber-800 text-sm mb-4">
+            <strong>Note:</strong> {data.pendingCount} pending transaction{data.pendingCount === 1 ? '' : 's'}{' '}
+            {data.pendingCount === 1 ? 'has' : 'have'} been excluded from this statement.
+            Pending transactions are payments promised but not yet received.
+          </div>
+        )}
+
         {data && (
           <>
             {/* Period header */}

@@ -328,6 +328,7 @@ export const finance = {
   createTransaction: (data)     => request('/finance/transactions', { method: 'POST', body: JSON.stringify(data) }),
   updateTransaction: (id, data) => request(`/finance/transactions/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
   deleteTransaction: (id)       => request(`/finance/transactions/${id}`, { method: 'DELETE' }),
+  bulkPending:       (ids, pending) => request('/finance/transactions/bulk-pending', { method: 'PATCH', body: JSON.stringify({ ids, pending }) }),
 
   // Transfers
   listTransfers:   ()              => request('/finance/transfers'),

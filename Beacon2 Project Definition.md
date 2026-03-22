@@ -80,8 +80,12 @@ Beacon2 is a ground-up rebuild with these goals:
   appear as single rows in reconciliation
 - **Reconcile account** — mark transactions as cleared against statement;
   supports clearing whole batches in one tick
-- **Financial statement** — per-account or all-accounts; year selector; download Excel
+- **Financial statement** — per-account or all-accounts; year selector; download Excel;
+  excludes pending transactions with warning banner
 - **Groups statement** — per-group ledger summary; optional transactions; download
+- **Pending transactions** — per-account config (disabled/optional/by_type); auto-pending
+  on creation; bulk confirm/make-pending from ledger; excluded from running balance
+  and financial statement
 
 ### Gift Aid module
 - **Gift Aid declaration** — financial-year filtered view of GA-eligible transactions;

@@ -10,7 +10,8 @@ import PageHeader from '../../components/PageHeader.jsx';
 import DateInput from '../../components/DateInput.jsx';
 import { useUnsavedChanges } from '../../hooks/useUnsavedChanges.js';
 
-const PAYMENT_METHODS = ['', 'Cash', 'Cheque', 'Standing Order', 'Direct Debit', 'Online', 'Other'];
+const PAYMENT_METHODS = ['', 'Cheque', 'Cash', 'PayPal', 'Standing Order', 'Direct Debit',
+                         'BACS', 'Debit card', 'Account transfer', 'Credit card'];
 
 const today = () => new Date().toISOString().slice(0, 10);
 
@@ -27,6 +28,7 @@ const BLANK = {
   member_id_1:    '',
   member_id_2:    '',
   group_id:       '',
+  pending:        false,
 };
 
 export default function TransactionEditor() {
@@ -54,6 +56,7 @@ export default function TransactionEditor() {
   const [batchId,    setBatchId]    = useState(null);
   const [batchRef,   setBatchRef]   = useState(null);
   const [removeBatch, setRemoveBatch] = useState(false);
+  const [isTransfer, setIsTransfer] = useState(false);
   const savedTimer = useRef(null);
   const { markDirty, markClean } = useUnsavedChanges();
 
@@ -99,11 +102,13 @@ export default function TransactionEditor() {
           member_id_1:    t.member_id_1    ?? '',
           member_id_2:    t.member_id_2    ?? '',
           group_id:       t.group_id       ?? '',
+          pending:        t.pending        ?? false,
         });
         setCleared(!!t.cleared_at);
         setTxnNumber(t.transaction_number);
         setBatchId(t.batch_id ?? null);
         setBatchRef(t.batch_ref ?? null);
+        setIsTransfer(!!t.transfer_id);
         // populate category amounts
         const amounts = {};
         if (Array.isArray(t.categories)) {
@@ -120,6 +125,11 @@ export default function TransactionEditor() {
   }, [id, isNew]);
 
   const set = (k, v) => { markDirty(); setForm((f) => ({ ...f, [k]: v })); };
+
+  // Determine pending configuration for the selected account
+  const selectedAccount = accounts.find((a) => a.id === form.account_id);
+  const pendingConfig = selectedAccount?.pending_config ?? 'disabled';
+  const showPending = pendingConfig === 'optional' && !isTransfer;
 
   const catTotal = useMemo(() => {
     return Object.values(catAmounts).reduce((s, v) => {
@@ -168,6 +178,7 @@ export default function TransactionEditor() {
       member_id_1:    form.member_id_1    || null,
       member_id_2:    form.member_id_2    || null,
       group_id:       form.group_id       || null,
+      pending:        form.pending,
       categories:     cats,
     };
     if (removeBatch) payload.batch_id = null;
@@ -200,7 +211,7 @@ export default function TransactionEditor() {
           savedTimer.current = setTimeout(() => {
             setSaved(false);
             // Reset form but keep account, date, type, payment_method
-            setForm((f) => ({ ...BLANK, account_id: f.account_id, date: f.date, type: f.type, payment_method: f.payment_method }));
+            setForm((f) => ({ ...BLANK, account_id: f.account_id, date: f.date, type: f.type, payment_method: f.payment_method, pending: false }));
             setCatAmounts({});
           }, 1000);
         } else {
@@ -380,6 +391,33 @@ export default function TransactionEditor() {
                 placeholder="Cheque number or other reference"
               />
             </div>
+
+            {/* Pending checkbox — only shown when account has pending_config = 'optional' */}
+            {showPending && (
+              <div className="sm:col-span-2 flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  id="pending"
+                  checked={form.pending}
+                  onChange={(e) => set('pending', e.target.checked)}
+                  disabled={cleared}
+                  className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                />
+                <label htmlFor="pending" className="text-sm font-medium text-slate-700">
+                  Pending (payment promised but not yet received)
+                </label>
+              </div>
+            )}
+
+            {/* Pending info for by_type mode */}
+            {pendingConfig === 'by_type' && !isTransfer && (
+              <div className="sm:col-span-2">
+                <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded px-3 py-1.5">
+                  Pending status is set automatically based on payment method for this account.
+                  {form.pending && ' This transaction is currently pending.'}
+                </p>
+              </div>
+            )}
 
             {/* Detail */}
             <div className="sm:col-span-2">
