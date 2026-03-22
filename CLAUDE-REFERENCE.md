@@ -739,6 +739,9 @@ Design decisions:
 - `NavBar` — glass-effect backdrop, blue links, `–` separator. Accepts `links` prop (not `items`)
 - `SortableHeader` + `useSortedData` — sortable columns with ▲/▼/⇅ indicator
 - `DateInput` — UK dd/mm/yyyy display, ISO value, calendar picker button
+- `ScrollButtons` — dual fixed-position scroll-to-top/bottom buttons (doc 6 "Table Lists").
+  Pass `containerRef` (a ref to the table wrapper div). Only appears when the container
+  overflows the viewport. Used on 12 list pages.
 
 ### Save success feedback
 
