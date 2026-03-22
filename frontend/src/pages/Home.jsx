@@ -23,7 +23,7 @@ export default function Home() {
         { label: 'Membership renewals', to: can('membership_renewals', 'view') ? '/membership/renewals' : null },
         { label: 'Recent members',      to: can('members_recent', 'view') ? '/members/recent' : null },
         { label: 'Non-renewals',        to: can('members_non_renewals', 'view') ? '/membership/non-renewals' : null },
-        { label: 'Membership cards',    to: null },
+        { label: 'Membership cards',    to: can('membership_cards', 'view') ? '/membership/cards' : null },
         { label: 'Addresses export',    to: can('addresses_export', 'view') ? '/addresses-export' : null },
         { label: 'Statistics',          to: can('membership_statistics', 'view') ? '/members/statistics' : null },
       ],

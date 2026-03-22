@@ -604,3 +604,6 @@ CREATE INDEX IF NOT EXISTS :schema_idx_members_portal_email ON :schema.members (
 
 INSERT INTO :schema.member_statuses (name) VALUES ('Applicant')
 ON CONFLICT (name) DO NOTHING;
+
+-- ─── Membership card tracking ────────────────────────────────────────
+ALTER TABLE :schema.members ADD COLUMN IF NOT EXISTS card_printed BOOLEAN NOT NULL DEFAULT false;

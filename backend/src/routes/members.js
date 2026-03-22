@@ -459,6 +459,7 @@ router.post('/renew', requirePrivilege('membership_renewals', 'renew'), async (r
            SET next_renewal  = $1::date,
                status_id     = $2,
                gift_aid_from = $3::date,
+               card_printed  = false,
                updated_at    = now()
            WHERE id = $4`,
           [newNextRenewal, newStatusId, giftAidFrom === 'TODAY' ? new Date().toISOString().slice(0, 10) : giftAidFrom, memberId],
@@ -1302,7 +1303,8 @@ router.patch('/:id', requirePrivilege('member_record', 'change'), async (req, re
     if (data.suffix      !== undefined) { fields.push(`suffix = $${i++}`);       values.push(data.suffix); }
     if (data.email       !== undefined) { fields.push(`email = $${i++}`);        values.push(data.email ? data.email.toLowerCase() : null); }
     if (data.mobile      !== undefined) { fields.push(`mobile = $${i++}`);       values.push(data.mobile); }
-    if (data.statusId    !== undefined) { fields.push(`status_id = $${i++}`);    values.push(data.statusId); }
+    if (data.statusId    !== undefined) { fields.push(`status_id = $${i++}`);    values.push(data.statusId);
+                                         fields.push('card_printed = false'); }
     if (data.classId     !== undefined) { fields.push(`class_id = $${i++}`);     values.push(data.classId); }
     if (data.joinedOn    !== undefined) { fields.push(`joined_on = $${i++}::date`);    values.push(data.joinedOn); }
     if (data.nextRenewal !== undefined) { fields.push(`next_renewal = $${i++}::date`); values.push(data.nextRenewal); }

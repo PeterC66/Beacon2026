@@ -595,6 +595,32 @@ export const calendar = {
   deleteOpenEvents:(ids)          => request('/calendar/open-events', { method: 'DELETE', body: JSON.stringify({ ids }) }),
 };
 
+// ─── Membership Cards ────────────────────────────────────────────────────
+
+export const membershipCards = {
+  list: (params = {}) => {
+    const qs = new URLSearchParams();
+    if (params.show)   qs.set('show',   params.show);
+    if (params.pollId) qs.set('pollId', params.pollId);
+    const q = qs.toString();
+    return request(`/membership-cards${q ? '?' + q : ''}`);
+  },
+  downloadCards: (ids, advanceYear) => {
+    const qs = new URLSearchParams({ ids: ids.join(','), advanceYear: advanceYear ? '1' : '0' });
+    return requestBlob(`/membership-cards/download?${qs}`);
+  },
+  downloadBlank: (advanceYear) => {
+    const qs = new URLSearchParams({ advanceYear: advanceYear ? '1' : '0' });
+    return requestBlob(`/membership-cards/blank?${qs}`);
+  },
+  downloadExcel: (ids, advanceYear) => {
+    const qs = new URLSearchParams({ ids: ids.join(','), advanceYear: advanceYear ? '1' : '0' });
+    return requestBlob(`/membership-cards/excel?${qs}`);
+  },
+  markPrinted: (memberIds) =>
+    request('/membership-cards/mark-printed', { method: 'POST', body: JSON.stringify({ memberIds }) }),
+};
+
 // ─── Public Links ─────────────────────────────────────────────────────────
 
 export const publicLinks = {

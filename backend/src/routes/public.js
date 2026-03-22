@@ -263,7 +263,7 @@ router.post('/:slug/payment-confirm', async (req, res, next) => {
     if (currentStatus) {
       await tenantQuery(
         slug,
-        `UPDATE members SET status_id = $1, updated_at = now() WHERE id = $2`,
+        `UPDATE members SET status_id = $1, card_printed = false, updated_at = now() WHERE id = $2`,
         [currentStatus.id, member.id],
       );
     }
