@@ -303,6 +303,7 @@ export default function FinanceLedger() {
                         <th className={`${TH} text-right`}>In</th>
                         <th className={`${TH} text-right`}>Out</th>
                         {view === 'account' && <th className={`${TH} text-right`}>Balance</th>}
+                        <th className={`${TH} text-center`}>Refund</th>
                         <SortableHeader col="cleared_at"         label="Cleared" sortKey={sortKey} sortDir={sortDir} onSort={onSort} className={`${TH} text-center`} />
                       </tr>
                     </thead>
@@ -317,6 +318,7 @@ export default function FinanceLedger() {
                           <td className="px-3 py-2"></td>
                           <td className="px-3 py-2 text-right font-medium text-slate-700">{fmtAmount(openingBal)}</td>
                           <td className="px-3 py-2"></td>
+                          <td className="px-3 py-2"></td>
                         </tr>
                       )}
                       {view === 'group' && groupBf.length > 0 && groupBf.map((bf) => (
@@ -328,6 +330,7 @@ export default function FinanceLedger() {
                           </td>
                           <td className="px-3 py-2 text-right text-green-700">{bf.balance >= 0 ? fmtAmount(bf.balance) : ''}</td>
                           <td className="px-3 py-2 text-right text-red-700">{bf.balance < 0 ? fmtAmount(Math.abs(bf.balance)) : ''}</td>
+                          <td className="px-3 py-2"></td>
                           <td className="px-3 py-2"></td>
                         </tr>
                       ))}
@@ -341,11 +344,12 @@ export default function FinanceLedger() {
                             <td className="px-3 py-2 text-right text-green-700">{totalBf >= 0 ? fmtAmount(totalBf) : ''}</td>
                             <td className="px-3 py-2 text-right text-red-700">{totalBf < 0 ? fmtAmount(Math.abs(totalBf)) : ''}</td>
                             <td className="px-3 py-2"></td>
+                            <td className="px-3 py-2"></td>
                           </tr>
                         );
                       })()}
                       {withBalance.map((t, i) => (
-                        <tr key={t.id} className={`border-b border-slate-100 ${i % 2 === 0 ? 'bg-yellow-50' : 'bg-white'}`}>
+                        <tr key={t.id} className={`border-b border-slate-100 ${t.refund_of_id ? 'bg-red-50 text-red-700' : i % 2 === 0 ? 'bg-yellow-50' : 'bg-white'}`}>
                           {showBulk && (
                             <td className="px-2 py-2">
                               {isEligible(t) && (
@@ -383,6 +387,20 @@ export default function FinanceLedger() {
                               {t.pending ? '' : fmtAmount(t._balance)}
                             </td>
                           )}
+                          <td className="px-3 py-2 text-center text-xs">
+                            {t.refund_of_txn_number && (
+                              <button
+                                onClick={() => navigate(`/finance/transactions/${t.refund_of_id}`)}
+                                className="text-red-600 hover:underline font-mono"
+                              >{t.refund_of_txn_number}</button>
+                            )}
+                            {t.refunded_by_txn_number && (
+                              <button
+                                onClick={() => navigate(`/finance/transactions/${t.refunded_by_id}`)}
+                                className="text-blue-600 hover:underline font-mono"
+                              >{t.refunded_by_txn_number}</button>
+                            )}
+                          </td>
                           <td className="px-3 py-2 text-center text-xs text-slate-500">
                             {t.pending
                               ? <span className="text-amber-600 font-medium">Pending</span>
@@ -398,6 +416,7 @@ export default function FinanceLedger() {
                         <td className="px-3 py-2 text-right text-green-700">{fmtAmount(totals.in)}</td>
                         <td className="px-3 py-2 text-right text-red-700">{fmtAmount(totals.out)}</td>
                         {view === 'account' && <td className="px-3 py-2"></td>}
+                        <td></td>
                         <td></td>
                       </tr>
                     </tfoot>

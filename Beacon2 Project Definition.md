@@ -88,6 +88,12 @@ Beacon2 is a ground-up rebuild with these goals:
 - **Pending transactions** — per-account config (disabled/optional/by_type); auto-pending
   on creation; bulk confirm/make-pending from ledger; excluded from running balance
   and financial statement
+- **Refunds** (doc 7.10.7 / 8.6e) — per-account enable_refunds toggle; "Refund this
+  transaction" nav link on eligible transactions; dedicated refund form with per-category
+  amounts; reciprocal refund_of_id/refunded_by_id linking; financial statement nets
+  refund amounts; ledger shows Refund column with linked transaction numbers; refund
+  rows in red; date must be after original and in same financial year; blocks refund
+  of cleared, transferred, or Gift-Aid-claimed transactions
 
 ### Gift Aid module
 - **Gift Aid declaration** — financial-year filtered view of GA-eligible transactions;

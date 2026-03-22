@@ -625,3 +625,7 @@ CREATE UNIQUE INDEX IF NOT EXISTS :schema_idx_standard_letters_name ON :schema.s
 
 -- ─── Group Brought Forward setting ────────────────────────────────────
 ALTER TABLE :schema.tenant_settings ADD COLUMN IF NOT EXISTS group_bf_enabled BOOLEAN NOT NULL DEFAULT false;
+
+-- ─── Refund transaction linking (doc 7.10.7) ──────────────────────────
+ALTER TABLE :schema.transactions ADD COLUMN IF NOT EXISTS refund_of_id  TEXT REFERENCES :schema.transactions(id);
+ALTER TABLE :schema.transactions ADD COLUMN IF NOT EXISTS refunded_by_id TEXT REFERENCES :schema.transactions(id);
