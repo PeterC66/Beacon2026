@@ -323,6 +323,14 @@ export const DEFAULT_ROLES = [
       { code: 'membership_statistics',    action: 'view' },
       { code: 'membership_statistics',    action: 'download' },           // vo
 
+      // Letters
+      { code: 'letters',                  action: 'view' },
+      { code: 'letters',                  action: 'download' },          // vo
+      { code: 'letters_standard_messages', action: 'view' },
+      { code: 'letters_standard_messages', action: 'create' },
+      { code: 'letters_standard_messages', action: 'change' },
+      { code: 'letters_standard_messages', action: 'delete' },           // vced
+
       // Poll
       { code: 'poll_set_up',              action: 'view' },
       { code: 'poll_set_up',              action: 'create' },

@@ -607,3 +607,15 @@ ON CONFLICT (name) DO NOTHING;
 
 -- ─── Membership card tracking ────────────────────────────────────────
 ALTER TABLE :schema.members ADD COLUMN IF NOT EXISTS card_printed BOOLEAN NOT NULL DEFAULT false;
+
+-- ─── Standard letter templates ──────────────────────────────────────
+
+CREATE TABLE IF NOT EXISTS :schema.standard_letters (
+  id         TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
+  name       TEXT NOT NULL,
+  body       TEXT NOT NULL DEFAULT '',
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE UNIQUE INDEX IF NOT EXISTS :schema_idx_standard_letters_name ON :schema.standard_letters (name);

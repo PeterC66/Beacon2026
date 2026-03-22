@@ -729,3 +729,16 @@ export const email = {
 
   unblock: (emailAddr) => request('/email/unblocker', { method: 'POST', body: JSON.stringify({ email: emailAddr }) }),
 };
+
+export const letters = {
+  listStandardLetters: () => request('/letters/standard-letters'),
+  saveStandardLetter:  (data) => request('/letters/standard-letters', { method: 'POST', body: JSON.stringify(data) }),
+  deleteStandardLetter:(id)   => request(`/letters/standard-letters/${id}`, { method: 'DELETE' }),
+
+  /** Download letter PDF. data = { memberIds, body (TipTap JSON) } */
+  download: (data) => requestBlob('/letters/download', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  }),
+};

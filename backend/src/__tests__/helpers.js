@@ -51,6 +51,8 @@ export const ALL_PRIVS = [
   'calendar:view', 'calendar:download',
   'meetings:view', 'meetings:create', 'meetings:change', 'meetings:delete',
   'membership_cards:view', 'membership_cards:download_and_mark',
+  'letters:view', 'letters:download',
+  'letters_standard_messages:view', 'letters_standard_messages:create', 'letters_standard_messages:change', 'letters_standard_messages:delete',
 ];
 
 export const TEST_TENANT = 'test-u3a';

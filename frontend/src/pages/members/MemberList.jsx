@@ -149,6 +149,11 @@ export default function MemberList() {
       navigate('/email/compose');
       return;
     }
+    if (bulkAction === 'send_letter') {
+      sessionStorage.setItem('letterComposeMemberIds', JSON.stringify([...selected]));
+      navigate('/letters/compose');
+      return;
+    }
     if (bulkAction === 'add_to_poll') {
       if (!addToPollId) return;
       setBulkWorking(true);
@@ -407,6 +412,7 @@ export default function MemberList() {
                       >
                         <option value="">— choose action —</option>
                         {can('email', 'send') && <option value="send_email">Send email</option>}
+                        {can('letters', 'view') && <option value="send_letter">Send letter</option>}
                         {hasBulkPolls && <option value="add_to_poll">Add to poll</option>}
                         <option value="download_excel">Download Excel</option>
                         <option value="download_pdf">Download PDF</option>
@@ -428,7 +434,7 @@ export default function MemberList() {
                       </div>
                     )}
 
-                    {(bulkAction === 'send_email' || bulkAction === 'add_to_poll') && (
+                    {(bulkAction === 'send_email' || bulkAction === 'send_letter' || bulkAction === 'add_to_poll') && (
                       <button
                         onClick={handleBulkDo}
                         disabled={bulkWorking || (bulkAction === 'add_to_poll' && !addToPollId)}
