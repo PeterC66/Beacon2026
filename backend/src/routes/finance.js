@@ -256,7 +256,7 @@ router.get('/transactions', requirePrivilege('finance_ledger', 'view'), async (r
       sql = `
         SELECT t.id, t.transaction_number, t.account_id, t.date, t.type,
                t.from_to, t.amount::float, t.payment_method, t.payment_ref,
-               t.detail, t.remarks, t.cleared_at,
+               t.detail, t.remarks, t.cleared_at, t.pending,
                t.member_id_1, t.member_id_2, t.group_id,
                m1.forenames || ' ' || m1.surname AS member_1_name,
                m2.forenames || ' ' || m2.surname AS member_2_name,
@@ -282,8 +282,9 @@ router.get('/transactions', requirePrivilege('finance_ledger', 'view'), async (r
       sql = `
         SELECT t.id, t.transaction_number, t.account_id, t.date, t.type,
                t.from_to, t.amount::float, t.payment_method, t.payment_ref,
-               t.detail, t.remarks, t.cleared_at,
+               t.detail, t.remarks, t.cleared_at, t.pending,
                t.member_id_1, t.member_id_2, t.group_id,
+               t.batch_id,
                m1.forenames || ' ' || m1.surname AS member_1_name,
                m2.forenames || ' ' || m2.surname AS member_2_name,
                g.name AS group_name,
@@ -306,7 +307,7 @@ router.get('/transactions', requirePrivilege('finance_ledger', 'view'), async (r
       sql = `
         SELECT t.id, t.transaction_number, t.account_id, t.date, t.type,
                t.from_to, t.amount::float, t.payment_method, t.payment_ref,
-               t.detail, t.remarks, t.cleared_at,
+               t.detail, t.remarks, t.cleared_at, t.pending,
                t.member_id_1, t.member_id_2, t.group_id,
                m1.forenames || ' ' || m1.surname AS member_1_name,
                m2.forenames || ' ' || m2.surname AS member_2_name,
@@ -332,7 +333,7 @@ router.get('/transactions', requirePrivilege('finance_ledger', 'view'), async (r
       sql = `
         SELECT t.id, t.transaction_number, t.account_id, t.date, t.type,
                t.from_to, t.amount::float, t.payment_method, t.payment_ref,
-               t.detail, t.remarks, t.cleared_at,
+               t.detail, t.remarks, t.cleared_at, t.pending,
                t.member_id_1, t.member_id_2, t.group_id,
                m1.forenames || ' ' || m1.surname AS member_1_name,
                m2.forenames || ' ' || m2.surname AS member_2_name,
@@ -367,7 +368,7 @@ router.get('/transactions', requirePrivilege('finance_ledger', 'view'), async (r
       const [priorNet] = await tenantQuery(
         req.user.tenantSlug,
         `SELECT COALESCE(SUM(CASE WHEN type='in' THEN amount ELSE -amount END), 0)::float AS net
-         FROM transactions WHERE account_id = $1 AND date < $2::date`,
+         FROM transactions WHERE account_id = $1 AND date < $2::date AND pending = false`,
         [accountId, yearStart],
       );
       const openingBalance = bf + (priorNet?.net ?? 0);
@@ -385,7 +386,7 @@ router.get('/transactions/:id', requirePrivilege('finance_transactions', 'view')
       req.user.tenantSlug,
       `SELECT t.id, t.transaction_number, t.account_id, t.date, t.type,
               t.from_to, t.amount::float, t.payment_method, t.payment_ref,
-              t.detail, t.remarks, t.cleared_at,
+              t.detail, t.remarks, t.cleared_at, t.pending, t.transfer_id,
               t.member_id_1, t.member_id_2, t.group_id,
               t.batch_id, cb.batch_ref,
               m1.forenames || ' ' || m1.surname AS member_1_name,
@@ -432,6 +433,7 @@ const createTxnSchema = z.object({
   member_id_1:    z.string().optional().nullable(),
   member_id_2:    z.string().optional().nullable(),
   group_id:       z.string().optional().nullable(),
+  pending:        z.boolean().optional(),
   categories:     z.array(txnCategorySchema).min(1),
 });
 
@@ -445,11 +447,28 @@ router.post('/transactions', requirePrivilege('finance_transactions', 'create'),
       throw AppError(`Category amounts (${catTotal.toFixed(2)}) must equal transaction amount (${data.amount.toFixed(2)}).`, 400);
     }
 
+    // Determine pending status based on account config
+    let pending = data.pending ?? false;
+    const [acct] = await tenantQuery(
+      req.user.tenantSlug,
+      `SELECT pending_config, pending_types FROM finance_accounts WHERE id = $1`,
+      [data.account_id],
+    );
+    if (acct) {
+      if (acct.pending_config === 'disabled') {
+        pending = false;
+      } else if (acct.pending_config === 'by_type') {
+        const types = acct.pending_types ?? [];
+        pending = types.includes(data.payment_method ?? '');
+      }
+      // 'optional' — use whatever the client sent
+    }
+
     const [txn] = await tenantQuery(
       req.user.tenantSlug,
       `INSERT INTO transactions
-         (account_id, date, type, from_to, amount, payment_method, payment_ref, detail, remarks, member_id_1, member_id_2, group_id)
-       VALUES ($1, $2::date, $3, $4, $5::numeric, $6, $7, $8, $9, $10, $11, $12)
+         (account_id, date, type, from_to, amount, payment_method, payment_ref, detail, remarks, member_id_1, member_id_2, group_id, pending)
+       VALUES ($1, $2::date, $3, $4, $5::numeric, $6, $7, $8, $9, $10, $11, $12, $13)
        RETURNING id, transaction_number`,
       [
         data.account_id, data.date, data.type,
@@ -457,6 +476,7 @@ router.post('/transactions', requirePrivilege('finance_transactions', 'create'),
         data.payment_method ?? null, data.payment_ref ?? null,
         data.detail ?? null, data.remarks ?? null,
         data.member_id_1 ?? null, data.member_id_2 ?? null, data.group_id ?? null,
+        pending,
       ],
     );
 
@@ -472,17 +492,55 @@ router.post('/transactions', requirePrivilege('finance_transactions', 'create'),
   } catch (err) { next(err); }
 });
 
+// ─── BULK PENDING ────────────────────────────────────────────────────────
+// Must be defined BEFORE /transactions/:id to avoid Express matching 'bulk-pending' as :id.
+
+const bulkPendingSchema = z.object({
+  ids:     z.array(z.string().min(1)).min(1),
+  pending: z.boolean(),
+});
+
+router.patch('/transactions/bulk-pending', requirePrivilege('finance_transactions', 'change'), async (req, res, next) => {
+  try {
+    const { ids, pending } = bulkPendingSchema.parse(req.body);
+
+    // Validate: only non-cleared, non-transfer, non-batched transactions
+    const rows = await tenantQuery(
+      req.user.tenantSlug,
+      `SELECT id, cleared_at, transfer_id, batch_id FROM transactions WHERE id = ANY($1::text[])`,
+      [ids],
+    );
+
+    const errors = [];
+    for (const r of rows) {
+      if (r.cleared_at)   errors.push(`Transaction ${r.id} is cleared.`);
+      if (r.transfer_id)  errors.push(`Transaction ${r.id} is a transfer.`);
+      if (r.batch_id)     errors.push(`Transaction ${r.id} is in a credit batch.`);
+    }
+    if (errors.length > 0) throw AppError(errors.join(' '), 400);
+
+    await tenantQuery(
+      req.user.tenantSlug,
+      `UPDATE transactions SET pending = $1, updated_at = now() WHERE id = ANY($2::text[])`,
+      [pending, ids],
+    );
+
+    res.json({ message: `${ids.length} transaction(s) updated.`, count: ids.length });
+  } catch (err) { next(err); }
+});
+
 // PATCH /finance/transactions/:id
 const updateTxnSchema = createTxnSchema.partial().extend({
   categories: z.array(txnCategorySchema).min(1).optional(),
   batch_id:   z.string().nullable().optional(),
+  pending:    z.boolean().optional(),
 });
 
 router.patch('/transactions/:id', requirePrivilege('finance_transactions', 'change'), async (req, res, next) => {
   try {
     const [current] = await tenantQuery(
       req.user.tenantSlug,
-      `SELECT id, amount::float AS amount, cleared_at, transfer_id FROM transactions WHERE id = $1`,
+      `SELECT id, amount::float AS amount, cleared_at, transfer_id, pending FROM transactions WHERE id = $1`,
       [req.params.id],
     );
     if (!current) throw AppError('Transaction not found.', 404);
@@ -490,6 +548,11 @@ router.patch('/transactions/:id', requirePrivilege('finance_transactions', 'chan
     if (current.cleared_at) throw AppError('Cleared transactions cannot be changed.', 400);
 
     const data = updateTxnSchema.parse(req.body);
+
+    // Transfers cannot be marked as pending
+    if (data.pending === true && current.transfer_id) {
+      throw AppError('Transfers cannot be marked as pending.', 400);
+    }
 
     // If categories are being updated, validate sum
     if (data.categories) {
@@ -516,6 +579,7 @@ router.patch('/transactions/:id', requirePrivilege('finance_transactions', 'chan
     if (data.member_id_2    !== undefined) { fields.push(`member_id_2 = $${i++}`);    values.push(data.member_id_2); }
     if (data.group_id       !== undefined) { fields.push(`group_id = $${i++}`);       values.push(data.group_id); }
     if (data.batch_id       !== undefined) { fields.push(`batch_id = $${i++}`);       values.push(data.batch_id); }
+    if (data.pending        !== undefined) { fields.push(`pending = $${i++}`);        values.push(data.pending); }
 
     if (fields.length > 0) {
       fields.push(`updated_at = now()`);
@@ -870,36 +934,45 @@ async function getStatementData(tenantSlug, accountId, yearNum) {
   const accountIds = accounts.map((a) => a.id);
   const totalBF    = accounts.reduce((s, a) => s + a.balance_brought_forward, 0);
 
-  // Opening balance = BF + net of all transactions before year start
+  // Opening balance = BF + net of all non-pending transactions before year start
   const [priorNet] = await tenantQuery(
     tenantSlug,
     `SELECT COALESCE(SUM(CASE WHEN type='in' THEN amount ELSE -amount END), 0)::float AS net
-     FROM transactions WHERE account_id = ANY($1::text[]) AND date < $2::date`,
+     FROM transactions WHERE account_id = ANY($1::text[]) AND date < $2::date AND pending = false`,
     [accountIds, yearStart],
   );
   const openingBalance = totalBF + (priorNet?.net ?? 0);
 
-  // Category breakdown for this year
+  // Category breakdown for this year (exclude pending)
   const categoryRows = await tenantQuery(
     tenantSlug,
     `SELECT fc.name AS category, t.type, SUM(tc.amount)::float AS total
      FROM transaction_categories tc
      JOIN transactions t ON t.id = tc.transaction_id
      JOIN finance_categories fc ON fc.id = tc.category_id
-     WHERE t.account_id = ANY($1::text[]) AND t.date BETWEEN $2::date AND $3::date
+     WHERE t.account_id = ANY($1::text[]) AND t.date BETWEEN $2::date AND $3::date AND t.pending = false
      GROUP BY fc.name, t.type
      ORDER BY fc.name, t.type`,
     [accountIds, yearStart, yearEnd],
   );
 
-  // Year totals (all transactions, including uncategorized transfers)
+  // Year totals (exclude pending)
   const [yearTotals] = await tenantQuery(
     tenantSlug,
     `SELECT COALESCE(SUM(CASE WHEN type='in'  THEN amount ELSE 0 END), 0)::float AS total_in,
             COALESCE(SUM(CASE WHEN type='out' THEN amount ELSE 0 END), 0)::float AS total_out
-     FROM transactions WHERE account_id = ANY($1::text[]) AND date BETWEEN $2::date AND $3::date`,
+     FROM transactions WHERE account_id = ANY($1::text[]) AND date BETWEEN $2::date AND $3::date AND pending = false`,
     [accountIds, yearStart, yearEnd],
   );
+
+  // Count pending transactions in year range (for warning)
+  const [pendingRow] = await tenantQuery(
+    tenantSlug,
+    `SELECT COUNT(*)::int AS count FROM transactions
+     WHERE account_id = ANY($1::text[]) AND date BETWEEN $2::date AND $3::date AND pending = true`,
+    [accountIds, yearStart, yearEnd],
+  );
+  const pendingCount = pendingRow?.count ?? 0;
 
   const totalIn       = yearTotals?.total_in  ?? 0;
   const totalOut      = yearTotals?.total_out ?? 0;
@@ -907,7 +980,7 @@ async function getStatementData(tenantSlug, accountId, yearNum) {
 
   const accountLabel = isAll ? 'All Accounts' : accounts[0]?.name ?? '';
 
-  return { yearNum, yearStart, yearEnd, accountLabel, openingBalance, totalIn, totalOut, closingBalance, categoryRows };
+  return { yearNum, yearStart, yearEnd, accountLabel, openingBalance, totalIn, totalOut, closingBalance, categoryRows, pendingCount };
 }
 
 // GET /finance/statement?accountId=&year= — JSON data for on-screen display

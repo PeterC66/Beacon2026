@@ -2,7 +2,7 @@
 // Financial ledger — view transactions by account, category, or group.
 // Implements Beacon doc 7.1.
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { finance as financeApi, groups as groupsApi } from '../../lib/api.js';
 import { useAuth } from '../../context/AuthContext.jsx';
@@ -36,6 +36,11 @@ export default function FinanceLedger() {
   const [loading,     setLoading]     = useState(false);
   const [error,       setError]       = useState(null);
 
+  // Bulk action state
+  const [selected,   setSelected]   = useState(new Set());
+  const [bulkAction, setBulkAction] = useState('');
+  const [bulkBusy,   setBulkBusy]   = useState(false);
+
   const { sorted, sortKey, sortDir, onSort } = useSortedData(txns, 'date', 'asc');
 
   // Load selector lists
@@ -56,7 +61,7 @@ export default function FinanceLedger() {
   }, []);
 
   // Reset selection when view changes
-  useEffect(() => { setSelId(''); setTxns([]); setOpeningBal(0); setGroupFilter(''); }, [view]);
+  useEffect(() => { setSelId(''); setTxns([]); setOpeningBal(0); setGroupFilter(''); setSelected(new Set()); }, [view]);
 
   const filteredGroups = useMemo(() => {
     const q = groupFilter.trim().toLowerCase();
@@ -65,40 +70,43 @@ export default function FinanceLedger() {
   }, [groups, groupFilter]);
 
   // Fetch transactions when selId or year changes
-  useEffect(() => {
+  const loadTransactions = useCallback(async () => {
     if (!selId) { setTxns([]); return; }
-    async function load() {
-      setLoading(true);
-      setError(null);
-      try {
-        const params = { year };
-        if (view === 'account')  params.accountId  = selId;
-        if (view === 'category') params.categoryId = selId;
-        if (view === 'group')    params.groupId    = selId;
-        const result = await financeApi.listTransactions(params);
-        // Account view returns { transactions, openingBalance }; others return array
-        if (result && !Array.isArray(result) && result.transactions) {
-          setTxns(result.transactions);
-          setOpeningBal(result.openingBalance ?? 0);
-        } else {
-          setTxns(result);
-          setOpeningBal(0);
-        }
-      } catch (err) { setError(err.message); }
-      finally { setLoading(false); }
-    }
-    load();
+    setLoading(true);
+    setError(null);
+    setSelected(new Set());
+    try {
+      const params = { year };
+      if (view === 'account')  params.accountId  = selId;
+      if (view === 'category') params.categoryId = selId;
+      if (view === 'group')    params.groupId    = selId;
+      const result = await financeApi.listTransactions(params);
+      // Account view returns { transactions, openingBalance }; others return array
+      if (result && !Array.isArray(result) && result.transactions) {
+        setTxns(result.transactions);
+        setOpeningBal(result.openingBalance ?? 0);
+      } else {
+        setTxns(result);
+        setOpeningBal(0);
+      }
+    } catch (err) { setError(err.message); }
+    finally { setLoading(false); }
   }, [selId, year, view]);
 
+  useEffect(() => { loadTransactions(); }, [loadTransactions]);
+
   // Running balance (only meaningful when sorted by date asc, for account view)
+  // Pending transactions are excluded from the running balance
   const withBalance = useMemo(() => {
     if (view !== 'account') return sorted;
     let balance = openingBal;
     return sorted.map((t) => {
-      const amt = Number(t.amount);
-      if (t.type === 'in')  balance += amt;
-      if (t.type === 'out') balance -= amt;
-      return { ...t, _balance: balance };
+      if (!t.pending) {
+        const amt = Number(t.amount);
+        if (t.type === 'in')  balance += amt;
+        if (t.type === 'out') balance -= amt;
+      }
+      return { ...t, _balance: t.pending ? null : balance };
     });
   }, [sorted, view, openingBal]);
 
@@ -109,6 +117,48 @@ export default function FinanceLedger() {
     const outTotal = txns.filter((t) => t.type === 'out').reduce((s, t) => s + amt(t), 0);
     return { in: inTotal, out: outTotal };
   }, [txns, view]);
+
+  // Bulk action eligibility: not cleared, not in a batch, not a transfer, in the current year
+  const isEligible = (t) => !t.cleared_at && !t.batch_id && !t.transfer_id;
+
+  const eligibleIds = useMemo(() => {
+    return new Set(txns.filter(isEligible).map((t) => t.id));
+  }, [txns]);
+
+  const toggleSelect = (id) => {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  };
+
+  const toggleAll = () => {
+    if (selected.size === eligibleIds.size) {
+      setSelected(new Set());
+    } else {
+      setSelected(new Set(eligibleIds));
+    }
+  };
+
+  async function handleBulkAction() {
+    if (!bulkAction || selected.size === 0) return;
+    const ids = [...selected];
+    setBulkBusy(true);
+    setError(null);
+    try {
+      if (bulkAction === 'confirm') {
+        await financeApi.bulkPending(ids, false);
+      } else if (bulkAction === 'make-pending') {
+        await financeApi.bulkPending(ids, true);
+      }
+      await loadTransactions();
+      setBulkAction('');
+    } catch (err) { setError(err.message); }
+    finally { setBulkBusy(false); }
+  }
+
+  const showBulk = view === 'account' && can('finance_transactions', 'change');
 
   const navLinks = [
     { label: 'Home', to: '/' },
@@ -203,10 +253,44 @@ export default function FinanceLedger() {
               <p className="text-center text-slate-400 py-8">No transactions found for this {view} in {year}. Opening balance: {fmtAmount(openingBal)}</p>
             ) : (
               <>
+                {/* Bulk actions bar */}
+                {showBulk && eligibleIds.size > 0 && (
+                  <div className="bg-white/90 rounded-lg shadow-sm p-3 mb-3 flex flex-wrap items-center gap-3">
+                    <span className="text-sm text-slate-600">{selected.size} selected</span>
+                    <select
+                      value={bulkAction}
+                      onChange={(e) => setBulkAction(e.target.value)}
+                      className="border border-slate-300 rounded px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                      <option value="">— action —</option>
+                      <option value="confirm">Confirm (not pending)</option>
+                      <option value="make-pending">Make pending</option>
+                    </select>
+                    <button
+                      onClick={handleBulkAction}
+                      disabled={!bulkAction || selected.size === 0 || bulkBusy}
+                      className="bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white rounded px-4 py-1.5 text-sm font-medium transition-colors"
+                    >
+                      {bulkBusy ? 'Updating…' : 'Do with selected'}
+                    </button>
+                  </div>
+                )}
+
                 <div className="overflow-x-auto rounded-lg shadow-sm">
                   <table className="w-full text-sm bg-white min-w-max">
                     <thead>
                       <tr className="bg-slate-50 border-b border-slate-200 text-left text-slate-600 italic font-normal">
+                        {showBulk && (
+                          <th className="px-2 py-2.5 w-8">
+                            <input
+                              type="checkbox"
+                              checked={eligibleIds.size > 0 && selected.size === eligibleIds.size}
+                              onChange={toggleAll}
+                              className="h-4 w-4 rounded border-slate-300"
+                              title="Select all eligible"
+                            />
+                          </th>
+                        )}
                         <SortableHeader col="transaction_number" label="#"       sortKey={sortKey} sortDir={sortDir} onSort={onSort} className={TH} />
                         <SortableHeader col="date"               label="Date"    sortKey={sortKey} sortDir={sortDir} onSort={onSort} className={TH} />
                         <SortableHeader col="detail"             label="Detail"  sortKey={sortKey} sortDir={sortDir} onSort={onSort} className={TH} />
@@ -221,6 +305,7 @@ export default function FinanceLedger() {
                     <tbody>
                       {view === 'account' && (
                         <tr className="bg-slate-100 border-b border-slate-200 italic text-slate-600">
+                          {showBulk && <td className="px-2 py-2"></td>}
                           <td className="px-3 py-2"></td>
                           <td className="px-3 py-2"></td>
                           <td className="px-3 py-2" colSpan={3}>Balance brought forward</td>
@@ -232,6 +317,18 @@ export default function FinanceLedger() {
                       )}
                       {withBalance.map((t, i) => (
                         <tr key={t.id} className={`border-b border-slate-100 ${i % 2 === 0 ? 'bg-yellow-50' : 'bg-white'}`}>
+                          {showBulk && (
+                            <td className="px-2 py-2">
+                              {isEligible(t) && (
+                                <input
+                                  type="checkbox"
+                                  checked={selected.has(t.id)}
+                                  onChange={() => toggleSelect(t.id)}
+                                  className="h-4 w-4 rounded border-slate-300"
+                                />
+                              )}
+                            </td>
+                          )}
                           <td className="px-3 py-2">
                             {can('finance_transactions', 'view') ? (
                               <button
@@ -251,18 +348,23 @@ export default function FinanceLedger() {
                           <td className="px-3 py-2 text-right text-green-700">{t.type === 'in'  ? fmtAmount(view === 'category' ? t.category_amount : t.amount) : ''}</td>
                           <td className="px-3 py-2 text-right text-red-700"> {t.type === 'out' ? fmtAmount(view === 'category' ? t.category_amount : t.amount) : ''}</td>
                           {view === 'account' && (
-                            <td className={`px-3 py-2 text-right font-medium ${t._balance >= 0 ? 'text-slate-700' : 'text-red-600'}`}>
-                              {fmtAmount(t._balance)}
+                            <td className={`px-3 py-2 text-right font-medium ${
+                              t.pending ? 'text-slate-400 italic' : (t._balance >= 0 ? 'text-slate-700' : 'text-red-600')
+                            }`}>
+                              {t.pending ? '' : fmtAmount(t._balance)}
                             </td>
                           )}
                           <td className="px-3 py-2 text-center text-xs text-slate-500">
-                            {t.cleared_at ? fmtDate(t.cleared_at) : ''}
+                            {t.pending
+                              ? <span className="text-amber-600 font-medium">Pending</span>
+                              : t.cleared_at ? fmtDate(t.cleared_at) : ''}
                           </td>
                         </tr>
                       ))}
                     </tbody>
                     <tfoot>
                       <tr className="bg-slate-100 border-t-2 border-slate-300 font-medium text-sm">
+                        {showBulk && <td></td>}
                         <td colSpan={5} className="px-3 py-2 text-right text-slate-600">Totals:</td>
                         <td className="px-3 py-2 text-right text-green-700">{fmtAmount(totals.in)}</td>
                         <td className="px-3 py-2 text-right text-red-700">{fmtAmount(totals.out)}</td>

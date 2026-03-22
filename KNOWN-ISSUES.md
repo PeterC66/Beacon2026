@@ -57,6 +57,15 @@ Items noted during development that need addressing in future sessions.
    where members can order a replacement membership card. Not yet built; requires
    the Members Portal self-service features to be completed first.
 
+## Documentation Typos
+
+1. **Doc 7.10.5 — Pending Transactions bulk action eligibility** — The document says
+   transactions are eligible for bulk pending actions if they "Are not in the Current
+   financial year". This should read "Are in the Current financial year" — only
+   current-year transactions should be eligible for bulk pending changes.
+
+---
+
 ## Accessibility / E2E
 
 1. **Form labels missing `htmlFor`/`id` association** — ~106 `<label>` elements

@@ -405,6 +405,9 @@ ALTER TABLE :schema.transactions ADD CONSTRAINT transactions_amount_check CHECK 
 -- Transfer money: links paired transactions (both share the same transfer_id UUID)
 ALTER TABLE :schema.transactions ADD COLUMN IF NOT EXISTS transfer_id TEXT;
 
+-- Pending transactions: promised but not yet received (e.g. awaited BACS)
+ALTER TABLE :schema.transactions ADD COLUMN IF NOT EXISTS pending BOOLEAN NOT NULL DEFAULT false;
+
 -- Gift Aid: eligible amount stored at transaction time, and claimed date
 ALTER TABLE :schema.transactions ADD COLUMN IF NOT EXISTS gift_aid_amount NUMERIC(10,2);
 ALTER TABLE :schema.transactions ADD COLUMN IF NOT EXISTS gift_aid_claimed_at DATE;
