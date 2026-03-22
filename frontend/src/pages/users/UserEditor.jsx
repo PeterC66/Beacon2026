@@ -1,5 +1,5 @@
 // beacon2/frontend/src/pages/users/UserEditor.jsx
-// Create or edit a system user and their role assignments.
+// Create or edit a system user and their role assignments (doc 8.2).
 
 import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
@@ -17,35 +17,49 @@ export default function UserEditor() {
   const navigate = useNavigate();
   const { can, tenant } = useAuth();
 
-  const [name,         setName]         = useState('');
-  const [email,        setEmail]        = useState('');
-  const [username,     setUsername]     = useState('');
-  const [password,     setPassword]     = useState('');
-  const [showPw,       setShowPw]       = useState(false);
-  const [active,       setActive]       = useState(true);
-  const [allRoles,     setAllRoles]     = useState([]);
-  const [assignedIds,  setAssignedIds]  = useState(new Set());
-  const [origRoleIds,  setOrigRoleIds]  = useState(new Set());
-  const [loading,      setLoading]      = useState(!isNew);
-  const [saving,       setSaving]       = useState(false);
-  const [saved,        setSaved]        = useState(false);
-  const [error,        setError]        = useState(null);
+  const [memberId,       setMemberId]       = useState('');
+  const [availableMembers, setAvailableMembers] = useState([]);
+  const [username,       setUsername]       = useState('');
+  const [email,          setEmail]          = useState('');
+  const [active,         setActive]         = useState(true);
+  const [isSiteAdmin,    setIsSiteAdmin]    = useState(false);
+  const [memberName,     setMemberName]     = useState('');
+  const [allRoles,       setAllRoles]       = useState([]);
+  const [assignedIds,    setAssignedIds]    = useState(new Set());
+  const [origRoleIds,    setOrigRoleIds]    = useState(new Set());
+  const [loading,        setLoading]        = useState(true);
+  const [saving,         setSaving]         = useState(false);
+  const [saved,          setSaved]          = useState(false);
+  const [error,          setError]          = useState(null);
+  const [tempPwMsg,      setTempPwMsg]      = useState(null);
   const savedTimer = useRef(null);
   const { markDirty, markClean } = useUnsavedChanges();
+
+  // Existing user fields (for edit mode display)
+  const [userName, setUserName] = useState('');
 
   useEffect(() => {
     async function load() {
       try {
-        const [roleList, user] = await Promise.all([
-          rolesApi.list(),
-          isNew ? null : usersApi.get(id),
-        ]);
+        const promises = [rolesApi.list()];
+        if (isNew) {
+          promises.push(usersApi.availableMembers());
+          promises.push(null);
+        } else {
+          promises.push(null);
+          promises.push(usersApi.get(id));
+        }
+        const [roleList, memberList, user] = await Promise.all(promises);
         setAllRoles(roleList);
+        if (memberList) setAvailableMembers(memberList);
         if (user) {
-          setName(user.name);
+          setUserName(user.name);
           setEmail(user.email);
           setUsername(user.username ?? '');
           setActive(user.active);
+          setIsSiteAdmin(user.is_site_admin || false);
+          setMemberId(user.member_id || '');
+          setMemberName(user.member_name || '');
           const ids = new Set(user.roles.map((r) => r.id));
           setAssignedIds(ids);
           setOrigRoleIds(new Set(ids));
@@ -59,6 +73,17 @@ export default function UserEditor() {
     load();
   }, [id, isNew]);
 
+  // When member selection changes in create mode, auto-fill email
+  function handleMemberChange(e) {
+    markDirty();
+    const mid = e.target.value;
+    setMemberId(mid);
+    if (mid) {
+      const member = availableMembers.find((m) => m.id === mid);
+      if (member?.email) setEmail(member.email);
+    }
+  }
+
   function toggleRole(roleId) {
     markDirty();
     setAssignedIds((prev) => {
@@ -70,32 +95,36 @@ export default function UserEditor() {
   }
 
   const handleSave = async () => {
-    if (!name.trim())  { setError('Name is required.');  return; }
-    if (!email.trim()) { setError('Email is required.'); return; }
+    if (isNew) {
+      if (!memberId)       { setError('Please select a member.'); return; }
+      if (!username.trim()) { setError('Username is required.');   return; }
+    }
     if (username.trim() && !/^[a-z0-9]+$/.test(username.trim())) {
       setError('Username must be lowercase letters and numbers only (no spaces).');
       return;
     }
-    if (isNew && !password) { setError('Password is required for new users.'); return; }
     setSaving(true);
     setError(null);
     try {
       if (isNew) {
         const created = await usersApi.create({
-          name: name.trim(),
-          email: email.trim(),
-          username: username.trim() || undefined,
-          password,
+          memberId,
+          username: username.trim(),
+          email: email.trim() || undefined,
           active,
           roleIds: [...assignedIds],
         });
         markClean();
+        // Show temp password notice
+        setTempPwMsg(
+          `The new user has been set the temporary password of ${created.tempPassword}\nwhich they will need to change at first login.\nNow please establish the user's roles.`
+        );
         setSaved(true);
         clearTimeout(savedTimer.current);
-        savedTimer.current = setTimeout(() => navigate(`/users/${created.id}`), 1200);
+        savedTimer.current = setTimeout(() => navigate(`/users/${created.id}`), 3000);
       } else {
-        const patch = { name: name.trim(), email: email.trim(), username: username.trim() || null, active };
-        if (password) patch.password = password;
+        const patch = { username: username.trim() || null, active };
+        if (email.trim()) patch.email = email.trim();
         await usersApi.update(id, patch);
 
         const toAdd    = [...assignedIds].filter((rid) => !origRoleIds.has(rid));
@@ -117,12 +146,22 @@ export default function UserEditor() {
     }
   };
 
+  const handleSetTempPassword = async () => {
+    if (!confirm('Set a new temporary password for this user? They will need to change it on next login.')) return;
+    try {
+      const result = await usersApi.setTempPassword(id);
+      setTempPwMsg(`Temporary password set: ${result.tempPassword}\nPlease notify the user of their new password.`);
+    } catch (err) {
+      alert(err.message);
+    }
+  };
+
   const canEdit = can('user_record', isNew ? 'create' : 'change');
 
   const navLinks = [
     { label: 'Home', to: '/' },
     { label: 'Users List', to: '/users' },
-    ...(!isNew && can('user_record', 'create') ? [{ label: 'Add User', to: '/users/new' }] : []),
+    ...(!isNew && can('user_record', 'create') ? [{ label: 'Add New User', to: '/users/new' }] : []),
   ];
 
   if (loading) {
@@ -130,7 +169,7 @@ export default function UserEditor() {
       <div className="min-h-screen pb-10">
         <PageHeader tenant={tenant} />
         <NavBar links={navLinks} />
-        <p className="text-center mt-8 text-slate-500">Loading…</p>
+        <p className="text-center mt-8 text-slate-500">Loading...</p>
       </div>
     );
   }
@@ -144,7 +183,7 @@ export default function UserEditor() {
       <div className="max-w-2xl mx-auto px-4 py-5">
 
         <h1 className="text-xl font-bold text-center mb-4">
-          {isNew ? 'Add User' : `Edit User: ${name}`}
+          {isNew ? 'Add New User' : 'System User Record'}
         </h1>
 
         {error && (
@@ -153,24 +192,72 @@ export default function UserEditor() {
           </div>
         )}
 
-        {saved && (
+        {saved && !tempPwMsg && (
           <p className="mb-4 text-green-700 text-sm font-medium bg-green-50 border border-green-200 rounded px-3 py-2 text-center">
-            ✓ Saved successfully.
+            Saved successfully.
           </p>
+        )}
+
+        {tempPwMsg && (
+          <div className="mb-4 p-4 bg-blue-50 border border-blue-300 rounded text-blue-800 text-sm whitespace-pre-line text-center">
+            <p className="font-bold mb-1">Notice</p>
+            {tempPwMsg}
+          </div>
         )}
 
         {/* User details card */}
         <div className="bg-white/90 rounded-lg shadow-sm p-4 sm:p-6 mb-6 space-y-4">
 
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Name</label>
-            <input type="text" value={name} onChange={(e) => { markDirty(); setName(e.target.value); }}
-              disabled={!canEdit} className={inputCls} />
-          </div>
+          {/* Member selection (new) or display (edit) */}
+          {isNew ? (
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Member</label>
+              <select
+                value={memberId}
+                onChange={handleMemberChange}
+                disabled={!canEdit}
+                className={inputCls}
+              >
+                <option value="">-- Select a member --</option>
+                {availableMembers.map((m) => (
+                  <option key={m.id} value={m.id}>
+                    {m.surname}, {m.forenames}{m.email ? ` (${m.email})` : ''}
+                  </option>
+                ))}
+              </select>
+            </div>
+          ) : (
+            <div className="flex items-center gap-2">
+              <label className="text-sm font-medium text-slate-700">Member:</label>
+              {memberId ? (
+                <span className="flex items-center gap-2">
+                  <span className="text-sm">{memberName}</span>
+                  <button
+                    onClick={() => navigate(`/members/${memberId}`)}
+                    className="text-blue-700 hover:underline text-sm"
+                    title="View member record"
+                  >
+                    ...
+                  </button>
+                </span>
+              ) : (
+                <span className="text-sm text-slate-400">
+                  {isSiteAdmin ? 'Not required for Site Administrator' : 'Not linked'}
+                </span>
+              )}
+            </div>
+          )}
+
+          {/* Site Admin indicator */}
+          {!isNew && isSiteAdmin && (
+            <div className="p-2 bg-amber-50 border border-amber-200 rounded text-sm text-amber-800">
+              This user is the <strong>Site Administrator</strong> and has ALL privileges.
+            </div>
+          )}
 
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1">
-              Username <span className="text-slate-400 font-normal">(used to log in)</span>
+              Login name <span className="text-slate-400 font-normal">(username)</span>
             </label>
             <input
               type="text"
@@ -180,37 +267,13 @@ export default function UserEditor() {
               placeholder="e.g. jbloggs"
               className={`${inputCls} font-mono`}
             />
-            <p className="text-xs text-slate-400 mt-1">Lowercase letters and numbers only.</p>
+            <p className="text-xs text-slate-400 mt-1">Lowercase letters and numbers only. Personal to the user, not a role name.</p>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Email</label>
+            <label className="block text-sm font-medium text-slate-700 mb-1">User's E-mail</label>
             <input type="email" value={email} onChange={(e) => { markDirty(); setEmail(e.target.value); }}
               disabled={!canEdit} className={inputCls} />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">
-              {isNew ? 'Password' : 'New password'}
-            </label>
-            <div className="relative">
-              <input
-                type={showPw ? 'text' : 'password'}
-                value={password}
-                onChange={(e) => { markDirty(); setPassword(e.target.value); }}
-                disabled={!canEdit}
-                placeholder={isNew ? 'Required' : 'Leave blank to keep current'}
-                className={`${inputCls} pr-10`}
-              />
-              <button
-                type="button"
-                onClick={() => setShowPw((v) => !v)}
-                className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-800 p-1"
-                title={showPw ? 'Hide password' : 'Show password'}
-              >
-                {showPw ? '🙈' : '👁'}
-              </button>
-            </div>
           </div>
 
           <div className="flex items-center gap-3">
@@ -225,14 +288,22 @@ export default function UserEditor() {
           </div>
 
           {canEdit && (
-            <div className="flex gap-3 pt-1">
+            <div className="flex flex-wrap gap-3 pt-1">
               <button
                 onClick={handleSave}
                 disabled={saving}
                 className="px-5 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white rounded text-sm font-medium transition-colors"
               >
-                {saving ? 'Saving…' : 'Save user'}
+                {saving ? 'Saving...' : 'Save user'}
               </button>
+              {!isNew && (
+                <button
+                  onClick={handleSetTempPassword}
+                  className="px-5 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded text-sm font-medium transition-colors"
+                >
+                  Set Temporary Password
+                </button>
+              )}
               <button
                 onClick={() => { markClean(); navigate('/users'); }}
                 className="px-5 py-2 border border-slate-300 rounded text-sm text-slate-700 hover:bg-slate-50 transition-colors"
@@ -244,7 +315,7 @@ export default function UserEditor() {
         </div>
 
         {/* Role assignments */}
-        {allRoles.length > 0 && (
+        {!isSiteAdmin && allRoles.length > 0 && (
           <>
             <h2 className="text-lg font-bold text-center mb-3">Roles</h2>
             <div className="overflow-x-auto rounded-lg shadow-sm">
@@ -283,17 +354,18 @@ export default function UserEditor() {
                   disabled={saving}
                   className="px-5 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white rounded text-sm font-medium transition-colors"
                 >
-                  {saving ? 'Saving…' : 'Save user'}
-                </button>
-                <button
-                  onClick={() => { markClean(); navigate('/users'); }}
-                  className="px-5 py-2 border border-slate-300 rounded text-sm text-slate-700 hover:bg-slate-50 transition-colors"
-                >
-                  Cancel
+                  {saving ? 'Saving...' : 'Save Role Assignment'}
                 </button>
               </div>
             )}
           </>
+        )}
+
+        {/* Site admin: show message about roles */}
+        {!isNew && isSiteAdmin && (
+          <div className="text-center text-sm text-slate-500 mt-4">
+            The Site Administrator has all privileges regardless of role assignments.
+          </div>
         )}
 
       </div>

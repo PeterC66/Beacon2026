@@ -135,6 +135,9 @@ export const users = {
     request(`/users/${id}/roles`, { method: 'POST', body: JSON.stringify({ roleId }) }),
   removeRole:  (id, roleId) =>
     request(`/users/${id}/roles/${roleId}`, { method: 'DELETE' }),
+  setTempPassword: (id) =>
+    request(`/users/${id}/set-temp-password`, { method: 'POST' }),
+  availableMembers: () => request('/users/available-members'),
 };
 
 // ─── Roles ────────────────────────────────────────────────────────────────
