@@ -17,7 +17,7 @@ export class MemberListPage {
   }
 
   searchInput() {
-    return this.page.getByPlaceholder('search…');
+    return this.page.getByPlaceholder('Name, address, postcode, no…');
   }
 
   async search(term) {
