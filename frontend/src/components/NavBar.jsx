@@ -5,7 +5,7 @@ import { Link } from 'react-router-dom';
 
 export default function NavBar({ links }) {
   return (
-    <nav className="beacon-no-theme text-center py-2 px-4 text-sm bg-white/60 backdrop-blur-sm border-y border-white/50">
+    <nav className="text-center py-2 px-4 text-sm bg-white/60 backdrop-blur-sm border-y border-white/50">
       {links.map((link, i) => (
         <span key={i}>
           {i > 0 && <span className="mx-2 text-slate-400">–</span>}

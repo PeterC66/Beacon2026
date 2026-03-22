@@ -171,9 +171,6 @@ export default function PersonalPreferences() {
                 {[
                   { value: 'default',        label: 'Default' },
                   { value: 'high-contrast',  label: 'High Contrast' },
-                  { value: 'warm',           label: 'Warm' },
-                  { value: 'green',          label: 'Green' },
-                  { value: 'dark',           label: 'Dark Mode' },
                 ].map((opt) => (
                   <label key={opt.value} className="flex items-center gap-1.5 text-sm cursor-pointer">
                     <input type="radio" name="colorTheme" value={opt.value}

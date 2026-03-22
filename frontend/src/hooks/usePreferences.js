@@ -9,7 +9,7 @@ const DEFAULTS = {
   displayFormat:     'surname_first', // 'surname_first' | 'forename_first'
   inactivityTimeout: 20,              // minutes (5–99)
   textSize:          'normal',        // 'small' | 'normal' | 'large' | 'xlarge'
-  colorTheme:        'default',       // 'default' | 'high-contrast' | 'warm' | 'green' | 'dark'
+  colorTheme:        'default',       // 'default' | 'high-contrast'
 };
 
 function load() {
@@ -52,7 +52,7 @@ export function savePreferences(updates) {
     next.textSize = valid.includes(updates.textSize) ? updates.textSize : DEFAULTS.textSize;
   }
   if (updates.colorTheme !== undefined) {
-    const valid = ['default', 'high-contrast', 'warm', 'green', 'dark'];
+    const valid = ['default', 'high-contrast'];
     next.colorTheme = valid.includes(updates.colorTheme) ? updates.colorTheme : DEFAULTS.colorTheme;
   }
   save(next);

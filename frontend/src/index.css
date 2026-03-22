@@ -11,176 +11,34 @@ html, body {
   background-color: #9dc8df;
 }
 
-/* ── Text size preference (main content only) ─────────────────────────── */
-/* Applied to .beacon-themed-content wrapper; NavBar/PageHeader excluded  */
-.beacon-themed-content[data-text-size="small"]  { font-size: 0.875rem; }
-.beacon-themed-content[data-text-size="normal"] { font-size: 1rem; }
-.beacon-themed-content[data-text-size="large"]  { font-size: 1.125rem; }
-.beacon-themed-content[data-text-size="xlarge"] { font-size: 1.25rem; }
+/* ── Text size preference ─────────────────────────────────────────────── */
+html[data-text-size="small"]  { font-size: 0.875rem; }
+html[data-text-size="normal"] { font-size: 1rem; }
+html[data-text-size="large"]  { font-size: 1.125rem; }
+html[data-text-size="xlarge"] { font-size: 1.25rem; }
 
-/* Exclude NavBar / PageHeader from text-size inheritance */
-.beacon-themed-content .beacon-no-theme { font-size: 1rem !important; }
-
-/* ── Colour theme helper ──────────────────────────────────────────────── */
-/* Shorthand: T = .beacon-themed-content[data-theme="<name>"]            */
-/* All rules use :not(.beacon-no-theme) so header & nav are unaffected.  */
-
-/* Default — no overrides, uses standard Tailwind classes */
-
-/* ── High Contrast ──────────────────────────────────────────────────── */
-.beacon-themed-content[data-theme="high-contrast"] {
-  color: #000;
-}
-.beacon-themed-content[data-theme="high-contrast"] :not(.beacon-no-theme) > .bg-white\/90,
-.beacon-themed-content[data-theme="high-contrast"] :not(.beacon-no-theme) > .bg-white\/85,
-.beacon-themed-content[data-theme="high-contrast"] :not(.beacon-no-theme) > .bg-white\/50 {
+/* ── High Contrast theme ──────────────────────────────────────────────── */
+html[data-theme="high-contrast"] { color: #000; }
+html[data-theme="high-contrast"] .bg-white\/90,
+html[data-theme="high-contrast"] .bg-white\/85,
+html[data-theme="high-contrast"] .bg-white\/70,
+html[data-theme="high-contrast"] .bg-white\/60,
+html[data-theme="high-contrast"] .bg-white\/50 {
   background-color: #fff !important;
   border: 2px solid #000 !important;
 }
-.beacon-themed-content[data-theme="high-contrast"] :not(.beacon-no-theme) .text-slate-700,
-.beacon-themed-content[data-theme="high-contrast"] :not(.beacon-no-theme) .text-slate-600,
-.beacon-themed-content[data-theme="high-contrast"] :not(.beacon-no-theme) .text-slate-500 {
+html[data-theme="high-contrast"] .text-slate-700,
+html[data-theme="high-contrast"] .text-slate-600,
+html[data-theme="high-contrast"] .text-slate-500,
+html[data-theme="high-contrast"] .text-slate-400 {
   color: #000 !important;
 }
-.beacon-themed-content[data-theme="high-contrast"] :not(.beacon-no-theme) .border-slate-300,
-.beacon-themed-content[data-theme="high-contrast"] :not(.beacon-no-theme) .border-slate-200,
-.beacon-themed-content[data-theme="high-contrast"] :not(.beacon-no-theme) .border-slate-100 {
+html[data-theme="high-contrast"] .border-slate-300,
+html[data-theme="high-contrast"] .border-slate-200,
+html[data-theme="high-contrast"] .border-slate-100 {
   border-color: #000 !important;
 }
-.beacon-themed-content[data-theme="high-contrast"] :not(.beacon-no-theme) .text-blue-700 {
+html[data-theme="high-contrast"] .text-blue-700 {
   color: #00e !important;
   text-decoration: underline;
-}
-.beacon-themed-content[data-theme="high-contrast"] .beacon-no-theme,
-.beacon-themed-content[data-theme="high-contrast"] .beacon-no-theme * {
-  color: revert;
-}
-
-/* ── Warm ────────────────────────────────────────────────────────────── */
-.beacon-themed-content[data-theme="warm"] {
-  color: #3e2723;
-}
-.beacon-themed-content[data-theme="warm"] :not(.beacon-no-theme) > .bg-white\/90,
-.beacon-themed-content[data-theme="warm"] :not(.beacon-no-theme) > .bg-white\/85,
-.beacon-themed-content[data-theme="warm"] :not(.beacon-no-theme) > .bg-white\/50 {
-  background-color: #fef3e2 !important;
-}
-.beacon-themed-content[data-theme="warm"] :not(.beacon-no-theme) .text-slate-700,
-.beacon-themed-content[data-theme="warm"] :not(.beacon-no-theme) .text-slate-600 {
-  color: #4e342e !important;
-}
-.beacon-themed-content[data-theme="warm"] :not(.beacon-no-theme) .text-slate-500 {
-  color: #6d4c41 !important;
-}
-.beacon-themed-content[data-theme="warm"] :not(.beacon-no-theme) .bg-blue-600 {
-  background-color: #bf360c !important;
-}
-.beacon-themed-content[data-theme="warm"] :not(.beacon-no-theme) .bg-blue-600:hover,
-.beacon-themed-content[data-theme="warm"] :not(.beacon-no-theme) .hover\:bg-blue-700:hover {
-  background-color: #a52900 !important;
-}
-.beacon-themed-content[data-theme="warm"] :not(.beacon-no-theme) .text-blue-700 {
-  color: #bf360c !important;
-}
-.beacon-themed-content[data-theme="warm"] :not(.beacon-no-theme) .border-slate-300 {
-  border-color: #d7ccc8 !important;
-}
-.beacon-themed-content[data-theme="warm"] :not(.beacon-no-theme) .bg-gradient-to-r {
-  background: linear-gradient(to right, #ffe0b2, #ffcc80) !important;
-}
-.beacon-themed-content[data-theme="warm"] .beacon-no-theme,
-.beacon-themed-content[data-theme="warm"] .beacon-no-theme * {
-  color: revert;
-}
-
-/* ── Green ───────────────────────────────────────────────────────────── */
-.beacon-themed-content[data-theme="green"] {
-  color: #1b3a1b;
-}
-.beacon-themed-content[data-theme="green"] :not(.beacon-no-theme) > .bg-white\/90,
-.beacon-themed-content[data-theme="green"] :not(.beacon-no-theme) > .bg-white\/85,
-.beacon-themed-content[data-theme="green"] :not(.beacon-no-theme) > .bg-white\/50 {
-  background-color: #e8f5e9 !important;
-}
-.beacon-themed-content[data-theme="green"] :not(.beacon-no-theme) .text-slate-700,
-.beacon-themed-content[data-theme="green"] :not(.beacon-no-theme) .text-slate-600 {
-  color: #1b5e20 !important;
-}
-.beacon-themed-content[data-theme="green"] :not(.beacon-no-theme) .text-slate-500 {
-  color: #2e7d32 !important;
-}
-.beacon-themed-content[data-theme="green"] :not(.beacon-no-theme) .bg-blue-600 {
-  background-color: #2e7d32 !important;
-}
-.beacon-themed-content[data-theme="green"] :not(.beacon-no-theme) .bg-blue-600:hover,
-.beacon-themed-content[data-theme="green"] :not(.beacon-no-theme) .hover\:bg-blue-700:hover {
-  background-color: #1b5e20 !important;
-}
-.beacon-themed-content[data-theme="green"] :not(.beacon-no-theme) .text-blue-700 {
-  color: #1b5e20 !important;
-}
-.beacon-themed-content[data-theme="green"] :not(.beacon-no-theme) .border-slate-300 {
-  border-color: #a5d6a7 !important;
-}
-.beacon-themed-content[data-theme="green"] :not(.beacon-no-theme) .bg-gradient-to-r {
-  background: linear-gradient(to right, #c8e6c9, #a5d6a7) !important;
-}
-.beacon-themed-content[data-theme="green"] .beacon-no-theme,
-.beacon-themed-content[data-theme="green"] .beacon-no-theme * {
-  color: revert;
-}
-
-/* ── Dark mode ───────────────────────────────────────────────────────── */
-.beacon-themed-content[data-theme="dark"] {
-  color: #e0e0e0;
-}
-.beacon-themed-content[data-theme="dark"] :not(.beacon-no-theme) > .bg-white\/90,
-.beacon-themed-content[data-theme="dark"] :not(.beacon-no-theme) > .bg-white\/85,
-.beacon-themed-content[data-theme="dark"] :not(.beacon-no-theme) > .bg-white\/50 {
-  background-color: #1e1e1e !important;
-  border-color: #444 !important;
-}
-.beacon-themed-content[data-theme="dark"] :not(.beacon-no-theme) .text-slate-700,
-.beacon-themed-content[data-theme="dark"] :not(.beacon-no-theme) .text-slate-600 {
-  color: #ccc !important;
-}
-.beacon-themed-content[data-theme="dark"] :not(.beacon-no-theme) .text-slate-500 {
-  color: #aaa !important;
-}
-.beacon-themed-content[data-theme="dark"] :not(.beacon-no-theme) .text-blue-700 {
-  color: #64b5f6 !important;
-}
-.beacon-themed-content[data-theme="dark"] :not(.beacon-no-theme) .bg-blue-600 {
-  background-color: #1565c0 !important;
-}
-.beacon-themed-content[data-theme="dark"] :not(.beacon-no-theme) .bg-blue-600:hover,
-.beacon-themed-content[data-theme="dark"] :not(.beacon-no-theme) .hover\:bg-blue-700:hover {
-  background-color: #0d47a1 !important;
-}
-.beacon-themed-content[data-theme="dark"] :not(.beacon-no-theme) .border-slate-300,
-.beacon-themed-content[data-theme="dark"] :not(.beacon-no-theme) .border-slate-200,
-.beacon-themed-content[data-theme="dark"] :not(.beacon-no-theme) .border-slate-100 {
-  border-color: #444 !important;
-}
-.beacon-themed-content[data-theme="dark"] :not(.beacon-no-theme) .bg-gradient-to-r {
-  background: linear-gradient(to right, #333, #444) !important;
-}
-.beacon-themed-content[data-theme="dark"] :not(.beacon-no-theme) .bg-gradient-to-br {
-  background: linear-gradient(to bottom right, #2a2a2a, #333) !important;
-}
-.beacon-themed-content[data-theme="dark"] :not(.beacon-no-theme) input,
-.beacon-themed-content[data-theme="dark"] :not(.beacon-no-theme) select,
-.beacon-themed-content[data-theme="dark"] :not(.beacon-no-theme) textarea {
-  background-color: #2a2a2a !important;
-  color: #e0e0e0 !important;
-  border-color: #555 !important;
-}
-.beacon-themed-content[data-theme="dark"] :not(.beacon-no-theme) h1,
-.beacon-themed-content[data-theme="dark"] :not(.beacon-no-theme) h2,
-.beacon-themed-content[data-theme="dark"] :not(.beacon-no-theme) h3 {
-  color: #fff !important;
-}
-.beacon-themed-content[data-theme="dark"] .beacon-no-theme,
-.beacon-themed-content[data-theme="dark"] .beacon-no-theme * {
-  color: revert;
 }

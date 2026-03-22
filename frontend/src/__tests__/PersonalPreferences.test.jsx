@@ -53,7 +53,6 @@ describe('PersonalPreferences page', () => {
     expect(getByText('Text size')).toBeInTheDocument();
     expect(getByText('Colour theme')).toBeInTheDocument();
     expect(getByText('Normal')).toBeInTheDocument();
-    expect(getByText('Dark Mode')).toBeInTheDocument();
     expect(getByText('High Contrast')).toBeInTheDocument();
   });
 });
