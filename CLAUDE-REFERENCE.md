@@ -82,9 +82,35 @@ affected sessions via Redis, or expire naturally after 15 min.
 - Change password: `PATCH /auth/change-password`; 5-bar strength meter
 - Security Q&A: `GET /auth/qa` + `PATCH /auth/qa` (hashed answer)
 
+### Site Administrator (doc 8.1)
+
+- **`is_site_admin`** boolean column on `users` table (one per tenant)
+- Site admin has ALL privileges — `computeAllPrivileges()` returns every
+  `resource:action` from `privilege_resources` via `unnest(pr.actions)`
+- JWT payload includes `isSiteAdmin: true` for site admin
+- Frontend `AuthContext.can()` returns `true` for everything when `isSiteAdmin`
+- Cannot be deleted (backend guard)
+- Roles section hidden on user record (privileges are implicit)
+
+### System Users (doc 8.2)
+
+- **`member_id`** FK on `users` → `members(id) ON DELETE SET NULL`
+- Every system user must be linked to a current member (except site admin)
+- **User creation**: select member from dropdown → auto-derives name/email,
+  generates random temp password, returns it in response
+- **Set Temporary Password**: `POST /users/:id/set-temp-password` → generates
+  random password, invalidates sessions, returns `{ tempPassword }`
+- **Available members**: `GET /users/available-members` returns current members
+  (status = 'Current') for the add-user dropdown
+- **User list columns**: Select, Full Name, Login User Name, Member, Site Admin,
+  Date Created, Last Accessed, Roles
+- **Send Email to users** (doc 8.2.1): row selection + Send Email button,
+  uses member_id to route through existing email compose flow
+
 ### Delete-last-admin guard
 
 `DELETE /users/:id` checks if target is last Administration role holder → 400 if so.
+Also blocks deletion of site administrator.
 
 ### New tenant: adminUsername required
 

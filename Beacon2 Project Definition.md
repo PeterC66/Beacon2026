@@ -30,6 +30,12 @@ Beacon2 is a ground-up rebuild with these goals:
 - Auth: JWT (access) + refresh token (httpOnly cookie), bcrypt password hashing
 - Login by **username** (with email fallback for legacy users)
 - Roles and Privileges: fully configurable per-u3a, seeded defaults on tenant creation
+- **Site Administrator** (doc 8.1): `is_site_admin` flag on user, ALL privileges implicit,
+  cannot be deleted, shown prominently in user list
+- **System Users** (doc 8.2): user ↔ member link (`member_id` FK), create user from
+  member dropdown, auto-generated temp password, set-temp-password per user,
+  user list with Select/Full Name/Login User Name/Member/Site Admin/Date Created/
+  Last Accessed/Roles columns, Send Email to selected users (doc 8.2.1)
 - System tier: separate system admin login, tenant CRUD, set-temp-password
 - Auto-migrate and auto-seed on startup (`migrate.js`) — no shell access needed
 - Redis session invalidation (disabled in POC; `USE_REDIS=false`)

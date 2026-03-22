@@ -29,6 +29,11 @@ CREATE TABLE IF NOT EXISTS :schema.users (
 ALTER TABLE :schema.users ADD COLUMN IF NOT EXISTS username TEXT;
 CREATE UNIQUE INDEX IF NOT EXISTS :schema_idx_users_username ON :schema.users (username) WHERE username IS NOT NULL;
 
+-- Site administrator flag (exactly one user per tenant)
+ALTER TABLE :schema.users ADD COLUMN IF NOT EXISTS is_site_admin BOOLEAN NOT NULL DEFAULT false;
+
+-- member_id FK (added after members table is created — see bottom of file)
+
 -- ─────────────────────────────────────────────
 -- ROLES
 -- ─────────────────────────────────────────────
@@ -653,3 +658,10 @@ ALTER TABLE :schema.tenant_settings ADD COLUMN IF NOT EXISTS group_bf_enabled BO
 -- ─── Refund transaction linking (doc 7.10.7) ──────────────────────────
 ALTER TABLE :schema.transactions ADD COLUMN IF NOT EXISTS refund_of_id  TEXT REFERENCES :schema.transactions(id);
 ALTER TABLE :schema.transactions ADD COLUMN IF NOT EXISTS refunded_by_id TEXT REFERENCES :schema.transactions(id);
+
+-- ─── Users → Members FK (doc 8.2) ──────────────────────────────────────
+-- Activate the member_id column as a proper FK to members table.
+-- Using CREATE INDEX pattern since ALTER TABLE ADD CONSTRAINT IF NOT EXISTS is PG 17+.
+-- We put the FK inline in a helper table approach -- actually we just
+-- rely on the migration runner's try/catch per statement.
+ALTER TABLE :schema.users ADD CONSTRAINT users_member_id_fkey FOREIGN KEY (member_id) REFERENCES :schema.members(id) ON DELETE SET NULL

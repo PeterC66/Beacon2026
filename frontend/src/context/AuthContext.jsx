@@ -17,6 +17,7 @@ export function AuthProvider({ children }) {
   const [user,    setUser]    = useState(null);   // { id, name, email }
   const [tenant,  setTenant]  = useState(null);   // slug string
   const [privs,   setPrivs]   = useState([]);     // string[] of "resource:action"
+  const [siteAdmin, setSiteAdmin] = useState(false); // true for site administrator
   const [loading, setLoading] = useState(false);
   const [error,   setError]   = useState(null);
   const [restoring, setRestoring] = useState(true); // true while checking refresh cookie
@@ -31,6 +32,7 @@ export function AuthProvider({ children }) {
         setUser(data.user);
         setTenant(slug);
         setPrivs(payload.privileges ?? []);
+        setSiteAdmin(payload.isSiteAdmin || false);
       }
     }).finally(() => setRestoring(false));
   }, []);
@@ -68,6 +70,7 @@ export function AuthProvider({ children }) {
       setUser(null);
       setTenant(null);
       setPrivs([]);
+      setSiteAdmin(false);
     };
     window.addEventListener('auth:expired', handler);
     return () => window.removeEventListener('auth:expired', handler);
@@ -85,6 +88,7 @@ export function AuthProvider({ children }) {
       setUser(data.user);
       setTenant(tenantSlug);
       setPrivs(payload.privileges ?? []);
+      setSiteAdmin(payload.isSiteAdmin || false);
       return true;
     } catch (err) {
       setError(err.message);
@@ -100,6 +104,7 @@ export function AuthProvider({ children }) {
     setUser(null);
     setTenant(null);
     setPrivs([]);
+    setSiteAdmin(false);
   }, []);
 
   /**
@@ -108,15 +113,16 @@ export function AuthProvider({ children }) {
    * @param {string} action    e.g. 'view'
    */
   const can = useCallback((resource, action) => {
+    if (siteAdmin) return true;
     return privs.includes(`${resource}:${action}`);
-  }, [privs]);
+  }, [privs, siteAdmin]);
 
   // While restoring session from refresh cookie, render nothing to avoid
   // flashing the login page before auth state is known.
   if (restoring) return null;
 
   return (
-    <AuthContext.Provider value={{ user, tenant, privs, loading, error, login, logout, can, isLoggedIn: !!user }}>
+    <AuthContext.Provider value={{ user, tenant, privs, loading, error, login, logout, can, isLoggedIn: !!user, isSiteAdmin: siteAdmin }}>
       {children}
     </AuthContext.Provider>
   );
