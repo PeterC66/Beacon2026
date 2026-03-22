@@ -357,6 +357,18 @@ ALTER TABLE :schema.finance_accounts ADD COLUMN IF NOT EXISTS pending_types  TEX
 ALTER TABLE :schema.finance_accounts ADD COLUMN IF NOT EXISTS enable_refunds BOOLEAN NOT NULL DEFAULT false;
 
 -- ─────────────────────────────────────────────
+-- PAYMENT METHOD DEFAULTS (doc 8.6c)
+-- Stores default account per payment method and the overall default method.
+-- The special key '_default_method' stores the default membership payment method
+-- in the account_id column (abused as a plain text value).
+-- ─────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS :schema.payment_method_defaults (
+  payment_method TEXT PRIMARY KEY,
+  account_id     TEXT,
+  updated_at     TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+-- ─────────────────────────────────────────────
 -- FINANCE CATEGORIES
 -- ─────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS :schema.finance_categories (

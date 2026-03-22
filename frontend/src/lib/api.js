@@ -310,6 +310,8 @@ export const finance = {
   deleteAccount:    (id)       => request(`/finance/accounts/${id}`, { method: 'DELETE' }),
   getGroupBfSetting:  ()       => request('/finance/group-bf-setting'),
   setGroupBfSetting:  (enabled) => request('/finance/group-bf-setting', { method: 'PATCH', body: JSON.stringify({ groupBfEnabled: enabled }) }),
+  getPaymentMethodDefaults: () => request('/finance/payment-method-defaults'),
+  setPaymentMethodDefaults: (data) => request('/finance/payment-method-defaults', { method: 'PUT', body: JSON.stringify(data) }),
 
   listCategories:   ()         => request('/finance/categories'),
   createCategory:   (data)     => request('/finance/categories', { method: 'POST', body: JSON.stringify(data) }),

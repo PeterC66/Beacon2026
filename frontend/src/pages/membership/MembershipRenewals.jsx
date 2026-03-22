@@ -1,7 +1,7 @@
 // beacon2/frontend/src/pages/membership/MembershipRenewals.jsx
 // Doc 4.5 — Membership Renewals
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { members as membersApi, finance as financeApi, polls as pollsApi } from '../../lib/api.js';
 import { useAuth } from '../../context/AuthContext.jsx';
@@ -27,6 +27,7 @@ export default function MembershipRenewals() {
   const [data,      setData]      = useState(null);   // { members, yearStart, prevYearStart, nextYearStart, showNextYear }
   const [accounts,  setAccounts]  = useState([]);
   const [polls,     setPolls]     = useState([]);
+  const payDefaults               = useRef({ defaultMethod: '', mappings: {} });
   const [loading,   setLoading]   = useState(true);
   const [error,     setError]     = useState(null);
 
@@ -52,15 +53,26 @@ export default function MembershipRenewals() {
     setLoading(true);
     setError(null);
     try {
-      const [renewalData, accs, pollList] = await Promise.all([
+      const [renewalData, accs, pollList, defaults] = await Promise.all([
         membersApi.listRenewals(),
         financeApi.listAccounts(),
         pollsApi.list(),
+        financeApi.getPaymentMethodDefaults().catch(() => ({ defaultMethod: '', mappings: {} })),
       ]);
       setData(renewalData);
       const activeAccs = accs.filter((a) => a.active);
       setAccounts(activeAccs);
-      if (activeAccs.length > 0) setAccountId(activeAccs[0].id);
+      payDefaults.current = defaults;
+      // Use default payment method if configured, otherwise 'Cheque'
+      const defMethod = defaults.defaultMethod || 'Cheque';
+      setPaymentMethod(defMethod);
+      // Use mapped account for the default method, otherwise first active account
+      const mappedAccId = defaults.mappings[defMethod];
+      if (mappedAccId && activeAccs.some((a) => a.id === mappedAccId)) {
+        setAccountId(mappedAccId);
+      } else if (activeAccs.length > 0) {
+        setAccountId(activeAccs[0].id);
+      }
       setPolls(pollList);
       if (pollList.length > 0) setChosenPoll(pollList[0].id);
 
@@ -225,7 +237,14 @@ export default function MembershipRenewals() {
               </div>
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">Payment method</label>
-                <select value={paymentMethod} onChange={(e) => setPaymentMethod(e.target.value)} className={SELECT + ' w-44'}>
+                <select value={paymentMethod} onChange={(e) => {
+                  const method = e.target.value;
+                  setPaymentMethod(method);
+                  const mappedAccId = payDefaults.current.mappings[method];
+                  if (mappedAccId && accounts.some((a) => a.id === mappedAccId)) {
+                    setAccountId(mappedAccId);
+                  }
+                }} className={SELECT + ' w-44'}>
                   {PAYMENT_METHODS.map((m) => <option key={m} value={m}>{m}</option>)}
                 </select>
               </div>

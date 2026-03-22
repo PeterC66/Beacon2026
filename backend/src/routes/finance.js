@@ -181,6 +181,73 @@ router.patch('/group-bf-setting', requirePrivilege('finance_accounts', 'change')
   } catch (err) { next(err); }
 });
 
+// ─── PAYMENT METHOD DEFAULTS (doc 8.6c) ──────────────────────────────────
+
+const PAYMENT_METHODS_LIST = ['Cheque', 'Cash', 'PayPal', 'Standing Order', 'Direct Debit',
+                              'BACS', 'Debit card', 'Account transfer', 'Credit card'];
+
+// GET /finance/payment-method-defaults — returns default method + per-type account mappings.
+router.get('/payment-method-defaults', requirePrivilege('finance_accounts', 'view'), async (req, res, next) => {
+  try {
+    const slug = req.user.tenantSlug;
+    const rows = await tenantQuery(slug, `SELECT payment_method, account_id FROM payment_method_defaults`);
+    const defaultMethodRow = rows.find((r) => r.payment_method === '_default_method');
+    const mappings = {};
+    for (const r of rows) {
+      if (r.payment_method !== '_default_method') mappings[r.payment_method] = r.account_id;
+    }
+    res.json({ defaultMethod: defaultMethodRow?.account_id || '', mappings });
+  } catch (err) { next(err); }
+});
+
+// PUT /finance/payment-method-defaults — save default method + per-type account mappings.
+const paymentMethodDefaultsSchema = z.object({
+  defaultMethod: z.string(),
+  mappings: z.record(z.string(), z.string()),  // { paymentMethod: accountId }
+});
+
+router.put('/payment-method-defaults', requirePrivilege('finance_accounts', 'change'), async (req, res, next) => {
+  try {
+    const slug = req.user.tenantSlug;
+    const data = paymentMethodDefaultsSchema.parse(req.body);
+
+    // Validate that referenced accounts exist
+    if (data.defaultMethod && !PAYMENT_METHODS_LIST.includes(data.defaultMethod)) {
+      throw new AppError(`Invalid default payment method: ${data.defaultMethod}`, 400);
+    }
+    const accountIds = Object.values(data.mappings).filter(Boolean);
+    if (accountIds.length > 0) {
+      const accs = await tenantQuery(slug, `SELECT id FROM finance_accounts WHERE id = ANY($1::text[])`, [accountIds]);
+      const validIds = new Set(accs.map((a) => a.id));
+      for (const aid of accountIds) {
+        if (!validIds.has(aid)) throw new AppError(`Account not found: ${aid}`, 400);
+      }
+    }
+
+    // Upsert default method
+    await tenantQuery(slug,
+      `INSERT INTO payment_method_defaults (payment_method, account_id, updated_at)
+       VALUES ('_default_method', $1, now())
+       ON CONFLICT (payment_method) DO UPDATE SET account_id = $1, updated_at = now()`,
+      [data.defaultMethod || null]);
+
+    // Upsert each payment type mapping
+    for (const pm of PAYMENT_METHODS_LIST) {
+      const accId = data.mappings[pm] || null;
+      await tenantQuery(slug,
+        `INSERT INTO payment_method_defaults (payment_method, account_id, updated_at)
+         VALUES ($1, $2, now())
+         ON CONFLICT (payment_method) DO UPDATE SET account_id = $2, updated_at = now()`,
+        [pm, accId]);
+    }
+
+    logAudit(slug, { userId: req.user.userId, userName: req.user.name, action: 'update',
+      entityType: 'setting', entityId: 'payment_method_defaults', entityName: 'Payment method defaults' });
+
+    res.json({ defaultMethod: data.defaultMethod, mappings: data.mappings });
+  } catch (err) { next(err); }
+});
+
 // ─── FINANCE CATEGORIES ───────────────────────────────────────────────────
 
 router.get('/categories', requirePrivilege('finance_categories', 'view'), async (req, res, next) => {
