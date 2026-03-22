@@ -435,8 +435,16 @@ export const polls = {
 export const settings = {
   get:           ()     => request('/settings'),
   update:        (data) => request('/settings', { method: 'PATCH', body: JSON.stringify(data) }),
-  getYearConfig:        () => request('/settings/year-config'),
-  getNewMemberDefaults: () => request('/settings/new-member-defaults'),
+  getYearConfig:          () => request('/settings/year-config'),
+  getNewMemberDefaults:   () => request('/settings/new-member-defaults'),
+  getCustomFieldLabels:   () => request('/settings/custom-field-labels'),
+};
+
+// ─── Custom Fields ────────────────────────────────────────────────────────
+
+export const customFields = {
+  get:    ()     => request('/custom-fields'),
+  update: (data) => request('/custom-fields', { method: 'PATCH', body: JSON.stringify(data) }),
 };
 
 // ─── System admin (separate token, no tenant) ─────────────────────────────

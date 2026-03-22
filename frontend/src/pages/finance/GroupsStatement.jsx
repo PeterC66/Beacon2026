@@ -71,6 +71,7 @@ export default function GroupsStatement() {
   }
 
   const groups = data?.groups ?? [];
+  const totalBf  = groups.reduce((s, g) => s + g.bf,        0);
   const totalIn  = groups.reduce((s, g) => s + g.total_in,  0);
   const totalOut = groups.reduce((s, g) => s + g.total_out, 0);
 
@@ -130,27 +131,29 @@ export default function GroupsStatement() {
                   <thead>
                     <tr className="bg-slate-50 border-b border-slate-200 text-left text-slate-600 font-normal italic">
                       <th className="px-4 py-2.5 font-normal">Group</th>
-                      <th className="px-4 py-2.5 font-normal">Status</th>
+                      <th className="px-4 py-2.5 font-normal text-right">B/F</th>
                       <th className="px-4 py-2.5 font-normal text-right">In (£)</th>
                       <th className="px-4 py-2.5 font-normal text-right">Out (£)</th>
                       <th className="px-4 py-2.5 font-normal text-right">Balance (£)</th>
+                      <th className="px-4 py-2.5 font-normal">Status</th>
                     </tr>
                   </thead>
                   <tbody>
                     {groups.length === 0 && (
-                      <tr><td colSpan={5} className="px-4 py-4 text-center text-slate-400">No groups found.</td></tr>
+                      <tr><td colSpan={6} className="px-4 py-4 text-center text-slate-400">No groups found.</td></tr>
                     )}
                     {groups.map((g, i) => (
                       <>
                         <tr key={g.id}
                           className={`border-b border-slate-100 ${i % 2 === 0 ? 'bg-yellow-50' : 'bg-white'} ${showTxns && entriesByGroup[g.id] ? 'font-semibold' : ''}`}>
                           <td className="px-4 py-2">{g.name}</td>
-                          <td className="px-4 py-2 text-slate-500 text-xs">{g.status ?? ''}</td>
+                          <td className="px-4 py-2 text-right font-mono text-slate-700">{g.bf !== 0 ? fmtAmt(g.bf) : ''}</td>
                           <td className="px-4 py-2 text-right font-mono text-green-700">{g.total_in > 0 ? fmtAmt(g.total_in) : ''}</td>
                           <td className="px-4 py-2 text-right font-mono text-red-700">{g.total_out > 0 ? fmtAmt(g.total_out) : ''}</td>
                           <td className={`px-4 py-2 text-right font-mono font-semibold ${g.balance >= 0 ? 'text-slate-700' : 'text-red-700'}`}>
                             {fmtAmt(g.balance)}
                           </td>
+                          <td className="px-4 py-2 text-slate-500 text-xs">{g.status ?? ''}</td>
                         </tr>
                         {showTxns && (entriesByGroup[g.id] ?? []).map((e) => (
                           <tr key={e.entry_date + e.payee + e.detail}
@@ -163,6 +166,7 @@ export default function GroupsStatement() {
                             <td className="px-4 py-1 text-right font-mono text-green-600">{e.money_in > 0 ? fmtAmt(e.money_in) : ''}</td>
                             <td className="px-4 py-1 text-right font-mono text-red-600">{e.money_out > 0 ? fmtAmt(e.money_out) : ''}</td>
                             <td></td>
+                            <td></td>
                           </tr>
                         ))}
                       </>
@@ -170,12 +174,14 @@ export default function GroupsStatement() {
                     {/* Totals */}
                     {groups.length > 0 && (
                       <tr className="bg-slate-100 border-t border-slate-300 font-bold">
-                        <td className="px-4 py-2.5" colSpan={2}>TOTAL</td>
+                        <td className="px-4 py-2.5">TOTAL</td>
+                        <td className="px-4 py-2.5 text-right font-mono text-slate-700">{fmtAmt(totalBf)}</td>
                         <td className="px-4 py-2.5 text-right font-mono text-green-700">{fmtAmt(totalIn)}</td>
                         <td className="px-4 py-2.5 text-right font-mono text-red-700">{fmtAmt(totalOut)}</td>
-                        <td className={`px-4 py-2.5 text-right font-mono ${totalIn - totalOut >= 0 ? 'text-slate-700' : 'text-red-700'}`}>
-                          {fmtAmt(totalIn - totalOut)}
+                        <td className={`px-4 py-2.5 text-right font-mono ${totalBf + totalIn - totalOut >= 0 ? 'text-slate-700' : 'text-red-700'}`}>
+                          {fmtAmt(totalBf + totalIn - totalOut)}
                         </td>
+                        <td></td>
                       </tr>
                     )}
                   </tbody>

@@ -833,6 +833,7 @@ const BEACON_PRIV_BASE = {
   1230: { code: 'settings' },
   1240: { code: 'address_labels',            extra: 'download' },
   1250: { code: 'poll_set_up' },
+  1255: { code: 'custom_fields' },
   1260: { code: 'gift_aid_declaration',      extra: 'download_and_mark' },
   1270: { code: 'membership_renewals',       extra: 'renew' },
   1310: { code: 'group_leaders',             extra: 'email_labels' },

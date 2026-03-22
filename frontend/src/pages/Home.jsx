@@ -78,6 +78,7 @@ export default function Home() {
         { label: 'Membership classes',  tip: 'Define membership types and their fees',       to: can('member_classes',  'view') ? '/membership/classes'  : null },
         { label: 'Member statuses',     tip: 'View the lifecycle statuses for members',      to: can('member_statuses', 'view') ? '/membership/statuses' : null },
         { label: 'Poll',                tip: 'Set up and manage membership polls',            to: can('poll_set_up', 'view') ? '/polls' : null },
+        { label: 'Custom fields',      tip: 'Define up to 4 free-form fields on member records', to: can('custom_fields', 'view') ? '/custom-fields' : null },
       ],
     },
   ];

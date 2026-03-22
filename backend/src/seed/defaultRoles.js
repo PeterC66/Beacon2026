@@ -23,6 +23,10 @@ export const DEFAULT_ROLES = [
       { code: 'audit_trail',              action: 'view' },
       { code: 'audit_trail',              action: 'delete' },             // vd
 
+      // Custom fields
+      { code: 'custom_fields',           action: 'view' },
+      { code: 'custom_fields',           action: 'change' },            // ve
+
       // Calendar / data
       { code: 'calendar',                 action: 'view' },
       { code: 'calendar',                 action: 'download' },           // vo

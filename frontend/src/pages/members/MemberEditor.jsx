@@ -14,6 +14,7 @@ const BLANK_FORM = {
   title: '', forenames: '', surname: '', knownAs: '', suffix: '', email: '',
   mobile: '', statusId: '', classId: '', joinedOn: '', nextRenewal: '',
   giftAidFrom: '', homeU3a: '', notes: '', hideContact: false,
+  customField1: '', customField2: '', customField3: '', customField4: '',
   // address
   houseNo: '', street: '', addLine1: '', addLine2: '', town: '', county: '', postcode: '', telephone: '',
   // partner
@@ -137,6 +138,9 @@ export default function MemberEditor() {
   const [memberPollIds, setMemberPollIds] = useState([]);   // polls this member is in
   const [pollSaving,    setPollSaving]    = useState(false);
 
+  // ── Custom field labels ──────────────────────────────────────────────
+  const [cfLabels, setCfLabels] = useState({ label1: '', label2: '', label3: '', label4: '' });
+
   const selectedClass = classes.find((c) => c.id === form.classId);
   const isAssociate   = selectedClass?.is_associate ?? false;
   const classFee      = selectedClass?.fee ?? null;
@@ -174,6 +178,7 @@ export default function MemberEditor() {
       .catch(() => {});
 
     membersApi.list({ status: '' }).then(setAllMembers).catch(() => {});
+    settingsApi.getCustomFieldLabels().then(setCfLabels).catch(() => {});
 
     if (isNew) {
       settingsApi.getYearConfig().then(setYearConfig).catch(() => {});
@@ -240,6 +245,10 @@ export default function MemberEditor() {
             homeU3a:           m.home_u3a        ?? '',
             notes:             m.notes           ?? '',
             hideContact:       m.hide_contact    ?? false,
+            customField1:      m.custom_field_1  ?? '',
+            customField2:      m.custom_field_2  ?? '',
+            customField3:      m.custom_field_3  ?? '',
+            customField4:      m.custom_field_4  ?? '',
             houseNo:           m.house_no        ?? '',
             street:            m.street          ?? '',
             addLine1:          m.add_line1       ?? '',
@@ -450,6 +459,10 @@ export default function MemberEditor() {
       homeU3a:     isAssociate ? (form.homeU3a || undefined) : undefined,
       notes:       form.notes       || undefined,
       hideContact: form.hideContact,
+      customField1: form.customField1 || null,
+      customField2: form.customField2 || null,
+      customField3: form.customField3 || null,
+      customField4: form.customField4 || null,
       address: {
         houseNo:   form.houseNo   || undefined,
         street:    form.street    || undefined,
@@ -1103,6 +1116,28 @@ export default function MemberEditor() {
                 ))}
               </div>
               {pollSaving && <p className="text-xs text-slate-400 mt-2">Saving…</p>}
+            </div>
+          )}
+
+          {/* ── Custom Fields (doc 8.7) ─────────────────────────────── */}
+          {(cfLabels.label1 || cfLabels.label2 || cfLabels.label3 || cfLabels.label4) && (
+            <div className={sectionCls}>
+              <h2 className="text-sm font-semibold text-slate-700 uppercase tracking-wide mb-3">Custom Fields</h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {[1, 2, 3, 4].map((n) => {
+                  const labelKey = `label${n}`;
+                  const fieldKey = `customField${n}`;
+                  if (!cfLabels[labelKey]) return null;
+                  return (
+                    <div key={n}>
+                      <label className={labelCls}>{cfLabels[labelKey]}</label>
+                      <input type="text" value={form[fieldKey]}
+                        onChange={(e) => set(fieldKey, e.target.value)}
+                        className={inputCls} />
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           )}
 

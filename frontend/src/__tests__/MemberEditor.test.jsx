@@ -22,7 +22,7 @@ vi.mock('../lib/api.js', () => ({
   memberClasses:  { list: vi.fn().mockResolvedValue([]) },
   finance:        { listAccounts: vi.fn().mockResolvedValue([]), listTransactions: vi.fn().mockResolvedValue([]), getPaymentMethodDefaults: vi.fn().mockResolvedValue({ defaultMethod: '', mappings: {} }) },
   polls:          { list: vi.fn().mockResolvedValue([]), setForMember: vi.fn() },
-  settings:       { get: vi.fn().mockResolvedValue({ shared_address_warning: false }), getYearConfig: vi.fn().mockResolvedValue({ yearStartMonth: 1, yearStartDay: 1, extendedMembershipMonth: null }), getNewMemberDefaults: vi.fn().mockResolvedValue({ defaultTown: '', defaultCounty: '', defaultStdCode: '' }) },
+  settings:       { get: vi.fn().mockResolvedValue({ shared_address_warning: false }), getYearConfig: vi.fn().mockResolvedValue({ yearStartMonth: 1, yearStartDay: 1, extendedMembershipMonth: null }), getNewMemberDefaults: vi.fn().mockResolvedValue({ defaultTown: '', defaultCounty: '', defaultStdCode: '' }), getCustomFieldLabels: vi.fn().mockResolvedValue({ label1: '', label2: '', label3: '', label4: '' }) },
 }));
 
 describe('MemberEditor page (new member)', () => {

@@ -874,9 +874,13 @@ const createMemberSchema = z.object({
   joinedOn:    z.string().min(1, 'Date joined is required'),  // ISO date string
   nextRenewal: z.string().min(1, 'Next renewal date is required'),
   giftAidFrom: z.string().optional(),
-  homeU3a:     z.string().max(100).optional(),
-  notes:       z.string().optional(),
-  hideContact: z.boolean().default(false),
+  homeU3a:      z.string().max(100).optional(),
+  notes:        z.string().optional(),
+  hideContact:  z.boolean().default(false),
+  customField1: z.string().nullable().optional(),
+  customField2: z.string().nullable().optional(),
+  customField3: z.string().nullable().optional(),
+  customField4: z.string().nullable().optional(),
   // Address — either a new address object, an existing partner's id, or a new partner (shares primary's address)
   address:           addressSchema.optional(),
   existingPartnerId: z.string().optional(),
@@ -1003,8 +1007,9 @@ router.post('/', requirePrivilege('member_record', 'create'), async (req, res, n
       `INSERT INTO members
          (title, forenames, surname, known_as, initials, suffix, email, mobile,
           address_id, status_id, class_id, joined_on, next_renewal, gift_aid_from,
-          home_u3a, notes, hide_contact, partner_id)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12::date,$13::date,$14::date,$15,$16,$17,$18)
+          home_u3a, notes, hide_contact, partner_id,
+          custom_field_1, custom_field_2, custom_field_3, custom_field_4)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12::date,$13::date,$14::date,$15,$16,$17,$18,$19,$20,$21,$22)
        RETURNING id, membership_number, title, forenames, surname, known_as,
                  initials, suffix, email, mobile, status_id, class_id,
                  joined_on, next_renewal, gift_aid_from, home_u3a, notes,
@@ -1028,6 +1033,10 @@ router.post('/', requirePrivilege('member_record', 'create'), async (req, res, n
         data.notes      ?? null,
         data.hideContact,
         data.existingPartnerId ?? null,
+        data.customField1 ?? null,
+        data.customField2 ?? null,
+        data.customField3 ?? null,
+        data.customField4 ?? null,
       ],
     );
 
@@ -1136,6 +1145,10 @@ const updateMemberSchema = z.object({
   homeU3a:      z.string().max(100).nullable().optional(),
   notes:        z.string().nullable().optional(),
   hideContact:  z.boolean().optional(),
+  customField1: z.string().nullable().optional(),
+  customField2: z.string().nullable().optional(),
+  customField3: z.string().nullable().optional(),
+  customField4: z.string().nullable().optional(),
   partnerId:    z.string().nullable().optional(),
   // 'both' = update the shared address row in place; 'me-only' = create a new address for this member only
   addressScope: z.enum(['both', 'me-only']).optional(),
@@ -1160,7 +1173,8 @@ router.patch('/:id', requirePrivilege('member_record', 'change'), async (req, re
 
     // Early empty-body check (before any DB call)
     const MEMBER_FIELDS = ['title','forenames','surname','knownAs','suffix','email','mobile',
-      'statusId','classId','joinedOn','nextRenewal','giftAidFrom','homeU3a','notes','hideContact','partnerId'];
+      'statusId','classId','joinedOn','nextRenewal','giftAidFrom','homeU3a','notes','hideContact',
+      'customField1','customField2','customField3','customField4','partnerId'];
     if (!data.address && !MEMBER_FIELDS.some((f) => data[f] !== undefined)) {
       return res.status(400).json({ error: 'Nothing to update.' });
     }
@@ -1316,6 +1330,10 @@ router.patch('/:id', requirePrivilege('member_record', 'change'), async (req, re
     if (data.homeU3a     !== undefined) { fields.push(`home_u3a = $${i++}`);     values.push(data.homeU3a); }
     if (data.notes       !== undefined) { fields.push(`notes = $${i++}`);        values.push(data.notes); }
     if (data.hideContact !== undefined) { fields.push(`hide_contact = $${i++}`); values.push(data.hideContact); }
+    if (data.customField1 !== undefined) { fields.push(`custom_field_1 = $${i++}`); values.push(data.customField1); }
+    if (data.customField2 !== undefined) { fields.push(`custom_field_2 = $${i++}`); values.push(data.customField2); }
+    if (data.customField3 !== undefined) { fields.push(`custom_field_3 = $${i++}`); values.push(data.customField3); }
+    if (data.customField4 !== undefined) { fields.push(`custom_field_4 = $${i++}`); values.push(data.customField4); }
     if (data.partnerId   !== undefined) { fields.push(`partner_id = $${i++}`);   values.push(data.partnerId); }
     if (data._newAddressId)             { fields.push(`address_id = $${i++}`);   values.push(data._newAddressId); }
 

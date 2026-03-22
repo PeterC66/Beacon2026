@@ -180,6 +180,10 @@ CREATE TABLE IF NOT EXISTS :schema.members (
   notes             TEXT,
   hide_contact      BOOLEAN NOT NULL DEFAULT false,    -- hide from group leaders
   partner_id        TEXT REFERENCES :schema.members(id),
+  custom_field_1    TEXT,                              -- free-form custom field (label in tenant_settings)
+  custom_field_2    TEXT,
+  custom_field_3    TEXT,
+  custom_field_4    TEXT,
   created_at        TIMESTAMPTZ NOT NULL DEFAULT now(),
   updated_at        TIMESTAMPTZ NOT NULL DEFAULT now()
 );
@@ -676,4 +680,16 @@ ALTER TABLE :schema.transactions ADD COLUMN IF NOT EXISTS refunded_by_id TEXT RE
 -- Activate the member_id column as a proper FK to members table.
 -- ADD CONSTRAINT IF NOT EXISTS requires PG 17+. The migration runner's
 -- per-statement try/catch silences the error on re-runs (code 42710).
-ALTER TABLE :schema.users ADD CONSTRAINT users_member_id_fkey FOREIGN KEY (member_id) REFERENCES :schema.members(id) ON DELETE SET NULL
+ALTER TABLE :schema.users ADD CONSTRAINT users_member_id_fkey FOREIGN KEY (member_id) REFERENCES :schema.members(id) ON DELETE SET NULL;
+
+-- ─── Custom fields (doc 8.7) ──────────────────────────────────────────
+-- Up to 4 free-form text fields on each member record, labels stored in settings
+ALTER TABLE :schema.members ADD COLUMN IF NOT EXISTS custom_field_1 TEXT;
+ALTER TABLE :schema.members ADD COLUMN IF NOT EXISTS custom_field_2 TEXT;
+ALTER TABLE :schema.members ADD COLUMN IF NOT EXISTS custom_field_3 TEXT;
+ALTER TABLE :schema.members ADD COLUMN IF NOT EXISTS custom_field_4 TEXT;
+
+ALTER TABLE :schema.tenant_settings ADD COLUMN IF NOT EXISTS custom_field_label_1 TEXT;
+ALTER TABLE :schema.tenant_settings ADD COLUMN IF NOT EXISTS custom_field_label_2 TEXT;
+ALTER TABLE :schema.tenant_settings ADD COLUMN IF NOT EXISTS custom_field_label_3 TEXT;
+ALTER TABLE :schema.tenant_settings ADD COLUMN IF NOT EXISTS custom_field_label_4 TEXT
