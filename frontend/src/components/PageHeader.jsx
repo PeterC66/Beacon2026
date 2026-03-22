@@ -12,7 +12,7 @@ export default function PageHeader({ tenant }) {
     : '';
 
   return (
-    <div className="flex items-center gap-4 px-4 py-3 sm:px-8 bg-white/70 backdrop-blur-sm">
+    <div className="beacon-no-theme flex items-center gap-4 px-4 py-3 sm:px-8 bg-white/70 backdrop-blur-sm">
       <BeaconLogo />
       {display && (
         <span className="text-xl sm:text-4xl font-normal text-slate-900 truncate min-w-0">

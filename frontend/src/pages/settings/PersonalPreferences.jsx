@@ -35,6 +35,15 @@ export default function PersonalPreferences() {
   // ── Section a: display prefs ────────────────────────────────────────
   const [prefs,      setPrefs]      = useState(getPreferences());
   const [prefsSaved, setPrefsSaved] = useState(false);
+  const [displaySaved, setDisplaySaved] = useState(false);
+
+  function handleSaveDisplay(e) {
+    e.preventDefault();
+    savePreferences(prefs);
+    markClean();
+    setDisplaySaved(true);
+    setTimeout(() => setDisplaySaved(false), 2500);
+  }
 
   function handleSavePrefs(e) {
     e.preventDefault();
@@ -130,6 +139,62 @@ export default function PersonalPreferences() {
 
       <div className="max-w-xl mx-auto px-4 py-5">
         <h1 className="text-xl font-bold text-center mb-5">Personal Preferences</h1>
+
+        {/* ── Display preferences: text size & colour theme ──────── */}
+        <div className={sectionCls}>
+          <h2 className="text-base font-semibold text-slate-700 mb-4">Display Preferences</h2>
+          <form onSubmit={handleSaveDisplay} className="space-y-4" noValidate>
+
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Text size</label>
+              <div className="flex gap-3 flex-wrap">
+                {[
+                  { value: 'small',  label: 'Small' },
+                  { value: 'normal', label: 'Normal' },
+                  { value: 'large',  label: 'Large' },
+                  { value: 'xlarge', label: 'Extra Large' },
+                ].map((opt) => (
+                  <label key={opt.value} className="flex items-center gap-1.5 text-sm cursor-pointer">
+                    <input type="radio" name="textSize" value={opt.value}
+                      checked={prefs.textSize === opt.value}
+                      onChange={(e) => { markDirty(); setPrefs((p) => ({ ...p, textSize: e.target.value })); }}
+                      className="accent-blue-600" />
+                    {opt.label}
+                  </label>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Colour theme</label>
+              <div className="flex gap-3 flex-wrap">
+                {[
+                  { value: 'default',        label: 'Default' },
+                  { value: 'high-contrast',  label: 'High Contrast' },
+                  { value: 'warm',           label: 'Warm' },
+                  { value: 'green',          label: 'Green' },
+                  { value: 'dark',           label: 'Dark Mode' },
+                ].map((opt) => (
+                  <label key={opt.value} className="flex items-center gap-1.5 text-sm cursor-pointer">
+                    <input type="radio" name="colorTheme" value={opt.value}
+                      checked={prefs.colorTheme === opt.value}
+                      onChange={(e) => { markDirty(); setPrefs((p) => ({ ...p, colorTheme: e.target.value })); }}
+                      className="accent-blue-600" />
+                    {opt.label}
+                  </label>
+                ))}
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <button type="submit"
+                className="bg-blue-600 hover:bg-blue-700 text-white rounded px-5 py-2 text-sm font-medium transition-colors">
+                Save Display Preferences
+              </button>
+              {displaySaved && <span className="text-sm text-green-700 font-medium">Saved.</span>}
+            </div>
+          </form>
+        </div>
 
         {/* ── Section a: Drop-down name lists & timeout ─────────────── */}
         <div className={sectionCls}>

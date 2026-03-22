@@ -8,6 +8,8 @@ const DEFAULTS = {
   sortBy:            'surname',       // 'surname' | 'forename'
   displayFormat:     'surname_first', // 'surname_first' | 'forename_first'
   inactivityTimeout: 20,              // minutes (5–99)
+  textSize:          'normal',        // 'small' | 'normal' | 'large' | 'xlarge'
+  colorTheme:        'default',       // 'default' | 'high-contrast' | 'warm' | 'green' | 'dark'
 };
 
 function load() {
@@ -21,7 +23,10 @@ function load() {
 }
 
 function save(prefs) {
-  try { localStorage.setItem(KEY, JSON.stringify(prefs)); } catch { /* ignore */ }
+  try {
+    localStorage.setItem(KEY, JSON.stringify(prefs));
+    window.dispatchEvent(new Event('beacon2-prefs-changed'));
+  } catch { /* ignore */ }
 }
 
 /**
@@ -41,6 +46,14 @@ export function savePreferences(updates) {
   if (updates.inactivityTimeout !== undefined) {
     const n = parseInt(updates.inactivityTimeout, 10);
     next.inactivityTimeout = (!isNaN(n) && n >= 5 && n <= 99) ? n : DEFAULTS.inactivityTimeout;
+  }
+  if (updates.textSize !== undefined) {
+    const valid = ['small', 'normal', 'large', 'xlarge'];
+    next.textSize = valid.includes(updates.textSize) ? updates.textSize : DEFAULTS.textSize;
+  }
+  if (updates.colorTheme !== undefined) {
+    const valid = ['default', 'high-contrast', 'warm', 'green', 'dark'];
+    next.colorTheme = valid.includes(updates.colorTheme) ? updates.colorTheme : DEFAULTS.colorTheme;
   }
   save(next);
   return next;

@@ -1,6 +1,6 @@
 // beacon2/frontend/src/App.jsx
 
-import { createBrowserRouter, RouterProvider, Navigate } from 'react-router-dom';
+import { createBrowserRouter, RouterProvider, Navigate, Outlet } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext.jsx';
 import Login           from './pages/Login.jsx';
 import Home            from './pages/Home.jsx';
@@ -65,6 +65,7 @@ import PortalVerifyEmail   from './pages/public/PortalVerifyEmail.jsx';
 import PortalForgotPassword from './pages/public/PortalForgotPassword.jsx';
 import PortalResetPassword  from './pages/public/PortalResetPassword.jsx';
 import ChangePassword       from './pages/ChangePassword.jsx';
+import ThemeProvider        from './components/ThemeProvider.jsx';
 
 function ProtectedRoute({ children }) {
   const { isLoggedIn, mustChangePassword } = useAuth();
@@ -78,6 +79,10 @@ function AuthRequired({ children }) {
   return isLoggedIn ? children : <Navigate to="/login" replace />;
 }
 
+function ThemedLayout() {
+  return <ThemeProvider><Outlet /></ThemeProvider>;
+}
+
 const router = createBrowserRouter([
   { path: '/login', element: <Login /> },
 
@@ -88,7 +93,8 @@ const router = createBrowserRouter([
   // Force-change-password (requires login but not subject to mustChangePassword redirect)
   { path: '/change-password', element: <AuthRequired><ChangePassword /></AuthRequired> },
 
-  // Protected tenant routes
+  // Protected tenant routes — wrapped in ThemeProvider
+  { element: <ThemedLayout />, children: [
   { path: '/',           element: <ProtectedRoute><Home /></ProtectedRoute> },
   { path: '/roles',      element: <ProtectedRoute><RoleList /></ProtectedRoute> },
   { path: '/roles/new',  element: <ProtectedRoute><RoleEditor /></ProtectedRoute> },
@@ -148,6 +154,7 @@ const router = createBrowserRouter([
   { path: '/calendar',                               element: <ProtectedRoute><Calendar /></ProtectedRoute> },
   { path: '/calendar/open-meetings',                  element: <ProtectedRoute><OpenMeetings /></ProtectedRoute> },
   { path: '/letters/compose',                          element: <ProtectedRoute><LetterCompose /></ProtectedRoute> },
+  ]},
 
   // Public pages (no auth required)
   { path: '/public/:slug/join',                     element: <JoinForm /> },
