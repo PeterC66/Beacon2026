@@ -395,6 +395,27 @@ All in `tenant_schema.sql` (idempotent):
   - Group view returns `{ transactions, groupBf }` instead of plain array
   - `FinanceLedger.jsx` shows B/F rows + Total Brought Forward at table top
 
+### Refunds (doc 7.10.7)
+
+- Per-account `enable_refunds` boolean (already existed in ConfigureAccount)
+- Two linking columns on `transactions`: `refund_of_id` (on refund, points to original)
+  and `refunded_by_id` (on original, points to refund)
+- `POST /finance/transactions/:id/refund` creates the refund:
+  - Opposite type (in→out, out→in); same account/from_to/members/group
+  - Per-category refund amounts (each ≤ original); refund total ≤ original amount
+  - Date must be > original date AND in same financial year
+  - Blocks: cleared, transfer, already-refunded, refund-of-refund, GA-claimed
+- Deleting a refund clears `refunded_by_id` on the original (re-enables refunding)
+- Refunded originals and refund transactions cannot be edited (PATCH blocked)
+- Financial statement: refund transactions (`refund_of_id IS NOT NULL`) are excluded;
+  refunded originals use net amount (`amount - refund.amount`) per category and total
+- Ledger: all four query variants include `refund_of_id`, `refunded_by_id`, and
+  linked transaction numbers; Refund column shows linked # as clickable link;
+  refund rows have red background
+- Frontend: `TransactionRefund.jsx` at `/finance/transactions/:id/refund`;
+  `TransactionEditor.jsx` shows refund/refunded banners and "Refund this transaction"
+  nav link on eligible transactions; read-only mode for refunded/refund transactions
+
 ### Transfer Money (doc 7.3)
 
 - Routes: `GET/POST/PATCH/DELETE /finance/transfers` — privilege `finance_transfer_money`

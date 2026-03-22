@@ -284,6 +284,9 @@ router.get('/transactions', requirePrivilege('finance_ledger', 'view'), async (r
                t.from_to, t.amount::float, t.payment_method, t.payment_ref,
                t.detail, t.remarks, t.cleared_at, t.pending,
                t.member_id_1, t.member_id_2, t.group_id,
+               t.refund_of_id, t.refunded_by_id,
+               ref_orig.transaction_number AS refund_of_txn_number,
+               ref_by.transaction_number AS refunded_by_txn_number,
                m1.forenames || ' ' || m1.surname AS member_1_name,
                m2.forenames || ' ' || m2.surname AS member_2_name,
                g.name AS group_name,
@@ -297,10 +300,13 @@ router.get('/transactions', requirePrivilege('finance_ledger', 'view'), async (r
         LEFT JOIN members m2 ON m2.id = t.member_id_2
         LEFT JOIN groups g   ON g.id  = t.group_id
         LEFT JOIN finance_accounts fa ON fa.id = t.account_id
+        LEFT JOIN transactions ref_orig ON ref_orig.id = t.refund_of_id
+        LEFT JOIN transactions ref_by   ON ref_by.id   = t.refunded_by_id
         LEFT JOIN transaction_categories tc ON tc.transaction_id = t.id
         LEFT JOIN finance_categories fc ON fc.id = tc.category_id
         WHERE (t.member_id_1 = $1 OR t.member_id_2 = $1)
-        GROUP BY t.id, m1.forenames, m1.surname, m2.forenames, m2.surname, g.name, fa.name
+        GROUP BY t.id, m1.forenames, m1.surname, m2.forenames, m2.surname, g.name, fa.name,
+                 ref_orig.transaction_number, ref_by.transaction_number
         ORDER BY t.date, t.transaction_number`;
       params = [memberId];
 
@@ -311,6 +317,9 @@ router.get('/transactions', requirePrivilege('finance_ledger', 'view'), async (r
                t.detail, t.remarks, t.cleared_at, t.pending,
                t.member_id_1, t.member_id_2, t.group_id,
                t.batch_id,
+               t.refund_of_id, t.refunded_by_id,
+               ref_orig.transaction_number AS refund_of_txn_number,
+               ref_by.transaction_number AS refunded_by_txn_number,
                m1.forenames || ' ' || m1.surname AS member_1_name,
                m2.forenames || ' ' || m2.surname AS member_2_name,
                g.name AS group_name,
@@ -322,10 +331,13 @@ router.get('/transactions', requirePrivilege('finance_ledger', 'view'), async (r
         LEFT JOIN members m1 ON m1.id = t.member_id_1
         LEFT JOIN members m2 ON m2.id = t.member_id_2
         LEFT JOIN groups g   ON g.id  = t.group_id
+        LEFT JOIN transactions ref_orig ON ref_orig.id = t.refund_of_id
+        LEFT JOIN transactions ref_by   ON ref_by.id   = t.refunded_by_id
         LEFT JOIN transaction_categories tc ON tc.transaction_id = t.id
         LEFT JOIN finance_categories fc ON fc.id = tc.category_id
         WHERE t.account_id = $1 AND t.date BETWEEN $2::date AND $3::date
-        GROUP BY t.id, m1.forenames, m1.surname, m2.forenames, m2.surname, g.name
+        GROUP BY t.id, m1.forenames, m1.surname, m2.forenames, m2.surname, g.name,
+                 ref_orig.transaction_number, ref_by.transaction_number
         ORDER BY t.date, t.transaction_number`;
       params = [accountId, yearStart, yearEnd];
 
@@ -335,6 +347,9 @@ router.get('/transactions', requirePrivilege('finance_ledger', 'view'), async (r
                t.from_to, t.amount::float, t.payment_method, t.payment_ref,
                t.detail, t.remarks, t.cleared_at, t.pending,
                t.member_id_1, t.member_id_2, t.group_id,
+               t.refund_of_id, t.refunded_by_id,
+               ref_orig.transaction_number AS refund_of_txn_number,
+               ref_by.transaction_number AS refunded_by_txn_number,
                m1.forenames || ' ' || m1.surname AS member_1_name,
                m2.forenames || ' ' || m2.surname AS member_2_name,
                g.name AS group_name,
@@ -348,10 +363,13 @@ router.get('/transactions', requirePrivilege('finance_ledger', 'view'), async (r
         LEFT JOIN members m1 ON m1.id = t.member_id_1
         LEFT JOIN members m2 ON m2.id = t.member_id_2
         LEFT JOIN groups g   ON g.id  = t.group_id
+        LEFT JOIN transactions ref_orig ON ref_orig.id = t.refund_of_id
+        LEFT JOIN transactions ref_by   ON ref_by.id   = t.refunded_by_id
         LEFT JOIN transaction_categories tc ON tc.transaction_id = t.id
         LEFT JOIN finance_categories fc ON fc.id = tc.category_id
         WHERE t.date BETWEEN $2::date AND $3::date
-        GROUP BY t.id, m1.forenames, m1.surname, m2.forenames, m2.surname, g.name, tc_this.amount
+        GROUP BY t.id, m1.forenames, m1.surname, m2.forenames, m2.surname, g.name, tc_this.amount,
+                 ref_orig.transaction_number, ref_by.transaction_number
         ORDER BY t.date, t.transaction_number`;
       params = [categoryId, yearStart, yearEnd];
 
@@ -361,6 +379,9 @@ router.get('/transactions', requirePrivilege('finance_ledger', 'view'), async (r
                t.from_to, t.amount::float, t.payment_method, t.payment_ref,
                t.detail, t.remarks, t.cleared_at, t.pending,
                t.member_id_1, t.member_id_2, t.group_id,
+               t.refund_of_id, t.refunded_by_id,
+               ref_orig.transaction_number AS refund_of_txn_number,
+               ref_by.transaction_number AS refunded_by_txn_number,
                m1.forenames || ' ' || m1.surname AS member_1_name,
                m2.forenames || ' ' || m2.surname AS member_2_name,
                COALESCE(
@@ -370,10 +391,13 @@ router.get('/transactions', requirePrivilege('finance_ledger', 'view'), async (r
         FROM transactions t
         LEFT JOIN members m1 ON m1.id = t.member_id_1
         LEFT JOIN members m2 ON m2.id = t.member_id_2
+        LEFT JOIN transactions ref_orig ON ref_orig.id = t.refund_of_id
+        LEFT JOIN transactions ref_by   ON ref_by.id   = t.refunded_by_id
         LEFT JOIN transaction_categories tc ON tc.transaction_id = t.id
         LEFT JOIN finance_categories fc ON fc.id = tc.category_id
         WHERE ($1 = 'all' OR t.group_id = $1) AND t.date BETWEEN $2::date AND $3::date
-        GROUP BY t.id, m1.forenames, m1.surname, m2.forenames, m2.surname
+        GROUP BY t.id, m1.forenames, m1.surname, m2.forenames, m2.surname,
+                 ref_orig.transaction_number, ref_by.transaction_number
         ORDER BY t.date, t.transaction_number`;
       params = [groupId, yearStart, yearEnd];
 
@@ -449,10 +473,15 @@ router.get('/transactions/:id', requirePrivilege('finance_transactions', 'view')
               t.detail, t.remarks, t.cleared_at, t.pending, t.transfer_id,
               t.member_id_1, t.member_id_2, t.group_id,
               t.batch_id, cb.batch_ref,
+              t.refund_of_id, t.refunded_by_id,
+              ref_orig.transaction_number AS refund_of_txn_number,
+              ref_by.transaction_number AS refunded_by_txn_number,
+              ref_by.amount::float AS refunded_amount,
               m1.forenames || ' ' || m1.surname AS member_1_name,
               m2.forenames || ' ' || m2.surname AS member_2_name,
               g.name AS group_name,
               fa.name AS account_name,
+              fa.enable_refunds AS account_enable_refunds,
               COALESCE(
                 json_agg(json_build_object('category_id', tc.category_id, 'name', fc.name, 'amount', tc.amount::float))
                   FILTER (WHERE tc.id IS NOT NULL), '[]'
@@ -463,10 +492,13 @@ router.get('/transactions/:id', requirePrivilege('finance_transactions', 'view')
        LEFT JOIN groups g   ON g.id  = t.group_id
        LEFT JOIN finance_accounts fa ON fa.id = t.account_id
        LEFT JOIN credit_batches cb ON cb.id = t.batch_id
+       LEFT JOIN transactions ref_orig ON ref_orig.id = t.refund_of_id
+       LEFT JOIN transactions ref_by   ON ref_by.id   = t.refunded_by_id
        LEFT JOIN transaction_categories tc ON tc.transaction_id = t.id
        LEFT JOIN finance_categories fc ON fc.id = tc.category_id
        WHERE t.id = $1
-       GROUP BY t.id, m1.forenames, m1.surname, m2.forenames, m2.surname, g.name, fa.name, cb.batch_ref`,
+       GROUP BY t.id, m1.forenames, m1.surname, m2.forenames, m2.surname, g.name, fa.name, cb.batch_ref,
+                ref_orig.transaction_number, ref_by.transaction_number, ref_by.amount, fa.enable_refunds`,
       [req.params.id],
     );
     if (!txn) throw AppError('Transaction not found.', 404);
@@ -600,12 +632,14 @@ router.patch('/transactions/:id', requirePrivilege('finance_transactions', 'chan
   try {
     const [current] = await tenantQuery(
       req.user.tenantSlug,
-      `SELECT id, amount::float AS amount, cleared_at, transfer_id, pending FROM transactions WHERE id = $1`,
+      `SELECT id, amount::float AS amount, cleared_at, transfer_id, pending, refund_of_id, refunded_by_id FROM transactions WHERE id = $1`,
       [req.params.id],
     );
     if (!current) throw AppError('Transaction not found.', 404);
     if (current.transfer_id) throw AppError('This transaction is part of a transfer. Use the Transfer Money page to edit it.', 400);
     if (current.cleared_at) throw AppError('Cleared transactions cannot be changed.', 400);
+    if (current.refunded_by_id) throw AppError('This transaction has been refunded and cannot be changed. Delete the refund first.', 400);
+    if (current.refund_of_id) throw AppError('Refund transactions cannot be edited. Delete and re-create the refund instead.', 400);
 
     const data = updateTxnSchema.parse(req.body);
 
@@ -675,15 +709,155 @@ router.delete('/transactions/:id', requirePrivilege('finance_transactions', 'del
   try {
     const [current] = await tenantQuery(
       req.user.tenantSlug,
-      `SELECT cleared_at, transfer_id FROM transactions WHERE id = $1`,
+      `SELECT cleared_at, transfer_id, refund_of_id, refunded_by_id FROM transactions WHERE id = $1`,
       [req.params.id],
     );
     if (!current) throw AppError('Transaction not found.', 404);
     if (current.transfer_id) throw AppError('This transaction is part of a transfer. Use the Transfer Money page to delete it.', 400);
     if (current.cleared_at) throw AppError('Cleared transactions cannot be deleted.', 400);
+    if (current.refunded_by_id) throw AppError('This transaction has been refunded. Delete the refund transaction first.', 400);
+
+    // If this is a refund transaction, clear the refunded_by_id on the original
+    if (current.refund_of_id) {
+      await tenantQuery(
+        req.user.tenantSlug,
+        `UPDATE transactions SET refunded_by_id = NULL, updated_at = now() WHERE id = $1`,
+        [current.refund_of_id],
+      );
+    }
 
     await tenantQuery(req.user.tenantSlug, `DELETE FROM transactions WHERE id = $1`, [req.params.id]);
     res.json({ message: 'Transaction deleted.' });
+  } catch (err) { next(err); }
+});
+
+// ─── REFUNDS (doc 7.10.7) ─────────────────────────────────────────────────
+
+const refundSchema = z.object({
+  date:           z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  payment_method: z.string().optional().nullable(),
+  payment_ref:    z.string().optional().nullable(),
+  detail:         z.string().optional().nullable(),
+  remarks:        z.string().optional().nullable(),
+  categories:     z.array(z.object({
+    category_id: z.string().min(1),
+    amount:      z.number().min(0),
+  })).min(1),
+});
+
+router.post('/transactions/:id/refund', requirePrivilege('finance_transactions', 'create'), async (req, res, next) => {
+  try {
+    const data = refundSchema.parse(req.body);
+
+    // Load the original transaction
+    const [orig] = await tenantQuery(
+      req.user.tenantSlug,
+      `SELECT t.id, t.transaction_number, t.account_id, t.date, t.type, t.from_to,
+              t.amount::float, t.cleared_at, t.transfer_id, t.refund_of_id, t.refunded_by_id,
+              t.member_id_1, t.member_id_2, t.group_id,
+              t.gift_aid_claimed_at,
+              fa.enable_refunds
+       FROM transactions t
+       JOIN finance_accounts fa ON fa.id = t.account_id
+       WHERE t.id = $1`,
+      [req.params.id],
+    );
+    if (!orig) throw AppError('Transaction not found.', 404);
+    if (!orig.enable_refunds) throw AppError('Refunds are not enabled for this account.', 400);
+    if (orig.cleared_at) throw AppError('Cleared transactions cannot be refunded. Un-clear it first.', 400);
+    if (orig.transfer_id) throw AppError('Transfer transactions cannot be refunded.', 400);
+    if (orig.refund_of_id) throw AppError('A refund transaction cannot itself be refunded.', 400);
+    if (orig.refunded_by_id) throw AppError('This transaction has already been refunded.', 400);
+    if (orig.gift_aid_claimed_at) throw AppError('Transactions with claimed Gift Aid cannot be refunded.', 400);
+
+    // Validate refund date: must be after original date
+    if (data.date <= orig.date) {
+      throw AppError('Refund date must be after the original transaction date.', 400);
+    }
+
+    // Validate refund date is in the same financial year as the original
+    const [settings] = await tenantQuery(
+      req.user.tenantSlug,
+      `SELECT year_start_month, year_start_day FROM tenant_settings WHERE id = 'singleton'`,
+    );
+    const sm = settings.year_start_month;
+    const sd = settings.year_start_day;
+
+    // Find which financial year the original transaction belongs to
+    const origDate = new Date(orig.date + 'T00:00:00Z');
+    let origYear = origDate.getUTCFullYear();
+    const fyStartOrig = new Date(Date.UTC(origYear, sm - 1, sd));
+    if (origDate < fyStartOrig) origYear--;
+    const { yearStart: fyStart, yearEnd: fyEnd } = computeYearBounds(origYear, sm, sd);
+
+    if (data.date < fyStart || data.date > fyEnd) {
+      throw AppError('Refund date must be in the same financial year as the original transaction.', 400);
+    }
+
+    // Validate refund category amounts
+    const refundTotal = data.categories.reduce((s, c) => s + c.amount, 0);
+    if (refundTotal <= 0) throw AppError('Refund amount must be positive.', 400);
+    if (refundTotal > orig.amount) throw AppError('Refund total cannot exceed the original transaction amount.', 400);
+
+    // Load original category amounts to validate per-category limits
+    const origCats = await tenantQuery(
+      req.user.tenantSlug,
+      `SELECT category_id, amount::float FROM transaction_categories WHERE transaction_id = $1`,
+      [orig.id],
+    );
+    const origCatMap = {};
+    for (const oc of origCats) origCatMap[oc.category_id] = oc.amount;
+
+    for (const rc of data.categories) {
+      if (rc.amount === 0) continue;
+      const origAmt = origCatMap[rc.category_id];
+      if (origAmt === undefined) throw AppError(`Category not found on original transaction.`, 400);
+      if (rc.amount > origAmt + 0.001) throw AppError(`Refund for category exceeds original amount.`, 400);
+    }
+
+    // Create the refund transaction (opposite type)
+    const refundType = orig.type === 'in' ? 'out' : 'in';
+    const [refundTxn] = await tenantQuery(
+      req.user.tenantSlug,
+      `INSERT INTO transactions
+         (account_id, date, type, from_to, amount, payment_method, payment_ref, detail, remarks,
+          member_id_1, member_id_2, group_id, pending, refund_of_id)
+       VALUES ($1, $2::date, $3, $4, $5::numeric, $6, $7, $8, $9, $10, $11, $12, false, $13)
+       RETURNING id, transaction_number`,
+      [
+        orig.account_id, data.date, refundType, orig.from_to,
+        refundTotal,
+        data.payment_method ?? null, data.payment_ref ?? null,
+        data.detail ?? null, data.remarks ?? null,
+        orig.member_id_1, orig.member_id_2, orig.group_id,
+        orig.id,
+      ],
+    );
+
+    // Insert refund category splits (only non-zero amounts)
+    for (const cat of data.categories) {
+      if (cat.amount === 0) continue;
+      await tenantQuery(
+        req.user.tenantSlug,
+        `INSERT INTO transaction_categories (transaction_id, category_id, amount) VALUES ($1, $2, $3::numeric)`,
+        [refundTxn.id, cat.category_id, cat.amount],
+      );
+    }
+
+    // Link original to refund
+    await tenantQuery(
+      req.user.tenantSlug,
+      `UPDATE transactions SET refunded_by_id = $1, updated_at = now() WHERE id = $2`,
+      [refundTxn.id, orig.id],
+    );
+
+    logAudit(req.user.tenantSlug, {
+      userId: req.user.userId, userName: req.user.name,
+      action: 'create', entityType: 'transaction', entityId: refundTxn.id,
+      entityName: `Refund #${refundTxn.transaction_number} of #${orig.transaction_number}`,
+    });
+
+    res.status(201).json({ id: refundTxn.id, transaction_number: refundTxn.transaction_number });
   } catch (err) { next(err); }
 });
 
@@ -1003,25 +1177,34 @@ async function getStatementData(tenantSlug, accountId, yearNum) {
   );
   const openingBalance = totalBF + (priorNet?.net ?? 0);
 
-  // Category breakdown for this year (exclude pending)
+  // Category breakdown for this year (exclude pending and refund transactions)
+  // For refunded originals, use net amount (original minus refund per category)
   const categoryRows = await tenantQuery(
     tenantSlug,
-    `SELECT fc.name AS category, t.type, SUM(tc.amount)::float AS total
+    `SELECT fc.name AS category, t.type,
+            SUM(tc.amount - COALESCE(rc.amount, 0))::float AS total
      FROM transaction_categories tc
      JOIN transactions t ON t.id = tc.transaction_id
      JOIN finance_categories fc ON fc.id = tc.category_id
-     WHERE t.account_id = ANY($1::text[]) AND t.date BETWEEN $2::date AND $3::date AND t.pending = false
+     LEFT JOIN transactions rt ON rt.id = t.refunded_by_id
+     LEFT JOIN transaction_categories rc ON rc.transaction_id = rt.id AND rc.category_id = tc.category_id
+     WHERE t.account_id = ANY($1::text[]) AND t.date BETWEEN $2::date AND $3::date
+       AND t.pending = false AND t.refund_of_id IS NULL
      GROUP BY fc.name, t.type
+     HAVING SUM(tc.amount - COALESCE(rc.amount, 0)) > 0
      ORDER BY fc.name, t.type`,
     [accountIds, yearStart, yearEnd],
   );
 
-  // Year totals (exclude pending)
+  // Year totals (exclude pending and refund transactions; net refunded originals)
   const [yearTotals] = await tenantQuery(
     tenantSlug,
-    `SELECT COALESCE(SUM(CASE WHEN type='in'  THEN amount ELSE 0 END), 0)::float AS total_in,
-            COALESCE(SUM(CASE WHEN type='out' THEN amount ELSE 0 END), 0)::float AS total_out
-     FROM transactions WHERE account_id = ANY($1::text[]) AND date BETWEEN $2::date AND $3::date AND pending = false`,
+    `SELECT COALESCE(SUM(CASE WHEN t.type='in'  THEN t.amount - COALESCE(rt.amount, 0) ELSE 0 END), 0)::float AS total_in,
+            COALESCE(SUM(CASE WHEN t.type='out' THEN t.amount - COALESCE(rt.amount, 0) ELSE 0 END), 0)::float AS total_out
+     FROM transactions t
+     LEFT JOIN transactions rt ON rt.id = t.refunded_by_id
+     WHERE t.account_id = ANY($1::text[]) AND t.date BETWEEN $2::date AND $3::date
+       AND t.pending = false AND t.refund_of_id IS NULL`,
     [accountIds, yearStart, yearEnd],
   );
 

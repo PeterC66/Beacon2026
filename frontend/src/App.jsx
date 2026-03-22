@@ -26,6 +26,7 @@ import FinanceAccounts    from './pages/finance/FinanceAccounts.jsx';
 import FinanceCategories  from './pages/finance/FinanceCategories.jsx';
 import FinanceLedger      from './pages/finance/FinanceLedger.jsx';
 import TransactionEditor  from './pages/finance/TransactionEditor.jsx';
+import TransactionRefund  from './pages/finance/TransactionRefund.jsx';
 import ConfigureAccount   from './pages/finance/ConfigureAccount.jsx';
 import TransferMoney      from './pages/finance/TransferMoney.jsx';
 import ReconcileAccount   from './pages/finance/ReconcileAccount.jsx';
@@ -109,6 +110,7 @@ const router = createBrowserRouter([
   { path: '/finance/categories',                  element: <ProtectedRoute><FinanceCategories /></ProtectedRoute> },
   { path: '/finance/ledger',                      element: <ProtectedRoute><FinanceLedger /></ProtectedRoute> },
   { path: '/finance/transactions/new',            element: <ProtectedRoute><TransactionEditor /></ProtectedRoute> },
+  { path: '/finance/transactions/:id/refund',    element: <ProtectedRoute><TransactionRefund /></ProtectedRoute> },
   { path: '/finance/transactions/:id',            element: <ProtectedRoute><TransactionEditor /></ProtectedRoute> },
   { path: '/finance/transfers',                   element: <ProtectedRoute><TransferMoney /></ProtectedRoute> },
   { path: '/finance/reconcile',                   element: <ProtectedRoute><ReconcileAccount /></ProtectedRoute> },

@@ -57,6 +57,12 @@ export default function TransactionEditor() {
   const [batchRef,   setBatchRef]   = useState(null);
   const [removeBatch, setRemoveBatch] = useState(false);
   const [isTransfer, setIsTransfer] = useState(false);
+  const [refundOfId, setRefundOfId] = useState(null);
+  const [refundOfTxn, setRefundOfTxn] = useState(null);
+  const [refundedById, setRefundedById] = useState(null);
+  const [refundedByTxn, setRefundedByTxn] = useState(null);
+  const [refundedAmount, setRefundedAmount] = useState(null);
+  const [canRefund, setCanRefund] = useState(false);
   const savedTimer = useRef(null);
   const { markDirty, markClean } = useUnsavedChanges();
 
@@ -109,6 +115,15 @@ export default function TransactionEditor() {
         setBatchId(t.batch_id ?? null);
         setBatchRef(t.batch_ref ?? null);
         setIsTransfer(!!t.transfer_id);
+        setRefundOfId(t.refund_of_id ?? null);
+        setRefundOfTxn(t.refund_of_txn_number ?? null);
+        setRefundedById(t.refunded_by_id ?? null);
+        setRefundedByTxn(t.refunded_by_txn_number ?? null);
+        setRefundedAmount(t.refunded_amount ?? null);
+        setCanRefund(
+          !!t.account_enable_refunds && !t.cleared_at && !t.transfer_id &&
+          !t.refund_of_id && !t.refunded_by_id && !t.gift_aid_claimed_at
+        );
         // populate category amounts
         const amounts = {};
         if (Array.isArray(t.categories)) {
@@ -130,6 +145,7 @@ export default function TransactionEditor() {
   const selectedAccount = accounts.find((a) => a.id === form.account_id);
   const pendingConfig = selectedAccount?.pending_config ?? 'disabled';
   const showPending = pendingConfig === 'optional' && !isTransfer;
+  const readOnly = cleared || !!refundedById || !!refundOfId;
 
   const catTotal = useMemo(() => {
     return Object.values(catAmounts).reduce((s, v) => {
@@ -250,6 +266,7 @@ export default function TransactionEditor() {
   const navLinks = [
     { label: 'Home',   to: '/' },
     { label: 'Ledger', to: '/finance/ledger' },
+    ...(!isNew && canRefund ? [{ label: 'Refund this transaction', to: `/finance/transactions/${id}/refund` }] : []),
   ];
 
   const INP = 'border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 w-full';
@@ -281,6 +298,31 @@ export default function TransactionEditor() {
           </div>
         )}
 
+        {refundedById && (
+          <div className="bg-blue-50 border border-blue-300 text-blue-800 rounded px-4 py-2 text-sm mb-4">
+            This transaction has been {refundedAmount < Number(form.amount) ? 'partially ' : ''}refunded
+            {refundedAmount != null && ` (£${Number(refundedAmount).toFixed(2)})`}.{' '}
+            <button
+              onClick={() => navigate(`/finance/transactions/${refundedById}`)}
+              className="text-blue-600 hover:underline font-medium"
+            >
+              Refund #{refundedByTxn} ...
+            </button>
+          </div>
+        )}
+
+        {refundOfId && (
+          <div className="bg-purple-50 border border-purple-300 text-purple-800 rounded px-4 py-2 text-sm mb-4">
+            This is a refund of transaction{' '}
+            <button
+              onClick={() => navigate(`/finance/transactions/${refundOfId}`)}
+              className="text-purple-600 hover:underline font-medium"
+            >
+              #{refundOfTxn} ...
+            </button>
+          </div>
+        )}
+
         {error && <p className="text-center text-red-600 py-2 mb-2">Error: {error}</p>}
         {saved && (
           <p className="text-green-700 text-sm font-medium bg-green-50 border border-green-200 rounded px-3 py-2 text-center mb-2">
@@ -299,7 +341,7 @@ export default function TransactionEditor() {
                   <button
                     key={val}
                     type="button"
-                    disabled={cleared}
+                    disabled={readOnly}
                     onClick={() => set('type', val)}
                     className={`px-4 py-2 rounded text-sm font-medium transition-colors ${
                       form.type === val
@@ -319,7 +361,7 @@ export default function TransactionEditor() {
               <select
                 value={form.account_id}
                 onChange={(e) => set('account_id', e.target.value)}
-                disabled={cleared}
+                disabled={readOnly}
                 className={INP}
               >
                 <option value="">— select account —</option>
@@ -333,7 +375,7 @@ export default function TransactionEditor() {
               <DateInput
                 value={form.date}
                 onChange={(v) => set('date', v)}
-                disabled={cleared}
+                disabled={readOnly}
                 className={INP}
               />
             </div>
@@ -345,7 +387,7 @@ export default function TransactionEditor() {
                 type="text"
                 value={form.from_to}
                 onChange={(e) => set('from_to', e.target.value)}
-                disabled={cleared}
+                disabled={readOnly}
                 className={INP}
                 placeholder={form.type === 'in' ? 'Person / body received from' : 'Person / body paid to'}
               />
@@ -360,7 +402,7 @@ export default function TransactionEditor() {
                 step="0.01"
                 value={form.amount}
                 onChange={(e) => set('amount', e.target.value)}
-                disabled={cleared}
+                disabled={readOnly}
                 className={INP}
                 placeholder="0.00"
               />
@@ -372,7 +414,7 @@ export default function TransactionEditor() {
               <select
                 value={form.payment_method}
                 onChange={(e) => set('payment_method', e.target.value)}
-                disabled={cleared}
+                disabled={readOnly}
                 className={INP}
               >
                 {PAYMENT_METHODS.map((m) => <option key={m} value={m}>{m || '— none —'}</option>)}
@@ -386,7 +428,7 @@ export default function TransactionEditor() {
                 type="text"
                 value={form.payment_ref}
                 onChange={(e) => set('payment_ref', e.target.value)}
-                disabled={cleared}
+                disabled={readOnly}
                 className={INP}
                 placeholder="Cheque number or other reference"
               />
@@ -426,7 +468,7 @@ export default function TransactionEditor() {
                 type="text"
                 value={form.detail}
                 onChange={(e) => set('detail', e.target.value)}
-                disabled={cleared}
+                disabled={readOnly}
                 className={INP}
                 placeholder="Concise reason shown in ledger"
               />
@@ -564,7 +606,7 @@ export default function TransactionEditor() {
                             step="0.01"
                             value={catAmounts[cat.id] ?? ''}
                             onChange={(e) => { markDirty(); setCatAmounts((prev) => ({ ...prev, [cat.id]: e.target.value })); }}
-                            disabled={cleared}
+                            disabled={readOnly}
                             className="border border-slate-300 rounded px-2 py-1 text-sm w-32 focus:outline-none focus:ring-2 focus:ring-blue-500"
                             placeholder="0.00"
                           />
@@ -598,8 +640,8 @@ export default function TransactionEditor() {
           )}
 
           {/* Actions */}
-          {!cleared && (
-            <div className="flex flex-wrap gap-3 justify-center">
+          <div className="flex flex-wrap gap-3 justify-center">
+            {!readOnly && (
               <button
                 type="submit"
                 disabled={saving || deleting}
@@ -607,35 +649,35 @@ export default function TransactionEditor() {
               >
                 {saving ? 'Saving…' : 'Save'}
               </button>
-              {isNew && (
-                <button
-                  type="button"
-                  disabled={saving || deleting}
-                  onClick={(e) => handleSave(e, true)}
-                  className="bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white rounded px-6 py-2 text-sm font-medium transition-colors"
-                >
-                  Save &amp; Add Another
-                </button>
-              )}
-              {!isNew && can('finance_transactions', 'delete') && (
-                <button
-                  type="button"
-                  disabled={saving || deleting}
-                  onClick={handleDelete}
-                  className="border border-red-300 text-red-600 hover:bg-red-50 rounded px-6 py-2 text-sm transition-colors"
-                >
-                  {deleting ? 'Deleting…' : 'Delete'}
-                </button>
-              )}
+            )}
+            {isNew && !readOnly && (
               <button
                 type="button"
-                onClick={() => navigate(-1)}
-                className="border border-slate-300 text-slate-700 hover:bg-slate-50 rounded px-6 py-2 text-sm transition-colors"
+                disabled={saving || deleting}
+                onClick={(e) => handleSave(e, true)}
+                className="bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white rounded px-6 py-2 text-sm font-medium transition-colors"
               >
-                Cancel
+                Save &amp; Add Another
               </button>
-            </div>
-          )}
+            )}
+            {!isNew && can('finance_transactions', 'delete') && !cleared && !refundedById && (
+              <button
+                type="button"
+                disabled={saving || deleting}
+                onClick={handleDelete}
+                className="border border-red-300 text-red-600 hover:bg-red-50 rounded px-6 py-2 text-sm transition-colors"
+              >
+                {deleting ? 'Deleting…' : 'Delete'}
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={() => navigate(-1)}
+              className="border border-slate-300 text-slate-700 hover:bg-slate-50 rounded px-6 py-2 text-sm transition-colors"
+            >
+              Cancel
+            </button>
+          </div>
         </form>
       </div>
 
