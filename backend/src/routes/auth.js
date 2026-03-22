@@ -2,12 +2,14 @@
 // Authentication endpoints: login, logout, token refresh
 
 import { Router } from 'express';
+import crypto from 'crypto';
 import { z } from 'zod';
 import { loginUser, logoutUser, refreshTokens, loginSysAdmin } from '../services/authService.js';
 import { requireAuth } from '../middleware/auth.js';
-import { tenantQuery } from '../utils/db.js';
+import { tenantQuery, prisma } from '../utils/db.js';
 import { verifyPassword, hashPassword } from '../utils/password.js';
 import { AppError } from '../middleware/errorHandler.js';
+import { logAudit } from '../utils/audit.js';
 
 const router = Router();
 
@@ -39,6 +41,7 @@ router.post('/login', async (req, res, next) => {
     res.json({
       accessToken: result.accessToken,
       user: result.user,
+      mustChangePassword: result.user.mustChangePassword || false,
     });
   } catch (err) {
     next(err);
@@ -80,7 +83,7 @@ router.post('/refresh', async (req, res, next) => {
     const result = await refreshTokens(tenantSlug, refreshToken);
 
     res.cookie(COOKIE_NAME, result.refreshToken, cookieOptions);
-    res.json({ accessToken: result.accessToken, user: result.user });
+    res.json({ accessToken: result.accessToken, user: result.user, mustChangePassword: result.user?.mustChangePassword || false });
   } catch (err) {
     next(err);
   }
@@ -109,7 +112,7 @@ router.post('/system/login', async (req, res, next) => {
 
 const changePwSchema = z.object({
   currentPassword: z.string().min(1),
-  newPassword:     z.string().min(8),
+  newPassword:     z.string().min(10).max(72),
 });
 
 router.post('/change-password', requireAuth, async (req, res, next) => {
@@ -167,5 +170,166 @@ router.get('/qa', requireAuth, async (req, res, next) => {
     res.json({ question: user?.security_question ?? null });
   } catch (err) { next(err); }
 });
+
+// ─── POST /auth/recover ──────────────────────────────────────────────────
+// Step 1: Identify the user by forename, surname, postcode, email.
+// Returns the security question if one is set, or sends the recovery email
+// directly if no question is set. Blocks site admins.
+
+const recoverSchema = z.object({
+  tenantSlug: z.string().min(1),
+  forename:   z.string().min(1),
+  surname:    z.string().min(1),
+  postcode:   z.string().min(1),
+  email:      z.string().email(),
+});
+
+// Generic message to avoid revealing whether the user exists
+const RECOVER_GENERIC = 'If a matching account was found, you will receive an email with your login details.';
+
+router.post('/recover', async (req, res, next) => {
+  try {
+    const data = recoverSchema.parse(req.body);
+    const tenant = await prisma.sysTenant.findUnique({ where: { slug: data.tenantSlug } });
+    if (!tenant || !tenant.active) {
+      return res.json({ message: RECOVER_GENERIC });
+    }
+
+    // Find user linked to a member matching forename + surname + postcode + email
+    const [user] = await tenantQuery(
+      data.tenantSlug,
+      `SELECT u.id, u.username, u.email AS user_email, u.is_site_admin,
+              u.security_question, u.security_answer_hash
+       FROM users u
+       JOIN members m ON m.id = u.member_id
+       WHERE LOWER(m.forenames) = LOWER($1)
+         AND LOWER(m.surname)   = LOWER($2)
+         AND LOWER(REPLACE(m.postcode, ' ', '')) = LOWER(REPLACE($3, ' ', ''))
+         AND LOWER(m.email)     = LOWER($4)
+         AND u.active = true
+       LIMIT 1`,
+      [data.forename, data.surname, data.postcode, data.email],
+    );
+
+    if (!user) {
+      return res.json({ message: RECOVER_GENERIC });
+    }
+
+    // Block recovery for site administrators
+    if (user.is_site_admin) {
+      return res.json({ message: RECOVER_GENERIC });
+    }
+
+    // If user has a security question, return it so the frontend can ask step 2
+    if (user.security_question && user.security_answer_hash) {
+      return res.json({ securityQuestion: user.security_question, userId: user.id });
+    }
+
+    // No security question set — send recovery email directly
+    await sendRecoveryEmail(data.tenantSlug, user);
+    res.json({ message: RECOVER_GENERIC });
+  } catch (err) { next(err); }
+});
+
+// ─── POST /auth/recover/verify ───────────────────────────────────────────
+// Step 2: Verify the security answer and send the recovery email.
+
+const recoverVerifySchema = z.object({
+  tenantSlug: z.string().min(1),
+  userId:     z.string().min(1),
+  answer:     z.string().min(1),
+});
+
+router.post('/recover/verify', async (req, res, next) => {
+  try {
+    const data = recoverVerifySchema.parse(req.body);
+    const tenant = await prisma.sysTenant.findUnique({ where: { slug: data.tenantSlug } });
+    if (!tenant || !tenant.active) {
+      return res.json({ message: RECOVER_GENERIC });
+    }
+
+    const [user] = await tenantQuery(
+      data.tenantSlug,
+      `SELECT id, username, email, is_site_admin, security_answer_hash
+       FROM users WHERE id = $1 AND active = true`,
+      [data.userId],
+    );
+
+    if (!user || user.is_site_admin || !user.security_answer_hash) {
+      return res.json({ message: RECOVER_GENERIC });
+    }
+
+    const valid = await verifyPassword(data.answer, user.security_answer_hash);
+    if (!valid) {
+      return res.status(400).json({ error: 'The answer is incorrect. Please try again, using the same format as when it was originally set.' });
+    }
+
+    await sendRecoveryEmail(data.tenantSlug, user);
+    res.json({ message: RECOVER_GENERIC });
+  } catch (err) { next(err); }
+});
+
+// ─── POST /auth/force-change-password ────────────────────────────────────
+// Used after login when must_change_password is true.
+// Sets new password + security Q&A. Does NOT require current password.
+
+const forceChangePwSchema = z.object({
+  newPassword: z.string().min(10).max(72),
+  question:    z.string().min(1).max(200),
+  answer:      z.string().min(1).max(200),
+});
+
+router.post('/force-change-password', requireAuth, async (req, res, next) => {
+  try {
+    const { newPassword, question, answer } = forceChangePwSchema.parse(req.body);
+
+    // Validate password rules: no spaces, upper+lower+number
+    if (/\s/.test(newPassword)) throw AppError('Password must not contain spaces.', 400);
+    if (!/[A-Z]/.test(newPassword)) throw AppError('Password must include at least one uppercase letter.', 400);
+    if (!/[a-z]/.test(newPassword)) throw AppError('Password must include at least one lowercase letter.', 400);
+    if (!/[0-9]/.test(newPassword)) throw AppError('Password must include at least one number.', 400);
+
+    const slug = req.user.tenantSlug;
+    const newHash = await hashPassword(newPassword);
+    const answerHash = await hashPassword(answer);
+
+    await tenantQuery(
+      slug,
+      `UPDATE users SET password_hash = $1, must_change_password = false,
+              security_question = $2, security_answer_hash = $3, updated_at = now()
+       WHERE id = $4`,
+      [newHash, question, answerHash, req.user.userId],
+    );
+
+    logAudit(slug, { userId: req.user.userId, userName: req.user.name, action: 'force_change_password', entityType: 'user', entityId: req.user.userId, entityName: req.user.name });
+    res.json({ message: 'Password changed successfully.' });
+  } catch (err) { next(err); }
+});
+
+// ─── Helpers ─────────────────────────────────────────────────────────────
+
+/** Generate a random temporary password like "!xZ#8kP2" */
+function generateTempPassword() {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789!@#$%';
+  const bytes = crypto.randomBytes(8);
+  return Array.from(bytes).map((b) => chars[b % chars.length]).join('');
+}
+
+/** Generate temp password, update user, and send recovery email. */
+async function sendRecoveryEmail(tenantSlug, user) {
+  const tempPassword = generateTempPassword();
+  const hash = await hashPassword(tempPassword);
+
+  await tenantQuery(
+    tenantSlug,
+    `UPDATE users SET password_hash = $1, must_change_password = true, updated_at = now() WHERE id = $2`,
+    [hash, user.id],
+  );
+
+  // In production, send via SendGrid. For now, log the email.
+  const subject = 'Your Beacon2 login credentials';
+  const body = `Your username is: ${user.username}\n\nA temporary password has been set: ${tempPassword}\n\nYou will be required to change this password when you next log in.`;
+  console.log(`[Recovery] Would send email to ${user.email}: "${subject}" — ${body}`);
+}
 
 export default router;

@@ -534,6 +534,7 @@ CREATE INDEX IF NOT EXISTS :schema_idx_offices_member ON :schema.offices (member
 
 ALTER TABLE :schema.users ADD COLUMN IF NOT EXISTS security_question TEXT;
 ALTER TABLE :schema.users ADD COLUMN IF NOT EXISTS security_answer_hash TEXT;
+ALTER TABLE :schema.users ADD COLUMN IF NOT EXISTS must_change_password BOOLEAN NOT NULL DEFAULT false;
 
 -- ─── Email batches + recipients ───────────────────────────────────────────
 

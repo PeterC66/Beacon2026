@@ -36,6 +36,15 @@ Beacon2 is a ground-up rebuild with these goals:
   member dropdown, auto-generated temp password, set-temp-password per user,
   user list with Select/Full Name/Login User Name/Member/Site Admin/Date Created/
   Last Accessed/Roles columns, Send Email to selected users (doc 8.2.1)
+- **Password recovery** (doc 9.6): inline recovery on login page — identify user by
+  forename/surname/postcode/email matched against linked member; security Q&A
+  verification (skipped if not set); sends email with username + new temp password;
+  blocked for site administrators
+- **Temporary passwords** (doc 9.7): `must_change_password` flag enforced on login;
+  set automatically on user creation and set-temp-password
+- **Force change password** (doc 4): dedicated `/change-password` route; requires
+  new password (min 10 chars, no spaces, upper+lower+number) plus security Q&A;
+  blocks all other navigation until completed
 - System tier: separate system admin login, tenant CRUD, set-temp-password
 - Auto-migrate and auto-seed on startup (`migrate.js`) — no shell access needed
 - Redis session invalidation (disabled in POC; `USE_REDIS=false`)

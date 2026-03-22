@@ -135,8 +135,8 @@ router.post('/', requirePrivilege('user_record', 'create'), async (req, res, nex
 
     const [user] = await tenantQuery(
       req.user.tenantSlug,
-      `INSERT INTO users (email, username, name, password_hash, active, member_id)
-       VALUES ($1, $2, $3, $4, $5, $6)
+      `INSERT INTO users (email, username, name, password_hash, active, member_id, must_change_password)
+       VALUES ($1, $2, $3, $4, $5, $6, true)
        RETURNING id, email, username, name, active, created_at, member_id`,
       [email.toLowerCase(), data.username, name, passwordHash, data.active, data.memberId],
     );
@@ -213,7 +213,7 @@ router.post('/:id/set-temp-password', requirePrivilege('user_record', 'change'),
 
     const [user] = await tenantQuery(
       req.user.tenantSlug,
-      `UPDATE users SET password_hash = $1, updated_at = now() WHERE id = $2 RETURNING id, name`,
+      `UPDATE users SET password_hash = $1, must_change_password = true, updated_at = now() WHERE id = $2 RETURNING id, name`,
       [hash, req.params.id],
     );
     if (!user) throw AppError('User not found.', 404);

@@ -27,14 +27,14 @@ export async function loginUser(tenantSlug, username, password) {
   //    (fallback allows existing users without a username set to still log in)
   let [user] = await tenantQuery(
     tenantSlug,
-    `SELECT id, email, name, password_hash, active, is_site_admin FROM users WHERE username = $1`,
+    `SELECT id, email, name, password_hash, active, is_site_admin, must_change_password FROM users WHERE username = $1`,
     [username.toLowerCase()],
   );
 
   if (!user) {
     [user] = await tenantQuery(
       tenantSlug,
-      `SELECT id, email, name, password_hash, active, is_site_admin FROM users WHERE email = $1`,
+      `SELECT id, email, name, password_hash, active, is_site_admin, must_change_password FROM users WHERE email = $1`,
       [username.toLowerCase()],
     );
   }
@@ -84,7 +84,7 @@ export async function loginUser(tenantSlug, username, password) {
     [user.id],
   );
 
-  return { accessToken, refreshToken, user: { id: user.id, name: user.name, email: user.email } };
+  return { accessToken, refreshToken, user: { id: user.id, name: user.name, email: user.email, mustChangePassword: user.must_change_password || false } };
 }
 
 // ─── Token refresh ────────────────────────────────────────────────────────
@@ -128,7 +128,7 @@ export async function refreshTokens(tenantSlug, refreshToken) {
   // Re-compute privileges (may have changed since last login)
   const [user] = await tenantQuery(
     tenantSlug,
-    `SELECT id, name, email, is_site_admin FROM users WHERE id = $1`,
+    `SELECT id, name, email, is_site_admin, must_change_password FROM users WHERE id = $1`,
     [stored.user_id],
   );
 
@@ -150,7 +150,7 @@ export async function refreshTokens(tenantSlug, refreshToken) {
     [user.id, newHash, expiresAt],
   );
 
-  return { accessToken: newAccessToken, refreshToken: newRefreshToken, user: { id: user.id, name: user.name, email: user.email } };
+  return { accessToken: newAccessToken, refreshToken: newRefreshToken, user: { id: user.id, name: user.name, email: user.email, mustChangePassword: user.must_change_password || false } };
 }
 
 // ─── Logout ───────────────────────────────────────────────────────────────

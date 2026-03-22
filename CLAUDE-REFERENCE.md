@@ -1178,3 +1178,50 @@ and support standard letter templates for reuse.
 - **Frontend**: `@tiptap/react`, `@tiptap/starter-kit`, `@tiptap/extension-text-align`,
   `@tiptap/extension-underline`, `@tiptap/extension-text-style`, `@tiptap/pm`
 
+---
+
+## 18. Password recovery and temporary passwords
+
+### Data model
+
+- `users.must_change_password` — `BOOLEAN NOT NULL DEFAULT false`; set to `true` on
+  user creation and `set-temp-password`; cleared when the user completes the
+  force-change-password flow
+- `users.security_question` / `users.security_answer_hash` — used for account recovery
+  (doc 9.6) and set during force-change-password (doc 4)
+
+### Backend routes (auth.js)
+
+- `POST /auth/recover` — step 1: identify user by `tenantSlug + forename + surname +
+  postcode + email` matched against linked member record; returns `securityQuestion` if
+  set, or sends recovery email directly if not; blocks site admins; always returns
+  generic message to avoid user enumeration
+- `POST /auth/recover/verify` — step 2: verify security answer and send recovery email;
+  returns 400 with helpful message if answer is incorrect
+- `POST /auth/force-change-password` — requires auth; sets new password (min 10, no
+  spaces, upper+lower+number) + security Q&A; clears `must_change_password`; does NOT
+  require current password
+- `POST /auth/change-password` — updated to min 10 characters (was 8)
+- Login (`POST /auth/login`) and refresh (`POST /auth/refresh`) both return
+  `mustChangePassword` flag in response
+
+### Frontend
+
+- **Login.jsx** — inline expandable recovery section below login form; two-step flow
+  (identify → security question → success message); inherits tenant from login form
+- **ChangePassword.jsx** — `/change-password` route; amber-themed form matching doc 4
+  screenshots; requires password + confirm + security Q&A; "Log out instead" option;
+  Submit button disabled until all fields valid
+- **AuthContext.jsx** — tracks `mustChangePassword` state; provides
+  `clearMustChangePassword()` callback
+- **App.jsx** — `ProtectedRoute` redirects to `/change-password` when
+  `mustChangePassword` is true; `AuthRequired` wrapper for change-password route
+  (requires login but not subject to the redirect)
+- **PersonalPreferences.jsx** — password rules updated to min 10 chars,
+  upper+lower+number required, no spaces
+
+### Recovery email
+
+Currently uses `console.log` (same pattern as portal password reset). The log includes
+username and temp password. Production deployment will send via SendGrid.
+
