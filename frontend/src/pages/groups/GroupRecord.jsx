@@ -12,6 +12,7 @@ import PageHeader from '../../components/PageHeader.jsx';
 import SortableHeader from '../../components/SortableHeader.jsx';
 import { useSortedData } from '../../hooks/useSortedData.js';
 import { useUnsavedChanges } from '../../hooks/useUnsavedChanges.js';
+import ScrollButtons from '../../components/ScrollButtons.jsx';
 
 // ─── Details sub-component ────────────────────────────────────────────────
 
@@ -305,6 +306,7 @@ function GroupMembers({ groupId }) {
   const [loading,      setLoading]      = useState(true);
   const [error,        setError]        = useState(null);
 
+  const tableRef = useRef(null);
   const [addByName,   setAddByName]   = useState('');
   const [addByNumber, setAddByNumber] = useState('');
   const [addError,    setAddError]    = useState(null);
@@ -503,7 +505,7 @@ function GroupMembers({ groupId }) {
       {visibleMembers.length === 0 ? (
         <p className="text-slate-500 text-sm">No members to display.</p>
       ) : (
-        <div className="overflow-x-auto rounded-lg shadow-sm">
+        <div ref={tableRef} className="overflow-x-auto rounded-lg shadow-sm">
           <table className="w-full text-sm bg-white min-w-max">
             <thead>
               <tr className="bg-slate-50 border-b border-slate-200 text-left text-slate-600 italic font-normal">
@@ -679,6 +681,8 @@ function GroupMembers({ groupId }) {
           </div>
         </div>
       )}
+
+      <ScrollButtons containerRef={tableRef} />
     </div>
   );
 }

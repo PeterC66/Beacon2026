@@ -7,6 +7,7 @@ import { members as membersApi, finance as financeApi, polls as pollsApi } from 
 import { useAuth } from '../../context/AuthContext.jsx';
 import PageHeader from '../../components/PageHeader.jsx';
 import NavBar from '../../components/NavBar.jsx';
+import ScrollButtons from '../../components/ScrollButtons.jsx';
 
 const PAYMENT_METHODS = ['Cash', 'Cheque', 'Standing Order', 'Direct Debit', 'Online', 'Other'];
 
@@ -30,6 +31,7 @@ export default function MembershipRenewals() {
   const payDefaults               = useRef({ defaultMethod: '', mappings: {} });
   const [loading,   setLoading]   = useState(true);
   const [error,     setError]     = useState(null);
+  const tableRef = useRef(null);
 
   // Renewal form state
   const [period,        setPeriod]        = useState('current_year');
@@ -317,7 +319,7 @@ export default function MembershipRenewals() {
               </form>
             )}
 
-            <div className="overflow-x-auto">
+            <div className="overflow-x-auto" ref={tableRef}>
               <table className="min-w-max w-full text-sm">
                 <thead className="bg-slate-50 text-slate-600 text-left">
                   <tr>
@@ -412,6 +414,7 @@ export default function MembershipRenewals() {
           </>
         )}
       </div>
+      <ScrollButtons containerRef={tableRef} />
     </div>
   );
 }

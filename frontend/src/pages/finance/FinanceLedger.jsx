@@ -2,13 +2,14 @@
 // Financial ledger — view transactions by account, category, or group.
 // Implements Beacon doc 7.1.
 
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { finance as financeApi, groups as groupsApi } from '../../lib/api.js';
 import { useAuth } from '../../context/AuthContext.jsx';
 import NavBar from '../../components/NavBar.jsx';
 import PageHeader from '../../components/PageHeader.jsx';
 import SortableHeader from '../../components/SortableHeader.jsx';
+import ScrollButtons from '../../components/ScrollButtons.jsx';
 import { useSortedData } from '../../hooks/useSortedData.js';
 
 const VIEWS = ['account', 'category', 'group'];
@@ -41,6 +42,8 @@ export default function FinanceLedger() {
   const [selected,   setSelected]   = useState(new Set());
   const [bulkAction, setBulkAction] = useState('');
   const [bulkBusy,   setBulkBusy]   = useState(false);
+
+  const tableRef = useRef(null);
 
   const { sorted, sortKey, sortDir, onSort } = useSortedData(txns, 'date', 'asc');
 
@@ -280,7 +283,7 @@ export default function FinanceLedger() {
                   </div>
                 )}
 
-                <div className="overflow-x-auto rounded-lg shadow-sm">
+                <div className="overflow-x-auto rounded-lg shadow-sm" ref={tableRef}>
                   <table className="w-full text-sm bg-white min-w-max">
                     <thead>
                       <tr className="bg-slate-50 border-b border-slate-200 text-left text-slate-600 italic font-normal">
@@ -452,6 +455,7 @@ export default function FinanceLedger() {
       </div>
 
       <NavBar links={navLinks} />
+      <ScrollButtons containerRef={tableRef} />
     </div>
   );
 }

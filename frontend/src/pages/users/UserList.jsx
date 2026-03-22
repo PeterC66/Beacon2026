@@ -1,13 +1,14 @@
 // beacon2/frontend/src/pages/users/UserList.jsx
 // System Users list — doc 8.2 / 8.2.1
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { users as usersApi } from '../../lib/api.js';
 import { useAuth } from '../../context/AuthContext.jsx';
 import NavBar from '../../components/NavBar.jsx';
 import PageHeader from '../../components/PageHeader.jsx';
 import SortableHeader from '../../components/SortableHeader.jsx';
+import ScrollButtons from '../../components/ScrollButtons.jsx';
 import { useSortedData } from '../../hooks/useSortedData.js';
 
 function formatDate(iso) {
@@ -25,6 +26,8 @@ export default function UserList() {
   const [error,    setError]    = useState(null);
   const [deleting, setDeleting] = useState(null);
   const [selected, setSelected] = useState(new Set());
+
+  const tableRef = useRef(null);
 
   const { sorted, sortKey, sortDir, onSort } = useSortedData(userList);
 
@@ -104,7 +107,7 @@ export default function UserList() {
             <p className="text-center text-slate-500">No users found.</p>
           ) : (
             <>
-              <div className="overflow-x-auto rounded-lg shadow-sm">
+              <div className="overflow-x-auto rounded-lg shadow-sm" ref={tableRef}>
                 <table className="w-full text-sm bg-white min-w-max">
                   <thead>
                     <tr className="bg-slate-50 border-b border-slate-200 text-left text-slate-600 italic font-normal">
@@ -200,6 +203,7 @@ export default function UserList() {
       </div>
 
       <NavBar links={navLinks} />
+      <ScrollButtons containerRef={tableRef} />
     </div>
   );
 }

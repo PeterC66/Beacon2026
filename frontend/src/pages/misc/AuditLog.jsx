@@ -1,13 +1,14 @@
 // beacon2/frontend/src/pages/misc/AuditLog.jsx
 // Audit log viewer — doc 9.2(a)
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { audit as auditApi } from '../../lib/api.js';
 import { useAuth } from '../../context/AuthContext.jsx';
 import NavBar from '../../components/NavBar.jsx';
 import PageHeader from '../../components/PageHeader.jsx';
 import DateInput from '../../components/DateInput.jsx';
+import ScrollButtons from '../../components/ScrollButtons.jsx';
 import { ENTITY_ROUTES } from './auditHelpers.js';
 
 function isoToday() {
@@ -40,6 +41,8 @@ export default function AuditLog() {
   const [deleteDate, setDeleteDate] = useState('');
   const [deleting,   setDeleting]   = useState(false);
   const [deleteMsg,  setDeleteMsg]  = useState(null);
+
+  const tableRef = useRef(null);
 
   useEffect(() => { load(); }, []);
 
@@ -126,7 +129,7 @@ export default function AuditLog() {
             {entries.length === 0 ? (
               <p className="text-center text-slate-400 italic py-6">No audit entries in this date range.</p>
             ) : (
-              <div className="overflow-x-auto rounded-lg shadow-sm mb-6">
+              <div className="overflow-x-auto rounded-lg shadow-sm mb-6" ref={tableRef}>
                 <table className="w-full text-sm bg-white min-w-max">
                   <thead>
                     <tr className="bg-slate-50 border-b border-slate-200 text-left text-slate-600 italic font-normal">
@@ -199,6 +202,7 @@ export default function AuditLog() {
       </div>
 
       <NavBar links={navLinks} />
+      <ScrollButtons containerRef={tableRef} />
     </div>
   );
 }

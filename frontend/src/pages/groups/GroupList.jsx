@@ -1,12 +1,13 @@
 // beacon2/frontend/src/pages/groups/GroupList.jsx
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { groups as groupsApi, faculties as facultiesApi } from '../../lib/api.js';
 import { useAuth } from '../../context/AuthContext.jsx';
 import NavBar from '../../components/NavBar.jsx';
 import PageHeader from '../../components/PageHeader.jsx';
 import SortableHeader from '../../components/SortableHeader.jsx';
+import ScrollButtons from '../../components/ScrollButtons.jsx';
 import { useSortedData } from '../../hooks/useSortedData.js';
 
 const ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
@@ -20,6 +21,8 @@ export default function GroupList() {
   const [faculties,   setFaculties]   = useState([]);
   const [loading,     setLoading]     = useState(true);
   const [error,       setError]       = useState(null);
+
+  const tableRef = useRef(null);
 
   const [activeOnly,   setActiveOnly]  = useState(true);
   const [facultyId,    setFacultyId]   = useState('');
@@ -119,7 +122,7 @@ export default function GroupList() {
           ) : (
             <>
               <p className="text-sm text-slate-500 mb-1">{groupList.length} group{groupList.length !== 1 ? 's' : ''}</p>
-              <div className="overflow-x-auto rounded-lg shadow-sm">
+              <div className="overflow-x-auto rounded-lg shadow-sm" ref={tableRef}>
                 <table className="w-full text-sm bg-white min-w-max">
                   <thead>
                     <tr className="bg-slate-50 border-b border-slate-200 text-left text-slate-600 italic font-normal">
@@ -187,6 +190,7 @@ export default function GroupList() {
       </div>
 
       <NavBar links={navLinks} />
+      <ScrollButtons containerRef={tableRef} />
     </div>
   );
 }
