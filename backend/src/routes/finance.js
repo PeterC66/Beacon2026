@@ -155,6 +155,32 @@ router.delete('/accounts/:id', requirePrivilege('finance_accounts', 'delete'), a
   } catch (err) { next(err); }
 });
 
+// ─── GROUP B/F SETTING ────────────────────────────────────────────────────
+
+router.get('/group-bf-setting', requirePrivilege('finance_accounts', 'view'), async (req, res, next) => {
+  try {
+    const [row] = await tenantQuery(
+      req.user.tenantSlug,
+      `SELECT group_bf_enabled FROM tenant_settings WHERE id = 'singleton'`,
+    );
+    res.json({ groupBfEnabled: row?.group_bf_enabled ?? false });
+  } catch (err) { next(err); }
+});
+
+router.patch('/group-bf-setting', requirePrivilege('finance_accounts', 'change'), async (req, res, next) => {
+  try {
+    const body = z.object({ groupBfEnabled: z.boolean() }).parse(req.body);
+    const [row] = await tenantQuery(
+      req.user.tenantSlug,
+      `UPDATE tenant_settings SET group_bf_enabled = $1, updated_at = now()
+       WHERE id = 'singleton' RETURNING group_bf_enabled`,
+      [body.groupBfEnabled],
+    );
+    logAudit(req.user.tenantSlug, { userId: req.user.userId, userName: req.user.name, action: 'update', entityType: 'setting', entityId: 'singleton', entityName: 'Group B/F enabled' });
+    res.json({ groupBfEnabled: row.group_bf_enabled });
+  } catch (err) { next(err); }
+});
+
 // ─── FINANCE CATEGORIES ───────────────────────────────────────────────────
 
 router.get('/categories', requirePrivilege('finance_categories', 'view'), async (req, res, next) => {
@@ -373,6 +399,40 @@ router.get('/transactions', requirePrivilege('finance_ledger', 'view'), async (r
       );
       const openingBalance = bf + (priorNet?.net ?? 0);
       return res.json({ transactions: rows, openingBalance });
+    }
+
+    // For group view, compute per-group opening balances if group_bf_enabled
+    if (groupId) {
+      const [setting] = await tenantQuery(
+        req.user.tenantSlug,
+        `SELECT group_bf_enabled FROM tenant_settings WHERE id = 'singleton'`,
+      );
+      if (setting?.group_bf_enabled) {
+        let bfSql, bfParams;
+        if (groupId === 'all') {
+          bfSql = `
+            SELECT t.group_id, g.name AS group_name,
+                   COALESCE(SUM(CASE WHEN t.type='in' THEN t.amount ELSE -t.amount END), 0)::float AS balance
+            FROM transactions t
+            LEFT JOIN groups g ON g.id = t.group_id
+            WHERE t.group_id IS NOT NULL AND t.date < $1::date AND t.pending = false
+            GROUP BY t.group_id, g.name
+            HAVING SUM(CASE WHEN t.type='in' THEN t.amount ELSE -t.amount END) <> 0
+            ORDER BY g.name`;
+          bfParams = [yearStart];
+        } else {
+          bfSql = `
+            SELECT t.group_id, g.name AS group_name,
+                   COALESCE(SUM(CASE WHEN t.type='in' THEN t.amount ELSE -t.amount END), 0)::float AS balance
+            FROM transactions t
+            LEFT JOIN groups g ON g.id = t.group_id
+            WHERE t.group_id = $1 AND t.date < $2::date AND t.pending = false
+            GROUP BY t.group_id, g.name`;
+          bfParams = [groupId, yearStart];
+        }
+        const groupBfRows = await tenantQuery(req.user.tenantSlug, bfSql, bfParams);
+        return res.json({ transactions: rows, groupBf: groupBfRows });
+      }
     }
 
     res.json(rows);

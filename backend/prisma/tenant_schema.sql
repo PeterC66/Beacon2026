@@ -622,3 +622,6 @@ CREATE TABLE IF NOT EXISTS :schema.standard_letters (
 );
 
 CREATE UNIQUE INDEX IF NOT EXISTS :schema_idx_standard_letters_name ON :schema.standard_letters (name);
+
+-- ─── Group Brought Forward setting ────────────────────────────────────
+ALTER TABLE :schema.tenant_settings ADD COLUMN IF NOT EXISTS group_bf_enabled BOOLEAN NOT NULL DEFAULT false;

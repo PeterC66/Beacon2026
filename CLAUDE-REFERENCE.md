@@ -385,6 +385,15 @@ All in `tenant_schema.sql` (idempotent):
   Frontend shows a "Balance brought forward" row at the top of the table.
 - **Locked accounts** can still have `balance_brought_forward` edited; only
   name/active/sort_order are blocked by the lock check
+- **Group B/F (doc 7.10.6 / 8.6)**: a global `group_bf_enabled` boolean in
+  `tenant_settings` controls whether per-group opening balances appear in the
+  group view. When enabled, the backend dynamically calculates each group's B/F
+  as the net of all prior-year non-pending main-ledger transactions for that
+  group (across all accounts). No stored B/F transactions — purely computed.
+  - Setting toggled via `GET/PATCH /finance/group-bf-setting`
+  - Tickbox on Finance Accounts page (`FinanceAccounts.jsx`)
+  - Group view returns `{ transactions, groupBf }` instead of plain array
+  - `FinanceLedger.jsx` shows B/F rows + Total Brought Forward at table top
 
 ### Transfer Money (doc 7.3)
 

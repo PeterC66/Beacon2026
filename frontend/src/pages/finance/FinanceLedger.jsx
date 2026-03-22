@@ -33,6 +33,7 @@ export default function FinanceLedger() {
   const [groupFilter, setGroupFilter] = useState('');
   const [txns,        setTxns]        = useState([]);
   const [openingBal,  setOpeningBal]  = useState(0);
+  const [groupBf,     setGroupBf]     = useState([]);   // per-group B/F rows
   const [loading,     setLoading]     = useState(false);
   const [error,       setError]       = useState(null);
 
@@ -61,7 +62,7 @@ export default function FinanceLedger() {
   }, []);
 
   // Reset selection when view changes
-  useEffect(() => { setSelId(''); setTxns([]); setOpeningBal(0); setGroupFilter(''); setSelected(new Set()); }, [view]);
+  useEffect(() => { setSelId(''); setTxns([]); setOpeningBal(0); setGroupBf([]); setGroupFilter(''); setSelected(new Set()); }, [view]);
 
   const filteredGroups = useMemo(() => {
     const q = groupFilter.trim().toLowerCase();
@@ -81,13 +82,16 @@ export default function FinanceLedger() {
       if (view === 'category') params.categoryId = selId;
       if (view === 'group')    params.groupId    = selId;
       const result = await financeApi.listTransactions(params);
-      // Account view returns { transactions, openingBalance }; others return array
+      // Account view returns { transactions, openingBalance };
+      // Group view may return { transactions, groupBf }; others return array
       if (result && !Array.isArray(result) && result.transactions) {
         setTxns(result.transactions);
         setOpeningBal(result.openingBalance ?? 0);
+        setGroupBf(result.groupBf ?? []);
       } else {
         setTxns(result);
         setOpeningBal(0);
+        setGroupBf([]);
       }
     } catch (err) { setError(err.message); }
     finally { setLoading(false); }
@@ -315,6 +319,31 @@ export default function FinanceLedger() {
                           <td className="px-3 py-2"></td>
                         </tr>
                       )}
+                      {view === 'group' && groupBf.length > 0 && groupBf.map((bf) => (
+                        <tr key={`bf-${bf.group_id}`} className="bg-slate-100 border-b border-slate-200 italic text-slate-600">
+                          <td className="px-3 py-2"></td>
+                          <td className="px-3 py-2"></td>
+                          <td className="px-3 py-2" colSpan={3}>
+                            Balance b/f{bf.group_name ? ` — ${bf.group_name}` : ''}
+                          </td>
+                          <td className="px-3 py-2 text-right text-green-700">{bf.balance >= 0 ? fmtAmount(bf.balance) : ''}</td>
+                          <td className="px-3 py-2 text-right text-red-700">{bf.balance < 0 ? fmtAmount(Math.abs(bf.balance)) : ''}</td>
+                          <td className="px-3 py-2"></td>
+                        </tr>
+                      ))}
+                      {view === 'group' && groupBf.length > 0 && (() => {
+                        const totalBf = groupBf.reduce((s, bf) => s + bf.balance, 0);
+                        return (
+                          <tr className="bg-slate-200 border-b border-slate-300 font-bold text-slate-700">
+                            <td className="px-3 py-2"></td>
+                            <td className="px-3 py-2"></td>
+                            <td className="px-3 py-2" colSpan={3}>Total Brought Forward</td>
+                            <td className="px-3 py-2 text-right text-green-700">{totalBf >= 0 ? fmtAmount(totalBf) : ''}</td>
+                            <td className="px-3 py-2 text-right text-red-700">{totalBf < 0 ? fmtAmount(Math.abs(totalBf)) : ''}</td>
+                            <td className="px-3 py-2"></td>
+                          </tr>
+                        );
+                      })()}
                       {withBalance.map((t, i) => (
                         <tr key={t.id} className={`border-b border-slate-100 ${i % 2 === 0 ? 'bg-yellow-50' : 'bg-white'}`}>
                           {showBulk && (

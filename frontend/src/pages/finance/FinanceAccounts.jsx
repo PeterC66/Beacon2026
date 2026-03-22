@@ -22,14 +22,30 @@ export default function FinanceAccounts() {
   const [adding,    setAdding]      = useState(false);
   const [editBF,    setEditBF]      = useState({});    // { accountId: '123.45' }
   const [savingBF,  setSavingBF]    = useState(null);  // accountId being saved
+  const [groupBf,   setGroupBf]     = useState(false); // Group B/F tickbox
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => { load(); loadGroupBf(); }, []);
 
   async function load() {
     setLoading(true);
     try { setAccounts(await financeApi.listAccounts()); }
     catch (err) { setError(err.message); }
     finally { setLoading(false); }
+  }
+
+  async function loadGroupBf() {
+    try {
+      const data = await financeApi.getGroupBfSetting();
+      setGroupBf(data.groupBfEnabled);
+    } catch { /* ignore — setting may not exist yet */ }
+  }
+
+  async function handleToggleGroupBf() {
+    const next = !groupBf;
+    try {
+      const data = await financeApi.setGroupBfSetting(next);
+      setGroupBf(data.groupBfEnabled);
+    } catch (err) { alert(err.message); }
   }
 
   async function handleAdd(e) {
@@ -189,6 +205,19 @@ export default function FinanceAccounts() {
               {adding ? 'Saving…' : 'Save'}
             </button>
           </form>
+        )}
+
+        {!loading && !error && (
+          <label className="mt-5 flex items-center gap-2 text-sm text-slate-700">
+            <input
+              type="checkbox"
+              checked={groupBf}
+              onChange={handleToggleGroupBf}
+              disabled={!canChange}
+              className="w-4 h-4 accent-blue-600"
+            />
+            Display Group brought forward balances at the start of the financial year
+          </label>
         )}
       </div>
 

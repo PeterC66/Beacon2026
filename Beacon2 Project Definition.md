@@ -70,9 +70,11 @@ Beacon2 is a ground-up rebuild with these goals:
 - **Faculties** — inline CRUD
 
 ### Finance module
-- **Finance accounts** — CRUD, locked protection, active toggle, balance b/f
+- **Finance accounts** — CRUD, locked protection, active toggle, balance b/f,
+  Group B/F tickbox (7.10.6 / 8.6)
 - **Finance categories** — same pattern
-- **Financial ledger** — account/category/group views; year selector; running balance
+- **Financial ledger** — account/category/group views; year selector; running balance;
+  group view shows per-group B/F rows when enabled (7.10.6)
 - **Transaction editor** — full form; category splits; cleared lock
 - **Transfer money** — paired transactions with shared transfer_id
 - **Credit batches** — group incoming transactions into batches for simpler
