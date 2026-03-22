@@ -674,7 +674,6 @@ ALTER TABLE :schema.transactions ADD COLUMN IF NOT EXISTS refunded_by_id TEXT RE
 
 -- ─── Users → Members FK (doc 8.2) ──────────────────────────────────────
 -- Activate the member_id column as a proper FK to members table.
--- Using CREATE INDEX pattern since ALTER TABLE ADD CONSTRAINT IF NOT EXISTS is PG 17+.
--- We put the FK inline in a helper table approach -- actually we just
--- rely on the migration runner's try/catch per statement.
+-- ADD CONSTRAINT IF NOT EXISTS requires PG 17+. The migration runner's
+-- per-statement try/catch silences the error on re-runs (code 42710).
 ALTER TABLE :schema.users ADD CONSTRAINT users_member_id_fkey FOREIGN KEY (member_id) REFERENCES :schema.members(id) ON DELETE SET NULL
