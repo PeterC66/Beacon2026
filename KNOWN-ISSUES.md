@@ -66,6 +66,26 @@ Items noted during development that need addressing in future sessions.
 
 ---
 
+## System Settings (doc 8.3) — Deferred Items
+
+1. **public_phone, public_email, home_page** — Stored in tenant_settings and editable
+   on the System Settings page, but not yet displayed anywhere to members (e.g. portal
+   login page, online joining form, confirmation emails). Ref: doc 8.3.
+
+2. **email_cards** — The "E-mail membership cards" checkbox is stored but the logic to
+   auto-attach membership card PDFs to online joining/renewal confirmation emails is not
+   yet implemented. Ref: doc 8.3, doc 4.7.
+
+3. **gift_aid_online_renewals** — The "Show Gift Aid for online renewals" checkbox is
+   stored but the online renewal flow itself is not yet built. When online renewals are
+   implemented, this setting should control whether Gift Aid tick boxes appear. Ref: doc 8.3.
+
+4. **online_renew_email** — Stored and returned in join-config, but the online renewal
+   flow is not yet built. When implemented, use this as reply-to on renewal confirmation
+   emails and display on the renewal form. Ref: doc 8.3.
+
+---
+
 ## Accessibility / E2E
 
 1. **Form labels missing `htmlFor`/`id` association** — ~106 `<label>` elements

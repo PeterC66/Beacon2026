@@ -44,7 +44,8 @@ router.get('/:slug/join-config', async (req, res, next) => {
     const [settings] = await tenantQuery(
       slug,
       `SELECT online_joining_enabled, privacy_policy_url,
-              gift_aid_enabled, paypal_email, default_town, default_county
+              gift_aid_enabled, paypal_email, default_town, default_county,
+              online_join_email, online_renew_email
        FROM tenant_settings WHERE id = 'singleton'`,
     );
 
@@ -64,11 +65,13 @@ router.get('/:slug/join-config', async (req, res, next) => {
     );
 
     res.json({
-      u3aName:          req.tenant.name,
-      privacyPolicyUrl: settings.privacy_policy_url ?? '',
-      giftAidEnabled:   settings.gift_aid_enabled ?? false,
-      defaultTown:      settings.default_town ?? '',
-      defaultCounty:    settings.default_county ?? '',
+      u3aName:            req.tenant.name,
+      privacyPolicyUrl:   settings.privacy_policy_url ?? '',
+      giftAidEnabled:     settings.gift_aid_enabled ?? false,
+      defaultTown:        settings.default_town ?? '',
+      defaultCounty:      settings.default_county ?? '',
+      onlineJoinEmail:    settings.online_join_email ?? '',
+      onlineRenewEmail:   settings.online_renew_email ?? '',
       classes,
     });
   } catch (err) {
@@ -335,6 +338,13 @@ async function sendJoinConfirmationEmail(slug, member) {
     const tenant = await prisma.sysTenant.findUnique({ where: { slug } });
     const u3aName = tenant?.name ?? '';
 
+    // Use online_join_email as reply-to so members can contact the u3a
+    const [settings] = await tenantQuery(
+      slug,
+      `SELECT online_join_email FROM tenant_settings WHERE id = 'singleton'`,
+    );
+    const replyTo = settings?.online_join_email || null;
+
     const { subject, body } = resolveTokens(
       template.subject, template.body,
       { ...member, class_name: member.class_name }, u3aName,
@@ -342,7 +352,7 @@ async function sendJoinConfirmationEmail(slug, member) {
 
     // In production, this would call SendGrid.
     // For now, log the email that would be sent.
-    console.log(`[Online Join] Would send confirmation email to ${member.email}: "${subject}"`);
+    console.log(`[Online Join] Would send confirmation email to ${member.email}: "${subject}"${replyTo ? ` (reply-to: ${replyTo})` : ''}`);
   } catch (err) {
     console.error('[Online Join] Failed to send confirmation email:', err.message);
   }
