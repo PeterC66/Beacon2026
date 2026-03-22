@@ -1,12 +1,13 @@
 // beacon2/frontend/src/pages/misc/OfficerList.jsx
 // u3a Officers (offices and post holders) — doc 9.3
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { offices as officesApi } from '../../lib/api.js';
 import { useAuth } from '../../context/AuthContext.jsx';
 import NavBar from '../../components/NavBar.jsx';
 import PageHeader from '../../components/PageHeader.jsx';
+import ScrollButtons from '../../components/ScrollButtons.jsx';
 
 const BLANK = { name: '', memberId: '', officeEmail: '', notifyOnlineJoin: false };
 
@@ -34,6 +35,7 @@ export default function OfficerList() {
   const [members,  setMembers]  = useState([]);
   const [loading,  setLoading]  = useState(true);
   const [error,    setError]    = useState(null);
+  const tableRef = useRef(null);
 
   const [editId,   setEditId]   = useState(null);   // null | 'new' | office id
   const [form,     setForm]     = useState(BLANK);
@@ -232,7 +234,7 @@ export default function OfficerList() {
               </div>
             )}
 
-            <div className="overflow-x-auto rounded-lg shadow-sm mb-4">
+            <div ref={tableRef} className="overflow-x-auto rounded-lg shadow-sm mb-4">
               <table className="w-full text-sm bg-white min-w-max">
                 <thead>
                   <tr className="bg-slate-50 border-b border-slate-200 text-left text-slate-600 italic font-normal">
@@ -301,6 +303,8 @@ export default function OfficerList() {
           </>
         )}
       </div>
+
+      <ScrollButtons containerRef={tableRef} />
 
       <NavBar links={navLinks} />
     </div>

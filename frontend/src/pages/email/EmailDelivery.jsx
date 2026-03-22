@@ -1,12 +1,13 @@
 // beacon2/frontend/src/pages/email/EmailDelivery.jsx
 // List of email batches sent by the current user.
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { email as emailApi } from '../../lib/api.js';
 import { useAuth } from '../../context/AuthContext.jsx';
 import NavBar from '../../components/NavBar.jsx';
 import PageHeader from '../../components/PageHeader.jsx';
+import ScrollButtons from '../../components/ScrollButtons.jsx';
 
 function fmtDateTime(ts) {
   if (!ts) return '';
@@ -21,6 +22,7 @@ export default function EmailDelivery() {
   const [error,   setError]   = useState(null);
   const [from,    setFrom]    = useState('');
   const [to,      setTo]      = useState('');
+  const tableRef = useRef(null);
 
   useEffect(() => { load(); }, []);
 
@@ -69,7 +71,7 @@ export default function EmailDelivery() {
           <p className="text-slate-500 text-sm text-center py-8">No emails found.</p>
         ) : (
           <div className="bg-white/90 rounded-lg shadow-sm overflow-hidden">
-            <div className="overflow-x-auto">
+            <div className="overflow-x-auto" ref={tableRef}>
               <table className="min-w-max w-full text-sm">
                 <thead className="bg-slate-50 border-b border-slate-200">
                   <tr>
@@ -98,6 +100,7 @@ export default function EmailDelivery() {
           </div>
         )}
       </div>
+      <ScrollButtons containerRef={tableRef} />
     </div>
   );
 }

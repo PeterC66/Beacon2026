@@ -1,13 +1,14 @@
 // beacon2/frontend/src/pages/groups/VenueList.jsx
 // List of group venues (5.7)
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { venues as venuesApi } from '../../lib/api.js';
 import { useAuth } from '../../context/AuthContext.jsx';
 import NavBar from '../../components/NavBar.jsx';
 import PageHeader from '../../components/PageHeader.jsx';
 import SortableHeader from '../../components/SortableHeader.jsx';
+import ScrollButtons from '../../components/ScrollButtons.jsx';
 import { useSortedData } from '../../hooks/useSortedData.js';
 
 export default function VenueList() {
@@ -15,6 +16,7 @@ export default function VenueList() {
   const [list,    setList]    = useState([]);
   const [loading, setLoading] = useState(true);
   const [error,   setError]   = useState(null);
+  const tableRef = useRef(null);
 
   const { sorted, sortKey, sortDir, onSort } = useSortedData(list, 'name');
 
@@ -58,7 +60,7 @@ export default function VenueList() {
             No venues yet.{canCreate && <> <Link to="/venues/new" className="text-blue-700 hover:underline">Add a venue</Link>.</>}
           </div>
         ) : (
-          <div className="bg-white/90 rounded-lg shadow-sm overflow-x-auto">
+          <div className="bg-white/90 rounded-lg shadow-sm overflow-x-auto" ref={tableRef}>
             <table className="w-full text-sm min-w-max">
               <thead>
                 <tr className="bg-slate-50 border-b border-slate-200 text-left text-slate-600 italic font-normal">
@@ -89,6 +91,7 @@ export default function VenueList() {
       </div>
 
       <NavBar links={navLinks} />
+      <ScrollButtons containerRef={tableRef} />
     </div>
   );
 }

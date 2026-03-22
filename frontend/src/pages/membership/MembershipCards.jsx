@@ -1,7 +1,7 @@
 // beacon2/frontend/src/pages/membership/MembershipCards.jsx
 // Membership Cards page (doc 4.7) — select members, download/email cards.
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { membershipCards as cardsApi, polls as pollsApi } from '../../lib/api.js';
 import { useAuth } from '../../context/AuthContext.jsx';
@@ -9,6 +9,7 @@ import NavBar from '../../components/NavBar.jsx';
 import PageHeader from '../../components/PageHeader.jsx';
 import SortableHeader from '../../components/SortableHeader.jsx';
 import { useSortedData } from '../../hooks/useSortedData.js';
+import ScrollButtons from '../../components/ScrollButtons.jsx';
 
 export default function MembershipCards() {
   const { can, tenant } = useAuth();
@@ -19,6 +20,7 @@ export default function MembershipCards() {
   const [polls, setPolls] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const tableRef = useRef(null);
 
   // Filters
   const [showMode, setShowMode] = useState('outstanding');
@@ -208,7 +210,7 @@ export default function MembershipCards() {
                 )}
               </div>
 
-              <div className="overflow-x-auto rounded-lg shadow-sm mb-3">
+              <div ref={tableRef} className="overflow-x-auto rounded-lg shadow-sm mb-3">
                 <table className="w-full text-sm bg-white min-w-max">
                   <thead>
                     <tr className="bg-slate-50 border-b border-slate-200 text-left text-slate-600 italic font-normal">
@@ -302,6 +304,8 @@ export default function MembershipCards() {
       <NavBar links={navLinks} />
 
       {/* ── Mark as printed dialog ──────────────────────────────── */}
+      <ScrollButtons containerRef={tableRef} />
+
       {showMarkDialog && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg shadow-xl p-6 max-w-sm mx-4">
@@ -324,6 +328,7 @@ export default function MembershipCards() {
           </div>
         </div>
       )}
+      <ScrollButtons containerRef={tableRef} />
     </div>
   );
 }
