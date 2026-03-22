@@ -86,6 +86,20 @@ Items noted during development that need addressing in future sessions.
 
 ---
 
+## Migration DDL warnings
+
+1. **`users_member_id_fkey` constraint already exists** — The `ALTER TABLE ADD CONSTRAINT`
+   statement for the users → members FK logs error code `42710` on every re-run because
+   `ADD CONSTRAINT IF NOT EXISTS` requires PostgreSQL 17+. The migration runner's
+   per-statement try/catch catches this and continues — it is purely cosmetic. A `DO $$`
+   block workaround is not possible because the migration runner splits statements on `;`,
+   which would break the inner `ALTER TABLE` semicolon. Options to fix:
+   - Upgrade to PostgreSQL 17+ and use `ADD CONSTRAINT IF NOT EXISTS`
+   - Enhance `migrate.js` to support `DO $$` blocks (split on `;\n` outside `$$` fences)
+   Ref: `backend/prisma/tenant_schema.sql` line ~677, `backend/src/utils/migrate.js` line ~82.
+
+---
+
 ## Accessibility / E2E
 
 1. **Form labels missing `htmlFor`/`id` association** — ~106 `<label>` elements
