@@ -586,6 +586,30 @@ INSERT INTO :schema.system_messages (id, name, subject, body) VALUES
    'A new member has joined online:\n\nName: #TITLE #FORENAME #SURNAME\nMembership Number: #MEMNO\nClass: #MEMCLASS\nEmail: #EMAIL')
 ON CONFLICT (id) DO NOTHING;
 
+INSERT INTO :schema.system_messages (id, name, subject, body) VALUES
+  ('gift_aid_payment', 'Gift Aid Payment Confirmation',
+   'Gift Aid confirmation from #U3ANAME',
+   'Dear #FORENAME,\n\nThank you for consenting to Gift Aid. We can confirm that your payment has been received and recorded.\n\nMembership Number: #MEMNO\nMembership Class: #MEMCLASS\n\nGift Aid allows #U3ANAME to reclaim tax on your membership subscription at no extra cost to you. Thank you for your support.\n\nKind regards,\n#U3ANAME')
+ON CONFLICT (id) DO NOTHING;
+
+INSERT INTO :schema.system_messages (id, name, subject, body) VALUES
+  ('online_renewal_confirm', 'Online Renewal Confirmation',
+   'Membership renewal confirmation from #U3ANAME',
+   'Dear #FORENAME,\n\nThank you for renewing your membership of #U3ANAME.\n\nMembership Number: #MEMNO\nMembership Class: #MEMCLASS\n\nWe look forward to seeing you at our events and groups.\n\nKind regards,\n#U3ANAME')
+ON CONFLICT (id) DO NOTHING;
+
+INSERT INTO :schema.system_messages (id, name, subject, body) VALUES
+  ('card_replacement_confirm', 'Membership Card Replacement Confirmation',
+   'Replacement membership card from #U3ANAME',
+   'Dear #FORENAME,\n\nYour request for a replacement membership card has been received.\n\nMembership Number: #MEMNO\nName: #TITLE #FORENAME #SURNAME\n\nYour new card will be sent to you in due course.\n\nKind regards,\n#U3ANAME')
+ON CONFLICT (id) DO NOTHING;
+
+INSERT INTO :schema.system_messages (id, name, subject, body) VALUES
+  ('home_page_notice', 'Home Page Notice',
+   '',
+   'Welcome to #U3ANAME Beacon. Please check the calendar for upcoming events and activities.')
+ON CONFLICT (id) DO NOTHING;
+
 -- ─── Public Links settings on tenant_settings ──────────────────────────
 
 ALTER TABLE :schema.tenant_settings ADD COLUMN IF NOT EXISTS online_joining_enabled BOOLEAN NOT NULL DEFAULT false;
