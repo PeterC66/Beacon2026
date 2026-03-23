@@ -24,5 +24,6 @@ Thumbs.db
 
 # E2E test state and artefacts (generated per run)
 e2e/.e2e-state.json
+e2e/.e2e-storage.json
 e2e/test-results/
 e2e/playwright-report/

@@ -39,6 +39,10 @@ export default defineConfig({
     // Frontend base URL — set in .env or environment
     baseURL: process.env.BEACON2_BASE_URL || 'http://localhost:5173',
 
+    // Pre-set cookie consent so the modal doesn't block tests.
+    // The file is written by global-setup.js.
+    storageState: './.e2e-storage.json',
+
     // Capture screenshots and traces on failure
     screenshot: 'only-on-failure',
     video: 'retain-on-failure',
