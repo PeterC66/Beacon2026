@@ -78,6 +78,19 @@ or may not succeed; this is acceptable as a last resort.
 
 ---
 
+## Locator patterns
+
+**Prefer `name` attribute selectors over `getByLabel` for selects.**
+Many MemberEditor fields use a plain `<label>` sibling + `<select>` without
+`htmlFor`/`id` pairing. Playwright's `getByLabel('Status')` requires a proper
+label–input association — it won't match unconnected sibling labels. Use
+`page.locator('select[name="statusId"]')` instead.
+
+For text `<input>` elements that already have `name` attributes (added to
+all forms), `input[name="..."]` is the most reliable locator.
+
+---
+
 ## Cookie-consent setup
 
 The `beacon2_cookie_consent` cookie must be pre-set to `'accepted'` in the
