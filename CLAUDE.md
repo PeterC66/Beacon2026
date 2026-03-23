@@ -7,6 +7,7 @@
 | **This file (`CLAUDE.md`)** | Session setup, workflow rules, key conventions | Every session (auto-loaded) |
 | **`CLAUDE-STANDARDS.md`** | Cross-cutting checklist for all new code | Before starting any implementation |
 | **`CLAUDE-REFERENCE.md`** | Detailed implementation notes by module | When working on a specific module |
+| **`CLAUDE-E2E.md`** | E2E test architecture, patterns, and gotchas | When writing or debugging E2E tests |
 | **`Beacon2 Project Definition.md`** | What has been built and what remains | Every session — living document |
 
 ---

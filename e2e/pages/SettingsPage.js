@@ -8,7 +8,13 @@ export class SystemSettingsPage {
   }
 
   async goto() {
-    await this.page.goto('/settings');
+    // SPA navigation — see CLAUDE-E2E.md
+    const clicked = await this.page.evaluate(() => {
+      const link = document.querySelector('a[href="/settings"]');
+      if (link) { link.click(); return true; }
+      return false;
+    });
+    if (!clicked) await this.page.goto('/settings');
     await this.page.getByRole('heading', { name: 'System Settings' }).waitFor();
   }
 
@@ -24,7 +30,13 @@ export class RoleListPage {
   }
 
   async goto() {
-    await this.page.goto('/roles');
+    // SPA navigation — see CLAUDE-E2E.md
+    const clicked = await this.page.evaluate(() => {
+      const link = document.querySelector('a[href="/roles"]');
+      if (link) { link.click(); return true; }
+      return false;
+    });
+    if (!clicked) await this.page.goto('/roles');
     await this.page.getByRole('heading', { name: /roles/i }).waitFor();
   }
 
@@ -46,7 +58,13 @@ export class UserListPage {
   }
 
   async goto() {
-    await this.page.goto('/users');
+    // SPA navigation — see CLAUDE-E2E.md
+    const clicked = await this.page.evaluate(() => {
+      const link = document.querySelector('a[href="/users"]');
+      if (link) { link.click(); return true; }
+      return false;
+    });
+    if (!clicked) await this.page.goto('/users');
     await this.page.getByRole('heading', { name: /system users/i }).waitFor();
   }
 
@@ -61,7 +79,14 @@ export class UserEditorPage {
   }
 
   async gotoNew() {
-    await this.page.goto('/users/new');
+    // SPA navigation — see CLAUDE-E2E.md
+    // No direct link to /users/new on home; try the Users list "Add" link first
+    const clicked = await this.page.evaluate(() => {
+      const link = document.querySelector('a[href="/users/new"]');
+      if (link) { link.click(); return true; }
+      return false;
+    });
+    if (!clicked) await this.page.goto('/users/new');
     await this.page.getByRole('heading', { name: /user/i }).waitFor();
   }
 

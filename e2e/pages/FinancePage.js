@@ -8,7 +8,13 @@ export class FinanceAccountsPage {
   }
 
   async goto() {
-    await this.page.goto('/finance/accounts');
+    // SPA navigation — see CLAUDE-E2E.md
+    const clicked = await this.page.evaluate(() => {
+      const link = document.querySelector('a[href="/finance/accounts"]');
+      if (link) { link.click(); return true; }
+      return false;
+    });
+    if (!clicked) await this.page.goto('/finance/accounts');
     await this.page.getByRole('heading', { name: 'Finance Accounts' }).waitFor();
   }
 
@@ -28,7 +34,13 @@ export class FinanceCategoriesPage {
   }
 
   async goto() {
-    await this.page.goto('/finance/categories');
+    // SPA navigation — see CLAUDE-E2E.md
+    const clicked = await this.page.evaluate(() => {
+      const link = document.querySelector('a[href="/finance/categories"]');
+      if (link) { link.click(); return true; }
+      return false;
+    });
+    if (!clicked) await this.page.goto('/finance/categories');
     await this.page.getByRole('heading', { name: 'Finance Categories' }).waitFor();
   }
 
@@ -45,7 +57,13 @@ export class TransactionEditorPage {
   }
 
   async gotoNew() {
-    await this.page.goto('/finance/transactions/new');
+    // SPA navigation — see CLAUDE-E2E.md
+    const clicked = await this.page.evaluate(() => {
+      const link = document.querySelector('a[href="/finance/transactions/new"]');
+      if (link) { link.click(); return true; }
+      return false;
+    });
+    if (!clicked) await this.page.goto('/finance/transactions/new');
     await this.page.getByRole('heading', { name: /transaction/i }).waitFor();
   }
 
@@ -66,16 +84,33 @@ export class FinanceLedgerPage {
   }
 
   async gotoByAccount() {
-    await this.page.goto('/finance/ledger?view=account');
+    // SPA navigation — see CLAUDE-E2E.md
+    // Link on home page is /finance/ledger (no query); click it then append the view
+    const clicked = await this.page.evaluate(() => {
+      const link = document.querySelector('a[href="/finance/ledger"]');
+      if (link) { link.click(); return true; }
+      return false;
+    });
+    if (!clicked) await this.page.goto('/finance/ledger?view=account');
     await this.page.getByRole('heading', { name: /ledger/i }).waitFor();
   }
 
   async gotoByCategory() {
-    await this.page.goto('/finance/ledger?view=category');
+    const clicked = await this.page.evaluate(() => {
+      const link = document.querySelector('a[href="/finance/ledger"]');
+      if (link) { link.click(); return true; }
+      return false;
+    });
+    if (!clicked) await this.page.goto('/finance/ledger?view=category');
   }
 
   async gotoByGroup() {
-    await this.page.goto('/finance/ledger?view=group');
+    const clicked = await this.page.evaluate(() => {
+      const link = document.querySelector('a[href="/finance/ledger"]');
+      if (link) { link.click(); return true; }
+      return false;
+    });
+    if (!clicked) await this.page.goto('/finance/ledger?view=group');
   }
 
   transactionRow(payee) {

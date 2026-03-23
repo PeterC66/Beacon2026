@@ -8,7 +8,13 @@ export class GroupListPage {
   }
 
   async goto() {
-    await this.page.goto('/groups');
+    // SPA navigation — see CLAUDE-E2E.md
+    const clicked = await this.page.evaluate(() => {
+      const link = document.querySelector('a[href="/groups"]');
+      if (link) { link.click(); return true; }
+      return false;
+    });
+    if (!clicked) await this.page.goto('/groups');
     await this.page.getByRole('heading', { name: 'Groups' }).waitFor();
   }
 
@@ -32,7 +38,13 @@ export class GroupRecordPage {
   }
 
   async gotoNew() {
-    await this.page.goto('/groups/new');
+    // SPA navigation — see CLAUDE-E2E.md
+    const clicked = await this.page.evaluate(() => {
+      const link = document.querySelector('a[href="/groups/new"]');
+      if (link) { link.click(); return true; }
+      return false;
+    });
+    if (!clicked) await this.page.goto('/groups/new');
   }
 
   nameInput()        { return this.page.locator('input[name="name"]').first(); }

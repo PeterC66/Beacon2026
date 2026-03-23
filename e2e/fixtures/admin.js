@@ -30,6 +30,10 @@ const PASSWORD = process.env.BEACON2_TEST_ADMIN_PASSWORD || 'TestAdmin99!';
  * The access token lives only in React memory, so there is no way to share it
  * via Playwright's storageState.  Instead we perform a fresh login per test
  * (one browser navigation, ~200 ms overhead).
+ *
+ * IMPORTANT: after login, page.goto() is overridden to prefer SPA link-click
+ * navigation.  This avoids full page reloads that would destroy the in-memory
+ * auth token (see CLAUDE-E2E.md for details).
  */
 export const test = base.extend({
   adminPage: async ({ page }, use) => {
@@ -44,6 +48,20 @@ export const test = base.extend({
     // Submit and wait for home page
     await page.getByRole('button', { name: 'Enter' }).click();
     await page.waitForURL('/', { timeout: 10_000 });
+
+    // Override page.goto to prefer SPA navigation.
+    // Full-page reloads destroy the in-memory auth token; clicking an <a>
+    // in the DOM triggers React Router without a reload.
+    const originalGoto = page.goto.bind(page);
+    page.goto = async (url, options) => {
+      const pathname = new URL(url, 'http://localhost').pathname;
+      const clicked = await page.evaluate((p) => {
+        const link = document.querySelector(`a[href="${p}"]`);
+        if (link) { link.click(); return true; }
+        return false;
+      }, pathname);
+      if (!clicked) return originalGoto(url, options);
+    };
 
     // Hand the logged-in page to the test
     await use(page);
