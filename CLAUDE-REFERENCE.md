@@ -1298,4 +1298,33 @@ When consent is declined, preferences still work using in-memory defaults for th
 ### Deferred items
 
 See `KNOWN-ISSUES.md` — Cookie Consent section for optional items not yet implemented.
+## 20. Help Widget (Zendesk Web Widget)
+
+### Architecture
+
+- **HelpWidget.jsx** (`frontend/src/components/HelpWidget.jsx`) — Loads the Zendesk
+  Web Widget SDK script dynamically and provides context-sensitive help on every screen.
+- Rendered via a `RootLayout` component in `App.jsx` that wraps all routes with
+  `<Outlet />` + `<HelpWidget />`.
+- The widget is positioned bottom-left, matching the original Beacon layout.
+
+### Configuration
+
+- Requires `VITE_ZENDESK_KEY` environment variable set to the Zendesk widget key.
+- When the key is absent, the widget is silently disabled (no errors).
+- Help center URL: `https://u3abeacon.zendesk.com/hc/en-gb/categories/360001240017-User-Guide`
+
+### Context-sensitive suggestions
+
+- A `ROUTE_HELP_TERMS` mapping in `HelpWidget.jsx` maps route path prefixes to
+  Zendesk search terms (e.g. `/members` → `'members list search'`).
+- On each route change, `zE('webWidget', 'helpCenter', 'setSuggestions', ...)` is
+  called to update the "Top suggestions" shown in the widget.
+- More specific routes must appear before general ones in the mapping array
+  (first `startsWith` match wins).
+
+### Adding help terms for new pages
+
+When adding a new page/route, add a corresponding entry to `ROUTE_HELP_TERMS` in
+`HelpWidget.jsx` with appropriate Zendesk search terms.
 
