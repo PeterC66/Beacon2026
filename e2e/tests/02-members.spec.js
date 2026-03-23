@@ -30,8 +30,8 @@ test.describe('Member list', () => {
     await expect(listPage.heading()).toBeVisible();
     // Search input present
     await expect(listPage.searchInput()).toBeVisible();
-    // "Add new member" link present
-    await expect(page.getByRole('link', { name: 'Add new member' })).toBeVisible();
+    // "Add new member" link present (top + bottom NavBar both have one; use .first())
+    await expect(page.getByRole('link', { name: 'Add new member' }).first()).toBeVisible();
   });
 
   test('alphabet jump links are shown', async ({ adminPage: page }) => {

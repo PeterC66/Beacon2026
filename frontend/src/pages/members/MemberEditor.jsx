@@ -711,7 +711,7 @@ export default function MemberEditor() {
               </div>
               <div>
                 <label className={labelCls}><strong>Forenames</strong></label>
-                <input type="text" value={form.forenames}
+                <input type="text" name="forenames" value={form.forenames}
                   onChange={(e) => set('forenames', e.target.value)}
                   onBlur={() => handleBlur('forenames')}
                   className={ic('forenames')} />
@@ -719,7 +719,7 @@ export default function MemberEditor() {
               </div>
               <div>
                 <label className={labelCls}><strong>Surname</strong></label>
-                <input type="text" value={form.surname}
+                <input type="text" name="surname" value={form.surname}
                   onChange={(e) => set('surname', e.target.value)}
                   onBlur={() => handleBlur('surname')}
                   className={ic('surname')} />
@@ -727,20 +727,20 @@ export default function MemberEditor() {
               </div>
               <div>
                 <label className={labelCls}>Known as</label>
-                <input type="text" value={form.knownAs}
+                <input type="text" name="knownAs" value={form.knownAs}
                   onChange={(e) => set('knownAs', e.target.value)}
                   className={inputCls} />
               </div>
               <div className="sm:col-span-2 grid grid-cols-[1fr_2fr_auto] gap-4 items-end">
                 <div>
                   <label className={labelCls}>Suffix <span className="text-slate-400 font-normal">(e.g. MBE)</span></label>
-                  <input type="text" value={form.suffix}
+                  <input type="text" name="suffix" value={form.suffix}
                     onChange={(e) => set('suffix', e.target.value)}
                     className={inputCls} maxLength={30} />
                 </div>
                 <div>
                   <label className={labelCls}>Email</label>
-                  <input type="email" value={form.email}
+                  <input type="email" name="email" value={form.email}
                     onChange={(e) => set('email', e.target.value)}
                     className={inputCls} />
                 </div>
@@ -761,7 +761,7 @@ export default function MemberEditor() {
               </div>
               <div>
                 <label className={labelCls}>Mobile</label>
-                <input type="text" value={form.mobile}
+                <input type="text" name="mobile" value={form.mobile}
                   onChange={(e) => set('mobile', e.target.value)}
                   onBlur={() => handleBlur('mobile')}
                   className={ic('mobile')} />
@@ -972,13 +972,13 @@ export default function MemberEditor() {
             <div className={`grid grid-cols-1 sm:grid-cols-2 gap-4 ${(form.existingPartnerId && isNew) || addressLocked || (isNew && newPartnerMode) ? 'opacity-40 pointer-events-none' : ''}`}>
               <div>
                 <label className={labelCls}>House / flat no.</label>
-                <input type="text" value={form.houseNo}
+                <input type="text" name="houseNo" value={form.houseNo}
                   onChange={(e) => set('houseNo', e.target.value)}
                   className={inputCls} />
               </div>
               <div>
                 <label className={labelCls}>Street</label>
-                <input type="text" value={form.street}
+                <input type="text" name="street" value={form.street}
                   onChange={(e) => set('street', e.target.value)}
                   className={inputCls} />
               </div>
@@ -996,7 +996,7 @@ export default function MemberEditor() {
               </div>
               <div>
                 <label className={labelCls}>Town</label>
-                <input type="text" value={form.town}
+                <input type="text" name="town" value={form.town}
                   onChange={(e) => set('town', e.target.value)}
                   className={inputCls} />
               </div>
@@ -1008,7 +1008,7 @@ export default function MemberEditor() {
               </div>
               <div>
                 <label className={labelCls}><strong>Postcode</strong></label>
-                <input type="text" value={form.postcode}
+                <input type="text" name="postcode" value={form.postcode}
                   onChange={(e) => set('postcode', e.target.value)}
                   onBlur={() => handleBlur('postcode')}
                   className={ic('postcode')} maxLength={10} />

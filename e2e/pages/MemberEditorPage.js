@@ -17,7 +17,7 @@ export class MemberEditorPage {
       return false;
     });
     if (!clicked) await this.page.goto('/members/new');
-    await this.page.getByRole('heading', { name: 'New Member' }).waitFor();
+    await this.page.getByRole('heading', { name: 'Add New Member' }).waitFor();
   }
 
   heading() {
