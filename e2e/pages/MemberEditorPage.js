@@ -36,7 +36,8 @@ export class MemberEditorPage {
   classSelect()     { return this.page.getByLabel('Class'); }
 
   // DateInput renders a plain text input with placeholder dd/mm/yyyy
-  joinedOnInput()   { return this.page.getByPlaceholder('dd/mm/yyyy').first(); }
+  joinedOnInput()     { return this.page.getByPlaceholder('dd/mm/yyyy').first(); }
+  nextRenewalInput()  { return this.page.getByPlaceholder('dd/mm/yyyy').nth(1); }
 
   // ── Address ─────────────────────────────────────────────────────────────
 
@@ -72,6 +73,18 @@ export class MemberEditorPage {
     await this.statusSelect().selectOption({ label: statusName });
     await this.classSelect().selectOption({ label: className });
     await this.postcodeInput().fill(postcode);
-    if (joinedOn) await this.joinedOnInput().fill(joinedOn);
+    if (joinedOn) {
+      await this.joinedOnInput().fill(joinedOn);
+      // Wait for the auto-computed "Next renewal" date to be populated.
+      // The frontend fetches year-config from the API and computes the
+      // renewal date in a useEffect — this can lag behind the fill,
+      // especially in CI where the API may be slow.
+      await this.nextRenewalInput().waitFor({ state: 'visible' });
+      await this.page.waitForFunction(
+        (sel) => { const el = document.querySelectorAll(sel)[1]; return el && el.value.length > 0; },
+        'input[placeholder="dd/mm/yyyy"]',
+        { timeout: 10_000 },
+      );
+    }
   }
 }
