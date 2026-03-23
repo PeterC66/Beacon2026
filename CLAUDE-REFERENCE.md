@@ -27,6 +27,9 @@ active tenant on every server startup.
 3. Seed `INSERT`s use `ON CONFLICT DO NOTHING` (or `WHERE NOT EXISTS`)
 4. DDL loop has per-statement try/catch
 5. **No semicolons in SQL comments** — migration splits on `;`
+6. `$$` dollar-quoted blocks (e.g. `DO $$ BEGIN ... EXCEPTION ... END $$`) are
+   handled correctly — `splitSQL()` tracks `$$` delimiters and only splits on
+   semicolons outside dollar-quoted regions
 
 After DDL, the migration also re-seeds privilege resources and calls
 `syncDefaultRolePrivileges()` to additively grant any newly-defined privileges
