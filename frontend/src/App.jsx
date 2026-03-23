@@ -1,7 +1,9 @@
 // beacon2/frontend/src/App.jsx
 
+import { useEffect } from 'react';
 import { createBrowserRouter, RouterProvider, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext.jsx';
+import { getPreferences } from './hooks/usePreferences.js';
 import Login           from './pages/Login.jsx';
 import Home            from './pages/Home.jsx';
 import RoleList        from './pages/roles/RoleList.jsx';
@@ -161,7 +163,23 @@ const router = createBrowserRouter([
   { path: '/public/:slug/portal/reset-password',    element: <PortalResetPassword /> },
 ]);
 
+function applyTheme() {
+  const { textSize, colorTheme } = getPreferences();
+  document.documentElement.dataset.textSize = textSize;
+  document.documentElement.dataset.theme = colorTheme;
+}
+
 export default function App() {
+  useEffect(() => {
+    applyTheme();
+    window.addEventListener('beacon2-prefs-changed', applyTheme);
+    window.addEventListener('storage', applyTheme);
+    return () => {
+      window.removeEventListener('beacon2-prefs-changed', applyTheme);
+      window.removeEventListener('storage', applyTheme);
+    };
+  }, []);
+
   return (
     <AuthProvider>
       <RouterProvider router={router} />

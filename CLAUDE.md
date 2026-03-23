@@ -40,6 +40,9 @@ All work goes on a branch whose name starts with `claude/`. Never push directly 
 
 ## Key conventions
 
+- **Challenge the user's approach** if an implementation would be difficult, fragile,
+  or over-engineered. Ask whether a simpler alternative would meet the requirement
+  before building something complex — the user welcomes being pushed back on.
 - Always spell **u3a** in lowercase
 - The system is called **Beacon2**; the original system is **Beacon**
 - Use ES modules (`import`/`export`) throughout — never `require()`

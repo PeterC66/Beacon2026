@@ -10,3 +10,35 @@ html, body {
   background-size: cover;
   background-color: #9dc8df;
 }
+
+/* ── Text size preference ─────────────────────────────────────────────── */
+html[data-text-size="small"]  { font-size: 0.875rem; }
+html[data-text-size="normal"] { font-size: 1rem; }
+html[data-text-size="large"]  { font-size: 1.125rem; }
+html[data-text-size="xlarge"] { font-size: 1.25rem; }
+
+/* ── High Contrast theme ──────────────────────────────────────────────── */
+html[data-theme="high-contrast"] { color: #000; }
+html[data-theme="high-contrast"] .bg-white\/90,
+html[data-theme="high-contrast"] .bg-white\/85,
+html[data-theme="high-contrast"] .bg-white\/70,
+html[data-theme="high-contrast"] .bg-white\/60,
+html[data-theme="high-contrast"] .bg-white\/50 {
+  background-color: #fff !important;
+  border: 2px solid #000 !important;
+}
+html[data-theme="high-contrast"] .text-slate-700,
+html[data-theme="high-contrast"] .text-slate-600,
+html[data-theme="high-contrast"] .text-slate-500,
+html[data-theme="high-contrast"] .text-slate-400 {
+  color: #000 !important;
+}
+html[data-theme="high-contrast"] .border-slate-300,
+html[data-theme="high-contrast"] .border-slate-200,
+html[data-theme="high-contrast"] .border-slate-100 {
+  border-color: #000 !important;
+}
+html[data-theme="high-contrast"] .text-blue-700 {
+  color: #00e !important;
+  text-decoration: underline;
+}

@@ -711,7 +711,7 @@ the browser sees `null` and downloads as `download.xlsx`.
 No custom CSS classes. Infrastructure:
 - `frontend/tailwind.config.js` — content: `./index.html`, `./src/**/*.{js,jsx}`
 - `frontend/postcss.config.cjs` — `.cjs` because `package.json` has `"type": "module"`
-- `frontend/src/index.css` — `@tailwind` directives + background-image rule
+- `frontend/src/index.css` — `@tailwind` directives + background-image rule + theme CSS
 
 Design decisions:
 - Clean slate/blue palette (not old Beacon yellow/grey)
@@ -732,6 +732,19 @@ Design decisions:
 - Responsive grids: always `grid-cols-1 sm:grid-cols-2`, never bare `grid-cols-2`
 - Error text: `text-sm text-red-600 mt-1 font-medium`
 - Error banner: `rounded-md bg-red-50 border border-red-300 px-4 py-3 text-red-700 text-sm font-medium text-center`
+
+### Display preferences — text size & colour theme
+
+User-selectable via Personal Preferences page (doc 9.1). Stored in localStorage
+(`beacon2_prefs`). Architecture:
+
+- `usePreferences.js` — `textSize` and `colorTheme` fields alongside existing prefs
+- `App.jsx` — `useEffect` sets `data-theme` and `data-text-size` on `<html>`;
+  listens for `beacon2-prefs-changed` custom event for same-tab updates
+- `index.css` — CSS rules scoped to `html[data-theme="..."]` / `html[data-text-size="..."]`
+
+Text sizes: `small` (0.875rem), `normal` (1rem), `large` (1.125rem), `xlarge` (1.25rem).
+Themes: `default`, `high-contrast`.
 
 ### Shared components
 

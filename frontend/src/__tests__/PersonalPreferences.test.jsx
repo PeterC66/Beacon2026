@@ -42,4 +42,17 @@ describe('PersonalPreferences page', () => {
     const { getByText } = render(<MemoryRouter><PersonalPreferences /></MemoryRouter>);
     expect(getByText('Change Personal Q&A')).toBeInTheDocument();
   });
+
+  it('shows the Display Preferences section', () => {
+    const { getByText } = render(<MemoryRouter><PersonalPreferences /></MemoryRouter>);
+    expect(getByText('Display Preferences')).toBeInTheDocument();
+  });
+
+  it('shows text size and colour theme radio options', () => {
+    const { getByText } = render(<MemoryRouter><PersonalPreferences /></MemoryRouter>);
+    expect(getByText('Text size')).toBeInTheDocument();
+    expect(getByText('Colour theme')).toBeInTheDocument();
+    expect(getByText('Normal')).toBeInTheDocument();
+    expect(getByText('High Contrast')).toBeInTheDocument();
+  });
 });
