@@ -157,14 +157,14 @@ export default function OfficerList() {
     <tr key={key} className="bg-blue-50 border-b border-slate-200">
       <td className="px-3 py-2 text-center"></td>
       <td className="px-3 py-2">
-        <input type="text" value={form.name} autoFocus
+        <input type="text" name="name" value={form.name} autoFocus
           onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
           placeholder="Office name" maxLength={100}
           className={formErr.name ? errCls : inputCls} />
         {formErr.name && <p className="text-xs text-red-600 mt-0.5">{formErr.name}</p>}
       </td>
       <td className="px-3 py-2">
-        <select value={form.memberId}
+        <select name="memberId" value={form.memberId}
           onChange={(e) => setForm((f) => ({ ...f, memberId: e.target.value }))}
           className={inputCls}>
           <option value="">— none —</option>
@@ -174,7 +174,7 @@ export default function OfficerList() {
         </select>
       </td>
       <td className="px-3 py-2">
-        <input type="email" value={form.officeEmail}
+        <input type="email" name="officeEmail" value={form.officeEmail}
           onChange={(e) => setForm((f) => ({ ...f, officeEmail: e.target.value }))}
           placeholder="office@example.com" maxLength={200}
           className={formErr.officeEmail ? errCls : inputCls} />

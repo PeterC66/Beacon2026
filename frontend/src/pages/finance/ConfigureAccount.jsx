@@ -118,6 +118,7 @@ export default function ConfigureAccount() {
             ) : (
               <input
                 type="text"
+                name="name"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 className={`${inputCls} w-full`}
@@ -130,6 +131,7 @@ export default function ConfigureAccount() {
           <div>
             <label className={labelCls}>Pending transactions</label>
             <select
+              name="pendingConfig"
               value={pendingConfig}
               onChange={(e) => setPendingConfig(e.target.value)}
               className={`${inputCls} w-full`}

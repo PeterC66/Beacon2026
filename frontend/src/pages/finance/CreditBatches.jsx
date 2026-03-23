@@ -227,14 +227,14 @@ export default function CreditBatches() {
           <form onSubmit={handleList} className="flex flex-wrap items-end gap-4 mb-4">
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">Account</label>
-              <select value={accountId} onChange={(e) => setAccountId(e.target.value)} className={inputCls}>
+              <select name="accountId" value={accountId} onChange={(e) => setAccountId(e.target.value)} className={inputCls}>
                 <option value="">— select —</option>
                 {accounts.map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}
               </select>
             </div>
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">Show</label>
-              <select value={mode} onChange={(e) => setMode(e.target.value)} className={inputCls}>
+              <select name="mode" value={mode} onChange={(e) => setMode(e.target.value)} className={inputCls}>
                 <option value="uncleared">Uncleared</option>
                 <option value="since">Since date</option>
               </select>
@@ -242,7 +242,7 @@ export default function CreditBatches() {
             {mode === 'since' && (
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">Since</label>
-                <input type="date" value={sinceDate} onChange={(e) => setSinceDate(e.target.value)} className={inputCls} />
+                <input type="date" name="sinceDate" value={sinceDate} onChange={(e) => setSinceDate(e.target.value)} className={inputCls} />
               </div>
             )}
             <button type="submit" disabled={!accountId || loading} className={btnPrimary}>
@@ -475,6 +475,7 @@ export default function CreditBatches() {
                         <label className="block text-sm font-medium text-slate-700 mb-1">Batch Reference</label>
                         <input
                           type="text"
+                          name="batchRef"
                           value={batchRef}
                           onChange={(e) => setBatchRef(e.target.value)}
                           placeholder="e.g. 12 Mar 2026"
@@ -496,6 +497,7 @@ export default function CreditBatches() {
                         <div>
                           <label className="block text-sm font-medium text-slate-700 mb-1">Or add to existing batch</label>
                           <select
+                            name="existingBatchId"
                             value={existingBatchId}
                             onChange={(e) => setExistingBatchId(e.target.value)}
                             className={inputCls}

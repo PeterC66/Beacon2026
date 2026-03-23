@@ -197,7 +197,7 @@ export default function TransactionRefund() {
             {/* Payment method */}
             <div>
               <label className={LBL}>Payment method</label>
-              <select value={payMethod} onChange={(e) => setPayMethod(e.target.value)} className={INP}>
+              <select name="payMethod" value={payMethod} onChange={(e) => setPayMethod(e.target.value)} className={INP}>
                 {PAYMENT_METHODS.map((m) => <option key={m} value={m}>{m || '— none —'}</option>)}
               </select>
             </div>
@@ -205,19 +205,19 @@ export default function TransactionRefund() {
             {/* Payment reference */}
             <div>
               <label className={LBL}>Payment reference</label>
-              <input type="text" value={payRef} onChange={(e) => setPayRef(e.target.value)} className={INP} placeholder="Reference" />
+              <input type="text" name="payRef" value={payRef} onChange={(e) => setPayRef(e.target.value)} className={INP} placeholder="Reference" />
             </div>
 
             {/* Detail */}
             <div className="sm:col-span-2">
               <label className={LBL}>Detail</label>
-              <input type="text" value={detail} onChange={(e) => setDetail(e.target.value)} className={INP} placeholder="Reason for refund" />
+              <input type="text" name="detail" value={detail} onChange={(e) => setDetail(e.target.value)} className={INP} placeholder="Reason for refund" />
             </div>
 
             {/* Remarks */}
             <div className="sm:col-span-2">
               <label className={LBL}>Remarks</label>
-              <textarea value={remarks} onChange={(e) => setRemarks(e.target.value)} rows={2} className={INP} placeholder="Additional notes" />
+              <textarea name="remarks" value={remarks} onChange={(e) => setRemarks(e.target.value)} rows={2} className={INP} placeholder="Additional notes" />
             </div>
           </div>
 
@@ -244,6 +244,7 @@ export default function TransactionRefund() {
                       <td className="py-1.5">
                         <input
                           type="number"
+                          name="refundAmount"
                           min="0"
                           max={cat.amount}
                           step="0.01"

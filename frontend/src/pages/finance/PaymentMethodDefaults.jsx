@@ -91,6 +91,7 @@ export default function PaymentMethodDefaults() {
               Default Membership Payment Method
             </label>
             <select
+              name="defaultMethod"
               value={defaultMethod}
               onChange={(e) => setDefaultMethod(e.target.value)}
               className={`${inputCls} w-full`}
@@ -121,6 +122,7 @@ export default function PaymentMethodDefaults() {
                       <td className="py-1.5 pr-4">{method}</td>
                       <td className="py-1.5">
                         <select
+                          name={`mapping_${method}`}
                           value={mappings[method] || ''}
                           onChange={(e) => setMapping(method, e.target.value)}
                           className={`${inputCls} w-full`}

@@ -92,11 +92,11 @@ export default function GroupsStatement() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-end mb-3">
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">From date</label>
-              <input type="date" value={from} onChange={(e) => setFrom(e.target.value)} className={`${inputCls} w-full`} />
+              <input type="date" name="from" value={from} onChange={(e) => setFrom(e.target.value)} className={`${inputCls} w-full`} />
             </div>
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">To date</label>
-              <input type="date" value={to} onChange={(e) => setTo(e.target.value)} className={`${inputCls} w-full`} />
+              <input type="date" name="to" value={to} onChange={(e) => setTo(e.target.value)} className={`${inputCls} w-full`} />
             </div>
           </div>
           <label className="flex items-center gap-2 text-sm text-slate-700 mb-3 cursor-pointer">

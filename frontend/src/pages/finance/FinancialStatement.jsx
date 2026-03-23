@@ -79,14 +79,14 @@ export default function FinancialStatement() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-end">
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">Account</label>
-              <select value={accountId} onChange={(e) => setAccountId(e.target.value)} className={`${inputCls} w-full`}>
+              <select name="accountId" value={accountId} onChange={(e) => setAccountId(e.target.value)} className={`${inputCls} w-full`}>
                 <option value="all">All accounts combined</option>
                 {accounts.map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}
               </select>
             </div>
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">Financial year</label>
-              <select value={year} onChange={(e) => setYear(Number(e.target.value))} className={`${inputCls} w-full`}>
+              <select name="year" value={year} onChange={(e) => setYear(Number(e.target.value))} className={`${inputCls} w-full`}>
                 {YEARS.map((y) => <option key={y} value={y}>{y}</option>)}
               </select>
             </div>

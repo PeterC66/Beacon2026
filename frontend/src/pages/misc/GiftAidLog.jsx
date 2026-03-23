@@ -91,7 +91,7 @@ export default function GiftAidLog() {
           </div>
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1">Member</label>
-            <select value={memberId} onChange={(e) => setMemberId(e.target.value)}
+            <select name="memberId" value={memberId} onChange={(e) => setMemberId(e.target.value)}
               className="border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
               <option value="">— all members —</option>
               {members.map((m) => (

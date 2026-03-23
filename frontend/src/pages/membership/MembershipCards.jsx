@@ -164,6 +164,7 @@ export default function MembershipCards() {
                 {(opt.value === 'poll' || opt.value === 'outstanding_and_poll') &&
                   showMode === opt.value && polls.length > 0 && (
                   <select
+                    name="selectedPoll"
                     value={selectedPoll}
                     onChange={(e) => setSelectedPoll(e.target.value)}
                     className="ml-2 border border-slate-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -268,6 +269,7 @@ export default function MembershipCards() {
                   <div>
                     <label className="block text-sm font-medium text-slate-700 mb-1">Action</label>
                     <select
+                      name="bulkAction"
                       value={bulkAction}
                       onChange={(e) => { setBulkAction(e.target.value); setActionResult(null); setActionError(null); }}
                       className="border border-slate-300 rounded px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"

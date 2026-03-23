@@ -154,6 +154,7 @@ export default function JoinForm() {
             <fieldset className="mb-6">
               <legend className="text-sm font-bold text-slate-700 mb-2">Membership Type</legend>
               <select
+                name="classId"
                 value={form.classId}
                 onChange={(e) => handleChange('classId', e.target.value)}
                 className="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -179,6 +180,7 @@ export default function JoinForm() {
                   <label className="block text-sm font-medium text-slate-700 mb-1">Title</label>
                   <input
                     type="text"
+                    name="title"
                     value={form.title}
                     onChange={(e) => handleChange('title', e.target.value)}
                     placeholder="Mr, Mrs, Ms, Dr..."
@@ -190,6 +192,7 @@ export default function JoinForm() {
                   <label className="block text-sm font-medium text-slate-700 mb-1">First name *</label>
                   <input
                     type="text"
+                    name="forenames"
                     value={form.forenames}
                     onChange={(e) => handleChange('forenames', e.target.value)}
                     className="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -200,6 +203,7 @@ export default function JoinForm() {
                   <label className="block text-sm font-medium text-slate-700 mb-1">Surname *</label>
                   <input
                     type="text"
+                    name="surname"
                     value={form.surname}
                     onChange={(e) => handleChange('surname', e.target.value)}
                     className="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -210,6 +214,7 @@ export default function JoinForm() {
                   <label className="block text-sm font-medium text-slate-700 mb-1">Email *</label>
                   <input
                     type="email"
+                    name="email"
                     value={form.email}
                     onChange={(e) => handleChange('email', e.target.value)}
                     className="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -220,6 +225,7 @@ export default function JoinForm() {
                   <label className="block text-sm font-medium text-slate-700 mb-1">Mobile</label>
                   <input
                     type="tel"
+                    name="mobile"
                     value={form.mobile}
                     onChange={(e) => handleChange('mobile', e.target.value)}
                     className="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -236,6 +242,7 @@ export default function JoinForm() {
                   <label className="block text-sm font-medium text-slate-700 mb-1">House no / name</label>
                   <input
                     type="text"
+                    name="houseNo"
                     value={form.houseNo}
                     onChange={(e) => handleChange('houseNo', e.target.value)}
                     className="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -245,6 +252,7 @@ export default function JoinForm() {
                   <label className="block text-sm font-medium text-slate-700 mb-1">Street</label>
                   <input
                     type="text"
+                    name="street"
                     value={form.street}
                     onChange={(e) => handleChange('street', e.target.value)}
                     className="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -254,6 +262,7 @@ export default function JoinForm() {
                   <label className="block text-sm font-medium text-slate-700 mb-1">Town</label>
                   <input
                     type="text"
+                    name="town"
                     value={form.town}
                     onChange={(e) => handleChange('town', e.target.value)}
                     className="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -263,6 +272,7 @@ export default function JoinForm() {
                   <label className="block text-sm font-medium text-slate-700 mb-1">County</label>
                   <input
                     type="text"
+                    name="county"
                     value={form.county}
                     onChange={(e) => handleChange('county', e.target.value)}
                     className="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -272,6 +282,7 @@ export default function JoinForm() {
                   <label className="block text-sm font-medium text-slate-700 mb-1">Postcode *</label>
                   <input
                     type="text"
+                    name="postcode"
                     value={form.postcode}
                     onChange={(e) => handleChange('postcode', e.target.value.toUpperCase())}
                     className="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -282,6 +293,7 @@ export default function JoinForm() {
                   <label className="block text-sm font-medium text-slate-700 mb-1">Telephone</label>
                   <input
                     type="tel"
+                    name="telephone"
                     value={form.telephone}
                     onChange={(e) => handleChange('telephone', e.target.value)}
                     className="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"

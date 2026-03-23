@@ -247,6 +247,7 @@ export default function RoleEditor() {
             </label>
             <input
               type="text"
+              name="name"
               value={name}
               onChange={(e) => { markDirty(); setName(e.target.value); }}
               disabled={!canEdit}
@@ -268,6 +269,7 @@ export default function RoleEditor() {
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1">Notes</label>
             <textarea
+              name="notes"
               value={notes}
               onChange={(e) => { markDirty(); setNotes(e.target.value); }}
               disabled={!canEdit}

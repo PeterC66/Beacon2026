@@ -209,6 +209,7 @@ export default function FinanceLedger() {
             {view === 'group' && (
               <input
                 type="text"
+                name="groupFilter"
                 value={groupFilter}
                 onChange={(e) => setGroupFilter(e.target.value)}
                 placeholder="Filter groups…"
@@ -216,6 +217,7 @@ export default function FinanceLedger() {
               />
             )}
             <select
+              name="selId"
               value={selId}
               onChange={(e) => setSelId(e.target.value)}
               className="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -240,6 +242,7 @@ export default function FinanceLedger() {
           <div>
             <label className="block text-xs font-medium text-slate-600 mb-1">Year</label>
             <select
+              name="year"
               value={year}
               onChange={(e) => setYear(Number(e.target.value))}
               className="border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -265,6 +268,7 @@ export default function FinanceLedger() {
                   <div className="bg-white/90 rounded-lg shadow-sm p-3 mb-3 flex flex-wrap items-center gap-3">
                     <span className="text-sm text-slate-600">{selected.size} selected</span>
                     <select
+                      name="bulkAction"
                       value={bulkAction}
                       onChange={(e) => setBulkAction(e.target.value)}
                       className="border border-slate-300 rounded px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"

@@ -149,31 +149,31 @@ export default function VenueEditor() {
             {/* Venue name */}
             <div>
               <label className={labelCls}>Venue *</label>
-              <input className={`${inputCls} w-full`} required value={form.name}
+              <input name="name" className={`${inputCls} w-full`} required value={form.name}
                 onChange={(e) => set('name', e.target.value)} disabled={!canChange} />
             </div>
 
             {/* Address */}
             <div>
               <label className={labelCls}>Address line 1</label>
-              <input className={`${inputCls} w-full`} value={form.address1}
+              <input name="address1" className={`${inputCls} w-full`} value={form.address1}
                 onChange={(e) => set('address1', e.target.value)} disabled={!canChange} />
             </div>
             <div>
               <label className={labelCls}>Address line 2</label>
-              <input className={`${inputCls} w-full`} value={form.address2}
+              <input name="address2" className={`${inputCls} w-full`} value={form.address2}
                 onChange={(e) => set('address2', e.target.value)} disabled={!canChange} />
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className={labelCls}>Town</label>
-                <input className={`${inputCls} w-full`} value={form.town}
+                <input name="town" className={`${inputCls} w-full`} value={form.town}
                   onChange={(e) => set('town', e.target.value)} disabled={!canChange} />
               </div>
               <div>
                 <label className={labelCls}>County</label>
-                <input className={`${inputCls} w-full`} value={form.county}
+                <input name="county" className={`${inputCls} w-full`} value={form.county}
                   onChange={(e) => set('county', e.target.value)} disabled={!canChange} />
               </div>
             </div>
@@ -181,12 +181,12 @@ export default function VenueEditor() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className={labelCls}>Postcode</label>
-                <input className={`${inputCls} w-full`} value={form.postcode}
+                <input name="postcode" className={`${inputCls} w-full`} value={form.postcode}
                   onChange={(e) => set('postcode', e.target.value)} disabled={!canChange} />
               </div>
               <div>
                 <label className={labelCls}>Telephone</label>
-                <input className={`${inputCls} w-full`} type="tel" value={form.telephone}
+                <input name="telephone" className={`${inputCls} w-full`} type="tel" value={form.telephone}
                   onChange={(e) => set('telephone', e.target.value)} disabled={!canChange} />
               </div>
             </div>
@@ -194,12 +194,12 @@ export default function VenueEditor() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className={labelCls}>Email</label>
-                <input className={`${inputCls} w-full`} type="email" value={form.email}
+                <input name="email" className={`${inputCls} w-full`} type="email" value={form.email}
                   onChange={(e) => set('email', e.target.value)} disabled={!canChange} />
               </div>
               <div>
                 <label className={labelCls}>Website</label>
-                <input className={`${inputCls} w-full`} type="url" value={form.website}
+                <input name="website" className={`${inputCls} w-full`} type="url" value={form.website}
                   placeholder="https://…"
                   onChange={(e) => set('website', e.target.value)} disabled={!canChange} />
               </div>
@@ -208,7 +208,7 @@ export default function VenueEditor() {
             {/* Notes */}
             <div>
               <label className={labelCls}>Notes</label>
-              <textarea rows={3} className={`${inputCls} w-full resize-y`} value={form.notes}
+              <textarea name="notes" rows={3} className={`${inputCls} w-full resize-y`} value={form.notes}
                 onChange={(e) => set('notes', e.target.value)} disabled={!canChange} />
             </div>
 

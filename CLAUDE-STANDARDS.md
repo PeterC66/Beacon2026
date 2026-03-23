@@ -20,6 +20,13 @@ Every item below applies to every new feature — no exceptions.
 - [ ] **Shared components** — import `PageHeader`, `NavBar`, `SortableHeader`, `DateInput`
   instead of duplicating.
 
+## Form inputs
+
+- [ ] **Every `<input>`, `<textarea>`, and `<select>` must have a `name` attribute.**
+  Use the React state/form property name (e.g., `value={form.forenames}` → `name="forenames"`).
+  This is required for E2E test locators (`input[name="..."]`) and for accessibility.
+  Checkboxes and radio buttons may be skipped when they are pure UI toggles.
+
 ## Edit forms
 
 - [ ] **`useUnsavedChanges` hook** on every full-page edit form.

@@ -255,22 +255,22 @@ export default function OpenMeetings() {
                               <div className="flex flex-wrap gap-2 items-end">
                                 <div>
                                   <label className={labelCls}>Date *</label>
-                                  <input type="date" className={inputCls} value={editForm.eventDate}
+                                  <input type="date" name="eventDate" className={inputCls} value={editForm.eventDate}
                                     onChange={(e) => setEditForm((p) => ({ ...p, eventDate: e.target.value }))} />
                                 </div>
                                 <div>
                                   <label className={labelCls}>Start</label>
-                                  <input type="time" step="900" className={inputCls} value={editForm.startTime}
+                                  <input type="time" step="900" name="startTime" className={inputCls} value={editForm.startTime}
                                     onChange={(e) => setEditForm((p) => ({ ...p, startTime: e.target.value }))} />
                                 </div>
                                 <div>
                                   <label className={labelCls}>Until</label>
-                                  <input type="time" step="900" className={inputCls} value={editForm.endTime}
+                                  <input type="time" step="900" name="endTime" className={inputCls} value={editForm.endTime}
                                     onChange={(e) => setEditForm((p) => ({ ...p, endTime: e.target.value }))} />
                                 </div>
                                 <div>
                                   <label className={labelCls}>Venue</label>
-                                  <select className={inputCls} value={editForm.venueId}
+                                  <select name="venueId" className={inputCls} value={editForm.venueId}
                                     onChange={(e) => setEditForm((p) => ({ ...p, venueId: e.target.value }))}>
                                     <option value="">-- none --</option>
                                     {venues.map((v) => <option key={v.id} value={v.id}>{v.name}</option>)}
@@ -278,17 +278,17 @@ export default function OpenMeetings() {
                                 </div>
                                 <div className="min-w-40">
                                   <label className={labelCls}>Topic</label>
-                                  <input className={`${inputCls} w-full`} value={editForm.topic}
+                                  <input name="topic" className={`${inputCls} w-full`} value={editForm.topic}
                                     onChange={(e) => setEditForm((p) => ({ ...p, topic: e.target.value }))} />
                                 </div>
                                 <div>
                                   <label className={labelCls}>Enquiries</label>
-                                  <input className={inputCls} value={editForm.contact}
+                                  <input name="contact" className={inputCls} value={editForm.contact}
                                     onChange={(e) => setEditForm((p) => ({ ...p, contact: e.target.value }))} />
                                 </div>
                                 <div className="flex-1 min-w-48">
                                   <label className={labelCls}>Details</label>
-                                  <input className={`${inputCls} w-full`} value={editForm.details}
+                                  <input name="details" className={`${inputCls} w-full`} value={editForm.details}
                                     onChange={(e) => setEditForm((p) => ({ ...p, details: e.target.value }))} />
                                 </div>
                                 <label className="flex items-center gap-1 text-xs cursor-pointer mt-4">
@@ -373,22 +373,22 @@ export default function OpenMeetings() {
                   <div className="flex flex-wrap gap-3 items-end">
                     <div>
                       <label className={labelCls}>First date and time *</label>
-                      <input type="date" className={inputCls} required value={addForm.eventDate}
+                      <input type="date" name="eventDate" className={inputCls} required value={addForm.eventDate}
                         onChange={(e) => setAdd('eventDate', e.target.value)} />
                     </div>
                     <div>
                       <label className={labelCls}>Start time</label>
-                      <input type="time" step="900" className={inputCls} value={addForm.startTime}
+                      <input type="time" step="900" name="startTime" className={inputCls} value={addForm.startTime}
                         onChange={(e) => setAdd('startTime', e.target.value)} />
                     </div>
                     <div>
                       <label className={labelCls}>End time</label>
-                      <input type="time" step="900" className={inputCls} value={addForm.endTime}
+                      <input type="time" step="900" name="endTime" className={inputCls} value={addForm.endTime}
                         onChange={(e) => setAdd('endTime', e.target.value)} />
                     </div>
                     <div>
                       <label className={labelCls}>Venue</label>
-                      <select className={inputCls} value={addForm.venueId}
+                      <select name="venueId" className={inputCls} value={addForm.venueId}
                         onChange={(e) => setAdd('venueId', e.target.value)}>
                         <option value="">-- none --</option>
                         {venues.map((v) => <option key={v.id} value={v.id}>{v.name}</option>)}
@@ -399,17 +399,17 @@ export default function OpenMeetings() {
                   <div className="flex flex-wrap gap-3 items-end">
                     <div className="min-w-40 flex-1">
                       <label className={labelCls}>Topic</label>
-                      <input className={`${inputCls} w-full`} value={addForm.topic}
+                      <input name="topic" className={`${inputCls} w-full`} value={addForm.topic}
                         onChange={(e) => setAdd('topic', e.target.value)} />
                     </div>
                     <div>
                       <label className={labelCls}>Enquiries</label>
-                      <input className={inputCls} value={addForm.contact}
+                      <input name="contact" className={inputCls} value={addForm.contact}
                         onChange={(e) => setAdd('contact', e.target.value)} />
                     </div>
                     <div className="flex-1 min-w-48">
                       <label className={labelCls}>Details</label>
-                      <input className={`${inputCls} w-full`} value={addForm.details}
+                      <input name="details" className={`${inputCls} w-full`} value={addForm.details}
                         onChange={(e) => setAdd('details', e.target.value)} />
                     </div>
                     <label className="flex items-center gap-1 text-xs cursor-pointer mt-4">
@@ -424,13 +424,13 @@ export default function OpenMeetings() {
                     <span className="text-sm text-slate-600 self-end pb-2">then every</span>
                     <div>
                       <label className={labelCls}>Count</label>
-                      <input type="number" min="1" className={`${inputCls} w-20`} value={addForm.repeatEvery}
+                      <input type="number" min="1" name="repeatEvery" className={`${inputCls} w-20`} value={addForm.repeatEvery}
                         placeholder="--"
                         onChange={(e) => setAdd('repeatEvery', e.target.value)} />
                     </div>
                     <div>
                       <label className={labelCls}>Unit</label>
-                      <select className={inputCls} value={addForm.repeatUnit}
+                      <select name="repeatUnit" className={inputCls} value={addForm.repeatUnit}
                         onChange={(e) => setAdd('repeatUnit', e.target.value)}>
                         <option value="days">days</option>
                         <option value="weeks">weeks</option>
@@ -439,7 +439,7 @@ export default function OpenMeetings() {
                     </div>
                     <div>
                       <label className={labelCls}>Not beyond</label>
-                      <input type="date" className={inputCls} value={addForm.repeatUntil}
+                      <input type="date" name="repeatUntil" className={inputCls} value={addForm.repeatUntil}
                         onChange={(e) => setAdd('repeatUntil', e.target.value)} />
                     </div>
                   </div>

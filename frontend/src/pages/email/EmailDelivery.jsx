@@ -53,12 +53,12 @@ export default function EmailDelivery() {
         <div className="bg-white/90 rounded-lg shadow-sm p-3 mb-4 flex flex-wrap gap-3 items-end">
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1">From</label>
-            <input type="date" value={from} onChange={(e) => setFrom(e.target.value)}
+            <input type="date" name="from" value={from} onChange={(e) => setFrom(e.target.value)}
               className="border border-slate-300 rounded px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
           </div>
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1">To</label>
-            <input type="date" value={to} onChange={(e) => setTo(e.target.value)}
+            <input type="date" name="to" value={to} onChange={(e) => setTo(e.target.value)}
               className="border border-slate-300 rounded px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
           </div>
           <button onClick={load} className="bg-blue-600 hover:bg-blue-700 text-white rounded px-4 py-1.5 text-sm">Search</button>

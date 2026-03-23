@@ -81,6 +81,7 @@ export default function PublicLinks() {
               <input
                 type="text"
                 readOnly
+                name="joinUrl"
                 value={slug ? `${frontendBase}/public/${slug}/join` : ''}
                 className="w-full border border-slate-300 rounded px-3 py-2 text-sm bg-slate-50 font-mono"
                 onClick={(e) => e.target.select()}
@@ -93,6 +94,7 @@ export default function PublicLinks() {
               <input
                 type="text"
                 readOnly
+                name="portalUrl"
                 value={slug ? `${frontendBase}/public/${slug}/portal` : ''}
                 className="w-full border border-slate-300 rounded px-3 py-2 text-sm bg-slate-50 font-mono"
                 onClick={(e) => e.target.select()}
@@ -122,6 +124,7 @@ export default function PublicLinks() {
               </label>
               <input
                 type="url"
+                name="privacyPolicyUrl"
                 value={form.privacyPolicyUrl}
                 onChange={(e) => handleChange('privacyPolicyUrl', e.target.value)}
                 disabled={!canChange}

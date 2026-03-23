@@ -108,6 +108,7 @@ export default function MemberStatusList() {
                       {editId === status.id ? (
                         <input
                           type="text"
+                          name="editName"
                           value={editName}
                           onChange={(e) => setEditName(e.target.value)}
                           onKeyDown={(e) => e.key === 'Escape' && setEditId(null)}
@@ -173,6 +174,7 @@ export default function MemberStatusList() {
               <form onSubmit={handleAdd} className="px-4 py-3 border-t border-slate-200 flex gap-2">
                 <input
                   type="text"
+                  name="newName"
                   value={newName}
                   onChange={(e) => setNewName(e.target.value)}
                   placeholder="Add new status…"

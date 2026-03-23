@@ -163,6 +163,7 @@ export default function GiftAidDeclaration() {
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">Financial Year</label>
                 <select
+                  name="year"
                   value={year}
                   onChange={(e) => setYear(parseInt(e.target.value, 10))}
                   className={inputCls}

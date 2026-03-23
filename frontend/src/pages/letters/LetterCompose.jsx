@@ -147,6 +147,7 @@ function EditorToolbar({ editor }) {
       <span className="border-l border-slate-300 mx-1" />
 
       <select
+        name="fontSize"
         value={currentSize}
         onChange={(e) => {
           const size = e.target.value;
@@ -345,6 +346,7 @@ export default function LetterCompose() {
             {can('letters_standard_messages', 'view') && (
               <div className="bg-white/90 rounded-lg shadow-sm p-3 flex flex-wrap gap-2 items-center">
                 <select
+                  name="loadLetterId"
                   value={loadLetterId}
                   onChange={(e) => { setLoadLetterId(e.target.value); handleLoadLetter(e.target.value); }}
                   className="border border-slate-300 rounded px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -374,6 +376,7 @@ export default function LetterCompose() {
                   <div className="flex gap-2 w-full mt-1">
                     <input
                       type="text"
+                      name="saveName"
                       value={saveName}
                       onChange={(e) => setSaveName(e.target.value)}
                       placeholder="Letter name"

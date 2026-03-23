@@ -94,22 +94,22 @@ function renderRecoverySection(tenantSlug, recoverState, setRecoverState) {
         <form onSubmit={handleIdentify} className="space-y-2">
           <div>
             <label className="block text-xs font-medium text-slate-700 mb-0.5">Forename</label>
-            <input value={form.forename} onChange={(e) => setField('forename', e.target.value)}
+            <input name="forename" value={form.forename} onChange={(e) => setField('forename', e.target.value)}
               required className={inputCls} />
           </div>
           <div>
             <label className="block text-xs font-medium text-slate-700 mb-0.5">Surname</label>
-            <input value={form.surname} onChange={(e) => setField('surname', e.target.value)}
+            <input name="surname" value={form.surname} onChange={(e) => setField('surname', e.target.value)}
               required className={inputCls} />
           </div>
           <div>
             <label className="block text-xs font-medium text-slate-700 mb-0.5">Postcode</label>
-            <input value={form.postcode} onChange={(e) => setField('postcode', e.target.value)}
+            <input name="postcode" value={form.postcode} onChange={(e) => setField('postcode', e.target.value)}
               required className={inputCls} />
           </div>
           <div>
             <label className="block text-xs font-medium text-slate-700 mb-0.5">Email</label>
-            <input type="email" value={form.email} onChange={(e) => setField('email', e.target.value)}
+            <input type="email" name="email" value={form.email} onChange={(e) => setField('email', e.target.value)}
               required className={inputCls} />
           </div>
           <button type="submit" disabled={busy}
@@ -126,7 +126,7 @@ function renderRecoverySection(tenantSlug, recoverState, setRecoverState) {
           </p>
           <div>
             <label className="block text-xs font-medium text-slate-700 mb-0.5">{securityQuestion}</label>
-            <input value={form.answer} onChange={(e) => setField('answer', e.target.value)}
+            <input name="answer" value={form.answer} onChange={(e) => setField('answer', e.target.value)}
               required className={inputCls} />
             <p className="text-xs text-slate-500 mt-1">
               Type the answer in the same format as when it was originally set.

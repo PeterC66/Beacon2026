@@ -224,6 +224,7 @@ export default function EmailCompose() {
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">From</label>
                   <select
+                    name="fromEmail"
                     value={fromEmail}
                     onChange={(e) => setFromEmail(e.target.value)}
                     className="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -259,6 +260,7 @@ export default function EmailCompose() {
             {/* Standard messages bar */}
             <div className="bg-white/90 rounded-lg shadow-sm p-3 flex flex-wrap gap-2 items-center">
               <select
+                name="loadMsgId"
                 value={loadMsgId}
                 onChange={(e) => { setLoadMsgId(e.target.value); handleLoadMsg(e.target.value); }}
                 className="border border-slate-300 rounded px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -277,6 +279,7 @@ export default function EmailCompose() {
                 <div className="flex gap-2 w-full mt-1">
                   <input
                     type="text"
+                    name="saveName"
                     value={saveName}
                     onChange={(e) => setSaveName(e.target.value)}
                     placeholder="Message name"
@@ -295,6 +298,7 @@ export default function EmailCompose() {
                 <input
                   ref={subjectRef}
                   type="text"
+                  name="subject"
                   value={subject}
                   onChange={(e) => setSubject(e.target.value)}
                   className="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -305,6 +309,7 @@ export default function EmailCompose() {
                 <label className="block text-sm font-medium text-slate-700 mb-1">Message</label>
                 <textarea
                   ref={bodyRef}
+                  name="body"
                   value={body}
                   onChange={(e) => setBody(e.target.value)}
                   rows={14}

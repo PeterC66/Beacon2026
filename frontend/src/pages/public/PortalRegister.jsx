@@ -101,31 +101,31 @@ export default function PortalRegister() {
           <div className="space-y-3 mb-6">
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">Membership number *</label>
-              <input type="number" value={form.membershipNumber}
+              <input type="number" name="membershipNumber" value={form.membershipNumber}
                 onChange={(e) => handleChange('membershipNumber', e.target.value)} className={fieldCss} />
               {fieldErrors.membershipNumber && <p className="text-sm text-red-600 mt-1 font-medium">{fieldErrors.membershipNumber}</p>}
             </div>
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">Forename *</label>
-              <input type="text" value={form.forename}
+              <input type="text" name="forename" value={form.forename}
                 onChange={(e) => handleChange('forename', e.target.value)} className={fieldCss} />
               {fieldErrors.forename && <p className="text-sm text-red-600 mt-1 font-medium">{fieldErrors.forename}</p>}
             </div>
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">Surname *</label>
-              <input type="text" value={form.surname}
+              <input type="text" name="surname" value={form.surname}
                 onChange={(e) => handleChange('surname', e.target.value)} className={fieldCss} />
               {fieldErrors.surname && <p className="text-sm text-red-600 mt-1 font-medium">{fieldErrors.surname}</p>}
             </div>
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">Postcode *</label>
-              <input type="text" value={form.postcode}
+              <input type="text" name="postcode" value={form.postcode}
                 onChange={(e) => handleChange('postcode', e.target.value.toUpperCase())} className={fieldCss} />
               {fieldErrors.postcode && <p className="text-sm text-red-600 mt-1 font-medium">{fieldErrors.postcode}</p>}
             </div>
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">Email address *</label>
-              <input type="email" value={form.email}
+              <input type="email" name="email" value={form.email}
                 onChange={(e) => handleChange('email', e.target.value)} className={fieldCss} autoComplete="email" />
               {fieldErrors.email && <p className="text-sm text-red-600 mt-1 font-medium">{fieldErrors.email}</p>}
             </div>
@@ -139,13 +139,13 @@ export default function PortalRegister() {
             <div className="space-y-3">
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">Password *</label>
-                <input type="password" value={form.password}
+                <input type="password" name="password" value={form.password}
                   onChange={(e) => handleChange('password', e.target.value)} className={fieldCss} autoComplete="new-password" />
                 {fieldErrors.password && <p className="text-sm text-red-600 mt-1 font-medium">{fieldErrors.password}</p>}
               </div>
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">Confirm password *</label>
-                <input type="password" value={form.confirmPassword}
+                <input type="password" name="confirmPassword" value={form.confirmPassword}
                   onChange={(e) => handleChange('confirmPassword', e.target.value)} className={fieldCss} autoComplete="new-password" />
                 {fieldErrors.confirmPassword && <p className="text-sm text-red-600 mt-1 font-medium">{fieldErrors.confirmPassword}</p>}
               </div>
