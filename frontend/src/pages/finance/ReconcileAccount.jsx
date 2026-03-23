@@ -123,7 +123,7 @@ export default function ReconcileAccount() {
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 items-end">
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">Account</label>
-              <select value={accountId} onChange={(e) => setAccountId(e.target.value)} className={`${inputCls} w-full`}>
+              <select name="accountId" value={accountId} onChange={(e) => setAccountId(e.target.value)} className={`${inputCls} w-full`}>
                 <option value="">— select —</option>
                 {accounts.filter((a) => a.active).map((a) => (
                   <option key={a.id} value={a.id}>{a.name}</option>
@@ -132,13 +132,13 @@ export default function ReconcileAccount() {
             </div>
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">Statement end balance (£)</label>
-              <input type="number" step="0.01" value={statementBalance}
+              <input type="number" name="statementBalance" step="0.01" value={statementBalance}
                 onChange={(e) => setStatementBalance(e.target.value)}
                 className={`${inputCls} w-full`} placeholder="0.00" />
             </div>
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">Statement end date</label>
-              <input type="date" value={statementDate} onChange={(e) => setStatementDate(e.target.value)}
+              <input type="date" name="statementDate" value={statementDate} onChange={(e) => setStatementDate(e.target.value)}
                 className={`${inputCls} w-full`} />
             </div>
           </div>

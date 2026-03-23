@@ -191,6 +191,7 @@ export default function RecentMembers() {
           <div className="bg-white/90 rounded-lg shadow-sm p-4 space-y-3">
             <p className="text-sm font-medium text-slate-700">Select a group to add the {selected.size} selected member{selected.size !== 1 ? 's' : ''} to:</p>
             <select
+              name="chosenGroup"
               value={chosenGroup}
               onChange={(e) => setChosenGroup(e.target.value)}
               className={SELECT + ' w-64'}
@@ -231,6 +232,7 @@ export default function RecentMembers() {
             {sorted.length > 0 && (
               <form onSubmit={handleDoWithSelected} className="flex flex-wrap items-center gap-3">
                 <select
+                  name="action"
                   value={action}
                   onChange={(e) => setAction(e.target.value)}
                   className={SELECT}

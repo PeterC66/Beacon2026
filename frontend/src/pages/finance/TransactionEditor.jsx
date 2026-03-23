@@ -364,6 +364,7 @@ export default function TransactionEditor() {
             <div>
               <label className={LBL}>Account *</label>
               <select
+                name="account_id"
                 value={form.account_id}
                 onChange={(e) => set('account_id', e.target.value)}
                 disabled={readOnly}
@@ -390,6 +391,7 @@ export default function TransactionEditor() {
               <label className={LBL}>{form.type === 'in' ? 'From' : 'To'}</label>
               <input
                 type="text"
+                name="from_to"
                 value={form.from_to}
                 onChange={(e) => set('from_to', e.target.value)}
                 disabled={readOnly}
@@ -403,6 +405,7 @@ export default function TransactionEditor() {
               <label className={LBL}>Amount (£) *</label>
               <input
                 type="number"
+                name="amount"
                 min="0.01"
                 step="0.01"
                 value={form.amount}
@@ -417,6 +420,7 @@ export default function TransactionEditor() {
             <div>
               <label className={LBL}>Payment method</label>
               <select
+                name="payment_method"
                 value={form.payment_method}
                 onChange={(e) => set('payment_method', e.target.value)}
                 disabled={readOnly}
@@ -431,6 +435,7 @@ export default function TransactionEditor() {
               <label className={LBL}>Payment reference</label>
               <input
                 type="text"
+                name="payment_ref"
                 value={form.payment_ref}
                 onChange={(e) => set('payment_ref', e.target.value)}
                 disabled={readOnly}
@@ -471,6 +476,7 @@ export default function TransactionEditor() {
               <label className={LBL}>Detail</label>
               <input
                 type="text"
+                name="detail"
                 value={form.detail}
                 onChange={(e) => set('detail', e.target.value)}
                 disabled={readOnly}
@@ -483,6 +489,7 @@ export default function TransactionEditor() {
             <div className="sm:col-span-2">
               <label className={LBL}>Remarks</label>
               <textarea
+                name="remarks"
                 value={form.remarks}
                 onChange={(e) => set('remarks', e.target.value)}
                 disabled={cleared}
@@ -503,6 +510,7 @@ export default function TransactionEditor() {
                 <label className={LBL}>Member 1</label>
                 <input
                   type="text"
+                  name="m1Filter"
                   value={m1Filter}
                   onChange={(e) => setM1Filter(e.target.value)}
                   disabled={cleared}
@@ -510,6 +518,7 @@ export default function TransactionEditor() {
                   placeholder="Search name / number…"
                 />
                 <select
+                  name="member_id_1"
                   value={form.member_id_1}
                   onChange={(e) => set('member_id_1', e.target.value)}
                   disabled={cleared}
@@ -530,6 +539,7 @@ export default function TransactionEditor() {
                 <label className={LBL}>Member 2</label>
                 <input
                   type="text"
+                  name="m2Filter"
                   value={m2Filter}
                   onChange={(e) => setM2Filter(e.target.value)}
                   disabled={cleared}
@@ -537,6 +547,7 @@ export default function TransactionEditor() {
                   placeholder="Search name / number…"
                 />
                 <select
+                  name="member_id_2"
                   value={form.member_id_2}
                   onChange={(e) => set('member_id_2', e.target.value)}
                   disabled={cleared}
@@ -556,6 +567,7 @@ export default function TransactionEditor() {
               <div>
                 <label className={LBL}>Group</label>
                 <select
+                  name="group_id"
                   value={form.group_id}
                   onChange={(e) => set('group_id', e.target.value)}
                   disabled={cleared}
@@ -607,6 +619,7 @@ export default function TransactionEditor() {
                         <td className="py-1.5">
                           <input
                             type="number"
+                            name="categoryAmount"
                             min="0"
                             step="0.01"
                             value={catAmounts[cat.id] ?? ''}

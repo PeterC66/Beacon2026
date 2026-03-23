@@ -102,6 +102,7 @@ export default function PollList() {
       <td className="px-3 py-2">
         <input
           type="text"
+          name="name"
           value={form.name}
           onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
           placeholder="Poll name"
@@ -114,6 +115,7 @@ export default function PollList() {
       <td className="px-3 py-2">
         <input
           type="text"
+          name="description"
           value={form.description}
           onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
           placeholder="Description"

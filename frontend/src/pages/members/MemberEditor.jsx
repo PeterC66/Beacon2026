@@ -660,7 +660,7 @@ export default function MemberEditor() {
               {!isNew && (
                 <div>
                   <label className={labelCls}><strong>Status</strong></label>
-                  <select value={form.statusId}
+                  <select name="statusId" value={form.statusId}
                     onChange={(e) => set('statusId', e.target.value)}
                     onBlur={() => handleBlur('statusId')}
                     className={ic('statusId')}>
@@ -672,7 +672,7 @@ export default function MemberEditor() {
               )}
               <div>
                 <label className={labelCls}><strong>Class</strong></label>
-                <select value={form.classId}
+                <select name="classId" value={form.classId}
                   onChange={(e) => set('classId', e.target.value)}
                   onBlur={() => handleBlur('classId')}
                   className={ic('classId')}>
@@ -705,13 +705,13 @@ export default function MemberEditor() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className={labelCls}>Title</label>
-                <select value={form.title} onChange={(e) => set('title', e.target.value)} className={inputCls}>
+                <select name="title" value={form.title} onChange={(e) => set('title', e.target.value)} className={inputCls}>
                   {TITLES.map((t) => <option key={t} value={t}>{t || '—'}</option>)}
                 </select>
               </div>
               <div>
                 <label className={labelCls}><strong>Forenames</strong></label>
-                <input type="text" value={form.forenames}
+                <input type="text" name="forenames" value={form.forenames}
                   onChange={(e) => set('forenames', e.target.value)}
                   onBlur={() => handleBlur('forenames')}
                   className={ic('forenames')} />
@@ -719,7 +719,7 @@ export default function MemberEditor() {
               </div>
               <div>
                 <label className={labelCls}><strong>Surname</strong></label>
-                <input type="text" value={form.surname}
+                <input type="text" name="surname" value={form.surname}
                   onChange={(e) => set('surname', e.target.value)}
                   onBlur={() => handleBlur('surname')}
                   className={ic('surname')} />
@@ -727,20 +727,20 @@ export default function MemberEditor() {
               </div>
               <div>
                 <label className={labelCls}>Known as</label>
-                <input type="text" value={form.knownAs}
+                <input type="text" name="knownAs" value={form.knownAs}
                   onChange={(e) => set('knownAs', e.target.value)}
                   className={inputCls} />
               </div>
               <div className="sm:col-span-2 grid grid-cols-[1fr_2fr_auto] gap-4 items-end">
                 <div>
                   <label className={labelCls}>Suffix <span className="text-slate-400 font-normal">(e.g. MBE)</span></label>
-                  <input type="text" value={form.suffix}
+                  <input type="text" name="suffix" value={form.suffix}
                     onChange={(e) => set('suffix', e.target.value)}
                     className={inputCls} maxLength={30} />
                 </div>
                 <div>
                   <label className={labelCls}>Email</label>
-                  <input type="email" value={form.email}
+                  <input type="email" name="email" value={form.email}
                     onChange={(e) => set('email', e.target.value)}
                     className={inputCls} />
                 </div>
@@ -761,7 +761,7 @@ export default function MemberEditor() {
               </div>
               <div>
                 <label className={labelCls}>Mobile</label>
-                <input type="text" value={form.mobile}
+                <input type="text" name="mobile" value={form.mobile}
                   onChange={(e) => set('mobile', e.target.value)}
                   onBlur={() => handleBlur('mobile')}
                   className={ic('mobile')} />
@@ -770,7 +770,7 @@ export default function MemberEditor() {
               {isAssociate && (
                 <div>
                   <label className={labelCls}>Home u3a</label>
-                  <input type="text" value={form.homeU3a}
+                  <input type="text" name="homeU3a" value={form.homeU3a}
                     onChange={(e) => set('homeU3a', e.target.value)}
                     className={inputCls} maxLength={100} />
                 </div>
@@ -788,7 +788,7 @@ export default function MemberEditor() {
 
             <div className="mt-4">
               <label className={labelCls}>Notes</label>
-              <textarea rows={3} value={form.notes}
+              <textarea name="notes" rows={3} value={form.notes}
                 onChange={(e) => set('notes', e.target.value)}
                 className={inputCls} />
             </div>
@@ -848,6 +848,7 @@ export default function MemberEditor() {
               {!newPartnerMode && (
                 <>
                   <select
+                    name="existingPartnerId"
                     value={form.existingPartnerId}
                     onChange={(e) => handlePartnerChange(e.target.value)}
                     className={inputCls}
@@ -891,7 +892,7 @@ export default function MemberEditor() {
                       <p className="text-sm text-blue-800 mb-2">
                         <strong>{partnerName}</strong> is in a different membership class. Update their class?
                       </p>
-                      <select value={partnerNewClassId} onChange={(e) => setPartnerNewClassId(e.target.value)} className={inputCls}>
+                      <select name="partnerNewClassId" value={partnerNewClassId} onChange={(e) => setPartnerNewClassId(e.target.value)} className={inputCls}>
                         <option value="">— keep current class —</option>
                         {classes.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
                       </select>
@@ -908,44 +909,44 @@ export default function MemberEditor() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
                     <label className={labelCls}>Title</label>
-                    <select value={npForm.title} onChange={(e) => setNp('title', e.target.value)} className={inputCls}>
+                    <select name="npTitle" value={npForm.title} onChange={(e) => setNp('title', e.target.value)} className={inputCls}>
                       {TITLES.map((t) => <option key={t} value={t}>{t || '—'}</option>)}
                     </select>
                   </div>
                   <div>
                     <label className={labelCls}><strong>Forenames</strong></label>
-                    <input type="text" value={npForm.forenames} onChange={(e) => setNp('forenames', e.target.value)}
+                    <input type="text" name="npForenames" value={npForm.forenames} onChange={(e) => setNp('forenames', e.target.value)}
                       className={fieldErrors.npForenames ? inputErrCls : inputCls} />
                     {fieldErrors.npForenames && <p className={errMsgCls}>{fieldErrors.npForenames}</p>}
                   </div>
                   <div>
                     <label className={labelCls}><strong>Surname</strong></label>
-                    <input type="text" value={npForm.surname} onChange={(e) => setNp('surname', e.target.value)}
+                    <input type="text" name="npSurname" value={npForm.surname} onChange={(e) => setNp('surname', e.target.value)}
                       className={fieldErrors.npSurname ? inputErrCls : inputCls} />
                     {fieldErrors.npSurname && <p className={errMsgCls}>{fieldErrors.npSurname}</p>}
                   </div>
                   <div>
                     <label className={labelCls}>Known as</label>
-                    <input type="text" value={npForm.knownAs} onChange={(e) => setNp('knownAs', e.target.value)} className={inputCls} />
+                    <input type="text" name="npKnownAs" value={npForm.knownAs} onChange={(e) => setNp('knownAs', e.target.value)} className={inputCls} />
                   </div>
                   <div>
                     <label className={labelCls}>Email</label>
-                    <input type="email" value={npForm.email} onChange={(e) => setNp('email', e.target.value)} className={inputCls} />
+                    <input type="email" name="npEmail" value={npForm.email} onChange={(e) => setNp('email', e.target.value)} className={inputCls} />
                   </div>
                   <div>
                     <label className={labelCls}>Mobile</label>
-                    <input type="text" value={npForm.mobile} onChange={(e) => setNp('mobile', e.target.value)} className={inputCls} />
+                    <input type="text" name="npMobile" value={npForm.mobile} onChange={(e) => setNp('mobile', e.target.value)} className={inputCls} />
                   </div>
                   <div>
                     <label className={labelCls}><strong>Status</strong></label>
-                    <select value={npForm.statusId} onChange={(e) => setNp('statusId', e.target.value)} className={inputCls}>
+                    <select name="npStatusId" value={npForm.statusId} onChange={(e) => setNp('statusId', e.target.value)} className={inputCls}>
                       <option value="">— select —</option>
                       {statuses.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
                     </select>
                   </div>
                   <div>
                     <label className={labelCls}><strong>Class</strong></label>
-                    <select value={npForm.classId} onChange={(e) => setNp('classId', e.target.value)} className={inputCls}>
+                    <select name="npClassId" value={npForm.classId} onChange={(e) => setNp('classId', e.target.value)} className={inputCls}>
                       <option value="">— select —</option>
                       {classes.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
                     </select>
@@ -972,43 +973,43 @@ export default function MemberEditor() {
             <div className={`grid grid-cols-1 sm:grid-cols-2 gap-4 ${(form.existingPartnerId && isNew) || addressLocked || (isNew && newPartnerMode) ? 'opacity-40 pointer-events-none' : ''}`}>
               <div>
                 <label className={labelCls}>House / flat no.</label>
-                <input type="text" value={form.houseNo}
+                <input type="text" name="houseNo" value={form.houseNo}
                   onChange={(e) => set('houseNo', e.target.value)}
                   className={inputCls} />
               </div>
               <div>
                 <label className={labelCls}>Street</label>
-                <input type="text" value={form.street}
+                <input type="text" name="street" value={form.street}
                   onChange={(e) => set('street', e.target.value)}
                   className={inputCls} />
               </div>
               <div>
                 <label className={labelCls}>Additional line 1 <span className="text-slate-400 font-normal">(district / village)</span></label>
-                <input type="text" value={form.addLine1}
+                <input type="text" name="addLine1" value={form.addLine1}
                   onChange={(e) => set('addLine1', e.target.value)}
                   className={inputCls} />
               </div>
               <div>
                 <label className={labelCls}>Additional line 2</label>
-                <input type="text" value={form.addLine2}
+                <input type="text" name="addLine2" value={form.addLine2}
                   onChange={(e) => set('addLine2', e.target.value)}
                   className={inputCls} />
               </div>
               <div>
                 <label className={labelCls}>Town</label>
-                <input type="text" value={form.town}
+                <input type="text" name="town" value={form.town}
                   onChange={(e) => set('town', e.target.value)}
                   className={inputCls} />
               </div>
               <div>
                 <label className={labelCls}>County</label>
-                <input type="text" value={form.county}
+                <input type="text" name="county" value={form.county}
                   onChange={(e) => set('county', e.target.value)}
                   className={inputCls} />
               </div>
               <div>
                 <label className={labelCls}><strong>Postcode</strong></label>
-                <input type="text" value={form.postcode}
+                <input type="text" name="postcode" value={form.postcode}
                   onChange={(e) => set('postcode', e.target.value)}
                   onBlur={() => handleBlur('postcode')}
                   className={ic('postcode')} maxLength={10} />
@@ -1016,7 +1017,7 @@ export default function MemberEditor() {
               </div>
               <div>
                 <label className={labelCls}>Home telephone <span className="text-slate-400 font-normal">(shared)</span></label>
-                <input type="text" value={form.telephone}
+                <input type="text" name="telephone" value={form.telephone}
                   onChange={(e) => set('telephone', e.target.value)}
                   onBlur={() => handleBlur('telephone')}
                   className={ic('telephone')} />
@@ -1042,6 +1043,7 @@ export default function MemberEditor() {
                     <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm">£</span>
                     <input
                       type="number" min="0" step="0.01"
+                      name="payAmount"
                       value={form.payAmount}
                       onChange={(e) => set('payAmount', e.target.value)}
                       className={`${inputCls} pl-7`}
@@ -1051,7 +1053,7 @@ export default function MemberEditor() {
                 </div>
                 <div>
                   <label className={labelCls}>Payment method</label>
-                  <select value={form.payMethod} onChange={(e) => {
+                  <select name="payMethod" value={form.payMethod} onChange={(e) => {
                     const method = e.target.value;
                     set('payMethod', method);
                     const mappedAccId = payDefaults.current.mappings[method];
@@ -1065,14 +1067,14 @@ export default function MemberEditor() {
                 </div>
                 <div>
                   <label className={labelCls}>Account</label>
-                  <select value={form.payAccountId} onChange={(e) => set('payAccountId', e.target.value)} className={inputCls}>
+                  <select name="payAccountId" value={form.payAccountId} onChange={(e) => set('payAccountId', e.target.value)} className={inputCls}>
                     <option value="">— select —</option>
                     {accounts.map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}
                   </select>
                 </div>
                 <div>
                   <label className={labelCls}>Payment ref <span className="text-slate-400 font-normal">(e.g. cheque no.)</span></label>
-                  <input type="text" value={form.payRef}
+                  <input type="text" name="payRef" value={form.payRef}
                     onChange={(e) => set('payRef', e.target.value)}
                     className={inputCls} maxLength={100} />
                 </div>
@@ -1131,7 +1133,7 @@ export default function MemberEditor() {
                   return (
                     <div key={n}>
                       <label className={labelCls}>{cfLabels[labelKey]}</label>
-                      <input type="text" value={form[fieldKey]}
+                      <input type="text" name={fieldKey} value={form[fieldKey]}
                         onChange={(e) => set(fieldKey, e.target.value)}
                         className={inputCls} />
                     </div>

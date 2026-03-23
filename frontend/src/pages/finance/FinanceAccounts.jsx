@@ -151,6 +151,7 @@ export default function FinanceAccounts() {
                         editBF[acc.id] !== undefined ? (
                           <span className="flex items-center justify-end gap-1">
                             <input type="number" step="0.01"
+                              name={`broughtForward_${acc.id}`}
                               value={editBF[acc.id]}
                               onChange={(e) => setEditBF((prev) => ({ ...prev, [acc.id]: e.target.value }))}
                               className="border border-slate-300 rounded px-2 py-0.5 text-sm w-24 text-right focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -204,6 +205,7 @@ export default function FinanceAccounts() {
               <label className="block text-sm font-medium text-slate-700 mb-1">Add new account</label>
               <input
                 type="text"
+                name="newName"
                 value={newName}
                 onChange={(e) => setNewName(e.target.value)}
                 placeholder="Account name"

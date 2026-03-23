@@ -329,6 +329,7 @@ export default function AddressesExport() {
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">Class</label>
               <select
+                name="selectedClass"
                 value={selectedClass}
                 onChange={(e) => setSelectedClass(e.target.value)}
                 className={`${inputCls} w-full`}
@@ -344,6 +345,7 @@ export default function AddressesExport() {
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">Poll</label>
               <select
+                name="selectedPoll"
                 value={selectedPoll}
                 onChange={(e) => setSelectedPoll(e.target.value)}
                 className={`${inputCls} w-full`}
@@ -371,12 +373,14 @@ export default function AddressesExport() {
               <label className="block text-sm font-medium text-slate-700 mb-1">Group</label>
               <input
                 type="text"
+                name="groupSearch"
                 placeholder="Search groups…"
                 value={groupSearch}
                 onChange={(e) => setGroupSearch(e.target.value)}
                 className={`${inputCls} w-full mb-1`}
               />
               <select
+                name="selectedGroup"
                 value={selectedGroup}
                 onChange={(e) => setSelectedGroup(e.target.value)}
                 className={`${inputCls} w-full`}
@@ -420,6 +424,7 @@ export default function AddressesExport() {
                     type="number"
                     step="0.1"
                     min="0"
+                    name={key}
                     value={labelSettings[key]}
                     onChange={(e) => setLabelField(key, parseFloat(e.target.value) || 0)}
                     className={`${inputCls} w-full`}

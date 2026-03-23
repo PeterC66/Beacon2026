@@ -142,6 +142,7 @@ export default function FacultyList() {
                           <div className="flex gap-2 items-center">
                             <input
                               className={`${inputCls} flex-1`}
+                              name="editingName"
                               value={editingName}
                               onChange={(e) => setEditingName(e.target.value)}
                               autoFocus
@@ -205,6 +206,7 @@ export default function FacultyList() {
             <form onSubmit={handleAdd} className="flex gap-2">
               <input
                 className={`${inputCls} flex-1`}
+                name="newName"
                 placeholder="Faculty name"
                 value={newName}
                 onChange={(e) => setNewName(e.target.value)}

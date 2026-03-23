@@ -232,14 +232,14 @@ export default function MembershipRenewals() {
             <div className="bg-white/90 rounded-lg shadow-sm p-4 flex flex-wrap gap-4 items-end">
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">Finance account</label>
-                <select value={accountId} onChange={(e) => setAccountId(e.target.value)} className={SELECT + ' w-56'}>
+                <select name="accountId" value={accountId} onChange={(e) => setAccountId(e.target.value)} className={SELECT + ' w-56'}>
                   {accounts.length === 0 && <option value="">— no active accounts —</option>}
                   {accounts.map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}
                 </select>
               </div>
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">Payment method</label>
-                <select value={paymentMethod} onChange={(e) => {
+                <select name="paymentMethod" value={paymentMethod} onChange={(e) => {
                   const method = e.target.value;
                   setPaymentMethod(method);
                   const mappedAccId = payDefaults.current.mappings[method];
@@ -299,12 +299,12 @@ export default function MembershipRenewals() {
             {/* Bulk action form */}
             {filtered.length > 0 && (
               <form onSubmit={handleDoWithSelected} className="flex flex-wrap items-center gap-3">
-                <select value={action} onChange={(e) => setAction(e.target.value)} className={SELECT}>
+                <select name="action" value={action} onChange={(e) => setAction(e.target.value)} className={SELECT}>
                   <option value="renew">Renew selected members</option>
                   {can('poll_set_up', 'view') && <option value="add_to_poll">Add to poll</option>}
                 </select>
                 {action === 'add_to_poll' && (
-                  <select value={chosenPoll} onChange={(e) => setChosenPoll(e.target.value)} className={SELECT + ' w-48'}>
+                  <select name="chosenPoll" value={chosenPoll} onChange={(e) => setChosenPoll(e.target.value)} className={SELECT + ' w-48'}>
                     {polls.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
                   </select>
                 )}
@@ -377,6 +377,7 @@ export default function MembershipRenewals() {
                             type="number"
                             min="0"
                             step="0.01"
+                            name="received"
                             value={received[m.id] ?? ''}
                             onChange={(e) => setReceived((prev) => ({ ...prev, [m.id]: e.target.value }))}
                             className="border border-slate-300 rounded px-2 py-1 text-sm text-right w-24 focus:outline-none focus:ring-2 focus:ring-blue-500"

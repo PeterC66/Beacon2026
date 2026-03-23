@@ -76,6 +76,7 @@ export default function CustomFields() {
                   </label>
                   <input
                     type="text"
+                    name={key}
                     value={labels[key]}
                     onChange={(e) => { setSaved(false); setLabels({ ...labels, [key]: e.target.value }); }}
                     disabled={!canChange}

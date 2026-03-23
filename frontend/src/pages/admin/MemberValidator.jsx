@@ -251,6 +251,7 @@ export default function MemberValidator() {
                                 <>
                                   <input
                                     type={issue.field === 'email' ? 'email' : 'text'}
+                                    name="inlineEdit"
                                     value={currentEdit}
                                     onChange={(e) => setEditValue(member.id, issue.field, e.target.value)}
                                     placeholder={issue.field === 'postcode' ? 'e.g. SW1A 1AA' : ''}

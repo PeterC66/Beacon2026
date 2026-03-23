@@ -188,6 +188,7 @@ export default function Calendar() {
               <div className="relative" ref={dropdownRef}>
                 <input
                   type="text"
+                  name="memberQuery"
                   className={inputCls + ' w-56'}
                   placeholder="Search member name..."
                   value={memberQuery}
@@ -219,7 +220,7 @@ export default function Calendar() {
               venue
             </label>
             {filterMode === 'venue' && (
-              <select className={inputCls} value={venueId}
+              <select className={inputCls} name="venueId" value={venueId}
                 onChange={(e) => setVenueId(e.target.value)}>
                 <option value="">— select venue —</option>
                 {venueList.map((v) => <option key={v.id} value={v.id}>{v.name}</option>)}
@@ -232,7 +233,7 @@ export default function Calendar() {
               group
             </label>
             {filterMode === 'group' && (
-              <select className={inputCls} value={groupId}
+              <select className={inputCls} name="groupId" value={groupId}
                 onChange={(e) => setGroupId(e.target.value)}>
                 <option value="">— select group —</option>
                 {groupList.map((g) => <option key={g.id} value={g.id}>{g.name}</option>)}
@@ -244,12 +245,12 @@ export default function Calendar() {
           <div className="flex flex-wrap gap-4 items-center text-sm">
             <label className="flex items-center gap-1">
               From
-              <input type="date" className={inputCls} value={from}
+              <input type="date" name="from" className={inputCls} value={from}
                 onChange={(e) => setFrom(e.target.value)} />
             </label>
             <label className="flex items-center gap-1">
               To
-              <input type="date" className={inputCls} value={to}
+              <input type="date" name="to" className={inputCls} value={to}
                 onChange={(e) => setTo(e.target.value)} />
             </label>
             <label className="flex items-center gap-2 cursor-pointer ml-auto">

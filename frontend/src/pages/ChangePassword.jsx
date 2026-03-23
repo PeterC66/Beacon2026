@@ -97,6 +97,7 @@ export default function ChangePassword() {
             <div className="relative">
               <input
                 type={showPw ? 'text' : 'password'}
+                name="newPassword"
                 value={form.newPassword}
                 onChange={(e) => setForm((f) => ({ ...f, newPassword: e.target.value }))}
                 autoComplete="new-password"
@@ -123,6 +124,7 @@ export default function ChangePassword() {
             <div className="relative">
               <input
                 type={showConfirm ? 'text' : 'password'}
+                name="confirm"
                 value={form.confirm}
                 onChange={(e) => setForm((f) => ({ ...f, confirm: e.target.value }))}
                 autoComplete="new-password"
@@ -155,6 +157,7 @@ export default function ChangePassword() {
             <label className="block text-sm font-medium text-slate-700 mb-1">Question</label>
             <input
               type="text"
+              name="question"
               value={form.question}
               onChange={(e) => setForm((f) => ({ ...f, question: e.target.value }))}
               maxLength={200}
@@ -167,6 +170,7 @@ export default function ChangePassword() {
             <label className="block text-sm font-medium text-slate-700 mb-1">Answer</label>
             <input
               type="text"
+              name="answer"
               value={form.answer}
               onChange={(e) => setForm((f) => ({ ...f, answer: e.target.value }))}
               maxLength={200}

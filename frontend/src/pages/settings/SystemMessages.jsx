@@ -93,6 +93,7 @@ export default function SystemMessages() {
                     <label className="block text-sm font-medium text-slate-700 mb-1">Subject</label>
                     <input
                       type="text"
+                      name="subject"
                       value={form.subject}
                       onChange={(e) => setForm({ ...form, subject: e.target.value })}
                       className="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -101,6 +102,7 @@ export default function SystemMessages() {
                   <div>
                     <label className="block text-sm font-medium text-slate-700 mb-1">Body</label>
                     <textarea
+                      name="body"
                       value={form.body}
                       onChange={(e) => setForm({ ...form, body: e.target.value })}
                       rows={8}

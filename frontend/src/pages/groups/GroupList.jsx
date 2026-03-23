@@ -80,6 +80,7 @@ export default function GroupList() {
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">Faculty</label>
               <select
+                name="facultyId"
                 value={facultyId}
                 onChange={(e) => setFacultyId(e.target.value)}
                 className="border border-slate-300 rounded px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"

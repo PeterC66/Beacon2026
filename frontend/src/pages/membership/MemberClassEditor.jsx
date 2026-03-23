@@ -220,6 +220,7 @@ export default function MemberClassEditor() {
             <label className="block text-sm font-medium text-slate-700 mb-1">Class name</label>
             <input
               type="text"
+              name="name"
               value={form.name}
               onChange={(e) => set('name', e.target.value)}
               required
@@ -234,6 +235,7 @@ export default function MemberClassEditor() {
               Explanation <span className="text-slate-400 font-normal">(shown to members joining online)</span>
             </label>
             <textarea
+              name="explanation"
               value={form.explanation}
               onChange={(e) => set('explanation', e.target.value)}
               rows={3}
@@ -248,6 +250,7 @@ export default function MemberClassEditor() {
                 <label className="block text-sm font-medium text-slate-700 mb-1">Fee per person (£)</label>
                 <input
                   type="number" min="0" step="0.01"
+                  name="fee"
                   value={form.fee}
                   onChange={(e) => set('fee', e.target.value)}
                   className="w-40 border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -258,6 +261,7 @@ export default function MemberClassEditor() {
                   <label className="block text-sm font-medium text-slate-700 mb-1">Gift Aid eligible (£)</label>
                   <input
                     type="number" min="0" step="0.01"
+                    name="giftAidFee"
                     value={form.giftAidFee}
                     onChange={(e) => set('giftAidFee', e.target.value)}
                     className="w-40 border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -365,6 +369,7 @@ export default function MemberClassEditor() {
                       <td className="px-3 py-1.5">
                         <input
                           type="number" min="0" step="0.01"
+                          name={`fee_${row.monthIndex}`}
                           value={row.fee}
                           onChange={(e) => setMonthFee(row.monthIndex, 'fee', e.target.value)}
                           className="w-28 border border-slate-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -374,6 +379,7 @@ export default function MemberClassEditor() {
                         <td className="px-3 py-1.5">
                           <input
                             type="number" min="0" step="0.01"
+                            name={`giftAidFee_${row.monthIndex}`}
                             value={row.giftAidFee}
                             onChange={(e) => setMonthFee(row.monthIndex, 'giftAidFee', e.target.value)}
                             className="w-28 border border-slate-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"

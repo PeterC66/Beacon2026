@@ -213,6 +213,7 @@ export default function UserEditor() {
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">Member</label>
               <select
+                name="memberId"
                 value={memberId}
                 onChange={handleMemberChange}
                 disabled={!canEdit}
@@ -261,6 +262,7 @@ export default function UserEditor() {
             </label>
             <input
               type="text"
+              name="username"
               value={username}
               onChange={(e) => { markDirty(); setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9]/g, '')); }}
               disabled={!canEdit}
@@ -272,7 +274,7 @@ export default function UserEditor() {
 
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1">User's E-mail</label>
-            <input type="email" value={email} onChange={(e) => { markDirty(); setEmail(e.target.value); }}
+            <input type="email" name="email" value={email} onChange={(e) => { markDirty(); setEmail(e.target.value); }}
               disabled={!canEdit} className={inputCls} />
           </div>
 

@@ -678,9 +678,8 @@ ALTER TABLE :schema.transactions ADD COLUMN IF NOT EXISTS refunded_by_id TEXT RE
 
 -- ─── Users → Members FK (doc 8.2) ──────────────────────────────────────
 -- Activate the member_id column as a proper FK to members table.
--- ADD CONSTRAINT IF NOT EXISTS requires PG 17+. The migration runner's
--- per-statement try/catch silences the error on re-runs (code 42710).
-ALTER TABLE :schema.users ADD CONSTRAINT users_member_id_fkey FOREIGN KEY (member_id) REFERENCES :schema.members(id) ON DELETE SET NULL;
+-- Wrapped in a DO block for idempotency (ADD CONSTRAINT IF NOT EXISTS requires PG 17+).
+DO $$ BEGIN ALTER TABLE :schema.users ADD CONSTRAINT users_member_id_fkey FOREIGN KEY (member_id) REFERENCES :schema.members(id) ON DELETE SET NULL; EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
 -- ─── Custom fields (doc 8.7) ──────────────────────────────────────────
 -- Up to 4 free-form text fields on each member record, labels stored in settings

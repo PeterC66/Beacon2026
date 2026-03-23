@@ -110,6 +110,7 @@ export default function FinanceCategories() {
                       {editId === cat.id ? (
                         <input
                           type="text"
+                          name="editName"
                           value={editName}
                           onChange={(e) => setEditName(e.target.value)}
                           onKeyDown={(e) => { if (e.key === 'Enter') handleSaveName(cat); if (e.key === 'Escape') setEditId(null); }}
@@ -161,6 +162,7 @@ export default function FinanceCategories() {
               <label className="block text-sm font-medium text-slate-700 mb-1">Add new category</label>
               <input
                 type="text"
+                name="newName"
                 value={newName}
                 onChange={(e) => setNewName(e.target.value)}
                 placeholder="Category name"

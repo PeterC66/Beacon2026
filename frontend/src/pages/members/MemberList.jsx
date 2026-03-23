@@ -260,6 +260,7 @@ export default function MemberList() {
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">Class</label>
               <select
+                name="selectedClass"
                 value={selectedClass}
                 onChange={(e) => setSelectedClass(e.target.value)}
                 className="border border-slate-300 rounded px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -276,6 +277,7 @@ export default function MemberList() {
                 <label className="block text-sm font-medium text-slate-700 mb-1">Poll</label>
                 <div className="flex gap-2 items-center">
                   <select
+                    name="selectedPoll"
                     value={selectedPoll}
                     onChange={(e) => setSelectedPoll(e.target.value)}
                     className="border border-slate-300 rounded px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -305,6 +307,7 @@ export default function MemberList() {
                 <label className="block text-sm font-medium text-slate-700 mb-1">Quick Find</label>
                 <input
                   type="text"
+                  name="search"
                   value={searchInput}
                   onChange={(e) => setSearchInput(e.target.value)}
                   placeholder="Name, address, postcode, no…"
@@ -328,6 +331,7 @@ export default function MemberList() {
                   <label className="block text-sm font-medium text-slate-700 mb-1">Custom Fields</label>
                   <input
                     type="text"
+                    name="customFieldSearch"
                     value={cfInput}
                     onChange={(e) => setCfInput(e.target.value)}
                     placeholder={cfLabelNames}
@@ -459,6 +463,7 @@ export default function MemberList() {
                     <div>
                       <label className="block text-sm font-medium text-slate-700 mb-1">Do with {selected.size} selected member{selected.size !== 1 ? 's' : ''}</label>
                       <select
+                        name="bulkAction"
                         value={bulkAction}
                         onChange={(e) => { setBulkAction(e.target.value); setBulkResult(null); setDlError(null); }}
                         className="border border-slate-300 rounded px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -477,6 +482,7 @@ export default function MemberList() {
                       <div>
                         <label className="block text-sm font-medium text-slate-700 mb-1">Poll</label>
                         <select
+                          name="addToPollId"
                           value={addToPollId}
                           onChange={(e) => setAddToPollId(e.target.value)}
                           className="border border-slate-300 rounded px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"

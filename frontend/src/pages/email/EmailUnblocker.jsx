@@ -56,6 +56,7 @@ export default function EmailUnblocker() {
               <label className="block text-sm font-medium text-slate-700 mb-1">Email address to unblock</label>
               <input
                 type="email"
+                name="emailAddr"
                 value={emailAddr}
                 onChange={(e) => setEmailAddr(e.target.value)}
                 placeholder="member@example.com"

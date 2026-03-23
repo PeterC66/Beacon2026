@@ -34,7 +34,7 @@ export class MemberListPage {
   }
 
   async clickAddNew() {
-    await this.page.getByRole('link', { name: 'Add new member' }).click();
+    await this.page.getByRole('link', { name: 'Add new member' }).first().click();
   }
 
   /** Returns the Edit link for the first row containing the given name. */
