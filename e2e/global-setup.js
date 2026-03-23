@@ -197,6 +197,13 @@ export default async function globalSetup() {
     waitForService(`${API}/health`, 'Backend'),
   ]);
 
+  // Log deployed version so CI output shows exactly what was tested.
+  try {
+    const healthRes = await fetch(`${API}/health`, { signal: AbortSignal.timeout(10_000) });
+    const health = await healthRes.json();
+    console.log(`[setup]   Backend version : v${health.version ?? 'unknown'}`);
+  } catch { console.log('[setup]   Backend version : unknown (health check failed)'); }
+
   const sysToken    = await sysAdminLogin();
   await ensureTestTenant(sysToken);
   const tenantToken = await tenantAdminLogin();

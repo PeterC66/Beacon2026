@@ -26,14 +26,14 @@ export class MemberEditorPage {
 
   // ── Personal details ────────────────────────────────────────────────────
 
-  titleSelect()     { return this.page.getByLabel('Title'); }
+  titleSelect()     { return this.page.locator('select[name="title"]'); }
   forenamesInput()  { return this.page.locator('input[name="forenames"]'); }
   surnameInput()    { return this.page.locator('input[name="surname"]'); }
   knownAsInput()    { return this.page.locator('input[name="knownAs"]'); }
   emailInput()      { return this.page.locator('input[name="email"]'); }
   mobileInput()     { return this.page.locator('input[name="mobile"]'); }
-  statusSelect()    { return this.page.getByLabel('Status'); }
-  classSelect()     { return this.page.getByLabel('Class'); }
+  statusSelect()    { return this.page.locator('select[name="statusId"]'); }
+  classSelect()     { return this.page.locator('select[name="classId"]'); }
 
   // DateInput renders a plain text input with placeholder dd/mm/yyyy
   joinedOnInput()     { return this.page.getByPlaceholder('dd/mm/yyyy').first(); }
