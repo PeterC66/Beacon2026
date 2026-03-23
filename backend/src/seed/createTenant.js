@@ -7,6 +7,7 @@ import { fileURLToPath } from 'url';
 import { prisma } from '../utils/db.js';
 import { tenantQuery } from '../utils/db.js';
 import { hashPassword } from '../utils/password.js';
+import { splitSQL } from '../utils/migrate.js';
 import { PRIVILEGE_RESOURCES } from './privilegeResources.js';
 import { DEFAULT_ROLES } from './defaultRoles.js';
 
@@ -35,11 +36,7 @@ export async function createTenantSchema({ name, slug, adminEmail, adminName, ad
 
   // We use $executeRawUnsafe because DDL cannot be parameterised
   // The slug has been validated as /^[a-z0-9_]+$/ before reaching here
-  const statements = schemaSQL
-    .replace(/:schema/g, schemaName)
-    .split(';')
-    .map((s) => s.trim())
-    .filter(Boolean);
+  const statements = splitSQL(schemaSQL.replace(/:schema/g, schemaName));
 
   for (const stmt of statements) {
     await prisma.$executeRawUnsafe(stmt);

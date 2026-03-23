@@ -57,7 +57,7 @@ export async function migrateAndSeed() {
  * Split a SQL string on semicolons, respecting $$ dollar-quoted blocks.
  * Semicolons inside `$$ ... $$` are kept as part of the statement.
  */
-function splitSQL(sql) {
+export function splitSQL(sql) {
   const stmts = [];
   let current = '';
   let inDollarQuote = false;
