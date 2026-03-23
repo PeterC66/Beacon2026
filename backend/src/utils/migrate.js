@@ -54,6 +54,36 @@ export async function migrateAndSeed() {
 }
 
 /**
+ * Split a SQL string on semicolons, respecting $$ dollar-quoted blocks.
+ * Semicolons inside `$$ ... $$` are kept as part of the statement.
+ */
+function splitSQL(sql) {
+  const stmts = [];
+  let current = '';
+  let inDollarQuote = false;
+
+  for (let i = 0; i < sql.length; i++) {
+    // Detect $$ delimiter (toggle in/out of dollar-quoted block)
+    if (sql[i] === '$' && sql[i + 1] === '$') {
+      inDollarQuote = !inDollarQuote;
+      current += '$$';
+      i++; // skip second $
+      continue;
+    }
+    if (sql[i] === ';' && !inDollarQuote) {
+      const trimmed = current.trim();
+      if (trimmed) stmts.push(trimmed);
+      current = '';
+      continue;
+    }
+    current += sql[i];
+  }
+  const last = current.trim();
+  if (last) stmts.push(last);
+  return stmts;
+}
+
+/**
  * Re-run tenant_schema.sql (idempotent) against every active tenant,
  * then re-seed default data (privilege resources, member statuses, member classes).
  * Safe to run on every startup — all DDL uses IF NOT EXISTS, inserts use ON CONFLICT DO NOTHING.
@@ -77,11 +107,7 @@ async function migrateTenantSchemas() {
     // Run the idempotent DDL — each statement is independent; a failure
     // on one statement (e.g. a pre-existing constraint) must not prevent
     // subsequent tables from being created.
-    const statements = schemaSQL
-      .replace(/:schema/g, schemaName)
-      .split(';')
-      .map((s) => s.trim())
-      .filter(Boolean);
+    const statements = splitSQL(schemaSQL.replace(/:schema/g, schemaName));
 
     for (const stmt of statements) {
       try {
