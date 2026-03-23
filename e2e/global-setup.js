@@ -213,7 +213,7 @@ export default async function globalSetup() {
   const storageState = {
     cookies: [{
       name: 'beacon2_cookie_consent',
-      value: 'declined',
+      value: 'accepted',
       domain: baseURL.hostname,
       path: '/',
       expires: -1,
