@@ -8,7 +8,15 @@ export class MemberListPage {
   }
 
   async goto() {
-    await this.page.goto('/members');
+    // Prefer SPA link-click navigation to preserve the in-memory auth token.
+    // page.goto() causes a full page reload which loses auth state; session
+    // restoration via the refresh cookie is unreliable in CI.
+    const clicked = await this.page.evaluate(() => {
+      const link = document.querySelector('a[href="/members"]');
+      if (link) { link.click(); return true; }
+      return false;
+    });
+    if (!clicked) await this.page.goto('/members');
     await this.page.getByRole('heading', { name: 'Members' }).waitFor();
   }
 
