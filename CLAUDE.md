@@ -90,6 +90,9 @@ not the System Settings screen (doc `8.3`).
 For these there is a .jpg with the same name that is a screenshot of the manual.
 Make sure you look at the .jpg for the complete image.
 
+**Unreadable images** If an image is too small or blurry to read, ask the user for a
+clearer version rather than guessing at the content.
+
 ### Legacy Beacon source — `docs/FromBeacon/`
 
 Selected files from the original codebase. Ask user to add missing files.

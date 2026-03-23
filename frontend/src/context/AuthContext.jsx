@@ -4,11 +4,13 @@
 import { createContext, useContext, useState, useEffect, useRef, useCallback } from 'react';
 import { auth as authApi, setAuth, clearAuth, restoreSession } from '../lib/api.js';
 import { getPreferences } from '../hooks/usePreferences.js';
+import { hasOptionalCookieConsent } from '../hooks/useCookieConsent.js';
 
 const AuthContext = createContext(null);
 
 // Read the beacon_last_u3a cookie (set on successful login by Login.jsx)
 function getLastU3aCookie() {
+  if (!hasOptionalCookieConsent()) return '';
   const match = document.cookie.split('; ').find((c) => c.startsWith('beacon_last_u3a='));
   return match ? decodeURIComponent(match.split('=')[1]) : '';
 }

@@ -6,16 +6,19 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext.jsx';
 import { auth as authApi } from '../lib/api.js';
 import BeaconLogo from '../components/BeaconLogo.jsx';
+import { hasOptionalCookieConsent } from '../hooks/useCookieConsent.js';
 
 const COOKIE_NAME = 'beacon_last_u3a';
 const COOKIE_DAYS = 365;
 
 function getLastU3aCookie() {
+  if (!hasOptionalCookieConsent()) return '';
   const match = document.cookie.split('; ').find((c) => c.startsWith(COOKIE_NAME + '='));
   return match ? decodeURIComponent(match.split('=')[1]) : '';
 }
 
 function setLastU3aCookie(slug) {
+  if (!hasOptionalCookieConsent()) return;
   const expires = new Date(Date.now() + COOKIE_DAYS * 864e5).toUTCString();
   document.cookie = `${COOKIE_NAME}=${encodeURIComponent(slug)}; expires=${expires}; path=/; SameSite=Lax`;
 }

@@ -1,6 +1,8 @@
 // beacon2/frontend/src/hooks/usePreferences.js
-// Per-user display preferences stored in localStorage.
+// Per-user display preferences stored in localStorage (when cookie consent given).
 // Mirrors the "Personal Preferences" settings from Beacon doc 9.1(a).
+
+import { hasOptionalCookieConsent } from './useCookieConsent.js';
 
 const KEY = 'beacon2_prefs';
 
@@ -13,6 +15,7 @@ const DEFAULTS = {
 };
 
 function load() {
+  if (!hasOptionalCookieConsent()) return { ...DEFAULTS };
   try {
     const raw = localStorage.getItem(KEY);
     if (!raw) return { ...DEFAULTS };
@@ -23,6 +26,7 @@ function load() {
 }
 
 function save(prefs) {
+  if (!hasOptionalCookieConsent()) return;
   try {
     localStorage.setItem(KEY, JSON.stringify(prefs));
     window.dispatchEvent(new Event('beacon2-prefs-changed'));

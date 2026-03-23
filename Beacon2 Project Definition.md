@@ -51,6 +51,10 @@ Beacon2 is a ground-up rebuild with these goals:
 - Deployed: backend on Render, frontend on Vercel, DB on Render PostgreSQL
 - CI: GitHub Actions runs backend + frontend tests on every push to `claude/**` branches
 - E2E: Playwright test suite against staging
+- **Cookie consent** — GDPR-compliant dialog on first visit; optional cookies
+  (`beacon_last_u3a`, localStorage preferences) gated behind user consent;
+  gear icon to reopen dialog; essential cookies (refresh token, consent choice)
+  always allowed
 
 ### Membership module
 - **Members list** — status/class/poll/letter/search filters; row selection; bulk actions
