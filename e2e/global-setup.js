@@ -206,5 +206,24 @@ export default async function globalSetup() {
   // Persist the generated slug so test fixtures and teardown can read it.
   writeFileSync(STATE_PATH, JSON.stringify({ slug: SLUG }));
 
+  // Write a storageState file that pre-sets the cookie consent cookie.
+  // This prevents the cookie consent modal from blocking form interaction
+  // in every test.
+  const baseURL = new URL(BASE_URL);
+  const storageState = {
+    cookies: [{
+      name: 'beacon2_cookie_consent',
+      value: 'declined',
+      domain: baseURL.hostname,
+      path: '/',
+      expires: -1,
+      httpOnly: false,
+      secure: false,
+      sameSite: 'Lax',
+    }],
+    origins: [],
+  };
+  writeFileSync(resolve(__dirname, '.e2e-storage.json'), JSON.stringify(storageState));
+
   console.log('[setup] Global setup complete.\n');
 }
