@@ -4,6 +4,7 @@ import { useEffect } from 'react';
 import { createBrowserRouter, RouterProvider, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext.jsx';
 import { getPreferences } from './hooks/usePreferences.js';
+import CookieConsent   from './components/CookieConsent.jsx';
 import Login           from './pages/Login.jsx';
 import Home            from './pages/Home.jsx';
 import RoleList        from './pages/roles/RoleList.jsx';
@@ -182,6 +183,7 @@ export default function App() {
 
   return (
     <AuthProvider>
+      <CookieConsent />
       <RouterProvider router={router} />
     </AuthProvider>
   );

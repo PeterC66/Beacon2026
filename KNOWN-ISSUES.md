@@ -100,6 +100,26 @@ Items noted during development that need addressing in future sessions.
 
 ---
 
+## Cookie Consent — Deferred Optional Cookie Items
+
+The cookie consent dialog currently lists four optional items that Beacon2 already
+supports (last u3a site, inactivity timeout, name sort/display, text size/theme).
+
+The following items from the original Beacon cookie dialog are **not yet implemented**
+and should be added to the optional cookies list when the features are built:
+
+1. **Last membership class for exporting addresses and labels** — Addresses Export
+   page does not yet remember the last class filter. Ref: Beacon Cookie Control.
+2. **Label printing settings** (labels per sheet and positioning) — Label printing
+   exists but does not yet persist layout preferences across sessions via cookies.
+3. **TAM submission status and class** — Third Age Matters submission is not yet
+   built. Ref: Beacon Cookie Control.
+4. **Email compose 'From' address and copy selection** — EmailCompose does not yet
+   persist the selected From address or "Tick to receive copy" setting across
+   sessions. Ref: Beacon Cookie Control.
+
+---
+
 ## Accessibility / E2E
 
 1. **Form labels missing `htmlFor`/`id` association** — ~106 `<label>` elements

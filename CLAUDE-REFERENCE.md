@@ -1264,3 +1264,38 @@ and support standard letter templates for reuse.
 Currently uses `console.log` (same pattern as portal password reset). The log includes
 username and temp password. Production deployment will send via SendGrid.
 
+## 19. Cookie Consent
+
+### Architecture
+
+Cookie consent is a **frontend-only** feature. No backend changes needed.
+
+| File | Purpose |
+|------|---------|
+| `frontend/src/hooks/useCookieConsent.js` | Consent state management — read/write consent cookie, cleanup on decline |
+| `frontend/src/components/CookieConsent.jsx` | Dialog UI + gear icon to reopen |
+
+### Cookies
+
+| Cookie | Type | Purpose |
+|--------|------|---------|
+| `beacon2_cookie_consent` | Essential | Records user's choice (`accepted` / `declined`). 365-day expiry. |
+| `beacon_last_u3a` | Optional | Pre-fills u3a slug on login. Only set when consent accepted. |
+| `beacon2_refresh` | Essential | httpOnly refresh token, set by backend. Not gated by consent. |
+
+### localStorage
+
+`beacon2_prefs` (preferences) is only read/written when `hasOptionalCookieConsent()` returns true.
+When consent is declined, preferences still work using in-memory defaults for the session.
+
+### Integration points
+
+- **Login.jsx** — `getLastU3aCookie()` and `setLastU3aCookie()` check consent before reading/writing
+- **AuthContext.jsx** — `getLastU3aCookie()` for session restoration checks consent
+- **usePreferences.js** — `load()` and `save()` gated behind consent
+- **App.jsx** — `<CookieConsent />` rendered alongside `<RouterProvider />`
+
+### Deferred items
+
+See `KNOWN-ISSUES.md` — Cookie Consent section for optional items not yet implemented.
+
