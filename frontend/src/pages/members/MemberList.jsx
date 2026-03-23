@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { members as membersApi, memberStatuses as statusApi, memberClasses as classApi, polls as pollsApi } from '../../lib/api.js';
+import { members as membersApi, memberStatuses as statusApi, memberClasses as classApi, polls as pollsApi, settings as settingsApi } from '../../lib/api.js';
 
 const DOWNLOAD_FIELDS = [
   { key: 'membership_number', label: 'Membership No', default: true },
@@ -22,6 +22,10 @@ const DOWNLOAD_FIELDS = [
   { key: 'class',             label: 'Class',         default: true },
   { key: 'joined_on',         label: 'Joined',        default: false },
   { key: 'next_renewal',      label: 'Next Renewal',  default: false },
+  { key: 'custom_field_1',    label: 'Custom Field 1', default: false },
+  { key: 'custom_field_2',    label: 'Custom Field 2', default: false },
+  { key: 'custom_field_3',    label: 'Custom Field 3', default: false },
+  { key: 'custom_field_4',    label: 'Custom Field 4', default: false },
 ];
 import { useAuth } from '../../context/AuthContext.jsx';
 import NavBar from '../../components/NavBar.jsx';
@@ -52,6 +56,9 @@ export default function MemberList() {
   const [letter,           setLetter]           = useState('');
   const [searchInput,      setSearchInput]      = useState('');
   const [activeSearch,     setActiveSearch]     = useState('');
+  const [cfInput,          setCfInput]          = useState('');
+  const [activeCf,         setActiveCf]         = useState('');
+  const [cfLabels,         setCfLabels]         = useState({ label1: '', label2: '', label3: '', label4: '' });
 
   // Selection + bulk actions
   const [selected,      setSelected]      = useState(new Set());
@@ -80,10 +87,11 @@ export default function MemberList() {
         if (current) setSelectedStatuses([current.id]);
       })
       .catch(() => {});
+    settingsApi.getCustomFieldLabels().then(setCfLabels).catch(() => {});
   }, []);
 
   // Load members whenever filters change
-  useEffect(() => { load(); }, [selectedStatuses, selectedClass, selectedPoll, negatePoll, letter, activeSearch]);
+  useEffect(() => { load(); }, [selectedStatuses, selectedClass, selectedPoll, negatePoll, letter, activeSearch, activeCf]);
 
   async function load() {
     setLoading(true);
@@ -98,6 +106,7 @@ export default function MemberList() {
         negatePoll: negatePoll && selectedPoll ? true : false,
         letter,
         q:          activeSearch,
+        cf:         activeCf,
       });
       setMemberList(data);
     } catch (err) {
@@ -122,6 +131,19 @@ export default function MemberList() {
   function handleCancelSearch() {
     setSearchInput('');
     setActiveSearch('');
+    setCfInput('');
+    setActiveCf('');
+  }
+
+  function handleCfSearch(e) {
+    e.preventDefault();
+    setActiveCf(cfInput);
+    setLetter('');
+  }
+
+  function handleCancelCf() {
+    setCfInput('');
+    setActiveCf('');
   }
 
   function handleLetterClick(l) {
@@ -193,6 +215,11 @@ export default function MemberList() {
       setDownloading(false);
     }
   }
+
+  // Custom field labels — derived values for the filter UI
+  const hasCfLabels = !!(cfLabels.label1 || cfLabels.label2 || cfLabels.label3 || cfLabels.label4);
+  const cfLabelNames = [cfLabels.label1, cfLabels.label2, cfLabels.label3, cfLabels.label4]
+    .filter(Boolean).join(', ');
 
   const navLinks = [
     { label: 'Home', to: '/' },
@@ -294,6 +321,30 @@ export default function MemberList() {
                 </button>
               )}
             </form>
+
+            {hasCfLabels && (
+              <form onSubmit={handleCfSearch} className="flex gap-2 items-end">
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Custom Fields</label>
+                  <input
+                    type="text"
+                    value={cfInput}
+                    onChange={(e) => setCfInput(e.target.value)}
+                    placeholder={cfLabelNames}
+                    className="border border-slate-300 rounded px-3 py-1.5 text-sm w-56 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+                <button type="submit" className="bg-blue-600 hover:bg-blue-700 text-white rounded px-4 py-1.5 text-sm font-medium">
+                  Search
+                </button>
+                {activeCf && (
+                  <button type="button" onClick={handleCancelCf}
+                    className="border border-slate-300 rounded px-4 py-1.5 text-sm text-slate-600 hover:bg-slate-50">
+                    Clear
+                  </button>
+                )}
+              </form>
+            )}
           </div>
         </div>
 

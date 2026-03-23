@@ -79,7 +79,7 @@ function deriveInitials(forenames) {
 router.get('/', requirePrivilege('members_list', 'view'), async (req, res, next) => {
   try {
     const slug = req.user.tenantSlug;
-    const { status, classId, pollId, negatePoll, q, letter } = req.query;
+    const { status, classId, pollId, negatePoll, q, letter, cf } = req.query;
 
     const conditions = [];
     const params = [];
@@ -123,10 +123,26 @@ router.get('/', requirePrivilege('members_list', 'view'), async (req, res, next)
         a.street         ILIKE $${i}   OR
         a.town           ILIKE $${i}   OR
         a.postcode       ILIKE $${i}   OR
+        m.custom_field_1 ILIKE $${i}   OR
+        m.custom_field_2 ILIKE $${i}   OR
+        m.custom_field_3 ILIKE $${i}   OR
+        m.custom_field_4 ILIKE $${i}   OR
         m.membership_number::text = $${i + 1}
       )`);
       params.push(like, q.trim());
       i += 2;
+    }
+
+    if (cf) {
+      const cfLike = `%${cf}%`;
+      conditions.push(`(
+        m.custom_field_1 ILIKE $${i}   OR
+        m.custom_field_2 ILIKE $${i}   OR
+        m.custom_field_3 ILIKE $${i}   OR
+        m.custom_field_4 ILIKE $${i}
+      )`);
+      params.push(cfLike);
+      i += 1;
     }
 
     const where = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
@@ -138,7 +154,9 @@ router.get('/', requirePrivilege('members_list', 'view'), async (req, res, next)
               ms.id AS status_id, ms.name AS status,
               mc.id AS class_id,  mc.name AS class,
               a.house_no, a.street, a.town, a.postcode,
-              m.joined_on, m.next_renewal, m.partner_id
+              m.joined_on, m.next_renewal, m.partner_id,
+              m.custom_field_1, m.custom_field_2,
+              m.custom_field_3, m.custom_field_4
        FROM members m
        LEFT JOIN member_statuses ms ON ms.id = m.status_id
        LEFT JOIN member_classes  mc ON mc.id = m.class_id
@@ -654,7 +672,11 @@ const MEMBER_FIELD_DEFS = {
   status:       { label: 'Status',      get: (m) => m.status ?? '' },
   class:        { label: 'Class',       get: (m) => m.class ?? '' },
   joined_on:    { label: 'Joined',      get: (m) => m.joined_on    ? String(m.joined_on).slice(0, 10)    : '' },
-  next_renewal: { label: 'Next Renewal',get: (m) => m.next_renewal ? String(m.next_renewal).slice(0, 10) : '' },
+  next_renewal:    { label: 'Next Renewal',    get: (m) => m.next_renewal ? String(m.next_renewal).slice(0, 10) : '' },
+  custom_field_1:  { label: 'Custom Field 1',  get: (m) => m.custom_field_1 ?? '' },
+  custom_field_2:  { label: 'Custom Field 2',  get: (m) => m.custom_field_2 ?? '' },
+  custom_field_3:  { label: 'Custom Field 3',  get: (m) => m.custom_field_3 ?? '' },
+  custom_field_4:  { label: 'Custom Field 4',  get: (m) => m.custom_field_4 ?? '' },
 };
 
 function buildMemberPdf(rows, cols, title) {
@@ -710,7 +732,9 @@ router.get('/download', requirePrivilege('members_list', 'view'), async (req, re
               ms.name AS status, mc.name AS class,
               a.house_no, a.street, a.add_line1, a.add_line2,
               a.town, a.county, a.postcode, a.country, a.telephone,
-              m.joined_on, m.next_renewal
+              m.joined_on, m.next_renewal,
+              m.custom_field_1, m.custom_field_2,
+              m.custom_field_3, m.custom_field_4
        FROM members m
        LEFT JOIN member_statuses ms ON ms.id = m.status_id
        LEFT JOIN member_classes  mc ON mc.id = m.class_id
