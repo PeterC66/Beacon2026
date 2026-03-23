@@ -53,7 +53,7 @@ app.use(cors({
 app.use(express.json());
 app.use(cookieParser());
 
-const authLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 20,  message: { error: 'Too many attempts, please try again later.' } });
+const authLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: parseInt(process.env.AUTH_RATE_LIMIT_MAX || '100', 10),  message: { error: 'Too many attempts, please try again later.' } });
 const generalLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 300 });
 app.use(generalLimiter);
 

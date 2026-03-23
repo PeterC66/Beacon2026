@@ -170,6 +170,13 @@ this by never triggering a full reload (and thus never triggering
   waiting for a heading or element that never appeared (usually because auth
   failed and the page redirected to `/login`).
 
+- **Auto-computed fields** — some form fields are auto-populated by async
+  API calls (e.g. `nextRenewal` depends on a `yearConfig` fetch). After
+  filling the triggering field (like `joinedOn`), always wait for the
+  dependent field to be populated before clicking Save. Without this the
+  frontend validation silently blocks submission and the `waitForURL` for
+  the saved record times out.
+
 ---
 
 ## Common pitfalls
