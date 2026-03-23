@@ -9,7 +9,14 @@ export class MemberEditorPage {
   }
 
   async gotoNew() {
-    await this.page.goto('/members/new');
+    // Prefer SPA link-click navigation to preserve the in-memory auth token.
+    // page.goto() causes a full page reload which loses auth state.
+    const clicked = await this.page.evaluate(() => {
+      const link = document.querySelector('a[href="/members/new"]');
+      if (link) { link.click(); return true; }
+      return false;
+    });
+    if (!clicked) await this.page.goto('/members/new');
     await this.page.getByRole('heading', { name: 'New Member' }).waitFor();
   }
 
