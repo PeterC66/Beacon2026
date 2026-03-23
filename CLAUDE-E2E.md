@@ -169,3 +169,28 @@ this by never triggering a full reload (and thus never triggering
   locator / assertion error. A test that fails at ~18 s typically timed out
   waiting for a heading or element that never appeared (usually because auth
   failed and the page redirected to `/login`).
+
+---
+
+## Common pitfalls
+
+### Form inputs must have `name` attributes
+
+Page object locators like `this.page.locator('input[name="forenames"]')` rely
+on the HTML `name` attribute. React controlled inputs often omit `name` since
+the form state is managed via `onChange` / `useState`. Always add explicit
+`name` attributes to inputs that E2E tests target.
+
+### Duplicate elements from responsive / repeated NavBars
+
+Some list pages render `<NavBar>` at both the top and bottom of the page for
+UX convenience. This means locators like `getByRole('link', { name: '…' })`
+may match two elements, causing Playwright strict mode violations. Always use
+`.first()` on such locators.
+
+### DDL idempotency
+
+`ALTER TABLE ... ADD CONSTRAINT` fails with code `42710` if the constraint
+already exists (PostgreSQL < 17 doesn't support `IF NOT EXISTS` for
+constraints). Wrap in a `DO $$ ... EXCEPTION WHEN duplicate_object THEN NULL;
+END $$` block for idempotency.
