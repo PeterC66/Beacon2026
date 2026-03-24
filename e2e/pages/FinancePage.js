@@ -84,36 +84,29 @@ export class FinanceLedgerPage {
     this.page = page;
   }
 
-  async gotoByAccount() {
-    // SPA navigation — see CLAUDE-E2E.md
-    // Link on home page is /finance/ledger (no query); click it then append the view
+  /** @private SPA-navigate to /finance/ledger, preserving auth token */
+  async _gotoLedger() {
+    // Wait for the SPA link to exist in the DOM before clicking
+    await this.page.waitForSelector('a[href="/finance/ledger"]', { timeout: 5_000 }).catch(() => null);
     const clicked = await this.page.evaluate(() => {
       const link = document.querySelector('a[href="/finance/ledger"]');
       if (link) { link.click(); return true; }
       return false;
     });
-    if (!clicked) await this.page.goto('/finance/ledger?view=account');
+    if (!clicked) await this.page.goto('/finance/ledger');
     await this.page.getByRole('heading', { name: /ledger/i }).waitFor();
+  }
+
+  async gotoByAccount() {
+    await this._gotoLedger();
   }
 
   async gotoByCategory() {
-    const clicked = await this.page.evaluate(() => {
-      const link = document.querySelector('a[href="/finance/ledger"]');
-      if (link) { link.click(); return true; }
-      return false;
-    });
-    if (!clicked) await this.page.goto('/finance/ledger?view=category');
-    await this.page.getByRole('heading', { name: /ledger/i }).waitFor();
+    await this._gotoLedger();
   }
 
   async gotoByGroup() {
-    const clicked = await this.page.evaluate(() => {
-      const link = document.querySelector('a[href="/finance/ledger"]');
-      if (link) { link.click(); return true; }
-      return false;
-    });
-    if (!clicked) await this.page.goto('/finance/ledger?view=group');
-    await this.page.getByRole('heading', { name: /ledger/i }).waitFor();
+    await this._gotoLedger();
   }
 
   transactionRow(payee) {

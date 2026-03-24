@@ -15,11 +15,13 @@
 
 import { test, expect } from '../fixtures/admin.js';
 import { RoleListPage, UserListPage, UserEditorPage } from '../pages/SettingsPage.js';
+import { MemberEditorPage } from '../pages/MemberEditorPage.js';
 
 const SUFFIX    = Date.now();
 const ROLE_NAME = `E2ERole${SUFFIX}`;
-const USER_NAME = `E2E User ${SUFFIX}`;
 const USER_UNAME = `e2euser${SUFFIX % 100000}`;  // keep to <=12 lowercase chars
+const MEMBER_SURNAME   = `E2EUserMbr${SUFFIX}`;
+const MEMBER_FORENAMES = 'Test';
 
 // ── Roles ─────────────────────────────────────────────────────────────────
 
@@ -87,44 +89,56 @@ test.describe('System users', () => {
   });
 
   test('add a new user', async ({ adminPage: page }) => {
+    // Step 1: Create a member to link to the new user
+    const memberEditor = new MemberEditorPage(page);
+    await memberEditor.gotoNew();
+    await memberEditor.surnameInput().fill(MEMBER_SURNAME);
+    await memberEditor.forenamesInput().fill(MEMBER_FORENAMES);
+    await memberEditor.saveButton().click();
+    await page.waitForURL(/\/members\/(?!new\b)[^/]+$/, { timeout: 10_000 });
+
+    // Step 2: Navigate to the users list
     const userList = new UserListPage(page);
     await userList.goto();
 
-    // Navigate to /users/new via the nav bar "Add" link
+    // Step 3: Click "Add New User" link
     await userList.addNewLink().click();
     await page.getByRole('heading', { name: 'Add New User' }).waitFor({ timeout: 10_000 });
 
-    const userEditor = new UserEditorPage(page);
-    await userEditor.nameInput().fill(USER_NAME);
-    await userEditor.emailInput().fill(`${USER_UNAME}@beacon2-e2e.invalid`);
-    await userEditor.usernameInput().fill(USER_UNAME);
-    await userEditor.passwordInput().fill('TestUser99!');
+    // Step 4: Select the member from the dropdown
+    const memberSelect = page.locator('select[name="memberId"]');
+    await memberSelect.selectOption({ label: new RegExp(MEMBER_SURNAME) });
 
-    await userEditor.saveButton().click();
+    // Step 5: Fill required fields
+    await page.locator('input[name="username"]').fill(USER_UNAME);
+    await page.locator('input[name="email"]').fill(`${USER_UNAME}@beacon2-e2e.invalid`);
 
-    // After save, should show success or redirect to the user editor
-    await expect(userEditor.successBanner()).toBeVisible({ timeout: 10_000 });
+    await page.getByRole('button', { name: /save user/i }).click();
+
+    // After save, should show temp password notice or success
+    await expect(page.getByText(/temporary password|saved/i).first()).toBeVisible({ timeout: 10_000 });
   });
 
   test('new user appears in the users list', async ({ adminPage: page }) => {
     const userList = new UserListPage(page);
     await userList.goto();
-    await expect(page.getByText(USER_NAME)).toBeVisible();
+    // The user's display name comes from the linked member
+    await expect(page.getByText(MEMBER_SURNAME)).toBeVisible();
   });
 
-  test('edit user name', async ({ adminPage: page }) => {
+  test('edit user username', async ({ adminPage: page }) => {
     const userList = new UserListPage(page);
     await userList.goto();
 
-    // Click the user name button to navigate to the editor
-    await userList.nameButton(USER_NAME).click();
+    // Click the user name (member surname) to navigate to the editor
+    await userList.nameButton(new RegExp(MEMBER_SURNAME)).click();
     await page.getByRole('heading', { name: 'System User Record' }).waitFor({ timeout: 10_000 });
 
-    const editor = new UserEditorPage(page);
-    await editor.nameInput().fill(USER_NAME);  // same — just save
-    await editor.saveButton().click();
+    // Change email and save
+    await page.locator('input[name="email"]').fill(`${USER_UNAME}2@beacon2-e2e.invalid`);
+    await page.getByRole('button', { name: /save user/i }).click();
 
-    await expect(editor.successBanner()).toBeVisible({ timeout: 6_000 });
+    await expect(page.getByText(/saved/i).first()).toBeVisible({ timeout: 6_000 });
   });
 
   test('delete the new user', async ({ adminPage: page }) => {
@@ -132,10 +146,10 @@ test.describe('System users', () => {
     await userList.goto();
 
     // Delete button is in the user list row (not on the editor page)
-    const row = userList.userRow(USER_NAME);
+    const row = userList.userRow(MEMBER_SURNAME);
     page.once('dialog', (d) => d.accept());
     await row.getByRole('button', { name: /delete/i }).click();
 
-    await expect(page.getByText(USER_NAME)).toBeHidden({ timeout: 6_000 });
+    await expect(row).toBeHidden({ timeout: 6_000 });
   });
 });

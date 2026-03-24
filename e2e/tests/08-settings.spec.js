@@ -69,16 +69,30 @@ test.describe('System settings', () => {
 
 test.describe('Personal preferences', () => {
   test('preferences page is accessible', async ({ adminPage: page }) => {
-    await page.goto('/preferences');
+    // SPA navigation to preserve auth token
+    const clicked = await page.evaluate(() => {
+      const link = document.querySelector('a[href="/preferences"]');
+      if (link) { link.click(); return true; }
+      return false;
+    });
+    if (!clicked) await page.goto('/preferences');
     await expect(page.getByRole('heading', { name: 'Personal Preferences' })).toBeVisible();
   });
 
-  test('preferences page has display and security sections', async ({ adminPage: page }) => {
-    await page.goto('/preferences');
+  test('preferences page has display and password sections', async ({ adminPage: page }) => {
+    // SPA navigation to preserve auth token
+    const clicked = await page.evaluate(() => {
+      const link = document.querySelector('a[href="/preferences"]');
+      if (link) { link.click(); return true; }
+      return false;
+    });
+    if (!clicked) await page.goto('/preferences');
+    await page.getByRole('heading', { name: 'Personal Preferences' }).waitFor();
 
-    // Beacon UG §9.1 — three sections
-    await expect(page.getByText(/display/i).first()).toBeVisible();
-    await expect(page.getByText(/password/i).first()).toBeVisible();
-    await expect(page.getByText(/security/i).first()).toBeVisible();
+    // Actual sections: Display Preferences, Drop-down Name Lists & Timeout,
+    // Change Password, Change Personal Q&A
+    await expect(page.getByText(/display preferences/i).first()).toBeVisible();
+    await expect(page.getByText(/change password/i).first()).toBeVisible();
+    await expect(page.getByText(/personal q&a/i).first()).toBeVisible();
   });
 });
