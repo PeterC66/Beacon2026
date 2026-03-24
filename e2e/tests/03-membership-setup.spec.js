@@ -30,16 +30,22 @@ test.describe('Member classes', () => {
   test('add a new member class', async ({ adminPage: page }) => {
     await page.goto('/membership/classes');
 
-    // Fill the add-new form
-    await page.getByPlaceholder(/class name/i).fill(NEW_CLASS);
+    // Click the "Add Membership Class" nav link to go to the editor
+    await page.getByRole('link', { name: /add membership class/i }).first().click();
+    await expect(page.getByRole('heading', { name: /add membership class/i })).toBeVisible();
+
+    // Fill the name
+    await page.locator('input[name="name"]').fill(NEW_CLASS);
 
     // Set fee
-    const feeInput = page.locator('input[name="fee"], input[placeholder*="fee" i]').first();
+    const feeInput = page.locator('input[name="fee"]').first();
     if (await feeInput.isVisible()) await feeInput.fill('15.00');
 
-    await page.getByRole('button', { name: /add/i }).first().click();
+    // Save
+    await page.getByRole('button', { name: /save record/i }).click();
 
-    // New class appears in the table
+    // After save the editor redirects back to the class list
+    await page.waitForURL('/membership/classes', { timeout: 6_000 });
     await expect(page.getByText(NEW_CLASS)).toBeVisible({ timeout: 6_000 });
   });
 
@@ -66,7 +72,7 @@ test.describe('Member classes', () => {
 
     const row = page.getByRole('row').filter({ hasText: NEW_CLASS });
     page.once('dialog', (d) => d.accept());
-    await row.getByRole('button', { name: /delete/i }).click();
+    await row.getByRole('link', { name: /delete/i }).click();
 
     // Row should disappear
     await expect(page.getByText(NEW_CLASS)).toBeHidden({ timeout: 6_000 });
@@ -75,8 +81,8 @@ test.describe('Member classes', () => {
   test('locked Individual class has no delete button', async ({ adminPage: page }) => {
     await page.goto('/membership/classes');
     const row = page.getByRole('row').filter({ hasText: 'Individual' });
-    // No delete button on locked class
-    await expect(row.getByRole('button', { name: /delete/i })).toHaveCount(0);
+    // No delete link on locked class
+    await expect(row.getByRole('link', { name: /delete/i })).toHaveCount(0);
   });
 });
 
@@ -96,8 +102,8 @@ test.describe('Member statuses', () => {
   test('add a new member status', async ({ adminPage: page }) => {
     await page.goto('/membership/statuses');
 
-    // Inline add: click the add input, type the name, press Enter or click Add
-    const nameInput = page.getByPlaceholder(/status name/i).first();
+    // Inline add: fill the "Add new status…" input and press Enter
+    const nameInput = page.getByPlaceholder(/add new status/i).first();
     await nameInput.fill(NEW_STATUS);
     await page.keyboard.press('Enter');
 
