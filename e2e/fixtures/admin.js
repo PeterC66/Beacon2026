@@ -50,20 +50,30 @@ export const test = base.extend({
     await page.waitForURL('/', { timeout: 10_000 });
     console.log(`[adminPage] Logged in. URL: ${page.url()}`);
 
-    // Wait for the Home page to actually render.  The Home component fetches
-    // privileges via AuthContext before it can render links — in CI the backend
-    // may be slow (cold start / shared runner), so allow a generous timeout.
+    // Wait for the Home page to actually render.  Privileges are embedded in
+    // the JWT and available synchronously after login, so the Home grid renders
+    // in the same React commit as the route change.  We wait for the "logged in"
+    // text which is rendered by the Home component itself.
     const homeStart = Date.now();
-    await page.waitForSelector('a[href="/members"]', { timeout: 15_000 }).catch(async () => {
-      // Dump diagnostic info so we can debug if the home page never renders
-      const bodyText = await page.evaluate(() => document.body?.innerText?.slice(0, 500)).catch(() => '<eval failed>');
-      const linkCount = await page.evaluate(() => document.querySelectorAll('a').length).catch(() => -1);
-      console.log(`[adminPage] WARNING: /members link not found after 15 s`);
-      console.log(`[adminPage]   URL: ${page.url()}`);
-      console.log(`[adminPage]   Total <a> tags: ${linkCount}`);
-      console.log(`[adminPage]   Body text (first 500 chars): ${bodyText}`);
-    });
+    await page.getByText('You are logged in as').waitFor({ timeout: 15_000 });
     console.log(`[adminPage] Home page rendered (${Date.now() - homeStart} ms)`);
+
+    // Diagnostic: check whether the members link actually exists as an <a>.
+    // This helps debug the long-standing waitForSelector mystery.
+    const memberLinkDiag = await page.evaluate(() => {
+      const exact = document.querySelectorAll('a[href="/members"]');
+      const partial = document.querySelectorAll('a[href*="member"]');
+      const allLinks = [...document.querySelectorAll('a')];
+      const memberishLinks = allLinks
+        .filter(a => a.textContent.trim().toLowerCase().includes('member'))
+        .map(a => ({ text: a.textContent.trim().slice(0, 40), href: a.href, tag: a.tagName }));
+      return {
+        exactCount: exact.length,
+        partialCount: partial.length,
+        memberishLinks,
+      };
+    }).catch(() => ({ error: 'evaluate failed' }));
+    console.log(`[adminPage] Members link diagnostic:`, JSON.stringify(memberLinkDiag));
 
     // Override page.goto to prefer SPA navigation.
     // Full-page reloads destroy the in-memory auth token; clicking an <a>
