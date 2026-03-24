@@ -14,42 +14,45 @@ const SUFFIX       = Date.now();
 const OFFICER_NAME = `E2EOfficer${SUFFIX}`;
 const OFFICE_NAME  = `E2EOffice${SUFFIX}`;
 
+/** SPA-navigate to /officers, preserving auth token */
+async function gotoOfficers(page) {
+  const clicked = await page.evaluate(() => {
+    const link = document.querySelector('a[href="/officers"]');
+    if (link) { link.click(); return true; }
+    return false;
+  });
+  if (!clicked) await page.goto('/officers');
+  await page.getByRole('heading', { name: /offices/i }).waitFor();
+}
+
 test.describe('u3a Officers', () => {
   test('officers list page loads', async ({ adminPage: page }) => {
-    await page.goto('/officers');
-    await expect(page.getByRole('heading', { name: /officer/i })).toBeVisible();
+    await gotoOfficers(page);
+    await expect(page.getByRole('heading', { name: 'u3a Offices and Post Holders' })).toBeVisible();
   });
 
   test('add an officer record', async ({ adminPage: page }) => {
-    await page.goto('/officers');
+    await gotoOfficers(page);
 
-    // Fill the add-officer form (office title + post-holder name or member link)
-    const officeTitleInput = page.getByPlaceholder(/office|title|position/i).first();
-    if (await officeTitleInput.isVisible()) {
-      await officeTitleInput.fill(OFFICE_NAME);
-    } else {
-      // Some forms use labelled inputs
-      await page.getByLabel(/office/i).first().fill(OFFICE_NAME);
-    }
+    // Click "Add new office" to show the inline edit row
+    await page.getByRole('button', { name: /add new office/i }).click();
 
-    // The officer may link to a member; the name field is sometimes separate
-    const nameInput = page.locator('input[name="name"], input[placeholder*="name" i]').first();
-    if (await nameInput.isVisible()) {
-      await nameInput.fill(OFFICER_NAME);
-    }
+    // Fill the office name input in the edit row
+    await page.locator('input[name="name"]').fill(OFFICE_NAME);
 
-    await page.getByRole('button', { name: /add|save/i }).first().click();
+    // Save the record
+    await page.getByRole('button', { name: /save record/i }).click();
 
     await expect(page.getByText(OFFICE_NAME)).toBeVisible({ timeout: 6_000 });
   });
 
   test('officer appears in the list', async ({ adminPage: page }) => {
-    await page.goto('/officers');
+    await gotoOfficers(page);
     await expect(page.getByText(OFFICE_NAME)).toBeVisible();
   });
 
   test('delete the officer record', async ({ adminPage: page }) => {
-    await page.goto('/officers');
+    await gotoOfficers(page);
     const row = page.getByRole('row').filter({ hasText: OFFICE_NAME });
     page.once('dialog', (d) => d.accept());
     await row.getByRole('button', { name: /delete/i }).click();

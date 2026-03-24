@@ -109,9 +109,13 @@ test.describe('Finance transactions', () => {
     await editor.fromToInput().fill(PAYEE);
     await editor.amountInput().fill('50.00');
 
+    // Category allocation — required by form validation
+    // Fill the first category amount input to match the transaction amount
+    await page.locator('input[name="categoryAmount"]').first().fill('50.00');
+
     await editor.saveButton().click();
 
-    // After save, should show success banner or redirect
+    // After save, should show success banner (then auto-redirects)
     await expect(editor.successBanner()).toBeVisible({ timeout: 10_000 });
   });
 
