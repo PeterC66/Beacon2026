@@ -11,13 +11,20 @@ export class MemberListPage {
     // Prefer SPA link-click navigation to preserve the in-memory auth token.
     // page.goto() causes a full page reload which loses auth state; session
     // restoration via the refresh cookie is unreliable in CI.
+    console.log(`[MemberListPage.goto] Current URL: ${this.page.url()}`);
     const clicked = await this.page.evaluate(() => {
       const link = document.querySelector('a[href="/members"]');
+      console.log('[MemberListPage.goto] a[href="/members"] found:', !!link);
       if (link) { link.click(); return true; }
       return false;
     });
-    if (!clicked) await this.page.goto('/members');
+    console.log(`[MemberListPage.goto] SPA click: ${clicked}`);
+    if (!clicked) {
+      console.log(`[MemberListPage.goto] Falling back to page.goto('/members')`);
+      await this.page.goto('/members');
+    }
     await this.page.getByRole('heading', { name: 'Members' }).waitFor();
+    console.log(`[MemberListPage.goto] Members heading found. URL: ${this.page.url()}`);
   }
 
   heading() {
@@ -46,9 +53,13 @@ export class MemberListPage {
       .first();
   }
 
-  /** Counts visible table rows (excludes header). */
+  /** Counts visible member rows (excludes header).  Returns 0 when the
+   *  component shows "No members found." instead of a table. */
   async memberRowCount() {
-    return this.page.getByRole('row').count().then((n) => n - 1);
+    const noMembers = this.page.getByText('No members found.');
+    if (await noMembers.isVisible().catch(() => false)) return 0;
+    const rowCount = await this.page.getByRole('row').count();
+    return Math.max(0, rowCount - 1);
   }
 
   memberName(name) {

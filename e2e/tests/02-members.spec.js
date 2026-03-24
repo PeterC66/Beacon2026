@@ -114,7 +114,9 @@ test.describe('Member search', () => {
     await listPage.goto();
     await listPage.search('ZZZNoSuchPersonXXX99');
 
-    // Row count should be 0 (just header row remains)
+    // When no members match, the component shows "No members found." instead
+    // of a table — wait for that message before checking the count.
+    await page.getByText('No members found.').waitFor({ timeout: 10_000 });
     const count = await listPage.memberRowCount();
     expect(count).toBe(0);
   });
@@ -180,6 +182,7 @@ test.describe('Delete a member', () => {
 
     // Confirm member no longer appears
     await listPage.search(TEST_SURNAME);
+    await page.getByText('No members found.').waitFor({ timeout: 10_000 });
     const count = await listPage.memberRowCount();
     expect(count).toBe(0);
   });
