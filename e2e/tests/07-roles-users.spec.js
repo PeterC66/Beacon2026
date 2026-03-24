@@ -147,8 +147,9 @@ test.describe('System users', () => {
   test('new user appears in the users list', async ({ adminPage: page }) => {
     const userList = new UserListPage(page);
     await userList.goto();
-    // The user's display name comes from the linked member
-    await expect(page.getByText(MEMBER_SURNAME)).toBeVisible();
+    // The user's display name comes from the linked member.
+    // Name appears in both "Full Name" and "Member" columns, so use .first()
+    await expect(page.getByText(MEMBER_SURNAME).first()).toBeVisible();
   });
 
   test('edit user username', async ({ adminPage: page }) => {

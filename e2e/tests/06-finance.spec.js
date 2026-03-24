@@ -126,15 +126,26 @@ test.describe('Finance transactions', () => {
 // ── Category cleanup (after transaction tests used it) ──────────────────
 
 test.describe('Finance category cleanup', () => {
-  test('delete the new category', async ({ adminPage: page }) => {
+  test('category with transactions cannot be deleted', async ({ adminPage: page }) => {
     const catPage = new FinanceCategoriesPage(page);
     await catPage.goto();
 
     const row = catPage.categoryRow(CAT_NAME);
-    page.once('dialog', (d) => d.accept());
+
+    // Two dialogs fire: (1) confirm prompt, (2) error alert from backend
+    let alertMsg = '';
+    page.on('dialog', async (d) => {
+      if (d.type() === 'confirm') await d.accept();
+      else { alertMsg = d.message(); await d.dismiss(); }
+    });
+
     await row.getByRole('button', { name: /delete/i }).click();
 
-    await expect(page.getByText(CAT_NAME)).toBeHidden({ timeout: 6_000 });
+    // Wait briefly for the API round-trip and alert
+    await page.waitForTimeout(2_000);
+    expect(alertMsg).toMatch(/cannot delete/i);
+    // Category should still be visible
+    await expect(page.getByText(CAT_NAME)).toBeVisible();
   });
 });
 
