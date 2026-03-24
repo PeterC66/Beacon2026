@@ -1,7 +1,7 @@
 // beacon2/frontend/src/pages/groups/GroupList.jsx
 
 import { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { groups as groupsApi, faculties as facultiesApi } from '../../lib/api.js';
 import { useAuth } from '../../context/AuthContext.jsx';
 import NavBar from '../../components/NavBar.jsx';
@@ -14,8 +14,6 @@ const ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
 
 export default function GroupList() {
   const { can, tenant } = useAuth();
-  const navigate = useNavigate();
-
   const [groupList,   setGroupList]   = useState([]);
   const { sorted, sortKey, sortDir, onSort } = useSortedData(groupList);
   const [faculties,   setFaculties]   = useState([]);
@@ -144,12 +142,12 @@ export default function GroupList() {
                       >
                         <td className="px-3 py-2 font-medium">
                           {can('group_records_all', 'view') ? (
-                            <button
-                              onClick={() => navigate(`/groups/${g.id}`)}
-                              className="text-blue-700 hover:underline text-left"
+                            <Link
+                              to={`/groups/${g.id}`}
+                              className="text-blue-700 hover:underline"
                             >
                               {g.name}
-                            </button>
+                            </Link>
                           ) : g.name}
                           {g.status === 'inactive' && (
                             <span className="ml-2 text-xs text-red-500">(inactive)</span>
@@ -172,12 +170,12 @@ export default function GroupList() {
                         )}
                         <td className="px-3 py-2 text-right">
                           {can('group_records_all', 'view') && (
-                            <button
-                              onClick={() => navigate(`/groups/${g.id}`)}
+                            <Link
+                              to={`/groups/${g.id}`}
                               className="text-blue-700 hover:underline text-xs"
                             >
                               Edit
-                            </button>
+                            </Link>
                           )}
                         </td>
                       </tr>
