@@ -529,8 +529,10 @@ export default function MemberEditor() {
     }
 
     try {
+      let createdId;
       if (isNew) {
-        await membersApi.create(payload);
+        const created = await membersApi.create(payload);
+        createdId = created?.id;
       } else {
         const patchPayload = {
           ...payload,
@@ -565,14 +567,15 @@ export default function MemberEditor() {
       markClean();
       setSaved(true);
       clearTimeout(savedTimer.current);
-      savedTimer.current = setTimeout(() => navigate('/members'), 1200);
+      const dest = isNew && createdId ? `/members/${createdId}` : '/members';
+      savedTimer.current = setTimeout(() => navigate(dest), 1200);
     } catch (err) {
       if (err.status === 409 && err.body?.code === 'DUPLICATE_NAME') {
         if (confirm(`A member named "${form.forenames} ${form.surname}" already exists. Create anyway?`)) {
           try {
-            await membersApi.create(payload, true);
+            const dup = await membersApi.create(payload, true);
             markClean();
-            navigate('/members');
+            navigate(dup?.id ? `/members/${dup.id}` : '/members');
             return;
           } catch (err2) {
             setError(err2.message);
