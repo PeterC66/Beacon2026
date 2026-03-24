@@ -113,8 +113,13 @@ test.describe('Finance transactions', () => {
     const ledger = new FinanceLedgerPage(page);
     await ledger.gotoByAccount();
 
+    // Must select an account before transactions are shown (selId controls fetch)
+    const acctSelect = page.locator('select[name="selId"]');
+    await acctSelect.waitFor({ timeout: 6_000 });
+    await acctSelect.selectOption({ index: 1 }); // first real account after "— select —"
+
     // The payee should appear somewhere in the ledger
-    await expect(page.getByText(PAYEE)).toBeVisible({ timeout: 6_000 });
+    await expect(page.getByText(PAYEE)).toBeVisible({ timeout: 10_000 });
   });
 });
 
