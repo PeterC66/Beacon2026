@@ -1544,10 +1544,12 @@ export default function GroupRecord() {
 
         {/* Tab navigation (only when editing existing) */}
         {!isNew && (
-          <div className="flex gap-0 mb-4 border-b border-slate-300">
+          <div role="tablist" className="flex gap-0 mb-4 border-b border-slate-300">
             {tabs.map((tab) => (
               <button
                 key={tab.key}
+                role="tab"
+                aria-selected={activeTab === tab.key}
                 disabled={!tab.available}
                 onClick={() => tab.available && setSearchParams(tab.key === 'details' ? {} : { tab: tab.key })}
                 className={[
