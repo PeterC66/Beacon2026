@@ -107,10 +107,11 @@ test.describe('Faculties', () => {
     const row = page.getByRole('row').filter({ hasText: FACULTY_NAME });
     await row.getByRole('button', { name: /edit/i }).click();
 
-    // Inline edit: input appears in the row (no explicit type attr, so use name)
-    const rowInput = row.locator('input[name="editingName"]');
-    await rowInput.fill(FACULTY_NAME);  // same name — just test the save path
-    await row.getByRole('button', { name: /save/i }).click();
+    // After clicking Edit the name text becomes an <input>, so hasText no
+    // longer matches.  There is only one editing input at a time on the page.
+    const editInput = page.locator('input[name="editingName"]');
+    await editInput.fill(FACULTY_NAME);  // same name — just test the save path
+    await page.getByRole('button', { name: /save/i }).first().click();
 
     await expect(page.getByText(FACULTY_NAME)).toBeVisible({ timeout: 6_000 });
   });
