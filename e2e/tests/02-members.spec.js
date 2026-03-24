@@ -127,7 +127,8 @@ test.describe('Member validation', () => {
 
     // Fill forenames only — no surname
     await editor.forenamesInput().fill('Noname');
-    await editor.statusSelect().selectOption({ label: 'Current' });
+    // Status is auto-set to "Current" on the new-member form (hidden select)
+    await editor.waitForClassOptions();
     await editor.classSelect().selectOption({ label: 'Individual' });
     await editor.postcodeInput().fill('OX1 1AA');
 
@@ -147,7 +148,8 @@ test.describe('Member validation', () => {
 
     await editor.forenamesInput().fill('Test');
     await editor.surnameInput().fill('Postcode');
-    await editor.statusSelect().selectOption({ label: 'Current' });
+    // Status is auto-set to "Current" on the new-member form (hidden select)
+    await editor.waitForClassOptions();
     await editor.classSelect().selectOption({ label: 'Individual' });
     await editor.postcodeInput().fill('NOT-A-POSTCODE');
 
