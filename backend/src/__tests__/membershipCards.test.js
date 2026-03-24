@@ -9,7 +9,12 @@ vi.mock('../utils/redis.js', () => ({
 }));
 
 vi.mock('../utils/db.js', () => ({
-  prisma:      { $disconnect: vi.fn() },
+  prisma: {
+    $disconnect: vi.fn(),
+    sysTenant: {
+      findUnique: vi.fn().mockResolvedValue({ name: 'Test U3A' }),
+    },
+  },
   tenantQuery: vi.fn(),
   withTenant:  vi.fn(),
 }));
@@ -48,7 +53,6 @@ const SAMPLE_MEMBER = {
 };
 
 const SETTINGS_ROW = {
-  display_name: 'Test U3A',
   card_colour: '#99FF99',
   year_start_month: 6,
   year_start_day: 1,

@@ -147,7 +147,7 @@ export default function MembershipCards() {
             {[
               { value: 'outstanding', label: 'Outstanding only (new members and renewals)' },
               { value: 'poll',        label: 'Poll' },
-              { value: 'outstanding_and_poll', label: 'Outstanding and' },
+              { value: 'outstanding_and_poll', label: 'Outstanding and poll' },
               { value: 'all',         label: 'All current members' },
             ].map((opt) => (
               <label key={opt.value} className="flex items-center gap-1.5 text-sm cursor-pointer">
