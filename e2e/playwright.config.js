@@ -57,8 +57,9 @@ export default defineConfig({
   },
 
   // Global setup creates (or resets) the test tenant before any tests run.
-  // Allow up to 3 minutes for global setup (cold-start warm-up + tenant creation).
-  globalTimeout: 180_000,
+  // globalTimeout covers the ENTIRE test run (setup + all tests + teardown).
+  // 10 minutes for CI (83+ tests × ~3 s login overhead each).
+  globalTimeout: process.env.CI ? 600_000 : 300_000,
   globalSetup: './global-setup.js',
   // globalTeardown: './global-teardown.js',
 
