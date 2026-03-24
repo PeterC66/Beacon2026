@@ -94,16 +94,14 @@ test.describe('Member data validator', () => {
   test('validator shows result (valid or issues)', async ({ adminPage: page }) => {
     await gotoValidator(page);
 
-    // Either a "All member data is valid!" banner or a list of issues
-    const valid   = page.getByText(/all member data is valid/i);
-    const issues  = page.getByRole('heading', { name: /issues?/i });
-    const recheck = page.getByRole('button', { name: /re-check/i });
+    // Wait for the "Re-check now" button (always present once loaded)
+    await expect(page.getByRole('button', { name: /re-check/i })).toBeVisible({ timeout: 15_000 });
 
-    const anyVisible = await Promise.any([
-      valid.isVisible(),
-      issues.isVisible(),
-      recheck.isVisible(),
-    ]);
-    expect(anyVisible).toBe(true);
+    // After loading, either the "All valid" banner or flagged members appear
+    const valid  = page.getByText(/all member data is valid/i);
+    const flagged = page.getByText(/issues? found/i);
+
+    // At least one of these should be visible
+    await expect(valid.or(flagged)).toBeVisible({ timeout: 10_000 });
   });
 });

@@ -9,11 +9,13 @@ export class MemberEditorPage {
   }
 
   async gotoNew() {
-    // Use page.evaluate() to fire a DOM click — this triggers React Router's
-    // onClick handler regardless of CSS visibility.  The Home page renders both
-    // a mobile layout (md:hidden) and a desktop grid; Playwright's locator.click()
-    // would fail if it resolved the hidden mobile element first.
-    // See CLAUDE-E2E.md § "The SPA-navigation pattern".
+    // SPA navigation — see CLAUDE-E2E.md § "The SPA-navigation pattern".
+    // Navigate Home first (only Home has the /members/new link).
+    await this.page.evaluate(() => {
+      const h = document.querySelector('a[href="/"]');
+      if (h) h.click();
+    });
+    await this.page.waitForSelector('a[href="/members/new"]', { timeout: 5_000 }).catch(() => null);
     const clicked = await this.page.evaluate(() => {
       const link = document.querySelector('a[href="/members/new"]');
       if (link) { link.click(); return true; }
