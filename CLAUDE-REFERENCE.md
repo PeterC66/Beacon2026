@@ -774,7 +774,8 @@ savedTimer.current = setTimeout(() => setSaved(false), 3000);
 ### Unsaved changes (`useUnsavedChanges`)
 
 Every full-page edit form must use it. Call `markDirty()` on change, `markClean()` before
-navigate on save/cancel. Currently on: MemberEditor, SystemSettings, TransactionEditor,
+navigate on save/cancel. **This includes new-record creation flows** — `markClean()` must
+be called before `onSaved()` / `navigate()` even for new records, not only for edits. Currently on: MemberEditor, SystemSettings, TransactionEditor,
 RoleEditor, VenueEditor, UserEditor, MemberClassEditor, GroupRecord, PersonalPreferences,
 TransferMoney, PublicLinks.
 
