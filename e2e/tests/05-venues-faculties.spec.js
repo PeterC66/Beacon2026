@@ -85,16 +85,18 @@ test.describe('Venues', () => {
 test.describe('Faculties', () => {
   test('faculty list page loads', async ({ adminPage: page }) => {
     await page.goto('/faculties');
-    await expect(page.getByRole('heading', { name: /facult/i })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Group Faculties' })).toBeVisible();
   });
 
   test('add a new faculty', async ({ adminPage: page }) => {
     await page.goto('/faculties');
+    await expect(page.getByRole('heading', { name: 'Group Faculties' })).toBeVisible();
 
-    // Inline add: name input at the bottom of the page
+    // Inline add: name input + Save button at the bottom of the page
     const input = page.getByPlaceholder(/faculty name/i).first();
     await input.fill(FACULTY_NAME);
-    await page.getByRole('button', { name: /add/i }).first().click();
+    // The submit button in the add-faculty form is labelled "Save"
+    await page.locator('form').filter({ has: input }).getByRole('button', { name: /save/i }).click();
 
     await expect(page.getByText(FACULTY_NAME)).toBeVisible({ timeout: 6_000 });
   });
