@@ -691,4 +691,7 @@ ALTER TABLE :schema.members ADD COLUMN IF NOT EXISTS custom_field_4 TEXT;
 ALTER TABLE :schema.tenant_settings ADD COLUMN IF NOT EXISTS custom_field_label_1 TEXT;
 ALTER TABLE :schema.tenant_settings ADD COLUMN IF NOT EXISTS custom_field_label_2 TEXT;
 ALTER TABLE :schema.tenant_settings ADD COLUMN IF NOT EXISTS custom_field_label_3 TEXT;
-ALTER TABLE :schema.tenant_settings ADD COLUMN IF NOT EXISTS custom_field_label_4 TEXT
+ALTER TABLE :schema.tenant_settings ADD COLUMN IF NOT EXISTS custom_field_label_4 TEXT;
+
+-- SiteWorks integration: when true, scheduling/venue fields are managed in SiteWorks
+ALTER TABLE :schema.tenant_settings ADD COLUMN IF NOT EXISTS siteworks_activated BOOLEAN NOT NULL DEFAULT false
