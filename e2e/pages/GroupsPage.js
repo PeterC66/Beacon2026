@@ -61,7 +61,7 @@ export class GroupRecordPage {
 
   nameInput()        { return this.page.locator('input[name="name"]').first(); }
   descriptionInput() { return this.page.locator('textarea[name="description"], input[name="description"]').first(); }
-  saveButton()       { return this.page.getByRole('button', { name: /save/i }).first(); }
+  saveButton()       { return this.page.getByRole('button', { name: /save|add group/i }).first(); }
   deleteButton()     { return this.page.getByRole('button', { name: /delete/i }).first(); }
   successBanner()    { return this.page.getByText('✓ Saved successfully.'); }
 
