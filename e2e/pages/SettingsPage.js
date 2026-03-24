@@ -40,15 +40,21 @@ export class RoleListPage {
     await this.page.getByRole('heading', { name: /roles/i }).waitFor();
   }
 
-  roleLink(name) {
-    return this.page.getByRole('link', { name }).first();
-  }
-
-  addNameInput()  { return this.page.getByPlaceholder(/role name/i); }
-  addButton()     { return this.page.getByRole('button', { name: /add/i }).first(); }
+  /** "Add Role" nav link — navigates to /roles/new */
+  addRoleLink() { return this.page.getByRole('link', { name: /add role/i }).first(); }
 
   roleRow(name) {
     return this.page.getByRole('row').filter({ hasText: name });
+  }
+
+  /** Edit link inside a role row (text "Edit", <a> tag) */
+  editLink(name) {
+    return this.roleRow(name).getByRole('link', { name: /edit/i });
+  }
+
+  /** Delete link inside a role row (text "Delete", <a> tag) */
+  deleteLink(name) {
+    return this.roleRow(name).getByRole('link', { name: /delete/i });
   }
 }
 

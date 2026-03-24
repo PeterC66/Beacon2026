@@ -48,15 +48,12 @@ export const test = base.extend({
     // Submit and wait for home page
     await page.getByRole('button', { name: 'Enter' }).click();
     await page.waitForURL('/', { timeout: 10_000 });
-    console.log(`[adminPage] Logged in. URL: ${page.url()}`);
 
     // Wait for the Home page to actually render.  Privileges are embedded in
     // the JWT and available synchronously after login, so the Home grid renders
     // in the same React commit as the route change.  We wait for the "logged in"
     // text which is rendered by the Home component itself.
-    const homeStart = Date.now();
     await page.getByText('You are logged in as').waitFor({ timeout: 15_000 });
-    console.log(`[adminPage] Home page rendered (${Date.now() - homeStart} ms)`);
 
     // Override page.goto to prefer SPA navigation.
     // Full-page reloads destroy the in-memory auth token; clicking an <a>
