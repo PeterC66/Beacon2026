@@ -48,6 +48,12 @@ export const test = base.extend({
     // Submit and wait for home page
     await page.getByRole('button', { name: 'Enter' }).click();
     await page.waitForURL('/', { timeout: 10_000 });
+    console.log(`[adminPage] Logged in. URL: ${page.url()}`);
+    // Wait for the Home page to actually render (links visible)
+    await page.waitForSelector('a[href="/members"]', { timeout: 5_000 }).catch(() => {
+      console.log(`[adminPage] WARNING: /members link not found after login — Home page may not have rendered`);
+    });
+    console.log(`[adminPage] Home page rendered`);
 
     // Override page.goto to prefer SPA navigation.
     // Full-page reloads destroy the in-memory auth token; clicking an <a>
