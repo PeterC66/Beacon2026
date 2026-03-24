@@ -217,6 +217,21 @@ variants. Use a regex: `/save|add member/i` rather than just `/save/i`.
 Similarly, success/error banner text in POM helpers must match the **exact**
 rendered text (e.g. `'✓ Member record saved.'`), not a generic approximation.
 
+### `waitForURL` regexes must exclude `/new`
+
+When waiting for a redirect from `/entity/new` to `/entity/:id` after form
+submission, the naive regex `/\/entity\/[^/]+$/` matches `/entity/new`
+immediately — so the test never waits for the actual redirect. Use a negative
+lookahead to exclude the `new` segment:
+
+```javascript
+// BAD — matches /groups/new instantly
+await page.waitForURL(/\/groups\/[^/]+$/);
+
+// GOOD — skips /groups/new, waits for /groups/<id>
+await page.waitForURL(/\/groups\/(?!new\b)[^/]+$/);
+```
+
 ### DDL idempotency
 
 `ALTER TABLE ... ADD CONSTRAINT` fails with code `42710` if the constraint
