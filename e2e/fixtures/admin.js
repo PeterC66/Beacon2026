@@ -58,23 +58,6 @@ export const test = base.extend({
     await page.getByText('You are logged in as').waitFor({ timeout: 15_000 });
     console.log(`[adminPage] Home page rendered (${Date.now() - homeStart} ms)`);
 
-    // Diagnostic: check whether the members link actually exists as an <a>.
-    // This helps debug the long-standing waitForSelector mystery.
-    const memberLinkDiag = await page.evaluate(() => {
-      const exact = document.querySelectorAll('a[href="/members"]');
-      const partial = document.querySelectorAll('a[href*="member"]');
-      const allLinks = [...document.querySelectorAll('a')];
-      const memberishLinks = allLinks
-        .filter(a => a.textContent.trim().toLowerCase().includes('member'))
-        .map(a => ({ text: a.textContent.trim().slice(0, 40), href: a.href, tag: a.tagName }));
-      return {
-        exactCount: exact.length,
-        partialCount: partial.length,
-        memberishLinks,
-      };
-    }).catch(() => ({ error: 'evaluate failed' }));
-    console.log(`[adminPage] Members link diagnostic:`, JSON.stringify(memberLinkDiag));
-
     // Override page.goto to prefer SPA navigation.
     // Full-page reloads destroy the in-memory auth token; clicking an <a>
     // in the DOM triggers React Router without a reload.
