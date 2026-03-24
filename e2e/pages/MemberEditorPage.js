@@ -95,23 +95,63 @@ export class MemberEditorPage {
    * statusName / className must already exist in the test tenant.
    */
   async fillMinimal({ forenames, surname, statusName, className, postcode, joinedOn }) {
+    console.log(`[fillMinimal] Starting...`);
+
+    console.log(`[fillMinimal] Filling forenames...`);
     await this.forenamesInput().fill(forenames);
+    console.log(`[fillMinimal] Forenames done`);
+
+    console.log(`[fillMinimal] Filling surname...`);
     await this.surnameInput().fill(surname);
+    console.log(`[fillMinimal] Surname done`);
+
+    // Debug: list available status options
+    const statusOptions = await this.statusSelect().locator('option').allInnerTexts();
+    console.log(`[fillMinimal] Status options: ${JSON.stringify(statusOptions)}`);
+    console.log(`[fillMinimal] Selecting status "${statusName}"...`);
     await this.statusSelect().selectOption({ label: statusName });
+    console.log(`[fillMinimal] Status done`);
+
+    // Debug: list available class options
+    const classOptions = await this.classSelect().locator('option').allInnerTexts();
+    console.log(`[fillMinimal] Class options: ${JSON.stringify(classOptions)}`);
+    console.log(`[fillMinimal] Selecting class "${className}"...`);
     await this.classSelect().selectOption({ label: className });
+    console.log(`[fillMinimal] Class done`);
+
+    console.log(`[fillMinimal] Filling postcode...`);
     await this.postcodeInput().fill(postcode);
+    console.log(`[fillMinimal] Postcode done`);
+
     if (joinedOn) {
+      console.log(`[fillMinimal] Filling joinedOn...`);
       await this.joinedOnInput().fill(joinedOn);
+      console.log(`[fillMinimal] JoinedOn done. Waiting for next renewal date...`);
       // Wait for the auto-computed "Next renewal" date to be populated.
       // The frontend fetches year-config from the API and computes the
       // renewal date in a useEffect — this can lag behind the fill,
       // especially in CI where the API may be slow.
       await this.nextRenewalInput().waitFor({ state: 'visible' });
+      console.log(`[fillMinimal] Next renewal input visible. Waiting for value...`);
+
+      // Debug: check how many dd/mm/yyyy inputs exist
+      const dateInputCount = await this.page.locator('input[placeholder="dd/mm/yyyy"]').count();
+      console.log(`[fillMinimal] Number of dd/mm/yyyy inputs: ${dateInputCount}`);
+
       await this.page.waitForFunction(
         (sel) => { const el = document.querySelectorAll(sel)[1]; return el && el.value.length > 0; },
         'input[placeholder="dd/mm/yyyy"]',
         { timeout: 10_000 },
-      );
+      ).catch(async (err) => {
+        // Debug: check current values of all date inputs
+        const dateValues = await this.page.evaluate((sel) => {
+          return [...document.querySelectorAll(sel)].map((el, i) => ({ index: i, value: el.value, name: el.name }));
+        }, 'input[placeholder="dd/mm/yyyy"]');
+        console.log(`[fillMinimal] TIMEOUT waiting for renewal date. Date inputs: ${JSON.stringify(dateValues)}`);
+        throw err;
+      });
+      console.log(`[fillMinimal] Next renewal date populated`);
     }
+    console.log(`[fillMinimal] Complete`);
   }
 }
