@@ -34,6 +34,11 @@ async function gotoBackup(page) {
 
 /** SPA-navigate to /admin/validate-members, preserving auth token */
 async function gotoValidator(page) {
+  // Navigate Home first (backup page doesn't have the validator link)
+  await page.evaluate(() => {
+    const h = document.querySelector('a[href="/"]');
+    if (h) h.click();
+  });
   await page.waitForSelector('a[href="/admin/validate-members"]', { timeout: 5_000 }).catch(() => null);
   const clicked = await page.evaluate(() => {
     const link = document.querySelector('a[href="/admin/validate-members"]');
@@ -97,11 +102,11 @@ test.describe('Member data validator', () => {
     // Wait for the "Re-check now" button (always present once loaded)
     await expect(page.getByRole('button', { name: /re-check/i })).toBeVisible({ timeout: 15_000 });
 
-    // After loading, either the "All valid" banner or flagged members appear
-    const valid  = page.getByText(/all member data is valid/i);
-    const flagged = page.getByText(/issues? found/i);
+    // After loading, either the "All valid" banner or flagged member rows appear
+    const valid  = page.getByText('All member data is valid!');
+    const flagged = page.locator('text=/\\d+ member/');
 
-    // At least one of these should be visible
-    await expect(valid.or(flagged)).toBeVisible({ timeout: 10_000 });
+    // At least one of these should be visible (use .first() to avoid strict mode)
+    await expect(valid.or(flagged).first()).toBeVisible({ timeout: 10_000 });
   });
 });

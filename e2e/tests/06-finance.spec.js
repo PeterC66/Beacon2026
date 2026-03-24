@@ -44,7 +44,7 @@ test.describe('Finance accounts', () => {
     await acctPage.addNameInput().fill(ACCT_NAME);
     await acctPage.addButton().click();
 
-    await expect(page.getByText(ACCT_NAME)).toBeVisible({ timeout: 6_000 });
+    await expect(page.getByText(ACCT_NAME).first()).toBeVisible({ timeout: 6_000 });
   });
 
   test('delete the new finance account', async ({ adminPage: page }) => {
@@ -110,7 +110,8 @@ test.describe('Finance transactions', () => {
     await editor.amountInput().fill('50.00');
 
     // Category allocation — required by form validation
-    // Fill the first category amount input to match the transaction amount
+    // Categories load async from the API; wait for at least one input to appear
+    await page.locator('input[name="categoryAmount"]').first().waitFor({ timeout: 10_000 });
     await page.locator('input[name="categoryAmount"]').first().fill('50.00');
 
     await editor.saveButton().click();
