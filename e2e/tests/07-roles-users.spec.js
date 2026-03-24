@@ -95,7 +95,8 @@ test.describe('System users', () => {
     await memberEditor.surnameInput().fill(MEMBER_SURNAME);
     await memberEditor.forenamesInput().fill(MEMBER_FORENAMES);
     await memberEditor.saveButton().click();
-    await page.waitForURL(/\/members\/(?!new\b)[^/]+$/, { timeout: 10_000 });
+    // Wait for save success (banner appears, then SPA redirects after 1200ms)
+    await expect(page.getByText(/saved/i).first()).toBeVisible({ timeout: 10_000 });
 
     // Step 2: Navigate to the users list
     const userList = new UserListPage(page);

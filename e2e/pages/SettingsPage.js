@@ -65,6 +65,12 @@ export class UserListPage {
 
   async goto() {
     // SPA navigation — see CLAUDE-E2E.md
+    // First navigate Home (link is always in NavBar), then click the Users link
+    await this.page.evaluate(() => {
+      const homeLink = document.querySelector('a[href="/"]');
+      if (homeLink) homeLink.click();
+    });
+    await this.page.waitForSelector('a[href="/users"]', { timeout: 5_000 }).catch(() => null);
     const clicked = await this.page.evaluate(() => {
       const link = document.querySelector('a[href="/users"]');
       if (link) { link.click(); return true; }
