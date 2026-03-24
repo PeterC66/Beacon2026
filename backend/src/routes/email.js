@@ -4,7 +4,7 @@ import { Router } from 'express';
 import { z } from 'zod';
 import multer from 'multer';
 import sgMail from '@sendgrid/mail';
-import { tenantQuery } from '../utils/db.js';
+import { tenantQuery, prisma } from '../utils/db.js';
 import { requirePrivilege } from '../middleware/requirePrivilege.js';
 import { requireAuth } from '../middleware/auth.js';
 import { resolveTokens, fmtDate } from '../utils/emailTokens.js';
@@ -86,11 +86,11 @@ async function fetchMembersForEmail(tenantSlug, memberIds) {
 }
 
 /**
- * Get the tenant's display name from tenant_settings.
+ * Get the tenant's display name from the system tenants table.
  */
 async function getTenantDisplayName(tenantSlug) {
-  const rows = await tenantQuery(tenantSlug, `SELECT display_name FROM tenant_settings WHERE id = 'singleton'`, []);
-  return rows[0]?.display_name || tenantSlug;
+  const tenant = await prisma.sysTenant.findUnique({ where: { slug: tenantSlug } });
+  return tenant?.name || tenantSlug;
 }
 
 /**

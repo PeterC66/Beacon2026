@@ -5,7 +5,7 @@
 import { Router } from 'express';
 import { requireAuth } from '../middleware/auth.js';
 import { requirePrivilege } from '../middleware/requirePrivilege.js';
-import { tenantQuery } from '../utils/db.js';
+import { tenantQuery, prisma } from '../utils/db.js';
 import ExcelJS from 'exceljs';
 import PDFDocument from 'pdfkit';
 import bwipjs from 'bwip-js';
@@ -43,13 +43,16 @@ function memberDisplayName(m) {
 
 /** Fetch tenant settings needed for cards (display name, card colour, year dates) */
 async function getCardSettings(slug) {
-  const [s] = await tenantQuery(
-    slug,
-    `SELECT display_name, card_colour, year_start_month, year_start_day
-     FROM tenant_settings WHERE id = 'singleton'`,
-  );
+  const [tenant, [s]] = await Promise.all([
+    prisma.sysTenant.findUnique({ where: { slug } }),
+    tenantQuery(
+      slug,
+      `SELECT card_colour, year_start_month, year_start_day
+       FROM tenant_settings WHERE id = 'singleton'`,
+    ),
+  ]);
   return {
-    u3aName:        s?.display_name || slug,
+    u3aName:        tenant?.name || slug,
     cardColour:     s?.card_colour  || '#0066cc',
     yearStartMonth: s?.year_start_month ?? 1,
     yearStartDay:   s?.year_start_day   ?? 1,
