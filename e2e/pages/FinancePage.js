@@ -67,10 +67,11 @@ export class TransactionEditorPage {
     await this.page.getByRole('heading', { name: /transaction/i }).waitFor();
   }
 
-  typeSelect()    { return this.page.getByLabel(/type/i).first(); }
-  accountSelect() { return this.page.getByLabel(/account/i).first(); }
+  /** Transaction type toggle — buttons labelled "Money received" / "Payment" */
+  typeButton(label) { return this.page.getByRole('button', { name: label }); }
+  accountSelect() { return this.page.locator('select[name="account_id"]'); }
   dateInput()     { return this.page.getByPlaceholder('dd/mm/yyyy').first(); }
-  payeeInput()    { return this.page.locator('input[name="payee"]'); }
+  fromToInput()   { return this.page.locator('input[name="from_to"]'); }
   detailInput()   { return this.page.locator('input[name="detail"], textarea[name="detail"]').first(); }
   amountInput()   { return this.page.locator('input[name="amount"]'); }
   saveButton()    { return this.page.getByRole('button', { name: /save/i }).first(); }

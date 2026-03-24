@@ -96,29 +96,23 @@ test.describe('Finance transactions', () => {
     const editor = new TransactionEditorPage(page);
     await editor.gotoNew();
 
-    // Transaction type: money in
-    const typeSelect = editor.typeSelect();
-    if (await typeSelect.isVisible()) {
-      await typeSelect.selectOption({ label: /in|income|receipt/i });
-    }
+    // Transaction type: money in (toggle button — default is already "in")
+    await editor.typeButton('Money received').click();
 
-    // Account
-    const acctSelect = editor.accountSelect();
-    if (await acctSelect.isVisible()) {
-      await acctSelect.selectOption({ index: 0 });  // first available account
-    }
+    // Account — select first available
+    await editor.accountSelect().selectOption({ index: 1 }); // skip "— select account —"
 
     // Date — dd/mm/yyyy via DateInput component
     await editor.dateInput().fill('01/06/2026');
 
-    // Payee and amount
-    await editor.payeeInput().fill(PAYEE);
+    // From and amount
+    await editor.fromToInput().fill(PAYEE);
     await editor.amountInput().fill('50.00');
 
     await editor.saveButton().click();
 
-    // After save, should redirect to the transaction list or show success
-    await page.waitForURL(/\/finance\//, { timeout: 10_000 });
+    // After save, should show success banner or redirect
+    await expect(editor.successBanner()).toBeVisible({ timeout: 10_000 });
   });
 
   test('transaction appears in the finance ledger', async ({ adminPage: page }) => {

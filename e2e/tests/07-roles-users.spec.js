@@ -38,22 +38,28 @@ test.describe('Roles', () => {
     const roleList = new RoleListPage(page);
     await roleList.goto();
 
-    await roleList.addNameInput().fill(ROLE_NAME);
-    await roleList.addButton().click();
+    // Navigate to /roles/new via the "Add Role" nav link
+    await roleList.addRoleLink().click();
+    await page.waitForURL(/\/roles\/new/);
 
-    await expect(page.getByText(ROLE_NAME)).toBeVisible({ timeout: 6_000 });
+    // Fill the role name and save
+    await page.locator('input[name="name"]').fill(ROLE_NAME);
+    await page.getByRole('button', { name: /save role/i }).click();
+
+    // Should show success and redirect to the role editor
+    await expect(page.getByText(/role saved/i)).toBeVisible({ timeout: 6_000 });
   });
 
   test('role editor loads and shows privilege matrix', async ({ adminPage: page }) => {
     const roleList = new RoleListPage(page);
     await roleList.goto();
 
-    // Click on the Administration role to open its editor
-    await roleList.roleLink('Administration').click();
-    await page.waitForURL(/\/roles\//);
+    // Click "Edit" on the Administration role to open its editor
+    await roleList.editLink('Administration').click();
+    await page.waitForURL(/\/roles\/\d+/);
 
-    // Privilege matrix should be visible
-    await expect(page.getByRole('heading', { name: /Administration/i }).first()).toBeVisible();
+    // Privilege matrix heading should be visible (only shown for existing roles)
+    await expect(page.getByRole('heading', { name: /privileges/i })).toBeVisible();
     // Some privilege resource cells visible
     await expect(page.getByText(/members|finance|groups/i).first()).toBeVisible();
   });
@@ -62,9 +68,9 @@ test.describe('Roles', () => {
     const roleList = new RoleListPage(page);
     await roleList.goto();
 
-    const row = roleList.roleRow(ROLE_NAME);
+    // Delete uses confirm() dialog and <a> link, not a button
     page.once('dialog', (d) => d.accept());
-    await row.getByRole('button', { name: /delete/i }).click();
+    await roleList.deleteLink(ROLE_NAME).click();
 
     await expect(page.getByText(ROLE_NAME)).toBeHidden({ timeout: 6_000 });
   });
