@@ -97,9 +97,9 @@ function GroupDetails({ groupId, faculties, venues, onSaved, onDeleted }) {
       } else {
         result = await groupsApi.update(groupId, payload);
       }
+      markClean();          // must precede onSaved → navigate() so useBlocker doesn't fire
       onSaved(result);
       if (!isNew) {
-        markClean();
         setSaved(true);
         clearTimeout(savedTimer.current);
         savedTimer.current = setTimeout(() => setSaved(false), 3000);
