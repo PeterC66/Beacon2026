@@ -70,7 +70,7 @@ test.describe('System settings', () => {
 test.describe('Personal preferences', () => {
   test('preferences page is accessible', async ({ adminPage: page }) => {
     await page.goto('/preferences');
-    await expect(page.getByRole('heading', { name: /preferences/i })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Personal Preferences' })).toBeVisible();
   });
 
   test('preferences page has display and security sections', async ({ adminPage: page }) => {

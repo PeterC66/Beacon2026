@@ -232,6 +232,49 @@ await page.waitForURL(/\/groups\/[^/]+$/);
 await page.waitForURL(/\/groups\/(?!new\b)[^/]+$/);
 ```
 
+### Heading locators must avoid matching multiple headings
+
+Many pages have both an `<h1>` and `<h2>` that contain similar words. A broad
+regex like `/transaction/i` will match both `<h1>Add Transaction</h1>` and
+`<h2>Associate transaction with</h2>`, causing a Playwright strict mode
+violation. **Always use exact heading text** or scope to a specific level:
+
+```javascript
+// BAD — matches multiple headings
+await page.getByRole('heading', { name: /transaction/i }).waitFor();
+
+// GOOD — exact match
+await page.getByRole('heading', { name: 'Add Transaction' }).waitFor();
+```
+
+### SPA navigation via `onClick` + `navigate()` — never use `waitForURL`
+
+Some list pages use `<a href="#edit" onClick={(e) => { e.preventDefault(); navigate(...); }}>`.
+Clicking these triggers React Router's `navigate()` (pushState), which changes the
+URL but does **not** fire the "load" event that `page.waitForURL()` waits for by
+default. The test will time out at 30 s.
+
+Instead, wait for content that appears on the destination page:
+
+```javascript
+// BAD — times out because SPA navigation doesn't fire "load"
+await roleList.editLink('Administration').click();
+await page.waitForURL(/\/roles\/\d+/);
+
+// GOOD — wait for content on the target page
+await roleList.editLink('Administration').click();
+await expect(page.getByRole('heading', { name: /privileges/i })).toBeVisible({ timeout: 10_000 });
+```
+
+### Verify actual element types before writing POM locators
+
+Always check the actual component source to determine whether interactive
+elements are `<a>` links, `<button>` buttons, or clickable `<td>` cells:
+
+- **RoleList**: Edit/Delete are `<a>` tags (`getByRole('link')`)
+- **UserList**: Name is a `<button>` (`getByRole('button')`), not a link
+- **UserList**: Delete is a `<button>` in the list row, not on the editor page
+
 ### DDL idempotency
 
 `ALTER TABLE ... ADD CONSTRAINT` fails with code `42710` if the constraint
