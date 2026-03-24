@@ -106,17 +106,17 @@ test.describe('Group tabs', () => {
     await openGroup(page);
     await page.getByRole('tab', { name: /schedule/i }).first().click();
 
-    // Fill add-event form — date input uses dd/mm/yyyy format
-    const dateInput = page.getByPlaceholder('dd/mm/yyyy').first();
+    // Fill add-event form — native date input uses YYYY-MM-DD format
+    const dateInput = page.locator('input[name="eventDate"]').first();
     await expect(dateInput).toBeVisible({ timeout: 5_000 });
-    await dateInput.fill('15/06/2026');
+    await dateInput.fill('2026-06-15');
 
     // Start time
-    const timeInput = page.locator('input[type="time"]').first();
+    const timeInput = page.locator('input[name="startTime"]').first();
     if (await timeInput.isVisible()) await timeInput.fill('10:00');
 
     // Topic
-    const topicInput = page.locator('input[name="topic"], input[placeholder*="topic" i]').first();
+    const topicInput = page.locator('input[name="topic"]').first();
     if (await topicInput.isVisible()) await topicInput.fill('E2E Test Meeting');
 
     await page.getByRole('button', { name: /add event/i }).first().click();
