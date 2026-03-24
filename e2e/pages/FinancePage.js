@@ -19,7 +19,7 @@ export class FinanceAccountsPage {
   }
 
   addNameInput()  { return this.page.getByPlaceholder(/account name/i); }
-  addButton()     { return this.page.getByRole('button', { name: /add/i }).first(); }
+  addButton()     { return this.page.getByRole('button', { name: /save/i }).first(); }
   accountRow(name) {
     return this.page.getByRole('row').filter({ hasText: name });
   }
@@ -45,7 +45,7 @@ export class FinanceCategoriesPage {
   }
 
   addNameInput()  { return this.page.getByPlaceholder(/category name/i); }
-  addButton()     { return this.page.getByRole('button', { name: /add/i }).first(); }
+  addButton()     { return this.page.getByRole('button', { name: /save/i }).first(); }
   categoryRow(name) {
     return this.page.getByRole('row').filter({ hasText: name });
   }
