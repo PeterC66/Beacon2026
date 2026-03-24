@@ -374,9 +374,10 @@ export const finance = {
   deleteBatch:      (id)       => request(`/finance/batches/${id}`, { method: 'DELETE' }),
 
   // Financial Statement
+  // accountId can be 'all' or an array of IDs (sent as comma-separated)
   getStatement: (accountId, year) => {
     const qs = new URLSearchParams();
-    qs.set('accountId', accountId);
+    qs.set('accountId', Array.isArray(accountId) ? accountId.join(',') : accountId);
     if (year) qs.set('year', String(year));
     return request(`/finance/statement?${qs.toString()}`);
   },
