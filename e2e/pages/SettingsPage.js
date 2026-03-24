@@ -20,8 +20,8 @@ export class SystemSettingsPage {
 
   publicPhoneInput() { return this.page.locator('input[name="public_phone"], input[name="publicPhone"]').first(); }
   publicEmailInput() { return this.page.locator('input[name="public_email"], input[name="publicEmail"]').first(); }
-  saveButton()       { return this.page.getByRole('button', { name: /save/i }).first(); }
-  successBanner()    { return this.page.getByText(/saved/i).first(); }
+  saveButton()       { return this.page.getByRole('button', { name: /update/i }).first(); }
+  successBanner()    { return this.page.getByText(/saved|updated/i).first(); }
 }
 
 export class RoleListPage {
@@ -74,9 +74,10 @@ export class UserListPage {
     await this.page.getByRole('heading', { name: /system users/i }).waitFor();
   }
 
-  addNewButton()  { return this.page.getByRole('link', { name: /add/i }).first(); }
+  addNewLink()    { return this.page.getByRole('link', { name: /add/i }).first(); }
   userRow(name)   { return this.page.getByRole('row').filter({ hasText: name }); }
-  editLink(name)  { return this.userRow(name).getByRole('link', { name: /edit/i }); }
+  /** Name is a clickable <button> that navigates to the user editor */
+  nameButton(name) { return this.userRow(name).getByRole('button', { name }).first(); }
 }
 
 export class UserEditorPage {
@@ -93,7 +94,7 @@ export class UserEditorPage {
       return false;
     });
     if (!clicked) await this.page.goto('/users/new');
-    await this.page.getByRole('heading', { name: /user/i }).waitFor();
+    await this.page.getByRole('heading', { name: 'Add New User' }).waitFor();
   }
 
   nameInput()     { return this.page.locator('input[name="name"]').first(); }

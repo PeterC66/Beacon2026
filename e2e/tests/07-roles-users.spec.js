@@ -54,12 +54,11 @@ test.describe('Roles', () => {
     const roleList = new RoleListPage(page);
     await roleList.goto();
 
-    // Click "Edit" on the Administration role to open its editor
+    // Click "Edit" on the Administration role — SPA navigate via onClick
     await roleList.editLink('Administration').click();
-    await page.waitForURL(/\/roles\/\d+/);
 
-    // Privilege matrix heading should be visible (only shown for existing roles)
-    await expect(page.getByRole('heading', { name: /privileges/i })).toBeVisible();
+    // SPA navigation doesn't fire a "load" event, so wait for content instead
+    await expect(page.getByRole('heading', { name: /privileges/i })).toBeVisible({ timeout: 10_000 });
     // Some privilege resource cells visible
     await expect(page.getByText(/members|finance|groups/i).first()).toBeVisible();
   });
@@ -68,11 +67,11 @@ test.describe('Roles', () => {
     const roleList = new RoleListPage(page);
     await roleList.goto();
 
-    // Delete uses confirm() dialog and <a> link, not a button
+    // Delete uses confirm() dialog and onClick handler on <a> tag
     page.once('dialog', (d) => d.accept());
     await roleList.deleteLink(ROLE_NAME).click();
 
-    await expect(page.getByText(ROLE_NAME)).toBeHidden({ timeout: 6_000 });
+    await expect(roleList.roleRow(ROLE_NAME)).toBeHidden({ timeout: 6_000 });
   });
 });
 
@@ -88,19 +87,23 @@ test.describe('System users', () => {
   });
 
   test('add a new user', async ({ adminPage: page }) => {
-    const userEditor = new UserEditorPage(page);
-    await userEditor.gotoNew();
+    const userList = new UserListPage(page);
+    await userList.goto();
 
+    // Navigate to /users/new via the nav bar "Add" link
+    await userList.addNewLink().click();
+    await page.getByRole('heading', { name: 'Add New User' }).waitFor({ timeout: 10_000 });
+
+    const userEditor = new UserEditorPage(page);
     await userEditor.nameInput().fill(USER_NAME);
     await userEditor.emailInput().fill(`${USER_UNAME}@beacon2-e2e.invalid`);
     await userEditor.usernameInput().fill(USER_UNAME);
-    // Password input
-    await page.locator('input[name="password"], input[type="password"]').first().fill('TestUser99!');
+    await userEditor.passwordInput().fill('TestUser99!');
 
     await userEditor.saveButton().click();
-    await page.waitForURL(/\/users\/[^/]+$/, { timeout: 10_000 });
 
-    await expect(page.getByText(USER_NAME)).toBeVisible();
+    // After save, should show success or redirect to the user editor
+    await expect(userEditor.successBanner()).toBeVisible({ timeout: 10_000 });
   });
 
   test('new user appears in the users list', async ({ adminPage: page }) => {
@@ -113,8 +116,9 @@ test.describe('System users', () => {
     const userList = new UserListPage(page);
     await userList.goto();
 
-    await userList.editLink(USER_NAME).click();
-    await page.waitForURL(/\/users\/[^/]+$/);
+    // Click the user name button to navigate to the editor
+    await userList.nameButton(USER_NAME).click();
+    await page.getByRole('heading', { name: 'System User Record' }).waitFor({ timeout: 10_000 });
 
     const editor = new UserEditorPage(page);
     await editor.nameInput().fill(USER_NAME);  // same — just save
@@ -127,13 +131,11 @@ test.describe('System users', () => {
     const userList = new UserListPage(page);
     await userList.goto();
 
-    await userList.editLink(USER_NAME).click();
-    await page.waitForURL(/\/users\/[^/]+$/);
-
+    // Delete button is in the user list row (not on the editor page)
+    const row = userList.userRow(USER_NAME);
     page.once('dialog', (d) => d.accept());
-    await new UserEditorPage(page).deleteButton().click();
+    await row.getByRole('button', { name: /delete/i }).click();
 
-    await page.waitForURL('/users', { timeout: 10_000 });
-    await expect(page.getByText(USER_NAME)).toBeHidden({ timeout: 5_000 });
+    await expect(page.getByText(USER_NAME)).toBeHidden({ timeout: 6_000 });
   });
 });

@@ -64,7 +64,7 @@ export class TransactionEditorPage {
       return false;
     });
     if (!clicked) await this.page.goto('/finance/transactions/new');
-    await this.page.getByRole('heading', { name: /transaction/i }).waitFor();
+    await this.page.getByRole('heading', { name: 'Add Transaction' }).waitFor();
   }
 
   /** Transaction type toggle — buttons labelled "Money received" / "Payment" */
@@ -103,6 +103,7 @@ export class FinanceLedgerPage {
       return false;
     });
     if (!clicked) await this.page.goto('/finance/ledger?view=category');
+    await this.page.getByRole('heading', { name: /ledger/i }).waitFor();
   }
 
   async gotoByGroup() {
@@ -112,6 +113,7 @@ export class FinanceLedgerPage {
       return false;
     });
     if (!clicked) await this.page.goto('/finance/ledger?view=group');
+    await this.page.getByRole('heading', { name: /ledger/i }).waitFor();
   }
 
   transactionRow(payee) {
