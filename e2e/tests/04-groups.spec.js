@@ -37,9 +37,9 @@ test.describe('Add and edit a group', () => {
     await recordPage.gotoNew();
 
     // Fill name (required)
-    await page.locator('input[name="name"]').first().fill(GROUP_NAME);
+    await recordPage.nameInput().fill(GROUP_NAME);
 
-    await page.getByRole('button', { name: /save/i }).first().click();
+    await recordPage.saveButton().click();
 
     // After save, URL should become /groups/:id
     await page.waitForURL(/\/groups\/[^/]+$/, { timeout: 10_000 });
@@ -60,9 +60,9 @@ test.describe('Add and edit a group', () => {
     await page.waitForURL(/\/groups\/[^/]+$/);
 
     // Edit the name (append suffix)
-    const nameInput = page.locator('input[name="name"]').first();
-    await nameInput.fill(GROUP_NAME);  // ensure no stale value
-    await page.getByRole('button', { name: /save/i }).first().click();
+    const recordPage = new GroupRecordPage(page);
+    await recordPage.nameInput().fill(GROUP_NAME);  // ensure no stale value
+    await recordPage.saveButton().click();
 
     await expect(page.getByText(/saved/i).first()).toBeVisible({ timeout: 6_000 });
   });
