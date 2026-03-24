@@ -92,8 +92,14 @@ test.describe('System users', () => {
     // Step 1: Create a member to link to the new user
     const memberEditor = new MemberEditorPage(page);
     await memberEditor.gotoNew();
-    await memberEditor.surnameInput().fill(MEMBER_SURNAME);
-    await memberEditor.forenamesInput().fill(MEMBER_FORENAMES);
+    await memberEditor.fillMinimal({
+      forenames: MEMBER_FORENAMES,
+      surname:   MEMBER_SURNAME,
+      statusName: 'Current',
+      className:  'Ordinary',
+      postcode:   'SW1A 1AA',
+      joinedOn:   '01/01/2025',
+    });
     await memberEditor.saveButton().click();
     // Wait for save success (banner appears, then SPA redirects after 1200ms)
     await expect(page.getByText(/saved/i).first()).toBeVisible({ timeout: 10_000 });
