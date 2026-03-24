@@ -48,13 +48,14 @@ export class MemberEditorPage {
 
   // ── Buttons ─────────────────────────────────────────────────────────────
 
-  saveButton()   { return this.page.getByRole('button', { name: /save/i }).first(); }
+  // Button text is "Add Member" for new, "Save" for existing, "Saving…" while in-flight
+  saveButton()   { return this.page.getByRole('button', { name: /save|add member/i }).first(); }
   deleteButton() { return this.page.getByRole('button', { name: /delete/i }).first(); }
 
   // ── Feedback ────────────────────────────────────────────────────────────
 
   errorBanner()   { return this.page.locator('.bg-red-50.border-red-300').first(); }
-  successBanner() { return this.page.getByText('✓ Saved successfully.'); }
+  successBanner() { return this.page.getByText('✓ Member record saved.'); }
 
   fieldError(name) {
     // Field errors appear after the relevant input
