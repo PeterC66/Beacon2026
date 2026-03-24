@@ -113,8 +113,26 @@ test.describe('System users', () => {
     await page.getByRole('heading', { name: 'Add New User' }).waitFor({ timeout: 10_000 });
 
     // Step 4: Select the member from the dropdown
+    // Label format: "Surname, Forenames" (see UserEditor.jsx)
     const memberSelect = page.locator('select[name="memberId"]');
-    await memberSelect.selectOption({ label: new RegExp(MEMBER_SURNAME) });
+    await memberSelect.waitFor({ timeout: 10_000 });
+    // Wait for options to load from API, then pick by partial text match
+    await page.waitForFunction(
+      (surname) => {
+        const sel = document.querySelector('select[name="memberId"]');
+        return sel && [...sel.options].some((o) => o.text.includes(surname));
+      },
+      MEMBER_SURNAME,
+      { timeout: 10_000 },
+    );
+    const optionLabel = await memberSelect.evaluate(
+      (sel, surname) => {
+        const opt = [...sel.options].find((o) => o.text.includes(surname));
+        return opt ? opt.text : null;
+      },
+      MEMBER_SURNAME,
+    );
+    await memberSelect.selectOption({ label: optionLabel });
 
     // Step 5: Fill required fields
     await page.locator('input[name="username"]').fill(USER_UNAME);
