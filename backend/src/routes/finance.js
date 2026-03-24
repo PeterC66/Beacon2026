@@ -1225,10 +1225,16 @@ async function getStatementData(tenantSlug, accountId, yearNum) {
     yearNum, settings.year_start_month, settings.year_start_day,
   );
 
+  // accountId can be 'all' or a comma-separated list of IDs
   const isAll = accountId === 'all';
-  const accounts = isAll
-    ? await tenantQuery(tenantSlug, `SELECT id, name, balance_brought_forward::float FROM finance_accounts WHERE active = true ORDER BY sort_order, name`)
-    : await tenantQuery(tenantSlug, `SELECT id, name, balance_brought_forward::float FROM finance_accounts WHERE id = $1`, [accountId]);
+  let accounts;
+  if (isAll) {
+    accounts = await tenantQuery(tenantSlug, `SELECT id, name, balance_brought_forward::float FROM finance_accounts WHERE active = true ORDER BY sort_order, name`);
+  } else {
+    const requestedIds = accountId.split(',').map((s) => s.trim()).filter(Boolean);
+    if (requestedIds.length === 0) throw AppError('At least one account must be selected.', 400);
+    accounts = await tenantQuery(tenantSlug, `SELECT id, name, balance_brought_forward::float FROM finance_accounts WHERE id = ANY($1::text[]) ORDER BY sort_order, name`, [requestedIds]);
+  }
 
   if (!isAll && accounts.length === 0) throw AppError('Account not found.', 404);
 
@@ -1288,7 +1294,12 @@ async function getStatementData(tenantSlug, accountId, yearNum) {
   const totalOut      = yearTotals?.total_out ?? 0;
   const closingBalance = openingBalance + totalIn - totalOut;
 
-  const accountLabel = isAll ? 'All Accounts' : accounts[0]?.name ?? '';
+  // Build label: "All Accounts", single name, or comma-separated names
+  const allActive = await tenantQuery(tenantSlug, `SELECT COUNT(*)::int AS count FROM finance_accounts WHERE active = true`);
+  const isEffectivelyAll = isAll || accounts.length === (allActive[0]?.count ?? 0);
+  const accountLabel = isEffectivelyAll
+    ? 'All Accounts'
+    : accounts.map((a) => a.name).join(', ');
 
   return { yearNum, yearStart, yearEnd, accountLabel, openingBalance, totalIn, totalOut, closingBalance, categoryRows, pendingCount };
 }

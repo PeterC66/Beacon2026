@@ -20,7 +20,8 @@ function fmtAmt(n) {
 export default function FinancialStatement() {
   const { can, tenant } = useAuth();
   const [accounts,     setAccounts]     = useState([]);
-  const [accountId,    setAccountId]    = useState('all');
+  const [selectedIds,  setSelectedIds]  = useState(new Set());  // set of account id strings
+  const [allChecked,   setAllChecked]   = useState(true);
   const [year,         setYear]         = useState(CURRENT_YEAR);
   const [data,         setData]         = useState(null);
   const [loading,      setLoading]      = useState(false);
@@ -31,18 +32,54 @@ export default function FinancialStatement() {
   useEffect(() => { loadAccounts(); }, []);
 
   async function loadAccounts() {
-    try { setAccounts(await financeApi.listAccounts()); }
-    catch (err) { setError(err.message); }
+    try {
+      const accts = await financeApi.listAccounts();
+      setAccounts(accts);
+      // Default: all accounts selected
+      setSelectedIds(new Set(accts.map((a) => String(a.id))));
+      setAllChecked(true);
+    } catch (err) { setError(err.message); }
     finally { setLoadingAccts(false); }
+  }
+
+  function handleAllToggle() {
+    if (allChecked) {
+      // Uncheck all
+      setSelectedIds(new Set());
+      setAllChecked(false);
+    } else {
+      // Check all
+      setSelectedIds(new Set(accounts.map((a) => String(a.id))));
+      setAllChecked(true);
+    }
+  }
+
+  function handleAccountToggle(id) {
+    const idStr = String(id);
+    const next = new Set(selectedIds);
+    if (next.has(idStr)) {
+      next.delete(idStr);
+    } else {
+      next.add(idStr);
+    }
+    setSelectedIds(next);
+    setAllChecked(next.size === accounts.length);
+  }
+
+  // Derive the accountId parameter to send to the API
+  function getAccountParam() {
+    if (allChecked || selectedIds.size === accounts.length) return 'all';
+    return Array.from(selectedIds);
   }
 
   async function handleView(e) {
     e.preventDefault();
+    if (selectedIds.size === 0) { setError('Please select at least one account.'); return; }
     setLoading(true);
     setError(null);
     setData(null);
     try {
-      const d = await financeApi.getStatement(accountId, year);
+      const d = await financeApi.getStatement(getAccountParam(), year);
       setData(d);
     } catch (err) { setError(err.message); }
     finally { setLoading(false); }
@@ -51,6 +88,8 @@ export default function FinancialStatement() {
   async function handleDownload() {
     setDownloading(true);
     try {
+      const param = getAccountParam();
+      const accountId = Array.isArray(param) ? param.join(',') : param;
       await requestBlob(`/finance/statement/download?accountId=${encodeURIComponent(accountId)}&year=${year}&format=xlsx`);
     } catch (err) { alert(err.message); }
     finally { setDownloading(false); }
@@ -76,13 +115,34 @@ export default function FinancialStatement() {
 
         {/* Selector form */}
         <form onSubmit={handleView} className="bg-white/90 rounded-lg shadow-sm p-4 mb-5">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-end">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-start">
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Account</label>
-              <select name="accountId" value={accountId} onChange={(e) => setAccountId(e.target.value)} className={`${inputCls} w-full`}>
-                <option value="all">All accounts combined</option>
-                {accounts.map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}
-              </select>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Accounts</label>
+              <div className="border border-slate-300 rounded bg-white max-h-48 overflow-y-auto px-2 py-1.5">
+                {/* All accounts toggle */}
+                <label className="flex items-center gap-2 py-1 text-sm font-medium text-slate-700 border-b border-slate-200 mb-1 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={allChecked}
+                    onChange={handleAllToggle}
+                    className="rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                  />
+                  All accounts
+                </label>
+                {/* Individual accounts */}
+                {loadingAccts && <p className="text-xs text-slate-400 py-1">Loading…</p>}
+                {accounts.map((a) => (
+                  <label key={a.id} className="flex items-center gap-2 py-0.5 text-sm text-slate-700 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={selectedIds.has(String(a.id))}
+                      onChange={() => handleAccountToggle(a.id)}
+                      className="rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                    />
+                    {a.name}
+                  </label>
+                ))}
+              </div>
             </div>
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">Financial year</label>
@@ -92,7 +152,7 @@ export default function FinancialStatement() {
             </div>
           </div>
           <div className="mt-3 flex gap-3 flex-wrap">
-            <button type="submit" disabled={loading} className={btnPrimary}>
+            <button type="submit" disabled={loading || selectedIds.size === 0} className={btnPrimary}>
               {loading ? 'Loading…' : 'View Statement'}
             </button>
             {data && canDownload && (
