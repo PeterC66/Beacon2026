@@ -440,6 +440,7 @@ export const settings = {
   getYearConfig:          () => request('/settings/year-config'),
   getNewMemberDefaults:   () => request('/settings/new-member-defaults'),
   getCustomFieldLabels:   () => request('/settings/custom-field-labels'),
+  getSiteworksConfig:     () => request('/settings/siteworks-config'),
 };
 
 // ─── Custom Fields ────────────────────────────────────────────────────────

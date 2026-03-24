@@ -87,6 +87,9 @@ Beacon2 is a ground-up rebuild with these goals:
 - **Group ledger** — independent from finance; per-group in/out; download Excel
 - **Venues** — CRUD; venue dropdown on group details
 - **Faculties** — inline CRUD
+- **SiteWorks integration** — tenant-wide "SiteWorks Activated" toggle in System Settings;
+  when enabled, hides Schedule tab and scheduling/venue fields (When, Start time, End time,
+  Venue, Enquiries, Information) from Group record; data preserved in DB
 
 ### Finance module
 - **Finance accounts** — CRUD, locked protection, active toggle, balance b/f,

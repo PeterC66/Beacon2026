@@ -5,7 +5,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
-import { groups as groupsApi, faculties as facultiesApi, members as membersApi, venues as venuesApi, requestBlob } from '../../lib/api.js';
+import { groups as groupsApi, faculties as facultiesApi, members as membersApi, venues as venuesApi, settings as settingsApi, requestBlob } from '../../lib/api.js';
 import { useAuth } from '../../context/AuthContext.jsx';
 import NavBar from '../../components/NavBar.jsx';
 import PageHeader from '../../components/PageHeader.jsx';
@@ -16,7 +16,7 @@ import ScrollButtons from '../../components/ScrollButtons.jsx';
 
 // ─── Details sub-component ────────────────────────────────────────────────
 
-function GroupDetails({ groupId, faculties, venues, onSaved, onDeleted }) {
+function GroupDetails({ groupId, faculties, venues, onSaved, onDeleted, siteworksActivated }) {
   const { can } = useAuth();
   const isNew = !groupId;
 
@@ -168,45 +168,47 @@ function GroupDetails({ groupId, faculties, venues, onSaved, onDeleted }) {
         </div>
       </div>
 
-      {/* When */}
-      <div>
-        <label className={labelCls}>When</label>
-        <input name="whenText" className={`${inputCls} w-full`} placeholder="e.g. 2nd Thursday at 2:00pm"
-          value={form.whenText} onChange={(e) => set('whenText', e.target.value)} disabled={!canChange} />
-      </div>
-
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        {/* Start time */}
+      {!siteworksActivated && (<>
+        {/* When */}
         <div>
-          <label className={labelCls}>Start time</label>
-          <input name="startTime" type="time" className={`${inputCls} w-full`} value={form.startTime}
-            onChange={(e) => set('startTime', e.target.value)} disabled={!canChange} />
+          <label className={labelCls}>When</label>
+          <input name="whenText" className={`${inputCls} w-full`} placeholder="e.g. 2nd Thursday at 2:00pm"
+            value={form.whenText} onChange={(e) => set('whenText', e.target.value)} disabled={!canChange} />
         </div>
 
-        {/* End time */}
-        <div>
-          <label className={labelCls}>End time</label>
-          <input name="endTime" type="time" className={`${inputCls} w-full`} value={form.endTime}
-            onChange={(e) => set('endTime', e.target.value)} disabled={!canChange} />
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {/* Start time */}
+          <div>
+            <label className={labelCls}>Start time</label>
+            <input name="startTime" type="time" className={`${inputCls} w-full`} value={form.startTime}
+              onChange={(e) => set('startTime', e.target.value)} disabled={!canChange} />
+          </div>
+
+          {/* End time */}
+          <div>
+            <label className={labelCls}>End time</label>
+            <input name="endTime" type="time" className={`${inputCls} w-full`} value={form.endTime}
+              onChange={(e) => set('endTime', e.target.value)} disabled={!canChange} />
+          </div>
         </div>
-      </div>
 
-      {/* Venue */}
-      <div>
-        <label className={labelCls}>Venue</label>
-        <select name="venueId" className={`${inputCls} w-full`} value={form.venueId}
-          onChange={(e) => set('venueId', e.target.value)} disabled={!canChange}>
-          <option value="">— none —</option>
-          {venues.map((v) => <option key={v.id} value={v.id}>{v.name}{v.town ? `, ${v.town}` : ''}</option>)}
-        </select>
-      </div>
+        {/* Venue */}
+        <div>
+          <label className={labelCls}>Venue</label>
+          <select name="venueId" className={`${inputCls} w-full`} value={form.venueId}
+            onChange={(e) => set('venueId', e.target.value)} disabled={!canChange}>
+            <option value="">— none —</option>
+            {venues.map((v) => <option key={v.id} value={v.id}>{v.name}{v.town ? `, ${v.town}` : ''}</option>)}
+          </select>
+        </div>
 
-      {/* Enquiries */}
-      <div>
-        <label className={labelCls}>Enquiries</label>
-        <input name="enquiries" className={`${inputCls} w-full`} placeholder="Name/phone for enquirers"
-          value={form.enquiries} onChange={(e) => set('enquiries', e.target.value)} disabled={!canChange} />
-      </div>
+        {/* Enquiries */}
+        <div>
+          <label className={labelCls}>Enquiries</label>
+          <input name="enquiries" className={`${inputCls} w-full`} placeholder="Name/phone for enquirers"
+            value={form.enquiries} onChange={(e) => set('enquiries', e.target.value)} disabled={!canChange} />
+        </div>
+      </>)}
 
       {/* Max members */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -247,11 +249,13 @@ function GroupDetails({ groupId, faculties, venues, onSaved, onDeleted }) {
       </div>
 
       {/* Information */}
-      <div>
-        <label className={labelCls}>Information (may be shown publicly)</label>
-        <textarea name="information" rows={4} className={`${inputCls} w-full resize-y`} value={form.information}
-          onChange={(e) => set('information', e.target.value)} disabled={!canChange} />
-      </div>
+      {!siteworksActivated && (
+        <div>
+          <label className={labelCls}>Information (may be shown publicly)</label>
+          <textarea name="information" rows={4} className={`${inputCls} w-full resize-y`} value={form.information}
+            onChange={(e) => set('information', e.target.value)} disabled={!canChange} />
+        </div>
+      )}
 
       {/* Notes */}
       <div>
@@ -1488,6 +1492,7 @@ export default function GroupRecord() {
   const [faculties, setFaculties] = useState([]);
   const [allVenues, setAllVenues] = useState([]);
   const [groupName, setGroupName] = useState('');
+  const [siteworksActivated, setSiteworksActivated] = useState(false);
 
   const isNew = id === undefined;
   const activeTab = searchParams.get('tab') ?? 'details';
@@ -1495,6 +1500,9 @@ export default function GroupRecord() {
   useEffect(() => {
     facultiesApi.list().then(setFaculties).catch(() => {});
     venuesApi.list().then(setAllVenues).catch(() => {});
+    settingsApi.getSiteworksConfig()
+      .then((cfg) => setSiteworksActivated(cfg.siteworksActivated ?? false))
+      .catch(() => {});
   }, []);
 
   useEffect(() => {
@@ -1526,7 +1534,7 @@ export default function GroupRecord() {
   const tabs = [
     { key: 'details',  label: 'Details',  available: true },
     { key: 'members',  label: 'Members',  available: !isNew },
-    { key: 'schedule', label: 'Schedule', available: !isNew },
+    { key: 'schedule', label: 'Schedule', available: !isNew && !siteworksActivated },
     { key: 'ledger',   label: 'Ledger',   available: !isNew && (can('group_ledger_all', 'view') || can('group_ledger_as_leader', 'view')) },
   ];
 
@@ -1576,12 +1584,13 @@ export default function GroupRecord() {
               venues={allVenues}
               onSaved={handleSaved}
               onDeleted={handleDeleted}
+              siteworksActivated={siteworksActivated}
             />
           )}
           {!isNew && activeTab === 'members' && (
             <GroupMembers groupId={id} />
           )}
-          {!isNew && activeTab === 'schedule' && (
+          {!isNew && activeTab === 'schedule' && !siteworksActivated && (
             <GroupSchedule groupId={id} />
           )}
           {!isNew && activeTab === 'ledger' && (
