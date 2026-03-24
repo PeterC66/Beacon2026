@@ -58,6 +58,8 @@ export class TransactionEditorPage {
 
   async gotoNew() {
     // SPA navigation — see CLAUDE-E2E.md
+    // Wait for the SPA link to exist in the DOM before clicking
+    await this.page.waitForSelector('a[href="/finance/transactions/new"]', { timeout: 5_000 }).catch(() => null);
     const clicked = await this.page.evaluate(() => {
       const link = document.querySelector('a[href="/finance/transactions/new"]');
       if (link) { link.click(); return true; }
