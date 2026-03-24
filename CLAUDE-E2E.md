@@ -208,6 +208,15 @@ UX convenience. This means locators like `getByRole('link', { name: '…' })`
 may match two elements, causing Playwright strict mode violations. Always use
 `.first()` on such locators.
 
+### POM locators must match all button-text variants
+
+Submit buttons often have different text depending on context — e.g. "Add Member"
+for new records vs "Save" for existing ones. POM locators must match **all**
+variants. Use a regex: `/save|add member/i` rather than just `/save/i`.
+
+Similarly, success/error banner text in POM helpers must match the **exact**
+rendered text (e.g. `'✓ Member record saved.'`), not a generic approximation.
+
 ### DDL idempotency
 
 `ALTER TABLE ... ADD CONSTRAINT` fails with code `42710` if the constraint
