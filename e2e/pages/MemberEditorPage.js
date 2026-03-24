@@ -11,13 +11,39 @@ export class MemberEditorPage {
   async gotoNew() {
     // Prefer SPA link-click navigation to preserve the in-memory auth token.
     // page.goto() causes a full page reload which loses auth state.
-    const clicked = await this.page.evaluate(() => {
+    const currentUrl = this.page.url();
+    console.log(`[MemberEditorPage.gotoNew] Current URL before navigation: ${currentUrl}`);
+
+    const debugInfo = await this.page.evaluate(() => {
       const link = document.querySelector('a[href="/members/new"]');
-      if (link) { link.click(); return true; }
-      return false;
+      const allLinks = [...document.querySelectorAll('a')].map(a => a.getAttribute('href')).slice(0, 20);
+      return { found: !!link, allLinks, bodyLength: document.body.innerHTML.length };
     });
-    if (!clicked) await this.page.goto('/members/new');
-    await this.page.getByRole('heading', { name: 'Add New Member' }).waitFor();
+    console.log(`[MemberEditorPage.gotoNew] Link found: ${debugInfo.found}, body length: ${debugInfo.bodyLength}`);
+    console.log(`[MemberEditorPage.gotoNew] First 20 links on page: ${JSON.stringify(debugInfo.allLinks)}`);
+
+    if (debugInfo.found) {
+      await this.page.evaluate(() => {
+        document.querySelector('a[href="/members/new"]').click();
+      });
+      console.log(`[MemberEditorPage.gotoNew] SPA click succeeded`);
+    } else {
+      console.log(`[MemberEditorPage.gotoNew] Link NOT found — falling back to page.goto (full reload)`);
+      await this.page.goto('/members/new');
+    }
+
+    const urlAfterNav = this.page.url();
+    console.log(`[MemberEditorPage.gotoNew] URL after navigation: ${urlAfterNav}`);
+
+    await this.page.getByRole('heading', { name: 'Add New Member' }).waitFor({ timeout: 10_000 })
+      .catch(async (err) => {
+        const finalUrl = this.page.url();
+        const pageTitle = await this.page.title();
+        const bodyText = await this.page.locator('body').innerText().catch(() => '(could not read body)');
+        console.log(`[MemberEditorPage.gotoNew] HEADING NOT FOUND. URL: ${finalUrl}, title: ${pageTitle}`);
+        console.log(`[MemberEditorPage.gotoNew] Body text (first 500 chars): ${bodyText.slice(0, 500)}`);
+        throw err;
+      });
   }
 
   heading() {
