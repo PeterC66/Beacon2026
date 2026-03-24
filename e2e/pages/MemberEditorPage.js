@@ -11,39 +11,13 @@ export class MemberEditorPage {
   async gotoNew() {
     // Prefer SPA link-click navigation to preserve the in-memory auth token.
     // page.goto() causes a full page reload which loses auth state.
-    const currentUrl = this.page.url();
-    console.log(`[MemberEditorPage.gotoNew] Current URL before navigation: ${currentUrl}`);
-
-    const debugInfo = await this.page.evaluate(() => {
-      const link = document.querySelector('a[href="/members/new"]');
-      const allLinks = [...document.querySelectorAll('a')].map(a => a.getAttribute('href')).slice(0, 20);
-      return { found: !!link, allLinks, bodyLength: document.body.innerHTML.length };
-    });
-    console.log(`[MemberEditorPage.gotoNew] Link found: ${debugInfo.found}, body length: ${debugInfo.bodyLength}`);
-    console.log(`[MemberEditorPage.gotoNew] First 20 links on page: ${JSON.stringify(debugInfo.allLinks)}`);
-
-    if (debugInfo.found) {
-      await this.page.evaluate(() => {
-        document.querySelector('a[href="/members/new"]').click();
-      });
-      console.log(`[MemberEditorPage.gotoNew] SPA click succeeded`);
+    const link = this.page.locator('a[href="/members/new"]');
+    if (await link.count() > 0) {
+      await link.click();
     } else {
-      console.log(`[MemberEditorPage.gotoNew] Link NOT found — falling back to page.goto (full reload)`);
       await this.page.goto('/members/new');
     }
-
-    const urlAfterNav = this.page.url();
-    console.log(`[MemberEditorPage.gotoNew] URL after navigation: ${urlAfterNav}`);
-
-    await this.page.getByRole('heading', { name: 'Add New Member' }).waitFor({ timeout: 10_000 })
-      .catch(async (err) => {
-        const finalUrl = this.page.url();
-        const pageTitle = await this.page.title();
-        const bodyText = await this.page.locator('body').innerText().catch(() => '(could not read body)');
-        console.log(`[MemberEditorPage.gotoNew] HEADING NOT FOUND. URL: ${finalUrl}, title: ${pageTitle}`);
-        console.log(`[MemberEditorPage.gotoNew] Body text (first 500 chars): ${bodyText.slice(0, 500)}`);
-        throw err;
-      });
+    await this.page.getByRole('heading', { name: 'Add New Member' }).waitFor({ timeout: 10_000 });
   }
 
   heading() {
@@ -93,65 +67,48 @@ export class MemberEditorPage {
   /**
    * Fill in the minimum required fields to create a member.
    * statusName / className must already exist in the test tenant.
+   *
+   * NOTE: On the "new member" form the status select is hidden — the
+   * component auto-sets status to "Current" via useEffect. We only
+   * interact with the status select when it exists (editing an
+   * existing member).
    */
   async fillMinimal({ forenames, surname, statusName, className, postcode, joinedOn }) {
-    console.log(`[fillMinimal] Starting...`);
-
-    console.log(`[fillMinimal] Filling forenames...`);
     await this.forenamesInput().fill(forenames);
-    console.log(`[fillMinimal] Forenames done`);
-
-    console.log(`[fillMinimal] Filling surname...`);
     await this.surnameInput().fill(surname);
-    console.log(`[fillMinimal] Surname done`);
 
-    // Debug: list available status options
-    const statusOptions = await this.statusSelect().locator('option').allInnerTexts();
-    console.log(`[fillMinimal] Status options: ${JSON.stringify(statusOptions)}`);
-    console.log(`[fillMinimal] Selecting status "${statusName}"...`);
-    await this.statusSelect().selectOption({ label: statusName });
-    console.log(`[fillMinimal] Status done`);
+    // Status select only exists on the edit form, not on "Add New Member".
+    // The new-member form auto-sets status to "Current" in a useEffect.
+    const statusCount = await this.statusSelect().count();
+    if (statusCount > 0) {
+      await this.statusSelect().selectOption({ label: statusName });
+    }
 
-    // Debug: list available class options
-    const classOptions = await this.classSelect().locator('option').allInnerTexts();
-    console.log(`[fillMinimal] Class options: ${JSON.stringify(classOptions)}`);
-    console.log(`[fillMinimal] Selecting class "${className}"...`);
+    // Class options load async from the API — wait for at least one
+    // real option (beyond the "— select —" placeholder) before selecting.
+    await this.page.waitForFunction(
+      (sel) => {
+        const select = document.querySelector(sel);
+        return select && select.options.length > 1;
+      },
+      'select[name="classId"]',
+      { timeout: 10_000 },
+    );
     await this.classSelect().selectOption({ label: className });
-    console.log(`[fillMinimal] Class done`);
 
-    console.log(`[fillMinimal] Filling postcode...`);
     await this.postcodeInput().fill(postcode);
-    console.log(`[fillMinimal] Postcode done`);
-
     if (joinedOn) {
-      console.log(`[fillMinimal] Filling joinedOn...`);
       await this.joinedOnInput().fill(joinedOn);
-      console.log(`[fillMinimal] JoinedOn done. Waiting for next renewal date...`);
       // Wait for the auto-computed "Next renewal" date to be populated.
       // The frontend fetches year-config from the API and computes the
       // renewal date in a useEffect — this can lag behind the fill,
       // especially in CI where the API may be slow.
       await this.nextRenewalInput().waitFor({ state: 'visible' });
-      console.log(`[fillMinimal] Next renewal input visible. Waiting for value...`);
-
-      // Debug: check how many dd/mm/yyyy inputs exist
-      const dateInputCount = await this.page.locator('input[placeholder="dd/mm/yyyy"]').count();
-      console.log(`[fillMinimal] Number of dd/mm/yyyy inputs: ${dateInputCount}`);
-
       await this.page.waitForFunction(
         (sel) => { const el = document.querySelectorAll(sel)[1]; return el && el.value.length > 0; },
         'input[placeholder="dd/mm/yyyy"]',
         { timeout: 10_000 },
-      ).catch(async (err) => {
-        // Debug: check current values of all date inputs
-        const dateValues = await this.page.evaluate((sel) => {
-          return [...document.querySelectorAll(sel)].map((el, i) => ({ index: i, value: el.value, name: el.name }));
-        }, 'input[placeholder="dd/mm/yyyy"]');
-        console.log(`[fillMinimal] TIMEOUT waiting for renewal date. Date inputs: ${JSON.stringify(dateValues)}`);
-        throw err;
-      });
-      console.log(`[fillMinimal] Next renewal date populated`);
+      );
     }
-    console.log(`[fillMinimal] Complete`);
   }
 }

@@ -47,25 +47,8 @@ test.describe('Add new member', () => {
 
   test('create a member with required fields', async ({ adminPage: page }) => {
     const editor = new MemberEditorPage(page);
-
-    // Listen for console messages from the browser
-    page.on('console', (msg) => {
-      if (msg.type() === 'error' || msg.text().includes('401') || msg.text().includes('auth'))
-        console.log(`[BROWSER ${msg.type()}] ${msg.text()}`);
-    });
-
-    // Listen for failed network requests
-    page.on('response', (response) => {
-      if (response.status() >= 400) {
-        console.log(`[HTTP ${response.status()}] ${response.url()}`);
-      }
-    });
-
-    console.log(`[TEST] Starting gotoNew...`);
     await editor.gotoNew();
-    console.log(`[TEST] gotoNew complete. URL: ${page.url()}`);
 
-    console.log(`[TEST] Filling minimal fields...`);
     await editor.fillMinimal({
       forenames:  TEST_FORENAMES,
       surname:    TEST_SURNAME,
@@ -74,32 +57,9 @@ test.describe('Add new member', () => {
       postcode:   'OX1 1AA',
       joinedOn:   '01/01/2024',
     });
-    console.log(`[TEST] fillMinimal complete`);
-
-    // Debug: check what the save button looks like
-    const btnText = await editor.saveButton().innerText().catch(() => '(not found)');
-    console.log(`[TEST] Save button text: "${btnText}"`);
 
     await editor.saveButton().click();
-    console.log(`[TEST] Save button clicked. Waiting for success banner...`);
-
-    // Confirm the save succeeded before checking the URL.
-    // If the success banner doesn't appear, the form probably has a
-    // validation error or the API call failed.
-    await expect(editor.successBanner()).toBeVisible({ timeout: 10_000 })
-      .catch(async (err) => {
-        const url = page.url();
-        const bodyText = await page.locator('body').innerText().catch(() => '(unreadable)');
-        console.log(`[TEST] SUCCESS BANNER NOT FOUND. URL: ${url}`);
-        console.log(`[TEST] Page body (first 1000 chars): ${bodyText.slice(0, 1000)}`);
-        // Check for any error banners
-        const errorVisible = await editor.errorBanner().isVisible().catch(() => false);
-        if (errorVisible) {
-          const errorText = await editor.errorBanner().innerText().catch(() => '(unreadable)');
-          console.log(`[TEST] Error banner found: ${errorText}`);
-        }
-        throw err;
-      });
+    await expect(editor.successBanner()).toBeVisible({ timeout: 10_000 });
 
     // After save, URL changes to the edit URL (/members/:id)
     await page.waitForURL(/\/members\/[^/]+$/, { timeout: 10_000 });
