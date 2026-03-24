@@ -19,7 +19,7 @@ export class GroupListPage {
   }
 
   addNewButton() {
-    return this.page.getByRole('link', { name: 'Add new group' });
+    return this.page.getByRole('link', { name: 'Add new group' }).first();
   }
 
   groupLink(name) {
@@ -38,13 +38,25 @@ export class GroupRecordPage {
   }
 
   async gotoNew() {
-    // SPA navigation — see CLAUDE-E2E.md
+    // Navigate to /groups first (SPA), then click "Add New Group"
     const clicked = await this.page.evaluate(() => {
       const link = document.querySelector('a[href="/groups/new"]');
       if (link) { link.click(); return true; }
       return false;
     });
-    if (!clicked) await this.page.goto('/groups/new');
+    if (!clicked) {
+      // No /groups/new link on current page — go to groups list first
+      const listClicked = await this.page.evaluate(() => {
+        const link = document.querySelector('a[href="/groups"]');
+        if (link) { link.click(); return true; }
+        return false;
+      });
+      if (!listClicked) await this.page.goto('/groups');
+      await this.page.getByRole('heading', { name: 'Groups' }).waitFor();
+      // Now click "Add New Group" from the list page NavBar
+      await this.page.getByRole('link', { name: /add new group/i }).first().click();
+    }
+    await this.page.getByRole('heading', { name: /add new group/i }).waitFor();
   }
 
   nameInput()        { return this.page.locator('input[name="name"]').first(); }

@@ -33,7 +33,8 @@ test.describe('Group list', () => {
 
 test.describe('Add and edit a group', () => {
   test('create a new group', async ({ adminPage: page }) => {
-    await page.goto('/groups/new');
+    const recordPage = new GroupRecordPage(page);
+    await recordPage.gotoNew();
 
     // Fill name (required)
     await page.locator('input[name="name"]').first().fill(GROUP_NAME);
