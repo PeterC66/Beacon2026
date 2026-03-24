@@ -60,6 +60,11 @@ test.describe('Add new member', () => {
 
     await editor.saveButton().click();
 
+    // Confirm the save succeeded before checking the URL.
+    // If the success banner doesn't appear, the form probably has a
+    // validation error or the API call failed.
+    await expect(editor.successBanner()).toBeVisible({ timeout: 10_000 });
+
     // After save, URL changes to the edit URL (/members/:id)
     await page.waitForURL(/\/members\/[^/]+$/, { timeout: 10_000 });
     createdMemberUrl = page.url();
