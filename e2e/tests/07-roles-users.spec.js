@@ -96,7 +96,7 @@ test.describe('System users', () => {
       forenames: MEMBER_FORENAMES,
       surname:   MEMBER_SURNAME,
       statusName: 'Current',
-      className:  'Ordinary',
+      className:  'Individual',
       postcode:   'SW1A 1AA',
       joinedOn:   '01/01/2025',
     });

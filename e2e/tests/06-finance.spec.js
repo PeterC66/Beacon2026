@@ -11,9 +11,9 @@
 //  ✓ Delete a non-locked account → removed
 //  ✓ Finance categories page loads
 //  ✓ Add a finance category → appears in list
-//  ✓ Delete a category → removed
 //  ✓ Add a money-in transaction → appears in ledger
 //  ✓ Finance ledger loads by account, category, and group
+//  ✓ Delete a category → removed (after transaction tests use it)
 
 import { test, expect } from '../fixtures/admin.js';
 import {
@@ -58,7 +58,7 @@ test.describe('Finance accounts', () => {
   });
 });
 
-// ── Finance Categories ────────────────────────────────────────────────────
+// ── Finance Categories (add) ────────────────────────────────────────────
 
 test.describe('Finance categories', () => {
   test('categories page loads', async ({ adminPage: page }) => {
@@ -76,20 +76,9 @@ test.describe('Finance categories', () => {
 
     await expect(page.getByText(CAT_NAME)).toBeVisible({ timeout: 6_000 });
   });
-
-  test('delete the new category', async ({ adminPage: page }) => {
-    const catPage = new FinanceCategoriesPage(page);
-    await catPage.goto();
-
-    const row = catPage.categoryRow(CAT_NAME);
-    page.once('dialog', (d) => d.accept());
-    await row.getByRole('button', { name: /delete/i }).click();
-
-    await expect(page.getByText(CAT_NAME)).toBeHidden({ timeout: 6_000 });
-  });
 });
 
-// ── Transactions ──────────────────────────────────────────────────────────
+// ── Transactions (depend on the category created above) ─────────────────
 
 test.describe('Finance transactions', () => {
   test('add a money-in transaction', async ({ adminPage: page }) => {
@@ -126,6 +115,21 @@ test.describe('Finance transactions', () => {
 
     // The payee should appear somewhere in the ledger
     await expect(page.getByText(PAYEE)).toBeVisible({ timeout: 6_000 });
+  });
+});
+
+// ── Category cleanup (after transaction tests used it) ──────────────────
+
+test.describe('Finance category cleanup', () => {
+  test('delete the new category', async ({ adminPage: page }) => {
+    const catPage = new FinanceCategoriesPage(page);
+    await catPage.goto();
+
+    const row = catPage.categoryRow(CAT_NAME);
+    page.once('dialog', (d) => d.accept());
+    await row.getByRole('button', { name: /delete/i }).click();
+
+    await expect(page.getByText(CAT_NAME)).toBeHidden({ timeout: 6_000 });
   });
 });
 
