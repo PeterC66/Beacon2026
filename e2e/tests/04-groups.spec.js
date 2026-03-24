@@ -41,9 +41,10 @@ test.describe('Add and edit a group', () => {
 
     await recordPage.saveButton().click();
 
-    // After save, URL should become /groups/:id
-    await page.waitForURL(/\/groups\/[^/]+$/, { timeout: 10_000 });
-    await expect(page.getByText(GROUP_NAME)).toBeVisible();
+    // After save, URL should become /groups/:id (not /groups/new)
+    await page.waitForURL(/\/groups\/(?!new\b)[^/]+$/, { timeout: 10_000 });
+    // The group name appears in the page heading once the record loads
+    await expect(page.getByRole('heading', { name: GROUP_NAME })).toBeVisible({ timeout: 10_000 });
   });
 
   test('new group appears in the group list', async ({ adminPage: page }) => {
