@@ -11,7 +11,7 @@ export class MemberEditorPage {
   async gotoNew() {
     // Prefer SPA link-click navigation to preserve the in-memory auth token.
     // page.goto() causes a full page reload which loses auth state.
-    const link = this.page.locator('a[href="/members/new"]');
+    const link = this.page.locator('a[href="/members/new"]').first();
     if (await link.count() > 0) {
       await link.click();
     } else {
@@ -62,6 +62,18 @@ export class MemberEditorPage {
     return this.page.locator(`[name="${name}"] ~ *`).filter({ hasText: /required|invalid|valid/i }).first();
   }
 
+  /** Wait for class select options to load from the API. */
+  async waitForClassOptions() {
+    await this.page.waitForFunction(
+      (sel) => {
+        const select = document.querySelector(sel);
+        return select && select.options.length > 1;
+      },
+      'select[name="classId"]',
+      { timeout: 10_000 },
+    );
+  }
+
   // ── Helpers ──────────────────────────────────────────────────────────────
 
   /**
@@ -84,16 +96,8 @@ export class MemberEditorPage {
       await this.statusSelect().selectOption({ label: statusName });
     }
 
-    // Class options load async from the API — wait for at least one
-    // real option (beyond the "— select —" placeholder) before selecting.
-    await this.page.waitForFunction(
-      (sel) => {
-        const select = document.querySelector(sel);
-        return select && select.options.length > 1;
-      },
-      'select[name="classId"]',
-      { timeout: 10_000 },
-    );
+    // Class options load async from the API — wait before selecting.
+    await this.waitForClassOptions();
     await this.classSelect().selectOption({ label: className });
 
     await this.postcodeInput().fill(postcode);
