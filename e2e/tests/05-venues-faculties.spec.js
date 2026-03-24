@@ -30,17 +30,20 @@ test.describe('Venues', () => {
   });
 
   test('add a new venue', async ({ adminPage: page }) => {
+    // Navigate to venue list first (SPA from Home), then to new venue form
+    await page.goto('/venues');
+    await expect(page.getByRole('heading', { name: /venues/i })).toBeVisible();
     await page.goto('/venues/new');
+    await expect(page.getByRole('heading', { name: /add new venue/i })).toBeVisible();
 
     await page.locator('input[name="name"]').first().fill(VENUE_NAME);
-    // Address fields are optional
-    await page.locator('input[name="postcode"], input[placeholder*="postcode" i]').first()
-      .fill('OX1 2AA').catch(() => {});
+    await page.locator('input[name="postcode"]').first().fill('OX1 2AA');
 
     await page.getByRole('button', { name: /save/i }).first().click();
 
-    // Redirects to the venue list or shows saved banner
-    await page.waitForURL(/\/venues/, { timeout: 10_000 });
+    // Editor shows saved banner then auto-redirects to /venues after 1200ms
+    await expect(page.getByText(/saved/i).first()).toBeVisible({ timeout: 6_000 });
+    await page.waitForURL(/\/venues$/, { timeout: 10_000 });
     await expect(page.getByText(VENUE_NAME)).toBeVisible({ timeout: 6_000 });
   });
 
@@ -51,10 +54,10 @@ test.describe('Venues', () => {
 
   test('edit venue details', async ({ adminPage: page }) => {
     await page.goto('/venues');
-    // Find and click the venue edit link
-    const row = page.getByRole('row').filter({ hasText: VENUE_NAME });
-    await row.getByRole('link', { name: /edit/i }).click();
-    await page.waitForURL(/\/venues\//);
+    // The venue name is a link to the editor
+    await page.getByRole('link', { name: VENUE_NAME }).first().click();
+    await page.waitForURL(/\/venues\/(?!new\b)[^/]+$/);
+    await expect(page.getByRole('heading', { name: /venue record/i })).toBeVisible();
 
     // Change the name slightly then save
     await page.locator('input[name="name"]').first().fill(VENUE_NAME);
@@ -64,10 +67,15 @@ test.describe('Venues', () => {
 
   test('delete the venue', async ({ adminPage: page }) => {
     await page.goto('/venues');
-    const row = page.getByRole('row').filter({ hasText: VENUE_NAME });
-    page.once('dialog', (d) => d.accept());
-    await row.getByRole('button', { name: /delete/i }).click();
+    // Click the venue name to go to the editor
+    await page.getByRole('link', { name: VENUE_NAME }).first().click();
+    await page.waitForURL(/\/venues\/(?!new\b)[^/]+$/);
 
+    page.once('dialog', (d) => d.accept());
+    await page.getByRole('button', { name: /delete/i }).click();
+
+    // Should redirect back to venues list with the venue removed
+    await page.waitForURL(/\/venues$/, { timeout: 10_000 });
     await expect(page.getByText(VENUE_NAME)).toBeHidden({ timeout: 6_000 });
   });
 });
