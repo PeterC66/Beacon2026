@@ -49,11 +49,21 @@ export const test = base.extend({
     await page.getByRole('button', { name: 'Enter' }).click();
     await page.waitForURL('/', { timeout: 10_000 });
     console.log(`[adminPage] Logged in. URL: ${page.url()}`);
-    // Wait for the Home page to actually render (links visible)
-    await page.waitForSelector('a[href="/members"]', { timeout: 5_000 }).catch(() => {
-      console.log(`[adminPage] WARNING: /members link not found after login — Home page may not have rendered`);
+
+    // Wait for the Home page to actually render.  The Home component fetches
+    // privileges via AuthContext before it can render links — in CI the backend
+    // may be slow (cold start / shared runner), so allow a generous timeout.
+    const homeStart = Date.now();
+    await page.waitForSelector('a[href="/members"]', { timeout: 15_000 }).catch(async () => {
+      // Dump diagnostic info so we can debug if the home page never renders
+      const bodyText = await page.evaluate(() => document.body?.innerText?.slice(0, 500)).catch(() => '<eval failed>');
+      const linkCount = await page.evaluate(() => document.querySelectorAll('a').length).catch(() => -1);
+      console.log(`[adminPage] WARNING: /members link not found after 15 s`);
+      console.log(`[adminPage]   URL: ${page.url()}`);
+      console.log(`[adminPage]   Total <a> tags: ${linkCount}`);
+      console.log(`[adminPage]   Body text (first 500 chars): ${bodyText}`);
     });
-    console.log(`[adminPage] Home page rendered`);
+    console.log(`[adminPage] Home page rendered (${Date.now() - homeStart} ms)`);
 
     // Override page.goto to prefer SPA navigation.
     // Full-page reloads destroy the in-memory auth token; clicking an <a>

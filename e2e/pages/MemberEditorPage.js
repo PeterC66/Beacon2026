@@ -9,15 +9,30 @@ export class MemberEditorPage {
   }
 
   async gotoNew() {
-    // Prefer SPA link-click navigation to preserve the in-memory auth token.
-    // page.goto() causes a full page reload which loses auth state.
-    const link = this.page.locator('a[href="/members/new"]').first();
-    if (await link.count() > 0) {
-      await link.click();
-    } else {
+    // Use page.evaluate() to fire a DOM click — this triggers React Router's
+    // onClick handler regardless of CSS visibility.  The Home page renders both
+    // a mobile layout (md:hidden) and a desktop grid; Playwright's locator.click()
+    // would fail if it resolved the hidden mobile element first.
+    // See CLAUDE-E2E.md § "The SPA-navigation pattern".
+    const url = this.page.url();
+    console.log(`[MemberEditorPage.gotoNew] Current URL before navigation: ${url}`);
+
+    const clicked = await this.page.evaluate(() => {
+      const link = document.querySelector('a[href="/members/new"]');
+      console.log('[gotoNew] link found in DOM:', !!link, link?.offsetParent, link?.getBoundingClientRect());
+      if (link) { link.click(); return true; }
+      return false;
+    });
+    console.log(`[MemberEditorPage.gotoNew] SPA link clicked: ${clicked}`);
+
+    if (!clicked) {
+      console.log('[MemberEditorPage.gotoNew] Falling back to page.goto("/members/new")');
       await this.page.goto('/members/new');
     }
-    await this.page.getByRole('heading', { name: 'Add New Member' }).waitFor({ timeout: 10_000 });
+
+    console.log(`[MemberEditorPage.gotoNew] Waiting for "Add New Member" heading...`);
+    await this.page.getByRole('heading', { name: 'Add New Member' }).waitFor({ timeout: 15_000 });
+    console.log(`[MemberEditorPage.gotoNew] Heading found. URL: ${this.page.url()}`);
   }
 
   heading() {
