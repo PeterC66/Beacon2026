@@ -13,6 +13,18 @@ import { useUnsavedChanges } from '../../hooks/useUnsavedChanges.js';
 
 function todayIso() { return new Date().toISOString().slice(0, 10); }
 
+function fmtTimestamp(ts) {
+  if (!ts) return '';
+  const d = new Date(ts);
+  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const day = d.getDate();
+  const mon = months[d.getMonth()];
+  const yr  = d.getFullYear();
+  const hh  = String(d.getHours()).padStart(2, '0');
+  const mm  = String(d.getMinutes()).padStart(2, '0');
+  return `${day} ${mon} ${yr} ${hh}:${mm}`;
+}
+
 const BLANK_FORM = {
   title: '', forenames: '', surname: '', knownAs: '', suffix: '', email: '',
   mobile: '', statusId: '', classId: '', joinedOn: '', nextRenewal: '',
@@ -98,6 +110,9 @@ export default function MemberEditor() {
   const { markDirty, markClean } = useUnsavedChanges();
   // All inline validation errors — keyed by field name
   const [fieldErrors,    setFieldErrors]    = useState({});
+  // Timestamps for existing member display
+  const [createdAt,      setCreatedAt]      = useState(null);
+  const [updatedAt,      setUpdatedAt]      = useState(null);
   // Whether the current address is shared with the linked partner (from server)
   const [addressShared,  setAddressShared]  = useState(false);
   // Display name of the linked partner (from server)
@@ -279,6 +294,8 @@ export default function MemberEditor() {
             telephone:         m.telephone       ?? '',
             existingPartnerId: m.partner_id      ?? '',
           });
+          setCreatedAt(m.created_at ?? null);
+          setUpdatedAt(m.updated_at ?? null);
           setAddressShared(m.address_shared ?? false);
           if (m.partner_forenames || m.partner_surname) {
             setPartnerName(`${m.partner_forenames ?? ''} ${m.partner_surname ?? ''}`.trim());
@@ -674,6 +691,11 @@ export default function MemberEditor() {
         <h1 className="text-xl font-bold text-center">
           {isNew ? 'Add New Member' : `Member Record — ${form.forenames} ${form.surname}`}
         </h1>
+        {!isNew && createdAt && (
+          <p className="text-xs text-slate-400 text-center">
+            Member record created {fmtTimestamp(createdAt)}{updatedAt && updatedAt !== createdAt ? `; last changed ${fmtTimestamp(updatedAt)}` : ''}
+          </p>
+        )}
 
         {saved && (
           <p className="text-green-700 text-sm font-medium bg-green-50 border border-green-200 rounded px-3 py-2 text-center">
