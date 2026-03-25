@@ -191,12 +191,14 @@ router.get('/recent', requirePrivilege('members_recent', 'view'), async (req, re
     const rows = await tenantQuery(
       slug,
       `SELECT m.id, m.membership_number, m.forenames, m.surname, m.email, m.mobile,
-              m.joined_on,
+              m.telephone, m.joined_on,
               mc.name AS class_name,
-              ms.name AS status_name
+              ms.name AS status_name,
+              a.house_no, a.street, a.town, a.postcode
        FROM members m
        LEFT JOIN member_classes   mc ON mc.id = m.class_id
        LEFT JOIN member_statuses  ms ON ms.id = m.status_id
+       LEFT JOIN addresses         a ON a.id  = m.address_id
        WHERE m.joined_on >= $1::date
          AND m.joined_on <= $2::date
        ORDER BY m.joined_on DESC, m.surname, m.forenames`,

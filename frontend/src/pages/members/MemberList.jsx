@@ -33,6 +33,7 @@ import PageHeader from '../../components/PageHeader.jsx';
 import SortableHeader from '../../components/SortableHeader.jsx';
 import ScrollButtons from '../../components/ScrollButtons.jsx';
 import { useSortedData } from '../../hooks/useSortedData.js';
+import { formatShortAddress } from '../../lib/memberFormatters.js';
 
 const ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
 
@@ -403,8 +404,7 @@ export default function MemberList() {
                       <SortableHeader col="surname"           label="Surname"  sortKey={sortKey} sortDir={sortDir} onSort={onSort} className="px-3 py-2 font-normal" />
                       <SortableHeader col="forenames"         label="Forenames" sortKey={sortKey} sortDir={sortDir} onSort={onSort} className="px-3 py-2 font-normal" />
                       <SortableHeader col="known_as"          label="Known as" sortKey={sortKey} sortDir={sortDir} onSort={onSort} className="px-3 py-2 font-normal" />
-                      <SortableHeader col="town"              label="Town"     sortKey={sortKey} sortDir={sortDir} onSort={onSort} className="px-3 py-2 font-normal" />
-                      <SortableHeader col="postcode"          label="Postcode" sortKey={sortKey} sortDir={sortDir} onSort={onSort} className="px-3 py-2 font-normal" />
+                      <SortableHeader col="house_no"           label="Address"  sortKey={sortKey} sortDir={sortDir} onSort={onSort} className="px-3 py-2 font-normal" />
                       <SortableHeader col="email"             label="Email"    sortKey={sortKey} sortDir={sortDir} onSort={onSort} className="px-3 py-2 font-normal" />
                       <SortableHeader col="status"            label="Status"   sortKey={sortKey} sortDir={sortDir} onSort={onSort} className="px-3 py-2 font-normal" />
                       <SortableHeader col="class"             label="Class"    sortKey={sortKey} sortDir={sortDir} onSort={onSort} className="px-3 py-2 font-normal" />
@@ -437,8 +437,7 @@ export default function MemberList() {
                         </td>
                         <td className="px-3 py-2">{m.forenames}</td>
                         <td className="px-3 py-2 text-slate-500">{m.known_as ?? ''}</td>
-                        <td className="px-3 py-2">{m.town ?? ''}</td>
-                        <td className="px-3 py-2">{m.postcode ?? ''}</td>
+                        <td className="px-3 py-2">{formatShortAddress(m)}</td>
                         <td className="px-3 py-2">{m.email ?? ''}</td>
                         <td className="px-3 py-2">{m.status ?? ''}</td>
                         <td className="px-3 py-2">{m.class ?? ''}</td>
