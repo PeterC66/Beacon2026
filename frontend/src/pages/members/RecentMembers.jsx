@@ -10,6 +10,7 @@ import NavBar from '../../components/NavBar.jsx';
 import DateInput from '../../components/DateInput.jsx';
 import SortableHeader from '../../components/SortableHeader.jsx';
 import { useSortedData } from '../../hooks/useSortedData.js';
+import { formatShortAddress, formatPhone } from '../../lib/memberFormatters.js';
 
 function isoToday() {
   return new Date().toISOString().slice(0, 10);
@@ -273,7 +274,8 @@ export default function RecentMembers() {
                     <SortableHeader col="class_name" label="Class"   sortKey={sortKey} sortDir={sortDir} onSort={onSort} className={TH} />
                     <SortableHeader col="status_name" label="Status" sortKey={sortKey} sortDir={sortDir} onSort={onSort} className={TH} />
                     <SortableHeader col="joined_on"  label="Joined"  sortKey={sortKey} sortDir={sortDir} onSort={onSort} className={TH} />
-                    <th className={TH}>Email</th>
+                    <th className={TH}>Address</th>
+                    <th className={TH}>Phone</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -296,12 +298,13 @@ export default function RecentMembers() {
                       <td className="px-4 py-2">{m.class_name ?? '—'}</td>
                       <td className="px-4 py-2">{m.status_name ?? '—'}</td>
                       <td className="px-4 py-2">{fmtDate(m.joined_on)}</td>
-                      <td className="px-4 py-2">{m.email ?? ''}</td>
+                      <td className="px-4 py-2">{formatShortAddress(m)}</td>
+                      <td className="px-4 py-2">{formatPhone(m)}</td>
                     </tr>
                   ))}
                   {sorted.length === 0 && (
                     <tr>
-                      <td colSpan={7} className="px-4 py-6 text-center text-slate-500">
+                      <td colSpan={8} className="px-4 py-6 text-center text-slate-500">
                         No members joined in this period.
                       </td>
                     </tr>
