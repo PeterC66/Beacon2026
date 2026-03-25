@@ -9,6 +9,7 @@
 | **`CLAUDE-REFERENCE.md`** | Detailed implementation notes by module | When working on a specific module |
 | **`CLAUDE-E2E.md`** | E2E test architecture, patterns, and gotchas | When writing or debugging E2E tests |
 | **`Beacon2 Project Definition.md`** | What has been built and what remains | Every session — living document |
+| **`docs/BeaconUG-Comparison.md`** | Beacon2 vs Beacon User Guide comparison | When building/changing features — update after each change |
 
 ---
 
@@ -133,8 +134,10 @@ At the end of every session:
      appropriate section.
    - **Cross-cutting** rules or patterns → add to `CLAUDE-STANDARDS.md`.
    - **Workflow/session** changes → update this file (`CLAUDE.md`).
-3. Commit and push the updated file(s) along with code changes.
-4. **Tell the user** what was updated (or "No documentation update needed this session").
+3. If any features were added, changed, or fixed, update `docs/BeaconUG-Comparison.md`
+   to reflect the new status of the relevant UG section(s).
+4. Commit and push the updated file(s) along with code changes.
+5. **Tell the user** what was updated (or "No documentation update needed this session").
 
 ---
 
