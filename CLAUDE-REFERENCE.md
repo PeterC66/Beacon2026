@@ -759,6 +759,18 @@ Themes: `default`, `high-contrast`.
   Pass `containerRef` (a ref to the table wrapper div). Only appears when the container
   overflows the viewport. Used on 12 list pages.
 
+### Mandatory field indicator (`RequiredMark`)
+
+Standard: `<RequiredMark />` from `frontend/src/components/RequiredMark.jsx`.
+Renders `<span className="text-red-500 ml-0.5" aria-hidden="true">*</span>`.
+
+Usage: `<label>Surname <RequiredMark /></label>`
+
+**Current state:** The component does not exist yet. Existing forms use three
+inconsistent approaches (plain `*` in label text, red `<span>`, bold `<strong>`).
+These should be migrated to `RequiredMark` when the component is created.
+See KNOWN-ISSUES.md for the migration item.
+
 ### Save success feedback
 
 Transient green banner, auto-dismiss 3 seconds:
