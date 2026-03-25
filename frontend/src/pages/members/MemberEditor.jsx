@@ -182,10 +182,10 @@ export default function MemberEditor() {
               const current = s.find((st) => st.name.toLowerCase() === 'current');
               if (current) updates.statusId = String(current.id);
             }
-            // Class → the one marked current (Individual)
+            // Class → Individual (the locked default class)
             if (!updates.classId && c.length > 0) {
-              const currentClass = c.find((cl) => cl.current);
-              if (currentClass) updates.classId = String(currentClass.id);
+              const individual = c.find((cl) => cl.locked && cl.name === 'Individual');
+              if (individual) updates.classId = String(individual.id);
             }
             // Joined → today
             if (!updates.joinedOn) updates.joinedOn = todayIso();
