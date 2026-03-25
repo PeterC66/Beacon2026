@@ -501,8 +501,8 @@ router.post('/renew', requirePrivilege('membership_renewals', 'renew'), async (r
         const [txn] = await tenantQuery(
           slug,
           `INSERT INTO transactions
-             (account_id, date, type, from_to, amount, payment_method, member_id_1, gift_aid_amount)
-           VALUES ($1, CURRENT_DATE, 'in', $2, $3::numeric, $4, $5, $6::numeric)
+             (account_id, date, type, from_to, amount, payment_method, detail, member_id_1, gift_aid_amount)
+           VALUES ($1, CURRENT_DATE, 'in', $2, $3::numeric, $4, 'Membership', $5, $6::numeric)
            RETURNING id, transaction_number`,
           [data.accountId, fromTo, amount, data.paymentMethod, memberId, gaAmount],
         );
@@ -961,8 +961,8 @@ async function createMemberPayment(slug, pay, memberId, memberName, joinedOn, cl
   const [txn] = await tenantQuery(
     slug,
     `INSERT INTO transactions
-       (account_id, date, type, from_to, amount, payment_method, payment_ref, member_id_1, gift_aid_amount)
-     VALUES ($1, $2::date, 'in', $3, $4::numeric, $5, $6, $7, $8::numeric)
+       (account_id, date, type, from_to, amount, payment_method, payment_ref, detail, member_id_1, gift_aid_amount)
+     VALUES ($1, $2::date, 'in', $3, $4::numeric, $5, $6, 'New Membership', $7, $8::numeric)
      RETURNING id, transaction_number`,
     [pay.accountId, joinedOn, memberName, pay.amount, pay.method ?? null, pay.ref ?? null, memberId, gaAmount],
   );
@@ -1163,6 +1163,7 @@ const updateMemberSchema = z.object({
   forenames:    z.string().min(1).max(100).optional(),
   surname:      z.string().min(1).max(100).optional(),
   knownAs:      z.string().max(50).nullable().optional(),
+  initials:     z.string().max(20).nullable().optional(),
   suffix:       z.string().max(30).nullable().optional(),
   email:        z.string().email().optional().or(z.literal('')).nullable(),
   mobile:       z.string().max(30).nullable().optional(),
@@ -1345,7 +1346,8 @@ router.patch('/:id', requirePrivilege('member_record', 'change'), async (req, re
 
     if (data.title       !== undefined) { fields.push(`title = $${i++}`);        values.push(data.title); }
     if (data.forenames   !== undefined) { fields.push(`forenames = $${i++}`);    values.push(data.forenames);
-                                          fields.push(`initials = $${i++}`);     values.push(deriveInitials(data.forenames)); }
+                                          if (data.initials === undefined) { fields.push(`initials = $${i++}`); values.push(deriveInitials(data.forenames)); } }
+    if (data.initials    !== undefined) { fields.push(`initials = $${i++}`);     values.push(data.initials); }
     if (data.surname     !== undefined) { fields.push(`surname = $${i++}`);      values.push(data.surname); }
     if (data.knownAs     !== undefined) { fields.push(`known_as = $${i++}`);     values.push(data.knownAs); }
     if (data.suffix      !== undefined) { fields.push(`suffix = $${i++}`);       values.push(data.suffix); }

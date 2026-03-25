@@ -289,8 +289,8 @@ router.post('/:slug/payment-confirm', async (req, res, next) => {
         const [txn] = await tenantQuery(
           slug,
           `INSERT INTO transactions
-             (account_id, date, type, from_to, amount, payment_method, member_id_1)
-           VALUES ($1, $2::date, 'in', $3, $4::numeric, 'Online', $5)
+             (account_id, date, type, from_to, amount, payment_method, detail, member_id_1)
+           VALUES ($1, $2::date, 'in', $3, $4::numeric, 'Online', 'New Membership', $5)
            RETURNING id`,
           [paypalAcct.id, member.joined_on, memberName, paypalAmount, member.id],
         );
