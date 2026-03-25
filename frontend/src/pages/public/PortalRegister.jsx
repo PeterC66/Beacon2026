@@ -4,6 +4,7 @@
 import { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { publicApi } from '../../lib/api.js';
+import RequiredMark from '../../components/RequiredMark.jsx';
 
 export default function PortalRegister() {
   const { slug } = useParams();
@@ -100,31 +101,31 @@ export default function PortalRegister() {
         <form onSubmit={handleSubmit} noValidate>
           <div className="space-y-3 mb-6">
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Membership number *</label>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Membership number <RequiredMark /></label>
               <input type="number" name="membershipNumber" value={form.membershipNumber}
                 onChange={(e) => handleChange('membershipNumber', e.target.value)} className={fieldCss} />
               {fieldErrors.membershipNumber && <p className="text-sm text-red-600 mt-1 font-medium">{fieldErrors.membershipNumber}</p>}
             </div>
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Forename *</label>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Forename <RequiredMark /></label>
               <input type="text" name="forename" value={form.forename}
                 onChange={(e) => handleChange('forename', e.target.value)} className={fieldCss} />
               {fieldErrors.forename && <p className="text-sm text-red-600 mt-1 font-medium">{fieldErrors.forename}</p>}
             </div>
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Surname *</label>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Surname <RequiredMark /></label>
               <input type="text" name="surname" value={form.surname}
                 onChange={(e) => handleChange('surname', e.target.value)} className={fieldCss} />
               {fieldErrors.surname && <p className="text-sm text-red-600 mt-1 font-medium">{fieldErrors.surname}</p>}
             </div>
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Postcode *</label>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Postcode <RequiredMark /></label>
               <input type="text" name="postcode" value={form.postcode}
                 onChange={(e) => handleChange('postcode', e.target.value.toUpperCase())} className={fieldCss} />
               {fieldErrors.postcode && <p className="text-sm text-red-600 mt-1 font-medium">{fieldErrors.postcode}</p>}
             </div>
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Email address *</label>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Email address <RequiredMark /></label>
               <input type="email" name="email" value={form.email}
                 onChange={(e) => handleChange('email', e.target.value)} className={fieldCss} autoComplete="email" />
               {fieldErrors.email && <p className="text-sm text-red-600 mt-1 font-medium">{fieldErrors.email}</p>}
@@ -138,13 +139,13 @@ export default function PortalRegister() {
             </p>
             <div className="space-y-3">
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Password *</label>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Password <RequiredMark /></label>
                 <input type="password" name="password" value={form.password}
                   onChange={(e) => handleChange('password', e.target.value)} className={fieldCss} autoComplete="new-password" />
                 {fieldErrors.password && <p className="text-sm text-red-600 mt-1 font-medium">{fieldErrors.password}</p>}
               </div>
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Confirm password *</label>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Confirm password <RequiredMark /></label>
                 <input type="password" name="confirmPassword" value={form.confirmPassword}
                   onChange={(e) => handleChange('confirmPassword', e.target.value)} className={fieldCss} autoComplete="new-password" />
                 {fieldErrors.confirmPassword && <p className="text-sm text-red-600 mt-1 font-medium">{fieldErrors.confirmPassword}</p>}

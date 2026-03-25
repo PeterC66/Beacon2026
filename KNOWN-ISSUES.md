@@ -120,23 +120,6 @@ and should be added to the optional cookies list when the features are built:
 
 ---
 
-## Mandatory Field Indicators — Inconsistent
-
-Three different approaches are currently used to mark required fields:
-
-1. **Plain asterisk in label text** (`"Surname *"`) — JoinForm, GroupRecord,
-   OpenMeetings, TransactionEditor, VenueEditor, PortalRegister (~17 fields)
-2. **Red asterisk span** (`<span className="text-red-500">*</span>`) —
-   MemberEditor "Next renewal" (2 fields)
-3. **Bold label** (`<strong>`) — MemberEditor core membership fields (~9 fields)
-
-**Standard going forward:** Use a shared `<RequiredMark />` component (red asterisk).
-The component needs to be created in `frontend/src/components/RequiredMark.jsx`,
-then existing forms migrated incrementally. See CLAUDE-STANDARDS.md and
-CLAUDE-REFERENCE.md §11 for the specification.
-
----
-
 ## Accessibility / E2E
 
 1. **Form labels missing `htmlFor`/`id` association** — ~106 `<label>` elements

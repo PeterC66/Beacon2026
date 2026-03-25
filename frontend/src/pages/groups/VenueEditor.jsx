@@ -6,6 +6,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { venues as venuesApi } from '../../lib/api.js';
 import { useAuth } from '../../context/AuthContext.jsx';
 import NavBar from '../../components/NavBar.jsx';
+import RequiredMark from '../../components/RequiredMark.jsx';
 import PageHeader from '../../components/PageHeader.jsx';
 import { useUnsavedChanges } from '../../hooks/useUnsavedChanges.js';
 
@@ -148,7 +149,7 @@ export default function VenueEditor() {
 
             {/* Venue name */}
             <div>
-              <label className={labelCls}>Venue *</label>
+              <label className={labelCls}>Venue <RequiredMark /></label>
               <input name="name" className={`${inputCls} w-full`} required value={form.name}
                 onChange={(e) => set('name', e.target.value)} disabled={!canChange} />
             </div>

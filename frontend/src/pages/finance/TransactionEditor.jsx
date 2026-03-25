@@ -6,6 +6,7 @@ import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { finance as financeApi, groups as groupsApi, members as membersApi, settings as settingsApi } from '../../lib/api.js';
 import { useAuth } from '../../context/AuthContext.jsx';
 import NavBar from '../../components/NavBar.jsx';
+import RequiredMark from '../../components/RequiredMark.jsx';
 import PageHeader from '../../components/PageHeader.jsx';
 import DateInput from '../../components/DateInput.jsx';
 import { useUnsavedChanges } from '../../hooks/useUnsavedChanges.js';
@@ -362,7 +363,7 @@ export default function TransactionEditor() {
 
             {/* Account */}
             <div>
-              <label className={LBL}>Account *</label>
+              <label className={LBL}>Account <RequiredMark /></label>
               <select
                 name="account_id"
                 value={form.account_id}
@@ -377,7 +378,7 @@ export default function TransactionEditor() {
 
             {/* Date */}
             <div>
-              <label className={LBL}>Date *</label>
+              <label className={LBL}>Date <RequiredMark /></label>
               <DateInput
                 value={form.date}
                 onChange={(v) => set('date', v)}
@@ -402,7 +403,7 @@ export default function TransactionEditor() {
 
             {/* Amount */}
             <div>
-              <label className={LBL}>Amount (£) *</label>
+              <label className={LBL}>Amount (£) <RequiredMark /></label>
               <input
                 type="number"
                 name="amount"
@@ -591,7 +592,7 @@ export default function TransactionEditor() {
 
           {/* Categories */}
           <div className="bg-white/90 rounded-lg shadow-sm p-4 sm:p-6 mb-4">
-            <h2 className="text-sm font-semibold text-slate-700 mb-1">Category allocation *</h2>
+            <h2 className="text-sm font-semibold text-slate-700 mb-1">Category allocation <RequiredMark /></h2>
             <p className="text-xs text-slate-500 mb-3">
               Amounts must add up to the transaction amount.
               {amountOk && (

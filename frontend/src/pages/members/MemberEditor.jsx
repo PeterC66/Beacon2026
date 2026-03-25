@@ -6,6 +6,7 @@ import { isValidPhoneNumber } from 'libphonenumber-js';
 import { members as membersApi, memberStatuses as statusApi, memberClasses as classApi, finance as financeApi, polls as pollsApi, settings as settingsApi } from '../../lib/api.js';
 import { useAuth } from '../../context/AuthContext.jsx';
 import NavBar from '../../components/NavBar.jsx';
+import RequiredMark from '../../components/RequiredMark.jsx';
 import PageHeader from '../../components/PageHeader.jsx';
 import DateInput from '../../components/DateInput.jsx';
 import { useUnsavedChanges } from '../../hooks/useUnsavedChanges.js';
@@ -662,7 +663,7 @@ export default function MemberEditor() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {!isNew && (
                 <div>
-                  <label className={labelCls}><strong>Status</strong></label>
+                  <label className={labelCls}>Status <RequiredMark /></label>
                   <select name="statusId" value={form.statusId}
                     onChange={(e) => set('statusId', e.target.value)}
                     onBlur={() => handleBlur('statusId')}
@@ -674,7 +675,7 @@ export default function MemberEditor() {
                 </div>
               )}
               <div>
-                <label className={labelCls}><strong>Class</strong></label>
+                <label className={labelCls}>Class <RequiredMark /></label>
                 <select name="classId" value={form.classId}
                   onChange={(e) => set('classId', e.target.value)}
                   onBlur={() => handleBlur('classId')}
@@ -685,7 +686,7 @@ export default function MemberEditor() {
                 {fieldErrors.classId && <p className={errMsgCls}>{fieldErrors.classId}</p>}
               </div>
               <div>
-                <label className={labelCls}><strong>Joined</strong></label>
+                <label className={labelCls}>Joined <RequiredMark /></label>
                 <DateInput value={form.joinedOn}
                   onChange={(v) => set('joinedOn', v)}
                   onBlur={() => handleBlur('joinedOn')}
@@ -693,7 +694,7 @@ export default function MemberEditor() {
                 {fieldErrors.joinedOn && <p className={errMsgCls}>{fieldErrors.joinedOn}</p>}
               </div>
               <div>
-                <label className={labelCls}><strong>Next renewal</strong>{isNew && <span className="text-red-500 ml-1">*</span>}</label>
+                <label className={labelCls}>Next renewal {isNew && <RequiredMark />}</label>
                 <DateInput value={form.nextRenewal}
                   onChange={(v) => set('nextRenewal', v)}
                   className={isNew ? ic('nextRenewal') : inputCls} />
@@ -713,7 +714,7 @@ export default function MemberEditor() {
                 </select>
               </div>
               <div>
-                <label className={labelCls}><strong>Forenames</strong></label>
+                <label className={labelCls}>Forenames <RequiredMark /></label>
                 <input type="text" name="forenames" value={form.forenames}
                   onChange={(e) => set('forenames', e.target.value)}
                   onBlur={() => handleBlur('forenames')}
@@ -721,7 +722,7 @@ export default function MemberEditor() {
                 {fieldErrors.forenames && <p className={errMsgCls}>{fieldErrors.forenames}</p>}
               </div>
               <div>
-                <label className={labelCls}><strong>Surname</strong></label>
+                <label className={labelCls}>Surname <RequiredMark /></label>
                 <input type="text" name="surname" value={form.surname}
                   onChange={(e) => set('surname', e.target.value)}
                   onBlur={() => handleBlur('surname')}
@@ -917,13 +918,13 @@ export default function MemberEditor() {
                     </select>
                   </div>
                   <div>
-                    <label className={labelCls}><strong>Forenames</strong></label>
+                    <label className={labelCls}>Forenames <RequiredMark /></label>
                     <input type="text" name="npForenames" value={npForm.forenames} onChange={(e) => setNp('forenames', e.target.value)}
                       className={fieldErrors.npForenames ? inputErrCls : inputCls} />
                     {fieldErrors.npForenames && <p className={errMsgCls}>{fieldErrors.npForenames}</p>}
                   </div>
                   <div>
-                    <label className={labelCls}><strong>Surname</strong></label>
+                    <label className={labelCls}>Surname <RequiredMark /></label>
                     <input type="text" name="npSurname" value={npForm.surname} onChange={(e) => setNp('surname', e.target.value)}
                       className={fieldErrors.npSurname ? inputErrCls : inputCls} />
                     {fieldErrors.npSurname && <p className={errMsgCls}>{fieldErrors.npSurname}</p>}
@@ -941,25 +942,25 @@ export default function MemberEditor() {
                     <input type="text" name="npMobile" value={npForm.mobile} onChange={(e) => setNp('mobile', e.target.value)} className={inputCls} />
                   </div>
                   <div>
-                    <label className={labelCls}><strong>Status</strong></label>
+                    <label className={labelCls}>Status <RequiredMark /></label>
                     <select name="npStatusId" value={npForm.statusId} onChange={(e) => setNp('statusId', e.target.value)} className={inputCls}>
                       <option value="">— select —</option>
                       {statuses.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
                     </select>
                   </div>
                   <div>
-                    <label className={labelCls}><strong>Class</strong></label>
+                    <label className={labelCls}>Class <RequiredMark /></label>
                     <select name="npClassId" value={npForm.classId} onChange={(e) => setNp('classId', e.target.value)} className={inputCls}>
                       <option value="">— select —</option>
                       {classes.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
                     </select>
                   </div>
                   <div>
-                    <label className={labelCls}><strong>Joined</strong></label>
+                    <label className={labelCls}>Joined <RequiredMark /></label>
                     <DateInput value={npForm.joinedOn} onChange={(v) => setNp('joinedOn', v)} className={inputCls} />
                   </div>
                   <div>
-                    <label className={labelCls}><strong>Next renewal</strong><span className="text-red-500 ml-1">*</span></label>
+                    <label className={labelCls}>Next renewal <RequiredMark /></label>
                     <DateInput value={npForm.nextRenewal} onChange={(v) => setNp('nextRenewal', v)} className={fieldErrors.npNextRenewal ? ic('npNextRenewal') : inputCls} />
                     {fieldErrors.npNextRenewal && <p className={errMsgCls}>{fieldErrors.npNextRenewal}</p>}
                   </div>
@@ -1011,7 +1012,7 @@ export default function MemberEditor() {
                   className={inputCls} />
               </div>
               <div>
-                <label className={labelCls}><strong>Postcode</strong></label>
+                <label className={labelCls}>Postcode <RequiredMark /></label>
                 <input type="text" name="postcode" value={form.postcode}
                   onChange={(e) => set('postcode', e.target.value)}
                   onBlur={() => handleBlur('postcode')}
