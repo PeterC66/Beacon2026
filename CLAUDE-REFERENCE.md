@@ -249,6 +249,21 @@ sends `addressScope: 'both' | 'me-only'`:
 Frontend: `partnerChanged` flag → fetches new partner, greys out address fields,
 omits `address` from PATCH body.
 
+### Column locations: members vs addresses
+
+The `addresses` table holds **all** address-related fields including `telephone`.
+The `members` table holds `mobile` and `email` directly.
+
+| Column       | Table       |
+|-------------|-------------|
+| `house_no`, `street`, `add_line1`, `add_line2`, `town`, `county`, `postcode` | `addresses` |
+| `telephone`  | `addresses` |
+| `mobile`     | `members`   |
+| `email`      | `members`   |
+
+When writing queries that need `telephone`, always use `a.telephone` (from the
+addresses JOIN), **not** `m.telephone`.
+
 ### Phone and postcode validation
 
 **Phone**: `libphonenumber-js` in frontend. `isValidPhoneNumber(value, 'GB')`.
