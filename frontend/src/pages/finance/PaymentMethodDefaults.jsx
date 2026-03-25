@@ -106,7 +106,7 @@ export default function PaymentMethodDefaults() {
           {/* Default account by payment type */}
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-2">
-              Default Account by Payment
+              Default Account by Payment Method
             </label>
             <div className="overflow-x-auto">
               <table className="w-full text-sm">

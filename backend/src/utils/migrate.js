@@ -170,6 +170,26 @@ async function migrateTenantSchemas() {
           [catName],
         );
       }
+
+      // Seed payment method defaults (BACS + all methods → Current account)
+      // Only if the table is empty — never overwrite tenant configuration.
+      const [pmCount] = await tenantQuery(slug, `SELECT count(*)::int AS n FROM payment_method_defaults`);
+      if (pmCount.n === 0) {
+        const [currentAcc] = await tenantQuery(slug, `SELECT id FROM finance_accounts WHERE name = 'Current' AND locked = true LIMIT 1`);
+        if (currentAcc) {
+          const pmMethods = ['Cheque', 'Cash', 'PayPal', 'Standing Order', 'Direct Debit',
+                             'BACS', 'Debit card', 'Account transfer', 'Credit card'];
+          await tenantQuery(slug,
+            `INSERT INTO payment_method_defaults (payment_method, account_id, updated_at)
+             VALUES ('_default_method', 'BACS', now())`);
+          for (const pm of pmMethods) {
+            await tenantQuery(slug,
+              `INSERT INTO payment_method_defaults (payment_method, account_id, updated_at)
+               VALUES ($1, $2, now())`,
+              [pm, currentAcc.id]);
+          }
+        }
+      }
     } catch (err) {
       console.error(`  ✗ Seed error [${schemaName}]:`, err.message);
     }
