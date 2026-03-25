@@ -191,7 +191,7 @@ router.get('/recent', requirePrivilege('members_recent', 'view'), async (req, re
     const rows = await tenantQuery(
       slug,
       `SELECT m.id, m.membership_number, m.forenames, m.surname, m.email, m.mobile,
-              m.telephone, m.joined_on,
+              a.telephone, m.joined_on,
               mc.name AS class_name,
               ms.name AS status_name,
               a.house_no, a.street, a.town, a.postcode
