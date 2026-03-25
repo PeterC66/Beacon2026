@@ -99,9 +99,11 @@ test.describe('Finance transactions', () => {
     await editor.amountInput().fill('50.00');
 
     // Category allocation — required by form validation
-    // Categories load async from the API; wait for at least one input to appear
-    await page.locator('input[name="categoryAmount"]').first().waitFor({ timeout: 10_000 });
-    await page.locator('input[name="categoryAmount"]').first().fill('50.00');
+    // Target the specific E2E category row so the transaction is linked to it
+    // (needed for the "cannot delete category with transactions" test below)
+    const catRow = page.getByRole('row').filter({ hasText: CAT_NAME });
+    await catRow.locator('input[name="categoryAmount"]').waitFor({ timeout: 10_000 });
+    await catRow.locator('input[name="categoryAmount"]').fill('50.00');
 
     await editor.saveButton().click();
 
@@ -133,16 +135,18 @@ test.describe('Finance category cleanup', () => {
     const row = catPage.categoryRow(CAT_NAME);
 
     // Two dialogs fire: (1) confirm prompt, (2) error alert from backend
-    let alertMsg = '';
-    page.on('dialog', async (d) => {
-      if (d.type() === 'confirm') await d.accept();
-      else { alertMsg = d.message(); await d.dismiss(); }
+    const alertPromise = new Promise((resolve) => {
+      page.on('dialog', async (d) => {
+        if (d.type() === 'confirm') { await d.accept(); return; }
+        resolve(d.message());
+        await d.dismiss();
+      });
     });
 
     await row.getByRole('button', { name: /delete/i }).click();
 
-    // Wait briefly for the API round-trip and alert
-    await page.waitForTimeout(2_000);
+    // Wait for the error alert dialog (fires after API round-trip)
+    const alertMsg = await alertPromise;
     expect(alertMsg).toMatch(/cannot delete/i);
     // Category should still be visible
     await expect(page.getByText(CAT_NAME)).toBeVisible();

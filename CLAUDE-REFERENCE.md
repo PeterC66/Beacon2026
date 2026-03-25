@@ -771,6 +771,9 @@ Themes: `default`, `high-contrast`.
 - `SortableHeader` + `useSortedData` — sortable columns with ▲/▼/⇅ indicator
 - `DateInput` — UK dd/mm/yyyy display, ISO value, calendar picker button
 - `RequiredMark` — red asterisk for mandatory form fields (`<span className="text-red-500 ml-0.5">*</span>`)
+- `NavBar` — glass-effect backdrop, blue links, `–` separator. Accepts `links` prop (not `items`).
+  Each link: `{ label, to, disabled? }`. When `disabled: true`, shown as greyed-out non-clickable
+  text — use for privilege-gated links (e.g. `{ label: 'Add New', to: '/members/new', disabled: !can('member_record', 'create') }`).
 - `ScrollButtons` — dual fixed-position scroll-to-top/bottom buttons (doc 6 "Table Lists").
   Pass `containerRef` (a ref to the table wrapper div). Only appears when the container
   overflows the viewport. Used on 12 list pages.

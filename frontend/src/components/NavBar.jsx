@@ -1,5 +1,7 @@
 // beacon2/frontend/src/components/NavBar.jsx
 // Navigation bar: centred links separated by " – ".
+// Each link: { label, to, disabled? }
+// When disabled is true, the label is shown as greyed-out non-clickable text.
 
 import { Link } from 'react-router-dom';
 
@@ -9,9 +11,9 @@ export default function NavBar({ links }) {
       {links.map((link, i) => (
         <span key={i}>
           {i > 0 && <span className="mx-2 text-slate-400">–</span>}
-          {link.to
+          {link.to && !link.disabled
             ? <Link to={link.to} className="text-blue-700 hover:underline">{link.label}</Link>
-            : <span className="text-slate-500">{link.label}</span>}
+            : <span className={link.disabled ? 'text-slate-400' : 'text-slate-500'}>{link.label}</span>}
         </span>
       ))}
     </nav>
