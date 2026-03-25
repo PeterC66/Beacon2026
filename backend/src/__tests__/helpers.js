@@ -54,6 +54,7 @@ export const ALL_PRIVS = [
   'membership_cards:view', 'membership_cards:download_and_mark',
   'letters:view', 'letters:download',
   'letters_standard_messages:view', 'letters_standard_messages:create', 'letters_standard_messages:change', 'letters_standard_messages:delete',
+  'utilities:view',
 ];
 
 export const TEST_TENANT = 'test-u3a';

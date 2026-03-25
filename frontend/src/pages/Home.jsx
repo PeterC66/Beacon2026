@@ -63,7 +63,7 @@ export default function Home() {
         { label: 'E-mail delivery',       tip: 'Track the status of sent emails',              to: can('email_delivery', 'view') ? '/email/delivery' : null },
         { label: 'E-mail unblocker',      tip: 'Remove members from the email block list',     to: can('email_delivery', 'all')  ? '/email/unblocker' : null },
         { label: 'Personal preferences',  tip: 'Change your password, name display and timeout settings', to: '/preferences' },
-        { label: 'Validate member data',  tip: 'Check member records for missing or inconsistent data',   to: can('member_data_validation', 'view') ? '/admin/validate-members' : null },
+        { label: 'Utilities',              tip: 'Administrative utilities',                                to: can('utilities', 'view') ? '/utilities' : null },
       ],
     },
     {

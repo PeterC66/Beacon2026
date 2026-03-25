@@ -191,6 +191,9 @@ export const DEFAULT_ROLES = [
       { code: 'user_record',              action: 'change' },
       { code: 'user_record',              action: 'delete' },            // vced
       { code: 'users_list',               action: 'view' },              // v
+
+      // Utilities
+      { code: 'utilities',                action: 'view' },              // v
     ],
   },
 

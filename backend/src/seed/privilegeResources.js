@@ -66,4 +66,5 @@ export const PRIVILEGE_RESOURCES = [
   r('system_messages',           'System messages',                 ['view', 'create', 'change']),
   r('user_record',               'User record',                     ['view', 'create', 'change', 'delete']),
   r('users_list',                'Users list',                      ['view']),
+  r('utilities',                 'Utilities',                       ['view']),
 ];
