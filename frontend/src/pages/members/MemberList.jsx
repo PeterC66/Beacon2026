@@ -243,6 +243,15 @@ export default function MemberList() {
           {/* Status checkboxes */}
           <div className="flex flex-wrap gap-3 items-center">
             <span className="text-sm font-medium text-slate-700 mr-1">Status:</span>
+            <label className="flex items-center gap-1.5 text-sm cursor-pointer">
+              <input
+                type="checkbox"
+                checked={selectedStatuses.length === 0}
+                onChange={() => setSelectedStatuses([])}
+                className="rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+              />
+              All
+            </label>
             {statuses.map((s) => (
               <label key={s.id} className="flex items-center gap-1.5 text-sm cursor-pointer">
                 <input
