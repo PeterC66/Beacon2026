@@ -501,8 +501,8 @@ router.post('/renew', requirePrivilege('membership_renewals', 'renew'), async (r
         const [txn] = await tenantQuery(
           slug,
           `INSERT INTO transactions
-             (account_id, date, type, from_to, amount, payment_method, member_id_1, gift_aid_amount)
-           VALUES ($1, CURRENT_DATE, 'in', $2, $3::numeric, $4, $5, $6::numeric)
+             (account_id, date, type, from_to, amount, payment_method, detail, member_id_1, gift_aid_amount)
+           VALUES ($1, CURRENT_DATE, 'in', $2, $3::numeric, $4, 'Membership', $5, $6::numeric)
            RETURNING id, transaction_number`,
           [data.accountId, fromTo, amount, data.paymentMethod, memberId, gaAmount],
         );
@@ -961,8 +961,8 @@ async function createMemberPayment(slug, pay, memberId, memberName, joinedOn, cl
   const [txn] = await tenantQuery(
     slug,
     `INSERT INTO transactions
-       (account_id, date, type, from_to, amount, payment_method, payment_ref, member_id_1, gift_aid_amount)
-     VALUES ($1, $2::date, 'in', $3, $4::numeric, $5, $6, $7, $8::numeric)
+       (account_id, date, type, from_to, amount, payment_method, payment_ref, detail, member_id_1, gift_aid_amount)
+     VALUES ($1, $2::date, 'in', $3, $4::numeric, $5, $6, 'New Membership', $7, $8::numeric)
      RETURNING id, transaction_number`,
     [pay.accountId, joinedOn, memberName, pay.amount, pay.method ?? null, pay.ref ?? null, memberId, gaAmount],
   );
