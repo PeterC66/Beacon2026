@@ -20,6 +20,10 @@ Every item below applies to every new feature — no exceptions.
 - [ ] **Shared components** — import `PageHeader`, `NavBar`, `SortableHeader`, `DateInput`
   instead of duplicating.
 
+- [ ] **NavBar privilege-gated links** — every NavBar link to a privileged page must use
+  `disabled: !can(resource, action)` so unprivileged users see the link greyed out rather
+  than missing. Home link never needs a gate.
+
 ## Form inputs
 
 - [ ] **Every `<input>`, `<textarea>`, and `<select>` must have a `name` attribute.**

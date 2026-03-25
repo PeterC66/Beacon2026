@@ -15,6 +15,7 @@ const BLANK_FORM = {
   title: '', forenames: '', surname: '', knownAs: '', suffix: '', email: '',
   mobile: '', statusId: '', classId: '', joinedOn: '', nextRenewal: '',
   giftAidFrom: '', homeU3a: '', notes: '', hideContact: false,
+  emergencyContact: '',
   customField1: '', customField2: '', customField3: '', customField4: '',
   // address
   houseNo: '', street: '', addLine1: '', addLine2: '', town: '', county: '', postcode: '', telephone: '',
@@ -252,6 +253,7 @@ export default function MemberEditor() {
             homeU3a:           m.home_u3a        ?? '',
             notes:             m.notes           ?? '',
             hideContact:       m.hide_contact    ?? false,
+            emergencyContact:  m.emergency_contact ?? '',
             customField1:      m.custom_field_1  ?? '',
             customField2:      m.custom_field_2  ?? '',
             customField3:      m.custom_field_3  ?? '',
@@ -466,6 +468,7 @@ export default function MemberEditor() {
       homeU3a:     isAssociate ? (form.homeU3a || undefined) : undefined,
       notes:       form.notes       || undefined,
       hideContact: form.hideContact,
+      emergencyContact: form.emergencyContact || null,
       customField1: form.customField1 || null,
       customField2: form.customField2 || null,
       customField3: form.customField3 || null,
@@ -629,7 +632,9 @@ export default function MemberEditor() {
 
   const navLinks = [
     { label: 'Home', to: '/' },
-    { label: 'Members', to: '/members' },
+    { label: 'Members List', to: '/members', disabled: !can('members_list', 'view') },
+    { label: 'Membership Cards', to: '/members/cards', disabled: !can('membership_cards', 'view') },
+    { label: 'Add New', to: '/members/new', disabled: !can('member_record', 'create') },
   ];
 
   if (loading) return (
@@ -811,6 +816,14 @@ export default function MemberEditor() {
               <textarea name="notes" rows={3} value={form.notes}
                 onChange={(e) => set('notes', e.target.value)}
                 className={inputCls} />
+            </div>
+
+            <div className="mt-4">
+              <label className={labelCls}>Emergency contact <span className="text-slate-400 font-normal">(name and phone)</span></label>
+              <input type="text" name="emergencyContact" value={form.emergencyContact}
+                onChange={(e) => set('emergencyContact', e.target.value)}
+                className={inputCls} maxLength={200}
+                placeholder="e.g. John Smith 07700 900123" />
             </div>
 
             <label className="flex items-center gap-2 mt-3 text-sm cursor-pointer">
@@ -1189,7 +1202,6 @@ export default function MemberEditor() {
                           <thead>
                             <tr className="bg-slate-50 border-b border-slate-200 text-left text-slate-600 italic">
                               <th className="px-3 py-2 font-normal">Group name</th>
-                              <th className="px-3 py-2 font-normal">Role</th>
                               <th className="px-3 py-2 font-normal">Status</th>
                             </tr>
                           </thead>
@@ -1202,9 +1214,8 @@ export default function MemberEditor() {
                                   ) : (
                                     <span className={g.status === 'inactive' ? 'text-red-600' : ''}>{g.name}</span>
                                   )}
-                                </td>
-                                <td className="px-3 py-1.5 text-slate-600">
-                                  {g.waiting_since ? 'Waiting list' : g.is_leader ? 'Leader' : 'Member'}
+                                  {g.is_leader && <span className="ml-1.5 text-amber-500" title="Leader">★</span>}
+                                  {g.waiting_since && <span className="ml-1.5 text-slate-400" title="Waiting list">⏳</span>}
                                 </td>
                                 <td className="px-3 py-1.5">
                                   {g.status === 'inactive'
@@ -1234,8 +1245,7 @@ export default function MemberEditor() {
                                 <th className="px-3 py-2 font-normal">Date</th>
                                 <th className="px-3 py-2 font-normal">Detail</th>
                                 <th className="px-3 py-2 font-normal">Account</th>
-                                <th className="px-3 py-2 font-normal text-right">In</th>
-                                <th className="px-3 py-2 font-normal text-right">Out</th>
+                                <th className="px-3 py-2 font-normal text-right">Amount</th>
                               </tr>
                             </thead>
                             <tbody>
@@ -1251,8 +1261,9 @@ export default function MemberEditor() {
                                   <td className="px-3 py-1.5 whitespace-nowrap">{t.date ? new Date(t.date).toLocaleDateString('en-GB') : ''}</td>
                                   <td className="px-3 py-1.5 max-w-[200px] truncate" title={t.detail}>{t.detail}</td>
                                   <td className="px-3 py-1.5 text-slate-600">{t.account_name}</td>
-                                  <td className="px-3 py-1.5 text-right text-green-700">{t.type === 'in'  ? `£${Number(t.amount).toFixed(2)}` : ''}</td>
-                                  <td className="px-3 py-1.5 text-right text-red-700"> {t.type === 'out' ? `£${Number(t.amount).toFixed(2)}` : ''}</td>
+                                  <td className={`px-3 py-1.5 text-right font-medium ${t.type === 'in' ? 'text-green-700' : 'text-red-700'}`}>
+                                    {t.type === 'in' ? '+' : '−'}£{Number(t.amount).toFixed(2)}
+                                  </td>
                                 </tr>
                               ))}
                             </tbody>

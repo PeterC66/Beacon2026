@@ -184,6 +184,7 @@ CREATE TABLE IF NOT EXISTS :schema.members (
   custom_field_2    TEXT,
   custom_field_3    TEXT,
   custom_field_4    TEXT,
+  emergency_contact TEXT,
   created_at        TIMESTAMPTZ NOT NULL DEFAULT now(),
   updated_at        TIMESTAMPTZ NOT NULL DEFAULT now()
 );
@@ -687,6 +688,7 @@ ALTER TABLE :schema.members ADD COLUMN IF NOT EXISTS custom_field_1 TEXT;
 ALTER TABLE :schema.members ADD COLUMN IF NOT EXISTS custom_field_2 TEXT;
 ALTER TABLE :schema.members ADD COLUMN IF NOT EXISTS custom_field_3 TEXT;
 ALTER TABLE :schema.members ADD COLUMN IF NOT EXISTS custom_field_4 TEXT;
+ALTER TABLE :schema.members ADD COLUMN IF NOT EXISTS emergency_contact TEXT;
 
 ALTER TABLE :schema.tenant_settings ADD COLUMN IF NOT EXISTS custom_field_label_1 TEXT;
 ALTER TABLE :schema.tenant_settings ADD COLUMN IF NOT EXISTS custom_field_label_2 TEXT;
