@@ -26,7 +26,7 @@ function fmtTimestamp(ts) {
 }
 
 const BLANK_FORM = {
-  title: '', forenames: '', surname: '', knownAs: '', suffix: '', email: '',
+  title: '', forenames: '', surname: '', knownAs: '', initials: '', suffix: '', email: '',
   mobile: '', statusId: '', classId: '', joinedOn: '', nextRenewal: '',
   giftAidFrom: '', homeU3a: '', notes: '', hideContact: false,
   emergencyContact: '',
@@ -268,6 +268,7 @@ export default function MemberEditor() {
             forenames:         m.forenames       ?? '',
             surname:           m.surname         ?? '',
             knownAs:           m.known_as        ?? '',
+            initials:          m.initials        ?? '',
             suffix:            m.suffix          ?? '',
             email:             m.email           ?? '',
             mobile:            m.mobile          ?? '',
@@ -485,6 +486,7 @@ export default function MemberEditor() {
       forenames:   form.forenames,
       surname:     form.surname,
       knownAs:     form.knownAs     || undefined,
+      initials:    !isNew ? (form.initials || undefined) : undefined,
       suffix:      form.suffix      || undefined,
       email:       form.email       || undefined,
       mobile:      form.mobile      || undefined,
@@ -789,6 +791,14 @@ export default function MemberEditor() {
                   onChange={(e) => set('knownAs', e.target.value)}
                   className={inputCls} />
               </div>
+              {!isNew && (
+                <div>
+                  <label className={labelCls}>Initials</label>
+                  <input type="text" name="initials" value={form.initials}
+                    onChange={(e) => set('initials', e.target.value)}
+                    className={inputCls} maxLength={20} />
+                </div>
+              )}
               <div className="sm:col-span-2 grid grid-cols-[1fr_2fr_auto] gap-4 items-end">
                 <div>
                   <label className={labelCls}>Suffix <span className="text-slate-400 font-normal">(e.g. MBE)</span></label>

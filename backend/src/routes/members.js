@@ -1163,6 +1163,7 @@ const updateMemberSchema = z.object({
   forenames:    z.string().min(1).max(100).optional(),
   surname:      z.string().min(1).max(100).optional(),
   knownAs:      z.string().max(50).nullable().optional(),
+  initials:     z.string().max(20).nullable().optional(),
   suffix:       z.string().max(30).nullable().optional(),
   email:        z.string().email().optional().or(z.literal('')).nullable(),
   mobile:       z.string().max(30).nullable().optional(),
@@ -1345,7 +1346,8 @@ router.patch('/:id', requirePrivilege('member_record', 'change'), async (req, re
 
     if (data.title       !== undefined) { fields.push(`title = $${i++}`);        values.push(data.title); }
     if (data.forenames   !== undefined) { fields.push(`forenames = $${i++}`);    values.push(data.forenames);
-                                          fields.push(`initials = $${i++}`);     values.push(deriveInitials(data.forenames)); }
+                                          if (data.initials === undefined) { fields.push(`initials = $${i++}`); values.push(deriveInitials(data.forenames)); } }
+    if (data.initials    !== undefined) { fields.push(`initials = $${i++}`);     values.push(data.initials); }
     if (data.surname     !== undefined) { fields.push(`surname = $${i++}`);      values.push(data.surname); }
     if (data.knownAs     !== undefined) { fields.push(`known_as = $${i++}`);     values.push(data.knownAs); }
     if (data.suffix      !== undefined) { fields.push(`suffix = $${i++}`);       values.push(data.suffix); }
