@@ -600,7 +600,7 @@ export default function MemberEditor() {
         // Shared address warning: alert if partner has different status or class
         if (sharedAddrWarn.current && addressShared && partnerName && !partnerChanged) {
           const statusDiff = partnerStatusId && form.statusId && partnerStatusId !== form.statusId;
-          const classDiff  = partnerClassId2 && form.classId && partnerClassId2 !== form.classId;
+          const classDiff  = partnerClassId && form.classId && partnerClassId !== form.classId;
           if (statusDiff || classDiff) {
             const diffs = [statusDiff && 'status', classDiff && 'class'].filter(Boolean).join(' and ');
             alert(`Note: ${partnerName} shares this address but has a different ${diffs}.`);
