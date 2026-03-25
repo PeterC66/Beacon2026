@@ -11,6 +11,8 @@ import PageHeader from '../../components/PageHeader.jsx';
 import DateInput from '../../components/DateInput.jsx';
 import { useUnsavedChanges } from '../../hooks/useUnsavedChanges.js';
 
+function todayIso() { return new Date().toISOString().slice(0, 10); }
+
 const BLANK_FORM = {
   title: '', forenames: '', surname: '', knownAs: '', suffix: '', email: '',
   mobile: '', statusId: '', classId: '', joinedOn: '', nextRenewal: '',
@@ -171,15 +173,24 @@ export default function MemberEditor() {
         setStatuses(s);
         setClasses(c);
         setAllPolls(p);
-        // Auto-set status to "Current" for new members
-        if (isNew && s.length > 0) {
-          const current = s.find((st) => st.name.toLowerCase() === 'current');
-          if (current) setForm((prev) => ({ ...prev, statusId: prev.statusId || String(current.id) }));
-        }
-        // Auto-set class to the one marked current (Individual) for new members
-        if (isNew && c.length > 0) {
-          const currentClass = c.find((cl) => cl.current);
-          if (currentClass) setForm((prev) => ({ ...prev, classId: prev.classId || String(currentClass.id) }));
+        // Auto-set defaults for new members
+        if (isNew) {
+          setForm((prev) => {
+            const updates = { ...prev };
+            // Status → Current
+            if (!updates.statusId && s.length > 0) {
+              const current = s.find((st) => st.name.toLowerCase() === 'current');
+              if (current) updates.statusId = String(current.id);
+            }
+            // Class → the one marked current (Individual)
+            if (!updates.classId && c.length > 0) {
+              const currentClass = c.find((cl) => cl.current);
+              if (currentClass) updates.classId = String(currentClass.id);
+            }
+            // Joined → today
+            if (!updates.joinedOn) updates.joinedOn = todayIso();
+            return updates;
+          });
         }
       })
       .catch(() => {});
