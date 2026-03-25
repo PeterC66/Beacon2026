@@ -694,7 +694,7 @@ export default function MemberEditor() {
           {isNew ? 'Add New Member' : `Member Record — ${form.forenames} ${form.surname}`}
         </h1>
         {!isNew && createdAt && (
-          <p className="text-xs text-slate-400 text-center">
+          <p className="text-xs text-slate-500 text-center">
             Member record created {fmtTimestamp(createdAt)}{updatedAt && updatedAt !== createdAt ? `; last changed ${fmtTimestamp(updatedAt)}` : ''}
           </p>
         )}
