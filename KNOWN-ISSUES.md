@@ -120,6 +120,13 @@ and should be added to the optional cookies list when the features are built:
 
 ---
 
+## Member Record (doc 4.2 / 4.3)
+
+1. **Photo upload** — Doc 4.3 mentions "the option to upload a photo of the member".
+   This is not yet implemented. Ref: doc 4.2, doc 4.3.
+
+---
+
 ## Accessibility / E2E
 
 1. **Form labels missing `htmlFor`/`id` association** — ~106 `<label>` elements
