@@ -138,6 +138,7 @@ export default function MemberEditor() {
   const [allPolls,      setAllPolls]      = useState([]);   // all polls in this u3a
   const [memberPollIds, setMemberPollIds] = useState([]);   // polls this member is in
   const [pollSaving,    setPollSaving]    = useState(false);
+  const [newMemberPollIds, setNewMemberPollIds] = useState([]);  // polls selected during add-new-member
 
   // ── Custom field labels ──────────────────────────────────────────────
   const [cfLabels, setCfLabels] = useState({ label1: '', label2: '', label3: '', label4: '' });
@@ -174,6 +175,11 @@ export default function MemberEditor() {
         if (isNew && s.length > 0) {
           const current = s.find((st) => st.name.toLowerCase() === 'current');
           if (current) setForm((prev) => ({ ...prev, statusId: prev.statusId || String(current.id) }));
+        }
+        // Auto-set class to the one marked current (Individual) for new members
+        if (isNew && c.length > 0) {
+          const currentClass = c.find((cl) => cl.current);
+          if (currentClass) setForm((prev) => ({ ...prev, classId: prev.classId || String(currentClass.id) }));
         }
       })
       .catch(() => {});
@@ -534,6 +540,11 @@ export default function MemberEditor() {
       if (isNew) {
         const created = await membersApi.create(payload);
         createdId = created?.id;
+        // Save poll selections for the newly created member
+        if (createdId && newMemberPollIds.length > 0) {
+          try { await pollsApi.setForMember(createdId, newMemberPollIds); }
+          catch { /* best-effort — member already created */ }
+        }
       } else {
         const patchPayload = {
           ...payload,
@@ -575,6 +586,10 @@ export default function MemberEditor() {
         if (confirm(`A member named "${form.forenames} ${form.surname}" already exists. Create anyway?`)) {
           try {
             const dup = await membersApi.create(payload, true);
+            if (dup?.id && newMemberPollIds.length > 0) {
+              try { await pollsApi.setForMember(dup.id, newMemberPollIds); }
+              catch { /* best-effort */ }
+            }
             markClean();
             navigate(dup?.id ? `/members/${dup.id}` : '/members');
             return;
@@ -693,13 +708,14 @@ export default function MemberEditor() {
                   className={ic('joinedOn')} />
                 {fieldErrors.joinedOn && <p className={errMsgCls}>{fieldErrors.joinedOn}</p>}
               </div>
-              <div>
-                <label className={labelCls}>Next renewal {isNew && <RequiredMark />}</label>
-                <DateInput value={form.nextRenewal}
-                  onChange={(v) => set('nextRenewal', v)}
-                  className={isNew ? ic('nextRenewal') : inputCls} />
-                {fieldErrors.nextRenewal && <p className={errMsgCls}>{fieldErrors.nextRenewal}</p>}
-              </div>
+              {!isNew && (
+                <div>
+                  <label className={labelCls}>Next renewal</label>
+                  <DateInput value={form.nextRenewal}
+                    onChange={(v) => set('nextRenewal', v)}
+                    className={inputCls} />
+                </div>
+              )}
             </div>
           </div>
 
@@ -1095,7 +1111,7 @@ export default function MemberEditor() {
           )}
 
           {/* ── Polls ───────────────────────────────────────────────── */}
-          {!isNew && allPolls.length > 0 && can('poll_set_up', 'view') && (
+          {allPolls.length > 0 && can('poll_set_up', 'view') && (
             <div className={sectionCls}>
               <h2 className="text-base font-semibold text-slate-700 mb-3">Polls</h2>
               <div className="flex flex-wrap gap-4">
@@ -1103,25 +1119,32 @@ export default function MemberEditor() {
                   <label key={poll.id} className="flex items-center gap-2 text-sm cursor-pointer">
                     <input
                       type="checkbox"
-                      checked={memberPollIds.includes(poll.id)}
-                      disabled={pollSaving || !can('poll_set_up', 'change')}
-                      onChange={async (e) => {
-                        const newIds = e.target.checked
-                          ? [...memberPollIds, poll.id]
-                          : memberPollIds.filter((x) => x !== poll.id);
-                        setMemberPollIds(newIds);
-                        setPollSaving(true);
-                        try { await pollsApi.setForMember(id, newIds); }
-                        catch { setMemberPollIds(memberPollIds); } // revert on error
-                        finally { setPollSaving(false); }
-                      }}
+                      checked={isNew ? newMemberPollIds.includes(poll.id) : memberPollIds.includes(poll.id)}
+                      disabled={!isNew && (pollSaving || !can('poll_set_up', 'change'))}
+                      onChange={isNew
+                        ? (e) => {
+                            setNewMemberPollIds((prev) =>
+                              e.target.checked ? [...prev, poll.id] : prev.filter((x) => x !== poll.id)
+                            );
+                          }
+                        : async (e) => {
+                            const newIds = e.target.checked
+                              ? [...memberPollIds, poll.id]
+                              : memberPollIds.filter((x) => x !== poll.id);
+                            setMemberPollIds(newIds);
+                            setPollSaving(true);
+                            try { await pollsApi.setForMember(id, newIds); }
+                            catch { setMemberPollIds(memberPollIds); } // revert on error
+                            finally { setPollSaving(false); }
+                          }
+                      }
                       className="rounded border-slate-300 text-blue-600 focus:ring-blue-500"
                     />
                     {poll.name}
                   </label>
                 ))}
               </div>
-              {pollSaving && <p className="text-xs text-slate-400 mt-2">Saving…</p>}
+              {!isNew && pollSaving && <p className="text-xs text-slate-400 mt-2">Saving…</p>}
             </div>
           )}
 
