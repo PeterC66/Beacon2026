@@ -34,6 +34,11 @@ Every item below applies to every new feature — no exceptions.
 
 - [ ] **Save success feedback** — transient green banner, auto-dismiss after 3 seconds.
 
+- [ ] **Mandatory field indicator** — use `<RequiredMark />` from
+  `frontend/src/components/RequiredMark.jsx` next to the label text. Renders a red
+  asterisk (`<span className="text-red-500 ml-0.5" aria-hidden="true">*</span>`).
+  Never use plain `*` in label text or `<strong>` to indicate required fields.
+
 - [ ] **Validation UX** — use `noValidate` on `<form>`, single `runValidation()` returning
   `{ fieldName: 'error message' }`, set all errors at once. Also validate on individual
   field blur.

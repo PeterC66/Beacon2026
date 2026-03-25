@@ -5,6 +5,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { publicApi } from '../../lib/api.js';
+import RequiredMark from '../../components/RequiredMark.jsx';
 
 const UK_POSTCODE_RE = /^(GIR\s?0AA|[A-Z]{1,2}[0-9][0-9A-Z]?\s?[0-9][ABD-HJLNP-UW-Z]{2})$/i;
 
@@ -189,7 +190,7 @@ export default function JoinForm() {
                   {fieldErrors.title && <p className="text-sm text-red-600 mt-1 font-medium">{fieldErrors.title}</p>}
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">First name *</label>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">First name <RequiredMark /></label>
                   <input
                     type="text"
                     name="forenames"
@@ -200,7 +201,7 @@ export default function JoinForm() {
                   {fieldErrors.forenames && <p className="text-sm text-red-600 mt-1 font-medium">{fieldErrors.forenames}</p>}
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Surname *</label>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Surname <RequiredMark /></label>
                   <input
                     type="text"
                     name="surname"
@@ -211,7 +212,7 @@ export default function JoinForm() {
                   {fieldErrors.surname && <p className="text-sm text-red-600 mt-1 font-medium">{fieldErrors.surname}</p>}
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Email *</label>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Email <RequiredMark /></label>
                   <input
                     type="email"
                     name="email"
@@ -279,7 +280,7 @@ export default function JoinForm() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Postcode *</label>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Postcode <RequiredMark /></label>
                   <input
                     type="text"
                     name="postcode"

@@ -755,9 +755,21 @@ Themes: `default`, `high-contrast`.
 - `NavBar` — glass-effect backdrop, blue links, `–` separator. Accepts `links` prop (not `items`)
 - `SortableHeader` + `useSortedData` — sortable columns with ▲/▼/⇅ indicator
 - `DateInput` — UK dd/mm/yyyy display, ISO value, calendar picker button
+- `RequiredMark` — red asterisk for mandatory form fields (`<span className="text-red-500 ml-0.5">*</span>`)
 - `ScrollButtons` — dual fixed-position scroll-to-top/bottom buttons (doc 6 "Table Lists").
   Pass `containerRef` (a ref to the table wrapper div). Only appears when the container
   overflows the viewport. Used on 12 list pages.
+
+### Mandatory field indicator (`RequiredMark`)
+
+Standard: `<RequiredMark />` from `frontend/src/components/RequiredMark.jsx`.
+Renders `<span className="text-red-500 ml-0.5" aria-hidden="true">*</span>`.
+
+Usage: `<label>Surname <RequiredMark /></label>`
+
+All existing forms have been migrated to use this component:
+JoinForm, PortalRegister, GroupRecord, OpenMeetings, VenueEditor,
+TransactionEditor, TransferMoney, TransactionRefund, MemberEditor.
 
 ### Save success feedback
 

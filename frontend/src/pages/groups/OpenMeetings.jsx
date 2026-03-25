@@ -7,6 +7,7 @@ import { Link } from 'react-router-dom';
 import { calendar as calendarApi, venues as venuesApi } from '../../lib/api.js';
 import { useAuth } from '../../context/AuthContext.jsx';
 import NavBar from '../../components/NavBar.jsx';
+import RequiredMark from '../../components/RequiredMark.jsx';
 import PageHeader from '../../components/PageHeader.jsx';
 
 function fmtDate(d) {
@@ -254,7 +255,7 @@ export default function OpenMeetings() {
                             <td className="px-3 py-2" colSpan={dataColSpan + (canManage ? 1 : 0)}>
                               <div className="flex flex-wrap gap-2 items-end">
                                 <div>
-                                  <label className={labelCls}>Date *</label>
+                                  <label className={labelCls}>Date <RequiredMark /></label>
                                   <input type="date" name="eventDate" className={inputCls} value={editForm.eventDate}
                                     onChange={(e) => setEditForm((p) => ({ ...p, eventDate: e.target.value }))} />
                                 </div>
@@ -372,7 +373,7 @@ export default function OpenMeetings() {
                 <form onSubmit={handleAdd} noValidate className="space-y-3">
                   <div className="flex flex-wrap gap-3 items-end">
                     <div>
-                      <label className={labelCls}>First date and time *</label>
+                      <label className={labelCls}>First date and time <RequiredMark /></label>
                       <input type="date" name="eventDate" className={inputCls} required value={addForm.eventDate}
                         onChange={(e) => setAdd('eventDate', e.target.value)} />
                     </div>

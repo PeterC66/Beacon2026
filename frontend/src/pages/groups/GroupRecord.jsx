@@ -8,6 +8,7 @@ import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { groups as groupsApi, faculties as facultiesApi, members as membersApi, venues as venuesApi, settings as settingsApi, requestBlob } from '../../lib/api.js';
 import { useAuth } from '../../context/AuthContext.jsx';
 import NavBar from '../../components/NavBar.jsx';
+import RequiredMark from '../../components/RequiredMark.jsx';
 import PageHeader from '../../components/PageHeader.jsx';
 import SortableHeader from '../../components/SortableHeader.jsx';
 import { useSortedData } from '../../hooks/useSortedData.js';
@@ -141,7 +142,7 @@ function GroupDetails({ groupId, faculties, venues, onSaved, onDeleted, sitework
 
       {/* Name */}
       <div>
-        <label className={labelCls}>Group Name *</label>
+        <label className={labelCls}>Group Name <RequiredMark /></label>
         <input name="name" className={`${inputCls} w-full`} required value={form.name}
           onChange={(e) => set('name', e.target.value)} disabled={!canChange} />
       </div>
@@ -933,7 +934,7 @@ function GroupSchedule({ groupId, groupData }) {
                       <td className="px-3 py-2" colSpan={dataColSpan + (canManage ? 1 : 0)}>
                         <div className="flex flex-wrap gap-2 items-end">
                           <div>
-                            <label className={labelCls}>Date *</label>
+                            <label className={labelCls}>Date <RequiredMark /></label>
                             <input name="eventDate" type="date" className={inputCls} value={editForm.eventDate}
                               onChange={(e) => setEditForm((p) => ({ ...p, eventDate: e.target.value }))} />
                           </div>
@@ -1051,7 +1052,7 @@ function GroupSchedule({ groupId, groupData }) {
           <form onSubmit={handleAdd} noValidate className="space-y-3">
             <div className="flex flex-wrap gap-3 items-end">
               <div>
-                <label className={labelCls}>First date *</label>
+                <label className={labelCls}>First date <RequiredMark /></label>
                 <input name="eventDate" type="date" className={inputCls} required value={addForm.eventDate}
                   onChange={(e) => setAdd('eventDate', e.target.value)} />
               </div>
@@ -1445,7 +1446,7 @@ function GroupLedger({ groupId }) {
           )}
           <div className="flex flex-wrap gap-3 items-end">
             <div>
-              <label className={labelCls}>Date *</label>
+              <label className={labelCls}>Date <RequiredMark /></label>
               <input name="entryDate" type="date" required className={inputCls} value={addForm.entryDate}
                 onChange={(e) => setAddForm((p) => ({ ...p, entryDate: e.target.value }))} />
             </div>

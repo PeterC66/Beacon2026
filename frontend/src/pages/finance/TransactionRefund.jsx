@@ -6,6 +6,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { finance as financeApi } from '../../lib/api.js';
 import { useAuth } from '../../context/AuthContext.jsx';
 import NavBar from '../../components/NavBar.jsx';
+import RequiredMark from '../../components/RequiredMark.jsx';
 import PageHeader from '../../components/PageHeader.jsx';
 import DateInput from '../../components/DateInput.jsx';
 
@@ -182,7 +183,7 @@ export default function TransactionRefund() {
 
             {/* Date */}
             <div>
-              <label className={LBL}>Refund date *</label>
+              <label className={LBL}>Refund date <RequiredMark /></label>
               <DateInput value={date} onChange={setDate} className={INP} />
             </div>
 
