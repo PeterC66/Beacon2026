@@ -124,6 +124,10 @@ export default function MemberEditor() {
   const sharedAddrWarn = useRef(false);
   // True when the partner dropdown was changed during this edit session
   const [partnerChanged, setPartnerChanged] = useState(false);
+  // Snapshot of address fields as loaded — used to detect address-only changes
+  const originalAddress = useRef(null);
+  // 3-option modal for shared address scope
+  const [addrScopeModal, setAddrScopeModal] = useState(null); // { resolve, thisName }
 
   // ── Year config for auto-computing next renewal ───────────────────────
   const [yearConfig, setYearConfig] = useState(null);
@@ -295,6 +299,16 @@ export default function MemberEditor() {
             telephone:         m.telephone       ?? '',
             existingPartnerId: m.partner_id      ?? '',
           });
+          originalAddress.current = {
+            houseNo:   m.house_no   ?? '',
+            street:    m.street     ?? '',
+            addLine1:  m.add_line1  ?? '',
+            addLine2:  m.add_line2  ?? '',
+            town:      m.town       ?? '',
+            county:    m.county     ?? '',
+            postcode:  m.postcode   ?? '',
+            telephone: m.telephone  ?? '',
+          };
           setCreatedAt(m.created_at ?? null);
           setUpdatedAt(m.updated_at ?? null);
           setAddressShared(m.address_shared ?? false);
@@ -466,6 +480,20 @@ export default function MemberEditor() {
     setNpForm((prev) => ({ ...prev, [field]: value }));
   }
 
+  // Check if any address fields changed compared to the loaded snapshot
+  const ADDRESS_FIELDS = ['houseNo', 'street', 'addLine1', 'addLine2', 'town', 'county', 'postcode', 'telephone'];
+  function addressFieldsChanged() {
+    if (!originalAddress.current) return false;
+    return ADDRESS_FIELDS.some((f) => (form[f] ?? '') !== (originalAddress.current[f] ?? ''));
+  }
+
+  // Show a 3-option modal and return a promise resolving to 'both' | 'me-only' | 'cancel'
+  function askAddressScope(thisName) {
+    return new Promise((resolve) => {
+      setAddrScopeModal({ resolve, thisName });
+    });
+  }
+
   async function handleSave(e) {
     e.preventDefault();
 
@@ -587,14 +615,15 @@ export default function MemberEditor() {
         if (partnerChanged) {
           // Partner changed: backend handles address linking; don't send address fields
           delete patchPayload.address;
-        } else if (addressShared && patchPayload.address) {
-          // Existing shared address: ask which scope to apply
+        } else if (addressShared && patchPayload.address && addressFieldsChanged()) {
+          // Existing shared address with address changes: ask 3-option scope
           const thisName = `${form.forenames} ${form.surname}`.trim();
-          const choice = confirm(
-            `Is this address change for both ${partnerName} and ${thisName}, or just ${thisName}?\n\n` +
-            `Click OK for both, Cancel for just ${thisName}.`
-          );
-          patchPayload.addressScope = choice ? 'both' : 'me-only';
+          const scope = await askAddressScope(thisName);
+          if (scope === 'cancel') {
+            setSaving(false);
+            return;
+          }
+          patchPayload.addressScope = scope; // 'both' or 'me-only'
         }
 
         // Shared address warning: alert if partner has different status or class
@@ -1339,6 +1368,38 @@ export default function MemberEditor() {
       </div>
 
       <NavBar links={navLinks} />
+
+      {/* ── Shared address scope modal ─────────────────────────────── */}
+      {addrScopeModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+          <div className="bg-white rounded-lg shadow-xl p-6 max-w-md mx-4 space-y-4">
+            <h3 className="text-base font-semibold text-slate-800">Shared Address Change</h3>
+            <p className="text-sm text-slate-600">
+              This address is shared with <strong>{partnerName}</strong>. Apply this change to:
+            </p>
+            <div className="flex flex-col gap-2">
+              <button
+                onClick={() => { const r = addrScopeModal.resolve; setAddrScopeModal(null); r('both'); }}
+                className="bg-blue-600 hover:bg-blue-700 text-white rounded px-4 py-2 text-sm font-medium transition-colors"
+              >
+                Both {addrScopeModal.thisName} and {partnerName}
+              </button>
+              <button
+                onClick={() => { const r = addrScopeModal.resolve; setAddrScopeModal(null); r('me-only'); }}
+                className="border border-blue-300 text-blue-700 hover:bg-blue-50 rounded px-4 py-2 text-sm font-medium transition-colors"
+              >
+                Just {addrScopeModal.thisName}
+              </button>
+              <button
+                onClick={() => { const r = addrScopeModal.resolve; setAddrScopeModal(null); r('cancel'); }}
+                className="border border-slate-300 text-slate-600 hover:bg-slate-50 rounded px-4 py-2 text-sm transition-colors"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
