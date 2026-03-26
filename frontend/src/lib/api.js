@@ -210,8 +210,9 @@ export const members = {
     if (params.pollId)      qs.set('pollId',       params.pollId);
     if (params.negatePoll)  qs.set('negatePoll',   '1');
     if (params.q)           qs.set('q',            params.q);
-    if (params.cf)          qs.set('cf',           params.cf);
-    if (params.letter)      qs.set('letter',       params.letter);
+    if (params.cf)            qs.set('cf',            params.cf);
+    if (params.letter)        qs.set('letter',        params.letter);
+    if (params.paymentMethod) qs.set('paymentMethod',  params.paymentMethod);
     const query = qs.toString();
     return request(`/members${query ? '?' + query : ''}`);
   },
