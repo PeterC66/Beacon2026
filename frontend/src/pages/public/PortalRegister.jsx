@@ -5,6 +5,7 @@ import { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { publicApi } from '../../lib/api.js';
 import RequiredMark from '../../components/RequiredMark.jsx';
+import { scrollToFirstFieldError } from '../../lib/scrollToError.js';
 
 export default function PortalRegister() {
   const { slug } = useParams();
@@ -42,7 +43,7 @@ export default function PortalRegister() {
     e.preventDefault();
     const errs = validate();
     setFieldErrors(errs);
-    if (Object.keys(errs).length > 0) return;
+    if (Object.keys(errs).length > 0) { scrollToFirstFieldError(Object.keys(errs)); return; }
 
     setSubmitting(true);
     setError('');

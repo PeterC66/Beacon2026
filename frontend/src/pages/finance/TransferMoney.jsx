@@ -8,6 +8,7 @@ import { useUnsavedChanges } from '../../hooks/useUnsavedChanges.js';
 import NavBar from '../../components/NavBar.jsx';
 import RequiredMark from '../../components/RequiredMark.jsx';
 import PageHeader from '../../components/PageHeader.jsx';
+import { scrollToFormError } from '../../lib/scrollToError.js';
 
 const inputCls   = 'border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 w-full';
 const btnPrimary = 'bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white rounded px-5 py-2 text-sm font-medium transition-colors';
@@ -77,7 +78,7 @@ export default function TransferMoney() {
   async function handleSave(e, addAnother = false) {
     e.preventDefault();
     const err = validate();
-    if (err) { setFormError(err); return; }
+    if (err) { setFormError(err); scrollToFormError(); return; }
     setFormError(null);
     setSaving(true);
     try {
@@ -172,7 +173,7 @@ export default function TransferMoney() {
               </p>
             )}
             {formError && (
-              <p className="rounded-md bg-red-50 border border-red-300 px-4 py-3 text-red-700 text-sm font-medium mb-3">
+              <p data-form-error className="rounded-md bg-red-50 border border-red-300 px-4 py-3 text-red-700 text-sm font-medium mb-3">
                 {formError}
               </p>
             )}

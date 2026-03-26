@@ -11,6 +11,7 @@ import PageHeader from '../../components/PageHeader.jsx';
 import DateInput from '../../components/DateInput.jsx';
 import GoToMemberButton from '../../components/GoToMemberButton.jsx';
 import { useUnsavedChanges } from '../../hooks/useUnsavedChanges.js';
+import { scrollToFirstFieldError } from '../../lib/scrollToError.js';
 
 function todayIso() { return new Date().toISOString().slice(0, 10); }
 
@@ -502,6 +503,7 @@ export default function MemberEditor() {
     const errs = runValidation();
     if (Object.keys(errs).length > 0) {
       setFieldErrors(errs);
+      scrollToFirstFieldError(Object.keys(errs));
       setSaving(false);
       return;
     }

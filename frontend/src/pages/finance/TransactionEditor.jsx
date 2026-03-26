@@ -10,6 +10,7 @@ import RequiredMark from '../../components/RequiredMark.jsx';
 import PageHeader from '../../components/PageHeader.jsx';
 import DateInput from '../../components/DateInput.jsx';
 import { useUnsavedChanges } from '../../hooks/useUnsavedChanges.js';
+import { scrollToFormError } from '../../lib/scrollToError.js';
 
 const PAYMENT_METHODS = ['', 'Cheque', 'Cash', 'PayPal', 'Standing Order', 'Direct Debit',
                          'BACS', 'Debit card', 'Account transfer', 'Credit card'];
@@ -219,7 +220,7 @@ export default function TransactionEditor() {
   async function handleSave(e, addAnother = false) {
     e.preventDefault();
     const err = validate();
-    if (err) { setError(err); return; }
+    if (err) { setError(err); scrollToFormError(); return; }
     setSaving(true);
     setError(null);
     try {
@@ -329,7 +330,7 @@ export default function TransactionEditor() {
           </div>
         )}
 
-        {error && <p className="text-center text-red-600 py-2 mb-2">Error: {error}</p>}
+        {error && <p data-form-error className="text-center text-red-600 py-2 mb-2">Error: {error}</p>}
         {saved && (
           <p className="text-green-700 text-sm font-medium bg-green-50 border border-green-200 rounded px-3 py-2 text-center mb-2">
             ✓ Saved successfully.

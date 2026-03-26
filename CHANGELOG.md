@@ -27,6 +27,9 @@ Format: `## [version] — YYYY-MM-DD` with bullet points per change.
 - Hint text below Home u3a field for Associate members
 - Show login attempts remaining on failed login
 - Show "Settings last changed" timestamp on System Settings page
+- Scroll-to-first-error on form validation failure — shared utility applied to all
+  6 forms (MemberEditor, JoinForm, PortalRegister, TransactionEditor,
+  TransactionRefund, TransferMoney)
 
 ### Changed
 - Street field label renamed to "Street/Building" on member record

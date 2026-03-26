@@ -47,6 +47,15 @@ Every item below applies to every new feature — no exceptions.
   `{ fieldName: 'error message' }`, set all errors at once. Also validate on individual
   field blur.
 
+- [ ] **Scroll to first error on validation failure** — every form must scroll to the
+  first error when the user clicks Save and validation fails.
+  - **Field-level errors** (`fieldErrors` object): call
+    `scrollToFirstFieldError(Object.keys(errs))` from `frontend/src/lib/scrollToError.js`.
+    This finds the first `<input>`/`<select>` by its `name` attribute and scrolls + focuses it.
+  - **Form-level errors** (single error string): add `data-form-error` to the error
+    display element, then call `scrollToFormError()` which scrolls to that element
+    after the next render frame.
+
 - [ ] **Backend Zod errors → inline field errors** — catch 422 with `issues` array,
   map to `setFieldErrors()`.
 
