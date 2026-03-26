@@ -6,6 +6,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { publicApi } from '../../lib/api.js';
 import RequiredMark from '../../components/RequiredMark.jsx';
+import { scrollToFirstFieldError } from '../../lib/scrollToError.js';
 
 const UK_POSTCODE_RE = /^(GIR\s?0AA|[A-Z]{1,2}[0-9][0-9A-Z]?\s?[0-9][ABD-HJLNP-UW-Z]{2})$/i;
 
@@ -67,7 +68,7 @@ export default function JoinForm() {
     e.preventDefault();
     const errs = validate();
     setFieldErrors(errs);
-    if (Object.keys(errs).length > 0) return;
+    if (Object.keys(errs).length > 0) { scrollToFirstFieldError(Object.keys(errs)); return; }
 
     setSubmitting(true);
     setError('');

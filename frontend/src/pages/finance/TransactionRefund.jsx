@@ -9,6 +9,7 @@ import NavBar from '../../components/NavBar.jsx';
 import RequiredMark from '../../components/RequiredMark.jsx';
 import PageHeader from '../../components/PageHeader.jsx';
 import DateInput from '../../components/DateInput.jsx';
+import { scrollToFormError } from '../../lib/scrollToError.js';
 
 const PAYMENT_METHODS = ['', 'Cheque', 'Cash', 'PayPal', 'Standing Order', 'Direct Debit',
                          'BACS', 'Debit card', 'Account transfer', 'Credit card'];
@@ -77,7 +78,7 @@ export default function TransactionRefund() {
   async function handleSave(e) {
     e.preventDefault();
     const err = validate();
-    if (err) { setError(err); return; }
+    if (err) { setError(err); scrollToFormError(); return; }
     setSaving(true);
     setError(null);
     try {
@@ -140,7 +141,7 @@ export default function TransactionRefund() {
       <div className="max-w-4xl mx-auto px-4 py-5">
         <h1 className="text-xl font-bold text-center mb-4">Transaction Refund</h1>
 
-        {error && <p className="text-center text-red-600 py-2 mb-2">Error: {error}</p>}
+        {error && <p data-form-error className="text-center text-red-600 py-2 mb-2">Error: {error}</p>}
 
         {/* Original transaction info */}
         <div className="bg-white/90 rounded-lg shadow-sm p-4 sm:p-6 mb-4">
