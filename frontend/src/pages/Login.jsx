@@ -156,6 +156,7 @@ export default function Login() {
 
   const [form, setForm] = useState({ tenantSlug: getLastU3aCookie(), username: '', password: '' });
   const [showPw, setShowPw] = useState(false);
+  const [triesLeft, setTriesLeft] = useState(3);
 
   // Recovery state
   const [recoverState, setRecoverState] = useState({
@@ -177,8 +178,10 @@ export default function Login() {
     const ok = await login(form.tenantSlug, form.username, form.password);
     if (ok) {
       setLastU3aCookie(form.tenantSlug);
-      // Navigate happens on next render; mustChangePassword will redirect via ProtectedRoute
+      setTriesLeft(3);
       navigate('/');
+    } else {
+      setTriesLeft((prev) => Math.max(0, prev - 1));
     }
   };
 
@@ -205,7 +208,10 @@ export default function Login() {
 
       {error && (
         <div className="mt-4 w-full max-w-xs p-3 bg-red-50 border border-red-300 rounded text-red-700 text-sm text-center">
-          {error}
+          Your login credentials are not recognised. Please try again.
+          {triesLeft > 0
+            ? ` You have ${triesLeft} ${triesLeft === 1 ? 'try' : 'tries'} left.`
+            : ' You have no tries left. Please contact your Site Administrator.'}
         </div>
       )}
 
@@ -264,7 +270,7 @@ export default function Login() {
 
         <button
           type="submit"
-          disabled={loading}
+          disabled={loading || triesLeft === 0}
           className="w-full py-2.5 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white rounded font-medium text-sm transition-colors"
         >
           {loading ? 'Signing in\u2026' : 'Enter'}
