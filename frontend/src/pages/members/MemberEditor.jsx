@@ -1098,7 +1098,7 @@ export default function MemberEditor() {
                   className={inputCls} />
               </div>
               <div>
-                <label className={labelCls}>Street</label>
+                <label className={labelCls}>Street/Building</label>
                 <input type="text" name="street" value={form.street}
                   onChange={(e) => set('street', e.target.value)}
                   className={inputCls} />
