@@ -1,0 +1,498 @@
+// Beacon2 Data Model — paste into https://dbdiagram.io/d
+// Generated 2026-03-26
+
+// ═══════════════════════════════════════════════
+// PUBLIC SCHEMA (system-level)
+// ═══════════════════════════════════════════════
+
+Table sys_tenants {
+  id         varchar [pk]
+  name       varchar [not null, note: 'e.g. Oxfordshire u3a']
+  slug       varchar [unique, not null, note: 'e.g. oxfordshire → schema u3a_oxfordshire']
+  active     boolean [default: true]
+  created_at timestamptz [default: `now()`]
+  updated_at timestamptz
+}
+
+Table sys_admins {
+  id            varchar [pk]
+  email         varchar [unique, not null]
+  password_hash varchar [not null]
+  name          varchar [not null]
+  active        boolean [default: true]
+  created_at    timestamptz [default: `now()`]
+  updated_at    timestamptz
+  last_login    timestamptz
+}
+
+Table sys_settings {
+  id              varchar [pk, default: 'singleton']
+  system_message  text [default: '<<System Message here>>']
+  created_at      timestamptz [default: `now()`]
+  updated_at      timestamptz
+}
+
+// ═══════════════════════════════════════════════
+// PER-TENANT SCHEMA (one set per u3a)
+// ═══════════════════════════════════════════════
+
+// ─── Access Control ──────────────────────────
+
+Table users {
+  id                  varchar [pk]
+  email               varchar [unique, not null]
+  username            varchar [unique]
+  password_hash       varchar
+  name                varchar [not null]
+  active              boolean [default: true]
+  is_site_admin       boolean [default: false]
+  security_question   text
+  security_answer_hash text
+  must_change_password boolean [default: false]
+  member_id           varchar [ref: - members.id, note: 'optional 1:1 link']
+  created_at          timestamptz [default: `now()`]
+  updated_at          timestamptz
+  last_login          timestamptz
+}
+
+Table roles {
+  id           varchar [pk]
+  name         varchar [not null]
+  is_committee boolean [default: false]
+  notes        text
+  created_at   timestamptz [default: `now()`]
+  updated_at   timestamptz
+}
+
+Table user_roles {
+  id          varchar [pk]
+  user_id     varchar [not null, ref: > users.id]
+  role_id     varchar [not null, ref: > roles.id]
+  assigned_at timestamptz [default: `now()`]
+
+  indexes {
+    (user_id, role_id) [unique]
+  }
+}
+
+Table privilege_resources {
+  id      varchar [pk]
+  code    varchar [unique, not null, note: 'e.g. finance:transactions']
+  label   varchar [not null]
+  actions varchar [not null, note: 'TEXT[] e.g. {view,create,change,delete}']
+}
+
+Table role_privileges {
+  id          varchar [pk]
+  role_id     varchar [not null, ref: > roles.id]
+  resource_id varchar [not null, ref: > privilege_resources.id]
+  action      varchar [not null, note: 'view|create|change|delete|download']
+
+  indexes {
+    (role_id, resource_id, action) [unique]
+  }
+}
+
+Table refresh_tokens {
+  id         varchar [pk]
+  user_id    varchar [not null, ref: > users.id]
+  token_hash varchar [unique, not null]
+  expires_at timestamptz [not null]
+  revoked    boolean [default: false]
+  created_at timestamptz [default: `now()`]
+}
+
+// ─── Members & Addresses ─────────────────────
+
+Table addresses {
+  id         varchar [pk]
+  house_no   varchar
+  street     varchar
+  add_line1  varchar [note: 'district / village']
+  add_line2  varchar
+  town       varchar
+  county     varchar
+  postcode   varchar
+  telephone  varchar [note: 'home landline — shared between partners']
+  created_at timestamptz [default: `now()`]
+  updated_at timestamptz
+}
+
+Table member_statuses {
+  id         varchar [pk]
+  name       varchar [unique, not null]
+  locked     boolean [default: false]
+  created_at timestamptz [default: `now()`]
+  updated_at timestamptz
+}
+
+Table member_classes {
+  id           varchar [pk]
+  name         varchar [not null]
+  current      boolean [default: true]
+  explanation  text
+  is_joint     boolean [default: false]
+  is_associate boolean [default: false]
+  show_online  boolean [default: false]
+  fee          decimal(8,2)
+  gift_aid_fee decimal(8,2)
+  locked       boolean [default: false]
+  created_at   timestamptz [default: `now()`]
+  updated_at   timestamptz
+}
+
+Table class_monthly_fees {
+  id           varchar [pk]
+  class_id     varchar [not null, ref: > member_classes.id]
+  month_index  integer [not null, note: '1-12 = Jan-Dec, 13 = Renewals']
+  fee          decimal(8,2)
+  gift_aid_fee decimal(8,2)
+
+  indexes {
+    (class_id, month_index) [unique]
+  }
+}
+
+Table members {
+  id                  varchar [pk]
+  membership_number   integer [unique, not null, note: 'auto-sequence']
+  title               varchar
+  forenames           varchar [not null]
+  surname             varchar [not null]
+  known_as            varchar
+  initials            varchar
+  suffix              varchar
+  email               varchar
+  mobile              varchar
+  address_id          varchar [ref: > addresses.id]
+  status_id           varchar [ref: > member_statuses.id]
+  class_id            varchar [ref: > member_classes.id]
+  joined_on           date
+  next_renewal        date
+  gift_aid_from       date
+  home_u3a            varchar [note: 'for associate-class members']
+  notes               text
+  hide_contact        boolean [default: false]
+  partner_id          varchar [ref: > members.id, note: 'self-ref partner']
+  custom_field_1      text
+  custom_field_2      text
+  custom_field_3      text
+  custom_field_4      text
+  emergency_contact   text
+  card_printed        boolean [default: false]
+  portal_email        varchar
+  portal_password_hash varchar
+  portal_email_verified boolean [default: false]
+  portal_verification_token varchar
+  portal_verification_expires timestamptz
+  portal_reset_token  varchar
+  portal_reset_expires timestamptz
+  created_at          timestamptz [default: `now()`]
+  updated_at          timestamptz
+}
+
+// ─── Groups & Events ─────────────────────────
+
+Table faculties {
+  id         varchar [pk]
+  name       varchar [unique, not null]
+  created_at timestamptz [default: `now()`]
+  updated_at timestamptz
+}
+
+Table venues {
+  id              varchar [pk]
+  name            varchar [not null]
+  address1        varchar
+  address2        varchar
+  town            varchar
+  county          varchar
+  postcode        varchar
+  telephone       varchar
+  email           varchar
+  website         varchar
+  notes           text
+  private_address boolean [default: false]
+  accessible      boolean [default: false]
+  created_at      timestamptz [default: `now()`]
+  updated_at      timestamptz
+}
+
+Table groups {
+  id                   varchar [pk]
+  name                 varchar [not null]
+  faculty_id           varchar [ref: > faculties.id]
+  status               varchar [not null, default: 'active', note: 'active | inactive']
+  when_text            varchar [note: 'e.g. 2nd Thursday at 2:00pm']
+  start_time           time
+  end_time             time
+  venue                varchar [note: 'legacy free-text']
+  venue_id             varchar [ref: > venues.id]
+  enquiries            varchar
+  max_members          integer
+  allow_online_join    boolean [default: false]
+  enable_waiting_list  boolean [default: false]
+  notify_leader        boolean [default: false]
+  display_waiting_list boolean [default: false]
+  information          text [note: 'may be shown publicly']
+  notes                text [note: 'private']
+  show_addresses       boolean [default: false]
+  created_at           timestamptz [default: `now()`]
+  updated_at           timestamptz
+}
+
+Table group_members {
+  id            varchar [pk]
+  group_id      varchar [not null, ref: > groups.id]
+  member_id     varchar [not null, ref: > members.id]
+  is_leader     boolean [default: false]
+  waiting_since date [note: 'non-null = on waiting list']
+  created_at    timestamptz [default: `now()`]
+
+  indexes {
+    (group_id, member_id) [unique]
+  }
+}
+
+Table group_events {
+  id         varchar [pk]
+  group_id   varchar [ref: > groups.id, note: 'nullable for open meetings']
+  event_date date [not null]
+  start_time time
+  end_time   time
+  venue_id   varchar [ref: > venues.id]
+  contact    varchar
+  details    text
+  topic      text
+  is_private boolean [default: false]
+  created_at timestamptz [default: `now()`]
+  updated_at timestamptz
+}
+
+Table group_ledger_entries {
+  id         varchar [pk]
+  group_id   varchar [not null, ref: > groups.id]
+  entry_date date [not null]
+  payee      varchar
+  detail     varchar
+  money_in   decimal(10,2)
+  money_out  decimal(10,2)
+  created_at timestamptz [default: `now()`]
+  updated_at timestamptz
+}
+
+// ─── Finance ─────────────────────────────────
+
+Table finance_accounts {
+  id                      varchar [pk]
+  name                    varchar [not null]
+  active                  boolean [default: true]
+  locked                  boolean [default: false]
+  sort_order              integer [default: 0]
+  pending_config          varchar [default: 'disabled', note: 'disabled|optional|by_type']
+  pending_types           varchar [note: 'TEXT[] — payment types auto-pending']
+  enable_refunds          boolean [default: false]
+  balance_brought_forward decimal(10,2) [default: 0]
+  created_at              timestamptz [default: `now()`]
+  updated_at              timestamptz
+}
+
+Table finance_categories {
+  id         varchar [pk]
+  name       varchar [not null]
+  active     boolean [default: true]
+  locked     boolean [default: false]
+  sort_order integer [default: 0]
+  created_at timestamptz [default: `now()`]
+  updated_at timestamptz
+}
+
+Table credit_batches {
+  id         varchar [pk]
+  batch_ref  varchar [not null]
+  account_id varchar [not null, ref: > finance_accounts.id]
+  created_at timestamptz [default: `now()`]
+
+  indexes {
+    (account_id, batch_ref) [unique]
+  }
+}
+
+Table transactions {
+  id                 varchar [pk]
+  transaction_number integer [unique, not null, note: 'auto-sequence']
+  account_id         varchar [not null, ref: > finance_accounts.id]
+  date               date [not null]
+  type               varchar [not null, note: 'in | out']
+  from_to            varchar
+  amount             decimal(10,2) [not null]
+  payment_method     varchar
+  payment_ref        varchar
+  detail             varchar
+  remarks            text
+  member_id_1        varchar [ref: > members.id]
+  member_id_2        varchar [ref: > members.id]
+  group_id           varchar [ref: > groups.id]
+  cleared_at         date
+  transfer_id        varchar [note: 'pairs transfer transactions']
+  pending            boolean [default: false]
+  gift_aid_amount    decimal(10,2)
+  gift_aid_claimed_at date
+  batch_id           varchar [ref: > credit_batches.id]
+  refund_of_id       varchar [ref: > transactions.id, note: 'original txn']
+  refunded_by_id     varchar [ref: > transactions.id, note: 'refund txn']
+  created_at         timestamptz [default: `now()`]
+  updated_at         timestamptz
+}
+
+Table transaction_categories {
+  id             varchar [pk]
+  transaction_id varchar [not null, ref: > transactions.id]
+  category_id    varchar [not null, ref: > finance_categories.id]
+  amount         decimal(10,2) [not null]
+
+  indexes {
+    (transaction_id, category_id) [unique]
+  }
+}
+
+Table payment_method_defaults {
+  payment_method varchar [pk]
+  account_id     varchar
+  updated_at     timestamptz
+}
+
+// ─── Polls ───────────────────────────────────
+
+Table polls {
+  id             varchar [pk]
+  name           varchar [not null]
+  description    text [default: '']
+  member_can_set boolean [default: false]
+  created_at     timestamptz [default: `now()`]
+  updated_at     timestamptz
+}
+
+Table poll_members {
+  poll_id   varchar [not null, ref: > polls.id]
+  member_id varchar [not null, ref: > members.id]
+
+  indexes {
+    (poll_id, member_id) [pk]
+  }
+}
+
+// ─── Communications ──────────────────────────
+
+Table email_batches {
+  id              varchar [pk]
+  user_id         varchar [not null]
+  subject         varchar [not null]
+  body            text [not null]
+  from_email      varchar [not null]
+  reply_to        varchar [not null]
+  recipient_count integer [default: 0]
+  sent_at         timestamptz [default: `now()`]
+}
+
+Table email_recipients {
+  id                  varchar [pk]
+  batch_id            varchar [not null, ref: > email_batches.id]
+  member_id           varchar
+  email_address       varchar [not null]
+  display_name        varchar [default: '']
+  status              varchar [default: 'Despatched']
+  sendgrid_message_id varchar
+  error_message       text
+  updated_at          timestamptz
+}
+
+Table standard_messages {
+  id         varchar [pk]
+  name       varchar [unique, not null]
+  subject    varchar [default: '']
+  body       text [default: '']
+  created_at timestamptz [default: `now()`]
+  updated_at timestamptz
+}
+
+Table standard_letters {
+  id         varchar [pk]
+  name       varchar [unique, not null]
+  body       text [default: '']
+  created_at timestamptz [default: `now()`]
+  updated_at timestamptz
+}
+
+Table system_messages {
+  id         varchar [pk, note: 'well-known IDs: online_join_confirm, etc.']
+  name       varchar [not null]
+  subject    varchar [default: '']
+  body       text [default: '']
+  updated_at timestamptz
+}
+
+// ─── Offices & Audit ─────────────────────────
+
+Table offices {
+  id                 varchar [pk]
+  name               varchar [not null]
+  member_id          varchar [ref: > members.id]
+  office_email       varchar
+  notify_online_join boolean [default: false]
+  created_at         timestamptz [default: `now()`]
+  updated_at         timestamptz
+}
+
+Table audit_log {
+  id          varchar [pk]
+  user_id     varchar
+  user_name   varchar [not null]
+  action      varchar [not null]
+  entity_type varchar [not null]
+  entity_id   varchar
+  entity_name varchar
+  detail      text
+  created_at  timestamptz [default: `now()`]
+}
+
+// ─── Tenant Settings (singleton) ─────────────
+
+Table tenant_settings {
+  id                        varchar [pk, default: 'singleton']
+  card_colour               varchar [default: '#0066cc']
+  email_cards               boolean [default: false]
+  public_phone              varchar
+  public_email              varchar
+  home_page                 varchar
+  online_join_email         varchar
+  online_renew_email        varchar
+  fee_variation             varchar [default: 'same_all_year', note: 'same_all_year | varies_by_month']
+  extended_membership_month integer
+  advance_renewals_weeks    integer [default: 4]
+  grace_lapse_weeks         integer [default: 4]
+  deletion_years            integer [default: 7]
+  default_payment_method    varchar [default: 'Cheque']
+  gift_aid_enabled          boolean [default: false]
+  gift_aid_online_renewals  boolean [default: false]
+  default_town              varchar
+  default_county            varchar
+  default_std_code          varchar
+  paypal_email              varchar
+  paypal_cancel_url         varchar
+  shared_address_warning    boolean [default: false]
+  year_start_month          integer [default: 1]
+  year_start_day            integer [default: 1]
+  online_joining_enabled    boolean [default: false]
+  privacy_policy_url        varchar
+  group_bf_enabled          boolean [default: false]
+  siteworks_activated       boolean [default: false]
+  custom_field_label_1      varchar
+  custom_field_label_2      varchar
+  custom_field_label_3      varchar
+  custom_field_label_4      varchar
+  portal_config             varchar [note: 'JSONB']
+  group_info_config         varchar [note: 'JSONB']
+  calendar_config           varchar [note: 'JSONB']
+  updated_at                timestamptz
+}
