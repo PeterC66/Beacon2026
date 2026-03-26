@@ -1,13 +1,21 @@
 // beacon2/frontend/src/pages/Home.jsx
 // Landing page after login — main administration menu.
 
+import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext.jsx';
+import { settings as settingsApi } from '../lib/api.js';
 import PageHeader from '../components/PageHeader.jsx';
 
 export default function Home() {
   const { user, tenant, logout, can } = useAuth();
   const navigate = useNavigate();
+
+  const [homeInfo, setHomeInfo] = useState(null);
+
+  useEffect(() => {
+    settingsApi.getHomeInfo().then(setHomeInfo).catch(() => {});
+  }, []);
 
   const handleLogout = async () => {
     await logout();
@@ -83,6 +91,16 @@ export default function Home() {
     },
   ];
 
+  const tenantName = homeInfo?.tenantName ?? '';
+
+  // Public website links use the tenant slug
+  const publicLinks = [
+    { label: `Join ${tenantName || 'us'} now!`, to: `/public/${tenant}/join` },
+    { label: 'Members Portal', to: `/public/${tenant}/portal` },
+    { label: 'Public groups list', to: null },
+    { label: 'Public calendar', to: null },
+  ];
+
   return (
     <div className="min-h-screen pb-10">
 
@@ -144,9 +162,48 @@ export default function Home() {
           ))}
         </div>
 
+        {/* ── Links & Messages panel ─────────────────────────────────── */}
+        <div className="mt-4 bg-gradient-to-br from-yellow-50 to-amber-100 border border-slate-300 rounded-lg overflow-hidden shadow-sm">
+
+          {/* Fixed links row */}
+          <div className="flex flex-wrap justify-center gap-x-8 gap-y-1 px-4 py-2 bg-white/80 border-b border-slate-300 text-sm">
+            <a href="https://demo.u3abeacon.org.uk/dashboard.php#" target="_blank" rel="noopener noreferrer" className="text-blue-700 hover:underline">u3a Beacon Users' Forum</a>
+            <a href="https://u3abeacon.zendesk.com/hc/en-gb" target="_blank" rel="noopener noreferrer" className="text-blue-700 hover:underline">Beacon User Guide</a>
+            <a href="https://demo.u3abeacon.org.uk/dashboard.php#" target="_blank" rel="noopener noreferrer" className="text-blue-700 hover:underline">Beacon Website</a>
+          </div>
+
+          {/* Public website links row */}
+          <div className="flex flex-wrap items-center gap-x-6 gap-y-1 px-4 py-2 border-b border-slate-300 text-sm">
+            <span className="font-bold text-sm whitespace-nowrap">Public website links</span>
+            {publicLinks.map((link) => (
+              link.to
+                ? <Link key={link.label} to={link.to} className="text-blue-700 hover:underline">{link.label}</Link>
+                : <span key={link.label} className="text-slate-400">{link.label}</span>
+            ))}
+          </div>
+
+          {/* Documents row */}
+          <div className="flex flex-wrap items-center gap-x-6 gap-y-1 px-4 py-2 text-sm">
+            <span className="font-bold text-sm whitespace-nowrap">Documents</span>
+            <a href="https://beacon.u3a.org.uk/engagement" target="_blank" rel="noopener noreferrer" className="text-blue-700 hover:underline">Documentation for prospective Beacon users</a>
+          </div>
+        </div>
+
         <p className="text-center text-xs text-slate-500 italic mt-2">
           Hover mouse over captions for more information
         </p>
+
+        {/* ── Messages ───────────────────────────────────────────────── */}
+        {homeInfo && (homeInfo.systemMessage || homeInfo.homeNotice) && (
+          <div className="mt-3 bg-white/90 border border-slate-200 rounded-lg shadow-sm p-4 space-y-3">
+            {homeInfo.systemMessage && (
+              <p className="text-sm text-slate-800 whitespace-pre-wrap">{homeInfo.systemMessage}</p>
+            )}
+            {homeInfo.homeNotice && (
+              <p className="text-sm text-slate-700 font-medium whitespace-pre-wrap">{homeInfo.homeNotice}</p>
+            )}
+          </div>
+        )}
 
       </div>
     </div>

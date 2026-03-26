@@ -39,3 +39,12 @@ model SysAdmin {
 
   @@map("sys_admins")
 }
+
+model SysSettings {
+  id             String   @id @default("singleton")
+  systemMessage  String   @default("<<System Message here>>")
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@map("sys_settings")
+}

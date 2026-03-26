@@ -4,7 +4,7 @@ import { Router } from 'express';
 import { z } from 'zod';
 import { requireAuth } from '../middleware/auth.js';
 import { requirePrivilege } from '../middleware/requirePrivilege.js';
-import { tenantQuery } from '../utils/db.js';
+import { prisma, tenantQuery } from '../utils/db.js';
 import { logAudit } from '../utils/audit.js';
 
 const router = Router();
@@ -93,6 +93,38 @@ router.get('/siteworks-config', async (req, res, next) => {
     res.json({
       siteworksActivated: row?.siteworks_activated ?? false,
     });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// ─── GET /settings/home-info ──────────────────────────────────────────────
+// Returns data for the Home page bottom panel: tenant name, home page notice,
+// and system-wide message. No specific privilege needed — any authenticated user.
+router.get('/home-info', async (req, res, next) => {
+  try {
+    // Tenant display name from sys_tenants
+    const tenant = await prisma.sysTenant.findUnique({
+      where: { slug: req.user.tenantSlug },
+      select: { name: true },
+    });
+    const tenantName = tenant?.name ?? '';
+
+    // Home page notice from tenant's system_messages
+    const [notice] = await tenantQuery(
+      req.user.tenantSlug,
+      `SELECT body FROM system_messages WHERE id = 'home_page_notice'`,
+    );
+    const noticeBody = (notice?.body ?? '').replace(/#U3ANAME/g, tenantName);
+
+    // System-wide message from sys_settings (public schema)
+    let sysSettings = await prisma.sysSettings.findUnique({ where: { id: 'singleton' } });
+    if (!sysSettings) {
+      sysSettings = await prisma.sysSettings.create({ data: { id: 'singleton' } });
+    }
+    const systemMessage = sysSettings.systemMessage ?? '';
+
+    res.json({ tenantName, homeNotice: noticeBody, systemMessage });
   } catch (err) {
     next(err);
   }
