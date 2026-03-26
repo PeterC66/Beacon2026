@@ -822,11 +822,12 @@
 |--------|--------|-------|
 | Online joining toggle | Built | — |
 | Privacy policy URL | Built | — |
-| Copyable public URLs | Built | — |
+| Copyable member services URLs | Built | Join URL and Members Portal URL |
+| Copyable public information URLs | Built | Groups list and Calendar URLs (public pages not yet built) |
 | PayPal status indicator | Built | — |
-| Members Portal feature toggles | Not started | Deferred — configure renewals, groups, calendar toggles |
-| Group Information display options | Not started | Deferred |
-| Calendar display options | Not started | Deferred |
+| Members Portal feature toggles | Built | Configure renewals, groups, calendar, personal details, replacement card toggles (stored in `portal_config` JSONB; portal features themselves not yet built) |
+| Group Information display options | Built | Grid of to-members/to-public toggles for status, venue, contact, detail, enquiries, join group (stored in `group_info_config` JSONB) |
+| Calendar display options | Built | Grid of to-members/to-public toggles for venue, topic, enquiries, detail, download (stored in `calendar_config` JSONB) |
 
 ---
 
