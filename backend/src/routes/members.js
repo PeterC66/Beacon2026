@@ -75,11 +75,12 @@ function deriveInitials(forenames) {
 //   negatePoll  – '1' to invert: members NOT in the poll
 //   q           – free-text search
 //   letter      – single letter to filter surname start
+//   paymentMethod – filter by last membership transaction's payment method
 
 router.get('/', requirePrivilege('members_list', 'view'), async (req, res, next) => {
   try {
     const slug = req.user.tenantSlug;
-    const { status, classId, pollId, negatePoll, q, letter, cf } = req.query;
+    const { status, classId, pollId, negatePoll, q, letter, cf, paymentMethod } = req.query;
 
     const conditions = [];
     const params = [];
@@ -143,6 +144,20 @@ router.get('/', requirePrivilege('members_list', 'view'), async (req, res, next)
       )`);
       params.push(cfLike);
       i += 1;
+    }
+
+    if (paymentMethod) {
+      conditions.push(`m.id IN (
+        SELECT lt.member_id_1
+        FROM (
+          SELECT DISTINCT ON (t.member_id_1) t.member_id_1, t.payment_method
+          FROM transactions t
+          WHERE t.member_id_1 IS NOT NULL AND t.type = 'in'
+          ORDER BY t.member_id_1, t.date DESC, t.created_at DESC
+        ) lt
+        WHERE lt.payment_method = $${i++}
+      )`);
+      params.push(paymentMethod);
     }
 
     const where = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';

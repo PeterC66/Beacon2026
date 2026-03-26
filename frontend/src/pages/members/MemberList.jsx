@@ -35,6 +35,8 @@ import ScrollButtons from '../../components/ScrollButtons.jsx';
 import { useSortedData } from '../../hooks/useSortedData.js';
 import { formatShortAddress } from '../../lib/memberFormatters.js';
 
+const PAYMENT_METHODS = ['Cash', 'Cheque', 'PayPal', 'Standing Order', 'Direct Debit', 'BACS', 'Debit card', 'Account transfer', 'Credit card', 'Online', 'Other'];
+
 const ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
 
 export default function MemberList() {
@@ -60,6 +62,7 @@ export default function MemberList() {
   const [cfInput,          setCfInput]          = useState('');
   const [activeCf,         setActiveCf]         = useState('');
   const [cfLabels,         setCfLabels]         = useState({ label1: '', label2: '', label3: '', label4: '' });
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState('');
 
   // Selection + bulk actions
   const [selected,      setSelected]      = useState(new Set());
@@ -92,7 +95,7 @@ export default function MemberList() {
   }, []);
 
   // Load members whenever filters change
-  useEffect(() => { load(); }, [selectedStatuses, selectedClass, selectedPoll, negatePoll, letter, activeSearch, activeCf]);
+  useEffect(() => { load(); }, [selectedStatuses, selectedClass, selectedPoll, negatePoll, letter, activeSearch, activeCf, selectedPaymentMethod]);
 
   async function load() {
     setLoading(true);
@@ -108,6 +111,7 @@ export default function MemberList() {
         letter,
         q:          activeSearch,
         cf:         activeCf,
+        paymentMethod: selectedPaymentMethod,
       });
       setMemberList(data);
     } catch (err) {
@@ -312,6 +316,21 @@ export default function MemberList() {
               </div>
             )}
 
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Payment method</label>
+              <select
+                name="selectedPaymentMethod"
+                value={selectedPaymentMethod}
+                onChange={(e) => setSelectedPaymentMethod(e.target.value)}
+                className="border border-slate-300 rounded px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="">- any -</option>
+                {PAYMENT_METHODS.map((m) => (
+                  <option key={m} value={m}>{m}</option>
+                ))}
+              </select>
+            </div>
+
             <form onSubmit={handleSearch} className="flex gap-2 items-end">
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">Quick Find</label>
@@ -361,6 +380,11 @@ export default function MemberList() {
             )}
           </div>
         </div>
+
+        {/* ── Info text ────────────────────────────────────────────── */}
+        <p className="text-sm text-slate-500 italic mb-3">
+          Use Quick Find or select filters above to customise list of members. Perform operations on list at bottom of page.
+        </p>
 
         {/* ── Letter navigation ─────────────────────────────────────── */}
         <div className="flex flex-wrap gap-1 mb-3">
