@@ -135,7 +135,9 @@
 
 | Aspect | Status | Notes |
 |--------|--------|-------|
-| Hide address from group leaders | Built | **Different approach:** Beacon had per-member "hide address" checkbox; Beacon2 uses per-group `show_addresses` toggle instead |
+| Per-member "hide contact details" checkbox | Built | `hide_contact` field on member record; hides email/phone in group members list |
+| Per-group "show addresses to group leader" toggle | Partial | `show_addresses` field stored on group record, but **not yet wired into visibility logic** — currently only `hide_contact` is checked |
+| System-wide "hide address from group leaders" | Not started | Global setting from doc 4.2.4(b) not yet implemented |
 
 ---
 
@@ -974,12 +976,9 @@ These are features or architectural aspects of Beacon2 that have no counterpart 
 
 | Feature | Description |
 |---------|-------------|
-| **Multi-tenant architecture** | Schema-per-tenant PostgreSQL; all tenant queries through `tenantQuery()` / `withTenant()` |
-| **System tier** | Separate system admin login, tenant CRUD, set-temp-password — manages multiple u3a instances |
+| **System tier** | Separate system admin login, tenant CRUD, set-temp-password — manages multiple u3a instances from a single dashboard |
 | **Auto-migration** | `migrateTenantSchemas()` re-runs idempotent DDL on every startup; no manual schema management |
-| **JWT + refresh token auth** | Access token (15 min, in-memory only) + refresh token (30 days, httpOnly cookie); bcrypt 12 rounds |
-| **Username-based login** | Lowercase alphanumeric usernames; email fallback for legacy users only |
-| **Cookie consent (GDPR)** | Mandatory consent dialog; essential vs optional cookies; gear icon to reopen |
+| **JWT + refresh token auth** | Access token (15 min, in-memory only) + refresh token (30 days, httpOnly cookie); bcrypt 12 rounds (replaces Beacon's session-based auth) |
 | **SiteWorks integration** | Tenant-wide toggle hides group scheduling/venue fields when SiteWorks manages events |
 | **Open Meetings** | Calendar events not tied to any group; dedicated page with recurrence support |
 | **Membership Payment Method Defaults** | Per-type default account and payment method; auto-populates member editor and renewals |
@@ -1016,12 +1015,12 @@ These are features or architectural aspects of Beacon2 that have no counterpart 
 
 ### Key differences from Beacon
 
-1. **Login**: Username-based (not email-based as in Beacon)
-2. **Hide address**: Per-group `show_addresses` toggle replaces per-member checkbox
-3. **Financial year**: Calendar year approach
-4. **Architecture**: Multi-tenant schema-per-tenant (vs Beacon's single-database approach)
+1. **Login**: Both use username-based login; Beacon2 adds email fallback for legacy users
+2. **Hide address**: Beacon2 has both per-member `hide_contact` checkbox AND per-group `show_addresses` toggle (but `show_addresses` is stored, not yet wired into visibility logic — see KNOWN-ISSUES.md)
+3. **Financial year**: Configurable via `year_start_month` / `year_start_day` (default January = calendar year); same concept as Beacon
+4. **Architecture**: Both are multi-tenant; Beacon2 uses schema-per-tenant PostgreSQL; the UG describes a single tenant's view
 5. **Auth**: JWT + refresh token (vs Beacon's session-based auth)
-6. **Cookie consent**: GDPR-compliant dialog (not in original Beacon)
+6. **Cookie consent**: Both have cookie consent dialogs; Beacon2's is GDPR-compliant with essential vs optional distinction
 
 ---
 
