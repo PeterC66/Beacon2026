@@ -79,16 +79,15 @@ export default function MemberCompactView() {
       membersApi.getGroups(id),
       financeApi.listTransactions({ memberId: id }),
       pollsApi.list(),
-      pollsApi.getForMember(id).catch(() => []),
       settingsApi.getCustomFieldLabels(),
-    ]).then(([m, sts, cls, grps, ts, pls, mPollIds, cfLbls]) => {
+    ]).then(([m, sts, cls, grps, ts, pls, cfLbls]) => {
       setMember(m);
       setStatuses(sts);
       setClasses(cls);
       setGroups(grps);
       setTxns(ts);
       setPolls(pls);
-      setMemberPollIds(mPollIds);
+      setMemberPollIds(m.poll_ids ?? []);
       setCfLabels(cfLbls);
       // Load partner name if linked
       if (m.partner_id) {

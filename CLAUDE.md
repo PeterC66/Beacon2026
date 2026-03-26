@@ -10,6 +10,7 @@
 | **`CLAUDE-E2E.md`** | E2E test architecture, patterns, and gotchas | When writing or debugging E2E tests |
 | **`Beacon2 Project Definition.md`** | What has been built and what remains | Every session — living document |
 | **`docs/BeaconUG-Comparison.md`** | Beacon2 vs Beacon User Guide comparison | When building/changing features — update after each change |
+| **`CHANGELOG.md`** | User-facing changelog of all notable changes | Update at end of every session |
 
 ---
 
@@ -136,8 +137,12 @@ At the end of every session:
    - **Workflow/session** changes → update this file (`CLAUDE.md`).
 3. If any features were added, changed, or fixed, update `docs/BeaconUG-Comparison.md`
    to reflect the new status of the relevant UG section(s).
-4. Commit and push the updated file(s) along with code changes.
-5. **Tell the user** what was updated (or "No documentation update needed this session").
+4. **Update `CHANGELOG.md`** — add bullet points under the current version for any
+   features added, changed, or fixed during this session. Group entries under
+   `### Added`, `### Changed`, or `### Fixed` headings. If the current version
+   section doesn't exist yet, create it with today's date.
+5. Commit and push the updated file(s) along with code changes.
+6. **Tell the user** what was updated (or "No documentation update needed this session").
 
 ---
 

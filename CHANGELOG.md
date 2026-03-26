@@ -5,6 +5,76 @@ Format: `## [version] — YYYY-MM-DD` with bullet points per change.
 
 ---
 
+## [0.7.7] — 2026-03-26
+
+### Added
+- Read-only compact member view (`/members/:id/compact`) — condensed single-screen
+  layout inspired by Beacon, with two-column grid on laptop and responsive stacking
+  on smaller screens
+- GoToMemberButton component — quick-navigate to partner member from member record
+- Clear button on Gift Aid From date field
+- Payment method filter and info text on Members List
+- Hint text below Home u3a field for Associate members
+- Show login attempts remaining on failed login
+- Show "Settings last changed" timestamp on System Settings page
+
+### Changed
+- Street field label renamed to "Street/Building" on member record
+- GoToMemberButton scrolls to top when navigating
+
+### Fixed
+- Invalid Date display in Gift Aid Log for withdrawn entries
+- BeaconUG comparison document — 5 inaccuracies corrected
+
+---
+
+## [0.7.0] — 2026-03-25
+
+### Added
+- Member record: emergency contact field, nav links, groups and transactions
+  display, created/last changed timestamps, editable initials field
+- "All" status filter on Members List (show all members regardless of status)
+- Address display on Members List and Recent Members pages
+- RequiredMark component — standardised mandatory field indicator across all forms
+- Add New Member form improvements per doc 4.3: default joined date to today,
+  auto-compute next renewal, partner handling, payment recording
+- Payment method defaults: BACS + Current account pre-selected for all methods
+- Shared address change dialog: 3-option modal (both / me-only / cancel),
+  triggered only on address-field changes
+- Utilities menu added under Misc on Home screen
+- BeaconUG-Comparison.md — living comparison document tracking Beacon2 vs
+  original Beacon User Guide
+
+### Fixed
+- Member class default: use locked "Individual" class, not current flag
+- `partnerClassId2` reference error on shared address save
+- Recent members query: telephone is on addresses table, not members table
+- Auto-generated membership transaction detail field now populated
+- Member record created/changed text made more legible
+
+---
+
+## [0.6.0] — 2026-03-24
+
+### Added
+- SiteWorks Activated setting — hides scheduling fields from Group screen
+  when SiteWorks integration is not enabled
+- Flexible account selection on Financial Statement (any account, not just default)
+- `role="tab"` and `role="tablist"` ARIA attributes on group record tabs
+- E2E test documentation: pitfalls for heading strict mode, SPA `waitForURL`,
+  element types, and `/new` URL gotchas
+
+### Changed
+- Group names in GroupList now use `<Link>` for SPA navigation instead of `<button>`
+- Unsaved-changes guard no longer blocks navigation when creating new records
+
+### Fixed
+- Extensive E2E test suite fixes across all modules (members, finance, groups,
+  roles, users, settings, venues, faculties, officers, backup) — strict mode
+  violations, SPA navigation patterns, selector mismatches, and timeout issues
+
+---
+
 ## [0.3.0] — 2026-03-10
 
 ### Added
