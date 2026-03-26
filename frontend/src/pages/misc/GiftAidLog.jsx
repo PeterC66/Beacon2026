@@ -69,6 +69,15 @@ export default function GiftAidLog() {
     try { return JSON.parse(detail); } catch { return {}; }
   }
 
+  function formatGaDate(iso) {
+    if (!iso) return '';
+    try {
+      const d = new Date(iso.length === 10 ? iso + 'T00:00:00' : iso);
+      if (isNaN(d.getTime())) return '';
+      return d.toLocaleDateString('en-GB');
+    } catch { return ''; }
+  }
+
   const navLinks = [{ label: 'Home', to: '/' }];
 
   return (
@@ -133,7 +142,9 @@ export default function GiftAidLog() {
                     {entries.map((e, i) => {
                       const act = ACTION_LABELS[e.action] ?? { label: e.action, cls: 'bg-slate-100 text-slate-700' };
                       const detail = parseDetail(e.detail);
-                      const gaDate = detail.giftAidFrom || detail.previousGiftAidFrom || '';
+                      const gaDate = detail.giftAidFrom
+                        ? formatGaDate(detail.giftAidFrom)
+                        : (detail.previousGiftAidFrom ? formatGaDate(detail.previousGiftAidFrom) : '');
                       return (
                         <tr key={e.id} className={`border-b border-slate-100 ${i % 2 === 0 ? 'bg-yellow-50' : 'bg-white'}`}>
                           <td className="px-3 py-2 whitespace-nowrap tabular-nums text-xs">{formatDate(e.created_at)}</td>
@@ -142,7 +153,7 @@ export default function GiftAidLog() {
                           <td className="px-3 py-2 whitespace-nowrap">
                             <span className={`inline-block px-2 py-0.5 rounded text-xs font-medium ${act.cls}`}>{act.label}</span>
                           </td>
-                          <td className="px-3 py-2 whitespace-nowrap text-slate-600">{gaDate ? new Date(gaDate + 'T00:00:00').toLocaleDateString('en-GB') : ''}</td>
+                          <td className="px-3 py-2 whitespace-nowrap text-slate-600">{gaDate}</td>
                         </tr>
                       );
                     })}
