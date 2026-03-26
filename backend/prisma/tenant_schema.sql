@@ -696,4 +696,10 @@ ALTER TABLE :schema.tenant_settings ADD COLUMN IF NOT EXISTS custom_field_label_
 ALTER TABLE :schema.tenant_settings ADD COLUMN IF NOT EXISTS custom_field_label_4 TEXT;
 
 -- SiteWorks integration: when true, scheduling/venue fields are managed in SiteWorks
-ALTER TABLE :schema.tenant_settings ADD COLUMN IF NOT EXISTS siteworks_activated BOOLEAN NOT NULL DEFAULT false
+ALTER TABLE :schema.tenant_settings ADD COLUMN IF NOT EXISTS siteworks_activated BOOLEAN NOT NULL DEFAULT false;
+
+-- ─── Public Links config sections (doc 9.4 c/d/e) ──────────────────────
+-- JSON objects storing toggle states for portal features, group info display, and calendar display
+ALTER TABLE :schema.tenant_settings ADD COLUMN IF NOT EXISTS portal_config    JSONB NOT NULL DEFAULT '{"renewals":false,"groups":false,"calendar":false,"personalDetails":false,"replacementCard":false}';
+ALTER TABLE :schema.tenant_settings ADD COLUMN IF NOT EXISTS group_info_config JSONB NOT NULL DEFAULT '{"status":{"members":false,"public":false},"venue":{"members":false,"public":false},"contact":{"members":false,"public":false},"detail":{"members":false,"public":false},"enquiries":{"members":false,"public":false},"joinGroup":{"members":false,"public":false}}';
+ALTER TABLE :schema.tenant_settings ADD COLUMN IF NOT EXISTS calendar_config  JSONB NOT NULL DEFAULT '{"venue":{"members":false,"public":false},"topic":{"members":false,"public":false},"enquiries":{"members":false,"public":false},"detail":{"members":false,"public":false},"download":{"members":false,"public":false}}'

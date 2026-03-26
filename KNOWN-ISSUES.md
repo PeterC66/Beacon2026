@@ -30,12 +30,9 @@ Items noted during development that need addressing in future sessions.
    - Updating personal details (doc 10.2.4)
    - Ordering replacement membership card (doc 10.2.5)
 
-3. **Full Public Links configuration** — The initial Public Links page only covers
-   online joining toggle and URLs. The following config sections from doc 9.4 are
-   deferred:
-   - Configure Members Portal feature toggles (renewals, groups, calendar, etc.)
-   - Configure Group Information display options (public and portal)
-   - Configure Calendar display options
+3. **Public groups list and calendar public pages** — The Public Links page now shows
+   URLs for public groups list and calendar, but the actual public-facing pages at
+   those routes are not yet built. Ref: doc 9.4 section (b).
 
 4. **Real PayPal API integration** — The initial implementation uses stub functions
    with clear interfaces. Actual PayPal REST API / IPN integration needs to be

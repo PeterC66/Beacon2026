@@ -1074,9 +1074,14 @@ Currently generates fake paymentId and redirects to own confirmation endpoint.
 ### Public Links (admin page)
 
 - Backend: `publicLinks.js` at `/public-links`; privileges `public_links:view/change`
-- Frontend: `PublicLinks.jsx` at `/public-links` — toggle online joining, privacy policy URL,
-  copyable public URLs, PayPal status indicator
-- Reads `online_joining_enabled` and `privacy_policy_url` from `tenant_settings`
+- Frontend: `PublicLinks.jsx` at `/public-links` — five sections per doc 9.4:
+  (a) Member Services URLs (join, portal)
+  (b) Public Information URLs (groups list, calendar — pages not yet built)
+  (c) Configure Members Portal toggles (renewals, groups, calendar, personal details, replacement card)
+  (d) Configure Group Information grid (status/venue/contact/detail/enquiries/joinGroup × members/public)
+  (e) Configure Calendar grid (venue/topic/enquiries/detail/download × members/public)
+- Reads from `tenant_settings`: `online_joining_enabled`, `privacy_policy_url`,
+  `portal_config` (JSONB), `group_info_config` (JSONB), `calendar_config` (JSONB)
 
 ### Database additions (`tenant_schema.sql`)
 
@@ -1153,7 +1158,7 @@ in `tenant_schema.sql`. No separate table is needed.
 
 - Joint membership online joining
 - Full Members Portal features (view/update own details, renewal, group browsing)
-- Full Public Links configuration (renewing, portal toggle)
+- Public groups list and calendar pages (URLs shown on Public Links, pages not yet built)
 - Real PayPal API integration
 - Shared email handling in portal registration
 
