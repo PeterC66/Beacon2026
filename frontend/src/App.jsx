@@ -40,6 +40,7 @@ import GroupsStatement    from './pages/finance/GroupsStatement.jsx';
 import GiftAidDeclaration from './pages/finance/GiftAidDeclaration.jsx';
 import CreditBatches      from './pages/finance/CreditBatches.jsx';
 import MemberValidator    from './pages/admin/MemberValidator.jsx';
+import Utilities          from './pages/admin/Utilities.jsx';
 import PollList           from './pages/admin/PollList.jsx';
 import AuditLog           from './pages/misc/AuditLog.jsx';
 import AuditRecord        from './pages/misc/AuditRecord.jsx';
@@ -148,6 +149,7 @@ const router = createBrowserRouter([
       { path: '/finance/groups-statement',            element: <ProtectedRoute><GroupsStatement /></ProtectedRoute> },
       { path: '/finance/gift-aid',                      element: <ProtectedRoute><GiftAidDeclaration /></ProtectedRoute> },
       { path: '/finance/batches',                       element: <ProtectedRoute><CreditBatches /></ProtectedRoute> },
+      { path: '/utilities',                            element: <ProtectedRoute><Utilities /></ProtectedRoute> },
       { path: '/admin/validate-members',              element: <ProtectedRoute><MemberValidator /></ProtectedRoute> },
       { path: '/polls',                               element: <ProtectedRoute><PollList /></ProtectedRoute> },
       { path: '/custom-fields',                       element: <ProtectedRoute><CustomFields /></ProtectedRoute> },
