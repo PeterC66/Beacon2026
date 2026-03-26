@@ -81,6 +81,12 @@ Every item below applies to every new feature — no exceptions.
 
 - [ ] **All tenant queries** through `tenantQuery()` or `withTenant()`.
 
+- [ ] **Always use `@map` for snake_case columns** in Prisma models — every field must
+  have an explicit `@map("snake_case_name")` annotation so that `prisma db push` creates
+  snake_case columns. Without `@map`, Prisma uses the camelCase field name as the column
+  name, which then requires quoted identifiers (`"camelCase"`) in all raw SQL and causes
+  "column does not exist" errors when the table is created by a different path.
+
 ## Code and modules
 
 - [ ] **ES modules** (`import`/`export`) throughout — never `require()`.
