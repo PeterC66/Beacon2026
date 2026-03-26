@@ -9,6 +9,7 @@ import NavBar from '../../components/NavBar.jsx';
 import RequiredMark from '../../components/RequiredMark.jsx';
 import PageHeader from '../../components/PageHeader.jsx';
 import DateInput from '../../components/DateInput.jsx';
+import GoToMemberButton from '../../components/GoToMemberButton.jsx';
 import { useUnsavedChanges } from '../../hooks/useUnsavedChanges.js';
 
 function todayIso() { return new Date().toISOString().slice(0, 10); }
@@ -952,21 +953,24 @@ export default function MemberEditor() {
               {/* Existing-partner dropdown — hidden in new-partner mode */}
               {!newPartnerMode && (
                 <>
-                  <select
-                    name="existingPartnerId"
-                    value={form.existingPartnerId}
-                    onChange={(e) => handlePartnerChange(e.target.value)}
-                    className={inputCls}
-                  >
-                    <option value="">— none —</option>
-                    {allMembers
-                      .filter((m) => String(m.id) !== String(id))
-                      .map((m) => (
-                        <option key={m.id} value={m.id}>
-                          {m.membership_number} — {m.surname}, {m.forenames}
-                        </option>
-                      ))}
-                  </select>
+                  <div className="flex items-center gap-1">
+                    <select
+                      name="existingPartnerId"
+                      value={form.existingPartnerId}
+                      onChange={(e) => handlePartnerChange(e.target.value)}
+                      className={inputCls}
+                    >
+                      <option value="">— none —</option>
+                      {allMembers
+                        .filter((m) => String(m.id) !== String(id))
+                        .map((m) => (
+                          <option key={m.id} value={m.id}>
+                            {m.membership_number} — {m.surname}, {m.forenames}
+                          </option>
+                        ))}
+                    </select>
+                    <GoToMemberButton memberId={form.existingPartnerId} />
+                  </div>
                   {form.existingPartnerId && isNew && (
                     <p className="text-xs text-slate-500 mt-1 italic">
                       Partner's address will be shared. The address fields below are not used.
