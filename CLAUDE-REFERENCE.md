@@ -1319,8 +1319,16 @@ Cookie consent is a **frontend-only** feature. No backend changes needed.
 
 ### localStorage
 
-`beacon2_prefs` (preferences) is only read/written when `hasOptionalCookieConsent()` returns true.
+All optional localStorage keys are only read/written when `hasOptionalCookieConsent()` returns true.
 When consent is declined, preferences still work using in-memory defaults for the session.
+All keys are removed in `useCookieConsent.js → setConsent(false)`.
+
+| Key | Purpose |
+|-----|---------|
+| `beacon2_prefs` | Display preferences (sort, format, timeout, text size, theme) |
+| `beacon2_label_settings` | Label printing layout (cols, rows, dimensions, offsets, font size) |
+| `beacon2_last_export_class` | Last membership class selected on Addresses Export page |
+| `beacon2_email_compose_prefs` | Email compose From address and copy-to-self preference |
 
 ### Integration points
 

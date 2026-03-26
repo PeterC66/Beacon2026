@@ -41,13 +41,19 @@ describe('useCookieConsent', () => {
     // Set up optional data
     document.cookie = 'beacon_last_u3a=test-slug; path=/';
     localStorage.setItem('beacon2_prefs', JSON.stringify({ sortBy: 'forename' }));
+    localStorage.setItem('beacon2_label_settings', JSON.stringify({ cols: 2 }));
+    localStorage.setItem('beacon2_last_export_class', '5');
+    localStorage.setItem('beacon2_email_compose_prefs', JSON.stringify({ fromEmail: 'a@b.com' }));
 
     setConsent(false);
 
     // beacon_last_u3a should be deleted
     expect(document.cookie).not.toContain('beacon_last_u3a');
-    // localStorage prefs should be removed
+    // All optional localStorage should be removed
     expect(localStorage.getItem('beacon2_prefs')).toBeNull();
+    expect(localStorage.getItem('beacon2_label_settings')).toBeNull();
+    expect(localStorage.getItem('beacon2_last_export_class')).toBeNull();
+    expect(localStorage.getItem('beacon2_email_compose_prefs')).toBeNull();
   });
 });
 
@@ -98,5 +104,9 @@ describe('CookieConsent component', () => {
     fireEvent.click(getByText(/Optional Cookies/));
     expect(getByText('The name of the u3a site you login to')).toBeInTheDocument();
     expect(getByText(/timeout period/)).toBeInTheDocument();
+    expect(getByText(/Last membership class used for exporting/)).toBeInTheDocument();
+    expect(getByText(/Label printing settings/)).toBeInTheDocument();
+    expect(getByText(/TAM.*submission status/)).toBeInTheDocument();
+    expect(getByText(/Email compose.*From.*address/)).toBeInTheDocument();
   });
 });

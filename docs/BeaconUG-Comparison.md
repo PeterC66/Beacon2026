@@ -60,10 +60,10 @@
 | Cookie usage explanation | Built | Cookie consent dialog lists all cookies used |
 | Essential vs optional cookies | Built | Essential (refresh token, consent) always allowed; optional cookies gated behind consent |
 | Anti-tracking software guidance | Partial | No specific guidance page; cookie consent handles the functional aspect |
-| Last membership class cookie | Not started | Addresses Export does not yet persist last class filter |
-| Label printing settings cookie | Not started | Label printing does not persist layout prefs across sessions |
-| TAM submission cookie | Not started | TAM submission not yet built |
-| Email compose prefs cookie | Not started | From address / copy selection not persisted across sessions |
+| Last membership class cookie | Built | Addresses Export persists last class filter in `beacon2_last_export_class` (consent-gated) |
+| Label printing settings cookie | Built | Label settings persist in `beacon2_label_settings` (now consent-gated) |
+| TAM submission cookie | Not started | TAM submission not yet built; placeholder listed in consent dialog |
+| Email compose prefs cookie | Built | From address and copy-to-self persist in `beacon2_email_compose_prefs` (consent-gated) |
 
 ---
 
