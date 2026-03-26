@@ -6,8 +6,27 @@ import { useState, useEffect, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { email as emailApi, members as membersApi } from '../../lib/api.js';
 import { useAuth } from '../../context/AuthContext.jsx';
+import { hasOptionalCookieConsent } from '../../hooks/useCookieConsent.js';
 import NavBar from '../../components/NavBar.jsx';
 import PageHeader from '../../components/PageHeader.jsx';
+
+const EMAIL_PREFS_KEY = 'beacon2_email_compose_prefs';
+
+function loadEmailPrefs() {
+  if (!hasOptionalCookieConsent()) return {};
+  try {
+    const raw = localStorage.getItem(EMAIL_PREFS_KEY);
+    return raw ? JSON.parse(raw) : {};
+  } catch { return {}; }
+}
+
+function saveEmailPrefs(updates) {
+  if (!hasOptionalCookieConsent()) return;
+  try {
+    const current = loadEmailPrefs();
+    localStorage.setItem(EMAIL_PREFS_KEY, JSON.stringify({ ...current, ...updates }));
+  } catch {}
+}
 
 const TOKENS = [
   { token: '#FAM',         desc: 'Familiar name' },
@@ -48,7 +67,7 @@ export default function EmailCompose() {
   const [fromEmail,   setFromEmail]   = useState('');
   const [subject,     setSubject]     = useState('');
   const [body,        setBody]        = useState('');
-  const [copyToSelf,  setCopyToSelf]  = useState(false);
+  const [copyToSelf,  setCopyToSelf]  = useState(() => loadEmailPrefs().copyToSelf || false);
   const [attachments, setAttachments] = useState([]); // File[]
 
   const [saveName,    setSaveName]    = useState('');
@@ -89,7 +108,11 @@ export default function EmailCompose() {
       emailApi.listStandardMessages().catch(() => []),
     ]).then(([addrs, msgs]) => {
       setFromAddrs(addrs);
-      if (addrs.length > 0) setFromEmail(addrs[0].email);
+      if (addrs.length > 0) {
+        const saved = loadEmailPrefs().fromEmail;
+        const match = saved && addrs.find((a) => a.email === saved);
+        setFromEmail(match ? match.email : addrs[0].email);
+      }
       setStdMessages(msgs);
     });
   }, []);
@@ -226,7 +249,7 @@ export default function EmailCompose() {
                   <select
                     name="fromEmail"
                     value={fromEmail}
-                    onChange={(e) => setFromEmail(e.target.value)}
+                    onChange={(e) => { setFromEmail(e.target.value); saveEmailPrefs({ fromEmail: e.target.value }); }}
                     className="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
                     {fromAddrs.length === 0 && <option value="">No email address on your member record</option>}
@@ -251,7 +274,7 @@ export default function EmailCompose() {
               </div>
               <div className="mt-2">
                 <label className="flex items-center gap-2 text-sm cursor-pointer">
-                  <input type="checkbox" checked={copyToSelf} onChange={(e) => setCopyToSelf(e.target.checked)} className="rounded" />
+                  <input type="checkbox" checked={copyToSelf} onChange={(e) => { setCopyToSelf(e.target.checked); saveEmailPrefs({ copyToSelf: e.target.checked }); }} className="rounded" />
                   Send a copy to myself (at {replyToEmail || 'your address'}) — note: copy will not contain personalised tokens
                 </label>
               </div>

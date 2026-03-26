@@ -16,17 +16,33 @@ import {
   groups         as groupsApi,
   requestBlob,
 } from '../../lib/api.js';
+import { hasOptionalCookieConsent } from '../../hooks/useCookieConsent.js';
 
 // ── Label settings localStorage key ─────────────────────────────────────────
 
 const LABEL_PREFS_KEY = 'beacon2_label_settings';
+const LAST_CLASS_KEY  = 'beacon2_last_export_class';
 
 function loadLabelPrefs() {
+  if (!hasOptionalCookieConsent()) return defaultLabelSettings();
   try {
     const raw = localStorage.getItem(LABEL_PREFS_KEY);
     if (raw) return { ...defaultLabelSettings(), ...JSON.parse(raw) };
   } catch {}
   return defaultLabelSettings();
+}
+
+function loadLastClass() {
+  if (!hasOptionalCookieConsent()) return '';
+  try { return localStorage.getItem(LAST_CLASS_KEY) || ''; } catch { return ''; }
+}
+
+function saveLastClass(classId) {
+  if (!hasOptionalCookieConsent()) return;
+  try {
+    if (classId) localStorage.setItem(LAST_CLASS_KEY, classId);
+    else localStorage.removeItem(LAST_CLASS_KEY);
+  } catch {}
 }
 
 function defaultLabelSettings() {
@@ -110,7 +126,7 @@ export default function AddressesExport() {
   const [polls,            setPolls]             = useState([]);
   const [allGroups,        setAllGroups]         = useState([]);
   const [selectedStatuses, setSelectedStatuses]  = useState([]);
-  const [selectedClass,    setSelectedClass]     = useState('');
+  const [selectedClass,    setSelectedClass]     = useState(loadLastClass);
   const [selectedPoll,     setSelectedPoll]      = useState('');
   const [negatePoll,       setNegatePoll]        = useState(false);
   const [groupSearch,      setGroupSearch]       = useState('');
@@ -197,6 +213,7 @@ export default function AddressesExport() {
   }
 
   function saveLabelsAsDefaults() {
+    if (!hasOptionalCookieConsent()) return;
     localStorage.setItem(LABEL_PREFS_KEY, JSON.stringify(labelSettings));
   }
 
@@ -331,7 +348,7 @@ export default function AddressesExport() {
               <select
                 name="selectedClass"
                 value={selectedClass}
-                onChange={(e) => setSelectedClass(e.target.value)}
+                onChange={(e) => { setSelectedClass(e.target.value); saveLastClass(e.target.value); }}
                 className={`${inputCls} w-full`}
               >
                 <option value="">All classes</option>

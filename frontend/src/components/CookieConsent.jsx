@@ -121,6 +121,10 @@ export default function CookieConsent() {
                   <li>The timeout period of inactivity after which you will be logged out</li>
                   <li>How forenames and surnames appear and are sorted on Drop-Down lists</li>
                   <li>Text size and colour theme preferences</li>
+                  <li>Last membership class used for exporting addresses and labels</li>
+                  <li>Label printing settings (labels per sheet and positioning)</li>
+                  <li>Third Age Matters (TAM) submission status and class</li>
+                  <li>Email compose 'From' address and copy selection</li>
                 </ul>
               </div>
             )}

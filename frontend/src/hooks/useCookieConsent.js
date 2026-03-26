@@ -45,7 +45,12 @@ export function setConsent(accepted) {
     // Remove optional cookies
     deleteCookie('beacon_last_u3a');
     // Remove optional localStorage
-    try { localStorage.removeItem('beacon2_prefs'); } catch { /* ignore */ }
+    try {
+      localStorage.removeItem('beacon2_prefs');
+      localStorage.removeItem('beacon2_label_settings');
+      localStorage.removeItem('beacon2_last_export_class');
+      localStorage.removeItem('beacon2_email_compose_prefs');
+    } catch { /* ignore */ }
   }
 
   // Notify listeners (e.g. CookieConsent component)
