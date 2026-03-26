@@ -122,9 +122,9 @@ router.get('/home-info', async (req, res, next) => {
     let systemMessage = '<<System Message here>>';
     try {
       const sysRows = await prisma.$queryRawUnsafe(
-        `SELECT "systemMessage" FROM sys_settings WHERE id = 'singleton'`
+        `SELECT system_message FROM sys_settings WHERE id = 'singleton'`
       );
-      if (sysRows[0]) systemMessage = sysRows[0].systemMessage ?? '';
+      if (sysRows[0]) systemMessage = sysRows[0].system_message ?? '';
     } catch {
       // Table may not exist yet on first deploy — use default
     }
