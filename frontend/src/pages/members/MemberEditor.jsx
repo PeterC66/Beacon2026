@@ -695,6 +695,7 @@ export default function MemberEditor() {
     { label: 'Members List', to: '/members', disabled: !can('members_list', 'view') },
     { label: 'Membership Cards', to: '/members/cards', disabled: !can('membership_cards', 'view') },
     { label: 'Add New', to: '/members/new', disabled: !can('member_record', 'create') },
+    ...(!isNew ? [{ label: 'Compact View', to: `/members/${id}/compact` }] : []),
   ];
 
   if (loading) return (

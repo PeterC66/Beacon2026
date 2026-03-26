@@ -112,6 +112,7 @@
 | Groups & Ledger tabs | Built | — |
 | Photo upload | Not started | Doc 4.3 mentions photo option; not implemented |
 | **Beacon2 extra:** Inline validation | Beacon2 extra | Field-level blur validation with error messages |
+| **Beacon2 extra:** Compact view | Beacon2 extra | Read-only condensed layout at `/members/:id/compact` — fits all member data on one laptop screen, inspired by Beacon's dense layout. Accessible via "Compact View" nav link on member record |
 
 ---
 
