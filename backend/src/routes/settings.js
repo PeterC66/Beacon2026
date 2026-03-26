@@ -117,12 +117,17 @@ router.get('/home-info', async (req, res, next) => {
     );
     const noticeBody = (notice?.body ?? '').replace(/#U3ANAME/g, tenantName);
 
-    // System-wide message from sys_settings (public schema)
-    let sysSettings = await prisma.sysSettings.findUnique({ where: { id: 'singleton' } });
-    if (!sysSettings) {
-      sysSettings = await prisma.sysSettings.create({ data: { id: 'singleton' } });
+    // System-wide message from sys_settings (public schema) — use raw SQL
+    // because the Prisma client may not have SysSettings generated yet
+    let systemMessage = '<<System Message here>>';
+    try {
+      const sysRows = await prisma.$queryRawUnsafe(
+        `SELECT system_message FROM sys_settings WHERE id = 'singleton'`
+      );
+      if (sysRows[0]) systemMessage = sysRows[0].system_message ?? '';
+    } catch {
+      // Table may not exist yet on first deploy — use default
     }
-    const systemMessage = sysSettings.systemMessage ?? '';
 
     res.json({ tenantName, homeNotice: noticeBody, systemMessage });
   } catch (err) {
