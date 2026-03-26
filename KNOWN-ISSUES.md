@@ -125,6 +125,11 @@ and should be added to the optional cookies list when the features are built:
 1. **Photo upload** — Doc 4.3 mentions "the option to upload a photo of the member".
    This is not yet implemented. Ref: doc 4.2, doc 4.3.
 
+2. **Member-to-member navigation in compact view** — The original Beacon member record
+   has a dropdown with < > arrows to navigate directly between members without returning
+   to the Members List. This should be added to the compact member view
+   (`MemberCompactView.jsx`) as a future enhancement. Ref: Beacon member record screenshot.
+
 ---
 
 ## Group / Member Contact Hiding (doc 4.2.4)

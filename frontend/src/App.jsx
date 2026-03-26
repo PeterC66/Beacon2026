@@ -19,6 +19,7 @@ import MemberClassEditor from './pages/membership/MemberClassEditor.jsx';
 import MemberStatusList  from './pages/membership/MemberStatusList.jsx';
 import MemberList        from './pages/members/MemberList.jsx';
 import MemberEditor      from './pages/members/MemberEditor.jsx';
+import MemberCompactView from './pages/members/MemberCompactView.jsx';
 import AddressesExport   from './pages/members/AddressesExport.jsx';
 import GroupList         from './pages/groups/GroupList.jsx';
 import GroupRecord       from './pages/groups/GroupRecord.jsx';
@@ -126,6 +127,7 @@ const router = createBrowserRouter([
       { path: '/members/recent',       element: <ProtectedRoute><RecentMembers /></ProtectedRoute> },
       { path: '/members/statistics',   element: <ProtectedRoute><MemberStatistics /></ProtectedRoute> },
       { path: '/members/:id',         element: <ProtectedRoute><MemberEditor /></ProtectedRoute> },
+      { path: '/members/:id/compact', element: <ProtectedRoute><MemberCompactView /></ProtectedRoute> },
       { path: '/addresses-export',    element: <ProtectedRoute><AddressesExport /></ProtectedRoute> },
       { path: '/groups',       element: <ProtectedRoute><GroupList /></ProtectedRoute> },
       { path: '/groups/new',   element: <ProtectedRoute><GroupRecord /></ProtectedRoute> },
