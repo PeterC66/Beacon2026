@@ -42,9 +42,9 @@ model SysAdmin {
 
 model SysSettings {
   id             String   @id @default("singleton")
-  systemMessage  String   @default("<<System Message here>>")
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  systemMessage  String   @default("<<System Message here>>") @map("system_message")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
 
   @@map("sys_settings")
 }

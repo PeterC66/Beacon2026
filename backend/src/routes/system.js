@@ -113,28 +113,45 @@ router.post('/tenants/:id/set-temp-password', async (req, res, next) => {
   }
 });
 
+// ─── Ensure sys_settings table uses snake_case columns ───────────────────────
+// The table may already exist with camelCase columns from an earlier deploy,
+// or with snake_case from Prisma @map. This helper normalises it once.
+async function ensureSysSettings() {
+  await prisma.$executeRawUnsafe(`
+    CREATE TABLE IF NOT EXISTS sys_settings (
+      id TEXT PRIMARY KEY DEFAULT 'singleton',
+      system_message TEXT NOT NULL DEFAULT '<<System Message here>>',
+      created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+      updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+    )
+  `);
+  // If the table was created with camelCase columns, rename them
+  try {
+    await prisma.$executeRawUnsafe(`ALTER TABLE sys_settings RENAME COLUMN "systemMessage" TO system_message`);
+  } catch { /* column already snake_case — ignore */ }
+  try {
+    await prisma.$executeRawUnsafe(`ALTER TABLE sys_settings RENAME COLUMN "createdAt" TO created_at`);
+  } catch { /* already snake_case */ }
+  try {
+    await prisma.$executeRawUnsafe(`ALTER TABLE sys_settings RENAME COLUMN "updatedAt" TO updated_at`);
+  } catch { /* already snake_case */ }
+}
+
 // ─── GET /system/settings ─────────────────────────────────────────────────────
 router.get('/settings', async (_req, res, next) => {
   try {
-    // Use raw SQL — the Prisma client may not have SysSettings generated yet.
-    // Prisma creates columns with camelCase names (no @map), so we must quote them.
-    await prisma.$executeRawUnsafe(`
-      CREATE TABLE IF NOT EXISTS sys_settings (
-        id TEXT PRIMARY KEY DEFAULT 'singleton',
-        "systemMessage" TEXT NOT NULL DEFAULT '<<System Message here>>',
-        "createdAt" TIMESTAMPTZ NOT NULL DEFAULT now(),
-        "updatedAt" TIMESTAMPTZ NOT NULL DEFAULT now()
-      )
-    `);
+    await ensureSysSettings();
     const rows = await prisma.$queryRawUnsafe(
-      `INSERT INTO sys_settings (id) VALUES ('singleton') ON CONFLICT (id) DO NOTHING RETURNING *`
+      `INSERT INTO sys_settings (id) VALUES ('singleton') ON CONFLICT (id) DO NOTHING RETURNING system_message`
     );
-    let row = rows[0];
-    if (!row) {
-      const existing = await prisma.$queryRawUnsafe(`SELECT * FROM sys_settings WHERE id = 'singleton'`);
-      row = existing[0];
+    let msg = rows[0]?.system_message;
+    if (msg == null) {
+      const existing = await prisma.$queryRawUnsafe(
+        `SELECT system_message FROM sys_settings WHERE id = 'singleton'`
+      );
+      msg = existing[0]?.system_message;
     }
-    res.json({ systemMessage: row?.systemMessage ?? '<<System Message here>>' });
+    res.json({ systemMessage: msg ?? '<<System Message here>>' });
   } catch (err) {
     next(err);
   }
@@ -147,21 +164,14 @@ router.patch('/settings', async (req, res, next) => {
       systemMessage: z.string().optional(),
     }).parse(req.body);
 
-    await prisma.$executeRawUnsafe(`
-      CREATE TABLE IF NOT EXISTS sys_settings (
-        id TEXT PRIMARY KEY DEFAULT 'singleton',
-        "systemMessage" TEXT NOT NULL DEFAULT '<<System Message here>>',
-        "createdAt" TIMESTAMPTZ NOT NULL DEFAULT now(),
-        "updatedAt" TIMESTAMPTZ NOT NULL DEFAULT now()
-      )
-    `);
+    await ensureSysSettings();
     const rows = await prisma.$queryRawUnsafe(
-      `INSERT INTO sys_settings (id, "systemMessage", "updatedAt") VALUES ('singleton', $1, now())
-       ON CONFLICT (id) DO UPDATE SET "systemMessage" = $1, "updatedAt" = now()
-       RETURNING *`,
+      `INSERT INTO sys_settings (id, system_message, updated_at) VALUES ('singleton', $1, now())
+       ON CONFLICT (id) DO UPDATE SET system_message = $1, updated_at = now()
+       RETURNING system_message`,
       systemMessage,
     );
-    res.json({ systemMessage: rows[0]?.systemMessage ?? '' });
+    res.json({ systemMessage: rows[0]?.system_message ?? '' });
   } catch (err) {
     next(err);
   }
