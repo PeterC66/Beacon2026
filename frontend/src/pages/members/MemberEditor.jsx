@@ -868,6 +868,7 @@ export default function MemberEditor() {
               {isAssociate && (
                 <div>
                   <label className={labelCls}>Home u3a</label>
+                  <p className="text-xs text-slate-500 mb-1">(where the person is a full member)</p>
                   <input type="text" name="homeU3a" value={form.homeU3a}
                     onChange={(e) => set('homeU3a', e.target.value)}
                     className={inputCls} maxLength={100} />
@@ -1097,7 +1098,7 @@ export default function MemberEditor() {
                   className={inputCls} />
               </div>
               <div>
-                <label className={labelCls}>Street</label>
+                <label className={labelCls}>Street/Building</label>
                 <input type="text" name="street" value={form.street}
                   onChange={(e) => set('street', e.target.value)}
                   className={inputCls} />
