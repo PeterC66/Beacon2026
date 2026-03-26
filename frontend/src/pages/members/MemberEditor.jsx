@@ -522,7 +522,7 @@ export default function MemberEditor() {
       classId:     form.classId,
       joinedOn:    form.joinedOn    || undefined,
       nextRenewal: form.nextRenewal || undefined,
-      giftAidFrom: isNew ? (giftAidTick ? new Date().toISOString().slice(0, 10) : undefined) : (form.giftAidFrom || undefined),
+      giftAidFrom: isNew ? (giftAidTick ? new Date().toISOString().slice(0, 10) : undefined) : (form.giftAidFrom || null),
       homeU3a:     isAssociate ? (form.homeU3a || undefined) : undefined,
       notes:       form.notes       || undefined,
       hideContact: form.hideContact,
@@ -875,10 +875,20 @@ export default function MemberEditor() {
               {!isNew && (
                 <div>
                   <label className={labelCls}>Gift Aid from</label>
-                  <DateInput value={form.giftAidFrom}
-                    onChange={(v) => set('giftAidFrom', v)}
-                    max={new Date().toISOString().slice(0, 10)}
-                    className={inputCls} />
+                  <div className="flex items-center gap-1">
+                    <DateInput value={form.giftAidFrom}
+                      onChange={(v) => set('giftAidFrom', v)}
+                      max={new Date().toISOString().slice(0, 10)}
+                      className={inputCls} />
+                    {form.giftAidFrom && (
+                      <button type="button"
+                        onClick={() => set('giftAidFrom', '')}
+                        className="text-slate-400 hover:text-red-600 transition-colors px-1"
+                        title="Remove Gift Aid date">
+                        ✕
+                      </button>
+                    )}
+                  </div>
                 </div>
               )}
             </div>
