@@ -8,6 +8,18 @@ import NavBar from '../../components/NavBar.jsx';
 import { settings as settingsApi } from '../../lib/api.js';
 import { useUnsavedChanges } from '../../hooks/useUnsavedChanges.js';
 
+function fmtTimestamp(ts) {
+  if (!ts) return '';
+  const d = new Date(ts);
+  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const day = d.getDate();
+  const mon = months[d.getMonth()];
+  const yr  = d.getFullYear();
+  const hh  = String(d.getHours()).padStart(2, '0');
+  const mm  = String(d.getMinutes()).padStart(2, '0');
+  return `${day} ${mon} ${yr} ${hh}:${mm}`;
+}
+
 const MONTHS = [
   'January', 'February', 'March', 'April', 'May', 'June',
   'July', 'August', 'September', 'October', 'November', 'December',
@@ -142,15 +154,16 @@ export default function SystemSettings() {
   const { tenant, can } = useAuth();
   const { markDirty, markClean } = useUnsavedChanges();
 
-  const [form,    setForm]    = useState(toForm({}));
-  const [loading, setLoading] = useState(true);
-  const [saving,  setSaving]  = useState(false);
-  const [error,   setError]   = useState(null);
-  const [success, setSuccess] = useState(false);
+  const [form,      setForm]      = useState(toForm({}));
+  const [updatedAt, setUpdatedAt] = useState(null);
+  const [loading,   setLoading]   = useState(true);
+  const [saving,    setSaving]    = useState(false);
+  const [error,     setError]     = useState(null);
+  const [success,   setSuccess]   = useState(false);
 
   useEffect(() => {
     settingsApi.get()
-      .then((s) => setForm(toForm(s)))
+      .then((s) => { setForm(toForm(s)); setUpdatedAt(s.updated_at ?? null); })
       .catch((e) => setError(e.message))
       .finally(() => setLoading(false));
   }, []);
@@ -170,6 +183,7 @@ export default function SystemSettings() {
     try {
       const updated = await settingsApi.update(toPayload(form));
       setForm(toForm(updated));
+      setUpdatedAt(updated.updated_at ?? null);
       markClean();
       setSuccess(true);
     } catch (err) {
@@ -187,7 +201,12 @@ export default function SystemSettings() {
       <NavBar links={[{ to: '/', label: 'Home' }, { label: 'System Settings' }]} />
 
       <div className="max-w-2xl mx-auto px-4 mt-6">
-        <h1 className="text-2xl font-bold text-slate-800 mb-4">System Settings</h1>
+        <h1 className="text-2xl font-bold text-slate-800 mb-1">System Settings</h1>
+        {updatedAt && (
+          <p className="text-xs text-slate-500 mb-4">
+            Settings last changed {fmtTimestamp(updatedAt)}
+          </p>
+        )}
 
         {loading && <p className="text-slate-500 text-sm">Loading…</p>}
 
