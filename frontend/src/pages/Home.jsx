@@ -166,10 +166,10 @@ export default function Home() {
         <div className="mt-4 bg-gradient-to-br from-yellow-50 to-amber-100 border border-slate-300 rounded-lg overflow-hidden shadow-sm">
 
           {/* Fixed links row */}
-          <div className="flex flex-wrap justify-center gap-x-8 gap-y-1 px-4 py-2 bg-white/80 border-b border-slate-300 text-sm">
-            <a href="https://demo.u3abeacon.org.uk/dashboard.php#" target="_blank" rel="noopener noreferrer" className="text-blue-700 hover:underline">u3a Beacon Users' Forum</a>
-            <a href="https://u3abeacon.zendesk.com/hc/en-gb" target="_blank" rel="noopener noreferrer" className="text-blue-700 hover:underline">Beacon User Guide</a>
-            <a href="https://demo.u3abeacon.org.uk/dashboard.php#" target="_blank" rel="noopener noreferrer" className="text-blue-700 hover:underline">Beacon Website</a>
+          <div className="flex flex-wrap justify-center gap-x-8 gap-y-1 px-4 py-2 border-b border-slate-300 text-sm">
+            <a href="https://forum.u3abeacon.org.uk/" target="_blank" rel="noopener noreferrer" className="text-blue-700 hover:underline" title="Go to the u3a Beacon Users' Forum for support on using Beacon, to give feedback on bugs and usability and to suggest new features">u3a Beacon Users' Forum</a>
+            <a href="https://u3abeacon.zendesk.com/hc/en-gb" target="_blank" rel="noopener noreferrer" className="text-blue-700 hover:underline" title="Display the u3a Beacon User Guide to assist your use of the system">Beacon User Guide</a>
+            <a href="https://beacon.u3a.org.uk/" target="_blank" rel="noopener noreferrer" className="text-blue-700 hover:underline" title="Visit the Beacon website for news, training and support">Beacon Website</a>
           </div>
 
           {/* Public website links row */}
@@ -182,11 +182,13 @@ export default function Home() {
             ))}
           </div>
 
-          {/* Documents row */}
+          {/* Documents row (hidden for now — may be needed later) */}
+          {false && (
           <div className="flex flex-wrap items-center gap-x-6 gap-y-1 px-4 py-2 text-sm">
             <span className="font-bold text-sm whitespace-nowrap">Documents</span>
             <a href="https://beacon.u3a.org.uk/engagement" target="_blank" rel="noopener noreferrer" className="text-blue-700 hover:underline">Documentation for prospective Beacon users</a>
           </div>
+          )}
         </div>
 
         <p className="text-center text-xs text-slate-500 italic mt-2">
