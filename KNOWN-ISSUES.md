@@ -127,6 +127,22 @@ and should be added to the optional cookies list when the features are built:
 
 ---
 
+## Group / Member Contact Hiding (doc 4.2.4)
+
+1. **Per-group `show_addresses` not wired into visibility logic** — The `show_addresses`
+   boolean field exists on the group record and is stored/retrieved via the API, but the
+   group members table in GroupRecord.jsx only checks the per-member `hide_contact` flag
+   when deciding whether to show email/phone. The `show_addresses` toggle should also
+   control whether addresses are visible to group leaders viewing that group's member list.
+   Ref: doc 4.2.4.
+
+2. **System-wide "Hide Address from Group Leaders" setting** — Doc 4.2.4(b) describes a
+   global system setting that hides addresses of ALL members from ALL group leaders (unless
+   they have other privileges). This setting is not yet implemented in Beacon2.
+   Ref: doc 4.2.4, doc 8.3.
+
+---
+
 ## Accessibility / E2E
 
 1. **Form labels missing `htmlFor`/`id` association** — ~106 `<label>` elements
