@@ -8,6 +8,16 @@ Format: `## [version] — YYYY-MM-DD` with bullet points per change.
 ## [0.7.7] — 2026-03-26
 
 ### Added
+- Home page bottom panel with fixed links (Beacon Users' Forum, User Guide,
+  Beacon Website), public website links (Join, Portal, groups, calendar),
+  and Documents row
+- System-wide message (`sys_settings` table) — editable from System Dashboard,
+  displayed on every tenant's Home page (default: `<<System Message here>>`)
+- Home page tenant notice — displays `home_page_notice` system message with
+  `#U3ANAME` substitution
+- `GET /settings/home-info` endpoint — returns tenant name, home page notice,
+  and system-wide message in one call
+- `GET/PATCH /system/settings` endpoints for system-wide settings
 - Read-only compact member view (`/members/:id/compact`) — condensed single-screen
   layout inspired by Beacon, with two-column grid on laptop and responsive stacking
   on smaller screens

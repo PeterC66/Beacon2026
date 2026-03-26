@@ -38,6 +38,11 @@
 |--------|--------|-------|
 | Home page with navigation | Built | Card-based home page with privilege-gated navigation to all modules |
 | Module organisation | Built | Same modules: Membership, Groups, Finance, Email, Set-up, Misc |
+| Fixed links (Forum, User Guide, Website) | Built | Links to Beacon resources shown in bottom panel |
+| Public website links (Join, Portal, Groups, Calendar) | Partial | Join and Portal links active; Public groups list and Public calendar greyed out (pages not yet built) |
+| Documents link | Built | Links to prospective Beacon users documentation |
+| System-wide message | Built | Editable by system admin from System Dashboard; displayed on all tenants' Home pages |
+| Home page notice (tenant message) | Built | Uses `home_page_notice` system message with `#U3ANAME` substitution |
 | **Beacon2 extra:** Privilege-gated cards | Beacon2 extra | Home page cards are greyed out if user lacks privileges (rather than hidden) |
 
 ---

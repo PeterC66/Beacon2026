@@ -442,6 +442,7 @@ export const settings = {
   getNewMemberDefaults:   () => request('/settings/new-member-defaults'),
   getCustomFieldLabels:   () => request('/settings/custom-field-labels'),
   getSiteworksConfig:     () => request('/settings/siteworks-config'),
+  getHomeInfo:            () => request('/settings/home-info'),
 };
 
 // ─── Custom Fields ────────────────────────────────────────────────────────
@@ -501,6 +502,18 @@ export const system = {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
       body: JSON.stringify({ password }),
+    }).then((r) => r.json().then((b) => { if (!r.ok) throw new Error(b.error ?? `HTTP ${r.status}`); return b; })),
+
+  getSettings: (token) =>
+    fetch(`${BASE}/system/settings`, {
+      headers: { Authorization: `Bearer ${token}` },
+    }).then((r) => r.json().then((b) => { if (!r.ok) throw new Error(b.error ?? `HTTP ${r.status}`); return b; })),
+
+  updateSettings: (token, data) =>
+    fetch(`${BASE}/system/settings`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify(data),
     }).then((r) => r.json().then((b) => { if (!r.ok) throw new Error(b.error ?? `HTTP ${r.status}`); return b; })),
 };
 

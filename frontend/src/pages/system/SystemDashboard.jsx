@@ -22,6 +22,12 @@ export default function SystemDashboard() {
   const [formErr,  setFormErr]  = useState(null);
   const [success,  setSuccess]  = useState(null);
 
+  // System message state
+  const [sysMessage,      setSysMessage]     = useState('');
+  const [sysMessageOrig,  setSysMessageOrig] = useState('');
+  const [sysMessageSaving, setSysMessageSaving] = useState(false);
+  const [sysMessageSaved,  setSysMessageSaved]  = useState(false);
+
   // Restore state
   const restoreFileRef = useRef(null);
   const [restoreTenant,  setRestoreTenant]  = useState('');
@@ -49,6 +55,9 @@ export default function SystemDashboard() {
   useEffect(() => {
     if (!token) { navigate('/system/login'); return; }
     loadTenants();
+    system.getSettings(token)
+      .then((s) => { setSysMessage(s.systemMessage ?? ''); setSysMessageOrig(s.systemMessage ?? ''); })
+      .catch(() => {});
   }, [token, navigate, loadTenants]);
 
   const handleChange = (e) =>
@@ -123,6 +132,21 @@ export default function SystemDashboard() {
   function handleRestoreClick() {
     if (!restoreTenant || !restoreFile) return;
     setConfirmOpen(true);
+  }
+
+  async function handleSaveSystemMessage() {
+    setSysMessageSaving(true);
+    setSysMessageSaved(false);
+    try {
+      const result = await system.updateSettings(token, { systemMessage: sysMessage });
+      setSysMessageOrig(result.systemMessage ?? '');
+      setSysMessageSaved(true);
+      setTimeout(() => setSysMessageSaved(false), 3000);
+    } catch (err) {
+      setLoadErr(err.message);
+    } finally {
+      setSysMessageSaving(false);
+    }
   }
 
   async function handleConfirmRestore() {
@@ -306,6 +330,33 @@ export default function SystemDashboard() {
             </form>
           </section>
         )}
+
+        {/* System Message */}
+        <section className="bg-white rounded-xl shadow-sm p-6">
+          <h2 className="text-lg font-semibold text-slate-700 mb-1">System Message</h2>
+          <p className="text-sm text-slate-500 mb-4">
+            This message is displayed on the Home page of every tenant. Use it for system-wide announcements.
+          </p>
+          <textarea
+            value={sysMessage}
+            onChange={(e) => setSysMessage(e.target.value)}
+            rows={3}
+            className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            placeholder="<<System Message here>>"
+          />
+          <div className="flex items-center gap-3 mt-3">
+            <button
+              onClick={handleSaveSystemMessage}
+              disabled={sysMessageSaving || sysMessage === sysMessageOrig}
+              className="bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors"
+            >
+              {sysMessageSaving ? 'Saving…' : 'Save'}
+            </button>
+            {sysMessageSaved && (
+              <span className="text-green-600 text-sm font-medium">Saved</span>
+            )}
+          </div>
+        </section>
 
         {/* Restore from Backup */}
         <section className="bg-white rounded-xl shadow-sm p-6">

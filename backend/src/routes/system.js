@@ -113,6 +113,37 @@ router.post('/tenants/:id/set-temp-password', async (req, res, next) => {
   }
 });
 
+// ─── GET /system/settings ─────────────────────────────────────────────────────
+router.get('/settings', async (_req, res, next) => {
+  try {
+    let settings = await prisma.sysSettings.findUnique({ where: { id: 'singleton' } });
+    if (!settings) {
+      settings = await prisma.sysSettings.create({ data: { id: 'singleton' } });
+    }
+    res.json({ systemMessage: settings.systemMessage });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// ─── PATCH /system/settings ──────────────────────────────────────────────────
+router.patch('/settings', async (req, res, next) => {
+  try {
+    const { systemMessage } = z.object({
+      systemMessage: z.string().optional(),
+    }).parse(req.body);
+
+    const settings = await prisma.sysSettings.upsert({
+      where: { id: 'singleton' },
+      update: { systemMessage },
+      create: { id: 'singleton', systemMessage },
+    });
+    res.json({ systemMessage: settings.systemMessage });
+  } catch (err) {
+    next(err);
+  }
+});
+
 // ─── POST /system/restore/:tenantSlug ────────────────────────────────────────
 // Restore a full tenant backup (Beacon2 or Beacon legacy format).
 // System-admin only (requireSysAdmin already applied above).

@@ -9,6 +9,7 @@ vi.mock('../lib/api.js', () => ({
     listTenants:     vi.fn().mockResolvedValue([]),
     createTenant:    vi.fn(),
     setTenantActive: vi.fn(),
+    getSettings:     vi.fn().mockResolvedValue({ systemMessage: '' }),
   },
 }));
 
