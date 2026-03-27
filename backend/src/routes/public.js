@@ -11,6 +11,7 @@ import { signAccessToken } from '../utils/jwt.js';
 import { resolveTokens } from '../utils/emailTokens.js';
 import { initiatePayment, verifyPaymentNotification } from '../utils/paypal.js';
 import { logAudit } from '../utils/audit.js';
+import portalRoutes from './portal.js';
 
 const router = Router();
 
@@ -844,5 +845,11 @@ router.post('/:slug/portal/reset-password', async (req, res, next) => {
     next(err);
   }
 });
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// PORTAL AUTHENTICATED ROUTES (10.2.2–10.2.5)
+// ═══════════════════════════════════════════════════════════════════════════════
+
+router.use('/:slug/portal/app', portalRoutes);
 
 export default router;

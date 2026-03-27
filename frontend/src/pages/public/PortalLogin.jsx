@@ -2,11 +2,12 @@
 // Members Portal sign-in page (public, unauthenticated).
 
 import { useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { publicApi } from '../../lib/api.js';
 
 export default function PortalLogin() {
   const { slug } = useParams();
+  const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -22,11 +23,10 @@ export default function PortalLogin() {
     setSubmitting(true);
     try {
       const result = await publicApi.portalLogin(slug, email.trim(), password);
-      // For now, just show success. Full portal features are deferred.
       sessionStorage.setItem('portalToken', result.token);
       sessionStorage.setItem('portalMember', JSON.stringify(result.member));
-      // Redirect to a placeholder portal home
-      alert(`Welcome, ${result.member.name}! The Members Portal features are coming soon.`);
+      sessionStorage.setItem('portalSlug', slug);
+      navigate(`/public/${slug}/portal/home`);
     } catch (err) {
       setError(err.message);
     } finally {

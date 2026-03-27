@@ -28,23 +28,22 @@ Items noted during development that need addressing in future sessions.
    email alone would produce false positives. Consider using email + surname
    combination, and warn rather than block.
 
-3. **Full Members Portal features** — The initial implementation covers only portal
-   registration and login. The following portal features are not yet built:
-   - Online renewals (doc 10.2.1)
-   - Viewing interest groups / join & leave groups (doc 10.2.2)
-   - Viewing calendar (doc 10.2.3)
-   - Updating personal details (doc 10.2.4)
-   - Ordering replacement membership card (doc 10.2.5)
+3. **Members Portal — online renewals** — Online renewals (doc 10.2.1) are not yet
+   built. The portal_config.renewals toggle exists but the feature is deferred.
 
-4. **Public groups list and calendar public pages** — The Public Links page now shows
+4. **Members Portal — photo upload** — Doc 10.2.4 describes uploading a member photo
+   for membership cards via the portal. This requires file/photo storage infrastructure
+   (S3 or R2) which is not yet implemented. Deferred. Ref: doc 10.2.4, doc 4.3.
+
+5. **Public groups list and calendar public pages** — The Public Links page now shows
    URLs for public groups list and calendar, but the actual public-facing pages at
    those routes are not yet built. Ref: doc 9.4 section (b).
 
-5. **Real PayPal API integration** — The initial implementation uses stub functions
+6. **Real PayPal API integration** — The initial implementation uses stub functions
    with clear interfaces. Actual PayPal REST API / IPN integration needs to be
    built. Ref: docs 7.9, 7.9.1, 9.8.
 
-6. **Shared email address handling** — When two members share an email address,
+7. **Shared email address handling** — When two members share an email address,
    the portal registration and login flow needs special handling (doc 10.2
    section c). Deferred to a later phase.
 
@@ -56,9 +55,10 @@ Items noted during development that need addressing in future sessions.
    tenant_settings but the integration with the online joining/renewal confirmation
    email flow is not yet implemented. Ref: doc 4.7 section about System Settings.
 
-2. **Members Portal: Order replacement card** — doc 10.2.5 describes a portal feature
-   where members can order a replacement membership card. Not yet built; requires
-   the Members Portal self-service features to be completed first.
+2. **Members Portal: Replacement card PDF attachment** — The portal replacement card
+   feature (doc 10.2.5) now exists but currently only sends a confirmation email
+   (stubbed). The actual PDF card attachment to the email needs to be wired up when
+   SendGrid integration is completed.
 
 ## Documentation Typos
 
