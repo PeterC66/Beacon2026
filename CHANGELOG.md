@@ -5,6 +5,30 @@ Format: `## [version] — YYYY-MM-DD` with bullet points per change.
 
 ---
 
+## [0.7.13] — 2026-03-27
+
+### Added
+- Members Portal dashboard (doc 10.2) — home page after login with greeting,
+  membership expiry, and conditional feature links based on portal_config
+- Portal Groups (doc 10.2.2) — view all active groups with MEMBER/WAITING badges;
+  expandable details (When, Venue, Contact, Information) controlled by group_info_config;
+  Join group / Leave group with confirmation dialogs; waiting list support; group leader
+  notification (stubbed)
+- Portal Calendar (doc 10.2.3) — calendar view with All / Group / Own groups filters;
+  date range from now to end of year; column visibility per calendar_config; Download PDF
+- Portal Personal Details (doc 10.2.4) — edit personal details and address; change
+  password; email change triggers re-verification flow; confirmation email via
+  system_messages template
+- Portal Replacement Card (doc 10.2.5) — request replacement membership card by email;
+  validates Current status and within renewal period; marks card as not printed
+- Backend portal auth middleware (`requirePortalAuth`) — validates portal JWT tokens
+- `portal_details_updated` system message template — confirmation email for portal
+  detail changes
+- Production options document (`docs/production-options.md`) — high-level technical
+  options paper for scaling Beacon2 to production
+
+---
+
 ## [0.7.9] — 2026-03-27
 
 ### Fixed

@@ -946,7 +946,11 @@
 
 | Aspect | Status | Notes |
 |--------|--------|-------|
-| Portal group browsing / join & leave | Not started | Deferred |
+| View all active groups | Done | Accordion list with MEMBER/WAITING badges |
+| Group details (When, Venue, Contact, Info) | Done | Controlled by group_info_config.members toggles |
+| Join group with confirmation | Done | Includes waiting list support when group is full |
+| Leave group with confirmation | Done | Confirmation dialog before removal |
+| Group leader notification | Partial | Logic in place but email sending stubbed |
 
 ---
 
@@ -954,7 +958,10 @@
 
 | Aspect | Status | Notes |
 |--------|--------|-------|
-| Portal calendar view | Not started | Deferred |
+| Calendar event list | Done | Events from now to end of year |
+| Filter: All / Group / Own groups | Done | Radio buttons + group dropdown |
+| Column visibility (Venue, Topic, Enquiries) | Done | Controlled by calendar_config.members toggles |
+| Download PDF | Done | Controlled by calendar_config.download.members toggle |
 
 ---
 
@@ -962,7 +969,13 @@
 
 | Aspect | Status | Notes |
 |--------|--------|-------|
-| Portal self-service detail updates | Not started | Deferred |
+| View/edit personal details | Done | Title, name, known as, suffix, initials, mobile, email, emergency contact |
+| View/edit address | Done | House no, street, add line, town, county, postcode, phone |
+| Hide contact from group leaders | Done | Checkbox toggle |
+| Change password | Done | Expandable section with validation |
+| Email change triggers re-verification | Done | Logs out member after email change, must re-verify |
+| Confirmation email | Done | Uses portal_details_updated system message template |
+| Photo upload | Not started | Deferred — requires file storage infrastructure |
 
 ---
 
@@ -970,7 +983,9 @@
 
 | Aspect | Status | Notes |
 |--------|--------|-------|
-| Portal replacement card ordering | Not started | Deferred |
+| Request replacement card | Done | Validates Current status and within renewal period |
+| Confirmation email | Partial | Uses card_replacement_confirm template, but PDF attachment not yet wired |
+| Mark card as not printed | Done | Sets card_printed = false so admin knows to reprint |
 
 ---
 
@@ -1018,7 +1033,7 @@ These are features or architectural aspects of Beacon2 that have no counterpart 
 
 ### Key gaps (Not started)
 
-1. **Members Portal self-service** — online renewals, group browsing, calendar, personal details, replacement card (docs 10.2.1–10.2.5)
+1. **Members Portal online renewals** — doc 10.2.1 is not yet built; photo upload for personal details (doc 10.2.4) deferred
 2. **Networks and Regions** (doc 12)
 3. **Joint membership online joining** (doc 10.1)
 4. **Real PayPal API integration** (docs 7.9, 9.8)
