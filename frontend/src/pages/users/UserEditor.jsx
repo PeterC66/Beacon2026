@@ -120,6 +120,7 @@ export default function UserEditor() {
           `The new user has been set the temporary password of ${created.tempPassword}\nwhich they will need to change at first login.\nNow please establish the user's roles.`
         );
         setSaved(true);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
         clearTimeout(savedTimer.current);
         savedTimer.current = setTimeout(() => navigate(`/users/${created.id}`), 3000);
       } else {
@@ -136,6 +137,7 @@ export default function UserEditor() {
 
         markClean();
         setSaved(true);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
         clearTimeout(savedTimer.current);
         savedTimer.current = setTimeout(() => navigate('/users'), 1200);
       }

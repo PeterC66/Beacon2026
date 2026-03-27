@@ -107,6 +107,7 @@ export default function GiftAidDeclaration() {
     try {
       const result = await giftAidApi.mark([...selected]);
       setSaved(true);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
       clearTimeout(savedTimer.current);
       savedTimer.current = setTimeout(() => setSaved(false), 3000);
       setShowMarkConfirm(false);

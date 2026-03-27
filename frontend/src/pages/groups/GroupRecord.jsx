@@ -102,6 +102,7 @@ function GroupDetails({ groupId, faculties, venues, onSaved, onDeleted, sitework
       onSaved(result);
       if (!isNew) {
         setSaved(true);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
         clearTimeout(savedTimer.current);
         savedTimer.current = setTimeout(() => setSaved(false), 3000);
       }

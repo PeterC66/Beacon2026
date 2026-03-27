@@ -87,6 +87,7 @@ export default function VenueEditor() {
       }
       markClean();
       setSaved(true);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
       clearTimeout(savedTimer.current);
       savedTimer.current = setTimeout(() => navigate('/venues'), 1200);
     } catch (err) {

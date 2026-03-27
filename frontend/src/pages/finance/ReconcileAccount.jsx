@@ -94,6 +94,7 @@ export default function ReconcileAccount() {
       const batchIds       = selectedItems.filter((t) => t.is_batch).map((t) => t.id);
       await financeApi.reconcile({ accountId, statementDate, transactionIds, batchIds });
       setSaved(true);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
       setTimeout(() => setSaved(false), 3000);
       // Reload
       const d = await financeApi.getReconcileData(accountId);
