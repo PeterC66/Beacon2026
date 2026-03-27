@@ -63,6 +63,9 @@ test.describe('Add new member', () => {
     // Include payment so the member stays "Current" (no payment → Applicant)
     await editor.fillPayment({ amount: '1', accountName: 'Current Account' });
 
+    // If the amount is below the class fee, a confirm dialog warns about
+    // underpayment. Accept it so the save proceeds.
+    page.once('dialog', (d) => d.accept());
     await editor.saveButton().click();
     await expect(editor.successBanner()).toBeVisible({ timeout: 10_000 });
 

@@ -103,6 +103,8 @@ test.describe('System users', () => {
     // Include payment so the member stays "Current" — the available-members
     // dropdown for user creation only shows Current members.
     await memberEditor.fillPayment({ amount: '1', accountName: 'Current Account' });
+    // Accept any underpayment confirm dialog that may fire
+    page.once('dialog', (d) => d.accept());
     await memberEditor.saveButton().click();
     // Wait for save success (banner appears, then SPA redirects after 1200ms)
     await expect(page.getByText(/saved/i).first()).toBeVisible({ timeout: 10_000 });
