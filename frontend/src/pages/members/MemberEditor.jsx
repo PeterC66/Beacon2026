@@ -643,6 +643,7 @@ export default function MemberEditor() {
       }
       markClean();
       setSaved(true);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
       clearTimeout(savedTimer.current);
       const dest = isNew && createdId ? `/members/${createdId}` : '/members';
       savedTimer.current = setTimeout(() => navigate(dest), 1200);
