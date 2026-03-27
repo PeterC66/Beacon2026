@@ -1046,6 +1046,19 @@ When an applicant doesn't complete payment:
   email using the `online_join_payment_link` system message template
   (supports `#PAYMENTLINK` token in addition to standard member tokens)
 
+### Admin-created Applicants (Add Member without payment)
+
+When an admin adds a new member via MemberEditor **without entering payment details**,
+the backend automatically:
+1. Switches the member's status from "Current" to "Applicant"
+2. Generates a `payment_token` on the member record
+3. Returns `paymentToken` in the API response
+
+The frontend detects this and prompts the admin: "Would you like to email them a
+payment link?" — if accepted, calls `POST /public/:slug/email-payment-link` to send
+the resume-payment URL. The member can then pay online via the same resume-payment
+flow used by online applicants.
+
 **Admin cleanup:** Administrators can filter the Members List by "Applicant" status
 to see unpaid applications, then open individual records and use the Delete button
 (`member_record:delete` privilege required). No automatic cleanup — this is intentional

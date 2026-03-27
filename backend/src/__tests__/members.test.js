@@ -98,7 +98,13 @@ describe('POST /members', () => {
     // address insert
     tenantQuery.mockResolvedValueOnce([{ id: 'addr1' }]);
     // member insert
-    tenantQuery.mockResolvedValueOnce([{ ...SAMPLE_MEMBER, id: 'm2', forenames: 'Jane', surname: 'Doe' }]);
+    tenantQuery.mockResolvedValueOnce([{ ...SAMPLE_MEMBER, id: 'm2', forenames: 'Jane', surname: 'Doe', email: 'jane@example.com' }]);
+    // no payment → look up Current status
+    tenantQuery.mockResolvedValueOnce([{ id: 'st1' }]);
+    // look up Applicant status
+    tenantQuery.mockResolvedValueOnce([{ id: 'st-applicant' }]);
+    // update member to Applicant + payment_token
+    tenantQuery.mockResolvedValueOnce([]);
 
     const res = await request(app)
       .post('/members')
@@ -107,6 +113,7 @@ describe('POST /members', () => {
 
     expect(res.status).toBe(201);
     expect(res.body.surname).toBe('Doe');
+    expect(res.body.paymentToken).toBeTruthy();
   });
 
   it('returns 409 when name is a duplicate (without ?confirmed=1)', async () => {
@@ -125,6 +132,12 @@ describe('POST /members', () => {
     // no dup check called — goes straight to address insert
     tenantQuery.mockResolvedValueOnce([{ id: 'addr1' }]);
     tenantQuery.mockResolvedValueOnce([{ ...SAMPLE_MEMBER, id: 'm3', forenames: 'Jane', surname: 'Doe' }]);
+    // no payment → look up Current status
+    tenantQuery.mockResolvedValueOnce([{ id: 'st1' }]);
+    // look up Applicant status
+    tenantQuery.mockResolvedValueOnce([{ id: 'st-applicant' }]);
+    // update member to Applicant + payment_token
+    tenantQuery.mockResolvedValueOnce([]);
 
     const res = await request(app)
       .post('/members?confirmed=1')
@@ -132,6 +145,7 @@ describe('POST /members', () => {
       .send(VALID_BODY);
 
     expect(res.status).toBe(201);
+    expect(res.body.paymentToken).toBeTruthy();
   });
 
   it('returns 422 on missing required fields', async () => {
