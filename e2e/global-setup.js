@@ -165,7 +165,28 @@ async function seedFinanceAccount(tenantToken) {
   }
 }
 
-// ── Step 5: seed a second member class ───────────────────────────────────
+// ── Step 5: seed a "Membership" finance category ─────────────────────────
+// Member-creation tests that include a payment need an active finance
+// category named "Membership" (or "Donations") so the backend can allocate
+// the payment to a transaction_categories row.
+
+async function seedFinanceCategory(tenantToken) {
+  const { status } = await apiCall('/finance/categories', {
+    method: 'POST',
+    token: tenantToken,
+    tenantSlug: SLUG,
+    body: { name: 'Membership', active: true, sort_order: 1 },
+  });
+  if (status === 201) {
+    console.log('[setup] Finance category "Membership" created.');
+  } else if (status === 409) {
+    console.log('[setup] Finance category already exists — skipping.');
+  } else {
+    console.warn(`[setup] Finance category creation returned ${status} — continuing.`);
+  }
+}
+
+// ── Step 6: seed a second member class ───────────────────────────────────
 // Tests that add/delete classes need a deletable one (the default "Individual"
 // is locked). Seed a "Joint" class so tests have something to work with.
 
@@ -208,6 +229,7 @@ export default async function globalSetup() {
   await ensureTestTenant(sysToken);
   const tenantToken = await tenantAdminLogin();
   await seedFinanceAccount(tenantToken);
+  await seedFinanceCategory(tenantToken);
   await seedMemberClass(tenantToken);
 
   // Persist the generated slug so test fixtures and teardown can read it.
