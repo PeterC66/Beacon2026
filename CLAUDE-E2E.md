@@ -138,6 +138,27 @@ The tenant slug is generated per run (`e2e_<hex>`) to avoid collisions.
 
 ---
 
+## Member creation and the Applicant status
+
+When a member is created **without payment details**, the backend automatically
+switches their status from "Current" to "Applicant" and generates a payment
+token (see `POST /members` in `backend/src/routes/members.js`).
+
+This affects E2E tests because:
+- The **member list** defaults to the "Current" status filter — Applicant members
+  are hidden unless the "All" checkbox is ticked
+- The **available-members dropdown** on the Add User form (`/users/available-members`)
+  only returns members with status "Current"
+
+**When writing tests that need a Current member**, include payment via
+`editor.fillPayment({ amount: '1', accountName: 'Current Account' })` after
+`fillMinimal()`. The global setup seeds a "Current Account" finance account.
+
+**When testing the Applicant path**, omit payment and verify the status select
+shows "Applicant" on the resulting edit page.
+
+---
+
 ## Adding a new page object
 
 1. Create `e2e/pages/FooPage.js`

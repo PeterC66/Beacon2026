@@ -51,6 +51,12 @@ export class MemberEditorPage {
   townInput()       { return this.page.locator('input[name="town"]'); }
   postcodeInput()   { return this.page.locator('input[name="postcode"]'); }
 
+  // ── Payment (new member only) ────────────────────────────────────────────
+
+  payAmountInput()   { return this.page.locator('input[name="payAmount"]'); }
+  payAccountSelect() { return this.page.locator('select[name="payAccountId"]'); }
+  payMethodSelect()  { return this.page.locator('select[name="payMethod"]'); }
+
   // ── Buttons ─────────────────────────────────────────────────────────────
 
   // Button text is "Add Member" for new, "Save" for existing, "Saving…" while in-flight
@@ -77,6 +83,30 @@ export class MemberEditorPage {
       'select[name="classId"]',
       { timeout: 10_000 },
     );
+  }
+
+  /** Wait for the payment account select to have loaded options. */
+  async waitForPaymentAccounts() {
+    await this.page.waitForFunction(
+      (sel) => {
+        const select = document.querySelector(sel);
+        return select && select.options.length > 1;
+      },
+      'select[name="payAccountId"]',
+      { timeout: 10_000 },
+    );
+  }
+
+  /**
+   * Fill in the payment section on the new-member form.
+   * The payment section only appears when finance accounts exist.
+   * Providing payment keeps the member as "Current"; omitting it
+   * causes the backend to switch them to "Applicant".
+   */
+  async fillPayment({ amount, accountName }) {
+    await this.waitForPaymentAccounts();
+    await this.payAmountInput().fill(String(amount));
+    await this.payAccountSelect().selectOption({ label: accountName });
   }
 
   // ── Helpers ──────────────────────────────────────────────────────────────

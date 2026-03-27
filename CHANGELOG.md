@@ -5,6 +5,17 @@ Format: `## [version] — YYYY-MM-DD` with bullet points per change.
 
 ---
 
+## [0.7.9] — 2026-03-27
+
+### Fixed
+- E2E tests: member creation now includes payment to keep status as "Current",
+  fixing failures in member edit/search/delete and user creation tests caused
+  by the Applicant auto-switch feature
+- E2E tests: added test for the no-payment Applicant creation path
+- E2E tests: fixed timeout waiting for hidden "Next renewal" input on new member form
+
+---
+
 ## [0.7.8] — 2026-03-27
 
 ### Added
