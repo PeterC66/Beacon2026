@@ -7,7 +7,8 @@
 //
 // Tests:
 //  ✓ Member list loads and displays filter controls
-//  ✓ Add a new member (minimal required fields) → appears in list
+//  ✓ Add a new member with payment → stays Current, appears in list
+//  ✓ Add a new member without payment → becomes Applicant
 //  ✓ Edit a member → changes saved
 //  ✓ Search by surname → filters list
 //  ✓ Validation: save without surname shows error
@@ -21,6 +22,9 @@ import { MemberEditorPage } from '../pages/MemberEditorPage.js';
 const SUFFIX = Date.now();
 const TEST_SURNAME   = `E2ETest${SUFFIX}`;
 const TEST_FORENAMES = 'Alice';
+
+// Second member for the no-payment (Applicant) path
+const APPLICANT_SURNAME = `E2EAppl${SUFFIX}`;
 
 test.describe('Member list', () => {
   test('page loads with filter controls', async ({ adminPage: page }) => {
@@ -43,9 +47,7 @@ test.describe('Member list', () => {
 });
 
 test.describe('Add new member', () => {
-  let createdMemberUrl;
-
-  test('create a member with required fields', async ({ adminPage: page }) => {
+  test('create a member with payment keeps status Current', async ({ adminPage: page }) => {
     const editor = new MemberEditorPage(page);
     await editor.gotoNew();
 
@@ -58,15 +60,47 @@ test.describe('Add new member', () => {
       joinedOn:   '01/01/2024',
     });
 
+    // Include payment so the member stays "Current" (no payment → Applicant)
+    await editor.fillPayment({ amount: '1', accountName: 'Current Account' });
+
     await editor.saveButton().click();
     await expect(editor.successBanner()).toBeVisible({ timeout: 10_000 });
 
     // After save, URL changes to the edit URL (/members/:id)
     await page.waitForURL(/\/members\/[^/]+$/, { timeout: 10_000 });
-    createdMemberUrl = page.url();
 
     // Success: page now shows the member's name in the heading
     await expect(page.getByText(TEST_SURNAME)).toBeVisible();
+  });
+
+  test('create a member without payment saves as Applicant', async ({ adminPage: page }) => {
+    const editor = new MemberEditorPage(page);
+    await editor.gotoNew();
+
+    await editor.fillMinimal({
+      forenames:  'Bob',
+      surname:    APPLICANT_SURNAME,
+      statusName: 'Current',
+      className:  'Individual',
+      postcode:   'OX1 1AA',
+      joinedOn:   '01/01/2024',
+    });
+
+    // No payment — backend will switch to Applicant.
+    // If the member has an email, a confirm() dialog offers to email a payment link.
+    // We don't set an email so no dialog fires.
+    await editor.saveButton().click();
+    await expect(editor.successBanner()).toBeVisible({ timeout: 10_000 });
+
+    // After save, URL changes to the edit URL (/members/:id)
+    await page.waitForURL(/\/members\/[^/]+$/, { timeout: 10_000 });
+
+    // The status select (visible on the edit form) should show "Applicant"
+    await expect(editor.statusSelect()).toHaveValue(/.+/);    // has some value
+    const selectedText = await editor.statusSelect().evaluate(
+      (sel) => sel.options[sel.selectedIndex]?.text,
+    );
+    expect(selectedText).toBe('Applicant');
   });
 
   test('newly created member appears in the member list', async ({ adminPage: page }) => {

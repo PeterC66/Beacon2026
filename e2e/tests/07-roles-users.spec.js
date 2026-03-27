@@ -100,6 +100,9 @@ test.describe('System users', () => {
       postcode:   'SW1A 1AA',
       joinedOn:   '01/01/2025',
     });
+    // Include payment so the member stays "Current" — the available-members
+    // dropdown for user creation only shows Current members.
+    await memberEditor.fillPayment({ amount: '1', accountName: 'Current Account' });
     await memberEditor.saveButton().click();
     // Wait for save success (banner appears, then SPA redirects after 1200ms)
     await expect(page.getByText(/saved/i).first()).toBeVisible({ timeout: 10_000 });
