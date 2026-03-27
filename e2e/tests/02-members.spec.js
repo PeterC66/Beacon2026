@@ -18,8 +18,10 @@ import { test, expect } from '../fixtures/admin.js';
 import { MemberListPage } from '../pages/MemberListPage.js';
 import { MemberEditorPage } from '../pages/MemberEditorPage.js';
 
-// Unique-enough suffix to avoid collisions if tests are run concurrently
-const SUFFIX = Date.now();
+// Use process.pid so the suffix stays the same when Playwright retries
+// re-import the module (Date.now() changes on every re-import).
+// Each CI run creates a fresh tenant, so collisions are not a concern.
+const SUFFIX = process.pid;
 const TEST_SURNAME   = `E2ETest${SUFFIX}`;
 const TEST_FORENAMES = 'Alice';
 
@@ -78,6 +80,16 @@ test.describe('Add new member', () => {
 
   test('create a member without payment saves as Applicant', async ({ adminPage: page }) => {
     const editor = new MemberEditorPage(page);
+
+    // Start listening for the year-config API response BEFORE navigating,
+    // so we can await it after filling the form. The useEffect that auto-computes
+    // nextRenewal depends on yearConfig — if it hasn't loaded when save is clicked,
+    // validation rejects with "Next renewal date is required".
+    const yearConfigLoaded = page.waitForResponse(
+      (r) => r.url().includes('/settings/year-config') && r.ok(),
+      { timeout: 15_000 },
+    );
+
     await editor.gotoNew();
 
     await editor.fillMinimal({
@@ -92,6 +104,7 @@ test.describe('Add new member', () => {
     // No payment — backend will switch to Applicant.
     // If the member has an email, a confirm() dialog offers to email a payment link.
     // We don't set an email so no dialog fires.
+    await yearConfigLoaded;
     await editor.saveButton().click();
     await expect(editor.successBanner()).toBeVisible({ timeout: 10_000 });
 
