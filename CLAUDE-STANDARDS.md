@@ -37,6 +37,9 @@ Every item below applies to every new feature — no exceptions.
   Call `markDirty()` on field change, `markClean()` before navigate on save/cancel.
 
 - [ ] **Save success feedback** — transient green banner, auto-dismiss after 3 seconds.
+  **Always scroll to top** after `setSaved(true)`:
+  `window.scrollTo({ top: 0, behavior: 'smooth' });`
+  so the user sees the success message even if the form is long.
 
 - [ ] **Mandatory field indicator** — use `<RequiredMark />` from
   `frontend/src/components/RequiredMark.jsx` next to the label text. Renders a red

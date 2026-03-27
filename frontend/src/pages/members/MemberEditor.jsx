@@ -377,6 +377,14 @@ export default function MemberEditor() {
     const telErr = validatePhone(form.telephone);
     if (telErr) errs.telephone = telErr;
 
+    // HMRC Gift Aid requires: Title, First name, Last name, House name or number, Postcode
+    // Forenames, surname, and postcode are already required above.
+    const giftAidActive = isNew ? giftAidTick : !!form.giftAidFrom;
+    if (giftAidActive) {
+      if (!form.title || !form.title.trim()) errs.title = 'Title is required for Gift Aid (HMRC requirement)';
+      if (!skipPostcode && !form.houseNo.trim()) errs.houseNo = 'House name or number is required for Gift Aid (HMRC requirement)';
+    }
+
     return errs;
   }
 
@@ -654,6 +662,7 @@ export default function MemberEditor() {
       }
       markClean();
       setSaved(true);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
       clearTimeout(savedTimer.current);
       const dest = isNew && createdId ? `/members/${createdId}` : '/members';
       savedTimer.current = setTimeout(() => navigate(dest), 1200);
@@ -818,9 +827,10 @@ export default function MemberEditor() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className={labelCls}>Title</label>
-                <select name="title" value={form.title} onChange={(e) => set('title', e.target.value)} className={inputCls}>
+                <select name="title" value={form.title} onChange={(e) => set('title', e.target.value)} className={ic('title')}>
                   {TITLES.map((t) => <option key={t} value={t}>{t || '—'}</option>)}
                 </select>
+                {fieldErrors.title && <p className={errMsgCls}>{fieldErrors.title}</p>}
               </div>
               <div>
                 <label className={labelCls}>Forenames <RequiredMark /></label>
@@ -854,9 +864,10 @@ export default function MemberEditor() {
               )}
               <div className="sm:col-span-2 grid grid-cols-[1fr_2fr_auto] gap-4 items-end">
                 <div>
-                  <label className={labelCls}>Suffix <span className="text-slate-400 font-normal">(e.g. MBE)</span></label>
+                  <label className={labelCls}>Suffix</label>
                   <input type="text" name="suffix" value={form.suffix}
                     onChange={(e) => set('suffix', e.target.value)}
+                    title="e.g. MBE, DD, Esq etc"
                     className={inputCls} maxLength={30} />
                 </div>
                 <div>
@@ -873,7 +884,7 @@ export default function MemberEditor() {
                         navigate('/email/compose');
                       }}
                       className="border border-blue-300 text-blue-600 hover:bg-blue-50 rounded px-3 py-2 text-sm transition-colors whitespace-nowrap"
-                      title="Send email to this member"
+                      title="Press to send an email to this member"
                     >
                       Send email
                     </button>
@@ -891,9 +902,9 @@ export default function MemberEditor() {
               {isAssociate && (
                 <div>
                   <label className={labelCls}>Home u3a</label>
-                  <p className="text-xs text-slate-500 mb-1">(where the person is a full member)</p>
                   <input type="text" name="homeU3a" value={form.homeU3a}
                     onChange={(e) => set('homeU3a', e.target.value)}
+                    title="e.g. name of main u3a, etc"
                     className={inputCls} maxLength={100} />
                 </div>
               )}
@@ -909,7 +920,7 @@ export default function MemberEditor() {
                       <button type="button"
                         onClick={() => set('giftAidFrom', '')}
                         className="text-slate-400 hover:text-red-600 transition-colors px-1"
-                        title="Remove Gift Aid date">
+                        title="Press if the member is no longer eligible for gift aid donations">
                         ✕
                       </button>
                     )}
@@ -993,6 +1004,7 @@ export default function MemberEditor() {
                       value={form.existingPartnerId}
                       onChange={(e) => handlePartnerChange(e.target.value)}
                       className={inputCls}
+                      title="Select the name of the partner with whom the address is shared"
                     >
                       <option value="">— none —</option>
                       {allMembers
@@ -1118,7 +1130,9 @@ export default function MemberEditor() {
                 <label className={labelCls}>House / flat no.</label>
                 <input type="text" name="houseNo" value={form.houseNo}
                   onChange={(e) => set('houseNo', e.target.value)}
-                  className={inputCls} />
+                  onBlur={() => handleBlur('houseNo')}
+                  className={ic('houseNo')} />
+                {fieldErrors.houseNo && <p className={errMsgCls}>{fieldErrors.houseNo}</p>}
               </div>
               <div>
                 <label className={labelCls}>Street/Building</label>
@@ -1127,15 +1141,17 @@ export default function MemberEditor() {
                   className={inputCls} />
               </div>
               <div>
-                <label className={labelCls}>Additional line 1 <span className="text-slate-400 font-normal">(district / village)</span></label>
+                <label className={labelCls}>Additional line 1</label>
                 <input type="text" name="addLine1" value={form.addLine1}
                   onChange={(e) => set('addLine1', e.target.value)}
+                  title="Use these fields for additional lines of address"
                   className={inputCls} />
               </div>
               <div>
                 <label className={labelCls}>Additional line 2</label>
                 <input type="text" name="addLine2" value={form.addLine2}
                   onChange={(e) => set('addLine2', e.target.value)}
+                  title="Use these fields for additional lines of address"
                   className={inputCls} />
               </div>
               <div>
@@ -1390,12 +1406,14 @@ export default function MemberEditor() {
           {/* ── Buttons ─────────────────────────────────────────────── */}
           <div className="flex gap-3 flex-wrap">
             <button type="submit" disabled={saving}
+              title="Press to save this member record"
               className="bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white rounded px-5 py-2 text-sm font-medium transition-colors">
               {saving ? 'Saving…' : (isNew ? 'Add Member' : 'Save')}
             </button>
 
             {!isNew && can('member_record', 'delete') && (
               <button type="button" onClick={handleDelete} disabled={deleting}
+                title="Press to remove this member record"
                 className="border border-red-300 text-red-600 hover:bg-red-50 rounded px-5 py-2 text-sm transition-colors">
                 {deleting ? 'Deleting…' : 'Delete'}
               </button>

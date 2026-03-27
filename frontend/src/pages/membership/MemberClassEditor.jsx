@@ -139,6 +139,7 @@ export default function MemberClassEditor() {
       }
       markClean();
       setSaved(true);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
       clearTimeout(savedTimer.current);
       savedTimer.current = setTimeout(() => navigate('/membership/classes'), 1200);
     } catch (err) {

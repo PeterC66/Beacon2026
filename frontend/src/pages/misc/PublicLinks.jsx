@@ -135,6 +135,7 @@ export default function PublicLinks() {
       setData((prev) => ({ ...prev, ...updated }));
       markClean();
       setSaved(true);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
       clearTimeout(savedTimer.current);
       savedTimer.current = setTimeout(() => setSaved(false), 3000);
     } catch (e) {

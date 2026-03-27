@@ -58,8 +58,9 @@ export default function JoinForm() {
     else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) errs.email = 'Please enter a valid email address.';
     if (!form.postcode.trim()) errs.postcode = 'Postcode is required.';
     else if (!UK_POSTCODE_RE.test(form.postcode.trim())) errs.postcode = 'Please enter a valid UK postcode.';
-    if (config?.giftAidEnabled && form.giftAid && !form.title.trim()) {
-      errs.title = 'Title is required for Gift Aid claims (HMRC requirement).';
+    if (config?.giftAidEnabled && form.giftAid) {
+      if (!form.title.trim()) errs.title = 'Title is required for Gift Aid (HMRC requirement).';
+      if (!form.houseNo.trim()) errs.houseNo = 'House name or number is required for Gift Aid (HMRC requirement).';
     }
     return errs;
   }
@@ -253,8 +254,9 @@ export default function JoinForm() {
                     name="houseNo"
                     value={form.houseNo}
                     onChange={(e) => handleChange('houseNo', e.target.value)}
-                    className="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className={`w-full border rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${fieldErrors.houseNo ? 'border-red-400 ring-2 ring-red-200' : 'border-slate-300'}`}
                   />
+                  {fieldErrors.houseNo && <p className="text-red-600 text-xs mt-1">{fieldErrors.houseNo}</p>}
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">Street</label>

@@ -39,6 +39,7 @@ export default function SystemMessages() {
       setMessages((prev) => prev.map((m) => (m.id === id ? updated : m)));
       setEditing(null);
       setSaved(true);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
       clearTimeout(savedTimer.current);
       savedTimer.current = setTimeout(() => setSaved(false), 3000);
     } catch (e) {

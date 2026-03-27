@@ -230,6 +230,7 @@ export default function TransactionEditor() {
         if (addAnother) {
           markClean();
           setSaved(true);
+          window.scrollTo({ top: 0, behavior: 'smooth' });
           clearTimeout(savedTimer.current);
           savedTimer.current = setTimeout(() => {
             setSaved(false);
@@ -240,12 +241,14 @@ export default function TransactionEditor() {
         } else {
           markClean();
           setSaved(true);
+          window.scrollTo({ top: 0, behavior: 'smooth' });
           clearTimeout(savedTimer.current);
           savedTimer.current = setTimeout(() => navigate(`/finance/transactions/${result.id}`), 1200);
         }
       } else {
         markClean();
         setSaved(true);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
         clearTimeout(savedTimer.current);
         savedTimer.current = setTimeout(() => navigate(`/finance/transactions/${id}`), 1200);
       }

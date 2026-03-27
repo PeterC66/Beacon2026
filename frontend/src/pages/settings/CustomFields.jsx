@@ -34,6 +34,7 @@ export default function CustomFields() {
       const data = await api.update(labels);
       setLabels(data);
       setSaved(true);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     } catch (err) { setError(err.message); }
     finally { setSaving(false); }
   }
