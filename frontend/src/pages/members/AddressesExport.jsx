@@ -22,6 +22,7 @@ import { hasOptionalCookieConsent } from '../../hooks/useCookieConsent.js';
 
 const LABEL_PREFS_KEY = 'beacon2_label_settings';
 const LAST_CLASS_KEY  = 'beacon2_last_export_class';
+const TAM_PREFS_KEY   = 'beacon2_tam_submission';
 
 function loadLabelPrefs() {
   if (!hasOptionalCookieConsent()) return defaultLabelSettings();
@@ -42,6 +43,21 @@ function saveLastClass(classId) {
   try {
     if (classId) localStorage.setItem(LAST_CLASS_KEY, classId);
     else localStorage.removeItem(LAST_CLASS_KEY);
+  } catch {}
+}
+
+function loadTamPrefs() {
+  if (!hasOptionalCookieConsent()) return null;
+  try {
+    const raw = localStorage.getItem(TAM_PREFS_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch { return null; }
+}
+
+function saveTamPrefs(statusIds, classId) {
+  if (!hasOptionalCookieConsent()) return;
+  try {
+    localStorage.setItem(TAM_PREFS_KEY, JSON.stringify({ statusIds, classId }));
   } catch {}
 }
 
@@ -119,6 +135,8 @@ export default function AddressesExport() {
 
   // Format
   const [format, setFormat] = useState('excel');
+  // Track whether TAM prefs have already been restored this session
+  const [tamPrefsApplied, setTamPrefsApplied] = useState(false);
 
   // Filter state
   const [statuses,         setStatuses]         = useState([]);
@@ -162,6 +180,20 @@ export default function AddressesExport() {
       })
       .catch(() => {});
   }, []);
+
+  // ── Restore TAM prefs when switching to TAM format ──────────────────────
+  // Only apply once per session (so user can freely change filters after).
+
+  useEffect(() => {
+    if (format !== 'tam' || tamPrefsApplied || statuses.length === 0) return;
+    const prefs = loadTamPrefs();
+    if (!prefs) return;
+    // Validate that saved status IDs still exist
+    const validIds = prefs.statusIds?.filter((id) => statuses.some((s) => s.id === id));
+    if (validIds?.length) setSelectedStatuses(validIds);
+    if (prefs.classId) setSelectedClass(prefs.classId);
+    setTamPrefsApplied(true);
+  }, [format, tamPrefsApplied, statuses]);
 
   // ── Load members when filters change ──────────────────────────────────────
 
@@ -227,6 +259,11 @@ export default function AddressesExport() {
     }
     // Collect all member IDs from selected address groups
     const memberIds = selectedGroups.flatMap((g) => g.members.map((m) => m.id));
+
+    // Save TAM submission prefs when downloading in TAM format
+    if (format === 'tam') {
+      saveTamPrefs(selectedStatuses, selectedClass);
+    }
 
     setDownloading(true);
     setDlError(null);

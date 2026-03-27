@@ -9,7 +9,7 @@
 > - **Not started** — feature not yet implemented
 > - **Beacon2 extra** — functionality in Beacon2 that is not in the original Beacon
 >
-> **Last updated:** 2026-03-25
+> **Last updated:** 2026-03-27
 
 ---
 
@@ -67,7 +67,7 @@
 | Anti-tracking software guidance | Partial | No specific guidance page; cookie consent handles the functional aspect |
 | Last membership class cookie | Built | Addresses Export persists last class filter in `beacon2_last_export_class` (consent-gated) |
 | Label printing settings cookie | Built | Label settings persist in `beacon2_label_settings` (now consent-gated) |
-| TAM submission cookie | Not started | TAM submission not yet built; placeholder listed in consent dialog |
+| TAM submission cookie | Built | TAM status + class persist in `beacon2_tam_submission` (consent-gated); restored when TAM format selected |
 | Email compose prefs cookie | Built | From address and copy-to-self persist in `beacon2_email_compose_prefs` (consent-gated) |
 
 ---
@@ -245,7 +245,7 @@
 
 | Aspect | Status | Notes |
 |--------|--------|-------|
-| Printer settings for labels | Partial | Labels work but layout prefs not persisted across sessions |
+| Printer settings for labels | Built | All settings (cols, rows, width, height, offsets, font size) adjustable; "Save as defaults" persists to localStorage (consent-gated) |
 
 ---
 
