@@ -3,6 +3,7 @@
 // All routes are tenant-scoped via the :slug path parameter.
 
 import { Router } from 'express';
+import { randomBytes } from 'crypto';
 import { z } from 'zod';
 import { prisma, tenantQuery, withTenant } from '../utils/db.js';
 import { hashPassword, verifyPassword, generateToken } from '../utils/password.js';
@@ -170,19 +171,24 @@ router.post('/:slug/join', async (req, res, next) => {
     // Set gift_aid_from if opted in and enabled
     const giftAidFrom = (data.giftAid && settings.gift_aid_enabled) ? joinedOn : null;
 
+    // Generate a payment token so the applicant can resume payment later
+    const paymentToken = randomBytes(24).toString('hex');
+
     // Create member with Applicant status
     const [member] = await tenantQuery(
       slug,
       `INSERT INTO members
          (title, forenames, surname, initials, email, mobile,
-          address_id, status_id, class_id, joined_on, next_renewal, gift_aid_from)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10::date, $11::date, $12::date)
+          address_id, status_id, class_id, joined_on, next_renewal, gift_aid_from,
+          payment_token)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10::date, $11::date, $12::date, $13)
        RETURNING id, membership_number, forenames, surname, email`,
       [
         data.title ?? null, data.forenames, data.surname, initials,
         data.email.toLowerCase(), data.mobile ?? null,
         newAddr.id, applicantStatus.id, data.classId,
         joinedOn, nextRenewal, giftAidFrom,
+        paymentToken,
       ],
     );
 
@@ -212,7 +218,9 @@ router.post('/:slug/join', async (req, res, next) => {
       membershipNumber: member.membership_number,
       paymentId,
       redirectUrl,
+      paymentToken,
       amount:           cls.fee ?? 0,
+      className:        cls.name,
     });
   } catch (err) {
     next(err);
@@ -258,7 +266,7 @@ router.post('/:slug/payment-confirm', async (req, res, next) => {
       return res.status(404).json({ error: 'Member not found.' });
     }
 
-    // Update status from Applicant to Current
+    // Update status from Applicant to Current, clear payment token
     let [currentStatus] = await tenantQuery(
       slug,
       `SELECT id FROM member_statuses WHERE name ILIKE '%Current%' LIMIT 1`,
@@ -266,7 +274,7 @@ router.post('/:slug/payment-confirm', async (req, res, next) => {
     if (currentStatus) {
       await tenantQuery(
         slug,
-        `UPDATE members SET status_id = $1, card_printed = false, updated_at = now() WHERE id = $2`,
+        `UPDATE members SET status_id = $1, card_printed = false, payment_token = NULL, updated_at = now() WHERE id = $2`,
         [currentStatus.id, member.id],
       );
     }
@@ -320,6 +328,151 @@ router.post('/:slug/payment-confirm', async (req, res, next) => {
     });
 
     res.json({ success: true, membershipNumber: member.membership_number });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// ─── GET /:slug/resume-payment/:token ────────────────────────────────────
+// Looks up an Applicant by payment token and re-initiates payment.
+// Returns payment details so the frontend can show a "Resume payment" page.
+
+router.get('/:slug/resume-payment/:token', async (req, res, next) => {
+  try {
+    const slug = req.tenantSlug;
+    const { token } = req.params;
+
+    if (!token || token.length < 10) {
+      return res.status(400).json({ error: 'Invalid payment link.' });
+    }
+
+    // Find the Applicant member by payment token
+    const [member] = await tenantQuery(
+      slug,
+      `SELECT m.id, m.membership_number, m.forenames, m.surname, m.email,
+              m.class_id, ms.name AS status_name,
+              mc.name AS class_name, mc.fee::float AS fee
+       FROM members m
+       LEFT JOIN member_statuses ms ON m.status_id = ms.id
+       LEFT JOIN member_classes mc ON m.class_id = mc.id
+       WHERE m.payment_token = $1`,
+      [token],
+    );
+
+    if (!member) {
+      return res.status(404).json({ error: 'This payment link is no longer valid. It may have expired or already been used.' });
+    }
+
+    // If member is no longer an Applicant, they've already paid
+    if (member.status_name !== 'Applicant') {
+      return res.status(400).json({
+        error: 'This membership has already been activated. No further payment is needed.',
+        membershipNumber: member.membership_number,
+      });
+    }
+
+    // Re-initiate payment
+    const [settings] = await tenantQuery(
+      slug,
+      `SELECT paypal_email, paypal_cancel_url FROM tenant_settings WHERE id = 'singleton'`,
+    );
+
+    const frontendBase = process.env.CORS_ORIGIN || 'http://localhost:5173';
+    const returnUrl = `${frontendBase}/public/${slug}/join-complete`;
+    const cancelUrl = settings?.paypal_cancel_url || `${frontendBase}/public/${slug}/join`;
+
+    const { paymentId, redirectUrl } = await initiatePayment({
+      amount:      member.fee ?? 0,
+      description: `Membership: ${member.class_name}`,
+      memberRef:   member.id,
+      returnUrl,
+      cancelUrl,
+      paypalEmail: settings?.paypal_email,
+    });
+
+    res.json({
+      memberId:         member.id,
+      membershipNumber: member.membership_number,
+      forenames:        member.forenames,
+      surname:          member.surname,
+      email:            member.email,
+      className:        member.class_name,
+      amount:           member.fee ?? 0,
+      paymentId,
+      redirectUrl,
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// ─── POST /:slug/email-payment-link ─────────────────────────────────────
+// Sends a "complete your payment" email to the applicant.
+// Called from the JoinPending page when the applicant clicks "Email me this link".
+
+const emailPaymentLinkSchema = z.object({
+  paymentToken: z.string().min(1),
+});
+
+router.post('/:slug/email-payment-link', async (req, res, next) => {
+  try {
+    const slug = req.tenantSlug;
+    const { paymentToken } = emailPaymentLinkSchema.parse(req.body);
+
+    // Find the Applicant member
+    const [member] = await tenantQuery(
+      slug,
+      `SELECT m.id, m.membership_number, m.forenames, m.surname, m.email,
+              ms.name AS status_name,
+              mc.name AS class_name
+       FROM members m
+       LEFT JOIN member_statuses ms ON m.status_id = ms.id
+       LEFT JOIN member_classes mc ON m.class_id = mc.id
+       WHERE m.payment_token = $1`,
+      [paymentToken],
+    );
+
+    if (!member || member.status_name !== 'Applicant') {
+      return res.status(404).json({ error: 'Application not found or already completed.' });
+    }
+
+    if (!member.email) {
+      return res.status(400).json({ error: 'No email address on file.' });
+    }
+
+    // Build the payment link URL
+    const frontendBase = process.env.CORS_ORIGIN || 'http://localhost:5173';
+    const paymentLink = `${frontendBase}/public/${slug}/resume-payment/${paymentToken}`;
+
+    // Resolve and send the email
+    const [template] = await tenantQuery(
+      slug,
+      `SELECT subject, body FROM system_messages WHERE id = 'online_join_payment_link'`,
+    );
+    if (!template) {
+      return res.status(500).json({ error: 'Payment link email template not found.' });
+    }
+
+    const tenant = await prisma.sysTenant.findUnique({ where: { slug } });
+    const u3aName = tenant?.name ?? '';
+
+    const [settings] = await tenantQuery(
+      slug,
+      `SELECT online_join_email FROM tenant_settings WHERE id = 'singleton'`,
+    );
+    const replyTo = settings?.online_join_email || null;
+
+    const { subject, body } = resolveTokens(
+      template.subject, template.body,
+      { ...member, class_name: member.class_name }, u3aName,
+      { '#PAYMENTLINK': paymentLink },
+    );
+
+    // In production, this would call SendGrid
+    console.log(`[Online Join] Would send payment link email to ${member.email}: "${subject}"${replyTo ? ` (reply-to: ${replyTo})` : ''}`);
+    console.log(`[Online Join] Payment link: ${paymentLink}`);
+
+    res.json({ message: 'Payment link has been sent to your email address.' });
   } catch (err) {
     next(err);
   }

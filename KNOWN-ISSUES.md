@@ -22,7 +22,13 @@ Items noted during development that need addressing in future sessions.
    details (name, etc.) and create both member records linked at the same address.
    Deferred to a later phase. Ref: doc 10.1, doc 9.4.1.
 
-2. **Full Members Portal features** — The initial implementation covers only portal
+2. **Duplicate application detection limited by shared emails** — Some members
+   genuinely share the same email address (e.g. couples). Any future duplicate
+   detection logic for online applications must account for this — checking by
+   email alone would produce false positives. Consider using email + surname
+   combination, and warn rather than block.
+
+3. **Full Members Portal features** — The initial implementation covers only portal
    registration and login. The following portal features are not yet built:
    - Online renewals (doc 10.2.1)
    - Viewing interest groups / join & leave groups (doc 10.2.2)
@@ -30,15 +36,15 @@ Items noted during development that need addressing in future sessions.
    - Updating personal details (doc 10.2.4)
    - Ordering replacement membership card (doc 10.2.5)
 
-3. **Public groups list and calendar public pages** — The Public Links page now shows
+4. **Public groups list and calendar public pages** — The Public Links page now shows
    URLs for public groups list and calendar, but the actual public-facing pages at
    those routes are not yet built. Ref: doc 9.4 section (b).
 
-4. **Real PayPal API integration** — The initial implementation uses stub functions
+5. **Real PayPal API integration** — The initial implementation uses stub functions
    with clear interfaces. Actual PayPal REST API / IPN integration needs to be
    built. Ref: docs 7.9, 7.9.1, 9.8.
 
-5. **Shared email address handling** — When two members share an email address,
+6. **Shared email address handling** — When two members share an email address,
    the portal registration and login flow needs special handling (doc 10.2
    section c). Deferred to a later phase.
 

@@ -1023,11 +1023,33 @@ a URL slug (`/public/:slug/...`).
 1. `GET /:slug/join-config` — returns u3a name, membership classes, Gift Aid flag,
    privacy policy URL, default town/county
 2. `POST /:slug/join` — validates form (Zod), creates address row, computes `next_renewal`
-   from year-start settings, creates member with **Applicant** status, calls PayPal stub,
-   returns `{ paymentId, redirectUrl, memberId }`
-3. `POST /:slug/payment-confirm` — verifies payment via stub, updates status to **Current**,
-   creates finance transaction (PayPal account + Membership category), sends confirmation
-   email to member + notification to officers with `notify_online_join = true`
+   from year-start settings, creates member with **Applicant** status, generates a
+   `payment_token` (stored on the member), calls PayPal stub, returns
+   `{ paymentId, redirectUrl, memberId, paymentToken, className }`
+3. Frontend navigates to **JoinPending** page (not directly to PayPal). This shows:
+   - Application summary (name, membership number, class, amount)
+   - **Pay Now** button → redirects to PayPal (or stub)
+   - Bookmarkable **resume-payment URL** (`/public/:slug/resume-payment/:token`)
+   - **Email me this link** button → calls `POST /:slug/email-payment-link`
+4. `POST /:slug/payment-confirm` — verifies payment via stub, updates status to **Current**,
+   clears `payment_token`, creates finance transaction (PayPal account + Membership category),
+   sends confirmation email to member + notification to officers with `notify_online_join = true`
+
+### Unpaid application (Applicant who hasn't paid)
+
+When an applicant doesn't complete payment:
+- Member record remains in DB with **Applicant** status and `payment_token` set
+- The applicant can return via the resume-payment link (bookmarked or emailed)
+- `GET /:slug/resume-payment/:token` — looks up Applicant by token, re-initiates PayPal,
+  returns payment details for the **ResumePayment** page
+- `POST /:slug/email-payment-link` — sends the resume-payment URL to the applicant's
+  email using the `online_join_payment_link` system message template
+  (supports `#PAYMENTLINK` token in addition to standard member tokens)
+
+**Admin cleanup:** Administrators can filter the Members List by "Applicant" status
+to see unpaid applications, then open individual records and use the Delete button
+(`member_record:delete` privilege required). No automatic cleanup — this is intentional
+so admins retain control.
 
 ### Portal authentication (doc 10.2 — registration/login only)
 
@@ -1068,6 +1090,7 @@ Currently generates fake paymentId and redirects to own confirmation endpoint.
 - Frontend: `SystemMessages.jsx` at `/system-messages` — inline editing of subject/body
 - Token reference panel shows available substitutions (#FORENAME, #SURNAME, #MEMNO, etc.)
 - Current messages: `online_join_confirm`, `online_join_officer_notify`,
+  `online_join_payment_link` (supports `#PAYMENTLINK` extra token),
   `gift_aid_payment`, `online_renewal_confirm`, `card_replacement_confirm`,
   `home_page_notice` (body only, no subject)
 

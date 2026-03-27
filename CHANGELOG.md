@@ -5,6 +5,29 @@ Format: `## [version] — YYYY-MM-DD` with bullet points per change.
 
 ---
 
+## [0.7.8] — 2026-03-27
+
+### Added
+- Unpaid application process — when an online applicant submits but doesn't pay,
+  they now see a JoinPending page with a "Pay Now" button, a bookmarkable
+  resume-payment link, and an "Email me this link" option
+- ResumePayment page (`/public/:slug/resume-payment/:token`) — lets applicants
+  return and complete payment from a saved or emailed link
+- `payment_token` column on members — generated at application time, cleared on
+  payment confirmation
+- `online_join_payment_link` system message template — customisable email sent
+  when applicant requests the payment link; supports `#PAYMENTLINK` token
+- Backend routes: `GET /:slug/resume-payment/:token` (lookup + re-initiate payment),
+  `POST /:slug/email-payment-link` (send payment link email)
+- Documented admin workflow for cleaning up stale Applicant records (filter by
+  Applicant status in Members List, delete individually)
+
+### Changed
+- Online joining flow now goes through JoinPending page instead of redirecting
+  directly to PayPal, giving applicants a chance to save the payment link
+- `POST /:slug/join` response now includes `paymentToken` and `className`
+- Payment confirmation (`POST /:slug/payment-confirm`) now clears `payment_token`
+
 ## [0.7.7] — 2026-03-26
 
 ### Added
