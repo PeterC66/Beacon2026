@@ -1141,15 +1141,17 @@ export default function MemberEditor() {
                   className={inputCls} />
               </div>
               <div>
-                <label className={labelCls}>Additional line 1 <span className="text-slate-400 font-normal">(district / village)</span></label>
+                <label className={labelCls}>Additional line 1</label>
                 <input type="text" name="addLine1" value={form.addLine1}
                   onChange={(e) => set('addLine1', e.target.value)}
+                  title="Use these fields for additional lines of address"
                   className={inputCls} />
               </div>
               <div>
                 <label className={labelCls}>Additional line 2</label>
                 <input type="text" name="addLine2" value={form.addLine2}
                   onChange={(e) => set('addLine2', e.target.value)}
+                  title="Use these fields for additional lines of address"
                   className={inputCls} />
               </div>
               <div>
@@ -1404,12 +1406,14 @@ export default function MemberEditor() {
           {/* ── Buttons ─────────────────────────────────────────────── */}
           <div className="flex gap-3 flex-wrap">
             <button type="submit" disabled={saving}
+              title="Press to save this member record"
               className="bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white rounded px-5 py-2 text-sm font-medium transition-colors">
               {saving ? 'Saving…' : (isNew ? 'Add Member' : 'Save')}
             </button>
 
             {!isNew && can('member_record', 'delete') && (
               <button type="button" onClick={handleDelete} disabled={deleting}
+                title="Press to remove this member record"
                 className="border border-red-300 text-red-600 hover:bg-red-50 rounded px-5 py-2 text-sm transition-colors">
                 {deleting ? 'Deleting…' : 'Delete'}
               </button>
