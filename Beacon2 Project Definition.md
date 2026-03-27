@@ -143,8 +143,24 @@ Beacon2 is a ground-up rebuild with these goals:
   confirmation email + officer notifications
 - **Portal registration/login** — separate auth on members table; identity verification
   (memno + name + postcode); email verification flow; password reset flow
+- **Portal home** (doc 10.2) — dashboard after login showing available features based on
+  portal_config; greeting with member name and membership expiry
+- **Portal groups** (doc 10.2.2) — view all active groups with membership status (MEMBER/
+  WAITING badges); expand to see When/Venue/Contact/Information (controlled by
+  group_info_config); Join group / Leave group with confirmation dialogs; group leader
+  notification (stubbed); waiting list support when group is full
+- **Portal calendar** (doc 10.2.3) — calendar view with filters: All / specific Group /
+  Own groups and general meetings; date range from now to end of year; column visibility
+  controlled by calendar_config; Download PDF button (when enabled)
+- **Portal personal details** (doc 10.2.4) — edit personal details (title, name, known as,
+  suffix, initials, mobile, email, emergency contact, hide contact from leaders) and
+  address; change password; email change triggers re-verification; confirmation email
+  via system_messages template; photo upload deferred
+- **Portal replacement card** (doc 10.2.5) — request replacement membership card by email;
+  validates Current status and within renewal period; uses card_replacement_confirm
+  system message template; marks card as not printed
 - **System messages** — admin page for editing auto-sent email templates (joining
-  confirmation, officer notification); token substitution support
+  confirmation, officer notification, portal details updated); token substitution support
 - **Public links** — admin page with online joining toggle, privacy policy URL,
   copyable public URLs, PayPal status indicator
 
@@ -265,8 +281,8 @@ Greyed-out items in `Home.jsx` (i.e. `to: null`) are the remaining roadmap:
 - ~~Membership cards~~ (done)
 - ~~Calendar~~ (done)
 - Data migration tool (standalone import from Beacon — restore already handles this)
-- Members Portal — full self-service features (registration/login built; view/update details,
-  renewal, group browsing still to do)
+- Members Portal — online renewals (doc 10.2.1) still to do; photo upload in personal
+  details deferred pending file storage infrastructure
 
 ---
 

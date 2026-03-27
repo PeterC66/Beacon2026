@@ -628,6 +628,12 @@ INSERT INTO :schema.system_messages (id, name, subject, body) VALUES
 ON CONFLICT (id) DO NOTHING;
 
 INSERT INTO :schema.system_messages (id, name, subject, body) VALUES
+  ('portal_details_updated', 'Portal Details Update Confirmation',
+   'Your details have been updated — #U3ANAME',
+   'Dear #FORENAME,\n\nThis email confirms that your personal details have been updated on the #U3ANAME membership system.\n\nIf you did not make this change, please contact your Membership Secretary immediately.\n\nKind regards,\n#U3ANAME')
+ON CONFLICT (id) DO NOTHING;
+
+INSERT INTO :schema.system_messages (id, name, subject, body) VALUES
   ('home_page_notice', 'Home Page Notice',
    '',
    'Welcome to #U3ANAME Beacon. Please check the calendar for upcoming events and activities.')

@@ -1,6 +1,6 @@
 {
   "name": "beacon2-frontend",
-  "version": "0.7.12",
+  "version": "0.7.14",
   "type": "module",
   "scripts": {
     "dev": "vite",
