@@ -113,11 +113,7 @@ implemented and persist via localStorage gated by cookie consent:
 - Label printing settings (`beacon2_label_settings`) — now consent-gated
 - Email compose 'From' address and copy selection (`beacon2_email_compose_prefs`)
 
-The following item is listed in the consent dialog but the underlying feature is
-**not yet built**:
-
-1. **TAM submission status and class** — Third Age Matters submission is not yet
-   built. The cookie consent entry is a placeholder. Ref: Beacon Cookie Control.
+All eight optional cookie items are now fully implemented.
 
 ---
 

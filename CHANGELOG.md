@@ -5,6 +5,19 @@ Format: `## [version] — YYYY-MM-DD` with bullet points per change.
 
 ---
 
+## [0.7.10] — 2026-03-27
+
+### Added
+- TAM submission cookie — when downloading in TAM format, the selected Status
+  and Class filters are saved to localStorage (consent-gated) and restored
+  next time TAM format is selected (`beacon2_tam_submission`)
+
+### Fixed
+- CSV/TSV export column mismatch — headers had 8 columns (including "Address 4")
+  but data rows only had 7 values; removed the unused "Address 4" header
+
+---
+
 ## [0.7.9] — 2026-03-27
 
 ### Fixed
