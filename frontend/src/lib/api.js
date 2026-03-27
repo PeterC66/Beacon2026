@@ -692,6 +692,18 @@ export const publicApi = {
     }).then((r) =>
       r.json().then((b) => { if (!r.ok) throw new Error(b.error ?? `HTTP ${r.status}`); return b; }),
     ),
+  resumePayment: (slug, token) =>
+    fetch(`${BASE}/public/${slug}/resume-payment/${token}`).then((r) =>
+      r.json().then((b) => { if (!r.ok) throw new Error(b.error ?? `HTTP ${r.status}`); return b; }),
+    ),
+  emailPaymentLink: (slug, paymentToken) =>
+    fetch(`${BASE}/public/${slug}/email-payment-link`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ paymentToken }),
+    }).then((r) =>
+      r.json().then((b) => { if (!r.ok) throw new Error(b.error ?? `HTTP ${r.status}`); return b; }),
+    ),
   portalRegister: (slug, data) =>
     fetch(`${BASE}/public/${slug}/portal/register`, {
       method: 'POST',

@@ -910,7 +910,11 @@
 |--------|--------|-------|
 | Public joining form | Built | Class selection, personal details, address, Gift Aid consent |
 | PayPal payment | Partial | Stub — payment confirmation flow wired but PayPal API not connected |
-| Creates member with Applicant status | Built | Promotes to Current on payment |
+| Creates member with Applicant status | Built | Promotes to Current on payment, clears payment token |
+| Unpaid application handling | Built | JoinPending page with Pay Now, bookmarkable resume-payment link, email-me-this-link |
+| Resume payment from link | Built | ResumePayment page via `/resume-payment/:token`, re-initiates PayPal |
+| Payment link email | Built | `online_join_payment_link` system message with `#PAYMENTLINK` token |
+| Admin cleanup of Applicants | Built | Filter Members List by Applicant status, delete individually via member editor |
 | Finance transaction creation | Built | — |
 | Confirmation email + officer notifications | Built | — |
 | Joint membership joining | Not started | Deferred |

@@ -64,7 +64,9 @@ import Calendar            from './pages/groups/Calendar.jsx';
 import OpenMeetings        from './pages/groups/OpenMeetings.jsx';
 import LetterCompose       from './pages/letters/LetterCompose.jsx';
 import JoinForm            from './pages/public/JoinForm.jsx';
+import JoinPending         from './pages/public/JoinPending.jsx';
 import JoinComplete        from './pages/public/JoinComplete.jsx';
+import ResumePayment       from './pages/public/ResumePayment.jsx';
 import PortalLogin         from './pages/public/PortalLogin.jsx';
 import PortalRegister      from './pages/public/PortalRegister.jsx';
 import PortalVerifyEmail   from './pages/public/PortalVerifyEmail.jsx';
@@ -173,7 +175,9 @@ const router = createBrowserRouter([
 
       // Public pages (no auth required)
       { path: '/public/:slug/join',                     element: <JoinForm /> },
+      { path: '/public/:slug/join-pending',             element: <JoinPending /> },
       { path: '/public/:slug/join-complete',            element: <JoinComplete /> },
+      { path: '/public/:slug/resume-payment/:token',    element: <ResumePayment /> },
       { path: '/public/:slug/portal',                   element: <PortalLogin /> },
       { path: '/public/:slug/portal/register',          element: <PortalRegister /> },
       { path: '/public/:slug/portal/verify',            element: <PortalVerifyEmail /> },

@@ -633,6 +633,12 @@ INSERT INTO :schema.system_messages (id, name, subject, body) VALUES
    'Welcome to #U3ANAME Beacon. Please check the calendar for upcoming events and activities.')
 ON CONFLICT (id) DO NOTHING;
 
+INSERT INTO :schema.system_messages (id, name, subject, body) VALUES
+  ('online_join_payment_link', 'Online Joining Payment Link',
+   'Complete your membership payment — #U3ANAME',
+   'Dear #FORENAME,\n\nThank you for your application to join #U3ANAME.\n\nYour membership number is #MEMNO. To complete your membership, please pay using the link below:\n\n#PAYMENTLINK\n\nIf you have already paid, please disregard this email.\n\nKind regards,\n#U3ANAME')
+ON CONFLICT (id) DO NOTHING;
+
 -- ─── Public Links settings on tenant_settings ──────────────────────────
 
 ALTER TABLE :schema.tenant_settings ADD COLUMN IF NOT EXISTS online_joining_enabled BOOLEAN NOT NULL DEFAULT false;
@@ -657,6 +663,10 @@ ON CONFLICT (name) DO NOTHING;
 
 -- ─── Membership card tracking ────────────────────────────────────────
 ALTER TABLE :schema.members ADD COLUMN IF NOT EXISTS card_printed BOOLEAN NOT NULL DEFAULT false;
+
+-- ─── Online joining payment token ───────────────────────────────────
+-- Used to generate a resume-payment link for Applicants who haven't paid yet
+ALTER TABLE :schema.members ADD COLUMN IF NOT EXISTS payment_token TEXT;
 
 -- ─── Standard letter templates ──────────────────────────────────────
 

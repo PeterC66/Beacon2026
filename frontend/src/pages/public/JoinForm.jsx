@@ -91,13 +91,19 @@ export default function JoinForm() {
         giftAid: form.giftAid,
       });
 
-      // Store result for the completion page and redirect to PayPal (or stub)
-      sessionStorage.setItem('joinResult', JSON.stringify(result));
-      if (result.redirectUrl) {
-        window.location.href = result.redirectUrl;
-      } else {
-        navigate(`/public/${slug}/join-complete`);
-      }
+      // Navigate to the pending page where the applicant can pay or get a link
+      navigate(`/public/${slug}/join-pending`, {
+        state: {
+          memberId:         result.memberId,
+          membershipNumber: result.membershipNumber,
+          paymentToken:     result.paymentToken,
+          redirectUrl:      result.redirectUrl,
+          amount:           result.amount,
+          className:        result.className,
+          forenames:        form.forenames.trim(),
+          surname:          form.surname.trim(),
+        },
+      });
     } catch (err) {
       setError(err.message);
       setSubmitting(false);
