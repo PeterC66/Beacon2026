@@ -5,6 +5,21 @@ Format: `## [version] — YYYY-MM-DD` with bullet points per change.
 
 ---
 
+## [0.7.10] — 2026-03-27
+
+### Added
+- **Member photos** (docs 4.2, 4.3, 5.4, 10.2.4) — upload, view, and remove photos
+  on the member record (new and existing members); jpg/png/gif, max 2 MB, with
+  square-format recommendation for membership cards
+- Photos appear on **membership cards PDF** — displayed in the top-right corner of
+  each card
+- **Group members PDF** (doc 5.4) — when any member in the group has a photo, the PDF
+  switches to a photo-aware card layout with contact details alongside each photo
+- Backend API: `POST/DELETE/GET /members/:id/photo` endpoints with validation
+- `has_photo` flag returned in member record (full photo data excluded from GET response)
+
+---
+
 ## [0.7.9] — 2026-03-27
 
 ### Fixed

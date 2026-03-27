@@ -115,7 +115,7 @@
 | Partner linking (bidirectional) | Built | Auto-shares address |
 | Poll tick boxes | Built | — |
 | Groups & Ledger tabs | Built | — |
-| Photo upload | Not started | Doc 4.3 mentions photo option; not implemented |
+| Photo upload | Built | Upload/view/remove in member record; appears on membership cards and group members PDF. Portal upload deferred. |
 | **Beacon2 extra:** Inline validation | Beacon2 extra | Field-level blur validation with error messages |
 | **Beacon2 extra:** Compact view | Beacon2 extra | Read-only condensed layout at `/members/:id/compact` — fits all member data on one laptop screen, inspired by Beacon's dense layout. Accessible via "Compact View" nav link on member record |
 
@@ -306,6 +306,7 @@
 | Add/remove members | Built | — |
 | Mark leaders | Built | — |
 | Waiting list with auto-enforcement | Built | — |
+| PDF download with photos | Built | Includes member photos when available; falls back to tabular layout when no photos exist |
 
 ---
 
@@ -963,6 +964,7 @@
 | Aspect | Status | Notes |
 |--------|--------|-------|
 | Portal self-service detail updates | Not started | Deferred |
+| Portal photo upload | Not started | Admin photo upload built; portal upload deferred until portal self-service is built |
 
 ---
 

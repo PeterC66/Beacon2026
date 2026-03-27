@@ -185,6 +185,8 @@ CREATE TABLE IF NOT EXISTS :schema.members (
   custom_field_3    TEXT,
   custom_field_4    TEXT,
   emergency_contact TEXT,
+  photo_data        TEXT,                              -- base64-encoded photo (jpg/png/gif, max 2MB)
+  photo_mime_type   VARCHAR(20),                       -- e.g. image/jpeg, image/png, image/gif
   created_at        TIMESTAMPTZ NOT NULL DEFAULT now(),
   updated_at        TIMESTAMPTZ NOT NULL DEFAULT now()
 );
@@ -699,6 +701,8 @@ ALTER TABLE :schema.members ADD COLUMN IF NOT EXISTS custom_field_2 TEXT;
 ALTER TABLE :schema.members ADD COLUMN IF NOT EXISTS custom_field_3 TEXT;
 ALTER TABLE :schema.members ADD COLUMN IF NOT EXISTS custom_field_4 TEXT;
 ALTER TABLE :schema.members ADD COLUMN IF NOT EXISTS emergency_contact TEXT;
+ALTER TABLE :schema.members ADD COLUMN IF NOT EXISTS photo_data TEXT;
+ALTER TABLE :schema.members ADD COLUMN IF NOT EXISTS photo_mime_type VARCHAR(20);
 
 ALTER TABLE :schema.tenant_settings ADD COLUMN IF NOT EXISTS custom_field_label_1 TEXT;
 ALTER TABLE :schema.tenant_settings ADD COLUMN IF NOT EXISTS custom_field_label_2 TEXT;
