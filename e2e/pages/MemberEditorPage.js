@@ -108,16 +108,17 @@ export class MemberEditorPage {
     await this.postcodeInput().fill(postcode);
     if (joinedOn) {
       await this.joinedOnInput().fill(joinedOn);
-      // Wait for the auto-computed "Next renewal" date to be populated.
-      // The frontend fetches year-config from the API and computes the
-      // renewal date in a useEffect — this can lag behind the fill,
-      // especially in CI where the API may be slow.
-      await this.nextRenewalInput().waitFor({ state: 'visible' });
-      await this.page.waitForFunction(
-        (sel) => { const el = document.querySelectorAll(sel)[1]; return el && el.value.length > 0; },
-        'input[placeholder="dd/mm/yyyy"]',
-        { timeout: 10_000 },
-      );
+      // The "Next renewal" input is only visible on the edit form (!isNew).
+      // On the new-member form the renewal date is auto-computed in React
+      // state but the field is hidden, so we only wait for it when visible.
+      const renewalVisible = await this.nextRenewalInput().isVisible().catch(() => false);
+      if (renewalVisible) {
+        await this.page.waitForFunction(
+          (sel) => { const el = document.querySelectorAll(sel)[1]; return el && el.value.length > 0; },
+          'input[placeholder="dd/mm/yyyy"]',
+          { timeout: 10_000 },
+        );
+      }
     }
   }
 }
