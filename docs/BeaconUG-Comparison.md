@@ -914,6 +914,7 @@
 | Unpaid application handling | Built | JoinPending page with Pay Now, bookmarkable resume-payment link, email-me-this-link |
 | Resume payment from link | Built | ResumePayment page via `/resume-payment/:token`, re-initiates PayPal |
 | Payment link email | Built | `online_join_payment_link` system message with `#PAYMENTLINK` token |
+| Admin Add Member without payment | Built | Auto-sets Applicant status + payment token; offers to email payment link |
 | Admin cleanup of Applicants | Built | Filter Members List by Applicant status, delete individually via member editor |
 | Finance transaction creation | Built | — |
 | Confirmation email + officer notifications | Built | — |

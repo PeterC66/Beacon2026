@@ -21,6 +21,9 @@ Format: `## [version] — YYYY-MM-DD` with bullet points per change.
   `POST /:slug/email-payment-link` (send payment link email)
 - Documented admin workflow for cleaning up stale Applicant records (filter by
   Applicant status in Members List, delete individually)
+- Admin Add Member without payment — when no payment details are entered, the
+  member is automatically saved as Applicant with a payment token; admin is
+  offered to email the payment link to the new member
 
 ### Changed
 - Online joining flow now goes through JoinPending page instead of redirecting
