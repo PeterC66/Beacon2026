@@ -377,6 +377,14 @@ export default function MemberEditor() {
     const telErr = validatePhone(form.telephone);
     if (telErr) errs.telephone = telErr;
 
+    // HMRC Gift Aid requires: Title, First name, Last name, House name or number, Postcode
+    // Forenames, surname, and postcode are already required above.
+    const giftAidActive = isNew ? giftAidTick : !!form.giftAidFrom;
+    if (giftAidActive) {
+      if (!form.title || !form.title.trim()) errs.title = 'Title is required for Gift Aid (HMRC requirement)';
+      if (!skipPostcode && !form.houseNo.trim()) errs.houseNo = 'House name or number is required for Gift Aid (HMRC requirement)';
+    }
+
     return errs;
   }
 
@@ -799,9 +807,10 @@ export default function MemberEditor() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className={labelCls}>Title</label>
-                <select name="title" value={form.title} onChange={(e) => set('title', e.target.value)} className={inputCls}>
+                <select name="title" value={form.title} onChange={(e) => set('title', e.target.value)} className={ic('title')}>
                   {TITLES.map((t) => <option key={t} value={t}>{t || '—'}</option>)}
                 </select>
+                {fieldErrors.title && <p className={errMsgCls}>{fieldErrors.title}</p>}
               </div>
               <div>
                 <label className={labelCls}>Forenames <RequiredMark /></label>
@@ -1099,7 +1108,9 @@ export default function MemberEditor() {
                 <label className={labelCls}>House / flat no.</label>
                 <input type="text" name="houseNo" value={form.houseNo}
                   onChange={(e) => set('houseNo', e.target.value)}
-                  className={inputCls} />
+                  onBlur={() => handleBlur('houseNo')}
+                  className={ic('houseNo')} />
+                {fieldErrors.houseNo && <p className={errMsgCls}>{fieldErrors.houseNo}</p>}
               </div>
               <div>
                 <label className={labelCls}>Street/Building</label>
