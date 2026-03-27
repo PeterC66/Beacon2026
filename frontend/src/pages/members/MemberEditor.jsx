@@ -864,9 +864,10 @@ export default function MemberEditor() {
               )}
               <div className="sm:col-span-2 grid grid-cols-[1fr_2fr_auto] gap-4 items-end">
                 <div>
-                  <label className={labelCls}>Suffix <span className="text-slate-400 font-normal">(e.g. MBE)</span></label>
+                  <label className={labelCls}>Suffix</label>
                   <input type="text" name="suffix" value={form.suffix}
                     onChange={(e) => set('suffix', e.target.value)}
+                    title="e.g. MBE, DD, Esq etc"
                     className={inputCls} maxLength={30} />
                 </div>
                 <div>
@@ -883,7 +884,7 @@ export default function MemberEditor() {
                         navigate('/email/compose');
                       }}
                       className="border border-blue-300 text-blue-600 hover:bg-blue-50 rounded px-3 py-2 text-sm transition-colors whitespace-nowrap"
-                      title="Send email to this member"
+                      title="Press to send an email to this member"
                     >
                       Send email
                     </button>
@@ -901,9 +902,9 @@ export default function MemberEditor() {
               {isAssociate && (
                 <div>
                   <label className={labelCls}>Home u3a</label>
-                  <p className="text-xs text-slate-500 mb-1">(where the person is a full member)</p>
                   <input type="text" name="homeU3a" value={form.homeU3a}
                     onChange={(e) => set('homeU3a', e.target.value)}
+                    title="e.g. name of main u3a, etc"
                     className={inputCls} maxLength={100} />
                 </div>
               )}
@@ -919,7 +920,7 @@ export default function MemberEditor() {
                       <button type="button"
                         onClick={() => set('giftAidFrom', '')}
                         className="text-slate-400 hover:text-red-600 transition-colors px-1"
-                        title="Remove Gift Aid date">
+                        title="Press if the member is no longer eligible for gift aid donations">
                         ✕
                       </button>
                     )}
@@ -1003,6 +1004,7 @@ export default function MemberEditor() {
                       value={form.existingPartnerId}
                       onChange={(e) => handlePartnerChange(e.target.value)}
                       className={inputCls}
+                      title="Select the name of the partner with whom the address is shared"
                     >
                       <option value="">— none —</option>
                       {allMembers
