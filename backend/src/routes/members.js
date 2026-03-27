@@ -1,6 +1,7 @@
 // beacon2/backend/src/routes/members.js
 
 import { Router } from 'express';
+import { randomBytes } from 'crypto';
 import { z } from 'zod';
 import ExcelJS from 'exceljs';
 import PDFDocument from 'pdfkit';
@@ -1153,9 +1154,36 @@ router.post('/', requirePrivilege('member_record', 'create'), async (req, res, n
     }
 
     // ── Payment transaction for primary member ────────────────────────────
+    let paymentToken = null;
     if (data.payment) {
       const memberName = [data.title, data.forenames, data.surname].filter(Boolean).join(' ');
       await createMemberPayment(slug, data.payment, member.id, memberName, data.joinedOn, data.classId);
+    } else {
+      // No payment provided — switch status to Applicant and generate a payment token
+      // so the member can be sent a "complete your payment" link.
+      const [currentStatus] = await tenantQuery(
+        slug,
+        `SELECT id FROM member_statuses WHERE name ILIKE '%Current%' LIMIT 1`,
+      );
+      if (currentStatus && data.statusId === currentStatus.id) {
+        let [applicantStatus] = await tenantQuery(
+          slug,
+          `SELECT id FROM member_statuses WHERE name = 'Applicant'`,
+        );
+        if (!applicantStatus) {
+          [applicantStatus] = await tenantQuery(
+            slug,
+            `INSERT INTO member_statuses (name) VALUES ('Applicant') RETURNING id`,
+          );
+        }
+        paymentToken = randomBytes(24).toString('hex');
+        await tenantQuery(
+          slug,
+          `UPDATE members SET status_id = $1, payment_token = $2, updated_at = now() WHERE id = $3`,
+          [applicantStatus.id, paymentToken, member.id],
+        );
+        member.status_id = applicantStatus.id;
+      }
     }
 
     logAudit(slug, { userId: req.user.userId, userName: req.user.name, action: 'create', entityType: 'member', entityId: member.id, entityName: `${data.forenames} ${data.surname}` });
@@ -1165,7 +1193,7 @@ router.post('/', requirePrivilege('member_record', 'create'), async (req, res, n
       logAudit(slug, { userId: req.user.userId, userName: req.user.name, action: 'gift_aid_consent', entityType: 'member', entityId: member.id, entityName: `${data.forenames} ${data.surname}`, detail: JSON.stringify({ giftAidFrom: data.giftAidFrom }) });
     }
 
-    res.status(201).json(member);
+    res.status(201).json({ ...member, paymentToken });
   } catch (err) {
     next(err);
   }

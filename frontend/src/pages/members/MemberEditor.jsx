@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { isValidPhoneNumber } from 'libphonenumber-js';
-import { members as membersApi, memberStatuses as statusApi, memberClasses as classApi, finance as financeApi, polls as pollsApi, settings as settingsApi } from '../../lib/api.js';
+import { members as membersApi, memberStatuses as statusApi, memberClasses as classApi, finance as financeApi, polls as pollsApi, settings as settingsApi, publicApi } from '../../lib/api.js';
 import { useAuth } from '../../context/AuthContext.jsx';
 import NavBar from '../../components/NavBar.jsx';
 import RequiredMark from '../../components/RequiredMark.jsx';
@@ -617,6 +617,17 @@ export default function MemberEditor() {
           try { await pollsApi.setForMember(createdId, newMemberPollIds); }
           catch { /* best-effort — member already created */ }
         }
+        // If no payment was entered, backend switches to Applicant and returns a paymentToken.
+        // Offer to email the payment link to the new applicant.
+        if (created?.paymentToken && created?.email && tenant) {
+          if (confirm(
+            `${created.forenames} ${created.surname} has been saved as an Applicant (no payment received).\n\n` +
+            `Would you like to email them a payment link?`
+          )) {
+            try { await publicApi.emailPaymentLink(tenant, created.paymentToken); }
+            catch { /* best-effort — member already created */ }
+          }
+        }
       } else {
         const patchPayload = {
           ...payload,
@@ -663,6 +674,15 @@ export default function MemberEditor() {
             if (dup?.id && newMemberPollIds.length > 0) {
               try { await pollsApi.setForMember(dup.id, newMemberPollIds); }
               catch { /* best-effort */ }
+            }
+            if (dup?.paymentToken && dup?.email && tenant) {
+              if (confirm(
+                `${dup.forenames} ${dup.surname} has been saved as an Applicant (no payment received).\n\n` +
+                `Would you like to email them a payment link?`
+              )) {
+                try { await publicApi.emailPaymentLink(tenant, dup.paymentToken); }
+                catch { /* best-effort */ }
+              }
             }
             markClean();
             navigate(dup?.id ? `/members/${dup.id}` : '/members');
