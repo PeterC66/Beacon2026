@@ -33,6 +33,7 @@ export default defineConfig({
   reporter: [
     ['html', { outputFolder: 'playwright-report', open: 'never' }],
     ['list'],
+    ['./success-reporter.js'],
   ],
 
   use: {
@@ -61,7 +62,7 @@ export default defineConfig({
   // 10 minutes for CI (83+ tests × ~3 s login overhead each).
   globalTimeout: process.env.CI ? 600_000 : 300_000,
   globalSetup: './global-setup.js',
-  // globalTeardown: './global-teardown.js',
+  globalTeardown: './global-teardown.js',
 
   projects: [
     {

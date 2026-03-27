@@ -1,18 +1,18 @@
 // beacon2/e2e/global-teardown.js
-// Optional: deletes the test tenant after all tests run.
-// Disabled by default in playwright.config.js — enable when you want a clean
-// slate on every run (slower) rather than reusing the tenant (faster).
-//
-// To enable: uncomment globalTeardown in playwright.config.js
+// Deletes the test tenant after all tests run — but ONLY if they all passed.
+// The success-reporter.js writes a .e2e-passed marker file on a clean run;
+// if that file is absent (failures occurred), the tenant is preserved so you
+// can inspect the data.
 
-import { readFileSync, unlinkSync } from 'node:fs';
+import { readFileSync, unlinkSync, existsSync } from 'node:fs';
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { config as loadDotenv } from 'dotenv';
 loadDotenv();
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const STATE_PATH = resolve(__dirname, '.e2e-state.json');
+const STATE_PATH  = resolve(__dirname, '.e2e-state.json');
+const PASSED_PATH = resolve(__dirname, '.e2e-passed');
 
 function readSlug() {
   try {
@@ -39,7 +39,13 @@ async function apiCall(path, { method = 'GET', body, token } = {}) {
 }
 
 export default async function globalTeardown() {
-  console.log('\n[teardown] Deleting test tenant…');
+  // Only delete the tenant if every test passed
+  if (!existsSync(PASSED_PATH)) {
+    console.log('\n[teardown] Tests had failures — keeping test tenant for inspection.');
+    return;
+  }
+
+  console.log('\n[teardown] All tests passed — deleting test tenant…');
   const { body: loginBody } = await apiCall('/auth/system/login', {
     method: 'POST',
     body: { username: SADM_USER, password: SADM_PASS },
@@ -54,6 +60,7 @@ export default async function globalTeardown() {
   const { status } = await apiCall(`/system/tenants/${tenant.id}`, { method: 'DELETE', token: sysToken });
   console.log(`[teardown] Delete status: ${status}`);
 
-  // Clean up state file
+  // Clean up marker and state files
+  try { unlinkSync(PASSED_PATH); } catch { /* already gone */ }
   try { unlinkSync(STATE_PATH); } catch { /* already gone */ }
 }

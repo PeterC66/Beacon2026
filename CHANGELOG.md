@@ -8,6 +8,8 @@ Format: `## [version] — YYYY-MM-DD` with bullet points per change.
 ## [0.7.8] — 2026-03-27
 
 ### Added
+- E2E test tenant auto-cleanup — test tenant is now deleted on successful runs;
+  preserved on failure for inspection (via success-reporter + global-teardown)
 - Unpaid application process — when an online applicant submits but doesn't pay,
   they now see a JoinPending page with a "Pay Now" button, a bookmarkable
   resume-payment link, and an "Email me this link" option
