@@ -245,7 +245,7 @@
 
 | Aspect | Status | Notes |
 |--------|--------|-------|
-| Printer settings for labels | Partial | Labels work but layout prefs not persisted across sessions |
+| Printer settings for labels | Built | All settings (cols, rows, width, height, offsets, font size) adjustable; "Save as defaults" persists to localStorage (consent-gated) |
 
 ---
 
