@@ -147,3 +147,45 @@ All eight optional cookie items are now fully implemented.
    This breaks Playwright `getByLabel()` and hurts screen-reader accessibility.
    Login.jsx was fixed; remaining forms should be fixed incrementally as E2E
    tests are written for each page.
+
+---
+
+## E2E Test Coverage — Deferred Items
+
+The following areas have E2E spec files (12–18) covering page-load and structure
+verification, but deeper interaction tests are deferred:
+
+1. **Email send action** — Email compose UI is tested but the Send button is NOT
+   clicked in tests because SendGrid integration is not live in the test environment.
+   When SendGrid is enabled, add a test that sends to a test address and verifies
+   the delivery record appears.
+
+2. **PDF/Excel download verification** — Tests verify that download buttons are
+   present but do not verify the downloaded file content. Future tests should
+   intercept the download and check Content-Disposition / file size / basic content.
+
+3. **Membership renewals bulk action** — The renewals page structure is tested but
+   the "Renew selected" bulk action (which creates finance transactions and changes
+   statuses) is not exercised. Add a full-cycle test: seed member → renew → verify
+   status change + transaction.
+
+4. **Credit batch full workflow** — A transaction is created for batching but the
+   full create-batch → add-transactions → clear-batch flow is not tested end-to-end.
+
+5. **Portal registration and login flow** — The Members Portal has a separate auth
+   system (identity verification, email verification, password). E2E tests for the
+   full portal flow (register → verify email → login → view groups → edit details →
+   request card) are deferred due to complexity (separate browser context, email
+   verification step). Ref: docs 10.1, 10.2.
+
+6. **Online joining flow** — The public joining form → PayPal stub → payment
+   confirmation flow is not tested end-to-end. Deferred until PayPal integration
+   is real or a dedicated test mode is added.
+
+7. **Password recovery and force-change-password** — Multi-step auth flows
+   (identify user → security Q&A → temp password → force change) are not tested.
+   These require careful state management (user with `must_change_password` flag).
+
+8. **Data restore** — Only data export is tested (spec 11). The restore flow
+   (upload .xlsx → auto-detect format → import) is not tested because it would
+   destructively overwrite the test tenant's data mid-run.
