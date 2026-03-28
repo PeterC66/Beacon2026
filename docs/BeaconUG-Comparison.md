@@ -9,7 +9,7 @@
 > - **Not started** — feature not yet implemented
 > - **Beacon2 extra** — functionality in Beacon2 that is not in the original Beacon
 >
-> **Last updated:** 2026-03-27
+> **Last updated:** 2026-03-28
 
 ---
 
@@ -64,7 +64,7 @@
 |--------|--------|-------|
 | Cookie usage explanation | Built | Cookie consent dialog lists all cookies used |
 | Essential vs optional cookies | Built | Essential (refresh token, consent) always allowed; optional cookies gated behind consent |
-| Anti-tracking software guidance | Partial | No specific guidance page; cookie consent handles the functional aspect |
+| Anti-tracking software guidance | Not started | No dedicated guidance page; cookie consent handles the functional aspect |
 | Last membership class cookie | Built | Addresses Export persists last class filter in `beacon2_last_export_class` (consent-gated) |
 | Label printing settings cookie | Built | Label settings persist in `beacon2_label_settings` (now consent-gated) |
 | TAM submission cookie | Built | TAM status + class persist in `beacon2_tam_submission` (consent-gated); restored when TAM format selected |
@@ -76,7 +76,7 @@
 
 | Aspect | Status | Notes |
 |--------|--------|-------|
-| General usage tips | Partial | No dedicated tips page; contextual help via HelpWidget (Zendesk integration) |
+| General usage tips | Not started | No dedicated tips page; contextual help via HelpWidget (Zendesk integration) |
 | **Beacon2 extra:** Context-sensitive help | Beacon2 extra | HelpWidget provides route-mapped help links |
 
 ---
@@ -228,7 +228,7 @@
 | Mark-as-printed flow | Built | — |
 | Advance expiry to next year | Built | — |
 | Auto-attach cards to confirmation emails | Not started | `email_cards` setting stored but not wired to email flow |
-| Portal: order replacement card | Not started | Requires Members Portal self-service features |
+| Portal: order replacement card | Built | PortalRequestCard.jsx; validates Current status and renewal period; marks card_printed=false; PDF attachment in confirmation email still stubbed |
 
 ---
 
@@ -431,7 +431,7 @@
 
 | Aspect | Status | Notes |
 |--------|--------|-------|
-| Email guidance | Partial | No dedicated tips page; functionality handles deduplication |
+| Email guidance | Not started | No dedicated tips page; functionality handles deduplication |
 
 ---
 
@@ -610,7 +610,7 @@
 
 | Aspect | Status | Notes |
 |--------|--------|-------|
-| Finance reset guidance | Partial | No dedicated reset wizard; achievable through account/transaction management |
+| Finance reset guidance | Not started | No dedicated reset wizard; achievable through account/transaction management |
 
 ---
 
@@ -618,7 +618,7 @@
 
 | Aspect | Status | Notes |
 |--------|--------|-------|
-| First-time finance setup | Partial | Same as above — no dedicated wizard |
+| First-time finance setup | Not started | No dedicated wizard; achievable through account/transaction management |
 
 ---
 
@@ -676,7 +676,7 @@
 
 | Aspect | Status | Notes |
 |--------|--------|-------|
-| New site guidance | Partial | No dedicated onboarding wizard; data restore from Beacon format handles migration |
+| New site guidance | Not started | No dedicated onboarding wizard; data restore from Beacon format handles migration |
 
 ---
 
@@ -773,7 +773,7 @@
 
 | Aspect | Status | Notes |
 |--------|--------|-------|
-| Guidance on fee/year changes | Partial | No dedicated guidance page; functionality supports the changes described |
+| Guidance on fee/year changes | Not started | No dedicated guidance page; functionality supports the changes described |
 
 ---
 
@@ -855,7 +855,7 @@
 
 | Aspect | Status | Notes |
 |--------|--------|-------|
-| Data export guidance | Partial | Export functionality exists; no dedicated leaving-Beacon guide |
+| Data export guidance | Not started | Export functionality exists; no dedicated leaving-Beacon guide |
 
 ---
 
@@ -901,7 +901,7 @@
 
 | Aspect | Status | Notes |
 |--------|--------|-------|
-| Online services overview | Partial | Online joining built; portal partially built |
+| Online services overview | Built | Online joining and Members Portal both built; online renewals and public pages (groups list, calendar) not yet built |
 
 ---
 
@@ -947,10 +947,10 @@
 
 | Aspect | Status | Notes |
 |--------|--------|-------|
-| View all active groups | Done | Accordion list with MEMBER/WAITING badges |
-| Group details (When, Venue, Contact, Info) | Done | Controlled by group_info_config.members toggles |
-| Join group with confirmation | Done | Includes waiting list support when group is full |
-| Leave group with confirmation | Done | Confirmation dialog before removal |
+| View all active groups | Built | Accordion list with MEMBER/WAITING badges |
+| Group details (When, Venue, Contact, Info) | Built | Controlled by group_info_config.members toggles |
+| Join group with confirmation | Built | Includes waiting list support when group is full |
+| Leave group with confirmation | Built | Confirmation dialog before removal |
 | Group leader notification | Partial | Logic in place but email sending stubbed |
 
 ---
@@ -959,10 +959,10 @@
 
 | Aspect | Status | Notes |
 |--------|--------|-------|
-| Calendar event list | Done | Events from now to end of year |
-| Filter: All / Group / Own groups | Done | Radio buttons + group dropdown |
-| Column visibility (Venue, Topic, Enquiries) | Done | Controlled by calendar_config.members toggles |
-| Download PDF | Done | Controlled by calendar_config.download.members toggle |
+| Calendar event list | Built | Events from now to end of year |
+| Filter: All / Group / Own groups | Built | Radio buttons + group dropdown |
+| Column visibility (Venue, Topic, Enquiries) | Built | Controlled by calendar_config.members toggles |
+| Download PDF | Built | Controlled by calendar_config.download.members toggle |
 
 ---
 
@@ -970,13 +970,13 @@
 
 | Aspect | Status | Notes |
 |--------|--------|-------|
-| View/edit personal details | Done | Title, name, known as, suffix, initials, mobile, email, emergency contact |
-| View/edit address | Done | House no, street, add line, town, county, postcode, phone |
-| Hide contact from group leaders | Done | Checkbox toggle |
-| Change password | Done | Expandable section with validation |
-| Email change triggers re-verification | Done | Logs out member after email change, must re-verify |
-| Confirmation email | Done | Uses portal_details_updated system message template |
-| Photo upload | Done | Upload/view/remove photo; appears on membership card |
+| View/edit personal details | Built | Title, name, known as, suffix, initials, mobile, email, emergency contact |
+| View/edit address | Built | House no, street, add line, town, county, postcode, phone |
+| Hide contact from group leaders | Built | Checkbox toggle |
+| Change password | Built | Expandable section with validation |
+| Email change triggers re-verification | Built | Logs out member after email change, must re-verify |
+| Confirmation email | Built | Uses portal_details_updated system message template |
+| Photo upload | Built | Upload/view/remove photo; appears on membership card |
 
 ---
 
@@ -984,9 +984,9 @@
 
 | Aspect | Status | Notes |
 |--------|--------|-------|
-| Request replacement card | Done | Validates Current status and within renewal period |
+| Request replacement card | Built | Validates Current status and within renewal period |
 | Confirmation email | Partial | Uses card_replacement_confirm template, but PDF attachment not yet wired |
-| Mark card as not printed | Done | Sets card_printed = false so admin knows to reprint |
+| Mark card as not printed | Built | Sets card_printed = false so admin knows to reprint |
 
 ---
 
@@ -1027,19 +1027,21 @@ These are features or architectural aspects of Beacon2 that have no counterpart 
 
 | Status | Count | Description |
 |--------|-------|-------------|
-| **Built** | ~65 | Feature broadly matches UG description |
-| **Partial** | ~12 | Feature exists but some aspects missing (PayPal, portal config, guidance pages, some cookies) |
-| **Not started** | ~12 | Feature not yet implemented (portal self-service, networks/regions, joint online joining, some cookies) |
-| **Beacon2 extra** | ~17 | New in Beacon2 (architecture, SiteWorks, open meetings, refunds, etc.) |
+| **Built** | 244 | Feature broadly matches UG description |
+| **Partial** | 12 | Feature exists but some aspects missing (PayPal stubs, system settings not yet wired, portal notification stubs) |
+| **Not started** | 17 | Feature not yet implemented (online renewals, public pages, joint online joining, guidance pages, networks/regions) |
+| **Beacon2 extra** | 12 | New in Beacon2 (architecture, SiteWorks, open meetings, refunds, etc.) |
 
 ### Key gaps (Not started)
 
-1. **Members Portal online renewals** — doc 10.2.1 is not yet built; photo upload for personal details (doc 10.2.4) deferred
-2. **Networks and Regions** (doc 12)
-3. **Joint membership online joining** (doc 10.1)
-4. **Real PayPal API integration** (docs 7.9, 9.8)
-5. **Portal feature toggles in Public Links** (doc 9.4)
-6. **Cookie persistence** for some preferences (doc 5)
+1. **Online renewals** (doc 10.2.1) — no portal renewal flow exists
+2. **Public groups list and public calendar** — unauthenticated pages not yet built; links greyed out on Home page
+3. **Joint membership online joining** (doc 10.1) — no second-person fields in join form
+4. **Joint membership Gift Aid** (doc 7.8) — HMRC declaration should show against paying member only
+5. **Real PayPal API integration** (docs 7.9, 9.8) — stub functions only
+6. **System-wide hide address from group leaders** (doc 4.2.4b) — global setting not implemented
+7. **Networks and Regions** (doc 12) — out of scope for current build
+8. **Guidance pages** (docs 5, 6, 6.1.5, 7.10.3, 7.10.4, 8.1a, 8.9, 9.5.1) — no dedicated guidance/tips pages
 
 ### Key differences from Beacon
 
