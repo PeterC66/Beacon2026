@@ -305,3 +305,63 @@ elements are `<a>` links, `<button>` buttons, or clickable `<td>` cells:
 already exists (PostgreSQL < 17 doesn't support `IF NOT EXISTS` for
 constraints). Wrap in a `DO $$ ... EXCEPTION WHEN duplicate_object THEN NULL;
 END $$` block for idempotency.
+
+---
+
+## Test coverage inventory
+
+### Spec files (11)
+
+| File | Area | Key tests |
+|------|------|-----------|
+| `01-auth.spec.js` | Login / logout | Valid login, wrong password, unknown tenant, version display, logout redirect |
+| `02-members.spec.js` | Member CRUD | Create with/without payment (Current vs Applicant), edit, search, validation, delete |
+| `03-membership-setup.spec.js` | Classes / statuses | List, add, edit, delete; locked-item guard |
+| `04-groups.spec.js` | Group CRUD + tabs | Create, edit, delete; Schedule/Members/Ledger tabs; add event |
+| `05-venues-faculties.spec.js` | Venues / faculties | Full CRUD for both |
+| `06-finance.spec.js` | Accounts / categories / transactions / ledger | Add/delete account+category, add transaction, ledger views (account/category/group), delete guard |
+| `07-roles-users.spec.js` | Roles / system users | CRUD for both; privilege matrix load; user link to member |
+| `08-settings.spec.js` | System settings / prefs | Page loads, save+persist, personal preferences sections |
+| `09-officers.spec.js` | u3a Officers | Add, list, delete |
+| `10-audit-log.spec.js` | Audit log | Page loads, date filter, entries present |
+| `11-backup.spec.js` | Export / validator | Export type labels, .xlsx download, member validator |
+
+### Page objects (7)
+
+| File | Exposes |
+|------|---------|
+| `LoginPage.js` | `fillLogin()`, `submit()`, `getError()` |
+| `HomePage.js` | `goto()`, link helpers |
+| `MemberListPage.js` | `goto()`, `searchBySurname()`, `getRows()`, `clickMember()` |
+| `MemberEditorPage.js` | `gotoNew()`, `fillMinimal()`, `fillPayment()`, `save()`, `delete()`, field locators |
+| `GroupsPage.js` | `GroupListPage`, `GroupRecordPage` — CRUD + tabs + events + members |
+| `FinancePage.js` | `FinanceAccountsPage`, `FinanceCategoriesPage`, `TransactionEditorPage`, `FinanceLedgerPage` |
+| `SettingsPage.js` | `SystemSettingsPage`, `RoleListPage`, `UserListPage`, `UserEditorPage` |
+
+### Areas without E2E coverage
+
+The following features have **no E2E tests yet**. Tests should be added
+incrementally as features stabilise:
+
+| Area | Notes |
+|------|-------|
+| Email compose / delivery / unblocker | SendGrid dependency; may need mock or staging API key |
+| Gift Aid declaration + Gift Aid log | Depends on member with GA transactions |
+| Membership cards | PDF download; needs member with Current status |
+| Addresses export / label printing | PDF/Excel download |
+| Membership renewals / non-renewals | Depends on year-start config and member statuses |
+| Recent members / Statistics | Read-only pages; straightforward to add |
+| Calendar / Open Meetings | Depends on group schedule data |
+| Credit batches | Depends on finance transactions |
+| Financial statement / Groups statement | Read-only; depends on transaction data |
+| Reconcile account / Transfer money | Multi-step finance workflows |
+| Polls | CRUD + member assignment |
+| System messages | Template editing |
+| Public links | Config page + portal config toggles |
+| Online joining (JoinForm → payment) | Public unauthenticated flow; PayPal stub |
+| Portal (register → login → all features) | Separate auth system; member identity verification |
+| Letters | TipTap editor + PDF download |
+| Custom fields | Admin config + member record integration |
+| Utilities | Validate member data (partially covered via 11-backup) |
+| Data restore | Upload + format detection (Beacon / Beacon2) |
+| Password recovery / force-change | Multi-step auth flows |

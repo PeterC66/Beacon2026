@@ -25,6 +25,8 @@ Format: `## [version] — YYYY-MM-DD` with bullet points per change.
   - Added missing localStorage key `beacon2_tam_submission`
   - Added new sections: §22 Custom Fields, §23 Gift Aid Log
   - Added missing shared components: BeaconLogo, GoToMemberButton
+- Added test coverage inventory to `CLAUDE-E2E.md`: catalog of all 11 spec files,
+  7 page objects, and 20 areas without E2E coverage yet
 - Updated `KNOWN-ISSUES.md` — marked portal photo upload and migration DDL warning
   as resolved
 
