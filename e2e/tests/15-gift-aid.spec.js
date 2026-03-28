@@ -43,8 +43,8 @@ test.describe('Gift Aid Declaration', () => {
     // In a fresh tenant there may be none, so accept either the buttons
     // or the "no transactions" empty state.
     const downloadBtn = page.getByRole('button', { name: /download excel/i });
-    const noTxns = page.getByText(/no gift aid eligible/i);
-    await expect(downloadBtn.or(noTxns).first()).toBeVisible({ timeout: 15_000 });
+    const noTxns = page.getByText('No Gift Aid eligible transactions found for this period.');
+    await expect(downloadBtn.or(noTxns)).toBeVisible({ timeout: 15_000 });
   });
 });
 
