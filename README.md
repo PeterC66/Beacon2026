@@ -135,27 +135,23 @@ Render (backend + Postgres) and Vercel (frontend) — no command-line knowledge 
 - [x] Members (list, record, add, partner/address sharing, validation)
 - [x] Member classes and statuses (CRUD, monthly fee grid)
 - [x] Membership renewals and non-renewals (bulk operations)
+- [x] Membership cards (PDF generation, email, mark-as-printed)
 - [x] Recent members and statistics
 - [x] Addresses export and label printing
 - [x] Groups (list, record, members, schedule, ledger, venues, faculties)
+- [x] Calendar and Open Meetings
 - [x] Finance (accounts, categories, ledger, transactions, transfers, reconciliation)
+- [x] Credit batches
 - [x] Financial statement and groups statement
+- [x] Gift Aid (declaration + log)
 - [x] Email (compose, templates, delivery tracking, unblocker)
+- [x] Letters & documents (compose, standard templates, PDF download)
 - [x] Audit log
 - [x] u3a Officers
 - [x] Personal preferences (display, password, security Q&A)
 - [x] Data export & backup / restore (Beacon2 + legacy Beacon format)
 - [x] Polls (setup, member assignment)
 - [x] System settings
-
-## Remaining modules
-
-- [ ] Membership cards
-- [ ] Calendar
-- [ ] Credit batches
-- [ ] Gift Aid (declaration + log)
-- [ ] Public links
-- [ ] System messages
-- [ ] Letters & documents
-- [ ] Meetings
-- [ ] Members Portal (self-service)
+- [x] System messages (auto-sent email templates)
+- [x] Public links (online joining toggle, portal URLs)
+- [x] Members Portal (self-service: login, groups, calendar, personal details, card request)
