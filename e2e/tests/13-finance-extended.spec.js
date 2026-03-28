@@ -58,13 +58,13 @@ test.describe('Transfer money', () => {
     await expect(page.locator('select[name="from_account_id"]')).toBeVisible();
     await expect(page.locator('select[name="to_account_id"]')).toBeVisible();
     await expect(page.locator('input[name="amount"]')).toBeVisible();
-    await expect(page.getByPlaceholder('dd/mm/yyyy').first()).toBeVisible();
+    await expect(page.locator('input[type="date"][name="date"]')).toBeVisible();
   });
 
   test('create a transfer between accounts', async ({ adminPage: page }) => {
     await gotoHomeLink(page, '/finance/transfers', 'Transfer Money');
 
-    await page.getByPlaceholder('dd/mm/yyyy').first().fill('15/06/2026');
+    await page.locator('input[type="date"][name="date"]').fill('2026-06-15');
     await page.locator('input[name="amount"]').fill('25.00');
 
     // Select from/to accounts (index 1 and 2 to pick two different accounts)
@@ -96,9 +96,15 @@ test.describe('Financial statement', () => {
     await expect(yearControl).toBeVisible();
   });
 
-  test('Download Excel button is present', async ({ adminPage: page }) => {
+  test('Download Excel button appears after viewing statement', async ({ adminPage: page }) => {
     await gotoHomeLink(page, '/finance/statement', 'Financial Statement');
-    await expect(page.getByRole('button', { name: /download|excel/i }).first()).toBeVisible();
+
+    // Check "All accounts" and click View Statement to load data
+    await page.getByLabel(/all accounts/i).check();
+    await page.getByRole('button', { name: /view statement/i }).click();
+
+    // Download Excel button appears only after data loads
+    await expect(page.getByRole('button', { name: /download excel/i })).toBeVisible({ timeout: 15_000 });
   });
 });
 
@@ -108,8 +114,8 @@ test.describe('Groups statement', () => {
   test('page loads with date inputs', async ({ adminPage: page }) => {
     await gotoHomeLink(page, '/finance/groups-statement', 'Groups Statement');
 
-    const dateInputs = page.getByPlaceholder('dd/mm/yyyy');
-    await expect(dateInputs.first()).toBeVisible();
+    await expect(page.locator('input[type="date"][name="from"]')).toBeVisible();
+    await expect(page.locator('input[type="date"][name="to"]')).toBeVisible();
   });
 });
 
