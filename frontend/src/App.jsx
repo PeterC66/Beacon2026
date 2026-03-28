@@ -68,6 +68,11 @@ import JoinPending         from './pages/public/JoinPending.jsx';
 import JoinComplete        from './pages/public/JoinComplete.jsx';
 import ResumePayment       from './pages/public/ResumePayment.jsx';
 import PortalLogin         from './pages/public/PortalLogin.jsx';
+import PortalHome          from './pages/public/PortalHome.jsx';
+import PortalGroups        from './pages/public/PortalGroups.jsx';
+import PortalCalendar      from './pages/public/PortalCalendar.jsx';
+import PortalPersonalDetails from './pages/public/PortalPersonalDetails.jsx';
+import PortalRequestCard   from './pages/public/PortalRequestCard.jsx';
 import PortalRegister      from './pages/public/PortalRegister.jsx';
 import PortalVerifyEmail   from './pages/public/PortalVerifyEmail.jsx';
 import PortalForgotPassword from './pages/public/PortalForgotPassword.jsx';
@@ -179,6 +184,11 @@ const router = createBrowserRouter([
       { path: '/public/:slug/join-complete',            element: <JoinComplete /> },
       { path: '/public/:slug/resume-payment/:token',    element: <ResumePayment /> },
       { path: '/public/:slug/portal',                   element: <PortalLogin /> },
+      { path: '/public/:slug/portal/home',              element: <PortalHome /> },
+      { path: '/public/:slug/portal/groups',            element: <PortalGroups /> },
+      { path: '/public/:slug/portal/calendar',          element: <PortalCalendar /> },
+      { path: '/public/:slug/portal/personal-details',  element: <PortalPersonalDetails /> },
+      { path: '/public/:slug/portal/request-card',      element: <PortalRequestCard /> },
       { path: '/public/:slug/portal/register',          element: <PortalRegister /> },
       { path: '/public/:slug/portal/verify',            element: <PortalVerifyEmail /> },
       { path: '/public/:slug/portal/forgot-password',   element: <PortalForgotPassword /> },
