@@ -23,7 +23,7 @@ Beacon2 is a ground-up rebuild with these goals:
 
 ---
 
-## What has been built (as of version 0.7.10)
+## What has been built (as of version 0.7.14)
 
 ### Infrastructure and platform
 - Full multi-tenant architecture (PostgreSQL schema-per-tenant)
@@ -131,11 +131,16 @@ Beacon2 is a ground-up rebuild with these goals:
 - **Email delivery** — batch list; per-recipient status; SendGrid Activity refresh
 - **Email unblocker** — admin tool to remove from bounce/spam lists
 
+### Letters module
+- **Letter compose** (docs 6.2, 6.2.1, 6.2.2) — compose letters with member selection,
+  token substitution, print/download PDF
+
 ### Set-up module
 - **System settings** — all fields from Beacon doc 8.3
 - **Roles and privileges** — full privilege matrix
 - **System users** — CRUD, role assignment, username-based login
 - **Polls** — CRUD; member list filter; bulk assign
+- **Custom fields** — define up to 4 free-form fields on member records
 
 ### Online Joining and Portal module
 - **Online joining** — public form for new members; class selection, personal details,
@@ -181,6 +186,7 @@ Beacon2 is a ground-up rebuild with these goals:
 - **Personal preferences** — display prefs, change password, security Q&A, inactivity timeout
 - **Data export & backup** — 8 export types (Excel); full restore (Beacon2 + Beacon format)
 - **Validate member data** — comprehensive data quality tool
+- **Utilities** — administrative utilities page
 
 ---
 
@@ -228,7 +234,8 @@ backend/
                            memberClasses  memberStatuses  groups  venues
                            faculties  settings  finance  polls  backup
                            addressExport  email  giftAid  systemMessages
-                           publicLinks  public
+                           publicLinks  public  portal  calendar  letters
+                           membershipCards  officers  customFields  audit
     services/              authService
     utils/                 db  jwt  password  redis  migrate  audit  emailTokens  paypal
     seed/                  index  createTenant  privilegeResources  defaultRoles
@@ -241,28 +248,38 @@ frontend/
     lib/api.js             # All API calls; auto token refresh
     context/AuthContext.jsx # isLoggedIn, user, tenant, can(), logout
     components/            PageHeader  NavBar  SortableHeader  DateInput
+                           CookieConsent  HelpWidget  ScrollButtons  RequiredMark
     hooks/                 useSortedData  usePreferences  useUnsavedChanges
+                           useCookieConsent
     pages/
-      Login  Home
-      admin/               MemberValidator  PollList
+      Login  Home  ChangePassword
+      admin/               MemberValidator  PollList  Utilities
       finance/             FinanceAccounts  FinanceCategories  FinanceLedger
-                           TransactionEditor  TransferMoney  ReconcileAccount
+                           TransactionEditor  TransactionRefund  TransferMoney
+                           CreditBatches  ReconcileAccount  ConfigureAccount
                            FinancialStatement  GroupsStatement  GiftAidDeclaration
-      groups/              GroupList  GroupRecord
-      members/             MemberList  MemberEditor  AddressesExport
+                           PaymentMethodDefaults
+      groups/              GroupList  GroupRecord  Calendar  OpenMeetings
+                           VenueList  VenueEditor  FacultyList
+      members/             MemberList  MemberEditor  MemberCompactView
+                           AddressesExport  MemberStatistics  RecentMembers
       membership/          MemberClassList  MemberClassEditor  MemberStatusList
-                           MembershipRenewals  NonRenewals
-                           RecentMembers  Statistics
-      misc/                AuditLog  AuditRecord  auditHelpers  GiftAidLog  OfficerList  DataBackup
+                           MembershipRenewals  MembershipCards  NonRenewals
+      misc/                AuditLog  AuditRecord  GiftAidLog  OfficerList  DataBackup
                            PublicLinks
+      letters/             LetterCompose
       roles/               RoleList  RoleEditor
       settings/            SystemSettings  PersonalPreferences  SystemMessages
+                           CustomFields
       system/              SystemLogin  SystemDashboard
       users/               UserList  UserEditor
       email/               EmailCompose  EmailDelivery  EmailDeliveryDetail
                            EmailUnblocker
-      public/              JoinForm  JoinComplete  PortalLogin  PortalRegister
-                           PortalVerifyEmail  PortalForgotPassword  PortalResetPassword
+      public/              JoinForm  JoinComplete  JoinPending  ResumePayment
+                           PortalLogin  PortalRegister  PortalVerifyEmail
+                           PortalForgotPassword  PortalResetPassword  PortalHome
+                           PortalGroups  PortalCalendar  PortalPersonalDetails
+                           PortalRequestCard
 
 e2e/                       Playwright E2E tests against staging
 docs/
@@ -276,19 +293,26 @@ docs/
 
 Greyed-out items in `Home.jsx` (i.e. `to: null`) are the remaining roadmap:
 
-**Not yet started:**
+**Not yet built:**
+- Public groups list page (public-facing, unauthenticated — URLs shown on Public Links page)
+- Public calendar page (public-facing, unauthenticated — URLs shown on Public Links page)
+
+**Partially complete:**
+- Members Portal — online renewals (doc 10.2.1) still to do
+- Data migration tool (standalone import from Beacon — restore already handles this)
+
+**Previously listed, now done:**
 - ~~Letters~~ (done — docs 6.2, 6.2.1, 6.2.2)
-- Meetings
 - ~~Membership cards~~ (done)
 - ~~Calendar~~ (done)
-- Data migration tool (standalone import from Beacon — restore already handles this)
-- Members Portal — online renewals (doc 10.2.1) still to do; ~~photo upload~~ (done)
+- ~~Open Meetings~~ (done — accessible via Calendar page)
+- ~~Portal photo upload~~ (done)
 
 ---
 
 ## Key decisions already made
 
-- **No email login field on member record** — members log in via Members Portal (not yet built)
+- **No email login field on member record** — members log in via Members Portal
 - **"Hide address from group leaders"** deprecated — replaced by per-group `show_addresses`
 - **Calendar year** for finance ledger year filtering
 - **Member search in TransactionEditor** — client-side filter, `<select size={4}>`
