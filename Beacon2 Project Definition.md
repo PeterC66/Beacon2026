@@ -283,6 +283,7 @@ frontend/
 
 e2e/                       Playwright E2E tests against staging
 docs/
+  Beacon2UG/               Beacon2 User Guide (64 sections + index, Markdown)
   BeaconUG/                Beacon User Guide pages (Markdown + images)
   FromBeacon/              Selected files from original Beacon codebase
 ```
@@ -327,4 +328,9 @@ The Beacon User Guide has been transcribed into `docs/BeaconUG/`. Each subfolder
 is one webpage, converted from PDF to Markdown with images preserved.
 
 **Before using any folder**, check for unconverted PDFs — warn the user if found.
+
+The **Beacon2 User Guide** lives in `docs/Beacon2UG/` — 64 sections organised
+around Beacon2's actual navigation (not the original Beacon numbering). Currently
+at outline level with screenshot placeholders. See `docs/Beacon2UG/index.md` for
+the full table of contents.
 If docs for a feature don't exist, ask the user.
