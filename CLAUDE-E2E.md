@@ -310,7 +310,7 @@ END $$` block for idempotency.
 
 ## Test coverage inventory
 
-### Spec files (11)
+### Spec files (18)
 
 | File | Area | Key tests |
 |------|------|-----------|
@@ -325,6 +325,13 @@ END $$` block for idempotency.
 | `09-officers.spec.js` | u3a Officers | Add, list, delete |
 | `10-audit-log.spec.js` | Audit log | Page loads, date filter, entries present |
 | `11-backup.spec.js` | Export / validator | Export type labels, .xlsx download, member validator |
+| `12-calendar.spec.js` | Calendar / Open Meetings | Page loads, filters, PDF button, Open Meetings nav |
+| `13-finance-extended.spec.js` | Transfers / reconcile / statements / batches | Transfer creation, reconcile page, statement pages, credit batch with own transaction |
+| `14-membership-extended.spec.js` | Renewals / cards / addresses / recent / stats | Page loads and structure for all 6 membership sub-pages |
+| `15-gift-aid.spec.js` | Gift Aid declaration + log | Year selector, action buttons, date filters |
+| `16-email.spec.js` | Email compose / delivery / unblocker | Compose form (no send), delivery date filters, unblocker input |
+| `17-setup-extended.spec.js` | Polls / messages / public links / custom fields | Poll CRUD, message templates, link sections, field label inputs |
+| `18-letters-utilities.spec.js` | Letters / utilities | Letter editor + tokens, download button, utilities validate link |
 
 ### Page objects (7)
 
@@ -338,30 +345,18 @@ END $$` block for idempotency.
 | `FinancePage.js` | `FinanceAccountsPage`, `FinanceCategoriesPage`, `TransactionEditorPage`, `FinanceLedgerPage` |
 | `SettingsPage.js` | `SystemSettingsPage`, `RoleListPage`, `UserListPage`, `UserEditorPage` |
 
-### Areas without E2E coverage
+### Deferred E2E coverage
 
-The following features have **no E2E tests yet**. Tests should be added
-incrementally as features stabilise:
+The following areas are **not yet tested end-to-end**. See `KNOWN-ISSUES.md`
+§ "E2E Test Coverage — Deferred Items" for details and context:
 
-| Area | Notes |
-|------|-------|
-| Email compose / delivery / unblocker | SendGrid dependency; may need mock or staging API key |
-| Gift Aid declaration + Gift Aid log | Depends on member with GA transactions |
-| Membership cards | PDF download; needs member with Current status |
-| Addresses export / label printing | PDF/Excel download |
-| Membership renewals / non-renewals | Depends on year-start config and member statuses |
-| Recent members / Statistics | Read-only pages; straightforward to add |
-| Calendar / Open Meetings | Depends on group schedule data |
-| Credit batches | Depends on finance transactions |
-| Financial statement / Groups statement | Read-only; depends on transaction data |
-| Reconcile account / Transfer money | Multi-step finance workflows |
-| Polls | CRUD + member assignment |
-| System messages | Template editing |
-| Public links | Config page + portal config toggles |
-| Online joining (JoinForm → payment) | Public unauthenticated flow; PayPal stub |
-| Portal (register → login → all features) | Separate auth system; member identity verification |
-| Letters | TipTap editor + PDF download |
-| Custom fields | Admin config + member record integration |
-| Utilities | Validate member data (partially covered via 11-backup) |
-| Data restore | Upload + format detection (Beacon / Beacon2) |
-| Password recovery / force-change | Multi-step auth flows |
+| Area | Why deferred |
+|------|-------------|
+| Email send action | SendGrid not live in test env |
+| PDF/Excel download content | Only button presence tested; file content verification deferred |
+| Membership renewals bulk action | Would change member statuses + create transactions mid-run |
+| Credit batch full workflow | Create → add txns → clear not yet tested |
+| Portal full flow | Separate auth, email verification, complex multi-step |
+| Online joining flow | PayPal stub, public unauthenticated context |
+| Password recovery / force-change | Multi-step auth with state flags |
+| Data restore | Destructively overwrites tenant data |

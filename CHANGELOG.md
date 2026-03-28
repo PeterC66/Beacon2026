@@ -7,6 +7,17 @@ Format: `## [version] — YYYY-MM-DD` with bullet points per change.
 
 ## [0.7.14] — 2026-03-28
 
+### Added
+- 7 new E2E spec files (12–18) covering all previously untested areas:
+  Calendar, Open Meetings, Transfer Money, Reconcile Account, Financial Statement,
+  Groups Statement, Credit Batches, Recent Members, Statistics, Membership Renewals,
+  Non-renewals, Membership Cards, Addresses Export, Gift Aid Declaration, Gift Aid Log,
+  Email Compose/Delivery/Unblocker, Polls, System Messages, Public Links, Custom Fields,
+  Letters, and Utilities (~40 new tests total)
+- E2E deferred items documented in `KNOWN-ISSUES.md` (8 items: email send, download
+  content verification, portal flow, online joining, password recovery, data restore,
+  membership renewals bulk, credit batch full workflow)
+
 ### Changed
 - Comprehensive review and update of `Beacon2 Project Definition.md`:
   - Updated version reference from 0.7.10 to 0.7.14
