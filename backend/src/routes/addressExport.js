@@ -185,7 +185,7 @@ router.get('/download', requirePrivilege('addresses_export', 'download'), async 
 
     if (format === 'csv' || format === 'tsv') {
       const sep = format === 'tsv' ? '\t' : ',';
-      const headers = ['Name', 'Address 1', 'Address 2', 'Address 3', 'Address 4', 'Town', 'County', 'Postcode'];
+      const headers = ['Name', 'Address 1', 'Address 2', 'Address 3', 'Town', 'County', 'Postcode'];
       const rows = groups.map((g) => {
         const name = combinedName(g.members);
         const addrLine1 = [g.house_no, g.street].filter(Boolean).join(' ');
