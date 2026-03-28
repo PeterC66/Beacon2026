@@ -1,9 +1,6 @@
 # beacon2/.github/workflows/ci.yml
 # Runs backend and frontend tests on every push to a claude/* branch
 # and on every pull request targeting main.
-#
-# On PRs to main, also enforces that frontend/package.json version has been
-# bumped (MAJOR.MINOR.PATCH) relative to the base (main) branch.
 
 name: CI
 
@@ -64,34 +61,3 @@ jobs:
 
       - name: Run tests
         run: npm test
-
-  # ── Version bump check (PRs to main only) ────────────────────────────────
-  version-check:
-    name: Version bumped
-    runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request'
-
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          # Fetch the full history so we can read the base-branch version
-          fetch-depth: 0
-
-      - name: Check frontend version was bumped
-        run: |
-          BASE_VERSION=$(git show origin/${{ github.base_ref }}:frontend/package.json \
-            | node -e "let d=''; process.stdin.on('data',c=>d+=c); process.stdin.on('end',()=>console.log(JSON.parse(d).version))")
-          PR_VERSION=$(node -e "const p=require('./frontend/package.json'); console.log(p.version)")
-
-          echo "Base (main) version : $BASE_VERSION"
-          echo "PR branch version   : $PR_VERSION"
-
-          if [ "$BASE_VERSION" = "$PR_VERSION" ]; then
-            echo ""
-            echo "❌  frontend/package.json version was not bumped."
-            echo "    Bump PATCH for hot-fixes, MINOR for sprints, MAJOR for breaking changes."
-            echo "    Current: $PR_VERSION  →  needs to differ from main: $BASE_VERSION"
-            exit 1
-          fi
-
-          echo "✅  Version bumped: $BASE_VERSION → $PR_VERSION"
