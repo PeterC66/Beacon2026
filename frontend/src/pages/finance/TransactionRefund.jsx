@@ -185,7 +185,7 @@ export default function TransactionRefund() {
             {/* Date */}
             <div>
               <label className={LBL}>Refund date <RequiredMark /></label>
-              <DateInput value={date} onChange={setDate} className={INP} />
+              <DateInput name="date" value={date} onChange={setDate} className={INP} />
             </div>
 
             {/* Total refund amount (computed) */}

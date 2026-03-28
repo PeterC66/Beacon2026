@@ -92,11 +92,11 @@ export default function GiftAidLog() {
         <form onSubmit={handleApply} className="bg-white/90 rounded-lg shadow-sm p-3 mb-4 flex flex-wrap gap-4 items-end">
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1">From</label>
-            <DateInput value={fromDate} onChange={setFromDate} />
+            <DateInput name="fromDate" value={fromDate} onChange={setFromDate} />
           </div>
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1">To</label>
-            <DateInput value={toDate} onChange={setToDate} />
+            <DateInput name="toDate" value={toDate} onChange={setToDate} />
           </div>
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1">Member</label>

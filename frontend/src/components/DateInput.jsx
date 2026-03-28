@@ -18,7 +18,7 @@ function displayToIso(text) {
   return `${y}-${mo.padStart(2, '0')}-${d.padStart(2, '0')}`;
 }
 
-export default function DateInput({ value, onChange, onBlur, className = '', disabled, max, min }) {
+export default function DateInput({ value, onChange, onBlur, name, className = '', disabled, max, min }) {
   const [localText, setLocalText] = useState(() => isoToDisplay(value ?? ''));
   const pickerRef = useRef(null);
 
@@ -48,6 +48,7 @@ export default function DateInput({ value, onChange, onBlur, className = '', dis
     <div className="flex gap-1 items-center">
       <input
         type="text"
+        name={name}
         value={localText}
         onChange={handleTextChange}
         onBlur={onBlur}

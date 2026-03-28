@@ -901,7 +901,7 @@ export default function MemberEditor() {
               </div>
               <div>
                 <label className={labelCls}>Joined <RequiredMark /></label>
-                <DateInput value={form.joinedOn}
+                <DateInput name="joinedOn" value={form.joinedOn}
                   onChange={(v) => set('joinedOn', v)}
                   onBlur={() => handleBlur('joinedOn')}
                   className={ic('joinedOn')} />
@@ -910,7 +910,7 @@ export default function MemberEditor() {
               {!isNew && (
                 <div>
                   <label className={labelCls}>Next renewal</label>
-                  <DateInput value={form.nextRenewal}
+                  <DateInput name="nextRenewal" value={form.nextRenewal}
                     onChange={(v) => set('nextRenewal', v)}
                     className={inputCls} />
                 </div>
@@ -1009,7 +1009,7 @@ export default function MemberEditor() {
                 <div>
                   <label className={labelCls}>Gift Aid from</label>
                   <div className="flex items-center gap-1">
-                    <DateInput value={form.giftAidFrom}
+                    <DateInput name="giftAidFrom" value={form.giftAidFrom}
                       onChange={(v) => set('giftAidFrom', v)}
                       max={new Date().toISOString().slice(0, 10)}
                       className={inputCls} />
@@ -1169,7 +1169,7 @@ export default function MemberEditor() {
                       {renewPartner && (
                         <div className="mt-2 ml-6">
                           <label className={labelCls}>New renewal date for {partnerName}</label>
-                          <DateInput value={partnerNewRenewal} onChange={setPartnerNewRenewal} className={inputCls} />
+                          <DateInput name="partnerNewRenewal" value={partnerNewRenewal} onChange={setPartnerNewRenewal} className={inputCls} />
                         </div>
                       )}
                     </div>
@@ -1242,16 +1242,16 @@ export default function MemberEditor() {
                   </div>
                   <div>
                     <label className={labelCls}>Joined <RequiredMark /></label>
-                    <DateInput value={npForm.joinedOn} onChange={(v) => setNp('joinedOn', v)} className={inputCls} />
+                    <DateInput name="npJoinedOn" value={npForm.joinedOn} onChange={(v) => setNp('joinedOn', v)} className={inputCls} />
                   </div>
                   <div>
                     <label className={labelCls}>Next renewal <RequiredMark /></label>
-                    <DateInput value={npForm.nextRenewal} onChange={(v) => setNp('nextRenewal', v)} className={fieldErrors.npNextRenewal ? ic('npNextRenewal') : inputCls} />
+                    <DateInput name="npNextRenewal" value={npForm.nextRenewal} onChange={(v) => setNp('nextRenewal', v)} className={fieldErrors.npNextRenewal ? ic('npNextRenewal') : inputCls} />
                     {fieldErrors.npNextRenewal && <p className={errMsgCls}>{fieldErrors.npNextRenewal}</p>}
                   </div>
                   <div>
                     <label className={labelCls}>Gift Aid from</label>
-                    <DateInput value={npForm.giftAidFrom} onChange={(v) => setNp('giftAidFrom', v)} className={inputCls} />
+                    <DateInput name="npGiftAidFrom" value={npForm.giftAidFrom} onChange={(v) => setNp('giftAidFrom', v)} className={inputCls} />
                   </div>
                 </div>
                 <p className="text-xs text-slate-400 italic">Address is shared with the primary member above.</p>

@@ -104,11 +104,11 @@ export default function AuditLog() {
         <form onSubmit={handleApply} className="bg-white/90 rounded-lg shadow-sm p-3 mb-4 flex flex-wrap gap-4 items-end">
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1">From</label>
-            <DateInput value={fromDate} onChange={setFromDate} />
+            <DateInput name="fromDate" value={fromDate} onChange={setFromDate} />
           </div>
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1">To</label>
-            <DateInput value={toDate} onChange={setToDate} />
+            <DateInput name="toDate" value={toDate} onChange={setToDate} />
           </div>
           <button type="submit"
             className="bg-blue-600 hover:bg-blue-700 text-white rounded px-4 py-2 text-sm font-medium transition-colors">
@@ -183,7 +183,7 @@ export default function AuditLog() {
                 <form onSubmit={handleDelete} className="flex flex-wrap gap-3 items-end">
                   <div>
                     <label className="block text-sm font-medium text-slate-700 mb-1">Delete all entries before</label>
-                    <DateInput value={deleteDate} onChange={setDeleteDate} />
+                    <DateInput name="deleteDate" value={deleteDate} onChange={setDeleteDate} />
                   </div>
                   <button type="submit" disabled={!deleteDate || deleting}
                     className="border border-red-300 text-red-600 hover:bg-red-50 disabled:opacity-50 rounded px-4 py-2 text-sm transition-colors">
