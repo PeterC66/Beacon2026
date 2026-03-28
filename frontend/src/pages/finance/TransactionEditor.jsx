@@ -384,6 +384,7 @@ export default function TransactionEditor() {
             <div>
               <label className={LBL}>Date <RequiredMark /></label>
               <DateInput
+                name="date"
                 value={form.date}
                 onChange={(v) => set('date', v)}
                 disabled={readOnly}
