@@ -119,9 +119,8 @@ All eight optional cookie items are now fully implemented.
 
 ## Member Record (doc 4.2 / 4.3)
 
-1. ~~**Photo upload**~~ — **Done.** Photo upload/view/remove implemented on member record;
-   photos appear on membership cards and group members PDF. Portal photo upload deferred
-   (portal self-service not yet built).
+1. ~~**Photo upload**~~ — **Done.** Photo upload/view/remove implemented on member record
+   and Members Portal; photos appear on membership cards and group members PDF.
 
 2. **Member-to-member navigation in compact view** — The original Beacon member record
    has a dropdown with < > arrows to navigate directly between members without returning

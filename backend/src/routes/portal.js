@@ -3,7 +3,7 @@
 // All routes require a valid portal JWT (isPortal: true).
 // Mounted at /public/:slug/portal/app/* via the public router.
 
-import { Router } from 'express';
+import express, { Router } from 'express';
 import { z } from 'zod';
 import PDFDocument from 'pdfkit';
 import { tenantQuery, prisma } from '../utils/db.js';
@@ -527,6 +527,7 @@ router.get('/personal-details', async (req, res, next) => {
       `SELECT m.id, m.title, m.forenames, m.surname, m.known_as, m.initials,
               m.suffix, m.email, m.mobile, m.emergency_contact, m.hide_contact,
               m.portal_email,
+              (m.photo_data IS NOT NULL AND m.photo_mime_type IS NOT NULL) AS has_photo,
               a.house_no, a.street, a.add_line1, a.town, a.county, a.postcode, a.telephone
        FROM members m
        LEFT JOIN addresses a ON a.id = m.address_id
@@ -548,6 +549,7 @@ router.get('/personal-details', async (req, res, next) => {
       emergencyContact: member.emergency_contact || '',
       hideContact: member.hide_contact || false,
       portalEmail: member.portal_email || '',
+      hasPhoto: !!member.has_photo,
       address: {
         houseNo: member.house_no || '',
         street: member.street || '',
@@ -680,6 +682,86 @@ router.patch('/personal-details', async (req, res, next) => {
   } catch (err) {
     next(err);
   }
+});
+
+// ─── Portal Photo endpoints ─────────────────────────────────────────────────
+
+const portalPhotoUploadSchema = z.object({
+  data:     z.string().min(1, 'Photo data is required'),
+  mimeType: z.enum(['image/jpeg', 'image/png', 'image/gif'], {
+    errorMap: () => ({ message: 'Photo must be jpg, png, or gif' }),
+  }),
+});
+
+const MAX_PHOTO_BYTES = 2 * 1024 * 1024; // 2 MB
+
+router.post('/photo', express.json({ limit: '4mb' }), async (req, res, next) => {
+  try {
+    const slug = req.portal.tenantSlug;
+    const memberId = req.portal.memberId;
+
+    // Check personal details is enabled (photo upload is part of personal details)
+    const [settings] = await tenantQuery(slug,
+      `SELECT portal_config FROM tenant_settings WHERE id = 'singleton'`);
+    const portalConfig = { personalDetails: false, ...(settings?.portal_config ?? {}) };
+    if (!portalConfig.personalDetails) {
+      return res.status(403).json({ error: 'Personal details editing is not enabled.' });
+    }
+
+    const { data, mimeType } = portalPhotoUploadSchema.parse(req.body);
+
+    const byteLength = Buffer.from(data, 'base64').length;
+    if (byteLength > MAX_PHOTO_BYTES) {
+      return res.status(400).json({ error: `Photo exceeds the 2 MB limit (${(byteLength / 1024 / 1024).toFixed(1)} MB).` });
+    }
+
+    await tenantQuery(slug,
+      `UPDATE members SET photo_data = $1, photo_mime_type = $2, updated_at = now() WHERE id = $3`,
+      [data, mimeType, memberId]);
+
+    logAudit(slug, { userId: null, userName: `${req.portal.name} (portal)`, action: 'change', entityType: 'member', entityId: memberId, detail: 'Photo uploaded via portal' });
+    res.json({ message: 'Photo uploaded.' });
+  } catch (err) { next(err); }
+});
+
+router.delete('/photo', async (req, res, next) => {
+  try {
+    const slug = req.portal.tenantSlug;
+    const memberId = req.portal.memberId;
+
+    const [settings] = await tenantQuery(slug,
+      `SELECT portal_config FROM tenant_settings WHERE id = 'singleton'`);
+    const portalConfig = { personalDetails: false, ...(settings?.portal_config ?? {}) };
+    if (!portalConfig.personalDetails) {
+      return res.status(403).json({ error: 'Personal details editing is not enabled.' });
+    }
+
+    await tenantQuery(slug,
+      `UPDATE members SET photo_data = NULL, photo_mime_type = NULL, updated_at = now() WHERE id = $1`,
+      [memberId]);
+
+    logAudit(slug, { userId: null, userName: `${req.portal.name} (portal)`, action: 'change', entityType: 'member', entityId: memberId, detail: 'Photo removed via portal' });
+    res.json({ message: 'Photo removed.' });
+  } catch (err) { next(err); }
+});
+
+router.get('/photo', async (req, res, next) => {
+  try {
+    const slug = req.portal.tenantSlug;
+    const memberId = req.portal.memberId;
+
+    const [member] = await tenantQuery(slug,
+      `SELECT photo_data, photo_mime_type FROM members WHERE id = $1`, [memberId]);
+
+    if (!member || !member.photo_data) {
+      return res.status(404).json({ error: 'No photo found.' });
+    }
+    const buf = Buffer.from(member.photo_data, 'base64');
+    res.setHeader('Content-Type', member.photo_mime_type);
+    res.setHeader('Content-Length', buf.length);
+    res.setHeader('Cache-Control', 'private, max-age=3600');
+    res.send(buf);
+  } catch (err) { next(err); }
 });
 
 // ─── POST /change-password ───────────────────────────────────────────────────

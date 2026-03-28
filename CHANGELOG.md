@@ -17,6 +17,9 @@ Format: `## [version] — YYYY-MM-DD` with bullet points per change.
   switches to a photo-aware card layout with contact details alongside each photo
 - Backend API: `POST/DELETE/GET /members/:id/photo` endpoints with validation
 - `has_photo` flag returned in member record (full photo data excluded from GET response)
+- **Portal photo upload** (doc 10.2.4) — members can upload, view, and remove their
+  photo from the Members Portal personal details page; uses same validation (jpg/png/gif,
+  max 2 MB) and storage as admin-side upload
 - TAM submission cookie — when downloading in TAM format, the selected Status
   and Class filters are saved to localStorage (consent-gated) and restored
   next time TAM format is selected (`beacon2_tam_submission`)
