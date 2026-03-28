@@ -188,6 +188,46 @@ this by never triggering a full reload (and thus never triggering
 
 ---
 
+## Viewing test artifacts
+
+Playwright captures screenshots, videos, and traces on test failure.
+
+### After a CI run (GitHub Actions)
+
+1. Go to the GitHub repo → **Actions** tab → click the E2E workflow run
+2. Scroll to the bottom — the **Artifacts** section lists downloadable zips:
+   - **playwright-report** — always uploaded (kept 14 days). This is the most
+     useful artifact: a self-contained HTML report with pass/fail status,
+     failure screenshots, embedded video playback, and an interactive trace
+     viewer. After downloading and unzipping, open `index.html` in a browser.
+   - **test-results** — uploaded only on failure (kept 7 days). Contains the
+     raw screenshot PNGs, video WebM files, and trace ZIPs.
+
+### After a local run
+
+```bash
+cd e2e && npm test               # run the tests
+npm run test:report              # open the HTML report in a browser
+```
+
+Raw artifacts are in `e2e/test-results/`. To view a trace file directly:
+
+```bash
+npx playwright show-trace e2e/test-results/<test-folder>/trace.zip
+```
+
+### Configuration (in `playwright.config.js`)
+
+| Setting | Value |
+|---------|-------|
+| `screenshot` | `only-on-failure` |
+| `video` | `retain-on-failure` |
+| `trace` | `retain-on-failure` |
+| HTML report output | `e2e/playwright-report/` |
+| Raw artifact output | `e2e/test-results/` |
+
+---
+
 ## Debugging E2E failures
 
 - **Render logs** — check the backend's application log for auth errors.
@@ -199,8 +239,7 @@ this by never triggering a full reload (and thus never triggering
   - Prisma `P2010` / code `23505` on `token_hash` → duplicate refresh token
     (race condition)
 
-- **Playwright report** — downloaded from the CI artifact. Contains
-  screenshots, traces, and videos for failed tests.
+- **Playwright report** — see "Viewing test artifacts" above.
 
 - **Fast failures vs timeouts** — a test that fails in ~3 s likely hit a
   locator / assertion error. A test that fails at ~18 s typically timed out
