@@ -35,9 +35,9 @@ test.describe('Email Delivery', () => {
   test('page loads with heading and date filters', async ({ adminPage: page }) => {
     await gotoHomeLink(page, '/email/delivery', 'Email Delivery');
 
-    // Date filter inputs
-    const dateInputs = page.getByPlaceholder('dd/mm/yyyy');
-    await expect(dateInputs.first()).toBeVisible();
+    // Date filter inputs (native <input type="date">)
+    await expect(page.locator('input[type="date"][name="from"]')).toBeVisible();
+    await expect(page.locator('input[type="date"][name="to"]')).toBeVisible();
   });
 });
 
@@ -68,9 +68,11 @@ test.describe('Email Compose', () => {
       sessionStorage.setItem('emailComposeMemberIds', JSON.stringify([]));
     });
 
-    // No Home link exists for email compose — navigate directly
+    // No Home link exists for email compose — must navigate directly.
+    // page.goto() destroys the in-memory auth token; the app restores
+    // the session via the httpOnly refresh cookie, which can be slow.
     await page.goto('/email/compose');
-    await page.getByRole('heading', { name: 'Send Email' }).waitFor({ timeout: 10_000 });
+    await page.getByRole('heading', { name: 'Send Email' }).waitFor({ timeout: 15_000 });
 
     // Core form elements present
     await expect(page.getByText(/from/i).first()).toBeVisible();
