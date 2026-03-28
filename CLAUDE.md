@@ -10,6 +10,7 @@
 | **`CLAUDE-E2E.md`** | E2E test architecture, patterns, and gotchas | When writing or debugging E2E tests |
 | **`Beacon2 Project Definition.md`** | What has been built and what remains | Every session — living document |
 | **`docs/BeaconUG-Comparison.md`** | Beacon2 vs Beacon User Guide comparison | When building/changing features — update after each change |
+| **`docs/Beacon2UG/index.md`** | Beacon2 User Guide (64 sections) | When writing user-facing help or verifying feature descriptions |
 | **`CHANGELOG.md`** | User-facing changelog of all notable changes | Update at end of every session |
 
 ---

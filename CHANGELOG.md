@@ -5,6 +5,15 @@ Format: `## [version] — YYYY-MM-DD` with bullet points per change.
 
 ---
 
+## [0.7.15] — 2026-03-28
+
+### Added
+- Beacon2 User Guide (`docs/Beacon2UG/`) — 64 sections covering all modules,
+  structured around Beacon2's actual navigation. Outline-level content with
+  screenshot placeholders, ready to be fleshed out and have screenshots added.
+
+---
+
 ## [0.7.14] — 2026-03-28
 
 ### Added
