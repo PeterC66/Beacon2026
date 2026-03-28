@@ -17,6 +17,14 @@ Format: `## [version] — YYYY-MM-DD` with bullet points per change.
     (public groups list + public calendar pages) plus 2 partial items
   - Fixed outdated reference to Members Portal as "not yet built"
   - Added portal pages (PortalHome, PortalGroups, PortalCalendar, etc.) to layout tree
+- Comprehensive review and update of `CLAUDE-REFERENCE.md`:
+  - Fixed duplicate section numbering (§14, §16, §19 each appeared twice); renumbered to §1–§24
+  - Updated outdated deferred items: portal replacement card is built, portal features are built
+  - Added 7 missing portal pages to frontend pages table + documented `portalApi` methods
+  - Fixed Cookie Consent section (all 8 items implemented, removed stale "deferred" reference)
+  - Added missing localStorage key `beacon2_tam_submission`
+  - Added new sections: §22 Custom Fields, §23 Gift Aid Log
+  - Added missing shared components: BeaconLogo, GoToMemberButton
 - Updated `KNOWN-ISSUES.md` — marked portal photo upload and migration DDL warning
   as resolved
 

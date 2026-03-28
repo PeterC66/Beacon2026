@@ -766,6 +766,7 @@ Themes: `default`, `high-contrast`.
 
 ### Shared components
 
+- `BeaconLogo` — SVG logo used on login, portal, and public pages
 - `PageHeader` — logo + tenant name + version (`text-xl sm:text-4xl`)
 - `NavBar` — glass-effect backdrop, blue links, `–` separator. Accepts `links` prop (not `items`)
 - `SortableHeader` + `useSortedData` — sortable columns with ▲/▼/⇅ indicator
@@ -777,6 +778,9 @@ Themes: `default`, `high-contrast`.
 - `ScrollButtons` — dual fixed-position scroll-to-top/bottom buttons (doc 6 "Table Lists").
   Pass `containerRef` (a ref to the table wrapper div). Only appears when the container
   overflows the viewport. Used on 12 list pages.
+- `GoToMemberButton` — small "..." button that navigates to a member's record; renders
+  `null` when no `memberId` provided. Used for quick navigation from contexts like partner
+  linking.
 
 ### Mandatory field indicator (`RequiredMark`)
 
@@ -1137,8 +1141,15 @@ Currently generates fake paymentId and redirects to own confirmation endpoint.
 | `PortalLogin.jsx` | `/public/:slug/portal` | Portal login |
 | `PortalRegister.jsx` | `/public/:slug/portal/register` | Identity verification + password |
 | `PortalVerifyEmail.jsx` | `/public/:slug/portal/verify` | Email token verification |
+| `JoinPending.jsx` | `/public/:slug/join-pending` | Waiting for payment; shows Pay Now + resume link |
+| `ResumePayment.jsx` | `/public/:slug/resume-payment/:token` | Resume unpaid application |
 | `PortalForgotPassword.jsx` | `/public/:slug/portal/forgot-password` | Request reset link |
 | `PortalResetPassword.jsx` | `/public/:slug/portal/reset-password` | Set new password |
+| `PortalHome.jsx` | `/public/:slug/portal/home` | Portal dashboard with feature links |
+| `PortalGroups.jsx` | `/public/:slug/portal/groups` | View/join/leave groups (doc 10.2.2) |
+| `PortalCalendar.jsx` | `/public/:slug/portal/calendar` | Calendar view with filters (doc 10.2.3) |
+| `PortalPersonalDetails.jsx` | `/public/:slug/portal/details` | Edit details, photo, password (doc 10.2.4) |
+| `PortalRequestCard.jsx` | `/public/:slug/portal/request-card` | Request replacement card (doc 10.2.5) |
 
 ### API client (`api.js`)
 
@@ -1147,10 +1158,13 @@ Currently generates fake paymentId and redirects to own confirmation endpoint.
 - `publicApi.*` — direct fetch (no auth token): `getJoinConfig`, `submitJoin`,
   `confirmPayment`, `portalRegister`, `portalVerifyEmail`, `portalLogin`,
   `portalForgotPassword`, `portalResetPassword`
+- `portalApi.*` — portal JWT auth: `getHome`, `getGroups`, `joinGroup`, `leaveGroup`,
+  `getCalendar`, `downloadCalendarPdf`, `getPersonalDetails`, `updatePersonalDetails`,
+  `changePassword`, `uploadPhoto`, `deletePhoto`, `getPhotoBlob`, `requestCard`
 
 ---
 
-## 16. Calendar module
+## 17. Calendar module
 
 ### Data model
 
@@ -1193,14 +1207,14 @@ in `tenant_schema.sql`. No separate table is needed.
 ### Deferred items (in KNOWN-ISSUES.md)
 
 - Joint membership online joining
-- Full Members Portal features (view/update own details, renewal, group browsing)
+- Members Portal — online renewals (doc 10.2.1)
 - Public groups list and calendar pages (URLs shown on Public Links, pages not yet built)
 - Real PayPal API integration
 - Shared email handling in portal registration
 
 ---
 
-## 14. Membership Cards (doc 4.7)
+## 18. Membership Cards (doc 4.7)
 
 ### Data model
 
@@ -1243,12 +1257,12 @@ next `year_start_month/year_start_day`. "Advance expiry" adds one year.
 ### Deferred
 
 - Auto-attaching cards to online joining/renewal confirmation emails (`email_cards` setting)
-- Members Portal "Order a replacement card" (doc 10.2.5)
+- ~~Members Portal "Order a replacement card" (doc 10.2.5)~~ — **Done.** Implemented as
+  `PortalRequestCard.jsx`; backend route `POST /portal/request-card` in `portal.js`
 
 ---
 
 ## 19. Letters module (docs 6.2, 6.2.1, 6.2.2)
-
 ### Overview
 
 Letters are one-page personalised documents generated as a PDF (one page per member).
@@ -1294,7 +1308,7 @@ and support standard letter templates for reuse.
 
 ---
 
-## 18. Password recovery and temporary passwords
+## 20. Password recovery and temporary passwords
 
 ### Data model
 
@@ -1339,7 +1353,7 @@ and support standard letter templates for reuse.
 Currently uses `console.log` (same pattern as portal password reset). The log includes
 username and temp password. Production deployment will send via SendGrid.
 
-## 19. Cookie Consent
+## 21. Cookie Consent
 
 ### Architecture
 
@@ -1370,6 +1384,7 @@ All keys are removed in `useCookieConsent.js → setConsent(false)`.
 | `beacon2_label_settings` | Label printing layout (cols, rows, dimensions, offsets, font size) |
 | `beacon2_last_export_class` | Last membership class selected on Addresses Export page |
 | `beacon2_email_compose_prefs` | Email compose From address and copy-to-self preference |
+| `beacon2_tam_submission` | TAM export: last selected Status and Class filters |
 
 ### Integration points
 
@@ -1378,10 +1393,49 @@ All keys are removed in `useCookieConsent.js → setConsent(false)`.
 - **usePreferences.js** — `load()` and `save()` gated behind consent
 - **App.jsx** — `<CookieConsent />` rendered alongside `<RouterProvider />`
 
-### Deferred items
+All eight optional cookie items are now fully implemented — see `KNOWN-ISSUES.md`
+Cookie Consent section for confirmation.
 
-See `KNOWN-ISSUES.md` — Cookie Consent section for optional items not yet implemented.
-## 20. Help Widget (Zendesk Web Widget)
+---
+
+## 22. Custom Fields
+
+### Data model
+
+- `tenant_settings.custom_field_label_1` through `_4` — TEXT columns storing the admin-defined
+  labels for each custom field. When blank, the field is hidden on the member record.
+- `members.custom_field_1` through `_4` — TEXT columns (max 60 chars) storing per-member values.
+
+### Backend routes (`customFields.js` at `/custom-fields`)
+
+| Route | Privilege | Purpose |
+|-------|-----------|---------|
+| `GET /custom-fields` | `custom_fields:view` | Returns current labels |
+| `PATCH /custom-fields` | `custom_fields:change` | Updates labels |
+
+### Frontend
+
+- `CustomFields.jsx` at `/custom-fields` — admin page to define up to 4 free-form field labels
+- `MemberEditor.jsx` — renders custom fields dynamically when labels are set
+
+---
+
+## 23. Gift Aid Log
+
+### Backend
+
+- `GET /gift-aid/log?from=&to=&memberId=` in `giftAid.js` — queries audit trail for
+  `gift_aid_consent` and `gift_aid_withdrawn` actions; privilege `gift_aid_declaration:view`
+- Returns up to 500 entries within date range, optionally filtered by member
+
+### Frontend
+
+- `GiftAidLog.jsx` at `/gift-aid-log` — date-filtered table showing when Gift Aid consent
+  was given or withdrawn; member dropdown filter; columns: Date, Member, Action, By
+
+---
+
+## 24. Help Widget (Zendesk Web Widget)
 
 ### Architecture
 
