@@ -976,7 +976,7 @@
 | Change password | Done | Expandable section with validation |
 | Email change triggers re-verification | Done | Logs out member after email change, must re-verify |
 | Confirmation email | Done | Uses portal_details_updated system message template |
-| Photo upload | Not started | Admin-side photo upload built; portal upload not yet added |
+| Photo upload | Done | Upload/view/remove photo; appears on membership card |
 
 ---
 

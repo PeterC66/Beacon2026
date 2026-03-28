@@ -825,6 +825,21 @@ export const portalApi = {
     method: 'POST', body: JSON.stringify(data),
   }),
 
+  // Photo (10.2.4)
+  uploadPhoto: (slug, data, mimeType) => portalRequest(slug, '/photo', {
+    method: 'POST', body: JSON.stringify({ data, mimeType }),
+  }),
+  deletePhoto: (slug) => portalRequest(slug, '/photo', { method: 'DELETE' }),
+  getPhotoBlob: (slug) => {
+    const token = sessionStorage.getItem('portalToken');
+    const headers = { ...(token && { Authorization: `Bearer ${token}` }) };
+    return fetch(`${BASE}/public/${slug}/portal/app/photo`, { headers })
+      .then(async (r) => {
+        if (!r.ok) return null;
+        return r.blob();
+      });
+  },
+
   // Replacement Card (10.2.5)
   requestCard: (slug) => portalRequest(slug, '/request-card', { method: 'POST' }),
 };

@@ -1,7 +1,7 @@
 // beacon2/frontend/src/pages/public/PortalPersonalDetails.jsx
 // Members Portal — view and update personal details (doc 10.2.4).
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { portalApi } from '../../lib/api.js';
 
@@ -15,6 +15,12 @@ export default function PortalPersonalDetails() {
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState('');
 
+  // Photo
+  const [hasPhoto, setHasPhoto] = useState(false);
+  const [photoBlobUrl, setPhotoBlobUrl] = useState(null);
+  const [photoUploading, setPhotoUploading] = useState(false);
+  const [photoError, setPhotoError] = useState(null);
+
   // Password change
   const [showPassword, setShowPassword] = useState(false);
   const [pwForm, setPwForm] = useState({ currentPassword: '', newPassword: '', confirmPassword: '' });
@@ -24,7 +30,15 @@ export default function PortalPersonalDetails() {
 
   useEffect(() => {
     portalApi.getPersonalDetails(slug)
-      .then((data) => setForm(data))
+      .then((data) => {
+        setForm(data);
+        setHasPhoto(!!data.hasPhoto);
+        if (data.hasPhoto) {
+          portalApi.getPhotoBlob(slug).then((blob) => {
+            if (blob) setPhotoBlobUrl(URL.createObjectURL(blob));
+          });
+        }
+      })
       .catch((err) => {
         if (err.message.includes('expired') || err.message.includes('401')) {
           navigate(`/public/${slug}/portal`, { replace: true });
@@ -33,7 +47,64 @@ export default function PortalPersonalDetails() {
         }
       })
       .finally(() => setLoading(false));
+    return () => {
+      setPhotoBlobUrl((prev) => { if (prev) URL.revokeObjectURL(prev); return null; });
+    };
   }, [slug, navigate]);
+
+  const ALLOWED_PHOTO_TYPES = ['image/jpeg', 'image/png', 'image/gif'];
+  const MAX_PHOTO_SIZE = 2 * 1024 * 1024;
+
+  async function handlePhotoSelect(e) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    e.target.value = '';
+
+    if (!ALLOWED_PHOTO_TYPES.includes(file.type)) {
+      setPhotoError('Photo must be jpg, png, or gif.');
+      return;
+    }
+    if (file.size > MAX_PHOTO_SIZE) {
+      setPhotoError(`Photo exceeds the 2 MB limit (${(file.size / 1024 / 1024).toFixed(1)} MB).`);
+      return;
+    }
+
+    setPhotoError(null);
+    setPhotoUploading(true);
+    try {
+      const base64 = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result.split(',')[1]);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+
+      await portalApi.uploadPhoto(slug, base64, file.type);
+      const blob = await portalApi.getPhotoBlob(slug);
+      if (photoBlobUrl) URL.revokeObjectURL(photoBlobUrl);
+      setPhotoBlobUrl(blob ? URL.createObjectURL(blob) : null);
+      setHasPhoto(true);
+    } catch (err) {
+      setPhotoError(err.message || 'Failed to upload photo.');
+    } finally {
+      setPhotoUploading(false);
+    }
+  }
+
+  async function handlePhotoRemove() {
+    if (!confirm('Remove your photo?')) return;
+    setPhotoUploading(true);
+    try {
+      await portalApi.deletePhoto(slug);
+      if (photoBlobUrl) URL.revokeObjectURL(photoBlobUrl);
+      setPhotoBlobUrl(null);
+      setHasPhoto(false);
+    } catch (err) {
+      setPhotoError(err.message || 'Failed to remove photo.');
+    } finally {
+      setPhotoUploading(false);
+    }
+  }
 
   function handleChange(field, value) {
     setForm((prev) => ({ ...prev, [field]: value }));
@@ -242,6 +313,42 @@ export default function PortalPersonalDetails() {
                   />
                   Don&apos;t allow Group Leaders to see my contact details
                 </label>
+              </div>
+
+              {/* Photo upload */}
+              <div className="sm:col-span-2">
+                <label className={labelCls}>Your Photo</label>
+                <div className="flex items-start gap-4">
+                  {photoBlobUrl ? (
+                    <img src={photoBlobUrl} alt="Your photo"
+                      className="w-20 h-20 object-cover rounded border border-slate-300" />
+                  ) : (
+                    <div className="w-20 h-20 rounded border border-dashed border-slate-300 flex items-center justify-center text-slate-400 text-xs">
+                      No photo
+                    </div>
+                  )}
+                  <div className="flex flex-col gap-2">
+                    <input type="file" accept="image/jpeg,image/png,image/gif"
+                      onChange={handlePhotoSelect}
+                      className="hidden" id="portal-photo-upload" />
+                    <label htmlFor="portal-photo-upload"
+                      className="inline-flex items-center px-3 py-1.5 border border-blue-300 text-blue-600 hover:bg-blue-50 rounded text-sm cursor-pointer transition-colors">
+                      {photoUploading ? 'Uploading...' : (hasPhoto ? 'Change Photo' : 'Choose File')}
+                    </label>
+                    {hasPhoto && (
+                      <button type="button" onClick={handlePhotoRemove}
+                        disabled={photoUploading}
+                        className="inline-flex items-center px-3 py-1.5 border border-red-300 text-red-600 hover:bg-red-50 rounded text-sm transition-colors">
+                        Remove
+                      </button>
+                    )}
+                    <p className="text-xs text-slate-500">
+                      jpg, png, or gif — max 2 MB.
+                      <br />Square format (1:1) recommended for membership cards.
+                    </p>
+                    {photoError && <p className="text-xs text-red-600 font-medium">{photoError}</p>}
+                  </div>
+                </div>
               </div>
             </div>
           </fieldset>
