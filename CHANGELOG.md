@@ -8,9 +8,17 @@ Format: `## [version] — YYYY-MM-DD` with bullet points per change.
 ## [0.7.14] — 2026-03-28
 
 ### Changed
+- Comprehensive review and update of `Beacon2 Project Definition.md`:
+  - Updated version reference from 0.7.10 to 0.7.14
+  - Added missing features to "What has been built": Letters module, Custom fields,
+    Utilities page
+  - Updated project layout tree with ~30 missing files (routes, pages, components, hooks)
+  - Rewrote "What still needs building" to accurately reflect only 2 unbuilt items
+    (public groups list + public calendar pages) plus 2 partial items
+  - Fixed outdated reference to Members Portal as "not yet built"
+  - Added portal pages (PortalHome, PortalGroups, PortalCalendar, etc.) to layout tree
 - Updated `KNOWN-ISSUES.md` — marked portal photo upload and migration DDL warning
-  as resolved; updated `Beacon2 Project Definition.md` to reflect portal photo upload
-  is complete
+  as resolved
 
 ---
 
