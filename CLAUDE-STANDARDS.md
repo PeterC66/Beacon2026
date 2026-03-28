@@ -17,8 +17,14 @@ Every item below applies to every new feature — no exceptions.
 - [ ] **Tailwind CSS only** — no custom CSS classes. Follow the common patterns in CLAUDE.md
   (inputs, buttons, table rows, cards, grids, labels).
 
-- [ ] **Shared components** — import `PageHeader`, `NavBar`, `SortableHeader`, `DateInput`
-  instead of duplicating.
+- [ ] **Shared components** — import `PageHeader`, `NavBar`, `SortableHeader`, `DateInput`,
+  `RequiredMark` instead of duplicating.
+
+- [ ] **Shared hooks** — use existing hooks instead of reimplementing:
+  `useUnsavedChanges`, `useSortedData`, `usePreferences`, `useCookieConsent`.
+
+- [ ] **Shared utilities** — use `formatMemberName()` from `usePreferences.js`,
+  `formatShortAddress()` and `formatPhone()` from `frontend/src/lib/memberFormatters.js`.
 
 - [ ] **NavBar privilege-gated links** — every NavBar link to a privileged page must use
   `disabled: !can(resource, action)` so unprivileged users see the link greyed out rather
@@ -90,6 +96,15 @@ Every item below applies to every new feature — no exceptions.
   name, which then requires quoted identifiers (`"camelCase"`) in all raw SQL and causes
   "column does not exist" errors when the table is created by a different path.
 
+## API and network
+
+- [ ] **Use `frontend/src/lib/api.js` for all backend calls** — never raw `fetch()`.
+  The client auto-attaches the Bearer token and tenant slug, handles 401 refresh,
+  and sends credentials for the httpOnly cookie.
+
+- [ ] **Handle API errors via `ApiError`** — catch blocks should check `err.status`
+  and `err.body`. 422 responses with `issues` array → map to `setFieldErrors()`.
+
 ## Code and modules
 
 - [ ] **ES modules** (`import`/`export`) throughout — never `require()`.
@@ -98,9 +113,51 @@ Every item below applies to every new feature — no exceptions.
 
 - [ ] **Access token in memory only** — never localStorage or sessionStorage.
 
+- [ ] **Auth context** — use `useAuth()` from `frontend/src/context/AuthContext.jsx`
+  to access `{ user, tenant, can(resource, action), isSiteAdmin }`. Never roll
+  your own privilege checks.
+
+## Backend routes
+
+- [ ] **Middleware chain** — every tenant route follows:
+  `requireAuth` → `requirePrivilege(resource, action)` → `async (req, res, next) => { try { … } catch (e) { next(e); } }`.
+
+- [ ] **Audit logging** — call `logAudit(slug, { userId, userName, action, entityType, entityId, entityName, detail })`
+  from `backend/src/utils/audit.js` for create/update/delete operations. `logAudit`
+  never throws, so no try/catch needed around it.
+
 ## List pages
 
 - [ ] **Sortable columns** — use `useSortedData` hook + `SortableHeader` component.
+
+## Loading states
+
+- [ ] **Initial load** — `const [loading, setLoading] = useState(true)`, call
+  `setLoading(false)` in a `finally` block after the fetch.
+
+- [ ] **Display while loading** —
+  `<p className="text-center text-slate-500 py-8">Loading...</p>`
+
+## Delete confirmations
+
+- [ ] **Use `window.confirm()` before every destructive action** — with a clear,
+  user-friendly message naming the item being deleted.
+  Example: `if (!window.confirm('Delete group "Chess Club"? This cannot be undone.')) return;`
+
+## Success and error banners
+
+- [ ] **Success banner** — use this pattern consistently:
+  ```jsx
+  <p className="rounded-md bg-green-50 border border-green-300 px-4 py-3
+     text-green-700 text-sm font-medium text-center mb-4">
+  ```
+  Auto-dismiss after 3 seconds with `setTimeout(() => setSaved(false), 3000)`.
+
+- [ ] **Error banner** — use this pattern consistently:
+  ```jsx
+  <p className="rounded-md bg-red-50 border border-red-300 px-4 py-3
+     text-red-700 text-sm text-center mb-4">
+  ```
 
 ## Testing
 
