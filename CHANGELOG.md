@@ -5,6 +5,15 @@ Format: `## [version] — YYYY-MM-DD` with bullet points per change.
 
 ---
 
+## [0.7.14] — 2026-03-28
+
+### Changed
+- Updated `KNOWN-ISSUES.md` — marked portal photo upload and migration DDL warning
+  as resolved; updated `Beacon2 Project Definition.md` to reflect portal photo upload
+  is complete
+
+---
+
 ## [0.7.10] — 2026-03-27
 
 ### Added

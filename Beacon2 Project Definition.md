@@ -156,7 +156,7 @@ Beacon2 is a ground-up rebuild with these goals:
 - **Portal personal details** (doc 10.2.4) — edit personal details (title, name, known as,
   suffix, initials, mobile, email, emergency contact, hide contact from leaders) and
   address; change password; email change triggers re-verification; confirmation email
-  via system_messages template; photo upload deferred
+  via system_messages template; **photo upload** (jpg/png/gif, max 2 MB, base64 storage)
 - **Portal replacement card** (doc 10.2.5) — request replacement membership card by email;
   validates Current status and within renewal period; uses card_replacement_confirm
   system message template; marks card as not printed
@@ -282,8 +282,7 @@ Greyed-out items in `Home.jsx` (i.e. `to: null`) are the remaining roadmap:
 - ~~Membership cards~~ (done)
 - ~~Calendar~~ (done)
 - Data migration tool (standalone import from Beacon — restore already handles this)
-- Members Portal — online renewals (doc 10.2.1) still to do; photo upload in personal
-  details deferred pending file storage infrastructure
+- Members Portal — online renewals (doc 10.2.1) still to do; ~~photo upload~~ (done)
 
 ---
 

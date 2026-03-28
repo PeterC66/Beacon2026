@@ -31,9 +31,9 @@ Items noted during development that need addressing in future sessions.
 3. **Members Portal — online renewals** — Online renewals (doc 10.2.1) are not yet
    built. The portal_config.renewals toggle exists but the feature is deferred.
 
-4. **Members Portal — photo upload** — Doc 10.2.4 describes uploading a member photo
-   for membership cards via the portal. This requires file/photo storage infrastructure
-   (S3 or R2) which is not yet implemented. Deferred. Ref: doc 10.2.4, doc 4.3.
+4. ~~**Members Portal — photo upload**~~ — **Done.** Photo upload implemented in
+   PortalPersonalDetails.jsx (base64 storage, JPEG/PNG/GIF, max 2 MB). Photos appear
+   on membership cards and group members PDF.
 
 5. **Public groups list and calendar public pages** — The Public Links page now shows
    URLs for public groups list and calendar, but the actual public-facing pages at
@@ -91,15 +91,10 @@ Items noted during development that need addressing in future sessions.
 
 ## Migration DDL warnings
 
-1. **`users_member_id_fkey` constraint already exists** — The `ALTER TABLE ADD CONSTRAINT`
-   statement for the users → members FK logs error code `42710` on every re-run because
-   `ADD CONSTRAINT IF NOT EXISTS` requires PostgreSQL 17+. The migration runner's
-   per-statement try/catch catches this and continues — it is purely cosmetic. A `DO $$`
-   block workaround is not possible because the migration runner splits statements on `;`,
-   which would break the inner `ALTER TABLE` semicolon. Options to fix:
-   - Upgrade to PostgreSQL 17+ and use `ADD CONSTRAINT IF NOT EXISTS`
-   - Enhance `migrate.js` to support `DO $$` blocks (split on `;\n` outside `$$` fences)
-   Ref: `backend/prisma/tenant_schema.sql` line ~677, `backend/src/utils/migrate.js` line ~82.
+1. ~~**`users_member_id_fkey` constraint already exists**~~ — **Fixed.** Resolved by
+   wrapping the `ALTER TABLE ADD CONSTRAINT` in a `DO $$ ... EXCEPTION WHEN
+   duplicate_object THEN NULL; END $$` block in `tenant_schema.sql` (line ~701).
+   No more cosmetic error on re-runs.
 
 ---
 
