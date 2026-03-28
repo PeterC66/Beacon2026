@@ -382,3 +382,108 @@ describe('POST /members/lapse', () => {
     expect(res.status).toBe(403);
   });
 });
+
+// ── POST /members/:id/photo ──────────────────────────────────────────────
+
+// Small 1x1 red PNG as base64
+const TINY_PNG = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg==';
+
+describe('POST /members/:id/photo', () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it('uploads a photo and returns 200', async () => {
+    tenantQuery.mockResolvedValueOnce([{ id: 'm1' }]); // member exists
+    tenantQuery.mockResolvedValueOnce([]); // UPDATE
+
+    const res = await request(app)
+      .post('/members/m1/photo')
+      .set('Authorization', AUTH)
+      .send({ data: TINY_PNG, mimeType: 'image/png' });
+
+    expect(res.status).toBe(200);
+    expect(res.body.message).toBe('Photo uploaded.');
+  });
+
+  it('rejects invalid mime type', async () => {
+    const res = await request(app)
+      .post('/members/m1/photo')
+      .set('Authorization', AUTH)
+      .send({ data: TINY_PNG, mimeType: 'image/svg+xml' });
+
+    expect(res.status).toBe(422);
+  });
+
+  it('returns 404 when member not found', async () => {
+    tenantQuery.mockResolvedValueOnce([]); // member not found
+
+    const res = await request(app)
+      .post('/members/m1/photo')
+      .set('Authorization', AUTH)
+      .send({ data: TINY_PNG, mimeType: 'image/png' });
+
+    expect(res.status).toBe(404);
+  });
+
+  it('returns 403 when privilege missing', async () => {
+    const res = await request(app)
+      .post('/members/m1/photo')
+      .set('Authorization', makeAuthHeader({ privileges: [] }))
+      .send({ data: TINY_PNG, mimeType: 'image/png' });
+    expect(res.status).toBe(403);
+  });
+});
+
+// ── DELETE /members/:id/photo ────────────────────────────────────────────
+
+describe('DELETE /members/:id/photo', () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it('removes a photo and returns 200', async () => {
+    tenantQuery.mockResolvedValueOnce([{ id: 'm1' }]); // member exists
+    tenantQuery.mockResolvedValueOnce([]); // UPDATE
+
+    const res = await request(app)
+      .delete('/members/m1/photo')
+      .set('Authorization', AUTH);
+
+    expect(res.status).toBe(200);
+    expect(res.body.message).toBe('Photo removed.');
+  });
+
+  it('returns 404 when member not found', async () => {
+    tenantQuery.mockResolvedValueOnce([]); // member not found
+
+    const res = await request(app)
+      .delete('/members/m1/photo')
+      .set('Authorization', AUTH);
+
+    expect(res.status).toBe(404);
+  });
+});
+
+// ── GET /members/:id/photo ───────────────────────────────────────────────
+
+describe('GET /members/:id/photo', () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it('returns photo binary with correct content type', async () => {
+    tenantQuery.mockResolvedValueOnce([{ photo_data: TINY_PNG, photo_mime_type: 'image/png' }]);
+
+    const res = await request(app)
+      .get('/members/m1/photo')
+      .set('Authorization', AUTH);
+
+    expect(res.status).toBe(200);
+    expect(res.headers['content-type']).toContain('image/png');
+  });
+
+  it('returns 404 when no photo exists', async () => {
+    tenantQuery.mockResolvedValueOnce([{ photo_data: null, photo_mime_type: null }]);
+
+    const res = await request(app)
+      .get('/members/m1/photo')
+      .set('Authorization', AUTH);
+
+    expect(res.status).toBe(404);
+  });
+});

@@ -141,11 +141,23 @@ async function drawCard(doc, x, y, member, settings, expiryDate, barcodePng) {
   doc.text(`Membership valid`, textX, y + 36, { width: CARD_W - 2 * pad });
   doc.text(`to ${formatCardDate(expiryDate)}`, textX, y + 44, { width: CARD_W - 2 * pad });
 
-  // ── Class name (top right area) ──
+  // ── Member photo (top right area) ──
+  const photoSize = 40;
+  const photoX = x + CARD_W - photoSize - pad;
+  const photoY = y + 6;
+  if (member.photo_data && member.photo_mime_type) {
+    try {
+      const photoBuf = Buffer.from(member.photo_data, 'base64');
+      doc.image(photoBuf, photoX, photoY, { width: photoSize, height: photoSize, fit: [photoSize, photoSize] });
+    } catch { /* skip photo if rendering fails */ }
+  }
+
+  // ── Class name (top right area, above photo or standalone) ──
   if (member.class_name) {
     doc.font('Helvetica-Bold').fontSize(6).fillColor('#003366');
     const classText = member.class_name.toUpperCase();
-    doc.text(classText, x + CARD_W - 90, y + 6, { width: 82, align: 'right' });
+    const classY = member.photo_data ? photoY + photoSize + 2 : y + 6;
+    doc.text(classText, x + CARD_W - 90, classY, { width: 82, align: 'right' });
   }
 
   // ── Coloured band at bottom ──
@@ -286,6 +298,7 @@ async function fetchMembersById(slug, ids) {
             m.surname, m.initials, m.suffix, m.email, m.mobile,
             m.status_id, m.class_id, m.next_renewal,
             m.card_printed, m.joined_on,
+            m.photo_data, m.photo_mime_type,
             ms.name AS status_name,
             mc.name AS class_name,
             a.house_no, a.street, a.add_line1, a.add_line2,

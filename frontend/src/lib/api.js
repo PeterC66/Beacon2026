@@ -243,6 +243,10 @@ export const members = {
   update:   (id, data)        => request(`/members/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
   delete:   (id)              => request(`/members/${id}`, { method: 'DELETE' }),
   getGroups: (id)             => request(`/members/${id}/groups`),
+  uploadPhoto: (id, data, mimeType) =>
+    request(`/members/${id}/photo`, { method: 'POST', body: JSON.stringify({ data, mimeType }) }),
+  deletePhoto: (id)           => request(`/members/${id}/photo`, { method: 'DELETE' }),
+  getPhotoBlob: (id)          => requestBlob(`/members/${id}/photo`),
 };
 
 // ─── Faculties ────────────────────────────────────────────────────────────

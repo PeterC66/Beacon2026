@@ -314,6 +314,7 @@ router.get('/:id/members/download', requirePrivilege('group_records_all', 'view'
       `SELECT gm.member_id, gm.is_leader, gm.waiting_since,
               m.membership_number, m.title, m.forenames, m.surname, m.known_as,
               m.email, m.mobile,
+              m.photo_data, m.photo_mime_type,
               ms.name AS status,
               a.house_no, a.street, a.town, a.postcode, a.telephone
        FROM group_members gm
@@ -349,41 +350,88 @@ router.get('/:id/members/download', requirePrivilege('group_records_all', 'view'
       const PAGE_W = 841.89; const PAGE_H = 595.28;
       const MARGIN = 36; const FONT_SZ = 7; const ROW_H = 13;
       const usableW = PAGE_W - MARGIN * 2;
-      const colW = usableW / cols.length;
       const title = `${group.name} — Members — ${stamp}`;
+
+      // Check if any member has a photo — if so, use photo-aware layout
+      const hasAnyPhoto = rows.some((m) => m.photo_data && m.photo_mime_type);
 
       const doc = new PDFDocument({ margin: MARGIN, size: 'A4', layout: 'landscape', autoFirstPage: true });
       const chunks = [];
       doc.on('data', (c) => chunks.push(c));
       const done = new Promise((resolve) => doc.on('end', resolve));
 
-      function drawHeader(y) {
-        doc.font('Helvetica-Bold').fontSize(FONT_SZ);
-        cols.forEach((f, idx) => {
-          doc.text(GROUP_MEMBER_FIELD_DEFS[f].label, MARGIN + idx * colW, y, { width: colW - 3, lineBreak: false, ellipsis: true });
-        });
-        return y + ROW_H;
-      }
-
       let y = MARGIN + 4;
       doc.font('Helvetica-Bold').fontSize(9).text(title, MARGIN, y, { lineBreak: false });
       y += 16;
-      y = drawHeader(y);
-      doc.moveTo(MARGIN, y - 2).lineTo(PAGE_W - MARGIN, y - 2).strokeColor('#aaaaaa').stroke();
 
-      doc.font('Helvetica').fontSize(FONT_SZ);
-      for (const m of rows) {
-        if (y + ROW_H > PAGE_H - MARGIN) {
-          doc.addPage({ size: 'A4', layout: 'landscape' });
-          y = MARGIN + 4;
-          y = drawHeader(y);
-          doc.moveTo(MARGIN, y - 2).lineTo(PAGE_W - MARGIN, y - 2).strokeColor('#aaaaaa').stroke();
-          doc.font('Helvetica').fontSize(FONT_SZ);
+      if (hasAnyPhoto) {
+        // Photo-aware layout: each row is taller to accommodate a small photo
+        const PHOTO_SIZE = 36;
+        const PHOTO_ROW_H = PHOTO_SIZE + 6;
+        const TEXT_X = MARGIN + PHOTO_SIZE + 8;
+        const textW = usableW - PHOTO_SIZE - 8;
+
+        for (const m of rows) {
+          if (y + PHOTO_ROW_H > PAGE_H - MARGIN) {
+            doc.addPage({ size: 'A4', layout: 'landscape' });
+            y = MARGIN + 4;
+          }
+
+          // Draw photo if available
+          if (m.photo_data && m.photo_mime_type) {
+            try {
+              const photoBuf = Buffer.from(m.photo_data, 'base64');
+              doc.image(photoBuf, MARGIN, y, { width: PHOTO_SIZE, height: PHOTO_SIZE, fit: [PHOTO_SIZE, PHOTO_SIZE] });
+            } catch { /* skip photo */ }
+          }
+
+          // Name line
+          const displayName = [m.title, m.forenames, m.surname].filter(Boolean).join(' ');
+          doc.font('Helvetica-Bold').fontSize(8).fillColor('#000000');
+          doc.text(displayName, TEXT_X, y, { width: textW, lineBreak: false, ellipsis: true });
+
+          // Details line(s)
+          doc.font('Helvetica').fontSize(FONT_SZ).fillColor('#333333');
+          const details = cols
+            .filter((f) => !['title', 'forenames', 'surname'].includes(f))
+            .map((f) => GROUP_MEMBER_FIELD_DEFS[f].get(m))
+            .filter(Boolean)
+            .join('  |  ');
+          doc.text(details, TEXT_X, y + 11, { width: textW, lineBreak: false, ellipsis: true });
+
+          // Separator
+          doc.moveTo(MARGIN, y + PHOTO_ROW_H - 3).lineTo(PAGE_W - MARGIN, y + PHOTO_ROW_H - 3).strokeColor('#dddddd').stroke();
+          y += PHOTO_ROW_H;
         }
-        cols.forEach((f, idx) => {
-          doc.text(GROUP_MEMBER_FIELD_DEFS[f].get(m), MARGIN + idx * colW, y, { width: colW - 3, lineBreak: false, ellipsis: true });
-        });
-        y += ROW_H;
+      } else {
+        // Standard tabular layout (no photos)
+        const colW = usableW / cols.length;
+
+        function drawHeader(hy) {
+          doc.font('Helvetica-Bold').fontSize(FONT_SZ);
+          cols.forEach((f, idx) => {
+            doc.text(GROUP_MEMBER_FIELD_DEFS[f].label, MARGIN + idx * colW, hy, { width: colW - 3, lineBreak: false, ellipsis: true });
+          });
+          return hy + ROW_H;
+        }
+
+        y = drawHeader(y);
+        doc.moveTo(MARGIN, y - 2).lineTo(PAGE_W - MARGIN, y - 2).strokeColor('#aaaaaa').stroke();
+
+        doc.font('Helvetica').fontSize(FONT_SZ);
+        for (const m of rows) {
+          if (y + ROW_H > PAGE_H - MARGIN) {
+            doc.addPage({ size: 'A4', layout: 'landscape' });
+            y = MARGIN + 4;
+            y = drawHeader(y);
+            doc.moveTo(MARGIN, y - 2).lineTo(PAGE_W - MARGIN, y - 2).strokeColor('#aaaaaa').stroke();
+            doc.font('Helvetica').fontSize(FONT_SZ);
+          }
+          cols.forEach((f, idx) => {
+            doc.text(GROUP_MEMBER_FIELD_DEFS[f].get(m), MARGIN + idx * colW, y, { width: colW - 3, lineBreak: false, ellipsis: true });
+          });
+          y += ROW_H;
+        }
       }
 
       doc.end();

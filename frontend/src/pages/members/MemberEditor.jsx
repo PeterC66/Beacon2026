@@ -167,6 +167,13 @@ export default function MemberEditor() {
   // ── Custom field labels ──────────────────────────────────────────────
   const [cfLabels, setCfLabels] = useState({ label1: '', label2: '', label3: '', label4: '' });
 
+  // ── Photo ──────────────────────────────────────────────────────────
+  const [hasPhoto,       setHasPhoto]       = useState(false);
+  const [photoBlobUrl,   setPhotoBlobUrl]   = useState(null);
+  const [photoUploading, setPhotoUploading] = useState(false);
+  const [photoError,     setPhotoError]     = useState(null);
+  const pendingPhotoRef = useRef(null); // { data, mimeType } for new member pre-upload
+
   const selectedClass = classes.find((c) => c.id === form.classId);
   const isAssociate   = selectedClass?.is_associate ?? false;
   const classFee      = selectedClass?.fee ?? null;
@@ -320,10 +327,20 @@ export default function MemberEditor() {
           setPartnerStatusId(m.partner_status_id ?? '');
           setPartnerClassId2(m.partner_class_id ?? '');
           setMemberPollIds(m.poll_ids ?? []);
+          setHasPhoto(!!m.has_photo);
+          if (m.has_photo) {
+            membersApi.getPhotoBlob(id).then((blob) => {
+              setPhotoBlobUrl(URL.createObjectURL(blob));
+            }).catch(() => {});
+          }
         })
         .catch((err) => setError(err.message))
         .finally(() => setLoading(false));
     }
+    // Cleanup photo blob URL on unmount or id change
+    return () => {
+      setPhotoBlobUrl((prev) => { if (prev) URL.revokeObjectURL(prev); return null; });
+    };
   }, [id]);
 
   function set(field, value) {
@@ -617,6 +634,11 @@ export default function MemberEditor() {
           try { await pollsApi.setForMember(createdId, newMemberPollIds); }
           catch { /* best-effort — member already created */ }
         }
+        // Upload photo for newly created member
+        if (createdId && pendingPhotoRef.current) {
+          try { await membersApi.uploadPhoto(createdId, pendingPhotoRef.current.data, pendingPhotoRef.current.mimeType); }
+          catch { /* best-effort — member already created */ }
+        }
         // If no payment was entered, backend switches to Applicant and returns a paymentToken.
         // Offer to email the payment link to the new applicant.
         if (created?.paymentToken && created?.email && tenant) {
@@ -675,6 +697,10 @@ export default function MemberEditor() {
               try { await pollsApi.setForMember(dup.id, newMemberPollIds); }
               catch { /* best-effort */ }
             }
+            if (dup?.id && pendingPhotoRef.current) {
+              try { await membersApi.uploadPhoto(dup.id, pendingPhotoRef.current.data, pendingPhotoRef.current.mimeType); }
+              catch { /* best-effort */ }
+            }
             if (dup?.paymentToken && dup?.email && tenant) {
               if (confirm(
                 `${dup.forenames} ${dup.surname} has been saved as an Applicant (no payment received).\n\n` +
@@ -718,6 +744,77 @@ export default function MemberEditor() {
     } catch (err) {
       setError(err.message);
       setDeleting(false);
+    }
+  }
+
+  const ALLOWED_PHOTO_TYPES = ['image/jpeg', 'image/png', 'image/gif'];
+  const MAX_PHOTO_SIZE = 2 * 1024 * 1024; // 2 MB
+
+  async function handlePhotoSelect(e) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    // Reset input so the same file can be re-selected
+    e.target.value = '';
+
+    if (!ALLOWED_PHOTO_TYPES.includes(file.type)) {
+      setPhotoError('Photo must be jpg, png, or gif.');
+      return;
+    }
+    if (file.size > MAX_PHOTO_SIZE) {
+      setPhotoError(`Photo exceeds the 2 MB limit (${(file.size / 1024 / 1024).toFixed(1)} MB).`);
+      return;
+    }
+
+    setPhotoError(null);
+    setPhotoUploading(true);
+    try {
+      const base64 = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result.split(',')[1]); // strip data:...;base64, prefix
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+
+      if (isNew) {
+        // For new members we can't upload yet — store locally for display
+        setPhotoBlobUrl(URL.createObjectURL(file));
+        setHasPhoto(true);
+        // Stash in a ref for upload after member creation
+        pendingPhotoRef.current = { data: base64, mimeType: file.type };
+      } else {
+        await membersApi.uploadPhoto(id, base64, file.type);
+        // Refresh preview
+        const blob = await membersApi.getPhotoBlob(id);
+        if (photoBlobUrl) URL.revokeObjectURL(photoBlobUrl);
+        setPhotoBlobUrl(URL.createObjectURL(blob));
+        setHasPhoto(true);
+      }
+    } catch (err) {
+      setPhotoError(err.message || 'Failed to upload photo.');
+    } finally {
+      setPhotoUploading(false);
+    }
+  }
+
+  async function handlePhotoRemove() {
+    if (!confirm('Remove this member\'s photo?')) return;
+    if (isNew) {
+      if (photoBlobUrl) URL.revokeObjectURL(photoBlobUrl);
+      setPhotoBlobUrl(null);
+      setHasPhoto(false);
+      pendingPhotoRef.current = null;
+      return;
+    }
+    setPhotoUploading(true);
+    try {
+      await membersApi.deletePhoto(id);
+      if (photoBlobUrl) URL.revokeObjectURL(photoBlobUrl);
+      setPhotoBlobUrl(null);
+      setHasPhoto(false);
+    } catch (err) {
+      setPhotoError(err.message || 'Failed to remove photo.');
+    } finally {
+      setPhotoUploading(false);
     }
   }
 
@@ -959,6 +1056,43 @@ export default function MemberEditor() {
                 Tick if eligible for Gift Aid claim (if applicable)
               </label>
             )}
+
+            {/* ── Member Photo ───────────────────────────────────────── */}
+            <div className="mt-4">
+              <label className={labelCls}>Member Photo</label>
+              <div className="flex items-start gap-4">
+                {photoBlobUrl ? (
+                  <img src={photoBlobUrl} alt="Member photo"
+                    className="w-24 h-24 object-cover rounded border border-slate-300" />
+                ) : (
+                  <div className="w-24 h-24 rounded border border-dashed border-slate-300 flex items-center justify-center text-slate-400 text-xs">
+                    No photo
+                  </div>
+                )}
+                <div className="flex flex-col gap-2">
+                  <input type="file" accept="image/jpeg,image/png,image/gif"
+                    ref={el => { if (el) el._photoInput = true; }}
+                    onChange={handlePhotoSelect}
+                    className="hidden" id="photo-upload" />
+                  <label htmlFor="photo-upload"
+                    className="inline-flex items-center px-3 py-1.5 border border-blue-300 text-blue-600 hover:bg-blue-50 rounded text-sm cursor-pointer transition-colors">
+                    {photoUploading ? 'Uploading…' : (hasPhoto ? 'Change Photo' : 'Choose File')}
+                  </label>
+                  {hasPhoto && (
+                    <button type="button" onClick={handlePhotoRemove}
+                      disabled={photoUploading}
+                      className="inline-flex items-center px-3 py-1.5 border border-red-300 text-red-600 hover:bg-red-50 rounded text-sm transition-colors">
+                      Remove
+                    </button>
+                  )}
+                  <p className="text-xs text-slate-500">
+                    jpg, png, or gif — max 2 MB.
+                    <br />Square format (1:1) recommended for membership cards.
+                  </p>
+                  {photoError && <p className="text-sm text-red-600 font-medium">{photoError}</p>}
+                </div>
+              </div>
+            </div>
           </div>
 
           {/* ── iii) Address ─────────────────────────────────────────── */}

@@ -23,7 +23,7 @@ Beacon2 is a ground-up rebuild with these goals:
 
 ---
 
-## What has been built (as of version 0.4.9)
+## What has been built (as of version 0.7.10)
 
 ### Infrastructure and platform
 - Full multi-tenant architecture (PostgreSQL schema-per-tenant)
@@ -61,7 +61,8 @@ Beacon2 is a ground-up rebuild with these goals:
   (add to poll, send email); download (Excel/PDF/email CSV); sortable columns
 - **Member record** — full edit: personal details, address (sharing/partner linking),
   phone/email/postcode validation, status, class, dates (DateInput), Gift Aid, partner
-  linking (bidirectional, auto-shares address), poll tick boxes, groups & ledger tab
+  linking (bidirectional, auto-shares address), poll tick boxes, groups & ledger tab,
+  **photo upload** (jpg/png/gif, max 2 MB, displayed on membership cards and group PDFs)
 - **Add New Member** — dedicated form with auto-Current status, Gift Aid tickbox,
   default town/county/STD code pre-fill from system settings, postcode auto-uppercase,
   creates membership payment entry
