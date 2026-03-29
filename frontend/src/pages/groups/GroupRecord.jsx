@@ -325,11 +325,13 @@ function GroupMembers({ groupId }) {
   // Selection
   const [selected,   setSelected]   = useState(new Set());
 
-  // Downloads
-  const [dlAction,   setDlAction]   = useState('');
-  const [dlFields,   setDlFields]   = useState(new Set(GROUP_DL_FIELDS.filter((f) => f.default).map((f) => f.key)));
-  const [downloading, setDownloading] = useState(false);
-  const [dlError,    setDlError]    = useState(null);
+  // Bulk actions
+  const [bulkAction,   setBulkAction]   = useState('');
+  const [bulkWorking,  setBulkWorking]  = useState(false);
+  const [bulkResult,   setBulkResult]   = useState(null);
+  const [dlFields,     setDlFields]     = useState(new Set(GROUP_DL_FIELDS.filter((f) => f.default).map((f) => f.key)));
+  const [allGroups,    setAllGroups]    = useState([]);
+  const [targetGroupId, setTargetGroupId] = useState('');
 
   const canManage = can('group_records_all', 'change');
   const { sorted: sortedMembers, sortKey, sortDir, onSort } = useSortedData(groupMembers);
@@ -338,6 +340,7 @@ function GroupMembers({ groupId }) {
     load();
     if (canManage) {
       membersApi.list({}).then(setAllMembers).catch(() => {});
+      groupsApi.list({ activeOnly: true }).then(setAllGroups).catch(() => {});
     }
   }, [groupId]);
 
@@ -421,26 +424,65 @@ function GroupMembers({ groupId }) {
     setSelected((prev) => { const n = new Set(prev); n.has(memberId) ? n.delete(memberId) : n.add(memberId); return n; });
   }
 
-  function sendEmail() {
-    sessionStorage.setItem('emailComposeMemberIds', JSON.stringify([...selected]));
-    navigate('/email/compose');
-  }
-
   function toggleDlField(key) {
     setDlFields((prev) => { const n = new Set(prev); n.has(key) ? n.delete(key) : n.add(key); return n; });
   }
 
+  async function handleBulkDo() {
+    if (selected.size === 0) return;
+    if (bulkAction === 'send_email') {
+      sessionStorage.setItem('emailComposeMemberIds', JSON.stringify([...selected]));
+      navigate('/email/compose');
+      return;
+    }
+    if (bulkAction === 'remove_members') {
+      if (!window.confirm(`Remove ${selected.size} member${selected.size !== 1 ? 's' : ''} from this group?`)) return;
+      setBulkWorking(true);
+      setBulkResult(null);
+      try {
+        const result = await groupsApi.bulkRemoveMembers(groupId, [...selected]);
+        setBulkResult({ type: 'success', msg: `${result.removed} member${result.removed !== 1 ? 's' : ''} removed from group.` });
+        setSelected(new Set());
+        await load();
+      } catch (err) {
+        setBulkResult({ type: 'error', msg: err.message });
+      } finally {
+        setBulkWorking(false);
+      }
+      return;
+    }
+    if (bulkAction === 'add_to_group') {
+      if (!targetGroupId) return;
+      setBulkWorking(true);
+      setBulkResult(null);
+      try {
+        const result = await groupsApi.bulkAddToGroup(groupId, targetGroupId, [...selected]);
+        const targetName = allGroups.find((g) => g.id === targetGroupId)?.name ?? 'group';
+        const parts = [];
+        if (result.added > 0) parts.push(`${result.added} added`);
+        if (result.waitlisted > 0) parts.push(`${result.waitlisted} waitlisted`);
+        if (result.skipped > 0) parts.push(`${result.skipped} already in group`);
+        setBulkResult({ type: 'success', msg: `"${targetName}": ${parts.join(', ')}.` });
+      } catch (err) {
+        setBulkResult({ type: 'error', msg: err.message });
+      } finally {
+        setBulkWorking(false);
+      }
+      return;
+    }
+  }
+
   async function handleDownload(format) {
-    const ids = selected.size > 0 ? [...selected] : visibleMembers.map((m) => m.member_id);
+    const ids = [...selected];
     const fields = GROUP_DL_FIELDS.filter((f) => dlFields.has(f.key)).map((f) => f.key);
-    setDownloading(true);
-    setDlError(null);
+    setBulkWorking(true);
+    setBulkResult(null);
     try {
       await groupsApi.downloadMembers(groupId, format, ids, fields);
     } catch (err) {
-      setDlError(err.message);
+      setBulkResult({ type: 'error', msg: err.message });
     } finally {
-      setDownloading(false);
+      setBulkWorking(false);
     }
   }
 
@@ -586,33 +628,65 @@ function GroupMembers({ groupId }) {
         </div>
       )}
 
-      {/* ── Bulk actions (email + download) ────────────────────────── */}
-      {visibleMembers.length > 0 && (
+      {/* ── Bulk actions (Do with selected) ─────────────────────── */}
+      {selected.size > 0 && (
         <div className="bg-white/90 rounded-lg shadow-sm p-3 space-y-3">
           <div className="flex flex-wrap gap-3 items-end">
-            {can('email', 'send') && selected.size > 0 && (
-              <button onClick={sendEmail}
-                className="bg-blue-600 hover:bg-blue-700 text-white rounded px-4 py-1.5 text-sm font-medium transition-colors">
-                Send E-mail ({selected.size})
-              </button>
-            )}
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Download</label>
-              <select name="dlAction" value={dlAction} onChange={(e) => { setDlAction(e.target.value); setDlError(null); }}
-                className="border border-slate-300 rounded px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-                <option value="">— choose format —</option>
-                <option value="excel">Download Excel</option>
-                <option value="pdf">Download PDF</option>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Do with {selected.size} selected member{selected.size !== 1 ? 's' : ''}</label>
+              <select
+                name="bulkAction"
+                value={bulkAction}
+                onChange={(e) => { setBulkAction(e.target.value); setBulkResult(null); setTargetGroupId(''); }}
+                className="border border-slate-300 rounded px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="">— choose action —</option>
+                {can('email', 'send') && <option value="send_email">Send email</option>}
+                <option value="download_excel">Download Excel</option>
+                <option value="download_pdf">Download PDF</option>
+                {canManage && <option value="remove_members">Remove members</option>}
+                {canManage && <option value="add_to_group">Add to another group</option>}
               </select>
             </div>
-            {dlError && <p className="text-sm text-red-600 font-medium">{dlError}</p>}
+
+            {bulkAction === 'add_to_group' && (
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Target group</label>
+                <select
+                  name="targetGroupId"
+                  value={targetGroupId}
+                  onChange={(e) => setTargetGroupId(e.target.value)}
+                  className="border border-slate-300 rounded px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="">— select group —</option>
+                  {allGroups.filter((g) => g.id !== groupId).map((g) => (
+                    <option key={g.id} value={g.id}>{g.name}</option>
+                  ))}
+                </select>
+              </div>
+            )}
+
+            {(bulkAction === 'send_email' || bulkAction === 'remove_members' || bulkAction === 'add_to_group') && (
+              <button
+                onClick={handleBulkDo}
+                disabled={bulkWorking || (bulkAction === 'add_to_group' && !targetGroupId)}
+                className="bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white rounded px-4 py-1.5 text-sm font-medium transition-colors"
+              >
+                {bulkWorking ? 'Working…' : 'Do with selected'}
+              </button>
+            )}
+
+            {bulkResult && (
+              <p className={`text-sm font-medium ${bulkResult.type === 'success' ? 'text-green-700' : 'text-red-600'}`}>
+                {bulkResult.msg}
+              </p>
+            )}
           </div>
 
-          {(dlAction === 'excel' || dlAction === 'pdf') && (
+          {/* Field picker for Excel / PDF downloads */}
+          {(bulkAction === 'download_excel' || bulkAction === 'download_pdf') && (
             <div className="border border-slate-200 rounded p-3 bg-slate-50">
-              <p className="text-sm font-medium text-slate-700 mb-2">
-                Fields to include {selected.size > 0 ? `(${selected.size} selected members)` : '(all visible members)'}:
-              </p>
+              <p className="text-sm font-medium text-slate-700 mb-2">Fields to include:</p>
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-x-4 gap-y-1 mb-3">
                 {GROUP_DL_FIELDS.map((f) => (
                   <label key={f.key} className="flex items-center gap-1.5 text-sm cursor-pointer">
@@ -622,9 +696,10 @@ function GroupMembers({ groupId }) {
                   </label>
                 ))}
               </div>
-              <button onClick={() => handleDownload(dlAction)} disabled={downloading || dlFields.size === 0}
+              <button onClick={() => handleDownload(bulkAction === 'download_excel' ? 'excel' : 'pdf')}
+                disabled={bulkWorking || dlFields.size === 0}
                 className="bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white rounded px-4 py-1.5 text-sm font-medium transition-colors">
-                {downloading ? 'Downloading…' : `Download ${dlAction === 'excel' ? 'Excel' : 'PDF'}`}
+                {bulkWorking ? 'Downloading…' : `Download ${bulkAction === 'download_excel' ? 'Excel' : 'PDF'}`}
               </button>
             </div>
           )}

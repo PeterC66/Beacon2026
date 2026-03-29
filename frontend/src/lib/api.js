@@ -303,6 +303,10 @@ export const groups = {
     const qs = new URLSearchParams({ format, ids: ids.join(','), fields: fields.join(',') });
     return requestBlob(`/groups/${id}/members/download?${qs}`);
   },
+  bulkRemoveMembers: (id, memberIds) =>
+    request(`/groups/${id}/members/bulk`, { method: 'DELETE', body: JSON.stringify({ memberIds }) }),
+  bulkAddToGroup: (id, targetGroupId, memberIds) =>
+    request(`/groups/${id}/members/bulk-add`, { method: 'POST', body: JSON.stringify({ memberIds, targetGroupId }) }),
 
   listEvents:   (id)             => request(`/groups/${id}/events`),
   createEvents: (id, data)       => request(`/groups/${id}/events`, { method: 'POST', body: JSON.stringify(data) }),

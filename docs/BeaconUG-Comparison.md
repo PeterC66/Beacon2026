@@ -313,6 +313,7 @@
 | Mark leaders | Built | — |
 | Waiting list with auto-enforcement | Built | — |
 | PDF download with photos | Built | Includes member photos when available; falls back to tabular layout when no photos exist |
+| Bulk actions (Do with selected) | Built | Send email, Download Excel/PDF, Remove members, Add to another group (with waiting-list support) |
 
 ---
 
