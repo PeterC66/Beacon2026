@@ -157,6 +157,11 @@
 | Default town/county/STD code pre-fill | Built | From system settings |
 | Postcode auto-uppercase | Built | — |
 | Creates membership payment entry | Built | — |
+| Joined date hidden (auto-filled) | Built | Set automatically, not shown on add form |
+| Send email hidden on add | Built | Button only shown for saved members |
+| Emergency contact above Notes | Built | — |
+| Payment overpayment highlight | Built | Blue banner showing donation amount |
+| Payment underpayment highlight | Built | Amber banner showing shortfall |
 
 ---
 
