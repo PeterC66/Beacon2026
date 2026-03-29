@@ -16,6 +16,7 @@ vi.mock('../lib/api.js', () => ({
   memberStatuses: { list: vi.fn().mockResolvedValue([]) },
   memberClasses:  { list: vi.fn().mockResolvedValue([]) },
   polls:          { list: vi.fn().mockResolvedValue([]), addMembers: vi.fn() },
+  groups:         { list: vi.fn().mockResolvedValue([]) },
   settings:       { getCustomFieldLabels: vi.fn().mockResolvedValue({ label1: '', label2: '', label3: '', label4: '' }) },
 }));
 

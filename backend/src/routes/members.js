@@ -172,7 +172,9 @@ router.get('/', requirePrivilege('members_list', 'view'), async (req, res, next)
               a.house_no, a.street, a.town, a.postcode,
               m.joined_on, m.next_renewal, m.partner_id,
               m.custom_field_1, m.custom_field_2,
-              m.custom_field_3, m.custom_field_4
+              m.custom_field_3, m.custom_field_4,
+              (m.portal_password_hash IS NOT NULL) AS has_portal_password,
+              m.portal_email_verified
        FROM members m
        LEFT JOIN member_statuses ms ON ms.id = m.status_id
        LEFT JOIN member_classes  mc ON mc.id = m.class_id

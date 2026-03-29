@@ -279,6 +279,12 @@ export const groups = {
     const query = qs.toString();
     return request(`/groups${query ? '?' + query : ''}`);
   },
+  download: (format, ids, fields) => {
+    const qs = new URLSearchParams({ format, ids: ids.join(','), fields: fields.join(',') });
+    return requestBlob(`/groups/download?${qs}`);
+  },
+  bulkAddMembers: (id, memberIds) =>
+    request(`/groups/${id}/members/bulk`, { method: 'POST', body: JSON.stringify({ memberIds }) }),
   get:    (id)       => request(`/groups/${id}`),
   create: (data)     => request('/groups', { method: 'POST', body: JSON.stringify(data) }),
   update: (id, data) => request(`/groups/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
