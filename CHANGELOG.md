@@ -13,6 +13,12 @@ Format: `## [version] — YYYY-MM-DD` with bullet points per change.
 - Backend endpoints for bulk remove (`DELETE /groups/:id/members/bulk`) and
   bulk add-to-group (`POST /groups/:id/members/bulk-add`) with waiting-list support
 - Backend tests for both new endpoints (6 new tests)
+### Changed
+- Add New Member: hide Joined date field (auto-filled behind the scenes)
+- Add New Member: hide Send email button (member not yet saved)
+- Add New Member: moved Emergency contact above Notes
+- Add New Member: overpayment now shown as highlighted blue banner ("£X will be put to donations")
+- Add New Member: underpayment now shown as highlighted amber banner ("£X more needed to become a member")
 
 ---
 
