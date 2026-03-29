@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { members as membersApi, memberStatuses as statusApi, memberClasses as classApi, polls as pollsApi, settings as settingsApi } from '../../lib/api.js';
+import { members as membersApi, memberStatuses as statusApi, memberClasses as classApi, polls as pollsApi, groups as groupsApi, settings as settingsApi } from '../../lib/api.js';
 
 const DOWNLOAD_FIELDS = [
   { key: 'membership_number', label: 'Membership No', default: true },
@@ -68,6 +68,8 @@ export default function MemberList() {
   const [selected,      setSelected]      = useState(new Set());
   const [bulkAction,    setBulkAction]    = useState('');
   const [addToPollId,   setAddToPollId]   = useState('');
+  const [addToGroupId,  setAddToGroupId]  = useState('');
+  const [allGroups,     setAllGroups]     = useState([]);
   const [bulkWorking,   setBulkWorking]   = useState(false);
   const [bulkResult,    setBulkResult]    = useState(null);
 
@@ -80,7 +82,7 @@ export default function MemberList() {
   const rowRefs = useRef({});
   const tableRef = useRef(null);
 
-  // Load statuses, classes, polls once
+  // Load statuses, classes, polls, groups once
   useEffect(() => {
     Promise.all([statusApi.list(), classApi.list(), pollsApi.list()])
       .then(([s, c, p]) => {
@@ -92,6 +94,7 @@ export default function MemberList() {
       })
       .catch(() => {});
     settingsApi.getCustomFieldLabels().then(setCfLabels).catch(() => {});
+    groupsApi.list({ activeOnly: true }).then(setAllGroups).catch(() => {});
   }, []);
 
   // Load members whenever filters change
@@ -197,6 +200,24 @@ export default function MemberList() {
         setBulkWorking(false);
       }
     }
+    if (bulkAction === 'add_to_group') {
+      if (!addToGroupId) return;
+      setBulkWorking(true);
+      setBulkResult(null);
+      try {
+        const result = await groupsApi.bulkAddMembers(addToGroupId, [...selected]);
+        const groupName = allGroups.find((g) => g.id === addToGroupId)?.name ?? 'group';
+        const parts = [];
+        if (result.added)      parts.push(`${result.added} added`);
+        if (result.waitlisted) parts.push(`${result.waitlisted} waitlisted`);
+        if (result.skipped)    parts.push(`${result.skipped} already in group`);
+        setBulkResult({ type: 'success', msg: `"${groupName}": ${parts.join(', ')}.` });
+      } catch (err) {
+        setBulkResult({ type: 'error', msg: err.message });
+      } finally {
+        setBulkWorking(false);
+      }
+    }
   }
 
   function toggleDlField(key) {
@@ -232,6 +253,7 @@ export default function MemberList() {
   ];
 
   const hasBulkPolls = can('poll_set_up', 'change') && polls.length > 0;
+  const hasBulkGroups = can('group_records_all', 'change') && allGroups.length > 0;
 
   return (
     <div className="min-h-screen pb-10">
@@ -504,6 +526,7 @@ export default function MemberList() {
                         {can('email', 'send') && <option value="send_email">Send email</option>}
                         {can('letters', 'view') && <option value="send_letter">Send letter</option>}
                         {hasBulkPolls && <option value="add_to_poll">Add to poll</option>}
+                        {hasBulkGroups && <option value="add_to_group">Add to group</option>}
                         <option value="download_excel">Download Excel</option>
                         <option value="download_pdf">Download PDF</option>
                         <option value="download_emails">Download email addresses</option>
@@ -525,10 +548,25 @@ export default function MemberList() {
                       </div>
                     )}
 
-                    {(bulkAction === 'send_email' || bulkAction === 'send_letter' || bulkAction === 'add_to_poll') && (
+                    {bulkAction === 'add_to_group' && (
+                      <div>
+                        <label className="block text-sm font-medium text-slate-700 mb-1">Group</label>
+                        <select
+                          name="addToGroupId"
+                          value={addToGroupId}
+                          onChange={(e) => setAddToGroupId(e.target.value)}
+                          className="border border-slate-300 rounded px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        >
+                          <option value="">— select group —</option>
+                          {allGroups.map((g) => <option key={g.id} value={g.id}>{g.name}</option>)}
+                        </select>
+                      </div>
+                    )}
+
+                    {(bulkAction === 'send_email' || bulkAction === 'send_letter' || bulkAction === 'add_to_poll' || bulkAction === 'add_to_group') && (
                       <button
                         onClick={handleBulkDo}
-                        disabled={bulkWorking || (bulkAction === 'add_to_poll' && !addToPollId)}
+                        disabled={bulkWorking || (bulkAction === 'add_to_poll' && !addToPollId) || (bulkAction === 'add_to_group' && !addToGroupId)}
                         className="bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white rounded px-4 py-1.5 text-sm font-medium transition-colors"
                       >
                         {bulkWorking ? 'Working…' : 'Do with selected'}

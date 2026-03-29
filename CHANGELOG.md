@@ -5,6 +5,20 @@ Format: `## [version] — YYYY-MM-DD` with bullet points per change.
 
 ---
 
+## [0.7.16] — 2026-03-29
+
+### Added
+- **Members list** — "Add to group" bulk action: select members and add them to a
+  chosen group, respecting max-members and waiting-list logic
+- **Groups list** — row selection with checkboxes and "Do with selected" bulk actions:
+  - "Send email to leaders" — emails all leaders of the selected groups
+  - "Download Excel" / "Download PDF" — download group data with field selection
+  - "Add members to poll" — adds all members of selected groups to a chosen poll
+- Backend `POST /groups/:id/members/bulk` endpoint for bulk adding members to a group
+- Backend `GET /groups/download` endpoint for downloading groups list as Excel/PDF
+
+---
+
 ## [0.7.15] — 2026-03-28
 
 ### Added

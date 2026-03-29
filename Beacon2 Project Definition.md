@@ -58,7 +58,7 @@ Beacon2 is a ground-up rebuild with these goals:
 
 ### Membership module
 - **Members list** — status/class/poll/letter/search filters; row selection; bulk actions
-  (add to poll, send email); download (Excel/PDF/email CSV); sortable columns
+  (add to poll, add to group, send email, send letter); download (Excel/PDF/email CSV); sortable columns
 - **Member record** — full edit: personal details, address (sharing/partner linking),
   phone/email/postcode validation, status, class, dates (DateInput), Gift Aid, partner
   linking (bidirectional, auto-shares address), poll tick boxes, groups & ledger tab,
@@ -81,7 +81,8 @@ Beacon2 is a ground-up rebuild with these goals:
 - **Addresses export** — filtered download (Excel/CSV/TSV/TAM) + PDF label printing
 
 ### Groups module
-- **Groups list** — sortable; create/edit/delete
+- **Groups list** — sortable; create/edit/delete; row selection; bulk actions
+  (send email to leaders, download Excel/PDF, add members to poll)
 - **Group record** — Details, Members, Schedule, Ledger tabs
 - **Group members** — add/remove; mark leaders; waiting list with auto-enforcement
 - **Group schedule** — single + recurring events; inline edit; bulk delete
