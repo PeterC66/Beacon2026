@@ -899,14 +899,16 @@ export default function MemberEditor() {
                 </select>
                 {fieldErrors.classId && <p className={errMsgCls}>{fieldErrors.classId}</p>}
               </div>
-              <div>
-                <label className={labelCls}>Joined <RequiredMark /></label>
-                <DateInput name="joinedOn" value={form.joinedOn}
-                  onChange={(v) => set('joinedOn', v)}
-                  onBlur={() => handleBlur('joinedOn')}
-                  className={ic('joinedOn')} />
-                {fieldErrors.joinedOn && <p className={errMsgCls}>{fieldErrors.joinedOn}</p>}
-              </div>
+              {!isNew && (
+                <div>
+                  <label className={labelCls}>Joined <RequiredMark /></label>
+                  <DateInput name="joinedOn" value={form.joinedOn}
+                    onChange={(v) => set('joinedOn', v)}
+                    onBlur={() => handleBlur('joinedOn')}
+                    className={ic('joinedOn')} />
+                  {fieldErrors.joinedOn && <p className={errMsgCls}>{fieldErrors.joinedOn}</p>}
+                </div>
+              )}
               {!isNew && (
                 <div>
                   <label className={labelCls}>Next renewal</label>
@@ -973,20 +975,22 @@ export default function MemberEditor() {
                     onChange={(e) => set('email', e.target.value)}
                     className={inputCls} />
                 </div>
-                <div>
-                  {form.email && can('email', 'send') && (
-                    <button type="button"
-                      onClick={() => {
-                        sessionStorage.setItem('emailComposeMemberIds', JSON.stringify([id]));
-                        navigate('/email/compose');
-                      }}
-                      className="border border-blue-300 text-blue-600 hover:bg-blue-50 rounded px-3 py-2 text-sm transition-colors whitespace-nowrap"
-                      title="Press to send an email to this member"
-                    >
-                      Send email
-                    </button>
-                  )}
-                </div>
+                {!isNew && (
+                  <div>
+                    {form.email && can('email', 'send') && (
+                      <button type="button"
+                        onClick={() => {
+                          sessionStorage.setItem('emailComposeMemberIds', JSON.stringify([id]));
+                          navigate('/email/compose');
+                        }}
+                        className="border border-blue-300 text-blue-600 hover:bg-blue-50 rounded px-3 py-2 text-sm transition-colors whitespace-nowrap"
+                        title="Press to send an email to this member"
+                      >
+                        Send email
+                      </button>
+                    )}
+                  </div>
+                )}
               </div>
               <div>
                 <label className={labelCls}>Mobile</label>
@@ -1027,18 +1031,18 @@ export default function MemberEditor() {
             </div>
 
             <div className="mt-4">
-              <label className={labelCls}>Notes</label>
-              <textarea name="notes" rows={3} value={form.notes}
-                onChange={(e) => set('notes', e.target.value)}
-                className={inputCls} />
-            </div>
-
-            <div className="mt-4">
               <label className={labelCls}>Emergency contact <span className="text-slate-400 font-normal">(name and phone)</span></label>
               <input type="text" name="emergencyContact" value={form.emergencyContact}
                 onChange={(e) => set('emergencyContact', e.target.value)}
                 className={inputCls} maxLength={200}
                 placeholder="e.g. John Smith 07700 900123" />
+            </div>
+
+            <div className="mt-4">
+              <label className={labelCls}>Notes</label>
+              <textarea name="notes" rows={3} value={form.notes}
+                onChange={(e) => set('notes', e.target.value)}
+                className={inputCls} />
             </div>
 
             <label className="flex items-center gap-2 mt-3 text-sm cursor-pointer">
@@ -1373,8 +1377,13 @@ export default function MemberEditor() {
                 </div>
               </div>
               {classFee !== null && form.payAmount && parseFloat(form.payAmount) > classFee + 0.001 && (
-                <p className="text-xs text-blue-600 mt-2">
-                  Amount exceeds expected fee — £{(parseFloat(form.payAmount) - classFee).toFixed(2)} will be recorded as a donation.
+                <p className="text-sm font-medium text-blue-700 bg-blue-50 border border-blue-200 rounded px-3 py-2 mt-2">
+                  £{(parseFloat(form.payAmount) - classFee).toFixed(2)} will be put to donations.
+                </p>
+              )}
+              {classFee !== null && classFee > 0 && form.payAmount && parseFloat(form.payAmount) > 0 && parseFloat(form.payAmount) < classFee - 0.001 && (
+                <p className="text-sm font-medium text-amber-700 bg-amber-50 border border-amber-200 rounded px-3 py-2 mt-2">
+                  £{(classFee - parseFloat(form.payAmount)).toFixed(2)} more needed to become a member.
                 </p>
               )}
               {!form.payAmount && (
