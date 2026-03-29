@@ -132,6 +132,35 @@ delete the user record from the database first via Render's database dashboard.
 
 ---
 
+## Replacing the database (e.g. free tier expiry)
+
+Render's free PostgreSQL databases are deleted after 90 days. When this happens
+you need to create a new one and point the backend at it.
+
+1. In Render, click **New → PostgreSQL**
+   - Region: **Frankfurt** (same as the backend)
+   - Database name: `beacon2`, User: `beacon2`
+   - Plan: choose as needed (free = another 90 days; Starter = $7/month, no expiry)
+
+2. Once the new database is ready, copy its **Internal Database URL**
+   (it starts with `postgresql://beacon2:…`)
+
+3. Go to the `beacon2-backend` service → **Environment**
+   - Replace the `DATABASE_URL` value with the new Internal Database URL
+   - Click **Save Changes** — the backend restarts automatically
+
+4. **That's it.** On restart the backend automatically creates all tables and
+   seeds your admin account. No manual migration needed.
+
+5. The **frontend needs no changes** — it talks to the backend URL, which hasn't changed.
+
+**Important — data:** The old database's data is lost unless you export it first.
+Render emails you before deletion with a deadline. If you need to keep the data,
+use the database dashboard's **PSQL** tab to run `pg_dump` before the deadline,
+then `pg_restore` into the new database after creating it.
+
+---
+
 ## When you're ready to move beyond POC
 
 Three things to do, in order:

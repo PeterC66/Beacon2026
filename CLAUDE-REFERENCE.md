@@ -1469,75 +1469,19 @@ When adding a new page/route, add a corresponding entry to `ROUTE_HELP_TERMS` in
 
 ## 25. Deployment and Infrastructure
 
-### Architecture overview
+See `DEPLOYMENT.md` for the full step-by-step guide (written for non-technical users).
+Key facts for developers:
 
 | Component | Hosted on | Config |
 |-----------|-----------|--------|
-| Frontend | Vercel | Static React build (Vite) |
-| Backend | Render (web service) | Node.js, `backend/` root dir |
+| Frontend | Vercel | Static React build (Vite), `VITE_API_URL` points to backend |
+| Backend | Render (web service) | Node.js, `backend/` root dir, config in `render.yaml` |
 | Database | Render (PostgreSQL) | Schema-per-tenant, `beacon2` DB |
 
-Deployment is defined in `render.yaml` at the repo root.
+**Environment variables** are listed in `render.yaml` (backend) and set in the
+Vercel dashboard (frontend: `VITE_API_URL`, `VITE_ZENDESK_KEY`).
 
-### Environment variables
-
-**Backend (set in Render dashboard):**
-
-| Variable | Source | Notes |
-|----------|--------|-------|
-| `DATABASE_URL` | Render DB (auto-linked) | `postgresql://beacon2:…@dpg-…/beacon2` |
-| `JWT_ACCESS_SECRET` | Manual | Random 64-char string |
-| `JWT_REFRESH_SECRET` | Manual | Different random 64-char string |
-| `SEED_ADMIN_EMAIL` | Manual | System admin login (default `admin@beacon2.local`) |
-| `SEED_ADMIN_PASSWORD` | Manual | Set before first deploy |
-| `CORS_ORIGIN` | Manual | Vercel frontend URL |
-| `NODE_ENV` | `render.yaml` | `production` |
-| `PORT` | `render.yaml` | `3001` |
-| `USE_REDIS` | `render.yaml` | `false` (POC) |
-| `JWT_ACCESS_EXPIRES_IN` | `render.yaml` | `15m` |
-| `JWT_REFRESH_EXPIRES_DAYS` | `render.yaml` | `30` |
-| `BCRYPT_ROUNDS` | `render.yaml` | `12` |
-| `SENDGRID_API_KEY` | Manual (optional) | For transactional emails |
-
-**Frontend (set in Vercel dashboard):**
-
-| Variable | Notes |
-|----------|-------|
-| `VITE_API_URL` | Render backend URL (e.g. `https://beacon2-backend.onrender.com`) |
-| `VITE_ZENDESK_KEY` | Zendesk widget key (optional) |
-
-### Replacing the PostgreSQL database (e.g. Render free tier expiry)
-
-When Render deletes a free-tier database, follow these steps:
-
-1. **Create a new PostgreSQL instance** on Render
-   - Region: **Frankfurt** (same as backend service)
-   - Database name: `beacon2`, User: `beacon2`
-   - Plan: choose appropriately (free tier has a 90-day limit; Starter is $7/month)
-
-2. **Update `DATABASE_URL`** on the backend service
-   - Go to the **beacon2-backend** service → Environment
-   - Replace `DATABASE_URL` with the **Internal Database URL** from the new instance
-   - All other environment variables stay the same
-
-3. **Redeploy the backend**
-   - Trigger a manual deploy; on startup `migrate.js` automatically:
-     - Runs `prisma db push` to create system tables (`sys_tenants`, `sys_admins`, `sys_settings`)
-     - Seeds the system admin from `SEED_ADMIN_EMAIL` / `SEED_ADMIN_PASSWORD`
-     - Migrates and seeds all tenant schemas (none on a fresh DB)
-
-4. **Frontend — no changes needed**
-   - `VITE_API_URL` points to the backend service URL, which doesn't change
-
-5. **Data migration (optional)**
-   - The old database data is lost unless exported beforehand
-   - Before the old DB is deleted, run `pg_dump` to export and `pg_restore` into the new instance
-   - Render sends an email with the deletion deadline — act before then
-
-### Auto-migration on startup
-
-The backend calls `migrateTenantSchemas()` on every startup (see §1). This means:
-- No manual migration step is needed after a database replacement
-- New tables, columns, indexes, and seed data are applied automatically
-- All DDL is idempotent (`IF NOT EXISTS`, `ON CONFLICT DO NOTHING`)
+**Database replacement** (e.g. free tier expiry): create a new Render PostgreSQL
+instance, update `DATABASE_URL` on the backend service, and save. Auto-migration
+on startup (see §1) handles the rest. Full instructions in `DEPLOYMENT.md`.
 
