@@ -71,6 +71,126 @@ router.get('/', requirePrivilege('groups_list', 'view'), async (req, res, next) 
   }
 });
 
+// ─── GET /groups/download ─────────────────────────────────────────────────
+// Download selected groups as Excel or PDF.
+// Query params: format (excel|pdf), ids (comma-separated group IDs), fields (comma-separated)
+
+const GROUP_LIST_FIELD_DEFS = {
+  name:         { label: 'Group',        get: (g) => g.name ?? '' },
+  when_text:    { label: 'When',         get: (g) => g.when_text ?? '' },
+  leaders:      { label: 'Leader(s)',    get: (g) => (g.leaders ?? []).map((l) => `${l.forenames} ${l.surname}`).join(', ') },
+  member_count: { label: 'Members',      get: (g) => g.member_count ?? 0 },
+  status:       { label: 'Status',       get: (g) => g.status ?? '' },
+  faculty_name: { label: 'Faculty',      get: (g) => g.faculty_name ?? '' },
+  enquiries:    { label: 'Enquiries',    get: (g) => g.enquiries ?? '' },
+  information:  { label: 'Information',  get: (g) => g.information ?? '' },
+};
+
+router.get('/download', requirePrivilege('groups_list', 'download'), async (req, res, next) => {
+  try {
+    const { format = 'excel', ids = '', fields = '' } = req.query;
+    const slug = req.user.tenantSlug;
+
+    const groupIds = ids.split(',').map((s) => s.trim()).filter(Boolean);
+    if (groupIds.length === 0) throw AppError('No groups selected.', 400);
+
+    const rows = await tenantQuery(
+      slug,
+      `SELECT g.id, g.name, g.faculty_id, f.name AS faculty_name,
+              g.status, g.when_text, g.enquiries, g.information,
+              (SELECT COUNT(*)::int FROM group_members gm
+               WHERE gm.group_id = g.id AND gm.waiting_since IS NULL) AS member_count,
+              (SELECT COALESCE(
+                 json_agg(json_build_object(
+                   'forenames', m.forenames,
+                   'surname',   m.surname
+                 ) ORDER BY m.surname, m.forenames),
+                 '[]'::json
+               )
+               FROM group_members gm
+               JOIN members m ON m.id = gm.member_id
+               WHERE gm.group_id = g.id AND gm.is_leader = true) AS leaders
+       FROM groups g
+       LEFT JOIN faculties f ON f.id = g.faculty_id
+       WHERE g.id = ANY($1::text[])
+       ORDER BY g.name`,
+      [groupIds],
+    );
+
+    const activeCols = fields.split(',').map((s) => s.trim()).filter((f) => f && GROUP_LIST_FIELD_DEFS[f]);
+    const cols = activeCols.length ? activeCols : Object.keys(GROUP_LIST_FIELD_DEFS);
+
+    const tenantPart = slug.replace(/^u3a_/, '');
+    const stamp = new Date().toISOString().slice(0, 10);
+
+    if (format === 'excel') {
+      const wb = new ExcelJS.Workbook();
+      const ws = wb.addWorksheet('Groups');
+      ws.columns = cols.map((f) => ({ header: GROUP_LIST_FIELD_DEFS[f].label, width: 22 }));
+      ws.getRow(1).font = { bold: true };
+      for (const g of rows) ws.addRow(cols.map((f) => GROUP_LIST_FIELD_DEFS[f].get(g)));
+      res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+      res.setHeader('Content-Disposition', `attachment; filename="${tenantPart}_groups_${stamp}.xlsx"`);
+      await wb.xlsx.write(res);
+      return res.end();
+    }
+
+    if (format === 'pdf') {
+      const PAGE_W = 841.89; const PAGE_H = 595.28;
+      const MARGIN = 36; const FONT_SZ = 8; const ROW_H = 14;
+      const usableW = PAGE_W - MARGIN * 2;
+      const title = `Groups — ${stamp}`;
+
+      const doc = new PDFDocument({ margin: MARGIN, size: 'A4', layout: 'landscape', autoFirstPage: true });
+      const chunks = [];
+      doc.on('data', (c) => chunks.push(c));
+      const done = new Promise((resolve) => doc.on('end', resolve));
+
+      let y = MARGIN + 4;
+      doc.font('Helvetica-Bold').fontSize(10).text(title, MARGIN, y, { lineBreak: false });
+      y += 18;
+
+      const colW = usableW / cols.length;
+
+      function drawHeader(hy) {
+        doc.font('Helvetica-Bold').fontSize(FONT_SZ);
+        cols.forEach((f, idx) => {
+          doc.text(GROUP_LIST_FIELD_DEFS[f].label, MARGIN + idx * colW, hy, { width: colW - 3, lineBreak: false, ellipsis: true });
+        });
+        return hy + ROW_H;
+      }
+
+      y = drawHeader(y);
+      doc.moveTo(MARGIN, y - 2).lineTo(PAGE_W - MARGIN, y - 2).strokeColor('#aaaaaa').stroke();
+
+      doc.font('Helvetica').fontSize(FONT_SZ);
+      for (const g of rows) {
+        if (y + ROW_H > PAGE_H - MARGIN) {
+          doc.addPage({ size: 'A4', layout: 'landscape' });
+          y = MARGIN + 4;
+          y = drawHeader(y);
+          doc.moveTo(MARGIN, y - 2).lineTo(PAGE_W - MARGIN, y - 2).strokeColor('#aaaaaa').stroke();
+          doc.font('Helvetica').fontSize(FONT_SZ);
+        }
+        cols.forEach((f, idx) => {
+          const val = GROUP_LIST_FIELD_DEFS[f].get(g);
+          doc.text(String(val), MARGIN + idx * colW, y, { width: colW - 3, lineBreak: false, ellipsis: true });
+        });
+        y += ROW_H;
+      }
+
+      doc.end();
+      await done;
+      const buf = Buffer.concat(chunks);
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader('Content-Disposition', `attachment; filename="${tenantPart}_groups_${stamp}.pdf"`);
+      return res.send(buf);
+    }
+
+    throw AppError('Invalid format.', 400);
+  } catch (err) { next(err); }
+});
+
 // ─── GET /groups/:id ──────────────────────────────────────────────────────
 
 router.get('/:id', requirePrivilege('group_records_all', 'view'), async (req, res, next) => {
@@ -518,6 +638,70 @@ router.post('/:id/members', requirePrivilege('group_records_all', 'change'), asy
       forenames: member.forenames,
       surname: member.surname,
     });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// ─── POST /groups/:id/members/bulk ───────────────────────────────────────
+// Bulk-add multiple members to a group (from Members list "Add to group").
+// Respects max-members / waiting-list logic per member.
+
+const bulkAddMembersSchema = z.object({
+  memberIds: z.array(z.string().min(1)).min(1),
+});
+
+router.post('/:id/members/bulk', requirePrivilege('group_records_all', 'change'), async (req, res, next) => {
+  try {
+    const slug = req.user.tenantSlug;
+    const { memberIds } = bulkAddMembersSchema.parse(req.body);
+
+    const [group] = await tenantQuery(slug, `SELECT id, max_members, enable_waiting_list FROM groups WHERE id = $1`, [req.params.id]);
+    if (!group) throw AppError('Group not found.', 404);
+
+    // Current joined count (excluding waiting list)
+    const [{ count: joinedCount }] = await tenantQuery(
+      slug,
+      `SELECT COUNT(*)::int AS count FROM group_members WHERE group_id = $1 AND waiting_since IS NULL`,
+      [req.params.id],
+    );
+
+    let added = 0;
+    let skipped = 0;
+    let waitlisted = 0;
+    let currentJoined = joinedCount;
+
+    for (const memberId of memberIds) {
+      // Skip if already in group
+      const [existing] = await tenantQuery(
+        slug,
+        `SELECT id FROM group_members WHERE group_id = $1 AND member_id = $2`,
+        [req.params.id, memberId],
+      );
+      if (existing) { skipped++; continue; }
+
+      // Determine whether to add to waiting list
+      const addToWaiting = group.enable_waiting_list &&
+        group.max_members !== null &&
+        currentJoined >= group.max_members;
+
+      const waitingSince = addToWaiting ? new Date().toISOString().slice(0, 10) : null;
+
+      await tenantQuery(
+        slug,
+        `INSERT INTO group_members (group_id, member_id, waiting_since) VALUES ($1, $2, $3::date)`,
+        [req.params.id, memberId, waitingSince],
+      );
+
+      if (addToWaiting) {
+        waitlisted++;
+      } else {
+        currentJoined++;
+        added++;
+      }
+    }
+
+    res.json({ added, skipped, waitlisted });
   } catch (err) {
     next(err);
   }

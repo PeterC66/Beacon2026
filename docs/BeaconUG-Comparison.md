@@ -95,7 +95,7 @@
 |--------|--------|-------|
 | Member list with filters | Built | Status/class/poll/letter/search filters |
 | Row selection | Built | Checkbox selection for bulk actions |
-| Bulk actions (add to poll, send email) | Built | — |
+| Bulk actions (add to poll, add to group, send email, send letter) | Built | — |
 | Download (Excel/PDF/email CSV) | Built | — |
 | Sortable columns | Built | Via `useSortedData` hook |
 | **Beacon2 extra:** Letter filter | Beacon2 extra | Filter members by letter assignment |
@@ -279,6 +279,7 @@
 |--------|--------|-------|
 | Sortable groups list | Built | — |
 | Create/edit/delete groups | Built | — |
+| Row selection + bulk actions | Built | Send email to leaders, download Excel/PDF, add members to poll |
 
 ---
 

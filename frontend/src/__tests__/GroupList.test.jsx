@@ -14,6 +14,7 @@ vi.mock('../context/AuthContext.jsx', () => ({
 vi.mock('../lib/api.js', () => ({
   groups:    { list: vi.fn().mockResolvedValue([]) },
   faculties: { list: vi.fn().mockResolvedValue([]) },
+  polls:     { list: vi.fn().mockResolvedValue([]) },
 }));
 
 describe('GroupList page', () => {
