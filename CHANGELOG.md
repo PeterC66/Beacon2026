@@ -5,6 +5,17 @@ Format: `## [version] — YYYY-MM-DD` with bullet points per change.
 
 ---
 
+## [0.7.16] — 2026-03-29
+
+### Added
+- Group members bulk actions ("Do with selected") — unified dropdown with:
+  Send email, Download Excel, Download PDF, Remove members, Add to another group
+- Backend endpoints for bulk remove (`DELETE /groups/:id/members/bulk`) and
+  bulk add-to-group (`POST /groups/:id/members/bulk-add`) with waiting-list support
+- Backend tests for both new endpoints (6 new tests)
+
+---
+
 ## [0.7.15] — 2026-03-28
 
 ### Added

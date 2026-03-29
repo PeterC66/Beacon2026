@@ -568,6 +568,94 @@ router.patch('/:id/members/:memberId', requirePrivilege('group_records_all', 'ch
   }
 });
 
+// ─── DELETE /groups/:id/members/bulk ──────────────────────────────────────
+// Bulk-remove multiple members from a group.
+// NOTE: Must be registered before /:memberId to avoid Express treating "bulk" as a param.
+
+const bulkRemoveSchema = z.object({
+  memberIds: z.array(z.string().uuid()).min(1),
+});
+
+router.delete('/:id/members/bulk', requirePrivilege('group_records_all', 'change'), async (req, res, next) => {
+  try {
+    const slug = req.user.tenantSlug;
+    const { memberIds } = bulkRemoveSchema.parse(req.body);
+
+    const [group] = await tenantQuery(slug, `SELECT id FROM groups WHERE id = $1`, [req.params.id]);
+    if (!group) throw AppError('Group not found.', 404);
+
+    const result = await tenantQuery(
+      slug,
+      `DELETE FROM group_members WHERE group_id = $1 AND member_id = ANY($2::uuid[]) RETURNING member_id`,
+      [req.params.id, memberIds],
+    );
+    res.json({ removed: result.length });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// ─── POST /groups/:id/members/bulk-add ───────────────────────────────────
+// Add multiple members to another group (from the current group's member list).
+// NOTE: Must be registered before the POST /:id/members route.
+
+const bulkAddSchema = z.object({
+  memberIds:    z.array(z.string().uuid()).min(1),
+  targetGroupId: z.string().uuid(),
+});
+
+router.post('/:id/members/bulk-add', requirePrivilege('group_records_all', 'change'), async (req, res, next) => {
+  try {
+    const slug = req.user.tenantSlug;
+    const { memberIds, targetGroupId } = bulkAddSchema.parse(req.body);
+
+    const [targetGroup] = await tenantQuery(slug, `SELECT id, max_members, enable_waiting_list FROM groups WHERE id = $1`, [targetGroupId]);
+    if (!targetGroup) throw AppError('Target group not found.', 404);
+
+    // Get current joined count for waiting-list logic
+    const [{ count: joinedCount }] = await tenantQuery(
+      slug,
+      `SELECT COUNT(*)::int AS count FROM group_members WHERE group_id = $1 AND waiting_since IS NULL`,
+      [targetGroupId],
+    );
+
+    // Find which members are already in the target group
+    const existing = await tenantQuery(
+      slug,
+      `SELECT member_id FROM group_members WHERE group_id = $1 AND member_id = ANY($2::uuid[])`,
+      [targetGroupId, memberIds],
+    );
+    const existingSet = new Set(existing.map((r) => r.member_id));
+    const toAdd = memberIds.filter((id) => !existingSet.has(id));
+
+    let added = 0;
+    let waitlisted = 0;
+    let capacity = targetGroup.max_members !== null ? targetGroup.max_members - joinedCount : Infinity;
+
+    for (const memberId of toAdd) {
+      const addToWaiting = targetGroup.enable_waiting_list && capacity <= 0;
+      const waitingSince = addToWaiting ? new Date().toISOString().slice(0, 10) : null;
+
+      await tenantQuery(
+        slug,
+        `INSERT INTO group_members (group_id, member_id, waiting_since) VALUES ($1, $2, $3::date)`,
+        [targetGroupId, memberId, waitingSince],
+      );
+
+      if (addToWaiting) {
+        waitlisted++;
+      } else {
+        added++;
+        capacity--;
+      }
+    }
+
+    res.json({ added, waitlisted, skipped: existingSet.size });
+  } catch (err) {
+    next(err);
+  }
+});
+
 // ─── DELETE /groups/:id/members/:memberId ─────────────────────────────────
 
 router.delete('/:id/members/:memberId', requirePrivilege('group_records_all', 'change'), async (req, res, next) => {

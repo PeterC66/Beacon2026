@@ -230,6 +230,93 @@ describe('DELETE /groups/:id/members/:memberId', () => {
   });
 });
 
+// ── DELETE /groups/:id/members/bulk ───────────────────────────────────────
+
+describe('DELETE /groups/:id/members/bulk', () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it('bulk-removes members from group', async () => {
+    tenantQuery.mockResolvedValueOnce([{ id: 'g1' }]); // group exists
+    tenantQuery.mockResolvedValueOnce([{ member_id: 'm1' }, { member_id: 'm2' }]); // deleted rows
+    const res = await request(app)
+      .delete('/groups/g1/members/bulk')
+      .set('Authorization', AUTH)
+      .send({ memberIds: ['aaaaaaaa-0000-0000-0000-000000000001', 'aaaaaaaa-0000-0000-0000-000000000002'] });
+    expect(res.status).toBe(200);
+    expect(res.body.removed).toBe(2);
+  });
+
+  it('returns 404 when group not found', async () => {
+    tenantQuery.mockResolvedValueOnce([]); // group not found
+    const res = await request(app)
+      .delete('/groups/g1/members/bulk')
+      .set('Authorization', AUTH)
+      .send({ memberIds: ['aaaaaaaa-0000-0000-0000-000000000001'] });
+    expect(res.status).toBe(404);
+  });
+
+  it('returns 422 when memberIds is empty', async () => {
+    const res = await request(app)
+      .delete('/groups/g1/members/bulk')
+      .set('Authorization', AUTH)
+      .send({ memberIds: [] });
+    expect(res.status).toBe(422);
+  });
+});
+
+// ── POST /groups/:id/members/bulk-add ────────────────────────────────────
+
+describe('POST /groups/:id/members/bulk-add', () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it('adds members to target group', async () => {
+    tenantQuery.mockResolvedValueOnce([{ id: 'g2', max_members: null, enable_waiting_list: false }]); // target group
+    tenantQuery.mockResolvedValueOnce([{ count: 0 }]); // joined count
+    tenantQuery.mockResolvedValueOnce([]); // no existing members
+    tenantQuery.mockResolvedValueOnce([{ id: 'gm1' }]); // insert member 1
+    tenantQuery.mockResolvedValueOnce([{ id: 'gm2' }]); // insert member 2
+    const res = await request(app)
+      .post('/groups/g1/members/bulk-add')
+      .set('Authorization', AUTH)
+      .send({
+        memberIds: ['aaaaaaaa-0000-0000-0000-000000000001', 'aaaaaaaa-0000-0000-0000-000000000002'],
+        targetGroupId: 'aaaaaaaa-0000-0000-0000-000000000099',
+      });
+    expect(res.status).toBe(200);
+    expect(res.body.added).toBe(2);
+    expect(res.body.skipped).toBe(0);
+  });
+
+  it('skips members already in target group', async () => {
+    tenantQuery.mockResolvedValueOnce([{ id: 'g2', max_members: null, enable_waiting_list: false }]); // target group
+    tenantQuery.mockResolvedValueOnce([{ count: 0 }]); // joined count
+    tenantQuery.mockResolvedValueOnce([{ member_id: 'aaaaaaaa-0000-0000-0000-000000000001' }]); // m1 already in
+    tenantQuery.mockResolvedValueOnce([{ id: 'gm2' }]); // insert member 2
+    const res = await request(app)
+      .post('/groups/g1/members/bulk-add')
+      .set('Authorization', AUTH)
+      .send({
+        memberIds: ['aaaaaaaa-0000-0000-0000-000000000001', 'aaaaaaaa-0000-0000-0000-000000000002'],
+        targetGroupId: 'aaaaaaaa-0000-0000-0000-000000000099',
+      });
+    expect(res.status).toBe(200);
+    expect(res.body.added).toBe(1);
+    expect(res.body.skipped).toBe(1);
+  });
+
+  it('returns 404 when target group not found', async () => {
+    tenantQuery.mockResolvedValueOnce([]); // target group not found
+    const res = await request(app)
+      .post('/groups/g1/members/bulk-add')
+      .set('Authorization', AUTH)
+      .send({
+        memberIds: ['aaaaaaaa-0000-0000-0000-000000000001'],
+        targetGroupId: 'aaaaaaaa-0000-0000-0000-000000000099',
+      });
+    expect(res.status).toBe(404);
+  });
+});
+
 // ── GET /groups/:id/ledger ─────────────────────────────────────────────────
 
 const SAMPLE_ENTRY = {

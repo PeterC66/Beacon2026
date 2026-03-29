@@ -83,7 +83,8 @@ Beacon2 is a ground-up rebuild with these goals:
 ### Groups module
 - **Groups list** — sortable; create/edit/delete
 - **Group record** — Details, Members, Schedule, Ledger tabs
-- **Group members** — add/remove; mark leaders; waiting list with auto-enforcement
+- **Group members** — add/remove; mark leaders; waiting list with auto-enforcement;
+  bulk actions (send email, download Excel/PDF, remove members, add to another group)
 - **Group schedule** — single + recurring events; inline edit; bulk delete
 - **Group ledger** — independent from finance; per-group in/out; download Excel
 - **Venues** — CRUD; venue dropdown on group details
