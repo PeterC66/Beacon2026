@@ -10,14 +10,13 @@ staging deployment on Render.
 | Path | Purpose |
 |------|---------|
 | `e2e/global-setup.js` | Creates (or resets) a test tenant before any tests run |
-| `e2e/global-teardown.js` | Deletes the test tenant on success (skips on failure for inspection) |
-| `e2e/success-reporter.js` | Writes `.e2e-passed` marker file when all tests pass |
+| `e2e/global-teardown.js` | Always deletes the test tenant after the run |
+| `e2e/success-reporter.js` | Writes `.e2e-passed` marker file (housekeeping) |
 | `e2e/fixtures/admin.js` | `adminPage` fixture — logs in as the test-tenant admin |
 | `e2e/pages/*.js` | Page Object Models (one per frontend page/group) |
 | `e2e/tests/*.spec.js` | Test specs — numbered to control execution order |
 | `e2e/.e2e-state.json` | Written by global-setup; holds the generated tenant slug |
 | `e2e/.e2e-storage.json` | Written by global-setup; Playwright storageState for cookies |
-| `e2e/.e2e-passed` | Written by success-reporter; signals teardown to delete tenant |
 
 ---
 

@@ -1,8 +1,5 @@
 // beacon2/e2e/global-teardown.js
-// Deletes the test tenant after all tests run — but ONLY if they all passed.
-// The success-reporter.js writes a .e2e-passed marker file on a clean run;
-// if that file is absent (failures occurred), the tenant is preserved so you
-// can inspect the data.
+// Deletes the test tenant after all tests run — always, regardless of pass/fail.
 
 import { readFileSync, unlinkSync, existsSync } from 'node:fs';
 import { resolve, dirname } from 'node:path';
@@ -39,13 +36,7 @@ async function apiCall(path, { method = 'GET', body, token } = {}) {
 }
 
 export default async function globalTeardown() {
-  // Only delete the tenant if every test passed
-  if (!existsSync(PASSED_PATH)) {
-    console.log('\n[teardown] Tests had failures — keeping test tenant for inspection.');
-    return;
-  }
-
-  console.log('\n[teardown] All tests passed — deleting test tenant…');
+  console.log('\n[teardown] Deleting test tenant…');
   const { body: loginBody } = await apiCall('/auth/system/login', {
     method: 'POST',
     body: { username: SADM_USER, password: SADM_PASS },
