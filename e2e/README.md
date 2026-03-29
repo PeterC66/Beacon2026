@@ -93,13 +93,9 @@ create → edit → delete sequence within a describe block is reliable.
 
 ### Global teardown (`global-teardown.js`)
 
-Enabled by default.  On a **successful** run (all tests pass), the test tenant
-is automatically deleted.  On failure, the tenant is **preserved** so you can
-inspect its data for debugging.
-
-How it works: `success-reporter.js` writes a `.e2e-passed` marker file when
-Playwright reports `status === 'passed'`.  The teardown checks for that file
-before deleting.
+Enabled by default.  The test tenant is **always** deleted after the run,
+regardless of whether tests passed or failed.  This prevents leftover tenants
+from accumulating in the database.
 
 ---
 
@@ -176,9 +172,9 @@ When a new Beacon2 feature is implemented:
 → Check `BEACON2_API_URL`, `BEACON2_SYSADMIN_USERNAME`, `BEACON2_SYSADMIN_PASSWORD`.
 
 **`global-setup` fails with "Tenant admin login failed"**
-→ The tenant may have been left in a bad state from a failed run (teardown only
-deletes on success).  Manually delete the tenant via the system admin UI, or
-temporarily add a `.e2e-passed` marker file and re-run to trigger cleanup.
+→ The tenant may have been left in a bad state from a previous run where teardown
+didn't complete (e.g. process killed).  Manually delete the tenant via the system
+admin UI, then re-run.
 
 **Tests fail with "waitForURL timed out"**
 → The staging server may be slow.  Increase `navigationTimeout` in
