@@ -169,10 +169,13 @@ export default function MemberList() {
     });
   }
 
-  function selectAll()   { setSelected(new Set(sorted.map((m) => m.id))); }
-  function clearAll()    { setSelected(new Set()); }
-  function selectEmail() { setSelected(new Set(sorted.filter((m) => m.email).map((m) => m.id))); }
-  function selectNoEmail() { setSelected(new Set(sorted.filter((m) => !m.email).map((m) => m.id))); }
+  function selectAll()            { setSelected(new Set(sorted.map((m) => m.id))); }
+  function clearAll()             { setSelected(new Set()); }
+  function selectEmail()          { setSelected(new Set(sorted.filter((m) => m.email).map((m) => m.id))); }
+  function selectNoEmail()        { setSelected(new Set(sorted.filter((m) => !m.email).map((m) => m.id))); }
+  function selectPortalPassword() { setSelected(new Set(sorted.filter((m) => m.has_portal_password).map((m) => m.id))); }
+  function selectNoPortalPassword() { setSelected(new Set(sorted.filter((m) => !m.has_portal_password).map((m) => m.id))); }
+  function selectEmailNotConfirmed() { setSelected(new Set(sorted.filter((m) => m.has_portal_password && !m.portal_email_verified).map((m) => m.id))); }
 
   async function handleBulkDo() {
     if (selected.size === 0) return;
@@ -445,6 +448,9 @@ export default function MemberList() {
                 <button onClick={clearAll}     className="text-sm text-blue-700 hover:underline">Clear All</button>
                 <button onClick={selectEmail}  className="text-sm text-blue-700 hover:underline">Email only</button>
                 <button onClick={selectNoEmail} className="text-sm text-blue-700 hover:underline">Without email</button>
+                <button onClick={selectPortalPassword} className="text-sm text-blue-700 hover:underline">Portal password set</button>
+                <button onClick={selectNoPortalPassword} className="text-sm text-blue-700 hover:underline">Without portal password</button>
+                <button onClick={selectEmailNotConfirmed} className="text-sm text-blue-700 hover:underline">Email not confirmed</button>
                 {selected.size > 0 && (
                   <span className="text-sm font-medium text-blue-700 ml-2">{selected.size} selected</span>
                 )}
