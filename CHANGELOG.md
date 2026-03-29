@@ -16,6 +16,12 @@ Format: `## [version] — YYYY-MM-DD` with bullet points per change.
   - "Add members to poll" — adds all members of selected groups to a chosen poll
 - Backend `POST /groups/:id/members/bulk` endpoint for bulk adding members to a group
 - Backend `GET /groups/download` endpoint for downloading groups list as Excel/PDF
+### Changed
+- Add New Member: hide Joined date field (auto-filled behind the scenes)
+- Add New Member: hide Send email button (member not yet saved)
+- Add New Member: moved Emergency contact above Notes
+- Add New Member: overpayment now shown as highlighted blue banner ("£X will be put to donations")
+- Add New Member: underpayment now shown as highlighted amber banner ("£X more needed to become a member")
 
 ---
 
