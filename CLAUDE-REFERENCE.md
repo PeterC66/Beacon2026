@@ -1465,3 +1465,23 @@ Cookie Consent section for confirmation.
 When adding a new page/route, add a corresponding entry to `ROUTE_HELP_TERMS` in
 `HelpWidget.jsx` with appropriate Zendesk search terms.
 
+---
+
+## 25. Deployment and Infrastructure
+
+See `DEPLOYMENT.md` for the full step-by-step guide (written for non-technical users).
+Key facts for developers:
+
+| Component | Hosted on | Config |
+|-----------|-----------|--------|
+| Frontend | Vercel | Static React build (Vite), `VITE_API_URL` points to backend |
+| Backend | Render (web service) | Node.js, `backend/` root dir, config in `render.yaml` |
+| Database | Render (PostgreSQL) | Schema-per-tenant, `beacon2` DB |
+
+**Environment variables** are listed in `render.yaml` (backend) and set in the
+Vercel dashboard (frontend: `VITE_API_URL`, `VITE_ZENDESK_KEY`).
+
+**Database replacement** (e.g. free tier expiry): create a new Render PostgreSQL
+instance, update `DATABASE_URL` on the backend service, and save. Auto-migration
+on startup (see §1) handles the rest. Full instructions in `DEPLOYMENT.md`.
+
