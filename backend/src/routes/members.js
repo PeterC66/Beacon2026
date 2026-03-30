@@ -584,7 +584,9 @@ router.get('/non-renewals', requirePrivilege('members_non_renewals', 'view'), as
         `SELECT m.id, m.membership_number, m.forenames, m.surname,
                 ms.name AS status_name,
                 mc.name AS class_name,
-                m.next_renewal, m.email, m.mobile
+                m.next_renewal, m.email, m.mobile,
+                m.portal_password_hash IS NOT NULL AS has_portal_password,
+                m.portal_email_verified
          FROM members m
          LEFT JOIN member_statuses ms ON ms.id = m.status_id
          LEFT JOIN member_classes  mc ON mc.id = m.class_id
@@ -604,7 +606,9 @@ router.get('/non-renewals', requirePrivilege('members_non_renewals', 'view'), as
         `SELECT m.id, m.membership_number, m.forenames, m.surname,
                 ms.name AS status_name,
                 mc.name AS class_name,
-                m.next_renewal, m.email, m.mobile
+                m.next_renewal, m.email, m.mobile,
+                m.portal_password_hash IS NOT NULL AS has_portal_password,
+                m.portal_email_verified
          FROM members m
          LEFT JOIN member_statuses ms ON ms.id = m.status_id
          LEFT JOIN member_classes  mc ON mc.id = m.class_id
