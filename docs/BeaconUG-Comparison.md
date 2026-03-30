@@ -187,6 +187,7 @@
 | Aspect | Status | Notes |
 |--------|--------|-------|
 | Recently joined/renewed list | Built | — |
+| Bulk actions (Do with selected) | Built | Download names txt, Send email, Send letter, Add to poll, Add to group, Download Excel/PDF |
 
 ---
 
