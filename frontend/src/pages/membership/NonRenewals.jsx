@@ -9,6 +9,9 @@ import PageHeader from '../../components/PageHeader.jsx';
 import NavBar from '../../components/NavBar.jsx';
 import { useSortedData } from '../../hooks/useSortedData.js';
 import SortableHeader from '../../components/SortableHeader.jsx';
+import NoEmailIcon from '../../components/NoEmailIcon.jsx';
+import { formatMemberName } from '../../hooks/usePreferences.js';
+import { formatShortAddress } from '../../lib/memberFormatters.js';
 
 function fmtDate(d) {
   if (!d) return '—';
@@ -32,9 +35,10 @@ export default function NonRenewals() {
   const [processing,   setProcessing]   = useState(false);
   const [result,       setResult]       = useState(null);   // { lapsed?, deleted?, errors? }
 
+  const SORT_SURNAME = ['surname', 'forenames'];
   const { sorted, sortKey, sortDir, onSort } = useSortedData(
     data?.members ?? [],
-    'surname',
+    SORT_SURNAME,
     'asc',
   );
 
@@ -246,19 +250,33 @@ export default function NonRenewals() {
                       />
                     </th>
                     <SortableHeader col="membership_number" label="No."      sortKey={sortKey} sortDir={sortDir} onSort={onSort} className={thCls} />
-                    <SortableHeader col="surname"           label="Surname"   sortKey={sortKey} sortDir={sortDir} onSort={onSort} className={thCls} />
-                    <SortableHeader col="forenames"         label="Forenames" sortKey={sortKey} sortDir={sortDir} onSort={onSort} className={thCls} />
-                    <SortableHeader col="class_name"        label="Class"     sortKey={sortKey} sortDir={sortDir} onSort={onSort} className={thCls} />
-                    <SortableHeader col="status_name"       label="Status"    sortKey={sortKey} sortDir={sortDir} onSort={onSort} className={thCls} />
-                    <SortableHeader col="next_renewal"      label="Next Renewal" sortKey={sortKey} sortDir={sortDir} onSort={onSort} className={thCls} />
-                    <th className={thCls}>Email</th>
-                    <th className={thCls}>Actions</th>
+                    <th className={thCls}>
+                      <span className="cursor-pointer select-none" onClick={() => onSort('forenames')}>
+                        Name
+                        <span className={`ml-1 text-xs ${sortKey === 'forenames' ? 'text-blue-600' : 'text-slate-300'}`}>
+                          {sortKey === 'forenames' ? (sortDir === 'asc' ? '▲' : '▼') : '⇅'}
+                        </span>
+                      </span>
+                      <span className="text-slate-300 mx-1">|</span>
+                      <span className="cursor-pointer select-none text-xs" onClick={() => onSort(SORT_SURNAME)}>
+                        by surname
+                        <span className={`ml-1 text-xs ${Array.isArray(sortKey) && sortKey[0] === 'surname' ? 'text-blue-600' : 'text-slate-300'}`}>
+                          {Array.isArray(sortKey) && sortKey[0] === 'surname' ? (sortDir === 'asc' ? '▲' : '▼') : '⇅'}
+                        </span>
+                      </span>
+                    </th>
+                    <SortableHeader col="house_no"           label="Address"      sortKey={sortKey} sortDir={sortDir} onSort={onSort} className={thCls} />
+                    <th className={thCls}>Phone</th>
+                    <SortableHeader col="class_name"         label="Class"        sortKey={sortKey} sortDir={sortDir} onSort={onSort} className={thCls} />
+                    <SortableHeader col="status_name"        label="Status"       sortKey={sortKey} sortDir={sortDir} onSort={onSort} className={thCls} />
+                    <SortableHeader col="next_renewal"       label="Next Renewal" sortKey={sortKey} sortDir={sortDir} onSort={onSort} className={thCls} />
+                    <SortableHeader col="last_renewal_year"  label="Last Renewal" sortKey={sortKey} sortDir={sortDir} onSort={onSort} className={thCls} />
                   </tr>
                 </thead>
                 <tbody>
                   {sorted.length === 0 && (
                     <tr>
-                      <td colSpan={9} className="px-3 py-6 text-center text-slate-500">
+                      <td colSpan={10} className="px-3 py-6 text-center text-slate-500">
                         {mode === 'this_year'
                           ? 'No current members with overdue renewals.'
                           : `No members with renewals older than ${data.deletionYears} years.`}
@@ -274,22 +292,24 @@ export default function NonRenewals() {
                           onChange={() => toggleOne(m.id)}
                           className="accent-blue-600"
                         />
+                        {!m.email && <NoEmailIcon className="ml-1" />}
                       </td>
-                      <td className="px-3 py-1.5">{m.membership_number}</td>
-                      <td className="px-3 py-1.5 font-medium">{m.surname}</td>
-                      <td className="px-3 py-1.5">{m.forenames}</td>
+                      <td className="px-3 py-1.5">
+                        <Link to={`/members/${m.id}`} className="text-blue-600 hover:underline">
+                          {m.membership_number}
+                        </Link>
+                      </td>
+                      <td className="px-3 py-1.5 font-medium">
+                        <Link to={`/members/${m.id}`} className="text-blue-600 hover:underline">
+                          {formatMemberName(m)}
+                        </Link>
+                      </td>
+                      <td className="px-3 py-1.5">{formatShortAddress(m)}</td>
+                      <td className="px-3 py-1.5">{m.mobile || m.telephone || ''}</td>
                       <td className="px-3 py-1.5">{m.class_name}</td>
                       <td className="px-3 py-1.5">{m.status_name}</td>
                       <td className="px-3 py-1.5">{fmtDate(m.next_renewal)}</td>
-                      <td className="px-3 py-1.5">{m.email || '—'}</td>
-                      <td className="px-3 py-1.5">
-                        <Link
-                          to={`/members/${m.id}`}
-                          className="text-blue-600 hover:underline text-xs"
-                        >
-                          Edit
-                        </Link>
-                      </td>
+                      <td className="px-3 py-1.5">{m.last_renewal_year ?? '—'}</td>
                     </tr>
                   ))}
                 </tbody>

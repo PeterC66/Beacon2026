@@ -35,6 +35,7 @@ import ScrollButtons from '../../components/ScrollButtons.jsx';
 import { useSortedData } from '../../hooks/useSortedData.js';
 import { formatShortAddress } from '../../lib/memberFormatters.js';
 import { formatMemberName } from '../../hooks/usePreferences.js';
+import NoEmailIcon from '../../components/NoEmailIcon.jsx';
 
 const PAYMENT_METHODS = ['Cash', 'Cheque', 'PayPal', 'Standing Order', 'Direct Debit', 'BACS', 'Debit card', 'Account transfer', 'Credit card', 'Online', 'Other'];
 
@@ -503,6 +504,7 @@ export default function MemberList() {
                             onChange={() => toggleSelect(m.id)}
                             className="rounded border-slate-300 text-blue-600 focus:ring-blue-500"
                           />
+                          {!m.email && <NoEmailIcon className="ml-1" />}
                         </td>
                         <td className="px-3 py-2 tabular-nums">
                           {can('member_record', 'view') ? (
