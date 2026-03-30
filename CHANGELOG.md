@@ -5,6 +5,23 @@ Format: `## [version] — YYYY-MM-DD` with bullet points per change.
 
 ---
 
+## [0.7.17] — 2026-03-30
+
+### Changed
+- **Members list** — consolidated surname/forenames/known-as into a single "Name" column
+  formatted as "forenames (known as) surname", respecting display preference
+- **Members list** — member number and name are both clickable links to the member record;
+  removed the separate "Edit" link
+- **Members list** — removed email column; added separate Telephone and Mobile columns
+- **Members list** — moved Class column before Status
+- **Members list** — Name column sortable by forenames; "by surname" link sorts by
+  surname then forenames; default sort is by surname with visible indicator
+- **`formatMemberName()`** — now includes `(known_as)` when present, in both display formats
+- **`useSortedData`** — supports compound sort keys (array of field names) for multi-field sorting
+- Backend member list query now returns `telephone` from the address table
+
+---
+
 ## [0.7.16] — 2026-03-29
 
 ### Added

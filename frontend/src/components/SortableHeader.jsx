@@ -5,7 +5,9 @@
 //                   onSort={onSort} className="px-4 py-2.5 font-normal" />
 
 export default function SortableHeader({ col, label, sortKey, sortDir, onSort, className = '' }) {
-  const active = col === sortKey;
+  const active = Array.isArray(col) && Array.isArray(sortKey)
+    ? col.length === sortKey.length && col.every((v, i) => v === sortKey[i])
+    : col === sortKey;
   return (
     <th
       className={`cursor-pointer select-none ${className}`}

@@ -79,7 +79,7 @@ affected sessions via Redis, or expire naturally after 15 min.
 - Display prefs in `localStorage` via `usePreferences.js` (key `beacon2_prefs`)
   - `getPreferences()` — snapshot (not reactive)
   - `savePreferences(updates)` — merges partial updates
-  - `formatMemberName(member)` — respects `displayFormat` setting
+  - `formatMemberName(member)` — respects `displayFormat` setting; includes `(known_as)` when present
 - Inactivity timeout: `AuthContext` `useRef` timer, resets on user interaction,
   dispatches `auth:expired`
 - Change password: `PATCH /auth/change-password`; 5-bar strength meter

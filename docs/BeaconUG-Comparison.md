@@ -97,8 +97,10 @@
 | Row selection | Built | Checkbox selection for bulk actions |
 | Bulk actions (add to poll, add to group, send email, send letter) | Built | — |
 | Download (Excel/PDF/email CSV) | Built | — |
-| Sortable columns | Built | Via `useSortedData` hook |
+| Sortable columns | Built | Via `useSortedData` hook (supports compound sort keys) |
 | **Beacon2 extra:** Letter filter | Beacon2 extra | Filter members by letter assignment |
+| **Beacon2 extra:** Consolidated name column | Beacon2 extra | Single "Name" column showing `forenames (known_as) surname`; sortable by name or by surname; member number and name both link to member record |
+| **Beacon2 extra:** Telephone + mobile columns | Beacon2 extra | Separate telephone and mobile columns shown instead of email |
 
 ---
 

@@ -34,6 +34,7 @@ import SortableHeader from '../../components/SortableHeader.jsx';
 import ScrollButtons from '../../components/ScrollButtons.jsx';
 import { useSortedData } from '../../hooks/useSortedData.js';
 import { formatShortAddress } from '../../lib/memberFormatters.js';
+import { formatMemberName } from '../../hooks/usePreferences.js';
 
 const PAYMENT_METHODS = ['Cash', 'Cheque', 'PayPal', 'Standing Order', 'Direct Debit', 'BACS', 'Debit card', 'Account transfer', 'Credit card', 'Online', 'Other'];
 
@@ -44,7 +45,8 @@ export default function MemberList() {
   const navigate = useNavigate();
 
   const [memberList,  setMemberList]  = useState([]);
-  const { sorted, sortKey, sortDir, onSort } = useSortedData(memberList);
+  const SORT_SURNAME = ['surname', 'forenames'];
+  const { sorted, sortKey, sortDir, onSort } = useSortedData(memberList, SORT_SURNAME, 'asc');
   const [statuses,    setStatuses]    = useState([]);
   const [classes,     setClasses]     = useState([]);
   const [polls,       setPolls]       = useState([]);
@@ -462,14 +464,29 @@ export default function MemberList() {
                     <tr className="bg-slate-50 border-b border-slate-200 text-left text-slate-600 italic font-normal">
                       <th className="px-2 py-2"></th>
                       <SortableHeader col="membership_number" label="No"       sortKey={sortKey} sortDir={sortDir} onSort={onSort} className="px-3 py-2 font-normal" />
-                      <SortableHeader col="surname"           label="Surname"  sortKey={sortKey} sortDir={sortDir} onSort={onSort} className="px-3 py-2 font-normal" />
-                      <SortableHeader col="forenames"         label="Forenames" sortKey={sortKey} sortDir={sortDir} onSort={onSort} className="px-3 py-2 font-normal" />
-                      <SortableHeader col="known_as"          label="Known as" sortKey={sortKey} sortDir={sortDir} onSort={onSort} className="px-3 py-2 font-normal" />
-                      <SortableHeader col="house_no"           label="Address"  sortKey={sortKey} sortDir={sortDir} onSort={onSort} className="px-3 py-2 font-normal" />
-                      <SortableHeader col="email"             label="Email"    sortKey={sortKey} sortDir={sortDir} onSort={onSort} className="px-3 py-2 font-normal" />
-                      <SortableHeader col="status"            label="Status"   sortKey={sortKey} sortDir={sortDir} onSort={onSort} className="px-3 py-2 font-normal" />
-                      <SortableHeader col="class"             label="Class"    sortKey={sortKey} sortDir={sortDir} onSort={onSort} className="px-3 py-2 font-normal" />
-                      <th className="px-3 py-2"></th>
+                      <th className="px-3 py-2 font-normal">
+                        <span className="cursor-pointer select-none" onClick={() => onSort('forenames')}>
+                          Name
+                          <span className={`ml-1 text-xs ${sortKey === 'forenames' ? 'text-blue-600' : 'text-slate-300'}`}>
+                            {sortKey === 'forenames' ? (sortDir === 'asc' ? '▲' : '▼') : '⇅'}
+                          </span>
+                        </span>
+                        <span className="text-slate-300 mx-1">|</span>
+                        <span
+                          className="cursor-pointer select-none text-xs not-italic"
+                          onClick={() => onSort(SORT_SURNAME)}
+                        >
+                          by surname
+                          <span className={`ml-1 text-xs ${Array.isArray(sortKey) && sortKey[0] === 'surname' ? 'text-blue-600' : 'text-slate-300'}`}>
+                            {Array.isArray(sortKey) && sortKey[0] === 'surname' ? (sortDir === 'asc' ? '▲' : '▼') : '⇅'}
+                          </span>
+                        </span>
+                      </th>
+                      <SortableHeader col="house_no"           label="Address"    sortKey={sortKey} sortDir={sortDir} onSort={onSort} className="px-3 py-2 font-normal" />
+                      <SortableHeader col="telephone"          label="Telephone"  sortKey={sortKey} sortDir={sortDir} onSort={onSort} className="px-3 py-2 font-normal" />
+                      <SortableHeader col="mobile"             label="Mobile"     sortKey={sortKey} sortDir={sortDir} onSort={onSort} className="px-3 py-2 font-normal" />
+                      <SortableHeader col="class"              label="Class"      sortKey={sortKey} sortDir={sortDir} onSort={onSort} className="px-3 py-2 font-normal" />
+                      <SortableHeader col="status"             label="Status"     sortKey={sortKey} sortDir={sortDir} onSort={onSort} className="px-3 py-2 font-normal" />
                     </tr>
                   </thead>
                   <tbody>
@@ -487,29 +504,27 @@ export default function MemberList() {
                             className="rounded border-slate-300 text-blue-600 focus:ring-blue-500"
                           />
                         </td>
-                        <td className="px-3 py-2 tabular-nums">{m.membership_number}</td>
+                        <td className="px-3 py-2 tabular-nums">
+                          {can('member_record', 'view') ? (
+                            <a href="#view" onClick={(e) => { e.preventDefault(); navigate(`/members/${m.id}`); }}
+                              className="text-blue-700 hover:underline">
+                              {m.membership_number}
+                            </a>
+                          ) : m.membership_number}
+                        </td>
                         <td className="px-3 py-2 font-medium">
                           {can('member_record', 'view') ? (
                             <a href="#view" onClick={(e) => { e.preventDefault(); navigate(`/members/${m.id}`); }}
                               className="text-blue-700 hover:underline">
-                              {m.surname}
+                              {formatMemberName(m)}
                             </a>
-                          ) : m.surname}
+                          ) : formatMemberName(m)}
                         </td>
-                        <td className="px-3 py-2">{m.forenames}</td>
-                        <td className="px-3 py-2 text-slate-500">{m.known_as ?? ''}</td>
                         <td className="px-3 py-2">{formatShortAddress(m)}</td>
-                        <td className="px-3 py-2">{m.email ?? ''}</td>
-                        <td className="px-3 py-2">{m.status ?? ''}</td>
+                        <td className="px-3 py-2">{m.telephone ?? ''}</td>
+                        <td className="px-3 py-2">{m.mobile ?? ''}</td>
                         <td className="px-3 py-2">{m.class ?? ''}</td>
-                        <td className="px-3 py-2 text-right">
-                          {can('member_record', 'view') && (
-                            <a href="#edit" onClick={(e) => { e.preventDefault(); navigate(`/members/${m.id}`); }}
-                              className="text-blue-700 hover:underline text-xs">
-                              Edit
-                            </a>
-                          )}
-                        </td>
+                        <td className="px-3 py-2">{m.status ?? ''}</td>
                       </tr>
                     ))}
                   </tbody>
