@@ -208,8 +208,8 @@ router.get('/recent', requirePrivilege('members_recent', 'view'), async (req, re
 
     const rows = await tenantQuery(
       slug,
-      `SELECT m.id, m.membership_number, m.forenames, m.surname, m.email, m.mobile,
-              a.telephone, m.joined_on,
+      `SELECT m.id, m.membership_number, m.forenames, m.surname, m.known_as,
+              m.email, m.mobile, a.telephone, m.joined_on,
               mc.name AS class_name,
               ms.name AS status_name,
               a.house_no, a.street, a.town, a.postcode,
@@ -581,15 +581,20 @@ router.get('/non-renewals', requirePrivilege('members_non_renewals', 'view'), as
     if (mode === 'this_year') {
       rows = await tenantQuery(
         slug,
-        `SELECT m.id, m.membership_number, m.forenames, m.surname,
+        `SELECT m.id, m.membership_number, m.forenames, m.surname, m.known_as,
                 ms.name AS status_name,
                 mc.name AS class_name,
                 m.next_renewal, m.email, m.mobile,
+                a.house_no, a.street, a.town, a.postcode, a.telephone,
                 m.portal_password_hash IS NOT NULL AS has_portal_password,
-                m.portal_email_verified
+                m.portal_email_verified,
+                (SELECT EXTRACT(YEAR FROM MAX(t.date))::int
+                 FROM transactions t
+                 WHERE t.member_id_1 = m.id AND t.type = 'in') AS last_renewal_year
          FROM members m
          LEFT JOIN member_statuses ms ON ms.id = m.status_id
          LEFT JOIN member_classes  mc ON mc.id = m.class_id
+         LEFT JOIN addresses        a ON a.id  = m.address_id
          WHERE ms.name ILIKE '%Current%'
            AND (m.next_renewal IS NULL OR m.next_renewal < $1::date)
          ORDER BY m.surname, m.forenames`,
@@ -603,15 +608,20 @@ router.get('/non-renewals', requirePrivilege('members_non_renewals', 'view'), as
 
       rows = await tenantQuery(
         slug,
-        `SELECT m.id, m.membership_number, m.forenames, m.surname,
+        `SELECT m.id, m.membership_number, m.forenames, m.surname, m.known_as,
                 ms.name AS status_name,
                 mc.name AS class_name,
                 m.next_renewal, m.email, m.mobile,
+                a.house_no, a.street, a.town, a.postcode, a.telephone,
                 m.portal_password_hash IS NOT NULL AS has_portal_password,
-                m.portal_email_verified
+                m.portal_email_verified,
+                (SELECT EXTRACT(YEAR FROM MAX(t.date))::int
+                 FROM transactions t
+                 WHERE t.member_id_1 = m.id AND t.type = 'in') AS last_renewal_year
          FROM members m
          LEFT JOIN member_statuses ms ON ms.id = m.status_id
          LEFT JOIN member_classes  mc ON mc.id = m.class_id
+         LEFT JOIN addresses        a ON a.id  = m.address_id
          WHERE m.next_renewal IS NOT NULL
            AND m.next_renewal < $1::date
          ORDER BY m.next_renewal, m.surname`,

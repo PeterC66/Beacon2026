@@ -8,6 +8,9 @@ import { useAuth } from '../../context/AuthContext.jsx';
 import PageHeader from '../../components/PageHeader.jsx';
 import NavBar from '../../components/NavBar.jsx';
 import ScrollButtons from '../../components/ScrollButtons.jsx';
+import SortableHeader from '../../components/SortableHeader.jsx';
+import { useSortedData } from '../../hooks/useSortedData.js';
+import { formatMemberName } from '../../hooks/usePreferences.js';
 import NoEmailIcon from '../../components/NoEmailIcon.jsx';
 
 const PAYMENT_METHODS = ['Cash', 'Cheque', 'Standing Order', 'Direct Debit', 'Online', 'Other'];
@@ -117,6 +120,9 @@ export default function MembershipRenewals() {
       return !nr || nr < prevYearStart;
     });
   }, [data, period]);
+
+  const SORT_SURNAME = ['surname', 'forenames'];
+  const { sorted, sortKey, sortDir, onSort } = useSortedData(filtered, SORT_SURNAME, 'asc');
 
   function toggleAll(checked) {
     if (checked) setSelected(new Set(filtered.map((m) => m.id)));
@@ -342,18 +348,32 @@ export default function MembershipRenewals() {
                     <th className="px-3 py-2.5">
                       <input type="checkbox" checked={allChecked} onChange={(e) => toggleAll(e.target.checked)} aria-label="Select all" />
                     </th>
-                    <th className="px-4 py-2.5 font-normal">#</th>
-                    <th className="px-4 py-2.5 font-normal">Name</th>
-                    <th className="px-4 py-2.5 font-normal">Class</th>
+                    <SortableHeader col="membership_number" label="#" sortKey={sortKey} sortDir={sortDir} onSort={onSort} className="px-4 py-2.5 font-normal" />
+                    <th className="px-4 py-2.5 font-normal">
+                      <span className="cursor-pointer select-none" onClick={() => onSort('forenames')}>
+                        Name
+                        <span className={`ml-1 text-xs ${sortKey === 'forenames' ? 'text-blue-600' : 'text-slate-300'}`}>
+                          {sortKey === 'forenames' ? (sortDir === 'asc' ? '▲' : '▼') : '⇅'}
+                        </span>
+                      </span>
+                      <span className="text-slate-300 mx-1">|</span>
+                      <span className="cursor-pointer select-none text-xs" onClick={() => onSort(SORT_SURNAME)}>
+                        by surname
+                        <span className={`ml-1 text-xs ${Array.isArray(sortKey) && sortKey[0] === 'surname' ? 'text-blue-600' : 'text-slate-300'}`}>
+                          {Array.isArray(sortKey) && sortKey[0] === 'surname' ? (sortDir === 'asc' ? '▲' : '▼') : '⇅'}
+                        </span>
+                      </span>
+                    </th>
+                    <SortableHeader col="class_name" label="Class" sortKey={sortKey} sortDir={sortDir} onSort={onSort} className="px-4 py-2.5 font-normal" />
                     <th className="px-4 py-2.5 font-normal">Partner</th>
-                    <th className="px-4 py-2.5 font-normal">Next renewal</th>
+                    <SortableHeader col="next_renewal" label="Next renewal" sortKey={sortKey} sortDir={sortDir} onSort={onSort} className="px-4 py-2.5 font-normal" />
                     <th className="px-4 py-2.5 font-normal text-right">Fee due</th>
                     <th className="px-4 py-2.5 font-normal text-center">Gift Aid</th>
                     <th className="px-4 py-2.5 font-normal text-right">Amount received</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {filtered.map((m, i) => {
+                  {sorted.map((m, i) => {
                     const feeLabel = giftAid[m.id] && m.gift_aid_fee != null
                       ? fmtAmount(m.gift_aid_fee)
                       : fmtAmount(m.fee);
@@ -368,10 +388,14 @@ export default function MembershipRenewals() {
                           />
                           {!m.email && <NoEmailIcon className="ml-1" />}
                         </td>
-                        <td className="px-4 py-2">{m.membership_number}</td>
                         <td className="px-4 py-2">
                           <Link to={`/members/${m.id}`} className="text-blue-600 hover:underline">
-                            {m.forenames} {m.surname}
+                            {m.membership_number}
+                          </Link>
+                        </td>
+                        <td className="px-4 py-2 font-medium">
+                          <Link to={`/members/${m.id}`} className="text-blue-600 hover:underline">
+                            {formatMemberName(m)}
                           </Link>
                           <span className="ml-2 text-xs text-slate-400">{m.status_name}</span>
                         </td>
@@ -403,7 +427,7 @@ export default function MembershipRenewals() {
                       </tr>
                     );
                   })}
-                  {filtered.length === 0 && (
+                  {sorted.length === 0 && (
                     <tr>
                       <td colSpan={9} className="px-4 py-6 text-center text-slate-500">
                         No members to renew for this period.

@@ -27,6 +27,17 @@ Format: `## [version] — YYYY-MM-DD` with bullet points per change.
   envelope icon next to their checkbox on all member list pages (Members, Recent Members,
   Non-Renewals, Membership Renewals, Membership Cards)
 - New shared `NoEmailIcon` component (`frontend/src/components/NoEmailIcon.jsx`)
+- **Recent Members** — consolidated name using `formatMemberName()`, added Name/by surname
+  sort options, member number now a clickable link
+- **Non-Renewals** — consolidated name, Name/by surname sorting, removed email column and
+  Edit link, added Address, Phone, and Last Renewal (year) columns; backend query now
+  includes address fields, telephone, known_as, and last renewal year from transactions
+- **Membership Renewals** — added `useSortedData` sorting (default: surname+forenames),
+  Name/by surname sort headers, consolidated name with `formatMemberName()`, member number
+  now a clickable link
+- **Membership Cards** — consolidated name, removed email/town/postcode columns, added
+  short address column, Name/by surname sorting, default sort by surname, member number
+  now a clickable link
 
 ---
 

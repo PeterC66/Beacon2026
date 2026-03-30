@@ -11,6 +11,7 @@ import DateInput from '../../components/DateInput.jsx';
 import SortableHeader from '../../components/SortableHeader.jsx';
 import { useSortedData } from '../../hooks/useSortedData.js';
 import { formatShortAddress, formatPhone } from '../../lib/memberFormatters.js';
+import { formatMemberName } from '../../hooks/usePreferences.js';
 import NoEmailIcon from '../../components/NoEmailIcon.jsx';
 
 const DOWNLOAD_FIELDS = [
@@ -73,6 +74,7 @@ export default function RecentMembers() {
   const [allGroups,   setAllGroups]   = useState([]);
   const [addToGroupId, setAddToGroupId] = useState('');
 
+  const SORT_SURNAME = ['surname', 'forenames'];
   const { sorted, sortKey, sortDir, onSort } = useSortedData(list, 'joined_on', 'desc');
 
   useEffect(() => {
@@ -279,7 +281,21 @@ export default function RecentMembers() {
                       />
                     </th>
                     <SortableHeader col="membership_number" label="#" sortKey={sortKey} sortDir={sortDir} onSort={onSort} className={TH} />
-                    <SortableHeader col="surname"    label="Name"    sortKey={sortKey} sortDir={sortDir} onSort={onSort} className={TH} />
+                    <th className={TH}>
+                      <span className="cursor-pointer select-none" onClick={() => onSort('forenames')}>
+                        Name
+                        <span className={`ml-1 text-xs ${sortKey === 'forenames' ? 'text-blue-600' : 'text-slate-300'}`}>
+                          {sortKey === 'forenames' ? (sortDir === 'asc' ? '▲' : '▼') : '⇅'}
+                        </span>
+                      </span>
+                      <span className="text-slate-300 mx-1">|</span>
+                      <span className="cursor-pointer select-none text-xs" onClick={() => onSort(SORT_SURNAME)}>
+                        by surname
+                        <span className={`ml-1 text-xs ${Array.isArray(sortKey) && sortKey[0] === 'surname' ? 'text-blue-600' : 'text-slate-300'}`}>
+                          {Array.isArray(sortKey) && sortKey[0] === 'surname' ? (sortDir === 'asc' ? '▲' : '▼') : '⇅'}
+                        </span>
+                      </span>
+                    </th>
                     <SortableHeader col="class_name" label="Class"   sortKey={sortKey} sortDir={sortDir} onSort={onSort} className={TH} />
                     <SortableHeader col="status_name" label="Status" sortKey={sortKey} sortDir={sortDir} onSort={onSort} className={TH} />
                     <SortableHeader col="joined_on"  label="Joined"  sortKey={sortKey} sortDir={sortDir} onSort={onSort} className={TH} />
@@ -299,10 +315,14 @@ export default function RecentMembers() {
                         />
                         {!m.email && <NoEmailIcon className="ml-1" />}
                       </td>
-                      <td className="px-4 py-2">{m.membership_number}</td>
                       <td className="px-4 py-2">
                         <Link to={`/members/${m.id}`} className="text-blue-600 hover:underline">
-                          {m.forenames} {m.surname}
+                          {m.membership_number}
+                        </Link>
+                      </td>
+                      <td className="px-4 py-2 font-medium">
+                        <Link to={`/members/${m.id}`} className="text-blue-600 hover:underline">
+                          {formatMemberName(m)}
                         </Link>
                       </td>
                       <td className="px-4 py-2">{m.class_name ?? '—'}</td>

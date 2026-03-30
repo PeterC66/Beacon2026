@@ -190,6 +190,7 @@
 |--------|--------|-------|
 | Recently joined/renewed list | Built | — |
 | Bulk actions (Do with selected) | Built | Download names txt, Send email, Send letter, Add to poll, Add to group, Download Excel/PDF |
+| **Beacon2 extra:** Consolidated name column | Beacon2 extra | Single "Name" column with `formatMemberName()`; Name/by surname sort options |
 
 ---
 
@@ -200,6 +201,7 @@
 | Period tabs | Built | — |
 | Bulk renew with finance transactions | Built | — |
 | **Beacon2 extra:** Payment method defaults | Beacon2 extra | Auto-populates from Membership Payment Method Defaults (doc 8.6c) |
+| **Beacon2 extra:** Sortable columns + consolidated name | Beacon2 extra | `useSortedData` sorting with Name/by surname options |
 
 ---
 
@@ -220,6 +222,7 @@
 |--------|--------|-------|
 | This year / long term modes | Built | — |
 | Bulk lapse / delete | Built | — |
+| **Beacon2 extra:** Consolidated name + extra columns | Beacon2 extra | Name/by surname sort; Address, Phone, Last Renewal (year) columns; no-email icon |
 
 ---
 
@@ -234,6 +237,7 @@
 | Excel card data export | Built | — |
 | Send card by email | Built | — |
 | Mark-as-printed flow | Built | — |
+| **Beacon2 extra:** Consolidated name + short address | Beacon2 extra | Name/by surname sort; single address column replaces town/postcode; no email column |
 | Advance expiry to next year | Built | — |
 | Auto-attach cards to confirmation emails | Not started | `email_cards` setting stored but not wired to email flow |
 | Portal: order replacement card | Built | PortalRequestCard.jsx; validates Current status and renewal period; marks card_printed=false; PDF attachment in confirmation email still stubbed |
