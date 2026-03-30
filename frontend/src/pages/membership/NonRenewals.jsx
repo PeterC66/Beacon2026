@@ -2,7 +2,7 @@
 // Doc 4.6 — Non-renewals (Lapsed, Resigned, Deceased members)
 
 import { useState, useEffect, useMemo } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { members as membersApi } from '../../lib/api.js';
 import { useAuth } from '../../context/AuthContext.jsx';
 import PageHeader from '../../components/PageHeader.jsx';
@@ -19,8 +19,10 @@ function fmtDate(d) {
 
 export default function NonRenewals() {
   const { can } = useAuth();
+  const navigate = useNavigate();
 
   const [mode,         setMode]         = useState('this_year');
+  const [action,       setAction]       = useState('lapse');
   const [data,         setData]         = useState(null);   // { members, yearStart, graceLapse, deletionYears }
   const [loading,      setLoading]      = useState(true);
   const [error,        setError]        = useState(null);
@@ -37,6 +39,7 @@ export default function NonRenewals() {
   );
 
   useEffect(() => {
+    setAction(mode === 'long_term' ? 'delete' : 'lapse');
     load(mode);
   }, [mode]);
 
@@ -70,6 +73,36 @@ export default function NonRenewals() {
       else next.add(id);
       return next;
     });
+  }
+
+  function selectAll()               { setSelected(new Set(sorted.map((m) => m.id))); }
+  function clearAll()                { setSelected(new Set()); }
+  function selectEmail()             { setSelected(new Set(sorted.filter((m) => m.email).map((m) => m.id))); }
+  function selectNoEmail()           { setSelected(new Set(sorted.filter((m) => !m.email).map((m) => m.id))); }
+  function selectPortalPassword()    { setSelected(new Set(sorted.filter((m) => m.has_portal_password).map((m) => m.id))); }
+  function selectNoPortalPassword()  { setSelected(new Set(sorted.filter((m) => !m.has_portal_password).map((m) => m.id))); }
+  function selectEmailNotConfirmed() { setSelected(new Set(sorted.filter((m) => m.has_portal_password && !m.portal_email_verified).map((m) => m.id))); }
+
+  function handleDoWithSelected() {
+    if (selected.size === 0) return;
+    if (action === 'send_email') {
+      sessionStorage.setItem('emailComposeMemberIds', JSON.stringify([...selected]));
+      navigate('/email/compose');
+      return;
+    }
+    if (action === 'send_letter') {
+      sessionStorage.setItem('letterComposeMemberIds', JSON.stringify([...selected]));
+      navigate('/letters/compose');
+      return;
+    }
+    if (action === 'lapse') {
+      setConfirming('lapse');
+      return;
+    }
+    if (action === 'delete') {
+      setConfirming('delete');
+      return;
+    }
   }
 
   async function handleLapse() {
@@ -180,6 +213,25 @@ export default function NonRenewals() {
 
         {!loading && data && (
           <>
+            {/* Select controls — above the table */}
+            {sorted.length > 0 && (
+              <div className="flex flex-wrap gap-2 items-center mb-2">
+                <span className="text-sm text-slate-500">{sorted.length} member{sorted.length !== 1 ? 's' : ''}</span>
+                <span className="text-slate-300">|</span>
+                <span className="text-sm font-medium text-slate-600">Select:</span>
+                <button onClick={selectAll} className="text-sm text-blue-700 hover:underline">All</button>
+                <button onClick={clearAll} className="text-sm text-blue-700 hover:underline">Clear All</button>
+                <button onClick={selectEmail} className="text-sm text-blue-700 hover:underline">Email only</button>
+                <button onClick={selectNoEmail} className="text-sm text-blue-700 hover:underline">Without email</button>
+                <button onClick={selectPortalPassword} className="text-sm text-blue-700 hover:underline">Portal password set</button>
+                <button onClick={selectNoPortalPassword} className="text-sm text-blue-700 hover:underline">Without portal password</button>
+                <button onClick={selectEmailNotConfirmed} className="text-sm text-blue-700 hover:underline">Email not confirmed</button>
+                {selected.size > 0 && (
+                  <span className="text-sm font-medium text-blue-700 ml-2">{selected.size} selected</span>
+                )}
+              </div>
+            )}
+
             <div className="bg-white/90 rounded-lg shadow-sm overflow-x-auto">
               <table className="min-w-max w-full text-sm">
                 <thead className="bg-slate-50 border-b border-slate-200">
@@ -244,31 +296,32 @@ export default function NonRenewals() {
               </table>
             </div>
 
-            {/* Bulk action bar */}
-            {sorted.length > 0 && canLapse && (
-              <div className="bg-white/90 rounded-lg shadow-sm p-4 flex flex-wrap gap-3 items-center">
-                <span className="text-sm text-slate-600">
-                  {selected.size} of {sorted.length} selected
-                </span>
-                {mode === 'this_year' && (
+            {/* Bulk actions — below the table */}
+            {sorted.length > 0 && selected.size > 0 && (
+              <div className="bg-white/90 rounded-lg shadow-sm p-3">
+                <div className="flex flex-wrap gap-3 items-end">
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">Do with {selected.size} selected member{selected.size !== 1 ? 's' : ''}</label>
+                    <select
+                      name="action"
+                      value={action}
+                      onChange={(e) => setAction(e.target.value)}
+                      className="border border-slate-300 rounded px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                      {mode === 'this_year' && canLapse && <option value="lapse">Lapse</option>}
+                      {mode === 'long_term' && canLapse && <option value="delete">Delete</option>}
+                      {can('email', 'send') && <option value="send_email">Send email</option>}
+                      {can('letters', 'view') && <option value="send_letter">Send letter</option>}
+                    </select>
+                  </div>
                   <button
-                    onClick={() => selected.size > 0 && setConfirming('lapse')}
-                    disabled={selected.size === 0 || processing}
-                    className="bg-orange-600 hover:bg-orange-700 disabled:bg-orange-300 text-white rounded px-5 py-2 text-sm font-medium transition-colors"
+                    onClick={handleDoWithSelected}
+                    disabled={processing}
+                    className="bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white rounded px-4 py-1.5 text-sm font-medium transition-colors"
                   >
-                    Lapse selected
+                    {processing ? 'Processing…' : 'Do with selected'}
                   </button>
-                )}
-                {mode === 'long_term' && (
-                  <button
-                    onClick={() => selected.size > 0 && setConfirming('delete')}
-                    disabled={selected.size === 0 || processing}
-                    className="border border-red-300 text-red-600 hover:bg-red-50 rounded px-5 py-2 text-sm font-medium transition-colors disabled:opacity-50"
-                  >
-                    Delete selected
-                  </button>
-                )}
-                {processing && <span className="text-sm text-slate-500">Processing…</span>}
+                </div>
               </div>
             )}
           </>
