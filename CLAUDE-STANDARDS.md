@@ -130,6 +130,26 @@ Every item below applies to every new feature — no exceptions.
 
 - [ ] **Sortable columns** — use `useSortedData` hook + `SortableHeader` component.
 
+- [ ] **Selection and bulk action layout** — on pages with checkbox selection and
+  "Do with selected" actions, follow this order top-to-bottom:
+
+  1. **Selection quick-picks** — above the table, in a single line:
+     `{count} items shown | Select: All · Clear All · Email only · Without email ·
+     Portal password set · Without portal password · Email not confirmed · {N} selected`
+     Style: `text-sm text-blue-700 hover:underline` links, count in `text-slate-500`,
+     selected count in `font-medium text-blue-700`.
+
+  2. **The table** — with a select-all checkbox in the header row.
+
+  3. **Bulk action bar** — below the table, shown only when `selected.size > 0`.
+     Wrapped in `bg-white/90 rounded-lg shadow-sm p-3`. Contains a labelled dropdown
+     ("Do with {N} selected …"), any secondary pickers (poll, group, fields), and
+     an action button.
+
+  Pages following this standard: MemberList, GroupList, MembershipCards,
+  MembershipRenewals, RecentMembers. Specialised pages (FinanceLedger,
+  ReconcileAccount, CreditBatches, AddressesExport) may vary.
+
 ## Loading states
 
 - [ ] **Initial load** — `const [loading, setLoading] = useState(true)`, call

@@ -72,6 +72,13 @@ export default function RecentMembers() {
     load();
   }
 
+  function selectAll()               { setSelected(new Set(sorted.map((m) => m.id))); }
+  function clearAll()                { setSelected(new Set()); }
+  function selectEmail()             { setSelected(new Set(sorted.filter((m) => m.email).map((m) => m.id))); }
+  function selectNoEmail()           { setSelected(new Set(sorted.filter((m) => !m.email).map((m) => m.id))); }
+  function selectPortalPassword()    { setSelected(new Set(sorted.filter((m) => m.has_portal_password).map((m) => m.id))); }
+  function selectNoPortalPassword()  { setSelected(new Set(sorted.filter((m) => !m.has_portal_password).map((m) => m.id))); }
+  function selectEmailNotConfirmed() { setSelected(new Set(sorted.filter((m) => m.has_portal_password && !m.portal_email_verified).map((m) => m.id))); }
   function toggleAll(checked) {
     if (checked) setSelected(new Set(sorted.map((m) => m.id)));
     else         setSelected(new Set());
@@ -225,35 +232,30 @@ export default function RecentMembers() {
           <p className="text-red-600 text-sm">{error}</p>
         ) : (
           <>
-            <p className="text-sm text-slate-600">
-              {sorted.length} member{sorted.length !== 1 ? 's' : ''} joined between {fmtDate(fromDate)} and {fmtDate(toDate)}.
-            </p>
-
-            {/* Bulk actions */}
+            {/* Select controls — above the table */}
             {sorted.length > 0 && (
-              <form onSubmit={handleDoWithSelected} className="flex flex-wrap items-center gap-3">
-                <select
-                  name="action"
-                  value={action}
-                  onChange={(e) => setAction(e.target.value)}
-                  className={SELECT}
-                >
-                  <option value="download_names">Download names as a txt file</option>
-                  {can('groups_list', 'view') && (
-                    <option value="add_to_group">Add to group</option>
-                  )}
-                </select>
-                <button
-                  type="submit"
-                  disabled={doingAction || selected.size === 0}
-                  className="bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white rounded px-5 py-2 text-sm font-medium transition-colors"
-                >
-                  Do with selected
-                </button>
+              <div className="flex flex-wrap gap-2 items-center mb-2">
+                <span className="text-sm text-slate-500">
+                  {sorted.length} member{sorted.length !== 1 ? 's' : ''} joined between {fmtDate(fromDate)} and {fmtDate(toDate)}.
+                </span>
+                <span className="text-slate-300">|</span>
+                <span className="text-sm font-medium text-slate-600">Select:</span>
+                <button onClick={selectAll} className="text-sm text-blue-700 hover:underline">All</button>
+                <button onClick={clearAll} className="text-sm text-blue-700 hover:underline">Clear All</button>
+                <button onClick={selectEmail} className="text-sm text-blue-700 hover:underline">Email only</button>
+                <button onClick={selectNoEmail} className="text-sm text-blue-700 hover:underline">Without email</button>
+                <button onClick={selectPortalPassword} className="text-sm text-blue-700 hover:underline">Portal password set</button>
+                <button onClick={selectNoPortalPassword} className="text-sm text-blue-700 hover:underline">Without portal password</button>
+                <button onClick={selectEmailNotConfirmed} className="text-sm text-blue-700 hover:underline">Email not confirmed</button>
                 {selected.size > 0 && (
-                  <span className="text-sm text-slate-600">{selected.size} selected</span>
+                  <span className="text-sm font-medium text-blue-700 ml-2">{selected.size} selected</span>
                 )}
-              </form>
+              </div>
+            )}
+            {sorted.length === 0 && (
+              <p className="text-sm text-slate-600">
+                {sorted.length} member{sorted.length !== 1 ? 's' : ''} joined between {fmtDate(fromDate)} and {fmtDate(toDate)}.
+              </p>
             )}
 
             {/* Members table */}
@@ -312,6 +314,35 @@ export default function RecentMembers() {
                 </tbody>
               </table>
             </div>
+
+            {/* Bulk actions — below the table */}
+            {sorted.length > 0 && selected.size > 0 && (
+              <div className="bg-white/90 rounded-lg shadow-sm p-3">
+                <form onSubmit={handleDoWithSelected} className="flex flex-wrap gap-3 items-end">
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">Do with {selected.size} selected member{selected.size !== 1 ? 's' : ''}</label>
+                    <select
+                      name="action"
+                      value={action}
+                      onChange={(e) => setAction(e.target.value)}
+                      className={SELECT}
+                    >
+                      <option value="download_names">Download names as a txt file</option>
+                      {can('groups_list', 'view') && (
+                        <option value="add_to_group">Add to group</option>
+                      )}
+                    </select>
+                  </div>
+                  <button
+                    type="submit"
+                    disabled={doingAction}
+                    className="bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white rounded px-4 py-1.5 text-sm font-medium transition-colors"
+                  >
+                    Do with selected
+                  </button>
+                </form>
+              </div>
+            )}
           </>
         )}
       </div>

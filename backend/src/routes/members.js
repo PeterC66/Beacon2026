@@ -212,7 +212,9 @@ router.get('/recent', requirePrivilege('members_recent', 'view'), async (req, re
               a.telephone, m.joined_on,
               mc.name AS class_name,
               ms.name AS status_name,
-              a.house_no, a.street, a.town, a.postcode
+              a.house_no, a.street, a.town, a.postcode,
+              m.portal_password_hash IS NOT NULL AS has_portal_password,
+              m.portal_email_verified
        FROM members m
        LEFT JOIN member_classes   mc ON mc.id = m.class_id
        LEFT JOIN member_statuses  ms ON ms.id = m.status_id
