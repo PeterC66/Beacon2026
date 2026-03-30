@@ -2,7 +2,7 @@
 // Doc 4.5 — Membership Renewals
 
 import { useState, useEffect, useMemo, useRef } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { members as membersApi, finance as financeApi, polls as pollsApi } from '../../lib/api.js';
 import { useAuth } from '../../context/AuthContext.jsx';
 import PageHeader from '../../components/PageHeader.jsx';
@@ -24,7 +24,6 @@ function fmtAmount(n) {
 
 export default function MembershipRenewals() {
   const { can, tenant } = useAuth();
-  const navigate = useNavigate();
 
   const [data,      setData]      = useState(null);   // { members, yearStart, prevYearStart, nextYearStart, showNextYear }
   const [accounts,  setAccounts]  = useState([]);
@@ -130,16 +129,6 @@ export default function MembershipRenewals() {
   async function handleDoWithSelected(e) {
     e.preventDefault();
     if (selected.size === 0) { setActionMsg({ type: 'error', text: 'No members selected.' }); return; }
-    if (action === 'send_email') {
-      sessionStorage.setItem('emailComposeMemberIds', JSON.stringify([...selected]));
-      navigate('/email/compose');
-      return;
-    }
-    if (action === 'send_letter') {
-      sessionStorage.setItem('letterComposeMemberIds', JSON.stringify([...selected]));
-      navigate('/letters/compose');
-      return;
-    }
     if (action === 'add_to_poll') {
       if (!chosenPoll) { setActionMsg({ type: 'error', text: 'Select a poll first.' }); return; }
       setProcessing(true);
@@ -312,8 +301,6 @@ export default function MembershipRenewals() {
               <form onSubmit={handleDoWithSelected} className="flex flex-wrap items-center gap-3">
                 <select name="action" value={action} onChange={(e) => setAction(e.target.value)} className={SELECT}>
                   <option value="renew">Renew selected members</option>
-                  {can('email', 'send') && <option value="send_email">Send email</option>}
-                  {can('letters', 'view') && <option value="send_letter">Send letter</option>}
                   {can('poll_set_up', 'view') && <option value="add_to_poll">Add to poll</option>}
                 </select>
                 {action === 'add_to_poll' && (
