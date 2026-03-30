@@ -27,6 +27,12 @@ Format: `## [version] — YYYY-MM-DD` with bullet points per change.
 - Add New Member: moved Emergency contact above Notes
 - Add New Member: overpayment now shown as highlighted blue banner ("£X will be put to donations")
 - Add New Member: underpayment now shown as highlighted amber banner ("£X more needed to become a member")
+- Standardised selection/bulk-action layout across list pages: selection quick-picks
+  above table, "Do with selected" below table (MembershipRenewals, RecentMembers
+  updated to match MemberList/GroupList/MembershipCards pattern)
+- Membership Renewals and Recent Members: added 7 selection quick-picks
+  (All, Clear All, Email only, Without email, Portal password set, Without portal
+  password, Email not confirmed)
 
 ---
 
