@@ -13,6 +13,8 @@ Format: `## [version] — YYYY-MM-DD` with bullet points per change.
 - Backend endpoints for bulk remove (`DELETE /groups/:id/members/bulk`) and
   bulk add-to-group (`POST /groups/:id/members/bulk-add`) with waiting-list support
 - Backend tests for both new endpoints (6 new tests)
+- **Recent Members** — full "Do with selected" bulk actions: Download names as txt,
+  Send E-mail, Send Letter, Add to poll, Add to group, Download Excel, Download PDF
 - **Members list** — "Add to group" bulk action: select members and add them to a
   chosen group, respecting max-members and waiting-list logic
 - **Groups list** — row selection with checkboxes and "Do with selected" bulk actions:

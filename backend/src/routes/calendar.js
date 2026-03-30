@@ -198,9 +198,10 @@ router.get('/events/pdf', requirePrivilege('calendar', 'download'), async (req, 
     await new Promise((resolve) => doc.on('end', resolve));
 
     const pdfBuffer = Buffer.concat(chunks);
+    const tenantPart = slug.replace(/^u3a_/, '');
     const stamp = new Date().toISOString().slice(0, 10);
     res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader('Content-Disposition', `attachment; filename="calendar_${stamp}.pdf"`);
+    res.setHeader('Content-Disposition', `attachment; filename="${tenantPart}_calendar_${stamp}.pdf"`);
     res.send(pdfBuffer);
   } catch (err) {
     next(err);

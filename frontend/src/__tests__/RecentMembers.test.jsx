@@ -15,8 +15,9 @@ vi.mock('../context/AuthContext.jsx', () => ({
 }));
 
 vi.mock('../lib/api.js', () => ({
-  members: { recent: vi.fn().mockResolvedValue([]) },
-  groups:  { list: vi.fn().mockResolvedValue([]) },
+  members: { recent: vi.fn().mockResolvedValue([]), download: vi.fn().mockResolvedValue(undefined) },
+  groups:  { list: vi.fn().mockResolvedValue([]), bulkAddMembers: vi.fn().mockResolvedValue({ added: 0, waitlisted: 0, skipped: 0 }) },
+  polls:   { list: vi.fn().mockResolvedValue([]), addMembers: vi.fn().mockResolvedValue({ added: 0 }) },
 }));
 
 describe('RecentMembers page', () => {

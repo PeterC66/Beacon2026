@@ -2,8 +2,8 @@
 // Doc 4.4 — Recent Members
 
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import { members as membersApi, groups as groupsApi } from '../../lib/api.js';
+import { Link, useNavigate } from 'react-router-dom';
+import { members as membersApi, groups as groupsApi, polls as pollsApi } from '../../lib/api.js';
 import { useAuth } from '../../context/AuthContext.jsx';
 import PageHeader from '../../components/PageHeader.jsx';
 import NavBar from '../../components/NavBar.jsx';
@@ -11,6 +11,24 @@ import DateInput from '../../components/DateInput.jsx';
 import SortableHeader from '../../components/SortableHeader.jsx';
 import { useSortedData } from '../../hooks/useSortedData.js';
 import { formatShortAddress, formatPhone } from '../../lib/memberFormatters.js';
+
+const DOWNLOAD_FIELDS = [
+  { key: 'membership_number', label: 'Membership No', default: true },
+  { key: 'title',             label: 'Title',         default: false },
+  { key: 'forenames',         label: 'Forenames',     default: true },
+  { key: 'known_as',          label: 'Known As',      default: false },
+  { key: 'surname',           label: 'Surname',       default: true },
+  { key: 'email',             label: 'Email',         default: true },
+  { key: 'mobile',            label: 'Mobile',        default: true },
+  { key: 'telephone',         label: 'Telephone',     default: false },
+  { key: 'address',           label: 'Address',       default: false },
+  { key: 'town',              label: 'Town',          default: true },
+  { key: 'county',            label: 'County',        default: false },
+  { key: 'postcode',          label: 'Postcode',      default: true },
+  { key: 'status',            label: 'Status',        default: true },
+  { key: 'class',             label: 'Class',         default: true },
+  { key: 'joined_on',         label: 'Joined',        default: true },
+];
 
 function isoToday() {
   return new Date().toISOString().slice(0, 10);
@@ -29,6 +47,7 @@ function fmtDate(d) {
 
 export default function RecentMembers() {
   const { can, tenant } = useAuth();
+  const navigate = useNavigate();
   const [list,       setList]       = useState([]);
   const [loading,    setLoading]    = useState(true);
   const [error,      setError]      = useState(null);
@@ -36,25 +55,37 @@ export default function RecentMembers() {
   const [toDate,     setToDate]     = useState(isoToday());
   const [filterErr,  setFilterErr]  = useState(null);
   const [selected,   setSelected]   = useState(new Set());
-  const [action,     setAction]     = useState('download_names');
-  const [doingAction, setDoingAction] = useState(false);
-  const [actionMsg,  setActionMsg]  = useState(null);
+
+  // Bulk actions
+  const [bulkAction,  setBulkAction]  = useState('');
+  const [bulkWorking, setBulkWorking] = useState(false);
+  const [bulkResult,  setBulkResult]  = useState(null);
+
+  // Download field picker
+  const [dlFields,    setDlFields]    = useState(new Set(DOWNLOAD_FIELDS.filter((f) => f.default).map((f) => f.key)));
+
+  // For "Add to poll"
+  const [polls,       setPolls]       = useState([]);
+  const [addToPollId, setAddToPollId] = useState('');
 
   // For "Add to group"
-  const [groups,      setGroups]    = useState([]);
-  const [chosenGroup, setChosenGroup] = useState('');
-  const [showGroupPicker, setShowGroupPicker] = useState(false);
+  const [allGroups,   setAllGroups]   = useState([]);
+  const [addToGroupId, setAddToGroupId] = useState('');
 
   const { sorted, sortKey, sortDir, onSort } = useSortedData(list, 'joined_on', 'desc');
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => {
+    load();
+    pollsApi.list().then(setPolls).catch(() => {});
+    groupsApi.list({ activeOnly: true }).then(setAllGroups).catch(() => {});
+  }, []);
 
   async function load() {
     setLoading(true);
     setError(null);
     setFilterErr(null);
     setSelected(new Set());
-    setActionMsg(null);
+    setBulkResult(null);
     try {
       const data = await membersApi.recent({ from: fromDate, to: toDate });
       setList(data);
@@ -90,13 +121,23 @@ export default function RecentMembers() {
     setSelected(s);
   }
 
-  async function handleDoWithSelected(e) {
-    e.preventDefault();
-    if (selected.size === 0) { setActionMsg({ type: 'error', text: 'No members selected.' }); return; }
-    setDoingAction(true);
-    setActionMsg(null);
+  function toggleDlField(key) {
+    setDlFields((prev) => { const n = new Set(prev); n.has(key) ? n.delete(key) : n.add(key); return n; });
+  }
 
-    if (action === 'download_names') {
+  async function handleBulkDo() {
+    if (selected.size === 0) return;
+    if (bulkAction === 'send_email') {
+      sessionStorage.setItem('emailComposeMemberIds', JSON.stringify([...selected]));
+      navigate('/email/compose');
+      return;
+    }
+    if (bulkAction === 'send_letter') {
+      sessionStorage.setItem('letterComposeMemberIds', JSON.stringify([...selected]));
+      navigate('/letters/compose');
+      return;
+    }
+    if (bulkAction === 'download_names') {
       const names = list
         .filter((m) => selected.has(m.id))
         .map((m) => `${m.forenames} ${m.surname}`)
@@ -105,60 +146,66 @@ export default function RecentMembers() {
       const url  = URL.createObjectURL(blob);
       const a    = document.createElement('a');
       a.href     = url;
-      a.download = 'recent_members.txt';
+      const tenantPart = (tenant || '').replace(/^u3a_/, '');
+      const stamp = new Date().toISOString().slice(0, 10);
+      a.download = `${tenantPart}_recent_members_${stamp}.txt`;
       a.click();
       URL.revokeObjectURL(url);
-      setDoingAction(false);
       return;
     }
-
-    if (action === 'add_to_group') {
-      // Load groups if not already loaded
-      if (groups.length === 0) {
-        try {
-          const grps = await groupsApi.list();
-          setGroups(grps.filter((g) => g.status === 'Active'));
-          setChosenGroup(grps.filter((g) => g.status === 'Active')[0]?.id || '');
-        } catch (err) {
-          setActionMsg({ type: 'error', text: 'Could not load groups: ' + err.message });
-          setDoingAction(false);
-          return;
-        }
+    if (bulkAction === 'add_to_poll') {
+      if (!addToPollId) return;
+      setBulkWorking(true);
+      setBulkResult(null);
+      try {
+        const result = await pollsApi.addMembers(addToPollId, [...selected]);
+        const pollName = polls.find((p) => p.id === addToPollId)?.name ?? 'poll';
+        setBulkResult({ type: 'success', msg: `${result.added} member${result.added !== 1 ? 's' : ''} added to "${pollName}".` });
+      } catch (err) {
+        setBulkResult({ type: 'error', msg: err.message });
+      } finally {
+        setBulkWorking(false);
       }
-      setShowGroupPicker(true);
-      setDoingAction(false);
       return;
     }
-
-    setDoingAction(false);
+    if (bulkAction === 'add_to_group') {
+      if (!addToGroupId) return;
+      setBulkWorking(true);
+      setBulkResult(null);
+      try {
+        const result = await groupsApi.bulkAddMembers(addToGroupId, [...selected]);
+        const groupName = allGroups.find((g) => g.id === addToGroupId)?.name ?? 'group';
+        const parts = [];
+        if (result.added)      parts.push(`${result.added} added`);
+        if (result.waitlisted) parts.push(`${result.waitlisted} waitlisted`);
+        if (result.skipped)    parts.push(`${result.skipped} already in group`);
+        setBulkResult({ type: 'success', msg: `"${groupName}": ${parts.join(', ')}.` });
+      } catch (err) {
+        setBulkResult({ type: 'error', msg: err.message });
+      } finally {
+        setBulkWorking(false);
+      }
+      return;
+    }
   }
 
-  async function handleAddToGroup() {
-    if (!chosenGroup) return;
-    setDoingAction(true);
-    setActionMsg(null);
+  async function handleDownload(format) {
     const ids = [...selected];
-    let added = 0;
-    let errors = 0;
-    for (const memberId of ids) {
-      try {
-        await groupsApi.addMember(chosenGroup, { memberId });
-        added++;
-      } catch {
-        errors++;
-      }
+    const fields = DOWNLOAD_FIELDS.filter((f) => dlFields.has(f.key)).map((f) => f.key);
+    setBulkWorking(true);
+    setBulkResult(null);
+    try {
+      await membersApi.download(format, ids, fields);
+    } catch (err) {
+      setBulkResult({ type: 'error', msg: err.message });
+    } finally {
+      setBulkWorking(false);
     }
-    setShowGroupPicker(false);
-    setDoingAction(false);
-    const msg = `Added ${added} member${added !== 1 ? 's' : ''} to group.` +
-      (errors > 0 ? ` (${errors} already in group or error.)` : '');
-    setActionMsg({ type: 'success', text: msg });
   }
 
   const allChecked = sorted.length > 0 && sorted.every((m) => selected.has(m.id));
-
-  const INPUT  = 'border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500';
-  const SELECT = INPUT;
+  const hasBulkPolls  = can('poll_set_up', 'change') && polls.length > 0;
+  const hasBulkGroups = can('groups_list', 'view') && allGroups.length > 0;
   const TH     = 'px-4 py-2.5 font-normal text-left';
 
   return (
@@ -184,47 +231,6 @@ export default function RecentMembers() {
           </button>
           {filterErr && <p className="text-sm text-red-600">{filterErr}</p>}
         </form>
-
-        {/* Status messages */}
-        {actionMsg && (
-          <p className={`text-sm font-medium px-4 py-2 rounded border ${
-            actionMsg.type === 'success'
-              ? 'text-green-700 bg-green-50 border-green-200'
-              : 'text-red-700 bg-red-50 border-red-300'
-          }`}>{actionMsg.text}</p>
-        )}
-
-        {/* Add-to-group picker */}
-        {showGroupPicker && (
-          <div className="bg-white/90 rounded-lg shadow-sm p-4 space-y-3">
-            <p className="text-sm font-medium text-slate-700">Select a group to add the {selected.size} selected member{selected.size !== 1 ? 's' : ''} to:</p>
-            <select
-              name="chosenGroup"
-              value={chosenGroup}
-              onChange={(e) => setChosenGroup(e.target.value)}
-              className={SELECT + ' w-64'}
-            >
-              {groups.map((g) => (
-                <option key={g.id} value={g.id}>{g.name}</option>
-              ))}
-            </select>
-            <div className="flex gap-2">
-              <button
-                onClick={handleAddToGroup}
-                disabled={doingAction || !chosenGroup}
-                className="bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white rounded px-5 py-2 text-sm font-medium transition-colors"
-              >
-                Add to group
-              </button>
-              <button
-                onClick={() => setShowGroupPicker(false)}
-                className="border border-slate-300 text-slate-600 hover:bg-slate-50 rounded px-5 py-2 text-sm transition-colors"
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
-        )}
 
         {loading ? (
           <p className="text-slate-500 text-sm">Loading…</p>
@@ -316,31 +322,95 @@ export default function RecentMembers() {
             </div>
 
             {/* Bulk actions — below the table */}
-            {sorted.length > 0 && selected.size > 0 && (
-              <div className="bg-white/90 rounded-lg shadow-sm p-3">
-                <form onSubmit={handleDoWithSelected} className="flex flex-wrap gap-3 items-end">
+            {selected.size > 0 && (
+              <div className="bg-white/90 rounded-lg shadow-sm p-3 space-y-3">
+                <div className="flex flex-wrap gap-3 items-end">
                   <div>
                     <label className="block text-sm font-medium text-slate-700 mb-1">Do with {selected.size} selected member{selected.size !== 1 ? 's' : ''}</label>
                     <select
-                      name="action"
-                      value={action}
-                      onChange={(e) => setAction(e.target.value)}
-                      className={SELECT}
+                      name="bulkAction"
+                      value={bulkAction}
+                      onChange={(e) => { setBulkAction(e.target.value); setBulkResult(null); }}
+                      className="border border-slate-300 rounded px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                     >
-                      <option value="download_names">Download names as a txt file</option>
-                      {can('groups_list', 'view') && (
-                        <option value="add_to_group">Add to group</option>
-                      )}
+                      <option value="">— choose action —</option>
+                      <option value="download_names">Download names as txt file</option>
+                      {can('email', 'send') && <option value="send_email">Send E-mail</option>}
+                      {can('letters', 'view') && <option value="send_letter">Send Letter</option>}
+                      {hasBulkPolls && <option value="add_to_poll">Add to poll</option>}
+                      {hasBulkGroups && <option value="add_to_group">Add to group</option>}
+                      <option value="download_excel">Download Excel</option>
+                      <option value="download_pdf">Download PDF</option>
                     </select>
                   </div>
-                  <button
-                    type="submit"
-                    disabled={doingAction}
-                    className="bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white rounded px-4 py-1.5 text-sm font-medium transition-colors"
-                  >
-                    Do with selected
-                  </button>
-                </form>
+
+                  {bulkAction === 'add_to_poll' && (
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-1">Poll</label>
+                      <select
+                        name="addToPollId"
+                        value={addToPollId}
+                        onChange={(e) => setAddToPollId(e.target.value)}
+                        className="border border-slate-300 rounded px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      >
+                        <option value="">— select poll —</option>
+                        {polls.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
+                      </select>
+                    </div>
+                  )}
+
+                  {bulkAction === 'add_to_group' && (
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-1">Group</label>
+                      <select
+                        name="addToGroupId"
+                        value={addToGroupId}
+                        onChange={(e) => setAddToGroupId(e.target.value)}
+                        className="border border-slate-300 rounded px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      >
+                        <option value="">— select group —</option>
+                        {allGroups.map((g) => <option key={g.id} value={g.id}>{g.name}</option>)}
+                      </select>
+                    </div>
+                  )}
+
+                  {(bulkAction === 'send_email' || bulkAction === 'send_letter' || bulkAction === 'download_names' || bulkAction === 'add_to_poll' || bulkAction === 'add_to_group') && (
+                    <button
+                      onClick={handleBulkDo}
+                      disabled={bulkWorking || (bulkAction === 'add_to_poll' && !addToPollId) || (bulkAction === 'add_to_group' && !addToGroupId)}
+                      className="bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white rounded px-4 py-1.5 text-sm font-medium transition-colors"
+                    >
+                      {bulkWorking ? 'Working…' : 'Do with selected'}
+                    </button>
+                  )}
+
+                  {bulkResult && (
+                    <p className={`text-sm font-medium ${bulkResult.type === 'success' ? 'text-green-700' : 'text-red-600'}`}>
+                      {bulkResult.msg}
+                    </p>
+                  )}
+                </div>
+
+                {/* Field picker for Excel / PDF downloads */}
+                {(bulkAction === 'download_excel' || bulkAction === 'download_pdf') && (
+                  <div className="border border-slate-200 rounded p-3 bg-slate-50">
+                    <p className="text-sm font-medium text-slate-700 mb-2">Fields to include:</p>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-x-4 gap-y-1 mb-3">
+                      {DOWNLOAD_FIELDS.map((f) => (
+                        <label key={f.key} className="flex items-center gap-1.5 text-sm cursor-pointer">
+                          <input type="checkbox" checked={dlFields.has(f.key)} onChange={() => toggleDlField(f.key)}
+                            className="rounded border-slate-300 text-blue-600 focus:ring-blue-500" />
+                          {f.label}
+                        </label>
+                      ))}
+                    </div>
+                    <button onClick={() => handleDownload(bulkAction === 'download_excel' ? 'excel' : 'pdf')}
+                      disabled={bulkWorking || dlFields.size === 0}
+                      className="bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white rounded px-4 py-1.5 text-sm font-medium transition-colors">
+                      {bulkWorking ? 'Downloading…' : `Download ${bulkAction === 'download_excel' ? 'Excel' : 'PDF'}`}
+                    </button>
+                  </div>
+                )}
               </div>
             )}
           </>

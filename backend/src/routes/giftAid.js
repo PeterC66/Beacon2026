@@ -167,7 +167,8 @@ router.post('/download', requirePrivilege('gift_aid_declaration', 'download_and_
     }
 
     const tenantPart = slug.replace(/^u3a_/, '');
-    const filename = `${tenantPart}-gift-aid-declaration.xlsx`;
+    const stamp = new Date().toISOString().slice(0, 10);
+    const filename = `${tenantPart}_gift_aid_declaration_${stamp}.xlsx`;
 
     res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
     res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
