@@ -847,6 +847,7 @@ router.get('/:id', requirePrivilege('member_record', 'view'), async (req, res, n
               mc.is_associate,
               a.house_no, a.street, a.add_line1, a.add_line2,
               a.town, a.county, a.postcode, a.telephone,
+              a.created_at AS address_created_at, a.updated_at AS address_updated_at,
               p.forenames AS partner_forenames, p.surname AS partner_surname,
               p.membership_number AS partner_number,
               p.status_id AS partner_status_id, ps.name AS partner_status_name,
