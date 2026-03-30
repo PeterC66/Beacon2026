@@ -169,7 +169,7 @@ router.get('/', requirePrivilege('members_list', 'view'), async (req, res, next)
               m.known_as, m.email, m.mobile, m.hide_contact,
               ms.id AS status_id, ms.name AS status,
               mc.id AS class_id,  mc.name AS class,
-              a.house_no, a.street, a.town, a.postcode,
+              a.house_no, a.street, a.town, a.postcode, a.telephone,
               m.joined_on, m.next_renewal, m.partner_id,
               m.custom_field_1, m.custom_field_2,
               m.custom_field_3, m.custom_field_4,

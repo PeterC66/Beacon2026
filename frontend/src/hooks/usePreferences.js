@@ -65,12 +65,18 @@ export function savePreferences(updates) {
 
 /**
  * Format a member's name according to current display preferences.
- * member: { forenames, surname } or { member_forenames, member_surname }
+ * member: { forenames, surname, known_as? } or { member_forenames, member_surname, member_known_as? }
+ *
+ * If known_as is present:
+ *   forename_first → "forenames (known_as) surname"
+ *   surname_first  → "surname, forenames (known_as)"
  */
 export function formatMemberName(member) {
   const prefs = load();
-  const fore = member.forenames ?? member.member_forenames ?? '';
-  const sur  = member.surname   ?? member.member_surname   ?? '';
-  if (prefs.displayFormat === 'forename_first') return `${fore} ${sur}`.trim();
-  return `${sur}, ${fore}`.trim();
+  const fore    = member.forenames ?? member.member_forenames ?? '';
+  const sur     = member.surname   ?? member.member_surname   ?? '';
+  const knownAs = member.known_as  ?? member.member_known_as  ?? '';
+  const forePart = knownAs ? `${fore} (${knownAs})` : fore;
+  if (prefs.displayFormat === 'forename_first') return `${forePart} ${sur}`.trim();
+  return `${sur}, ${forePart}`.trim();
 }
