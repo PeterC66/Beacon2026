@@ -1,6 +1,6 @@
 // beacon2/backend/src/routes/members.js
 
-import express, { Router } from 'express';
+import { Router } from 'express';
 import { randomBytes } from 'crypto';
 import { z } from 'zod';
 import ExcelJS from 'exceljs';
@@ -1476,7 +1476,7 @@ const photoUploadSchema = z.object({
 
 const MAX_PHOTO_BYTES = 2 * 1024 * 1024; // 2 MB
 
-router.post('/:id/photo', express.json({ limit: '4mb' }), requirePrivilege('member_record', 'change'), async (req, res, next) => {
+router.post('/:id/photo', requirePrivilege('member_record', 'change'), async (req, res, next) => {
   try {
     const slug = req.user.tenantSlug;
     const memberId = req.params.id;

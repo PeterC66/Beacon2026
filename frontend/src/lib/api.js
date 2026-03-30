@@ -106,6 +106,17 @@ export class ApiError extends Error {
   }
 }
 
+/** Fetch a binary blob with auth headers (does NOT auto-download like requestBlob). */
+async function fetchAuthBlob(path) {
+  const headers = {
+    ...(accessToken && { Authorization: `Bearer ${accessToken}` }),
+    ...(tenantSlug  && { 'x-tenant-slug': tenantSlug }),
+  };
+  const res = await fetch(`${BASE}${path}`, { headers, credentials: 'include' });
+  if (!res.ok) return null;
+  return res.blob();
+}
+
 // ─── Auth ─────────────────────────────────────────────────────────────────
 
 export const auth = {
@@ -246,7 +257,7 @@ export const members = {
   uploadPhoto: (id, data, mimeType) =>
     request(`/members/${id}/photo`, { method: 'POST', body: JSON.stringify({ data, mimeType }) }),
   deletePhoto: (id)           => request(`/members/${id}/photo`, { method: 'DELETE' }),
-  getPhotoBlob: (id)          => requestBlob(`/members/${id}/photo`),
+  getPhotoBlob: (id) => fetchAuthBlob(`/members/${id}/photo`),
 };
 
 // ─── Faculties ────────────────────────────────────────────────────────────
