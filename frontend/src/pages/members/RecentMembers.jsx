@@ -146,7 +146,9 @@ export default function RecentMembers() {
       const url  = URL.createObjectURL(blob);
       const a    = document.createElement('a');
       a.href     = url;
-      a.download = 'recent_members.txt';
+      const tenantPart = (tenant || '').replace(/^u3a_/, '');
+      const stamp = new Date().toISOString().slice(0, 10);
+      a.download = `${tenantPart}_recent_members_${stamp}.txt`;
       a.click();
       URL.revokeObjectURL(url);
       return;

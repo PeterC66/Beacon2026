@@ -82,7 +82,7 @@ describe('POST /gift-aid/download', () => {
       .send({ ids: ['t1'], from: '2026-01-01', to: '2026-12-31' });
     expect(res.status).toBe(200);
     expect(res.headers['content-type']).toMatch(/spreadsheetml/);
-    expect(res.headers['content-disposition']).toMatch(/gift-aid-declaration\.xlsx/);
+    expect(res.headers['content-disposition']).toMatch(/gift_aid_declaration_\d{4}-\d{2}-\d{2}\.xlsx/);
   });
 
   it('returns 400 when no matching transactions', async () => {
