@@ -330,7 +330,7 @@ export default function MemberEditor() {
           setHasPhoto(!!m.has_photo);
           if (m.has_photo) {
             membersApi.getPhotoBlob(id).then((blob) => {
-              setPhotoBlobUrl(URL.createObjectURL(blob));
+              if (blob) setPhotoBlobUrl(URL.createObjectURL(blob));
             }).catch(() => {});
           }
         })
@@ -786,7 +786,7 @@ export default function MemberEditor() {
         // Refresh preview
         const blob = await membersApi.getPhotoBlob(id);
         if (photoBlobUrl) URL.revokeObjectURL(photoBlobUrl);
-        setPhotoBlobUrl(URL.createObjectURL(blob));
+        setPhotoBlobUrl(blob ? URL.createObjectURL(blob) : null);
         setHasPhoto(true);
       }
     } catch (err) {

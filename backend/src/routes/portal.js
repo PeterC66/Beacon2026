@@ -3,7 +3,7 @@
 // All routes require a valid portal JWT (isPortal: true).
 // Mounted at /public/:slug/portal/app/* via the public router.
 
-import express, { Router } from 'express';
+import { Router } from 'express';
 import { z } from 'zod';
 import PDFDocument from 'pdfkit';
 import { tenantQuery, prisma } from '../utils/db.js';
@@ -695,7 +695,7 @@ const portalPhotoUploadSchema = z.object({
 
 const MAX_PHOTO_BYTES = 2 * 1024 * 1024; // 2 MB
 
-router.post('/photo', express.json({ limit: '4mb' }), async (req, res, next) => {
+router.post('/photo', async (req, res, next) => {
   try {
     const slug = req.portal.tenantSlug;
     const memberId = req.portal.memberId;
