@@ -120,6 +120,11 @@ export default function MembershipRenewals() {
     if (checked) setSelected(new Set(filtered.map((m) => m.id)));
     else         setSelected(new Set());
   }
+  function selectEmail()               { setSelected(new Set(filtered.filter((m) => m.email).map((m) => m.id))); }
+  function selectNoEmail()             { setSelected(new Set(filtered.filter((m) => !m.email).map((m) => m.id))); }
+  function selectPortalPassword()      { setSelected(new Set(filtered.filter((m) => m.has_portal_password).map((m) => m.id))); }
+  function selectNoPortalPassword()    { setSelected(new Set(filtered.filter((m) => !m.has_portal_password).map((m) => m.id))); }
+  function selectEmailNotConfirmed()   { setSelected(new Set(filtered.filter((m) => m.has_portal_password && !m.portal_email_verified).map((m) => m.id))); }
   function toggleOne(id, checked) {
     const s = new Set(selected);
     if (checked) s.add(id); else s.delete(id);
@@ -399,9 +404,14 @@ export default function MembershipRenewals() {
 
             {/* Select/Deselect all links at bottom */}
             {filtered.length > 0 && (
-              <div className="flex gap-4 text-sm">
-                <button onClick={() => toggleAll(true)} className="text-blue-600 hover:underline">Select all</button>
-                <button onClick={() => toggleAll(false)} className="text-blue-600 hover:underline">Deselect all</button>
+              <div className="flex flex-wrap gap-4 text-sm">
+                <button onClick={() => toggleAll(true)} className="text-blue-700 hover:underline">All</button>
+                <button onClick={() => toggleAll(false)} className="text-blue-700 hover:underline">Clear All</button>
+                <button onClick={selectEmail} className="text-blue-700 hover:underline">Email only</button>
+                <button onClick={selectNoEmail} className="text-blue-700 hover:underline">Without email</button>
+                <button onClick={selectPortalPassword} className="text-blue-700 hover:underline">Portal password set</button>
+                <button onClick={selectNoPortalPassword} className="text-blue-700 hover:underline">Without portal password</button>
+                <button onClick={selectEmailNotConfirmed} className="text-blue-700 hover:underline">Email not confirmed</button>
               </div>
             )}
 

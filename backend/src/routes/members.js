@@ -403,7 +403,9 @@ router.get('/renewals', requirePrivilege('membership_renewals', 'view'), async (
               ms.id   AS status_id, ms.name AS status_name,
               mc.id   AS class_id,  mc.name AS class_name,
               mc.fee, mc.gift_aid_fee,
-              m.next_renewal, m.gift_aid_from, m.partner_id,
+              m.next_renewal, m.gift_aid_from, m.partner_id, m.email,
+              m.portal_password_hash IS NOT NULL AS has_portal_password,
+              m.portal_email_verified,
               p.forenames AS partner_forenames, p.surname AS partner_surname
        FROM members m
        LEFT JOIN member_statuses ms ON ms.id = m.status_id
