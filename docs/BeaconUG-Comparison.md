@@ -115,7 +115,7 @@
 | Partner linking (bidirectional) | Built | Auto-shares address |
 | Poll tick boxes | Built | — |
 | Groups & Ledger tabs | Built | — |
-| Photo upload | Built | Upload/view/remove in member record; appears on membership cards and group members PDF. Portal upload deferred. |
+| Photo upload | Built | Upload/view/remove in member record and portal; appears on membership cards and group members PDF. Drag-and-drop supported. |
 | **Beacon2 extra:** Inline validation | Beacon2 extra | Field-level blur validation with error messages |
 | **Beacon2 extra:** Compact view | Beacon2 extra | Read-only condensed layout at `/members/:id/compact` — fits all member data on one laptop screen, inspired by Beacon's dense layout. Accessible via "Compact View" nav link on member record |
 
@@ -983,7 +983,7 @@
 | Change password | Built | Expandable section with validation |
 | Email change triggers re-verification | Built | Logs out member after email change, must re-verify |
 | Confirmation email | Built | Uses portal_details_updated system message template |
-| Photo upload | Built | Upload/view/remove photo; appears on membership card |
+| Photo upload | Built | Upload/view/remove photo with drag-and-drop support; appears on membership card |
 
 ---
 

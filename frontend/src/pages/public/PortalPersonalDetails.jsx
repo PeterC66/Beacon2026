@@ -20,6 +20,7 @@ export default function PortalPersonalDetails() {
   const [photoBlobUrl, setPhotoBlobUrl] = useState(null);
   const [photoUploading, setPhotoUploading] = useState(false);
   const [photoError, setPhotoError] = useState(null);
+  const [photoDragOver, setPhotoDragOver] = useState(false);
 
   // Password change
   const [showPassword, setShowPassword] = useState(false);
@@ -55,10 +56,8 @@ export default function PortalPersonalDetails() {
   const ALLOWED_PHOTO_TYPES = ['image/jpeg', 'image/png', 'image/gif'];
   const MAX_PHOTO_SIZE = 2 * 1024 * 1024;
 
-  async function handlePhotoSelect(e) {
-    const file = e.target.files?.[0];
+  async function processPhotoFile(file) {
     if (!file) return;
-    e.target.value = '';
 
     if (!ALLOWED_PHOTO_TYPES.includes(file.type)) {
       setPhotoError('Photo must be jpg, png, or gif.');
@@ -89,6 +88,18 @@ export default function PortalPersonalDetails() {
     } finally {
       setPhotoUploading(false);
     }
+  }
+
+  function handlePhotoSelect(e) {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    processPhotoFile(file);
+  }
+
+  function handlePhotoDrop(e) {
+    e.preventDefault();
+    setPhotoDragOver(false);
+    processPhotoFile(e.dataTransfer?.files?.[0]);
   }
 
   async function handlePhotoRemove() {
@@ -319,14 +330,27 @@ export default function PortalPersonalDetails() {
               <div className="sm:col-span-2">
                 <label className={labelCls}>Your Photo</label>
                 <div className="flex items-start gap-4">
-                  {photoBlobUrl ? (
-                    <img src={photoBlobUrl} alt="Your photo"
-                      className="w-20 h-20 object-cover rounded border border-slate-300" />
-                  ) : (
-                    <div className="w-20 h-20 rounded border border-dashed border-slate-300 flex items-center justify-center text-slate-400 text-xs">
-                      No photo
-                    </div>
-                  )}
+                  <div
+                    onDrop={handlePhotoDrop}
+                    onDragOver={(e) => { e.preventDefault(); setPhotoDragOver(true); }}
+                    onDragLeave={() => setPhotoDragOver(false)}
+                    className={`w-20 h-20 rounded border-2 flex items-center justify-center transition-colors ${
+                      photoDragOver
+                        ? 'border-blue-400 bg-blue-50'
+                        : photoBlobUrl
+                          ? 'border-slate-300'
+                          : 'border-dashed border-slate-300'
+                    }`}
+                  >
+                    {photoBlobUrl ? (
+                      <img src={photoBlobUrl} alt="Your photo"
+                        className="w-full h-full object-cover rounded" />
+                    ) : (
+                      <span className="text-slate-400 text-xs text-center px-1">
+                        {photoDragOver ? 'Drop here' : 'No photo'}
+                      </span>
+                    )}
+                  </div>
                   <div className="flex flex-col gap-2">
                     <input type="file" accept="image/jpeg,image/png,image/gif"
                       onChange={handlePhotoSelect}
@@ -343,7 +367,7 @@ export default function PortalPersonalDetails() {
                       </button>
                     )}
                     <p className="text-xs text-slate-500">
-                      jpg, png, or gif — max 2 MB.
+                      jpg, png, or gif — max 2 MB. Drag and drop or click.
                       <br />Square format (1:1) recommended for membership cards.
                     </p>
                     {photoError && <p className="text-xs text-red-600 font-medium">{photoError}</p>}

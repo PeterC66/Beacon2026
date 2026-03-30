@@ -92,6 +92,9 @@ Format: `## [version] — YYYY-MM-DD` with bullet points per change.
 - **Portal photo upload** (doc 10.2.4) — members can upload, view, and remove their
   photo from the Members Portal personal details page; uses same validation (jpg/png/gif,
   max 2 MB) and storage as admin-side upload
+- **Drag-and-drop photo upload** — both Member Editor and Portal personal details
+  support drag-and-drop as well as click-to-browse for photo uploads, with visual
+  feedback (blue border highlight) during drag
 - TAM submission cookie — when downloading in TAM format, the selected Status
   and Class filters are saved to localStorage (consent-gated) and restored
   next time TAM format is selected (`beacon2_tam_submission`)
