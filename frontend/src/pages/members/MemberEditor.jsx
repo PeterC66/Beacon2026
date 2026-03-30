@@ -115,6 +115,9 @@ export default function MemberEditor() {
   // Timestamps for existing member display
   const [createdAt,      setCreatedAt]      = useState(null);
   const [updatedAt,      setUpdatedAt]      = useState(null);
+  // Timestamps for address record display
+  const [addrCreatedAt,  setAddrCreatedAt]  = useState(null);
+  const [addrUpdatedAt,  setAddrUpdatedAt]  = useState(null);
   // Whether the current address is shared with the linked partner (from server)
   const [addressShared,  setAddressShared]  = useState(false);
   // Display name of the linked partner (from server)
@@ -321,6 +324,8 @@ export default function MemberEditor() {
           };
           setCreatedAt(m.created_at ?? null);
           setUpdatedAt(m.updated_at ?? null);
+          setAddrCreatedAt(m.address_created_at ?? null);
+          setAddrUpdatedAt(m.address_updated_at ?? null);
           setAddressShared(m.address_shared ?? false);
           if (m.partner_forenames || m.partner_surname) {
             setPartnerName(`${m.partner_forenames ?? ''} ${m.partner_surname ?? ''}`.trim());
@@ -1019,7 +1024,7 @@ export default function MemberEditor() {
               </div>
               {isAssociate && (
                 <div>
-                  <label className={labelCls}>Home u3a</label>
+                  <label className={labelCls}>Home u3a and member no.</label>
                   <input type="text" name="homeU3a" value={form.homeU3a}
                     onChange={(e) => set('homeU3a', e.target.value)}
                     title="e.g. name of main u3a, etc"
@@ -1350,6 +1355,11 @@ export default function MemberEditor() {
                 {fieldErrors.telephone && <p className={errMsgCls}>{fieldErrors.telephone}</p>}
               </div>
             </div>
+            {!isNew && addrCreatedAt && (
+              <p className="text-xs text-slate-500 mt-2">
+                Address record created {fmtTimestamp(addrCreatedAt)}{addrUpdatedAt && addrUpdatedAt !== addrCreatedAt ? `; last changed ${fmtTimestamp(addrUpdatedAt)}` : ''}
+              </p>
+            )}
           </div>
 
           {/* ── iv) Payment (new member only) ───────────────────────── */}

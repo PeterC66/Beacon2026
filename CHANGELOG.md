@@ -8,6 +8,8 @@ Format: `## [version] — YYYY-MM-DD` with bullet points per change.
 ## [0.7.17] — 2026-03-30
 
 ### Changed
+- **Member record** — renamed "Home u3a" label to "Home u3a and member no." for Associate members
+- **Member record** — address section now shows "Address record created …; last changed …" timestamp note below the address fields
 - **Members list** — consolidated surname/forenames/known-as into a single "Name" column
   formatted as "forenames (known as) surname", respecting display preference
 - **Members list** — member number and name are both clickable links to the member record;

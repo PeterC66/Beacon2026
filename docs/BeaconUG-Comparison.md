@@ -109,7 +109,7 @@
 | Aspect | Status | Notes |
 |--------|--------|-------|
 | Personal details editing | Built | Forenames, surname, title, etc. |
-| Address fields | Built | With sharing and partner linking |
+| Address fields | Built | With sharing and partner linking; shows address record created/last-changed timestamps |
 | Phone/email/postcode validation | Built | — |
 | Status and class | Built | — |
 | Dates (joined, renewed, etc.) | Built | Via DateInput component |
