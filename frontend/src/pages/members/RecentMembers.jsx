@@ -11,6 +11,7 @@ import DateInput from '../../components/DateInput.jsx';
 import SortableHeader from '../../components/SortableHeader.jsx';
 import { useSortedData } from '../../hooks/useSortedData.js';
 import { formatShortAddress, formatPhone } from '../../lib/memberFormatters.js';
+import NoEmailIcon from '../../components/NoEmailIcon.jsx';
 
 const DOWNLOAD_FIELDS = [
   { key: 'membership_number', label: 'Membership No', default: true },
@@ -296,6 +297,7 @@ export default function RecentMembers() {
                           onChange={(e) => toggleOne(m.id, e.target.checked)}
                           aria-label={`Select ${m.forenames} ${m.surname}`}
                         />
+                        {!m.email && <NoEmailIcon className="ml-1" />}
                       </td>
                       <td className="px-4 py-2">{m.membership_number}</td>
                       <td className="px-4 py-2">

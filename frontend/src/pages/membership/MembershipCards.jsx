@@ -10,6 +10,7 @@ import PageHeader from '../../components/PageHeader.jsx';
 import SortableHeader from '../../components/SortableHeader.jsx';
 import { useSortedData } from '../../hooks/useSortedData.js';
 import ScrollButtons from '../../components/ScrollButtons.jsx';
+import NoEmailIcon from '../../components/NoEmailIcon.jsx';
 
 export default function MembershipCards() {
   const { can, tenant } = useAuth();
@@ -240,6 +241,7 @@ export default function MembershipCards() {
                             onChange={() => toggleSelect(m.id)}
                             className="rounded border-slate-300 text-blue-600 focus:ring-blue-500"
                           />
+                          {!m.email && <NoEmailIcon className="ml-1" />}
                         </td>
                         <td className="px-3 py-2 tabular-nums">{m.membership_number}</td>
                         <td className="px-3 py-2 font-medium">

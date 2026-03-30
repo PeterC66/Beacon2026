@@ -8,6 +8,7 @@ import { useAuth } from '../../context/AuthContext.jsx';
 import PageHeader from '../../components/PageHeader.jsx';
 import NavBar from '../../components/NavBar.jsx';
 import ScrollButtons from '../../components/ScrollButtons.jsx';
+import NoEmailIcon from '../../components/NoEmailIcon.jsx';
 
 const PAYMENT_METHODS = ['Cash', 'Cheque', 'Standing Order', 'Direct Debit', 'Online', 'Other'];
 
@@ -365,6 +366,7 @@ export default function MembershipRenewals() {
                             onChange={(e) => toggleOne(m.id, e.target.checked)}
                             aria-label={`Select ${m.forenames} ${m.surname}`}
                           />
+                          {!m.email && <NoEmailIcon className="ml-1" />}
                         </td>
                         <td className="px-4 py-2">{m.membership_number}</td>
                         <td className="px-4 py-2">

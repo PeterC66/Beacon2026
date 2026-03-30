@@ -9,6 +9,7 @@ import PageHeader from '../../components/PageHeader.jsx';
 import NavBar from '../../components/NavBar.jsx';
 import { useSortedData } from '../../hooks/useSortedData.js';
 import SortableHeader from '../../components/SortableHeader.jsx';
+import NoEmailIcon from '../../components/NoEmailIcon.jsx';
 
 function fmtDate(d) {
   if (!d) return '—';
@@ -274,6 +275,7 @@ export default function NonRenewals() {
                           onChange={() => toggleOne(m.id)}
                           className="accent-blue-600"
                         />
+                        {!m.email && <NoEmailIcon className="ml-1" />}
                       </td>
                       <td className="px-3 py-1.5">{m.membership_number}</td>
                       <td className="px-3 py-1.5 font-medium">{m.surname}</td>

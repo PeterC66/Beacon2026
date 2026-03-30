@@ -22,6 +22,12 @@ Format: `## [version] — YYYY-MM-DD` with bullet points per change.
 - **`useSortedData`** — supports compound sort keys (array of field names) for multi-field sorting
 - Backend member list query now returns `telephone` from the address table
 
+### Added
+- **No-email icon** — members without an email address now show a small struck-through
+  envelope icon next to their checkbox on all member list pages (Members, Recent Members,
+  Non-Renewals, Membership Renewals, Membership Cards)
+- New shared `NoEmailIcon` component (`frontend/src/components/NoEmailIcon.jsx`)
+
 ---
 
 ## [0.7.16] — 2026-03-29
