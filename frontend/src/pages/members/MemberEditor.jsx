@@ -988,7 +988,7 @@ export default function MemberEditor() {
                   <label className={labelCls}>Suffix</label>
                   <input type="text" name="suffix" value={form.suffix}
                     onChange={(e) => set('suffix', e.target.value)}
-                    title="e.g. MBE, DD, Esq etc"
+                    title="eg DD, MBE"
                     className={inputCls} maxLength={30} />
                 </div>
                 <div>
@@ -1518,7 +1518,7 @@ export default function MemberEditor() {
                               <tr key={g.id} className={`border-b border-slate-100 ${i % 2 === 0 ? 'bg-yellow-50' : 'bg-white'}`}>
                                 <td className="px-3 py-1.5">
                                   {can('group_records_all', 'view') ? (
-                                    <a href={`/groups/${g.id}`} className="text-blue-700 hover:underline">{g.name}</a>
+                                    <a href={`/groups/${g.id}`} className="text-blue-700 hover:underline" title="Press to access the group record">{g.name}</a>
                                   ) : (
                                     <span className={g.status === 'inactive' ? 'text-red-600' : ''}>{g.name}</span>
                                   )}
@@ -1553,7 +1553,7 @@ export default function MemberEditor() {
                                 <th className="px-3 py-2 font-normal">Date</th>
                                 <th className="px-3 py-2 font-normal">Detail</th>
                                 <th className="px-3 py-2 font-normal">Account</th>
-                                <th className="px-3 py-2 font-normal text-right">Amount</th>
+                                <th className="px-3 py-2 font-normal text-right" title="+/- means the member paid/received">Amount</th>
                               </tr>
                             </thead>
                             <tbody>
@@ -1561,7 +1561,7 @@ export default function MemberEditor() {
                                 <tr key={t.id} className={`border-b border-slate-100 ${i % 2 === 0 ? 'bg-yellow-50' : 'bg-white'}`}>
                                   <td className="px-3 py-1.5">
                                     {can('finance_transactions', 'view') ? (
-                                      <a href={`/finance/transactions/${t.id}`} className="text-blue-700 hover:underline font-mono">{t.transaction_number}</a>
+                                      <a href={`/finance/transactions/${t.id}`} className="text-blue-700 hover:underline font-mono" title="Press to access the transaction record">{t.transaction_number}</a>
                                     ) : (
                                       <span className="font-mono">{t.transaction_number}</span>
                                     )}
