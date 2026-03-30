@@ -172,6 +172,7 @@ export default function MemberEditor() {
   const [photoBlobUrl,   setPhotoBlobUrl]   = useState(null);
   const [photoUploading, setPhotoUploading] = useState(false);
   const [photoError,     setPhotoError]     = useState(null);
+  const [photoDragOver,  setPhotoDragOver]  = useState(false);
   const pendingPhotoRef = useRef(null); // { data, mimeType } for new member pre-upload
 
   const selectedClass = classes.find((c) => c.id === form.classId);
@@ -750,11 +751,8 @@ export default function MemberEditor() {
   const ALLOWED_PHOTO_TYPES = ['image/jpeg', 'image/png', 'image/gif'];
   const MAX_PHOTO_SIZE = 2 * 1024 * 1024; // 2 MB
 
-  async function handlePhotoSelect(e) {
-    const file = e.target.files?.[0];
+  async function processPhotoFile(file) {
     if (!file) return;
-    // Reset input so the same file can be re-selected
-    e.target.value = '';
 
     if (!ALLOWED_PHOTO_TYPES.includes(file.type)) {
       setPhotoError('Photo must be jpg, png, or gif.');
@@ -770,20 +768,17 @@ export default function MemberEditor() {
     try {
       const base64 = await new Promise((resolve, reject) => {
         const reader = new FileReader();
-        reader.onload = () => resolve(reader.result.split(',')[1]); // strip data:...;base64, prefix
+        reader.onload = () => resolve(reader.result.split(',')[1]);
         reader.onerror = reject;
         reader.readAsDataURL(file);
       });
 
       if (isNew) {
-        // For new members we can't upload yet — store locally for display
         setPhotoBlobUrl(URL.createObjectURL(file));
         setHasPhoto(true);
-        // Stash in a ref for upload after member creation
         pendingPhotoRef.current = { data: base64, mimeType: file.type };
       } else {
         await membersApi.uploadPhoto(id, base64, file.type);
-        // Refresh preview
         const blob = await membersApi.getPhotoBlob(id);
         if (photoBlobUrl) URL.revokeObjectURL(photoBlobUrl);
         setPhotoBlobUrl(blob ? URL.createObjectURL(blob) : null);
@@ -794,6 +789,28 @@ export default function MemberEditor() {
     } finally {
       setPhotoUploading(false);
     }
+  }
+
+  async function handlePhotoSelect(e) {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    processPhotoFile(file);
+  }
+
+  function handlePhotoDrop(e) {
+    e.preventDefault();
+    setPhotoDragOver(false);
+    const file = e.dataTransfer?.files?.[0];
+    processPhotoFile(file);
+  }
+
+  function handlePhotoDragOver(e) {
+    e.preventDefault();
+    setPhotoDragOver(true);
+  }
+
+  function handlePhotoDragLeave() {
+    setPhotoDragOver(false);
   }
 
   async function handlePhotoRemove() {
@@ -1065,17 +1082,29 @@ export default function MemberEditor() {
             <div className="mt-4">
               <label className={labelCls}>Member Photo</label>
               <div className="flex items-start gap-4">
-                {photoBlobUrl ? (
-                  <img src={photoBlobUrl} alt="Member photo"
-                    className="w-24 h-24 object-cover rounded border border-slate-300" />
-                ) : (
-                  <div className="w-24 h-24 rounded border border-dashed border-slate-300 flex items-center justify-center text-slate-400 text-xs">
-                    No photo
-                  </div>
-                )}
+                <div
+                  onDrop={handlePhotoDrop}
+                  onDragOver={handlePhotoDragOver}
+                  onDragLeave={handlePhotoDragLeave}
+                  className={`w-24 h-24 rounded border-2 flex items-center justify-center transition-colors ${
+                    photoDragOver
+                      ? 'border-blue-400 bg-blue-50'
+                      : photoBlobUrl
+                        ? 'border-slate-300'
+                        : 'border-dashed border-slate-300'
+                  }`}
+                >
+                  {photoBlobUrl ? (
+                    <img src={photoBlobUrl} alt="Member photo"
+                      className="w-full h-full object-cover rounded" />
+                  ) : (
+                    <span className="text-slate-400 text-xs text-center px-1">
+                      {photoDragOver ? 'Drop here' : 'No photo'}
+                    </span>
+                  )}
+                </div>
                 <div className="flex flex-col gap-2">
                   <input type="file" accept="image/jpeg,image/png,image/gif"
-                    ref={el => { if (el) el._photoInput = true; }}
                     onChange={handlePhotoSelect}
                     className="hidden" id="photo-upload" />
                   <label htmlFor="photo-upload"
@@ -1090,7 +1119,7 @@ export default function MemberEditor() {
                     </button>
                   )}
                   <p className="text-xs text-slate-500">
-                    jpg, png, or gif — max 2 MB.
+                    jpg, png, or gif — max 2 MB. Drag and drop or click.
                     <br />Square format (1:1) recommended for membership cards.
                   </p>
                   {photoError && <p className="text-sm text-red-600 font-medium">{photoError}</p>}
