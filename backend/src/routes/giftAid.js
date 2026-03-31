@@ -34,36 +34,56 @@ function currentFinancialYear(startMonth, startDay) {
 /** Fetch Gift Aid eligible transactions within a date range.
  *  A transaction is eligible when:
  *  - type = 'in' (a payment received)
- *  - member_id_1 is set (linked to a member)
- *  - gift_aid_amount > 0
+ *  - linked to a member (member_id_1 or member_id_2)
+ *  - gift_aid_amount (or gift_aid_amount_2) > 0
  *  - the member's gift_aid_from is set and <= the transaction date
+ *
+ *  Returns one row per member slot (member_slot = 1 or 2).
+ *  The composite key for each row is (transaction id, member_slot).
  */
 async function fetchDeclarationRows(tenantSlug, from, to, excludeClaimed) {
-  let whereClause = `
-    t.type = 'in'
-    AND t.member_id_1 IS NOT NULL
-    AND t.gift_aid_amount IS NOT NULL
-    AND t.gift_aid_amount > 0
-    AND m.gift_aid_from IS NOT NULL
-    AND m.gift_aid_from <= t.date
-    AND t.date BETWEEN $1::date AND $2::date`;
-
+  let claimedFilter1 = '';
+  let claimedFilter2 = '';
   if (excludeClaimed) {
-    whereClause += `\n    AND t.gift_aid_claimed_at IS NULL`;
+    claimedFilter1 = 'AND t.gift_aid_claimed_at IS NULL';
+    claimedFilter2 = 'AND t.gift_aid_claimed_at_2 IS NULL';
   }
 
   const rows = await tenantQuery(
     tenantSlug,
-    `SELECT t.id, t.transaction_number, t.date, t.gift_aid_amount::float,
-            t.gift_aid_claimed_at,
+    `SELECT t.id, t.transaction_number, t.date, t.gift_aid_amount::float AS gift_aid_amount,
+            t.gift_aid_claimed_at, 1 AS member_slot,
             m.id AS member_id, m.title, m.forenames, m.surname,
             m.membership_number, m.gift_aid_from, m.email,
             a.house_no, a.postcode
      FROM transactions t
      JOIN members m ON m.id = t.member_id_1
      LEFT JOIN addresses a ON a.id = m.address_id
-     WHERE ${whereClause}
-     ORDER BY m.surname, m.forenames, t.date`,
+     WHERE t.type = 'in'
+       AND t.member_id_1 IS NOT NULL
+       AND t.gift_aid_amount IS NOT NULL AND t.gift_aid_amount > 0
+       AND m.gift_aid_from IS NOT NULL AND m.gift_aid_from <= t.date
+       AND t.date BETWEEN $1::date AND $2::date
+       ${claimedFilter1}
+
+     UNION ALL
+
+     SELECT t.id, t.transaction_number, t.date, t.gift_aid_amount_2::float AS gift_aid_amount,
+            t.gift_aid_claimed_at_2 AS gift_aid_claimed_at, 2 AS member_slot,
+            m.id AS member_id, m.title, m.forenames, m.surname,
+            m.membership_number, m.gift_aid_from, m.email,
+            a.house_no, a.postcode
+     FROM transactions t
+     JOIN members m ON m.id = t.member_id_2
+     LEFT JOIN addresses a ON a.id = m.address_id
+     WHERE t.type = 'in'
+       AND t.member_id_2 IS NOT NULL
+       AND t.gift_aid_amount_2 IS NOT NULL AND t.gift_aid_amount_2 > 0
+       AND m.gift_aid_from IS NOT NULL AND m.gift_aid_from <= t.date
+       AND t.date BETWEEN $1::date AND $2::date
+       ${claimedFilter2}
+
+     ORDER BY surname, forenames, date`,
     [from, to],
   );
 
@@ -186,36 +206,60 @@ router.post('/download', requirePrivilege('gift_aid_declaration', 'download_and_
 
 const markSchema = z.object({
   ids: z.array(z.string().min(1)).min(1),
+  ids_2: z.array(z.string().min(1)).optional(),
 });
 
-// POST /gift-aid/mark  body: { ids }
+// POST /gift-aid/mark  body: { ids, ids_2 }
+// ids = transaction IDs to mark member_slot 1 as claimed
+// ids_2 = transaction IDs to mark member_slot 2 as claimed
 router.post('/mark', requirePrivilege('gift_aid_declaration', 'download_and_mark'), async (req, res, next) => {
   try {
     const data = markSchema.parse(req.body);
     const slug = req.user.tenantSlug;
-    const today = new Date().toISOString().slice(0, 10);
+    const todayStr = new Date().toISOString().slice(0, 10);
+    let totalMarked = 0;
 
-    const result = await tenantQuery(
-      slug,
-      `UPDATE transactions
-       SET gift_aid_claimed_at = $1::date, updated_at = now()
-       WHERE id = ANY($2::text[])
-         AND gift_aid_amount IS NOT NULL
-         AND gift_aid_amount > 0
-         AND gift_aid_claimed_at IS NULL
-       RETURNING id`,
-      [today, data.ids],
-    );
+    // Mark member slot 1
+    if (data.ids.length > 0) {
+      const result = await tenantQuery(
+        slug,
+        `UPDATE transactions
+         SET gift_aid_claimed_at = $1::date, updated_at = now()
+         WHERE id = ANY($2::text[])
+           AND gift_aid_amount IS NOT NULL
+           AND gift_aid_amount > 0
+           AND gift_aid_claimed_at IS NULL
+         RETURNING id`,
+        [todayStr, data.ids],
+      );
+      totalMarked += result.length;
+    }
+
+    // Mark member slot 2
+    if (data.ids_2 && data.ids_2.length > 0) {
+      const result2 = await tenantQuery(
+        slug,
+        `UPDATE transactions
+         SET gift_aid_claimed_at_2 = $1::date, updated_at = now()
+         WHERE id = ANY($2::text[])
+           AND gift_aid_amount_2 IS NOT NULL
+           AND gift_aid_amount_2 > 0
+           AND gift_aid_claimed_at_2 IS NULL
+         RETURNING id`,
+        [todayStr, data.ids_2],
+      );
+      totalMarked += result2.length;
+    }
 
     logAudit(slug, {
       userId: req.user.userId,
       userName: req.user.name,
       action: 'gift_aid_mark',
       entityType: 'transactions',
-      detail: JSON.stringify({ count: result.length, date: today }),
+      detail: JSON.stringify({ count: totalMarked, date: todayStr }),
     });
 
-    res.json({ marked: result.length });
+    res.json({ marked: totalMarked });
   } catch (err) {
     if (err.name === 'ZodError') {
       return res.status(422).json({ error: 'Validation failed.', issues: err.issues });

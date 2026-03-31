@@ -18,19 +18,21 @@ const PAYMENT_METHODS = ['', 'Cheque', 'Cash', 'PayPal', 'Standing Order', 'Dire
 const today = () => new Date().toISOString().slice(0, 10);
 
 const BLANK = {
-  account_id:     '',
-  date:           today(),
-  type:           'in',
-  from_to:        '',
-  amount:         '',
-  payment_method: '',
-  payment_ref:    '',
-  detail:         '',
-  remarks:        '',
-  member_id_1:    '',
-  member_id_2:    '',
-  group_id:       '',
-  pending:        false,
+  account_id:       '',
+  date:             today(),
+  type:             'in',
+  from_to:          '',
+  amount:           '',
+  payment_method:   '',
+  payment_ref:      '',
+  detail:           '',
+  remarks:          '',
+  member_id_1:      '',
+  member_id_2:      '',
+  group_id:         '',
+  pending:          false,
+  gift_aid_amount:  '',
+  gift_aid_amount_2: '',
 };
 
 export default function TransactionEditor() {
@@ -65,6 +67,8 @@ export default function TransactionEditor() {
   const [refundedByTxn, setRefundedByTxn] = useState(null);
   const [refundedAmount, setRefundedAmount] = useState(null);
   const [canRefund, setCanRefund] = useState(false);
+  const [giftAidClaimedAt,  setGiftAidClaimedAt]  = useState(null);
+  const [giftAidClaimedAt2, setGiftAidClaimedAt2] = useState(null);
   const savedTimer = useRef(null);
   const { markDirty, markClean } = useUnsavedChanges();
 
@@ -114,9 +118,13 @@ export default function TransactionEditor() {
           remarks:        t.remarks        ?? '',
           member_id_1:    t.member_id_1    ?? '',
           member_id_2:    t.member_id_2    ?? '',
-          group_id:       t.group_id       ?? '',
-          pending:        t.pending        ?? false,
+          group_id:          t.group_id          ?? '',
+          pending:           t.pending           ?? false,
+          gift_aid_amount:   t.gift_aid_amount != null ? String(t.gift_aid_amount) : '',
+          gift_aid_amount_2: t.gift_aid_amount_2 != null ? String(t.gift_aid_amount_2) : '',
         });
+        setGiftAidClaimedAt(t.gift_aid_claimed_at ?? null);
+        setGiftAidClaimedAt2(t.gift_aid_claimed_at_2 ?? null);
         setCleared(!!t.cleared_at);
         setTxnNumber(t.transaction_number);
         setBatchId(t.batch_id ?? null);
@@ -129,7 +137,7 @@ export default function TransactionEditor() {
         setRefundedAmount(t.refunded_amount ?? null);
         setCanRefund(
           !!t.account_enable_refunds && !t.cleared_at && !t.transfer_id &&
-          !t.refund_of_id && !t.refunded_by_id && !t.gift_aid_claimed_at
+          !t.refund_of_id && !t.refunded_by_id && !t.gift_aid_claimed_at && !t.gift_aid_claimed_at_2
         );
         // populate category amounts
         const amounts = {};
@@ -198,10 +206,14 @@ export default function TransactionEditor() {
       payment_ref:    form.payment_ref    || null,
       detail:         form.detail         || null,
       remarks:        form.remarks        || null,
-      member_id_1:    form.member_id_1    || null,
-      member_id_2:    form.member_id_2    || null,
-      group_id:       form.group_id       || null,
-      pending:        form.pending,
+      member_id_1:       form.member_id_1    || null,
+      member_id_2:       form.member_id_2    || null,
+      group_id:          form.group_id       || null,
+      pending:           form.pending,
+      gift_aid_amount:   form.member_id_1 && form.type === 'in' && parseFloat(form.gift_aid_amount) > 0
+                           ? parseFloat(form.gift_aid_amount) : null,
+      gift_aid_amount_2: form.member_id_2 && form.type === 'in' && parseFloat(form.gift_aid_amount_2) > 0
+                           ? parseFloat(form.gift_aid_amount_2) : null,
       categories:     cats,
     };
     if (removeBatch) payload.batch_id = null;
@@ -594,6 +606,73 @@ export default function TransactionEditor() {
               </div>
             </div>
           </div>
+
+          {/* Gift Aid */}
+          {form.type === 'in' && (form.member_id_1 || form.member_id_2) && (
+            <div className="bg-white/90 rounded-lg shadow-sm p-4 sm:p-6 mb-4">
+              <h2 className="text-sm font-semibold text-slate-700 mb-3">Gift Aid</h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {form.member_id_1 && (
+                  <div>
+                    <label className={LBL}>Gift aid eligible (Member 1)</label>
+                    <div className="flex items-center gap-1">
+                      <span className="text-slate-400 text-sm">£</span>
+                      <input
+                        type="number" name="gift_aid_amount" min="0" step="0.01"
+                        value={form.gift_aid_amount}
+                        onChange={(e) => set('gift_aid_amount', e.target.value)}
+                        disabled={readOnly || !!giftAidClaimedAt}
+                        className="border border-slate-300 rounded px-2 py-1 text-sm w-32 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        placeholder="0.00"
+                        title="Enter the amount (if any) that is eligible for Gift Aid"
+                      />
+                    </div>
+                    {giftAidClaimedAt && (
+                      <div className="mt-2">
+                        <label className={LBL}>Gift aid claimed</label>
+                        <input
+                          type="text"
+                          value={new Date(giftAidClaimedAt).toLocaleDateString('en-GB')}
+                          readOnly
+                          className="border border-slate-200 bg-slate-50 rounded px-2 py-1 text-sm w-32 text-slate-600"
+                          title="The date on which Gift Aid was claimed. This field is normally entered automatically."
+                        />
+                      </div>
+                    )}
+                  </div>
+                )}
+                {form.member_id_2 && (
+                  <div>
+                    <label className={LBL}>Gift aid eligible (Member 2)</label>
+                    <div className="flex items-center gap-1">
+                      <span className="text-slate-400 text-sm">£</span>
+                      <input
+                        type="number" name="gift_aid_amount_2" min="0" step="0.01"
+                        value={form.gift_aid_amount_2}
+                        onChange={(e) => set('gift_aid_amount_2', e.target.value)}
+                        disabled={readOnly || !!giftAidClaimedAt2}
+                        className="border border-slate-300 rounded px-2 py-1 text-sm w-32 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        placeholder="0.00"
+                        title="Enter the amount (if any) that is eligible for Gift Aid"
+                      />
+                    </div>
+                    {giftAidClaimedAt2 && (
+                      <div className="mt-2">
+                        <label className={LBL}>Gift aid claimed</label>
+                        <input
+                          type="text"
+                          value={new Date(giftAidClaimedAt2).toLocaleDateString('en-GB')}
+                          readOnly
+                          className="border border-slate-200 bg-slate-50 rounded px-2 py-1 text-sm w-32 text-slate-600"
+                          title="The date on which Gift Aid was claimed. This field is normally entered automatically."
+                        />
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
 
           {/* Categories */}
           <div className="bg-white/90 rounded-lg shadow-sm p-4 sm:p-6 mb-4">
