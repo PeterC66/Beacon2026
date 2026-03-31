@@ -298,6 +298,7 @@
 | Venue dropdown | Built | — |
 | Faculty assignment | Built | — |
 | **Beacon2 extra:** SiteWorks integration | Beacon2 extra | Tenant-wide toggle hides scheduling/venue fields when SiteWorks manages events |
+| **Beacon2 extra:** Record timestamps | Beacon2 extra | "Group record created …; last changed …" shown at the bottom of the Details tab |
 
 ---
 

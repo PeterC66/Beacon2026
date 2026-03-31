@@ -14,6 +14,7 @@ import SortableHeader from '../../components/SortableHeader.jsx';
 import { useSortedData } from '../../hooks/useSortedData.js';
 import { useUnsavedChanges } from '../../hooks/useUnsavedChanges.js';
 import ScrollButtons from '../../components/ScrollButtons.jsx';
+import RecordTimestamp from '../../components/RecordTimestamp.jsx';
 
 // ─── Details sub-component ────────────────────────────────────────────────
 
@@ -37,29 +38,35 @@ function GroupDetails({ groupId, faculties, venues, onSaved, onDeleted, sitework
   const [error,   setError]   = useState(null);
   const [saved,   setSaved]   = useState(false);
   const savedTimer = useRef(null);
+  const [createdAt, setCreatedAt] = useState(null);
+  const [updatedAt, setUpdatedAt] = useState(null);
 
   useEffect(() => {
     if (!groupId) return;
     setLoading(true);
     groupsApi.get(groupId)
-      .then((g) => setForm({
-        name:                g.name ?? '',
-        facultyId:           g.faculty_id ?? '',
-        status:              g.status ?? 'active',
-        whenText:            g.when_text ?? '',
-        startTime:           g.start_time ?? '',
-        endTime:             g.end_time ?? '',
-        venueId:             g.venue_id ?? '',
-        enquiries:           g.enquiries ?? '',
-        maxMembers:          g.max_members != null ? String(g.max_members) : '',
-        allowOnlineJoin:     g.allow_online_join ?? false,
-        enableWaitingList:   g.enable_waiting_list ?? false,
-        notifyLeader:        g.notify_leader ?? false,
-        displayWaitingList:  g.display_waiting_list ?? false,
-        information:         g.information ?? '',
-        notes:               g.notes ?? '',
-        showAddresses:       g.show_addresses ?? false,
-      }))
+      .then((g) => {
+        setForm({
+          name:                g.name ?? '',
+          facultyId:           g.faculty_id ?? '',
+          status:              g.status ?? 'active',
+          whenText:            g.when_text ?? '',
+          startTime:           g.start_time ?? '',
+          endTime:             g.end_time ?? '',
+          venueId:             g.venue_id ?? '',
+          enquiries:           g.enquiries ?? '',
+          maxMembers:          g.max_members != null ? String(g.max_members) : '',
+          allowOnlineJoin:     g.allow_online_join ?? false,
+          enableWaitingList:   g.enable_waiting_list ?? false,
+          notifyLeader:        g.notify_leader ?? false,
+          displayWaitingList:  g.display_waiting_list ?? false,
+          information:         g.information ?? '',
+          notes:               g.notes ?? '',
+          showAddresses:       g.show_addresses ?? false,
+        });
+        setCreatedAt(g.created_at);
+        setUpdatedAt(g.updated_at);
+      })
       .catch((err) => setError(err.message))
       .finally(() => setLoading(false));
   }, [groupId]);
@@ -281,6 +288,8 @@ function GroupDetails({ groupId, faculties, venues, onSaved, onDeleted, sitework
           )}
         </div>
       )}
+
+      {!isNew && <RecordTimestamp label="Group record" createdAt={createdAt} updatedAt={updatedAt} className="pt-3" />}
     </form>
   );
 }

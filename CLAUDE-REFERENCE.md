@@ -778,6 +778,11 @@ Themes: `default`, `high-contrast`.
 - `ScrollButtons` — dual fixed-position scroll-to-top/bottom buttons (doc 6 "Table Lists").
   Pass `containerRef` (a ref to the table wrapper div). Only appears when the container
   overflows the viewport. Used on 12 list pages.
+- `RecordTimestamp` — standard "X record created …; last changed …" display.
+  Props: `label` (e.g. "Group record"), `createdAt`, `updatedAt`, optional `className`.
+  Used on MemberEditor (member + address) and GroupRecord (group details).
+  Style: `text-xs text-slate-500 text-center`.
+- `NoEmailIcon` — SVG envelope with red strike-through for members without email.
 - `GoToMemberButton` — small "..." button that navigates to a member's record; renders
   `null` when no `memberId` provided. Used for quick navigation from contexts like partner
   linking.

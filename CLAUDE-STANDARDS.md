@@ -24,7 +24,12 @@ Every item below applies to every new feature — no exceptions.
   `useUnsavedChanges`, `useSortedData`, `usePreferences`, `useCookieConsent`.
 
 - [ ] **Shared utilities** — use `formatMemberName()` from `usePreferences.js`,
-  `formatShortAddress()` and `formatPhone()` from `frontend/src/lib/memberFormatters.js`.
+  `formatShortAddress()`, `formatPhone()`, and `isSubscriptionOverdue()` from
+  `frontend/src/lib/memberFormatters.js`.
+
+- [ ] **Record timestamps** — use `<RecordTimestamp label="X record" createdAt={…} updatedAt={…} />`
+  from `frontend/src/components/RecordTimestamp.jsx` for all "created / last changed"
+  displays on record detail pages. Do not duplicate the `fmtTimestamp` logic inline.
 
 - [ ] **NavBar privilege-gated links** — every NavBar link to a privileged page must use
   `disabled: !can(resource, action)` so unprivileged users see the link greyed out rather
