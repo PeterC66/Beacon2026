@@ -933,7 +933,7 @@ export default function MemberEditor() {
               )}
               {!isNew && (
                 <div>
-                  <label className={labelCls}>Next renewal</label>
+                  <label className={labelCls}>Next renewal <span className="text-xs text-slate-400 font-normal">(Updated automatically upon renewal)</span></label>
                   <DateInput name="nextRenewal" value={form.nextRenewal}
                     onChange={(v) => set('nextRenewal', v)}
                     className={inputCls} />
