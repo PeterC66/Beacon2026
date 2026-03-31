@@ -16,7 +16,7 @@ router.get('/', requirePrivilege('group_venues', 'view'), async (req, res, next)
   try {
     const rows = await tenantQuery(
       req.user.tenantSlug,
-      `SELECT id, name, address1, address2, town, county, postcode,
+      `SELECT id, name, contact, address, postcode,
               telephone, email, website, notes, private_address, accessible,
               created_at, updated_at
        FROM venues
@@ -35,7 +35,7 @@ router.get('/:id', requirePrivilege('group_venues', 'view'), async (req, res, ne
   try {
     const [row] = await tenantQuery(
       req.user.tenantSlug,
-      `SELECT id, name, address1, address2, town, county, postcode,
+      `SELECT id, name, contact, address, postcode,
               telephone, email, website, notes, private_address, accessible,
               created_at, updated_at
        FROM venues WHERE id = $1`,
@@ -52,10 +52,8 @@ router.get('/:id', requirePrivilege('group_venues', 'view'), async (req, res, ne
 
 const venueSchema = z.object({
   name:           z.string().min(1).max(200),
-  address1:       z.string().nullable().optional(),
-  address2:       z.string().nullable().optional(),
-  town:           z.string().nullable().optional(),
-  county:         z.string().nullable().optional(),
+  contact:        z.string().nullable().optional(),
+  address:        z.string().nullable().optional(),
   postcode:       z.string().nullable().optional(),
   telephone:      z.string().nullable().optional(),
   email:          z.string().email().nullable().optional().or(z.literal('')),
@@ -71,16 +69,14 @@ router.post('/', requirePrivilege('group_venues', 'create'), async (req, res, ne
     const [row] = await tenantQuery(
       req.user.tenantSlug,
       `INSERT INTO venues
-         (name, address1, address2, town, county, postcode, telephone, email,
+         (name, contact, address, postcode, telephone, email,
           website, notes, private_address, accessible)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
        RETURNING *`,
       [
         data.name,
-        data.address1    ?? null,
-        data.address2    ?? null,
-        data.town        ?? null,
-        data.county      ?? null,
+        data.contact     ?? null,
+        data.address     ?? null,
         data.postcode    ?? null,
         data.telephone   ?? null,
         data.email       || null,
@@ -100,10 +96,8 @@ router.post('/', requirePrivilege('group_venues', 'create'), async (req, res, ne
 
 const updateVenueSchema = z.object({
   name:           z.string().min(1).max(200).optional(),
-  address1:       z.string().nullable().optional(),
-  address2:       z.string().nullable().optional(),
-  town:           z.string().nullable().optional(),
-  county:         z.string().nullable().optional(),
+  contact:        z.string().nullable().optional(),
+  address:        z.string().nullable().optional(),
   postcode:       z.string().nullable().optional(),
   telephone:      z.string().nullable().optional(),
   email:          z.string().email().nullable().optional().or(z.literal('')),
@@ -115,10 +109,8 @@ const updateVenueSchema = z.object({
 
 const VENUE_FIELDS = [
   ['name',           'name'],
-  ['address1',       'address1'],
-  ['address2',       'address2'],
-  ['town',           'town'],
-  ['county',         'county'],
+  ['contact',        'contact'],
+  ['address',        'address'],
   ['postcode',       'postcode'],
   ['telephone',      'telephone'],
   ['email',          'email'],

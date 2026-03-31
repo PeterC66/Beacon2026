@@ -11,7 +11,7 @@ import PageHeader from '../../components/PageHeader.jsx';
 import { useUnsavedChanges } from '../../hooks/useUnsavedChanges.js';
 
 const EMPTY = {
-  name: '', address1: '', address2: '', town: '', county: '', postcode: '',
+  name: '', contact: '', address: '', postcode: '',
   telephone: '', email: '', website: '', notes: '',
   privateAddress: false, accessible: false,
 };
@@ -40,10 +40,8 @@ export default function VenueEditor() {
     venuesApi.get(id)
       .then((v) => setForm({
         name:           v.name ?? '',
-        address1:       v.address1 ?? '',
-        address2:       v.address2 ?? '',
-        town:           v.town ?? '',
-        county:         v.county ?? '',
+        contact:        v.contact ?? '',
+        address:        v.address ?? '',
         postcode:       v.postcode ?? '',
         telephone:      v.telephone ?? '',
         email:          v.email ?? '',
@@ -68,10 +66,8 @@ export default function VenueEditor() {
     try {
       const payload = {
         name:           form.name,
-        address1:       form.address1 || null,
-        address2:       form.address2 || null,
-        town:           form.town || null,
-        county:         form.county || null,
+        contact:        form.contact || null,
+        address:        form.address || null,
         postcode:       form.postcode || null,
         telephone:      form.telephone || null,
         email:          form.email || null,
@@ -118,6 +114,7 @@ export default function VenueEditor() {
   const inputCls = 'border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500';
   const labelCls = 'block text-sm font-medium text-slate-700 mb-1';
   const cbCls    = 'rounded border-slate-300 text-blue-600 focus:ring-blue-500';
+  const actionBtnCls = 'border border-blue-300 text-blue-600 hover:bg-blue-50 rounded px-3 py-2 text-sm transition-colors whitespace-nowrap';
 
   if (loading) return (
     <div className="min-h-screen pb-10">
@@ -157,27 +154,9 @@ export default function VenueEditor() {
 
             {/* Address */}
             <div>
-              <label className={labelCls}>Address line 1</label>
-              <input name="address1" className={`${inputCls} w-full`} value={form.address1}
-                onChange={(e) => set('address1', e.target.value)} disabled={!canChange} />
-            </div>
-            <div>
-              <label className={labelCls}>Address line 2</label>
-              <input name="address2" className={`${inputCls} w-full`} value={form.address2}
-                onChange={(e) => set('address2', e.target.value)} disabled={!canChange} />
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label className={labelCls}>Town</label>
-                <input name="town" className={`${inputCls} w-full`} value={form.town}
-                  onChange={(e) => set('town', e.target.value)} disabled={!canChange} />
-              </div>
-              <div>
-                <label className={labelCls}>County</label>
-                <input name="county" className={`${inputCls} w-full`} value={form.county}
-                  onChange={(e) => set('county', e.target.value)} disabled={!canChange} />
-              </div>
+              <label className={labelCls}>Address</label>
+              <input name="address" className={`${inputCls} w-full`} value={form.address}
+                onChange={(e) => set('address', e.target.value)} disabled={!canChange} />
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -187,23 +166,51 @@ export default function VenueEditor() {
                   onChange={(e) => set('postcode', e.target.value)} disabled={!canChange} />
               </div>
               <div>
-                <label className={labelCls}>Telephone</label>
-                <input name="telephone" className={`${inputCls} w-full`} type="tel" value={form.telephone}
-                  onChange={(e) => set('telephone', e.target.value)} disabled={!canChange} />
+                <label className={labelCls}>Contact</label>
+                <input name="contact" className={`${inputCls} w-full`} value={form.contact}
+                  onChange={(e) => set('contact', e.target.value)} disabled={!canChange} />
               </div>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label className={labelCls}>Email</label>
-                <input name="email" className={`${inputCls} w-full`} type="email" value={form.email}
+            <div>
+              <label className={labelCls}>Telephone</label>
+              <input name="telephone" className={`${inputCls} w-full`} type="tel" value={form.telephone}
+                onChange={(e) => set('telephone', e.target.value)} disabled={!canChange} />
+            </div>
+
+            {/* Email with send button */}
+            <div>
+              <label className={labelCls}>Email</label>
+              <div className="flex gap-2 items-start">
+                <input name="email" className={`${inputCls} flex-1`} type="email" value={form.email}
                   onChange={(e) => set('email', e.target.value)} disabled={!canChange} />
+                {!isNew && form.email && (
+                  <a href={`mailto:${form.email}`}
+                    className={actionBtnCls}
+                    title="Send email to this venue">
+                    Send email
+                  </a>
+                )}
               </div>
-              <div>
-                <label className={labelCls}>Website</label>
-                <input name="website" className={`${inputCls} w-full`} type="url" value={form.website}
+            </div>
+
+            {/* Website with open button */}
+            <div>
+              <label className={labelCls}>Website</label>
+              <div className="flex gap-2 items-start">
+                <input name="website" className={`${inputCls} flex-1`} type="url" value={form.website}
                   placeholder="https://…"
                   onChange={(e) => set('website', e.target.value)} disabled={!canChange} />
+                {!isNew && form.website && (
+                  <a href={form.website.startsWith('http') ? form.website : `https://${form.website}`}
+                    target="_blank" rel="noopener noreferrer"
+                    className={actionBtnCls}
+                    title="Open website in new tab">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-5 w-5">
+                      <path fillRule="evenodd" d="M4.25 5.5a.75.75 0 0 0-.75.75v8.5c0 .414.336.75.75.75h8.5a.75.75 0 0 0 .75-.75v-4a.75.75 0 0 1 1.5 0v4A2.25 2.25 0 0 1 12.75 17h-8.5A2.25 2.25 0 0 1 2 14.75v-8.5A2.25 2.25 0 0 1 4.25 4h5a.75.75 0 0 1 0 1.5h-5Zm7.25-.75a.75.75 0 0 1 .75-.75h3.5a.75.75 0 0 1 .75.75v3.5a.75.75 0 0 1-1.5 0V6.31l-5.22 5.22a.75.75 0 1 1-1.06-1.06l5.22-5.22H12.25a.75.75 0 0 1-.75-.75Z" clipRule="evenodd" />
+                    </svg>
+                  </a>
+                )}
               </div>
             </div>
 

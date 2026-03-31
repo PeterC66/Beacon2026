@@ -349,6 +349,10 @@
 |--------|--------|-------|
 | Venue CRUD | Built | — |
 | Venue dropdown on group | Built | — |
+| Venue fields: contact, single address, postcode | Built | Replaces multi-field address layout |
+| Send email button on venue email field | Built | Opens mailto: link |
+| Open website button on venue website field | Built | Opens in new tab |
+| Venue list: Name, Contact, Telephone, Accessible | Built | Simplified from previous layout |
 
 ---
 

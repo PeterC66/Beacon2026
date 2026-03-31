@@ -5,6 +5,18 @@ Format: `## [version] — YYYY-MM-DD` with bullet points per change.
 
 ---
 
+## [0.7.18] — 2026-03-31
+
+### Changed
+- **Venue form** — replaced multi-field address (address1, address2, town, county) with a
+  single Address field; postcode remains separate
+- **Venue form** — added Contact field (near telephone/email)
+- **Venue form** — added "Send email" button next to email field (opens mailto: link)
+- **Venue form** — added open-website button next to website field (opens in new tab)
+- **Venue list** — simplified columns to Name (sortable), Contact, Telephone, Accessible (♿)
+
+---
+
 ## [0.7.17] — 2026-03-30
 
 ### Changed

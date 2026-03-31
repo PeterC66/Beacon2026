@@ -64,10 +64,10 @@ export default function VenueList() {
             <table className="w-full text-sm min-w-max">
               <thead>
                 <tr className="bg-slate-50 border-b border-slate-200 text-left text-slate-600 italic font-normal">
-                  <SortableHeader col="name"     label="Venue"    sortKey={sortKey} sortDir={sortDir} onSort={onSort} className="px-4 py-2.5 font-normal" />
-                  <SortableHeader col="town"     label="Town"     sortKey={sortKey} sortDir={sortDir} onSort={onSort} className="px-4 py-2.5 font-normal" />
-                  <SortableHeader col="postcode" label="Postcode" sortKey={sortKey} sortDir={sortDir} onSort={onSort} className="px-4 py-2.5 font-normal" />
-                  <th className="px-4 py-2.5 font-normal">Flags</th>
+                  <SortableHeader col="name" label="Venue" sortKey={sortKey} sortDir={sortDir} onSort={onSort} className="px-4 py-2.5 font-normal" />
+                  <th className="px-4 py-2.5 font-normal">Contact</th>
+                  <th className="px-4 py-2.5 font-normal">Telephone</th>
+                  <th className="px-4 py-2.5 font-normal">Accessible</th>
                 </tr>
               </thead>
               <tbody>
@@ -76,11 +76,10 @@ export default function VenueList() {
                     <td className="px-4 py-2">
                       <Link to={`/venues/${v.id}`} className="text-blue-700 hover:underline">{v.name}</Link>
                     </td>
-                    <td className="px-4 py-2">{v.town ?? ''}</td>
-                    <td className="px-4 py-2">{v.postcode ?? ''}</td>
-                    <td className="px-4 py-2 text-xs text-slate-500 space-x-2">
-                      {v.private_address && <span title="Private address">Private</span>}
-                      {v.accessible      && <span title="Wheelchair accessible">♿</span>}
+                    <td className="px-4 py-2">{v.contact ?? ''}</td>
+                    <td className="px-4 py-2">{v.telephone ?? ''}</td>
+                    <td className="px-4 py-2 text-xs text-slate-500">
+                      {v.accessible && <span title="Wheelchair accessible">♿</span>}
                     </td>
                   </tr>
                 ))}
