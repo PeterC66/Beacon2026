@@ -10,22 +10,11 @@ import RequiredMark from '../../components/RequiredMark.jsx';
 import PageHeader from '../../components/PageHeader.jsx';
 import DateInput from '../../components/DateInput.jsx';
 import GoToMemberButton from '../../components/GoToMemberButton.jsx';
+import RecordTimestamp from '../../components/RecordTimestamp.jsx';
 import { useUnsavedChanges } from '../../hooks/useUnsavedChanges.js';
 import { scrollToFirstFieldError } from '../../lib/scrollToError.js';
 
 function todayIso() { return new Date().toISOString().slice(0, 10); }
-
-function fmtTimestamp(ts) {
-  if (!ts) return '';
-  const d = new Date(ts);
-  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-  const day = d.getDate();
-  const mon = months[d.getMonth()];
-  const yr  = d.getFullYear();
-  const hh  = String(d.getHours()).padStart(2, '0');
-  const mm  = String(d.getMinutes()).padStart(2, '0');
-  return `${day} ${mon} ${yr} ${hh}:${mm}`;
-}
 
 const BLANK_FORM = {
   title: '', forenames: '', surname: '', knownAs: '', initials: '', suffix: '', email: '',
@@ -874,11 +863,7 @@ export default function MemberEditor() {
         <h1 className="text-xl font-bold text-center">
           {isNew ? 'Add New Member' : `Member Record — ${form.forenames} ${form.surname}`}
         </h1>
-        {!isNew && createdAt && (
-          <p className="text-xs text-slate-500 text-center">
-            Member record created {fmtTimestamp(createdAt)}{updatedAt && updatedAt !== createdAt ? `; last changed ${fmtTimestamp(updatedAt)}` : ''}
-          </p>
-        )}
+        {!isNew && <RecordTimestamp label="Member record" createdAt={createdAt} updatedAt={updatedAt} />}
 
         {saved && (
           <p className="text-green-700 text-sm font-medium bg-green-50 border border-green-200 rounded px-3 py-2 text-center">
@@ -1355,11 +1340,7 @@ export default function MemberEditor() {
                 {fieldErrors.telephone && <p className={errMsgCls}>{fieldErrors.telephone}</p>}
               </div>
             </div>
-            {!isNew && addrCreatedAt && (
-              <p className="text-xs text-slate-500 mt-2">
-                Address record created {fmtTimestamp(addrCreatedAt)}{addrUpdatedAt && addrUpdatedAt !== addrCreatedAt ? `; last changed ${fmtTimestamp(addrUpdatedAt)}` : ''}
-              </p>
-            )}
+            {!isNew && <RecordTimestamp label="Address record" createdAt={addrCreatedAt} updatedAt={addrUpdatedAt} className="mt-2" />}
           </div>
 
           {/* ── iv) Payment (new member only) ───────────────────────── */}

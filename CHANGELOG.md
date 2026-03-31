@@ -46,6 +46,10 @@ Format: `## [version] — YYYY-MM-DD` with bullet points per change.
   member list pages (except Non-Renewals) when `next_renewal` is in the past
 - New shared `isSubscriptionOverdue()` helper in `memberFormatters.js`
 - Backend Recent Members query now returns `next_renewal`
+- **Group record** — "Group record created …; last changed …" timestamp at the bottom
+  of the Details tab
+- New shared `RecordTimestamp` component — standard display for record created/changed
+  timestamps; MemberEditor refactored to use it
 
 ---
 
