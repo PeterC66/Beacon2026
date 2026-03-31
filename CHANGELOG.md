@@ -21,6 +21,18 @@ Format: `## [version] — YYYY-MM-DD` with bullet points per change.
 - **Venue form** — added "Send email" button next to email field (opens mailto: link)
 - **Venue form** — added open-website button next to website field (opens in new tab)
 - **Venue list** — simplified columns to Name (sortable), Contact, Telephone, Accessible (♿)
+- **Financial Ledger** — expanded to 18 columns: Account, #, Date, Batch No, Batch Ref,
+  From/To, Group, Mem#, Mem2#, Detail, Category, Payment Ref, Method, In, Out, Refund,
+  Balance, Cleared
+- **Financial Ledger** — clickable links on #, Batch No, Group, Mem#, Mem2#, and Refund columns
+- **Financial Ledger** — running balance now shown in all views (account, category, group)
+- **Financial Ledger** — Category column shows comma-separated list of category names
+
+### Added
+- **Credit Batches** — description field on batch records (editable in detail view and
+  on creation); shown as "Batch Ref" column in the ledger
+- **Credit Batches** — PATCH endpoint to update batch description
+- **Credit Batches** — `batchId` query param to auto-open a specific batch
 
 ---
 

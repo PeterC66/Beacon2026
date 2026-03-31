@@ -493,8 +493,10 @@
 |--------|--------|-------|
 | Account/category/group views | Built | — |
 | Year selector | Built | Calendar year filtering |
-| Running balance | Built | Excludes pending transactions |
+| Running balance | Built | Shown in all views; excludes pending transactions |
 | Group view with per-group B/F rows | Built | When enabled via 7.10.6 setting |
+| Full ledger columns | Built | Account, #, Date, Batch No, Batch Ref, From/To, Group, Mem#, Mem2#, Detail, Category, Payment Ref, Method, In, Out, Refund, Balance, Cleared |
+| Clickable links | Built | # → transaction, Batch No → batch, Group → group record, Mem# / Mem2# → member record, Refund → transaction |
 
 ---
 
@@ -525,6 +527,7 @@
 |--------|--------|-------|
 | Create/view/delete batches | Built | — |
 | Add/remove transactions | Built | — |
+| Batch description field | Built | Editable on batch detail view |
 | Batches as single rows in reconciliation | Built | — |
 
 ---

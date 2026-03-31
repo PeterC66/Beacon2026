@@ -345,41 +345,9 @@ router.get('/transactions', requirePrivilege('finance_ledger', 'view'), async (r
 
     let sql, params;
 
-    if (memberId) {
-      sql = `
-        SELECT t.id, t.transaction_number, t.account_id, t.date, t.type,
-               t.from_to, t.amount::float, t.payment_method, t.payment_ref,
-               t.detail, t.remarks, t.cleared_at, t.pending,
-               t.member_id_1, t.member_id_2, t.group_id,
-               t.refund_of_id, t.refunded_by_id,
-               ref_orig.transaction_number AS refund_of_txn_number,
-               ref_by.transaction_number AS refunded_by_txn_number,
-               m1.forenames || ' ' || m1.surname AS member_1_name,
-               m2.forenames || ' ' || m2.surname AS member_2_name,
-               g.name AS group_name,
-               fa.name AS account_name,
-               COALESCE(
-                 json_agg(json_build_object('category_id', tc.category_id, 'name', fc.name, 'amount', tc.amount::float))
-                   FILTER (WHERE tc.id IS NOT NULL), '[]'
-               ) AS categories
-        FROM transactions t
-        LEFT JOIN members m1 ON m1.id = t.member_id_1
-        LEFT JOIN members m2 ON m2.id = t.member_id_2
-        LEFT JOIN groups g   ON g.id  = t.group_id
-        LEFT JOIN finance_accounts fa ON fa.id = t.account_id
-        LEFT JOIN transactions ref_orig ON ref_orig.id = t.refund_of_id
-        LEFT JOIN transactions ref_by   ON ref_by.id   = t.refunded_by_id
-        LEFT JOIN transaction_categories tc ON tc.transaction_id = t.id
-        LEFT JOIN finance_categories fc ON fc.id = tc.category_id
-        WHERE (t.member_id_1 = $1 OR t.member_id_2 = $1)
-        GROUP BY t.id, m1.forenames, m1.surname, m2.forenames, m2.surname, g.name, fa.name,
-                 ref_orig.transaction_number, ref_by.transaction_number
-        ORDER BY t.date, t.transaction_number`;
-      params = [memberId];
-
-    } else if (accountId) {
-      sql = `
-        SELECT t.id, t.transaction_number, t.account_id, t.date, t.type,
+    // Common SELECT columns shared by all views
+    const commonCols = `
+               t.id, t.transaction_number, t.account_id, t.date, t.type,
                t.from_to, t.amount::float, t.payment_method, t.payment_ref,
                t.detail, t.remarks, t.cleared_at, t.pending,
                t.member_id_1, t.member_id_2, t.group_id,
@@ -388,83 +356,76 @@ router.get('/transactions', requirePrivilege('finance_ledger', 'view'), async (r
                ref_orig.transaction_number AS refund_of_txn_number,
                ref_by.transaction_number AS refunded_by_txn_number,
                m1.forenames || ' ' || m1.surname AS member_1_name,
+               m1.membership_number AS member_1_no,
                m2.forenames || ' ' || m2.surname AS member_2_name,
+               m2.membership_number AS member_2_no,
                g.name AS group_name,
-               COALESCE(
-                 json_agg(json_build_object('category_id', tc.category_id, 'name', fc.name, 'amount', tc.amount::float))
-                   FILTER (WHERE tc.id IS NOT NULL), '[]'
-               ) AS categories
-        FROM transactions t
+               fa.name AS account_name,
+               cb.batch_ref AS batch_no,
+               cb.description AS batch_description`;
+    const commonJoins = `
         LEFT JOIN members m1 ON m1.id = t.member_id_1
         LEFT JOIN members m2 ON m2.id = t.member_id_2
         LEFT JOIN groups g   ON g.id  = t.group_id
+        LEFT JOIN finance_accounts fa ON fa.id = t.account_id
+        LEFT JOIN credit_batches cb ON cb.id = t.batch_id
         LEFT JOIN transactions ref_orig ON ref_orig.id = t.refund_of_id
         LEFT JOIN transactions ref_by   ON ref_by.id   = t.refunded_by_id
         LEFT JOIN transaction_categories tc ON tc.transaction_id = t.id
-        LEFT JOIN finance_categories fc ON fc.id = tc.category_id
+        LEFT JOIN finance_categories fc ON fc.id = tc.category_id`;
+    const categoriesAgg = `
+               COALESCE(
+                 json_agg(json_build_object('category_id', tc.category_id, 'name', fc.name, 'amount', tc.amount::float))
+                   FILTER (WHERE tc.id IS NOT NULL), '[]'
+               ) AS categories`;
+    const commonGroupBy = `t.id, m1.forenames, m1.surname, m1.membership_number,
+                 m2.forenames, m2.surname, m2.membership_number,
+                 g.name, fa.name, cb.batch_ref, cb.description,
+                 ref_orig.transaction_number, ref_by.transaction_number`;
+
+    if (memberId) {
+      sql = `
+        SELECT ${commonCols},
+               ${categoriesAgg}
+        FROM transactions t
+        ${commonJoins}
+        WHERE (t.member_id_1 = $1 OR t.member_id_2 = $1)
+        GROUP BY ${commonGroupBy}
+        ORDER BY t.date, t.transaction_number`;
+      params = [memberId];
+
+    } else if (accountId) {
+      sql = `
+        SELECT ${commonCols},
+               ${categoriesAgg}
+        FROM transactions t
+        ${commonJoins}
         WHERE t.account_id = $1 AND t.date BETWEEN $2::date AND $3::date
-        GROUP BY t.id, m1.forenames, m1.surname, m2.forenames, m2.surname, g.name,
-                 ref_orig.transaction_number, ref_by.transaction_number
+        GROUP BY ${commonGroupBy}
         ORDER BY t.date, t.transaction_number`;
       params = [accountId, yearStart, yearEnd];
 
     } else if (categoryId) {
       sql = `
-        SELECT t.id, t.transaction_number, t.account_id, t.date, t.type,
-               t.from_to, t.amount::float, t.payment_method, t.payment_ref,
-               t.detail, t.remarks, t.cleared_at, t.pending,
-               t.member_id_1, t.member_id_2, t.group_id,
-               t.refund_of_id, t.refunded_by_id,
-               ref_orig.transaction_number AS refund_of_txn_number,
-               ref_by.transaction_number AS refunded_by_txn_number,
-               m1.forenames || ' ' || m1.surname AS member_1_name,
-               m2.forenames || ' ' || m2.surname AS member_2_name,
-               g.name AS group_name,
+        SELECT ${commonCols},
                tc_this.amount::float AS category_amount,
-               COALESCE(
-                 json_agg(json_build_object('category_id', tc.category_id, 'name', fc.name, 'amount', tc.amount::float))
-                   FILTER (WHERE tc.id IS NOT NULL), '[]'
-               ) AS categories
+               ${categoriesAgg}
         FROM transactions t
         JOIN transaction_categories tc_this ON tc_this.transaction_id = t.id AND tc_this.category_id = $1
-        LEFT JOIN members m1 ON m1.id = t.member_id_1
-        LEFT JOIN members m2 ON m2.id = t.member_id_2
-        LEFT JOIN groups g   ON g.id  = t.group_id
-        LEFT JOIN transactions ref_orig ON ref_orig.id = t.refund_of_id
-        LEFT JOIN transactions ref_by   ON ref_by.id   = t.refunded_by_id
-        LEFT JOIN transaction_categories tc ON tc.transaction_id = t.id
-        LEFT JOIN finance_categories fc ON fc.id = tc.category_id
+        ${commonJoins}
         WHERE t.date BETWEEN $2::date AND $3::date
-        GROUP BY t.id, m1.forenames, m1.surname, m2.forenames, m2.surname, g.name, tc_this.amount,
-                 ref_orig.transaction_number, ref_by.transaction_number
+        GROUP BY ${commonGroupBy}, tc_this.amount
         ORDER BY t.date, t.transaction_number`;
       params = [categoryId, yearStart, yearEnd];
 
     } else if (groupId) {
       sql = `
-        SELECT t.id, t.transaction_number, t.account_id, t.date, t.type,
-               t.from_to, t.amount::float, t.payment_method, t.payment_ref,
-               t.detail, t.remarks, t.cleared_at, t.pending,
-               t.member_id_1, t.member_id_2, t.group_id,
-               t.refund_of_id, t.refunded_by_id,
-               ref_orig.transaction_number AS refund_of_txn_number,
-               ref_by.transaction_number AS refunded_by_txn_number,
-               m1.forenames || ' ' || m1.surname AS member_1_name,
-               m2.forenames || ' ' || m2.surname AS member_2_name,
-               COALESCE(
-                 json_agg(json_build_object('category_id', tc.category_id, 'name', fc.name, 'amount', tc.amount::float))
-                   FILTER (WHERE tc.id IS NOT NULL), '[]'
-               ) AS categories
+        SELECT ${commonCols},
+               ${categoriesAgg}
         FROM transactions t
-        LEFT JOIN members m1 ON m1.id = t.member_id_1
-        LEFT JOIN members m2 ON m2.id = t.member_id_2
-        LEFT JOIN transactions ref_orig ON ref_orig.id = t.refund_of_id
-        LEFT JOIN transactions ref_by   ON ref_by.id   = t.refunded_by_id
-        LEFT JOIN transaction_categories tc ON tc.transaction_id = t.id
-        LEFT JOIN finance_categories fc ON fc.id = tc.category_id
+        ${commonJoins}
         WHERE ($1 = 'all' OR t.group_id = $1) AND t.date BETWEEN $2::date AND $3::date
-        GROUP BY t.id, m1.forenames, m1.surname, m2.forenames, m2.surname,
-                 ref_orig.transaction_number, ref_by.transaction_number
+        GROUP BY ${commonGroupBy}
         ORDER BY t.date, t.transaction_number`;
       params = [groupId, yearStart, yearEnd];
 
@@ -1529,7 +1490,7 @@ router.get('/batches', requirePrivilege('finance_batches', 'view'), async (req, 
 
     const rows = await tenantQuery(
       req.user.tenantSlug,
-      `SELECT cb.id, cb.batch_ref, cb.account_id, cb.created_at,
+      `SELECT cb.id, cb.batch_ref, cb.description, cb.account_id, cb.created_at,
               COUNT(t.id)::int AS txn_count,
               COALESCE(SUM(t.amount), 0)::float AS total_amount,
               COUNT(t.id) FILTER (WHERE t.cleared_at IS NOT NULL)::int AS cleared_count,
@@ -1538,7 +1499,7 @@ router.get('/batches', requirePrivilege('finance_batches', 'view'), async (req, 
        FROM credit_batches cb
        LEFT JOIN transactions t ON t.batch_id = cb.id
        WHERE ${whereClause}
-       GROUP BY cb.id, cb.batch_ref, cb.account_id, cb.created_at
+       GROUP BY cb.id, cb.batch_ref, cb.description, cb.account_id, cb.created_at
        ORDER BY cb.created_at DESC`,
       params,
     );
@@ -1578,7 +1539,7 @@ router.get('/batches/:id', requirePrivilege('finance_batches', 'view'), async (r
   try {
     const [batch] = await tenantQuery(
       req.user.tenantSlug,
-      `SELECT id, batch_ref, account_id, created_at FROM credit_batches WHERE id = $1`,
+      `SELECT id, batch_ref, description, account_id, created_at FROM credit_batches WHERE id = $1`,
       [req.params.id],
     );
     if (!batch) throw AppError('Batch not found.', 404);
@@ -1603,6 +1564,7 @@ router.get('/batches/:id', requirePrivilege('finance_batches', 'view'), async (r
 const createBatchSchema = z.object({
   account_id:     z.string().min(1),
   batch_ref:      z.string().min(1).max(100),
+  description:    z.string().nullable().optional(),
   transactionIds: z.array(z.string().min(1)).min(1),
 });
 
@@ -1620,8 +1582,8 @@ router.post('/batches', requirePrivilege('finance_batches', 'create'), async (re
 
     const [batch] = await tenantQuery(
       req.user.tenantSlug,
-      `INSERT INTO credit_batches (batch_ref, account_id) VALUES ($1, $2) RETURNING id, batch_ref, account_id, created_at`,
-      [data.batch_ref, data.account_id],
+      `INSERT INTO credit_batches (batch_ref, description, account_id) VALUES ($1, $2, $3) RETURNING id, batch_ref, description, account_id, created_at`,
+      [data.batch_ref, data.description ?? null, data.account_id],
     );
 
     // Assign transactions to the batch
@@ -1691,6 +1653,28 @@ router.delete('/batches/:id/transactions', requirePrivilege('finance_batches', '
       [data.transactionIds, req.params.id],
     );
     res.json({ removed: result.length });
+  } catch (err) {
+    if (err.name === 'ZodError') return res.status(422).json({ error: 'Validation failed.', issues: err.issues });
+    next(err);
+  }
+});
+
+// PATCH /finance/batches/:id — update batch description
+const updateBatchSchema = z.object({
+  description: z.string().nullable().optional(),
+});
+
+router.patch('/batches/:id', requirePrivilege('finance_batches', 'create'), async (req, res, next) => {
+  try {
+    const data = updateBatchSchema.parse(req.body);
+    const [row] = await tenantQuery(
+      req.user.tenantSlug,
+      `UPDATE credit_batches SET description = $1 WHERE id = $2
+       RETURNING id, batch_ref, description, account_id, created_at`,
+      [data.description ?? null, req.params.id],
+    );
+    if (!row) throw AppError('Batch not found.', 404);
+    res.json(row);
   } catch (err) {
     if (err.name === 'ZodError') return res.status(422).json({ error: 'Validation failed.', issues: err.issues });
     next(err);

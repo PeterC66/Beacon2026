@@ -3,7 +3,7 @@
 // Implements Beacon doc 7.1.
 
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { finance as financeApi, groups as groupsApi } from '../../lib/api.js';
 import { useAuth } from '../../context/AuthContext.jsx';
 import NavBar from '../../components/NavBar.jsx';
@@ -45,7 +45,13 @@ export default function FinanceLedger() {
 
   const tableRef = useRef(null);
 
-  const { sorted, sortKey, sortDir, onSort } = useSortedData(txns, 'date', 'asc');
+  // Enrich transactions with a derived category_list string for sorting
+  const enrichedTxns = useMemo(() => txns.map((t) => ({
+    ...t,
+    category_list: Array.isArray(t.categories) ? t.categories.map((c) => c.name).filter(Boolean).join(', ') : '',
+  })), [txns]);
+
+  const { sorted, sortKey, sortDir, onSort } = useSortedData(enrichedTxns, 'date', 'asc');
 
   // Load selector lists
   useEffect(() => {
@@ -102,14 +108,14 @@ export default function FinanceLedger() {
 
   useEffect(() => { loadTransactions(); }, [loadTransactions]);
 
-  // Running balance (only meaningful when sorted by date asc, for account view)
-  // Pending transactions are excluded from the running balance
+  // Running balance — computed for all views.
+  // Account view uses the opening balance; other views start from 0.
+  // Pending transactions are excluded from the running balance.
   const withBalance = useMemo(() => {
-    if (view !== 'account') return sorted;
-    let balance = openingBal;
+    let balance = view === 'account' ? openingBal : 0;
     return sorted.map((t) => {
       if (!t.pending) {
-        const amt = Number(t.amount);
+        const amt = Number(view === 'category' ? (t.category_amount ?? t.amount) : t.amount);
         if (t.type === 'in')  balance += amt;
         if (t.type === 'out') balance -= amt;
       }
@@ -180,7 +186,7 @@ export default function FinanceLedger() {
       <PageHeader tenant={tenant} />
       <NavBar links={navLinks} />
 
-      <div className="max-w-6xl mx-auto px-4 py-5">
+      <div className="max-w-[100rem] mx-auto px-4 py-5">
         <h1 className="text-xl font-bold text-center mb-4">Financial Ledger</h1>
 
         {/* Controls */}
@@ -302,41 +308,48 @@ export default function FinanceLedger() {
                             />
                           </th>
                         )}
-                        <SortableHeader col="transaction_number" label="#"       sortKey={sortKey} sortDir={sortDir} onSort={onSort} className={TH} />
-                        <SortableHeader col="date"               label="Date"    sortKey={sortKey} sortDir={sortDir} onSort={onSort} className={TH} />
-                        <SortableHeader col="detail"             label="Detail"  sortKey={sortKey} sortDir={sortDir} onSort={onSort} className={TH} />
-                        <SortableHeader col="from_to"            label="From/To" sortKey={sortKey} sortDir={sortDir} onSort={onSort} className={TH} />
-                        <SortableHeader col="payment_method"     label="Method"  sortKey={sortKey} sortDir={sortDir} onSort={onSort} className={TH} />
+                        <SortableHeader col="account_name"       label="Account"     sortKey={sortKey} sortDir={sortDir} onSort={onSort} className={TH} />
+                        <SortableHeader col="transaction_number" label="#"            sortKey={sortKey} sortDir={sortDir} onSort={onSort} className={TH} />
+                        <SortableHeader col="date"               label="Date"         sortKey={sortKey} sortDir={sortDir} onSort={onSort} className={TH} />
+                        <SortableHeader col="batch_no"           label="Batch No"     sortKey={sortKey} sortDir={sortDir} onSort={onSort} className={TH} />
+                        <SortableHeader col="batch_description"  label="Batch Ref"    sortKey={sortKey} sortDir={sortDir} onSort={onSort} className={TH} />
+                        <SortableHeader col="from_to"            label="From/To"      sortKey={sortKey} sortDir={sortDir} onSort={onSort} className={TH} />
+                        <SortableHeader col="group_name"         label="Group"        sortKey={sortKey} sortDir={sortDir} onSort={onSort} className={TH} />
+                        <SortableHeader col="member_1_no"        label="Mem#"         sortKey={sortKey} sortDir={sortDir} onSort={onSort} className={TH} />
+                        <th className={TH}>Mem2#</th>
+                        <SortableHeader col="detail"             label="Detail"       sortKey={sortKey} sortDir={sortDir} onSort={onSort} className={TH} />
+                        <SortableHeader col="category_list"      label="Category"     sortKey={sortKey} sortDir={sortDir} onSort={onSort} className={TH} />
+                        <SortableHeader col="payment_ref"        label="Payment Ref"  sortKey={sortKey} sortDir={sortDir} onSort={onSort} className={TH} />
+                        <SortableHeader col="payment_method"     label="Method"       sortKey={sortKey} sortDir={sortDir} onSort={onSort} className={TH} />
                         <th className={`${TH} text-right`}>In</th>
                         <th className={`${TH} text-right`}>Out</th>
-                        {view === 'account' && <th className={`${TH} text-right`}>Balance</th>}
                         <th className={`${TH} text-center`}>Refund</th>
-                        <SortableHeader col="cleared_at"         label="Cleared" sortKey={sortKey} sortDir={sortDir} onSort={onSort} className={`${TH} text-center`} />
+                        <th className={`${TH} text-right`}>Balance</th>
+                        <th className={`${TH} text-center`}>Cleared</th>
                       </tr>
                     </thead>
                     <tbody>
                       {view === 'account' && (
                         <tr className="bg-slate-100 border-b border-slate-200 italic text-slate-600">
                           {showBulk && <td className="px-2 py-2"></td>}
+                          <td className="px-3 py-2" colSpan={4}></td>
+                          <td className="px-3 py-2" colSpan={9}>Balance brought forward</td>
                           <td className="px-3 py-2"></td>
-                          <td className="px-3 py-2"></td>
-                          <td className="px-3 py-2" colSpan={3}>Balance brought forward</td>
                           <td className="px-3 py-2"></td>
                           <td className="px-3 py-2"></td>
                           <td className="px-3 py-2 text-right font-medium text-slate-700">{fmtAmount(openingBal)}</td>
-                          <td className="px-3 py-2"></td>
                           <td className="px-3 py-2"></td>
                         </tr>
                       )}
                       {view === 'group' && groupBf.length > 0 && groupBf.map((bf) => (
                         <tr key={`bf-${bf.group_id}`} className="bg-slate-100 border-b border-slate-200 italic text-slate-600">
-                          <td className="px-3 py-2"></td>
-                          <td className="px-3 py-2"></td>
-                          <td className="px-3 py-2" colSpan={3}>
+                          <td className="px-3 py-2" colSpan={4}></td>
+                          <td className="px-3 py-2" colSpan={9}>
                             Balance b/f{bf.group_name ? ` — ${bf.group_name}` : ''}
                           </td>
                           <td className="px-3 py-2 text-right text-green-700">{bf.balance >= 0 ? fmtAmount(bf.balance) : ''}</td>
                           <td className="px-3 py-2 text-right text-red-700">{bf.balance < 0 ? fmtAmount(Math.abs(bf.balance)) : ''}</td>
+                          <td className="px-3 py-2"></td>
                           <td className="px-3 py-2"></td>
                           <td className="px-3 py-2"></td>
                         </tr>
@@ -345,11 +358,11 @@ export default function FinanceLedger() {
                         const totalBf = groupBf.reduce((s, bf) => s + bf.balance, 0);
                         return (
                           <tr className="bg-slate-200 border-b border-slate-300 font-bold text-slate-700">
-                            <td className="px-3 py-2"></td>
-                            <td className="px-3 py-2"></td>
-                            <td className="px-3 py-2" colSpan={3}>Total Brought Forward</td>
+                            <td className="px-3 py-2" colSpan={4}></td>
+                            <td className="px-3 py-2" colSpan={9}>Total Brought Forward</td>
                             <td className="px-3 py-2 text-right text-green-700">{totalBf >= 0 ? fmtAmount(totalBf) : ''}</td>
                             <td className="px-3 py-2 text-right text-red-700">{totalBf < 0 ? fmtAmount(Math.abs(totalBf)) : ''}</td>
+                            <td className="px-3 py-2"></td>
                             <td className="px-3 py-2"></td>
                             <td className="px-3 py-2"></td>
                           </tr>
@@ -369,6 +382,9 @@ export default function FinanceLedger() {
                               )}
                             </td>
                           )}
+                          {/* Account */}
+                          <td className="px-3 py-2 whitespace-nowrap">{t.account_name ?? ''}</td>
+                          {/* # */}
                           <td className="px-3 py-2">
                             {can('finance_transactions', 'view') ? (
                               <button
@@ -381,19 +397,62 @@ export default function FinanceLedger() {
                               <span className="font-mono">{t.transaction_number}</span>
                             )}
                           </td>
+                          {/* Date */}
                           <td className="px-3 py-2 whitespace-nowrap">{fmtDate(t.date)}</td>
-                          <td className="px-3 py-2 max-w-[200px] truncate" title={t.detail}>{t.detail}</td>
-                          <td className="px-3 py-2 max-w-[160px] truncate" title={t.from_to}>{t.from_to}</td>
+                          {/* Batch No */}
+                          <td className="px-3 py-2">
+                            {t.batch_no && can('finance_batches', 'view') ? (
+                              <button
+                                onClick={() => navigate(`/finance/batches?batchId=${t.batch_id}`)}
+                                className="text-blue-700 hover:underline"
+                              >
+                                {t.batch_no}
+                              </button>
+                            ) : (
+                              t.batch_no ?? ''
+                            )}
+                          </td>
+                          {/* Batch Ref */}
+                          <td className="px-3 py-2 max-w-[120px] truncate" title={t.batch_description ?? ''}>{t.batch_description ?? ''}</td>
+                          {/* From/To */}
+                          <td className="px-3 py-2 max-w-[140px] truncate" title={t.from_to}>{t.from_to}</td>
+                          {/* Group */}
+                          <td className="px-3 py-2 max-w-[120px] truncate" title={t.group_name ?? ''}>
+                            {t.group_name && t.group_id ? (
+                              <Link to={`/groups/${t.group_id}`} className="text-blue-700 hover:underline">{t.group_name}</Link>
+                            ) : (
+                              t.group_name ?? ''
+                            )}
+                          </td>
+                          {/* Mem# */}
+                          <td className="px-3 py-2">
+                            {t.member_1_no && t.member_id_1 ? (
+                              <Link to={`/members/${t.member_id_1}`} className="text-blue-700 hover:underline font-mono" title={t.member_1_name}>{t.member_1_no}</Link>
+                            ) : (
+                              ''
+                            )}
+                          </td>
+                          {/* Mem2# */}
+                          <td className="px-3 py-2">
+                            {t.member_2_no && t.member_id_2 ? (
+                              <Link to={`/members/${t.member_id_2}`} className="text-blue-700 hover:underline font-mono" title={t.member_2_name}>{t.member_2_no}</Link>
+                            ) : (
+                              ''
+                            )}
+                          </td>
+                          {/* Detail */}
+                          <td className="px-3 py-2 max-w-[180px] truncate" title={t.detail}>{t.detail}</td>
+                          {/* Category */}
+                          <td className="px-3 py-2 max-w-[140px] truncate" title={t.category_list}>{t.category_list}</td>
+                          {/* Payment Ref */}
+                          <td className="px-3 py-2">{t.payment_ref ?? ''}</td>
+                          {/* Method */}
                           <td className="px-3 py-2">{t.payment_method}</td>
+                          {/* In */}
                           <td className="px-3 py-2 text-right text-green-700">{t.type === 'in'  ? fmtAmount(view === 'category' ? t.category_amount : t.amount) : ''}</td>
+                          {/* Out */}
                           <td className="px-3 py-2 text-right text-red-700"> {t.type === 'out' ? fmtAmount(view === 'category' ? t.category_amount : t.amount) : ''}</td>
-                          {view === 'account' && (
-                            <td className={`px-3 py-2 text-right font-medium ${
-                              t.pending ? 'text-slate-400 italic' : (t._balance >= 0 ? 'text-slate-700' : 'text-red-600')
-                            }`}>
-                              {t.pending ? '' : fmtAmount(t._balance)}
-                            </td>
-                          )}
+                          {/* Refund */}
                           <td className="px-3 py-2 text-center text-xs">
                             {t.refund_of_txn_number && (
                               <button
@@ -408,6 +467,13 @@ export default function FinanceLedger() {
                               >{t.refunded_by_txn_number}</button>
                             )}
                           </td>
+                          {/* Balance */}
+                          <td className={`px-3 py-2 text-right font-medium ${
+                            t.pending ? 'text-slate-400 italic' : (t._balance >= 0 ? 'text-slate-700' : 'text-red-600')
+                          }`}>
+                            {t.pending ? '' : fmtAmount(t._balance)}
+                          </td>
+                          {/* Cleared */}
                           <td className="px-3 py-2 text-center text-xs text-slate-500">
                             {t.pending
                               ? <span className="text-amber-600 font-medium">Pending</span>
@@ -419,10 +485,10 @@ export default function FinanceLedger() {
                     <tfoot>
                       <tr className="bg-slate-100 border-t-2 border-slate-300 font-medium text-sm">
                         {showBulk && <td></td>}
-                        <td colSpan={5} className="px-3 py-2 text-right text-slate-600">Totals:</td>
+                        <td colSpan={13} className="px-3 py-2 text-right text-slate-600">Totals:</td>
                         <td className="px-3 py-2 text-right text-green-700">{fmtAmount(totals.in)}</td>
                         <td className="px-3 py-2 text-right text-red-700">{fmtAmount(totals.out)}</td>
-                        {view === 'account' && <td className="px-3 py-2"></td>}
+                        <td></td>
                         <td></td>
                         <td></td>
                       </tr>
