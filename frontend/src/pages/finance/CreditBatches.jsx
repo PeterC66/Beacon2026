@@ -29,6 +29,7 @@ export default function CreditBatches() {
   const { can, tenant } = useAuth();
   const [searchParams] = useSearchParams();
   const initialAccountId = searchParams.get('accountId') ?? '';
+  const initialBatchId = searchParams.get('batchId') ?? '';
 
   // ─── List mode state ────────────────────────────────────────────────────
   const [accounts,  setAccounts]  = useState([]);
@@ -47,6 +48,7 @@ export default function CreditBatches() {
   const [unbatched,       setUnbatched]       = useState([]);
   const [selectedCreate,  setSelectedCreate]  = useState(new Set());
   const [batchRef,        setBatchRef]        = useState('');
+  const [batchDesc,       setBatchDesc]       = useState('');
   const [existingBatchId, setExistingBatchId] = useState('');
   const [creating,        setCreating]        = useState(false);
   const [loadingUnbatched, setLoadingUnbatched] = useState(false);
@@ -60,6 +62,11 @@ export default function CreditBatches() {
   const savedTimer = useRef(null);
 
   useEffect(() => { loadAccounts(); }, []);
+
+  // Auto-open a specific batch if batchId query param is present
+  useEffect(() => {
+    if (initialBatchId) openBatch(initialBatchId);
+  }, [initialBatchId]);
 
   async function loadAccounts() {
     try {
@@ -111,6 +118,7 @@ export default function CreditBatches() {
       setUnbatched(rows);
       setSelectedCreate(new Set());
       setBatchRef('');
+      setBatchDesc('');
       setExistingBatchId('');
     } catch (err) { setError(err.message); }
     finally { setLoadingUnbatched(false); }
@@ -133,6 +141,7 @@ export default function CreditBatches() {
       await financeApi.createBatch({
         account_id: accountId,
         batch_ref: batchRef.trim(),
+        description: batchDesc.trim() || null,
         transactionIds: [...selectedCreate],
       });
       flashSaved();
@@ -323,6 +332,35 @@ export default function CreditBatches() {
               <h2 className="text-lg font-bold">Batch: {viewBatch.batch_ref}</h2>
             </div>
 
+            {canCreate && (
+              <div className="flex items-end gap-3 mb-4">
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Description</label>
+                  <input
+                    type="text"
+                    value={viewBatch.description ?? ''}
+                    onChange={(e) => setViewBatch((prev) => ({ ...prev, description: e.target.value }))}
+                    placeholder="Optional description"
+                    className={inputCls}
+                  />
+                </div>
+                <button
+                  onClick={async () => {
+                    try {
+                      await financeApi.updateBatch(viewBatch.id, { description: viewBatch.description || null });
+                      flashSaved();
+                    } catch (err) { setError(err.message); }
+                  }}
+                  className={btnSecondary}
+                >
+                  Save
+                </button>
+              </div>
+            )}
+            {!canCreate && viewBatch.description && (
+              <p className="text-sm text-slate-600 mb-4">Description: {viewBatch.description}</p>
+            )}
+
             <div className="overflow-x-auto mb-4">
               <table className="min-w-max w-full text-sm border border-slate-300">
                 <thead>
@@ -480,6 +518,17 @@ export default function CreditBatches() {
                           value={batchRef}
                           onChange={(e) => setBatchRef(e.target.value)}
                           placeholder="e.g. 12 Mar 2026"
+                          className={inputCls}
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-slate-700 mb-1">Description</label>
+                        <input
+                          type="text"
+                          name="batchDesc"
+                          value={batchDesc}
+                          onChange={(e) => setBatchDesc(e.target.value)}
+                          placeholder="Optional description"
                           className={inputCls}
                         />
                       </div>

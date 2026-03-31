@@ -458,6 +458,9 @@ CREATE TABLE IF NOT EXISTS :schema.credit_batches (
   UNIQUE (account_id, batch_ref)
 );
 
+-- Batch description (free text reference)
+ALTER TABLE :schema.credit_batches ADD COLUMN IF NOT EXISTS description TEXT;
+
 -- Link transactions to a credit batch
 ALTER TABLE :schema.transactions ADD COLUMN IF NOT EXISTS batch_id TEXT
   REFERENCES :schema.credit_batches(id) ON DELETE SET NULL;

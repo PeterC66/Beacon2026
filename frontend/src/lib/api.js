@@ -397,6 +397,7 @@ export const finance = {
     request(`/finance/batches/${id}/transactions`, { method: 'POST', body: JSON.stringify({ transactionIds }) }),
   removeFromBatch:  (id, transactionIds) =>
     request(`/finance/batches/${id}/transactions`, { method: 'DELETE', body: JSON.stringify({ transactionIds }) }),
+  updateBatch:      (id, data) => request(`/finance/batches/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
   deleteBatch:      (id)       => request(`/finance/batches/${id}`, { method: 'DELETE' }),
 
   // Financial Statement
