@@ -33,7 +33,7 @@ import PageHeader from '../../components/PageHeader.jsx';
 import SortableHeader from '../../components/SortableHeader.jsx';
 import ScrollButtons from '../../components/ScrollButtons.jsx';
 import { useSortedData } from '../../hooks/useSortedData.js';
-import { formatShortAddress } from '../../lib/memberFormatters.js';
+import { formatShortAddress, isSubscriptionOverdue } from '../../lib/memberFormatters.js';
 import { formatMemberName } from '../../hooks/usePreferences.js';
 import NoEmailIcon from '../../components/NoEmailIcon.jsx';
 
@@ -506,18 +506,18 @@ export default function MemberList() {
                           />
                           {!m.email && <NoEmailIcon className="ml-1" />}
                         </td>
-                        <td className="px-3 py-2 tabular-nums">
+                        <td className={`px-3 py-2 tabular-nums ${isSubscriptionOverdue(m) ? 'text-red-600' : ''}`}>
                           {can('member_record', 'view') ? (
                             <a href="#view" onClick={(e) => { e.preventDefault(); navigate(`/members/${m.id}`); }}
-                              className="text-blue-700 hover:underline">
+                              className={`hover:underline ${isSubscriptionOverdue(m) ? 'text-red-600' : 'text-blue-700'}`}>
                               {m.membership_number}
                             </a>
                           ) : m.membership_number}
                         </td>
-                        <td className="px-3 py-2 font-medium">
+                        <td className={`px-3 py-2 font-medium ${isSubscriptionOverdue(m) ? 'text-red-600' : ''}`}>
                           {can('member_record', 'view') ? (
                             <a href="#view" onClick={(e) => { e.preventDefault(); navigate(`/members/${m.id}`); }}
-                              className="text-blue-700 hover:underline">
+                              className={`hover:underline ${isSubscriptionOverdue(m) ? 'text-red-600' : 'text-blue-700'}`}>
                               {formatMemberName(m)}
                             </a>
                           ) : formatMemberName(m)}

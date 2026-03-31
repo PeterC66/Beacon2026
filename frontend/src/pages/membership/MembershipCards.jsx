@@ -12,7 +12,7 @@ import { useSortedData } from '../../hooks/useSortedData.js';
 import ScrollButtons from '../../components/ScrollButtons.jsx';
 import NoEmailIcon from '../../components/NoEmailIcon.jsx';
 import { formatMemberName } from '../../hooks/usePreferences.js';
-import { formatShortAddress } from '../../lib/memberFormatters.js';
+import { formatShortAddress, isSubscriptionOverdue } from '../../lib/memberFormatters.js';
 
 export default function MembershipCards() {
   const { can, tenant } = useAuth();
@@ -256,18 +256,18 @@ export default function MembershipCards() {
                           />
                           {!m.email && <NoEmailIcon className="ml-1" />}
                         </td>
-                        <td className="px-3 py-2 tabular-nums">
+                        <td className={`px-3 py-2 tabular-nums ${isSubscriptionOverdue(m) ? 'text-red-600' : ''}`}>
                           {can('member_record', 'view') ? (
                             <a href="#view" onClick={(e) => { e.preventDefault(); navigate(`/members/${m.id}`); }}
-                              className="text-blue-700 hover:underline">
+                              className={`hover:underline ${isSubscriptionOverdue(m) ? 'text-red-600' : 'text-blue-700'}`}>
                               {m.membership_number}
                             </a>
                           ) : m.membership_number}
                         </td>
-                        <td className="px-3 py-2 font-medium">
+                        <td className={`px-3 py-2 font-medium ${isSubscriptionOverdue(m) ? 'text-red-600' : ''}`}>
                           {can('member_record', 'view') ? (
                             <a href="#view" onClick={(e) => { e.preventDefault(); navigate(`/members/${m.id}`); }}
-                              className="text-blue-700 hover:underline">
+                              className={`hover:underline ${isSubscriptionOverdue(m) ? 'text-red-600' : 'text-blue-700'}`}>
                               {formatMemberName(m)}
                             </a>
                           ) : formatMemberName(m)}
