@@ -14,6 +14,9 @@ import SortableHeader from '../../components/SortableHeader.jsx';
 import { useSortedData } from '../../hooks/useSortedData.js';
 import { useUnsavedChanges } from '../../hooks/useUnsavedChanges.js';
 import ScrollButtons from '../../components/ScrollButtons.jsx';
+import NoEmailIcon from '../../components/NoEmailIcon.jsx';
+import { formatShortAddress, isSubscriptionOverdue } from '../../lib/memberFormatters.js';
+import { formatMemberName } from '../../hooks/usePreferences.js';
 
 // ─── Details sub-component ────────────────────────────────────────────────
 
@@ -334,7 +337,8 @@ function GroupMembers({ groupId }) {
   const [targetGroupId, setTargetGroupId] = useState('');
 
   const canManage = can('group_records_all', 'change');
-  const { sorted: sortedMembers, sortKey, sortDir, onSort } = useSortedData(groupMembers);
+  const SORT_SURNAME = ['surname', 'forenames'];
+  const { sorted: sortedMembers, sortKey, sortDir, onSort } = useSortedData(groupMembers, SORT_SURNAME, 'asc');
 
   useEffect(() => {
     load();
@@ -559,11 +563,28 @@ function GroupMembers({ groupId }) {
               <tr className="bg-slate-50 border-b border-slate-200 text-left text-slate-600 italic font-normal">
                 <th className="px-2 py-2"></th>
                 <SortableHeader col="membership_number" label="No"      sortKey={sortKey} sortDir={sortDir} onSort={onSort} className="px-3 py-2 font-normal" />
-                <SortableHeader col="surname"           label="Name"    sortKey={sortKey} sortDir={sortDir} onSort={onSort} className="px-3 py-2 font-normal" />
-                <SortableHeader col="town"              label="Town"    sortKey={sortKey} sortDir={sortDir} onSort={onSort} className="px-3 py-2 font-normal" />
-                <th className="px-3 py-2 font-normal">Email</th>
-                <th className="px-3 py-2 font-normal">Tel</th>
-                <SortableHeader col="status"            label="Status"  sortKey={sortKey} sortDir={sortDir} onSort={onSort} className="px-3 py-2 font-normal" />
+                <th className="px-3 py-2 font-normal">
+                  <span className="cursor-pointer select-none" onClick={() => onSort('forenames')}>
+                    Name
+                    <span className={`ml-1 text-xs ${sortKey === 'forenames' ? 'text-blue-600' : 'text-slate-300'}`}>
+                      {sortKey === 'forenames' ? (sortDir === 'asc' ? '▲' : '▼') : '⇅'}
+                    </span>
+                  </span>
+                  <span className="text-slate-300 mx-1">|</span>
+                  <span
+                    className="cursor-pointer select-none text-xs not-italic"
+                    onClick={() => onSort(SORT_SURNAME)}
+                  >
+                    by surname
+                    <span className={`ml-1 text-xs ${Array.isArray(sortKey) && sortKey[0] === 'surname' ? 'text-blue-600' : 'text-slate-300'}`}>
+                      {Array.isArray(sortKey) && sortKey[0] === 'surname' ? (sortDir === 'asc' ? '▲' : '▼') : '⇅'}
+                    </span>
+                  </span>
+                </th>
+                <SortableHeader col="house_no"           label="Address"    sortKey={sortKey} sortDir={sortDir} onSort={onSort} className="px-3 py-2 font-normal" />
+                <SortableHeader col="telephone"          label="Telephone"  sortKey={sortKey} sortDir={sortDir} onSort={onSort} className="px-3 py-2 font-normal" />
+                <SortableHeader col="mobile"             label="Mobile"     sortKey={sortKey} sortDir={sortDir} onSort={onSort} className="px-3 py-2 font-normal" />
+                <SortableHeader col="status"             label="Status"     sortKey={sortKey} sortDir={sortDir} onSort={onSort} className="px-3 py-2 font-normal" />
                 <SortableHeader col="is_leader"         label="Leader"  sortKey={sortKey} sortDir={sortDir} onSort={onSort} className="px-3 py-2 font-normal" />
                 {hasWaiting && (
                   <SortableHeader col="waiting_since" label="Waiting" sortKey={sortKey} sortDir={sortDir} onSort={onSort} className="px-3 py-2 font-normal" />
@@ -577,17 +598,28 @@ function GroupMembers({ groupId }) {
                   <td className="px-2 py-2">
                     <input type="checkbox" checked={selected.has(m.member_id)} onChange={() => toggleSelect(m.member_id)}
                       className="rounded border-slate-300 text-blue-600 focus:ring-blue-500" />
+                    {!m.email && <NoEmailIcon className="ml-1" />}
                   </td>
-                  <td className="px-3 py-2 tabular-nums">{m.membership_number}</td>
-                  <td className={`px-3 py-2 ${rowStyle(m)}`}>
+                  <td className={`px-3 py-2 tabular-nums ${isSubscriptionOverdue(m) ? 'text-red-600' : ''}`}>
+                    {can('member_record', 'view') ? (
+                      <a href="#view" onClick={(e) => { e.preventDefault(); navigate(`/members/${m.member_id}`); }}
+                        className={`hover:underline ${isSubscriptionOverdue(m) ? 'text-red-600' : 'text-blue-700'}`}>
+                        {m.membership_number}
+                      </a>
+                    ) : m.membership_number}
+                  </td>
+                  <td className={`px-3 py-2 font-medium ${rowStyle(m)} ${isSubscriptionOverdue(m) ? 'text-red-600' : ''}`}>
                     {m.is_leader && <span className="text-blue-600 font-medium mr-1">★</span>}
-                    {m.title ? `${m.title} ` : ''}{m.forenames} {m.surname}
-                    {m.known_as ? ` (${m.known_as})` : ''}
-                    {!m.email && <span className="ml-2 text-red-400 text-xs" title="No email">✉✗</span>}
+                    {can('member_record', 'view') ? (
+                      <a href="#view" onClick={(e) => { e.preventDefault(); navigate(`/members/${m.member_id}`); }}
+                        className={`hover:underline ${isSubscriptionOverdue(m) ? 'text-red-600' : 'text-blue-700'}`}>
+                        {formatMemberName(m)}
+                      </a>
+                    ) : formatMemberName(m)}
                   </td>
-                  <td className="px-3 py-2">{m.town ?? ''}</td>
-                  <td className="px-3 py-2 text-xs">{m.hide_contact ? '' : (m.email ?? '')}</td>
-                  <td className="px-3 py-2 text-xs">{m.hide_contact ? '' : (m.telephone ?? m.mobile ?? '')}</td>
+                  <td className="px-3 py-2">{formatShortAddress(m)}</td>
+                  <td className="px-3 py-2">{m.telephone ?? ''}</td>
+                  <td className="px-3 py-2">{m.mobile ?? ''}</td>
                   <td className="px-3 py-2">{m.status ?? ''}</td>
                   <td className="px-3 py-2">{m.is_leader ? 'Yes' : ''}</td>
                   {hasWaiting && (

@@ -8,6 +8,10 @@ Format: `## [version] — YYYY-MM-DD` with bullet points per change.
 ## [0.7.17] — 2026-03-30
 
 ### Changed
+- **Group members list** — aligned with main members list: uses `formatMemberName`, clickable
+  No/Name links to member record, dual sort (by forenames / by surname), NoEmailIcon in
+  checkbox column, overdue subscription red styling, Address column (short format) replacing
+  Town, separate Telephone and Mobile columns replacing single Tel, Email column removed
 - **Member record** — renamed "Home u3a" label to "Home u3a and member no." for Associate members
 - **Member record** — address section now shows "Address record created …; last changed …" timestamp note below the address fields
 - **Members list** — consolidated surname/forenames/known-as into a single "Name" column
