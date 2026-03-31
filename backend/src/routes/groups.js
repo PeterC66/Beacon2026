@@ -380,7 +380,7 @@ router.get('/:id/members', requirePrivilege('group_records_all', 'view'), async 
       slug,
       `SELECT gm.id AS gm_id, gm.member_id, gm.is_leader, gm.waiting_since, gm.created_at AS joined_at,
               m.membership_number, m.title, m.forenames, m.surname, m.known_as,
-              m.email, m.mobile, m.hide_contact,
+              m.email, m.mobile, m.hide_contact, m.next_renewal,
               ms.name AS status,
               a.house_no, a.street, a.town, a.postcode, a.telephone
        FROM group_members gm

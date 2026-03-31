@@ -322,6 +322,7 @@
 | Waiting list with auto-enforcement | Built | — |
 | PDF download with photos | Built | Includes member photos when available; falls back to tabular layout when no photos exist |
 | Bulk actions (Do with selected) | Built | Send email, Download Excel/PDF, Remove members, Add to another group (with waiting-list support) |
+| **Beacon2 extra:** Consistent with members list | Beacon2 extra | Columns, name formatting, links, sort, overdue styling, and no-email indicator all match the main members list |
 
 ---
 
