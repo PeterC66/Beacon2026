@@ -79,15 +79,19 @@ export default function GiftAidDeclaration() {
 
   // ─── Selection helpers ──────────────────────────────────────────────────
 
-  function toggleOne(id) {
+  /** Composite key: "txnId:memberSlot" — uniquely identifies a declaration row. */
+  function rowKey(r) { return `${r.id}:${r.member_slot ?? 1}`; }
+
+  function toggleOne(r) {
+    const k = rowKey(r);
     setSelected((prev) => {
       const next = new Set(prev);
-      if (next.has(id)) next.delete(id); else next.add(id);
+      if (next.has(k)) next.delete(k); else next.add(k);
       return next;
     });
   }
 
-  function selectAll() { setSelected(new Set(rows.map((r) => r.id))); }
+  function selectAll() { setSelected(new Set(rows.map(rowKey))); }
   function selectNone() { setSelected(new Set()); }
 
   // ─── Actions ────────────────────────────────────────────────────────────
@@ -96,7 +100,11 @@ export default function GiftAidDeclaration() {
     if (selected.size === 0) return;
     setDownloading(true);
     try {
-      await giftAidApi.download([...selected], yearStart, yearEnd);
+      // Download uses transaction IDs — collect all unique txn IDs from selected rows
+      const txnIds = [...new Set(
+        rows.filter((r) => selected.has(rowKey(r))).map((r) => r.id),
+      )];
+      await giftAidApi.download(txnIds, yearStart, yearEnd);
     } catch (err) { setError(err.message); }
     finally { setDownloading(false); }
   }
@@ -105,7 +113,15 @@ export default function GiftAidDeclaration() {
     if (selected.size === 0) return;
     setMarking(true);
     try {
-      const result = await giftAidApi.mark([...selected]);
+      // Split selected rows into slot 1 and slot 2 transaction IDs
+      const ids1 = [];
+      const ids2 = [];
+      for (const r of rows) {
+        if (!selected.has(rowKey(r))) continue;
+        if ((r.member_slot ?? 1) === 1) ids1.push(r.id);
+        else ids2.push(r.id);
+      }
+      const result = await giftAidApi.mark(ids1, ids2.length > 0 ? ids2 : undefined);
       setSaved(true);
       window.scrollTo({ top: 0, behavior: 'smooth' });
       clearTimeout(savedTimer.current);
@@ -120,7 +136,7 @@ export default function GiftAidDeclaration() {
     if (selected.size === 0) return;
     // Collect unique member IDs from selected transactions
     const memberIds = [...new Set(
-      rows.filter((r) => selected.has(r.id)).map((r) => r.member_id),
+      rows.filter((r) => selected.has(rowKey(r))).map((r) => r.member_id),
     )];
     // Store member IDs and GA context for email tokens
     sessionStorage.setItem('emailComposeMemberIds', JSON.stringify(memberIds));
@@ -140,7 +156,7 @@ export default function GiftAidDeclaration() {
 
   const totalGA = rows.reduce((s, r) => s + (r.gift_aid_amount ?? 0), 0);
   const selectedTotal = rows
-    .filter((r) => selected.has(r.id))
+    .filter((r) => selected.has(rowKey(r)))
     .reduce((s, r) => s + (r.gift_aid_amount ?? 0), 0);
 
   return (
@@ -292,14 +308,14 @@ export default function GiftAidDeclaration() {
                     <tbody>
                       {sorted.map((r, i) => (
                         <tr
-                          key={r.id}
+                          key={rowKey(r)}
                           className={i % 2 === 0 ? 'bg-yellow-50' : 'bg-white'}
                         >
                           <td className="px-2 py-1 border-b border-slate-200 text-center">
                             <input
                               type="checkbox"
-                              checked={selected.has(r.id)}
-                              onChange={() => toggleOne(r.id)}
+                              checked={selected.has(rowKey(r))}
+                              onChange={() => toggleOne(r)}
                             />
                           </td>
                           <td className="px-3 py-1 border-b border-slate-200">{r.membership_number}</td>

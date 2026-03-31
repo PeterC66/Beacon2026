@@ -7,6 +7,13 @@ Format: `## [version] — YYYY-MM-DD` with bullet points per change.
 
 ## [0.7.18] — 2026-03-31
 
+### Added
+- **Transaction form** — Gift Aid eligible amount fields for Member 1 and Member 2; shown
+  only for incoming transactions linked to a member. Read-only claimed date displayed when
+  gift aid has been claimed.
+- **Gift Aid declaration** — Member 2 support: declaration list, Excel download, and
+  mark-as-claimed now handle both member slots via UNION query
+
 ### Changed
 - **Venue form** — replaced multi-field address (address1, address2, town, county) with a
   single Address field; postcode remains separate

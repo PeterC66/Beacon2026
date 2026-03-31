@@ -506,6 +506,8 @@
 | Category splits | Built | — |
 | Cleared lock | Built | — |
 | Member search | Built | Client-side filter with `<select size={4}>` |
+| Gift Aid eligible amount | Built | Per-member amount fields shown for incoming transactions linked to members; read-only claimed date |
+| Gift Aid for Member 2 | Built | Separate gift_aid_amount_2 / gift_aid_claimed_at_2 columns |
 
 ---
 
@@ -582,7 +584,7 @@
 | Download Excel (HMRC format) | Built | — |
 | Mark as claimed | Built | — |
 | Send email with GA tokens | Built | `#GIFTAID` and `#GIFTAIDLIST` tokens |
-| Joint membership Gift Aid | Not started | See KNOWN-ISSUES.md — joint fee should qualify under paying member only |
+| Joint membership Gift Aid | Built | Member 2 gift aid amount and claiming supported; declaration UNION query returns separate rows per member slot |
 
 ---
 
@@ -1057,11 +1059,10 @@ These are features or architectural aspects of Beacon2 that have no counterpart 
 1. **Online renewals** (doc 10.2.1) — no portal renewal flow exists
 2. **Public groups list and public calendar** — unauthenticated pages not yet built; links greyed out on Home page
 3. **Joint membership online joining** (doc 10.1) — no second-person fields in join form
-4. **Joint membership Gift Aid** (doc 7.8) — HMRC declaration should show against paying member only
-5. **Real PayPal API integration** (docs 7.9, 9.8) — stub functions only
-6. **System-wide hide address from group leaders** (doc 4.2.4b) — global setting not implemented
-7. **Networks and Regions** (doc 12) — out of scope for current build
-8. **Guidance pages** (docs 5, 6, 6.1.5, 7.10.3, 7.10.4, 8.1a, 8.9, 9.5.1) — no dedicated guidance/tips pages
+4. **Real PayPal API integration** (docs 7.9, 9.8) — stub functions only
+5. **System-wide hide address from group leaders** (doc 4.2.4b) — global setting not implemented
+6. **Networks and Regions** (doc 12) — out of scope for current build
+7. **Guidance pages** (docs 5, 6, 6.1.5, 7.10.3, 7.10.4, 8.1a, 8.9, 9.5.1) — no dedicated guidance/tips pages
 
 ### Key differences from Beacon
 

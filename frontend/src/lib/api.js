@@ -434,8 +434,8 @@ export const giftAid = {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ ids, from, to }),
     }),
-  mark: (ids) =>
-    request('/gift-aid/mark', { method: 'POST', body: JSON.stringify({ ids }) }),
+  mark: (ids, ids_2) =>
+    request('/gift-aid/mark', { method: 'POST', body: JSON.stringify({ ids, ids_2 }) }),
   log: (params = {}) => {
     const qs = new URLSearchParams();
     if (params.from)     qs.set('from', params.from);

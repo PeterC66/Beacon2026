@@ -539,6 +539,8 @@ router.get('/transactions/:id', requirePrivilege('finance_transactions', 'view')
               t.from_to, t.amount::float, t.payment_method, t.payment_ref,
               t.detail, t.remarks, t.cleared_at, t.pending, t.transfer_id,
               t.member_id_1, t.member_id_2, t.group_id,
+              t.gift_aid_amount::float AS gift_aid_amount, t.gift_aid_claimed_at,
+              t.gift_aid_amount_2::float AS gift_aid_amount_2, t.gift_aid_claimed_at_2,
               t.batch_id, cb.batch_ref,
               t.refund_of_id, t.refunded_by_id,
               ref_orig.transaction_number AS refund_of_txn_number,
@@ -589,11 +591,13 @@ const createTxnSchema = z.object({
   payment_ref:    z.string().optional().nullable(),
   detail:         z.string().optional().nullable(),
   remarks:        z.string().optional().nullable(),
-  member_id_1:    z.string().optional().nullable(),
-  member_id_2:    z.string().optional().nullable(),
-  group_id:       z.string().optional().nullable(),
-  pending:        z.boolean().optional(),
-  categories:     z.array(txnCategorySchema).min(1),
+  member_id_1:       z.string().optional().nullable(),
+  member_id_2:       z.string().optional().nullable(),
+  group_id:          z.string().optional().nullable(),
+  pending:           z.boolean().optional(),
+  gift_aid_amount:   z.number().min(0).optional().nullable(),
+  gift_aid_amount_2: z.number().min(0).optional().nullable(),
+  categories:        z.array(txnCategorySchema).min(1),
 });
 
 router.post('/transactions', requirePrivilege('finance_transactions', 'create'), async (req, res, next) => {
@@ -626,8 +630,8 @@ router.post('/transactions', requirePrivilege('finance_transactions', 'create'),
     const [txn] = await tenantQuery(
       req.user.tenantSlug,
       `INSERT INTO transactions
-         (account_id, date, type, from_to, amount, payment_method, payment_ref, detail, remarks, member_id_1, member_id_2, group_id, pending)
-       VALUES ($1, $2::date, $3, $4, $5::numeric, $6, $7, $8, $9, $10, $11, $12, $13)
+         (account_id, date, type, from_to, amount, payment_method, payment_ref, detail, remarks, member_id_1, member_id_2, group_id, pending, gift_aid_amount, gift_aid_amount_2)
+       VALUES ($1, $2::date, $3, $4, $5::numeric, $6, $7, $8, $9, $10, $11, $12, $13, $14::numeric, $15::numeric)
        RETURNING id, transaction_number`,
       [
         data.account_id, data.date, data.type,
@@ -636,6 +640,7 @@ router.post('/transactions', requirePrivilege('finance_transactions', 'create'),
         data.detail ?? null, data.remarks ?? null,
         data.member_id_1 ?? null, data.member_id_2 ?? null, data.group_id ?? null,
         pending,
+        data.gift_aid_amount ?? null, data.gift_aid_amount_2 ?? null,
       ],
     );
 
@@ -741,6 +746,8 @@ router.patch('/transactions/:id', requirePrivilege('finance_transactions', 'chan
     if (data.group_id       !== undefined) { fields.push(`group_id = $${i++}`);       values.push(data.group_id); }
     if (data.batch_id       !== undefined) { fields.push(`batch_id = $${i++}`);       values.push(data.batch_id); }
     if (data.pending        !== undefined) { fields.push(`pending = $${i++}`);        values.push(data.pending); }
+    if (data.gift_aid_amount   !== undefined) { fields.push(`gift_aid_amount = $${i++}::numeric`);   values.push(data.gift_aid_amount); }
+    if (data.gift_aid_amount_2 !== undefined) { fields.push(`gift_aid_amount_2 = $${i++}::numeric`); values.push(data.gift_aid_amount_2); }
 
     if (fields.length > 0) {
       fields.push(`updated_at = now()`);
