@@ -11,6 +11,7 @@ import ScrollButtons from '../../components/ScrollButtons.jsx';
 import SortableHeader from '../../components/SortableHeader.jsx';
 import { useSortedData } from '../../hooks/useSortedData.js';
 import { formatMemberName } from '../../hooks/usePreferences.js';
+import { isSubscriptionOverdue } from '../../lib/memberFormatters.js';
 import NoEmailIcon from '../../components/NoEmailIcon.jsx';
 
 const PAYMENT_METHODS = ['Cash', 'Cheque', 'Standing Order', 'Direct Debit', 'Online', 'Other'];
@@ -388,13 +389,13 @@ export default function MembershipRenewals() {
                           />
                           {!m.email && <NoEmailIcon className="ml-1" />}
                         </td>
-                        <td className="px-4 py-2">
-                          <Link to={`/members/${m.id}`} className="text-blue-600 hover:underline">
+                        <td className={`px-4 py-2 ${isSubscriptionOverdue(m) ? 'text-red-600' : ''}`}>
+                          <Link to={`/members/${m.id}`} className={`hover:underline ${isSubscriptionOverdue(m) ? 'text-red-600' : 'text-blue-600'}`}>
                             {m.membership_number}
                           </Link>
                         </td>
-                        <td className="px-4 py-2 font-medium">
-                          <Link to={`/members/${m.id}`} className="text-blue-600 hover:underline">
+                        <td className={`px-4 py-2 font-medium ${isSubscriptionOverdue(m) ? 'text-red-600' : ''}`}>
+                          <Link to={`/members/${m.id}`} className={`hover:underline ${isSubscriptionOverdue(m) ? 'text-red-600' : 'text-blue-600'}`}>
                             {formatMemberName(m)}
                           </Link>
                           <span className="ml-2 text-xs text-slate-400">{m.status_name}</span>

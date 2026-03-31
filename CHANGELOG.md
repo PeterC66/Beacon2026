@@ -38,6 +38,10 @@ Format: `## [version] — YYYY-MM-DD` with bullet points per change.
 - **Membership Cards** — consolidated name, removed email/town/postcode columns, added
   short address column, Name/by surname sorting, default sort by surname, member number
   now a clickable link
+- **Overdue subscription highlighting** — member number and name shown in red on all
+  member list pages (except Non-Renewals) when `next_renewal` is in the past
+- New shared `isSubscriptionOverdue()` helper in `memberFormatters.js`
+- Backend Recent Members query now returns `next_renewal`
 
 ---
 
