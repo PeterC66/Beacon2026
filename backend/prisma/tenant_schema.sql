@@ -250,6 +250,14 @@ CREATE TABLE IF NOT EXISTS :schema.venues (
 
 CREATE INDEX IF NOT EXISTS :schema_idx_venues_name ON :schema.venues (name);
 
+-- Venue schema changes: add contact + single address, drop old address columns
+ALTER TABLE :schema.venues ADD COLUMN IF NOT EXISTS contact TEXT;
+ALTER TABLE :schema.venues ADD COLUMN IF NOT EXISTS address TEXT;
+ALTER TABLE :schema.venues DROP COLUMN IF EXISTS address1;
+ALTER TABLE :schema.venues DROP COLUMN IF EXISTS address2;
+ALTER TABLE :schema.venues DROP COLUMN IF EXISTS town;
+ALTER TABLE :schema.venues DROP COLUMN IF EXISTS county;
+
 -- Add venue_id FK to groups (replaces free-text venue field in the UI)
 ALTER TABLE :schema.groups ADD COLUMN IF NOT EXISTS venue_id TEXT REFERENCES :schema.venues(id) ON DELETE SET NULL;
 
