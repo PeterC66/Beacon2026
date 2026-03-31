@@ -3,16 +3,20 @@
 // app.js exports the pure Express app (importable without side-effects for tests).
 
 import 'dotenv/config';
+import { createRequire } from 'module';
 import app from './app.js';
 import { prisma } from './utils/db.js';
 import { migrateAndSeed } from './utils/migrate.js';
+
+const require = createRequire(import.meta.url);
+const { version } = require('../package.json');
 
 const PORT = process.env.PORT ?? 3001;
 
 migrateAndSeed()
   .then(() => {
     app.listen(PORT, () => {
-      console.log(`Beacon2 API running on port ${PORT} [${process.env.NODE_ENV}]`);
+      console.log(`Beacon2 API v${version} running on port ${PORT} [${process.env.NODE_ENV}]`);
     });
   })
   .catch((err) => {
