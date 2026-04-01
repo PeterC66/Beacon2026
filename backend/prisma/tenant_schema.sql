@@ -464,6 +464,10 @@ CREATE TABLE IF NOT EXISTS :schema.credit_batches (
 -- Batch description (free text reference)
 ALTER TABLE :schema.credit_batches ADD COLUMN IF NOT EXISTS description TEXT;
 
+-- Batch date (defaults to created_at, editable by user)
+ALTER TABLE :schema.credit_batches ADD COLUMN IF NOT EXISTS batch_date DATE;
+UPDATE :schema.credit_batches SET batch_date = created_at::date WHERE batch_date IS NULL;
+
 -- Link transactions to a credit batch
 ALTER TABLE :schema.transactions ADD COLUMN IF NOT EXISTS batch_id TEXT
   REFERENCES :schema.credit_batches(id) ON DELETE SET NULL;

@@ -5,6 +5,27 @@ Format: `## [version] — YYYY-MM-DD` with bullet points per change.
 
 ---
 
+## [0.7.20] — 2026-04-01
+
+### Changed
+- **Financial Ledger** — moved "Do with selected" bulk action bar from above the table
+  to below it, matching the standard layout used by all other list pages
+- **Credit Batches** — auto-select first locked account on page load; auto-display
+  batch list when account/mode/date changes (removed Show button); moved "Add credit
+  batch" button to NavBar
+- **Credit Batches (batch detail)** — show batch number; editable batch reference,
+  batch date (new field), and description; new table columns (#, Date, Payment Ref,
+  Payment Method, From/To, Detail, Amount, Cleared, Remove?); "Remove?" checkboxes
+  with Current/New Batch Total in footer; Update Transaction + Cancel buttons;
+  "Add transactions" button to add unbatched transactions to the current batch
+
+### Added
+- **NavBar** — support for `onClick` handler links (button-styled, no navigation)
+- **credit_batches.batch_date** — new editable date column (defaults to creation date);
+  used for "since date" filtering instead of created_at
+
+---
+
 ## [0.7.19] — 2026-04-01
 
 ### Changed

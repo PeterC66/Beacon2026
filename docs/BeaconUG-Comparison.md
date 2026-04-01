@@ -526,8 +526,13 @@
 | Aspect | Status | Notes |
 |--------|--------|-------|
 | Create/view/delete batches | Built | — |
-| Add/remove transactions | Built | — |
+| Add/remove transactions | Built | Remove via checkboxes with Current/New totals; add from detail view |
+| Batch reference field | Built | Editable on batch detail view |
 | Batch description field | Built | Editable on batch detail view |
+| Batch date | Built | Editable; defaults to creation date; used for "since" filtering |
+| Batch number | Built | Auto-calculated sequential number per account |
+| Auto-select default account | Built | First locked account pre-selected on page load |
+| Auto-display batch list | Built | No Show button; auto-loads on account/mode/date change |
 | Batches as single rows in reconciliation | Built | — |
 
 ---
