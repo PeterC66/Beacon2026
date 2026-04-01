@@ -71,6 +71,8 @@ import PortalLogin         from './pages/public/PortalLogin.jsx';
 import PortalHome          from './pages/public/PortalHome.jsx';
 import PortalGroups        from './pages/public/PortalGroups.jsx';
 import PortalCalendar      from './pages/public/PortalCalendar.jsx';
+import PublicGroups        from './pages/public/PublicGroups.jsx';
+import PublicCalendar      from './pages/public/PublicCalendar.jsx';
 import PortalPersonalDetails from './pages/public/PortalPersonalDetails.jsx';
 import PortalRequestCard   from './pages/public/PortalRequestCard.jsx';
 import PortalRegister      from './pages/public/PortalRegister.jsx';
@@ -183,6 +185,8 @@ const router = createBrowserRouter([
       { path: '/public/:slug/join-pending',             element: <JoinPending /> },
       { path: '/public/:slug/join-complete',            element: <JoinComplete /> },
       { path: '/public/:slug/resume-payment/:token',    element: <ResumePayment /> },
+      { path: '/public/:slug/groups',                    element: <PublicGroups /> },
+      { path: '/public/:slug/calendar',                  element: <PublicCalendar /> },
       { path: '/public/:slug/portal',                   element: <PortalLogin /> },
       { path: '/public/:slug/portal/home',              element: <PortalHome /> },
       { path: '/public/:slug/portal/groups',            element: <PortalGroups /> },
