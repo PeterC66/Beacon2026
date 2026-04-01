@@ -39,7 +39,7 @@
 | Home page with navigation | Built | Card-based home page with privilege-gated navigation to all modules |
 | Module organisation | Built | Same modules: Membership, Groups, Finance, Email, Set-up, Misc |
 | Fixed links (Forum, User Guide, Website) | Built | Links to Beacon resources shown in bottom panel |
-| Public website links (Join, Portal, Groups, Calendar) | Partial | Join and Portal links active; Public groups list and Public calendar greyed out (pages not yet built) |
+| Public website links (Join, Portal, Groups, Calendar) | Built | Join, Portal, Public groups list, and Public calendar all active |
 | Documents link | Built | Links to prospective Beacon users documentation |
 | System-wide message | Built | Editable by system admin from System Dashboard; displayed on all tenants' Home pages |
 | Home page notice (tenant message) | Built | Uses `home_page_notice` system message with `#U3ANAME` substitution |
@@ -1065,7 +1065,7 @@ These are features or architectural aspects of Beacon2 that have no counterpart 
 ### Key gaps (Not started)
 
 1. **Online renewals** (doc 10.2.1) — no portal renewal flow exists
-2. **Public groups list and public calendar** — unauthenticated pages not yet built; links greyed out on Home page
+2. ~~Public groups list and public calendar~~ — **Done** (v0.8.2)
 3. **Joint membership online joining** (doc 10.1) — no second-person fields in join form
 4. **Real PayPal API integration** (docs 7.9, 9.8) — stub functions only
 5. **System-wide hide address from group leaders** (doc 4.2.4b) — global setting not implemented

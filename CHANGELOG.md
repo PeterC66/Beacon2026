@@ -5,6 +5,18 @@ Format: `## [version] — YYYY-MM-DD` with bullet points per change.
 
 ---
 
+## [0.8.2] — 2026-04-01
+
+### Added
+- **Public groups list** — unauthenticated page at `/public/{slug}/groups` showing all
+  active groups; fields controlled by `group_info_config` public flags; supports `?hdr=0`
+  to hide header for iframe embedding
+- **Public calendar** — unauthenticated page at `/public/{slug}/calendar` showing all
+  non-private events from today to end of year; fields controlled by `calendar_config`
+  public flags; supports `?hdr=0` to hide header
+
+---
+
 ## [0.8.1] — 2026-04-01
 
 ### Fixed

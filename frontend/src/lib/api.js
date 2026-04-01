@@ -770,6 +770,20 @@ export const publicApi = {
     }).then((r) =>
       r.json().then((b) => { if (!r.ok) throw new Error(b.error ?? `HTTP ${r.status}`); return b; }),
     ),
+  // Public information pages (unauthenticated)
+  getPublicGroups: (slug) =>
+    fetch(`${BASE}/public/${slug}/groups`).then((r) =>
+      r.json().then((b) => { if (!r.ok) throw new Error(b.error ?? `HTTP ${r.status}`); return b; }),
+    ),
+  getPublicCalendar: (slug, params = {}) => {
+    const qs = new URLSearchParams();
+    if (params.from) qs.set('from', params.from);
+    if (params.to)   qs.set('to', params.to);
+    const q = qs.toString();
+    return fetch(`${BASE}/public/${slug}/calendar${q ? '?' + q : ''}`).then((r) =>
+      r.json().then((b) => { if (!r.ok) throw new Error(b.error ?? `HTTP ${r.status}`); return b; }),
+    );
+  },
 };
 
 // ─── Portal (authenticated member) ───────────────────────────────────────────

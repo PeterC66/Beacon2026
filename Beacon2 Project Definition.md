@@ -304,9 +304,9 @@ docs/
 
 Greyed-out items in `Home.jsx` (i.e. `to: null`) are the remaining roadmap:
 
-**Not yet built:**
-- Public groups list page (public-facing, unauthenticated — URLs shown on Public Links page)
-- Public calendar page (public-facing, unauthenticated — URLs shown on Public Links page)
+**Previously listed, now done:**
+- ~~Public groups list page~~ (done — unauthenticated, field visibility via group_info_config public flags)
+- ~~Public calendar page~~ (done — unauthenticated, field visibility via calendar_config public flags)
 
 **Partially complete:**
 - Members Portal — online renewals (doc 10.2.1) still to do
