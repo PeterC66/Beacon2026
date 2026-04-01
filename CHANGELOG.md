@@ -5,6 +5,18 @@ Format: `## [version] — YYYY-MM-DD` with bullet points per change.
 
 ---
 
+## [0.7.19] — 2026-04-01
+
+### Changed
+- **Transaction form** — From/To field is now required (hard validation)
+- **Transaction form** — Member 2 is disabled until Member 1 is selected; clearing
+  Member 1 also clears Member 2. Members 1 and 2 cannot be the same.
+- **Transaction form** — Total gift aid eligible cannot exceed the transaction amount
+- **Transaction form** — Category allocation mismatch now shows the difference amount
+  (e.g. "difference £1.00")
+
+---
+
 ## [0.7.18] — 2026-03-31
 
 ### Added
