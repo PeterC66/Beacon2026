@@ -159,12 +159,12 @@ export async function buildFinanceSheets(wb, slug) {
 }
 
 export async function buildGroupsSheets(wb, slug) {
-  const [groups, gm, faculties] = await Promise.all([
+  const [groups, gm, faculties, venues, gle] = await Promise.all([
     tenantQuery(slug, `
       SELECT g.id, g.name, g.faculty_id, f.name AS faculty_name, g.status,
              g.when_text,
              g.start_time::text AS start_time, g.end_time::text AS end_time,
-             g.venue, g.enquiries, g.max_members,
+             g.venue, g.venue_id, g.enquiries, g.max_members,
              g.allow_online_join, g.enable_waiting_list, g.notify_leader,
              g.display_waiting_list, g.information, g.notes, g.show_addresses
       FROM groups g
@@ -181,11 +181,23 @@ export async function buildGroupsSheets(wb, slug) {
       ORDER BY g.name, m.surname, m.forenames
     `),
     tenantQuery(slug, `SELECT id, name FROM faculties ORDER BY name`),
+    tenantQuery(slug, `
+      SELECT id, name, address, postcode, telephone, contact, email, website,
+             notes, private_address, accessible
+      FROM venues ORDER BY name
+    `),
+    tenantQuery(slug, `
+      SELECT gle.id, gle.group_id, g.name AS group_name,
+             gle.entry_date, gle.payee, gle.detail, gle.money_in, gle.money_out
+      FROM group_ledger_entries gle
+      JOIN groups g ON gle.group_id = g.id
+      ORDER BY g.name, gle.entry_date
+    `),
   ]);
 
   addSheet(wb, 'Groups', [
     'id', 'name', 'faculty_id', 'faculty_name', 'status',
-    'when_text', 'start_time', 'end_time', 'venue', 'enquiries', 'max_members',
+    'when_text', 'start_time', 'end_time', 'venue', 'venue_id', 'enquiries', 'max_members',
     'allow_online_join', 'enable_waiting_list', 'notify_leader',
     'display_waiting_list', 'information', 'notes', 'show_addresses',
   ], groups.map((r) => ({
@@ -206,10 +218,23 @@ export async function buildGroupsSheets(wb, slug) {
     waiting_since: dateToStr(r.waiting_since),
   })));
 
-  // Venues: no separate table in Beacon2 — venue is text on each group
-  const wsV = wb.addWorksheet('Venues');
-  wsV.addRow(['note']);
-  wsV.addRow(['Beacon2 does not have a venues table. Venues are text on each group record.']);
+  addSheet(wb, 'Venues', [
+    'id', 'name', 'address', 'postcode', 'telephone', 'contact',
+    'email', 'website', 'notes', 'private_address', 'accessible',
+  ], venues.map((r) => ({
+    ...r,
+    private_address: boolInt(r.private_address),
+    accessible:      boolInt(r.accessible),
+  })));
+
+  addSheet(wb, 'Group Ledgers', [
+    'id', 'group_id', 'group_name', 'entry_date', 'payee', 'detail', 'money_in', 'money_out',
+  ], gle.map((r) => ({
+    ...r,
+    entry_date: dateToStr(r.entry_date),
+    money_in:   r.money_in != null ? Number(r.money_in) : null,
+    money_out:  r.money_out != null ? Number(r.money_out) : null,
+  })));
 
   addSheet(wb, 'Faculties', ['id', 'name'], faculties);
 }
@@ -593,20 +618,34 @@ export async function restoreBeacon2(tx, wb) {
     );
   }
 
+  // 7b. Venues (must come before Groups so venue_id FK is valid)
+  for (const r of get('Venues')) {
+    if (!r.id) continue;
+    await tx.$executeRawUnsafe(
+      `INSERT INTO venues
+         (id, name, address, postcode, telephone, contact, email, website, notes, private_address, accessible)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11) ON CONFLICT (id) DO NOTHING`,
+      r.id, String(r.name || ''), str(r.address), str(r.postcode),
+      str(r.telephone), str(r.contact), str(r.email), str(r.website),
+      str(r.notes), parseBool(r.private_address), parseBool(r.accessible),
+    );
+  }
+
   // 8. Groups
   for (const r of get('Groups')) {
     if (!r.id) continue;
     await tx.$executeRawUnsafe(
       `INSERT INTO groups
-         (id, name, faculty_id, status, when_text, start_time, end_time, venue,
+         (id, name, faculty_id, status, when_text, start_time, end_time, venue, venue_id,
           enquiries, max_members, allow_online_join, enable_waiting_list, notify_leader,
           display_waiting_list, information, notes, show_addresses)
-       VALUES ($1,$2,$3,$4,$5,$6::time,$7::time,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17)
+       VALUES ($1,$2,$3,$4,$5,$6::time,$7::time,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18)
        ON CONFLICT (id) DO NOTHING`,
       r.id, String(r.name || ''), str(r.faculty_id),
       String(r.status || 'active'), str(r.when_text),
       str(r.start_time) || null, str(r.end_time) || null,
-      str(r.venue), str(r.enquiries),
+      str(r.venue), str(r.venue_id),
+      str(r.enquiries),
       r.max_members ? parseInt(r.max_members) : null,
       parseBool(r.allow_online_join), parseBool(r.enable_waiting_list),
       parseBool(r.notify_leader), parseBool(r.display_waiting_list),
@@ -621,6 +660,17 @@ export async function restoreBeacon2(tx, wb) {
       `INSERT INTO group_members (id, group_id, member_id, is_leader, waiting_since)
        VALUES ($1,$2,$3,$4,$5::date) ON CONFLICT (id) DO NOTHING`,
       r.id, r.group_id, r.member_id, parseBool(r.is_leader), parseDate(r.waiting_since),
+    );
+  }
+
+  // 9b. Group ledger entries
+  for (const r of get('Group Ledgers')) {
+    if (!r.id || !r.group_id) continue;
+    await tx.$executeRawUnsafe(
+      `INSERT INTO group_ledger_entries (id, group_id, entry_date, payee, detail, money_in, money_out)
+       VALUES ($1,$2,$3::date,$4,$5,$6::numeric,$7::numeric) ON CONFLICT (id) DO NOTHING`,
+      r.id, r.group_id, parseDate(r.entry_date), str(r.payee), str(r.detail),
+      parseDec(r.money_in), parseDec(r.money_out),
     );
   }
 
@@ -732,12 +782,12 @@ export async function restoreBeacon2(tx, wb) {
     );
   }
 
-  // 19. Users
+  // 19. Users (must_change_password forced true so restored users must reset)
   for (const r of get('System Users')) {
     if (!r.id) continue;
     await tx.$executeRawUnsafe(
-      `INSERT INTO users (id, username, name, email, password_hash, active, member_id)
-       VALUES ($1,$2,$3,$4,$5,$6,$7) ON CONFLICT (id) DO NOTHING`,
+      `INSERT INTO users (id, username, name, email, password_hash, active, member_id, must_change_password)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,true) ON CONFLICT (id) DO NOTHING`,
       r.id, str(r.username), String(r.name || ''), String(r.email || ''),
       str(r.password_hash), parseBool(r.active !== undefined ? r.active : 1), str(r.member_id),
     );
@@ -1044,6 +1094,23 @@ export async function restoreBeacon(tx, wb) {
     facRows.map((r) => [String(r.faculty || '').trim().toLowerCase(), facultyMap[String(r.gfkey || '').trim()]]),
   );
 
+  // 7b. Venues
+  const venueMap = {};
+  for (const r of get('Venues')) {
+    const gvkey = String(r.gvkey || '').trim();
+    if (!gvkey) continue;
+    const newId = uuid();
+    venueMap[gvkey] = newId;
+    await tx.$executeRawUnsafe(
+      `INSERT INTO venues
+         (id, name, address, postcode, telephone, contact, email, website, notes, private_address, accessible)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)`,
+      newId, String(r.venue || ''), str(r.address), str(r.postcode),
+      str(r.telephone), str(r.contact), str(r.email), str(r.website),
+      str(r.notes), parseBool(r.private), parseBool(r.accessible),
+    );
+  }
+
   // 8. Groups
   const groupRows = get('Groups');
   const seenGroups = new Set();
@@ -1058,16 +1125,18 @@ export async function restoreBeacon(tx, wb) {
 
     const facId    = facultyByName[String(r.faculty || '').trim().toLowerCase()] || null;
     const isActive = String(r.status || '').toLowerCase() !== 'inactive';
+    const gvkey    = String(r.gvkey || '').trim();
+    const venueId  = gvkey ? (venueMap[gvkey] || null) : null;
 
     await tx.$executeRawUnsafe(
       `INSERT INTO groups
-         (id, name, faculty_id, status, when_text, start_time, end_time, venue, enquiries,
+         (id, name, faculty_id, status, when_text, start_time, end_time, venue, venue_id, enquiries,
           max_members, allow_online_join, enable_waiting_list, notify_leader)
-       VALUES ($1,$2,$3,$4,$5,$6::time,$7::time,$8,$9,$10,$11,$12,$13)`,
+       VALUES ($1,$2,$3,$4,$5,$6::time,$7::time,$8,$9,$10,$11,$12,$13,$14)`,
       newId, String(r.group_name || ''), facId,
       isActive ? 'active' : 'inactive',
       str(r.meets_when), str(r.start_time) || null, str(r.end_time) || null,
-      str(r.venue), str(r.contact),
+      str(r.venue), venueId, str(r.contact),
       r.max_members ? parseInt(r.max_members) : null,
       parseBool(r.join_online), parseBool(r.waiting_list), parseBool(r.notify_leader),
     );
@@ -1093,6 +1162,22 @@ export async function restoreBeacon(tx, wb) {
        VALUES (gen_random_uuid()::text,$1,$2,$3,$4::date)
        ON CONFLICT (group_id, member_id) DO NOTHING`,
       groupId, memberId, parseBool(r.leader), waitingDate,
+    );
+  }
+
+  // 9b. Group ledger entries
+  for (const r of get('Group Ledgers')) {
+    const gtkey = String(r.gtkey || '').trim();
+    const gkey  = String(r.gkey || '').trim();
+    const groupId = groupMap[gkey];
+    if (!gtkey || !groupId) continue;
+    const rawAmount = parseDec(r.amount);
+    const moneyIn  = rawAmount != null && rawAmount >= 0 ? rawAmount : null;
+    const moneyOut = rawAmount != null && rawAmount < 0 ? Math.abs(rawAmount) : null;
+    await tx.$executeRawUnsafe(
+      `INSERT INTO group_ledger_entries (id, group_id, entry_date, payee, detail, money_in, money_out)
+       VALUES (gen_random_uuid()::text,$1,$2::date,$3,$4,$5::numeric,$6::numeric)`,
+      groupId, parseDate(r.date), str(r.payee), str(r.detail), moneyIn, moneyOut,
     );
   }
 
@@ -1244,8 +1329,8 @@ export async function restoreBeacon(tx, wb) {
     const placeholderEmail = `${newId}@beacon-migrated.invalid`;
 
     await tx.$executeRawUnsafe(
-      `INSERT INTO users (id, name, email, username, password_hash, active, member_id)
-       VALUES ($1,$2,$3,$4,$5,$6,$7)`,
+      `INSERT INTO users (id, name, email, username, password_hash, active, member_id, must_change_password)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,true)`,
       newId, String(r.fullname || ''), placeholderEmail,
       str(r.username) || null, defaultPasswordHash, true, memberId,
     );
