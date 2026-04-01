@@ -19,6 +19,9 @@ Format: `## [version] — YYYY-MM-DD` with bullet points per change.
 ### Changed
 - **Beacon2 export** — Groups sheet now includes `venue_id`; Venues sheet exports full
   venue records; new "Group Ledgers" sheet exports group ledger entries
+
+---
+
 ## [0.7.20] — 2026-04-01
 
 ### Changed

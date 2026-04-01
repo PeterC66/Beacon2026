@@ -1,6 +1,6 @@
-# Beacon2 — Project Definition (Updated March 2026)
+# Beacon2 — Project Definition (Updated April 2026)
 
-> **Note:** This document describes the *current* state of the project as of March 2026.
+> **Note:** This document describes the *current* state of the project as of April 2026.
 > Read it alongside `CLAUDE.md`, `CLAUDE-STANDARDS.md`, and `CLAUDE-REFERENCE.md` in the
 > repository root, which contain coding conventions and implementation details.
 
@@ -23,7 +23,7 @@ Beacon2 is a ground-up rebuild with these goals:
 
 ---
 
-## What has been built (as of version 0.7.14)
+## What has been built (as of version 0.8.1)
 
 ### Infrastructure and platform
 - Full multi-tenant architecture (PostgreSQL schema-per-tenant)
@@ -46,6 +46,7 @@ Beacon2 is a ground-up rebuild with these goals:
   new password (min 10 chars, no spaces, upper+lower+number) plus security Q&A;
   blocks all other navigation until completed
 - System tier: separate system admin login, tenant CRUD, set-temp-password
+  (forces `must_change_password` on all affected users)
 - Auto-migrate and auto-seed on startup (`migrate.js`) — no shell access needed
 - Redis session invalidation (disabled in POC; `USE_REDIS=false`)
 - Deployed: backend on Render, frontend on Vercel, DB on Render PostgreSQL
@@ -88,7 +89,8 @@ Beacon2 is a ground-up rebuild with these goals:
   bulk actions (send email, download Excel/PDF, remove members, add to another group)
 - **Group schedule** — single + recurring events; inline edit; bulk delete
 - **Group ledger** — independent from finance; per-group in/out; download Excel
-- **Venues** — CRUD; venue dropdown on group details
+- **Venues** — CRUD; venue dropdown on group details; single address field + postcode;
+  contact field; send-email and open-website buttons
 - **Faculties** — inline CRUD
 - **SiteWorks integration** — tenant-wide "SiteWorks Activated" toggle in System Settings;
   when enabled, hides Schedule tab and scheduling/venue fields (When, Start time, End time,
@@ -101,12 +103,16 @@ Beacon2 is a ground-up rebuild with these goals:
   MemberEditor and MembershipRenewals; auto-switches account on method change
 - **Finance categories** — same pattern
 - **Financial ledger** — account/category/group views; year selector; running balance;
-  group view shows per-group B/F rows when enabled (7.10.6)
-- **Transaction editor** — full form; category splits; cleared lock
+  group view shows per-group B/F rows when enabled (7.10.6); 18 columns with
+  clickable links; bulk action bar; category names in ledger
+- **Transaction editor** — full form; category splits; cleared lock; Gift Aid eligible
+  amounts per member; From/To required; Member 2 requires Member 1 (cannot be same);
+  total gift aid cannot exceed transaction amount; category difference display
 - **Transfer money** — paired transactions with shared transfer_id
 - **Credit batches** — group incoming transactions into batches for simpler
   reconciliation; create/view/delete batches; add/remove transactions; batches
-  appear as single rows in reconciliation
+  appear as single rows in reconciliation; batch date and description fields;
+  detailed batch view with editable fields and transaction management
 - **Reconcile account** — mark transactions as cleared against statement;
   supports clearing whole batches in one tick
 - **Financial statement** — per-account or all-accounts; year selector; download Excel;
@@ -187,6 +193,8 @@ Beacon2 is a ground-up rebuild with these goals:
 - **u3a Officers** — CRUD; email sending; status-based styling
 - **Personal preferences** — display prefs, change password, security Q&A, inactivity timeout
 - **Data export & backup** — 8 export types (Excel); full restore (Beacon2 + Beacon format)
+  including venues, group ledger entries, and venue_id linkage; restored users forced
+  to change password on first login
 - **Validate member data** — comprehensive data quality tool
 - **Utilities** — administrative utilities page
 

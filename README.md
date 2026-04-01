@@ -128,7 +128,7 @@ Render (backend + Postgres) and Vercel (frontend) — no command-line knowledge 
 ## Modules implemented
 
 - [x] Authentication (username login, token refresh, inactivity timeout)
-- [x] System admin UI (tenant CRUD, restore from backup, set-temp-password)
+- [x] System admin UI (tenant CRUD, restore from backup with venues + group ledger, set-temp-password with forced password change)
 - [x] Users (CRUD, role assignment, username-based)
 - [x] Roles (CRUD, privilege matrix editor)
 - [x] Privileges (full resource × action matrix, per role)
@@ -140,8 +140,8 @@ Render (backend + Postgres) and Vercel (frontend) — no command-line knowledge 
 - [x] Addresses export and label printing
 - [x] Groups (list, record, members, schedule, ledger, venues, faculties)
 - [x] Calendar and Open Meetings
-- [x] Finance (accounts, categories, ledger, transactions, transfers, reconciliation)
-- [x] Credit batches
+- [x] Finance (accounts, categories, ledger, transactions, transfers, reconciliation, gift aid on transactions)
+- [x] Credit batches (with batch date, description, detailed transaction management)
 - [x] Financial statement and groups statement
 - [x] Gift Aid (declaration + log)
 - [x] Email (compose, templates, delivery tracking, unblocker)
