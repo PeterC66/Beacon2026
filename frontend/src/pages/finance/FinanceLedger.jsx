@@ -40,7 +40,7 @@ export default function FinanceLedger() {
 
   // Bulk action state
   const [selected,   setSelected]   = useState(new Set());
-  const [bulkAction, setBulkAction] = useState('confirm');
+  const [bulkAction, setBulkAction] = useState('');
   const [bulkBusy,   setBulkBusy]   = useState(false);
 
   const tableRef = useRef(null);
@@ -272,23 +272,24 @@ export default function FinanceLedger() {
                 {/* Bulk actions bar */}
                 {showBulk && eligibleIds.size > 0 && (
                   <div className="bg-white/90 rounded-lg shadow-sm p-3 mb-3 flex flex-wrap items-center gap-3">
-                    <button
-                      onClick={handleBulkAction}
-                      disabled={!bulkAction || selected.size === 0 || bulkBusy}
-                      className="bg-amber-500 hover:bg-amber-600 disabled:bg-amber-300 text-white rounded px-4 py-1.5 text-sm font-bold transition-colors"
-                    >
-                      {bulkBusy ? 'Updating…' : 'Do with selected'}
-                    </button>
+                    <span className="text-sm text-slate-600">{selected.size} selected</span>
                     <select
                       name="bulkAction"
                       value={bulkAction}
                       onChange={(e) => setBulkAction(e.target.value)}
                       className="border border-slate-300 rounded px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                     >
-                      <option value="confirm">Confirm payment</option>
+                      <option value="">— action —</option>
+                      <option value="confirm">Confirm (not pending)</option>
                       <option value="make-pending">Make pending</option>
                     </select>
-                    <span className="text-sm text-slate-500">{selected.size} selected</span>
+                    <button
+                      onClick={handleBulkAction}
+                      disabled={!bulkAction || selected.size === 0 || bulkBusy}
+                      className="bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white rounded px-4 py-1.5 text-sm font-medium transition-colors"
+                    >
+                      {bulkBusy ? 'Updating…' : 'Do with selected'}
+                    </button>
                   </div>
                 )}
 
