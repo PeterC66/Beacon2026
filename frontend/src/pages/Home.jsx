@@ -97,8 +97,8 @@ export default function Home() {
   const publicLinks = [
     { label: `Join ${tenantName || 'us'} now!`, to: `/public/${tenant}/join` },
     { label: 'Members Portal', to: `/public/${tenant}/portal` },
-    { label: 'Public groups list', to: null },
-    { label: 'Public calendar', to: null },
+    { label: 'Public groups list', to: `/public/${tenant}/groups` },
+    { label: 'Public calendar', to: `/public/${tenant}/calendar` },
   ];
 
   return (
