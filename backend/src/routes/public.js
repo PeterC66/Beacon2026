@@ -857,7 +857,7 @@ router.get('/:slug/groups', async (req, res, next) => {
 
     const [[settings], groups] = await Promise.all([
       tenantQuery(slug,
-        `SELECT group_info_config, u3a_name
+        `SELECT group_info_config
          FROM tenant_settings WHERE id = 'singleton'`),
       tenantQuery(slug,
         `SELECT g.id, g.name, g.status, g.when_text, g.start_time, g.end_time,
@@ -910,7 +910,7 @@ router.get('/:slug/groups', async (req, res, next) => {
       ...(groupInfoConfig.detail?.public && { information: g.information || null }),
     }));
 
-    res.json({ groups: result, u3aName: settings?.u3a_name || slug });
+    res.json({ groups: result, u3aName: req.tenant.name || slug });
   } catch (err) { next(err); }
 });
 
@@ -921,7 +921,7 @@ router.get('/:slug/calendar', async (req, res, next) => {
     const { from, to } = req.query;
 
     const [settings] = await tenantQuery(slug,
-      `SELECT calendar_config, u3a_name
+      `SELECT calendar_config
        FROM tenant_settings WHERE id = 'singleton'`);
 
     const calConfig = {
@@ -973,7 +973,7 @@ router.get('/:slug/calendar', async (req, res, next) => {
       ...(calConfig.detail?.public && { details: ev.details || null }),
     }));
 
-    res.json({ events: result, u3aName: settings?.u3a_name || slug });
+    res.json({ events: result, u3aName: req.tenant.name || slug });
   } catch (err) { next(err); }
 });
 
