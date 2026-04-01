@@ -269,30 +269,6 @@ export default function FinanceLedger() {
               <p className="text-center text-slate-400 py-8">No transactions found for this {view} in {year}. Opening balance: {fmtAmount(openingBal)}</p>
             ) : (
               <>
-                {/* Bulk actions bar */}
-                {showBulk && eligibleIds.size > 0 && (
-                  <div className="bg-white/90 rounded-lg shadow-sm p-3 mb-3 flex flex-wrap items-center gap-3">
-                    <span className="text-sm text-slate-600">{selected.size} selected</span>
-                    <select
-                      name="bulkAction"
-                      value={bulkAction}
-                      onChange={(e) => setBulkAction(e.target.value)}
-                      className="border border-slate-300 rounded px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    >
-                      <option value="">— action —</option>
-                      <option value="confirm">Confirm (not pending)</option>
-                      <option value="make-pending">Make pending</option>
-                    </select>
-                    <button
-                      onClick={handleBulkAction}
-                      disabled={!bulkAction || selected.size === 0 || bulkBusy}
-                      className="bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white rounded px-4 py-1.5 text-sm font-medium transition-colors"
-                    >
-                      {bulkBusy ? 'Updating…' : 'Do with selected'}
-                    </button>
-                  </div>
-                )}
-
                 <div className="overflow-x-auto rounded-lg shadow-sm" ref={tableRef}>
                   <table className="w-full text-sm bg-white min-w-max">
                     <thead>
@@ -495,6 +471,30 @@ export default function FinanceLedger() {
                     </tfoot>
                   </table>
                 </div>
+
+                {/* Bulk actions bar — below the table per standard */}
+                {showBulk && eligibleIds.size > 0 && (
+                  <div className="bg-white/90 rounded-lg shadow-sm p-3 mt-3 flex flex-wrap items-center gap-3">
+                    <span className="text-sm text-slate-600">{selected.size} selected</span>
+                    <select
+                      name="bulkAction"
+                      value={bulkAction}
+                      onChange={(e) => setBulkAction(e.target.value)}
+                      className="border border-slate-300 rounded px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                      <option value="">— action —</option>
+                      <option value="confirm">Confirm (not pending)</option>
+                      <option value="make-pending">Make pending</option>
+                    </select>
+                    <button
+                      onClick={handleBulkAction}
+                      disabled={!bulkAction || selected.size === 0 || bulkBusy}
+                      className="bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white rounded px-4 py-1.5 text-sm font-medium transition-colors"
+                    >
+                      {bulkBusy ? 'Updating…' : 'Do with selected'}
+                    </button>
+                  </div>
+                )}
 
                 <div className="mt-4 flex justify-center gap-3">
                   {can('finance_transactions', 'create') && (
