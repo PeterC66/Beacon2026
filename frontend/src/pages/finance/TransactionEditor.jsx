@@ -154,7 +154,18 @@ export default function TransactionEditor() {
     load();
   }, [id, isNew]);
 
-  const set = (k, v) => { markDirty(); setForm((f) => ({ ...f, [k]: v })); };
+  const set = (k, v) => {
+    markDirty();
+    setForm((f) => {
+      const next = { ...f, [k]: v };
+      // Clear member 2 when member 1 is cleared
+      if (k === 'member_id_1' && !v) {
+        next.member_id_2 = '';
+        next.gift_aid_amount_2 = '';
+      }
+      return next;
+    });
+  };
 
   // Determine pending configuration for the selected account
   const selectedAccount = accounts.find((a) => a.id === form.account_id);
@@ -172,6 +183,8 @@ export default function TransactionEditor() {
   const amountNum = parseFloat(form.amount);
   const amountOk  = !isNaN(amountNum) && amountNum > 0;
   const catOk     = amountOk && Math.abs(catTotal - amountNum) < 0.005;
+
+  const giftAidTotal = (parseFloat(form.gift_aid_amount) || 0) + (parseFloat(form.gift_aid_amount_2) || 0);
 
   const filteredM1 = useMemo(() => {
     const q = m1Filter.trim().toLowerCase();
@@ -221,11 +234,15 @@ export default function TransactionEditor() {
   }
 
   function validate() {
-    if (!form.account_id) return 'Please select an account.';
-    if (!form.date)       return 'Please enter a date.';
-    if (!amountOk)        return 'Please enter a valid positive amount.';
-    if (catTotal === 0)   return 'Please assign at least one category amount.';
-    if (!catOk)           return `Category total (£${catTotal.toFixed(2)}) must equal amount (£${amountNum.toFixed(2)}).`;
+    if (!form.account_id)        return 'Please select an account.';
+    if (!form.date)              return 'Please enter a date.';
+    if (!form.from_to.trim())    return `Please enter the '${form.type === 'in' ? 'From' : 'To'}' field.`;
+    if (!amountOk)               return 'Please enter a valid positive amount.';
+    if (form.member_id_2 && !form.member_id_1) return 'Member 2 cannot be set without Member 1.';
+    if (form.member_id_2 && form.member_id_1 === form.member_id_2) return 'Member 1 and Member 2 cannot be the same.';
+    if (giftAidTotal > amountNum + 0.005) return `Total gift aid eligible (£${giftAidTotal.toFixed(2)}) cannot exceed the transaction amount (£${amountNum.toFixed(2)}).`;
+    if (catTotal === 0)          return 'Please assign at least one category amount.';
+    if (!catOk)                  return `Category total (£${catTotal.toFixed(2)}) must equal amount (£${amountNum.toFixed(2)}).`;
     return null;
   }
 
@@ -406,7 +423,7 @@ export default function TransactionEditor() {
 
             {/* From / To */}
             <div>
-              <label className={LBL}>{form.type === 'in' ? 'From' : 'To'}</label>
+              <label className={LBL}>{form.type === 'in' ? 'From' : 'To'} <RequiredMark /></label>
               <input
                 type="text"
                 name="from_to"
@@ -555,12 +572,15 @@ export default function TransactionEditor() {
               {/* Member 2 */}
               <div>
                 <label className={LBL}>Member 2</label>
+                {!form.member_id_1 && (
+                  <p className="text-xs text-slate-400 mb-1">Select Member 1 first</p>
+                )}
                 <input
                   type="text"
                   name="m2Filter"
                   value={m2Filter}
                   onChange={(e) => setM2Filter(e.target.value)}
-                  disabled={cleared}
+                  disabled={cleared || !form.member_id_1}
                   className={`${INP} mb-1`}
                   placeholder="Search name / number…"
                 />
@@ -568,7 +588,7 @@ export default function TransactionEditor() {
                   name="member_id_2"
                   value={form.member_id_2}
                   onChange={(e) => set('member_id_2', e.target.value)}
-                  disabled={cleared}
+                  disabled={cleared || !form.member_id_1}
                   className={INP}
                   size={4}
                 >
@@ -682,6 +702,7 @@ export default function TransactionEditor() {
               {amountOk && (
                 <span className={catOk ? ' text-green-700 font-medium' : ' text-red-600 font-medium'}>
                   {' '}Total: £{catTotal.toFixed(2)} / £{amountNum.toFixed(2)}
+                  {!catOk && ` — difference £${Math.abs(catTotal - amountNum).toFixed(2)}`}
                 </span>
               )}
             </p>
