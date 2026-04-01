@@ -5,6 +5,23 @@ Format: `## [version] — YYYY-MM-DD` with bullet points per change.
 
 ---
 
+## [0.8.1] — 2026-04-01
+
+### Fixed
+- **Restore (Beacon legacy)** — now imports venues (as proper venue records linked to
+  groups) and group ledger entries
+- **Restore (Beacon2)** — now imports venues, venue_id on groups, and group ledger entries
+- **Restore (both formats)** — restored users are now forced to change password on first
+  login (`must_change_password = true`)
+- **System set-temp-password** — now also sets `must_change_password = true` for all
+  affected users
+
+### Changed
+- **Beacon2 export** — Groups sheet now includes `venue_id`; Venues sheet exports full
+  venue records; new "Group Ledgers" sheet exports group ledger entries
+
+---
+
 ## [0.7.19] — 2026-04-01
 
 ### Changed

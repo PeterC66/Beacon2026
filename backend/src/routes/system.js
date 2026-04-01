@@ -104,7 +104,7 @@ router.post('/tenants/:id/set-temp-password', async (req, res, next) => {
     const hash = await hashPassword(password);
     const result = await tenantQuery(
       tenant.slug,
-      `UPDATE users SET password_hash = $1 RETURNING username, name`,
+      `UPDATE users SET password_hash = $1, must_change_password = true RETURNING username, name`,
       [hash],
     );
     res.json({ ok: true, updated: result.length, users: result.map((u) => u.username || u.name) });
