@@ -5,6 +5,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { publicApi } from '../../lib/api.js';
+import PortalVersion from '../../components/PortalVersion.jsx';
 
 export default function ResumePayment() {
   const { slug, token } = useParams();
@@ -36,7 +37,8 @@ export default function ResumePayment() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-slate-100">
+      <div className="relative min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-slate-100">
+        <PortalVersion />
         <p className="text-slate-500">Loading...</p>
       </div>
     );
@@ -44,7 +46,8 @@ export default function ResumePayment() {
 
   if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-slate-100 px-4">
+      <div className="relative min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-slate-100 px-4">
+        <PortalVersion />
         <div className="bg-white rounded-lg shadow-md p-8 max-w-md w-full text-center">
           <h1 className="text-xl font-bold text-red-700 mb-2">Payment Link Issue</h1>
           <p className="text-sm text-slate-600 mb-4">{error}</p>
@@ -60,7 +63,8 @@ export default function ResumePayment() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-slate-100 py-8 px-4">
+    <div className="relative min-h-screen bg-gradient-to-br from-blue-50 to-slate-100 py-8 px-4">
+      <PortalVersion />
       <div className="max-w-lg mx-auto">
         <div className="bg-white rounded-lg shadow-md p-6 sm:p-8">
           <h1 className="text-xl font-bold text-center mb-2">Complete Your Payment</h1>

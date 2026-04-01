@@ -8,6 +8,7 @@
 import { useState } from 'react';
 import { useParams, useLocation, Link } from 'react-router-dom';
 import { publicApi } from '../../lib/api.js';
+import PortalVersion from '../../components/PortalVersion.jsx';
 
 export default function JoinPending() {
   const { slug } = useParams();
@@ -21,7 +22,8 @@ export default function JoinPending() {
   // If user navigated here without state (e.g. typed URL), show fallback
   if (!data) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-slate-100 px-4">
+      <div className="relative min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-slate-100 px-4">
+        <PortalVersion />
         <div className="bg-white rounded-lg shadow-md p-8 max-w-md w-full text-center">
           <h1 className="text-xl font-bold text-slate-700 mb-2">Application Not Found</h1>
           <p className="text-sm text-slate-600 mb-4">
@@ -66,7 +68,8 @@ export default function JoinPending() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-slate-100 py-8 px-4">
+    <div className="relative min-h-screen bg-gradient-to-br from-blue-50 to-slate-100 py-8 px-4">
+      <PortalVersion />
       <div className="max-w-lg mx-auto">
         <div className="bg-white rounded-lg shadow-md p-6 sm:p-8">
           <h1 className="text-xl font-bold text-center text-green-700 mb-2">

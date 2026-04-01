@@ -7,6 +7,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import { publicApi } from '../../lib/api.js';
 import RequiredMark from '../../components/RequiredMark.jsx';
 import { scrollToFirstFieldError } from '../../lib/scrollToError.js';
+import PortalVersion from '../../components/PortalVersion.jsx';
 
 const UK_POSTCODE_RE = /^(GIR\s?0AA|[A-Z]{1,2}[0-9][0-9A-Z]?\s?[0-9][ABD-HJLNP-UW-Z]{2})$/i;
 
@@ -113,7 +114,8 @@ export default function JoinForm() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-slate-100">
+      <div className="relative min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-slate-100">
+        <PortalVersion />
         <p className="text-slate-500">Loading...</p>
       </div>
     );
@@ -121,7 +123,8 @@ export default function JoinForm() {
 
   if (error && !config) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-slate-100 px-4">
+      <div className="relative min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-slate-100 px-4">
+        <PortalVersion />
         <div className="bg-white rounded-lg shadow-md p-8 max-w-md w-full text-center">
           <h1 className="text-xl font-bold text-red-700 mb-2">Online Joining Unavailable</h1>
           <p className="text-sm text-slate-600">{error}</p>
@@ -139,7 +142,8 @@ export default function JoinForm() {
   const selectedClass = config?.classes.find((c) => c.id === form.classId);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-slate-100 py-8 px-4">
+    <div className="relative min-h-screen bg-gradient-to-br from-blue-50 to-slate-100 py-8 px-4">
+      <PortalVersion />
       <div className="max-w-2xl mx-auto">
         <div className="bg-white rounded-lg shadow-md p-6 sm:p-8">
           <h1 className="text-xl font-bold text-center mb-1">Join {config?.u3aName}</h1>
