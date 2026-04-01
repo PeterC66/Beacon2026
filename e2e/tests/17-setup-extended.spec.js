@@ -28,7 +28,8 @@ async function gotoHomeLink(page, href, headingText) {
   await page.getByRole('heading', { name: headingText }).waitFor({ timeout: 10_000 });
 }
 
-const SUFFIX = process.pid;
+// Fixed suffix — each CI run has its own tenant so no collision risk.
+const SUFFIX = 'X';
 
 // ── Polls ────────────────────────────────────────────────────────────────
 

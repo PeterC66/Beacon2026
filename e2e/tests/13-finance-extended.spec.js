@@ -34,8 +34,8 @@ async function gotoHomeLink(page, href, headingText) {
   await page.getByRole('heading', { name: headingText }).waitFor({ timeout: 10_000 });
 }
 
-const SUFFIX = process.pid;
-const SECOND_ACCT = `E2ETransfer${SUFFIX}`;
+// Fixed suffix — each CI run has its own tenant so no collision risk.
+const SECOND_ACCT = 'E2ETransferAcct';
 
 // ── Setup: create a second account for transfers ─────────────────────────
 
@@ -134,7 +134,7 @@ test.describe('Credit batches', () => {
     await editor.typeButton('Money received').click();
     await editor.accountSelect().selectOption({ index: 1 });
     await editor.dateInput().fill('20/06/2026');
-    await editor.fromToInput().fill(`BatchPayee${SUFFIX}`);
+    await editor.fromToInput().fill('BatchPayeeE2E');
     await editor.amountInput().fill('100.00');
 
     // Fill the first category row

@@ -18,15 +18,15 @@ import { test, expect } from '../fixtures/admin.js';
 import { MemberListPage } from '../pages/MemberListPage.js';
 import { MemberEditorPage } from '../pages/MemberEditorPage.js';
 
-// Use process.pid so the suffix stays the same when Playwright retries
-// re-import the module (Date.now() changes on every re-import).
-// Each CI run creates a fresh tenant, so collisions are not a concern.
-const SUFFIX = process.pid;
-const TEST_SURNAME   = `E2ETest${SUFFIX}`;
+// Each CI run creates its own tenant, so a fixed suffix is safe — no
+// cross-run collisions.  Using a fixed string avoids the problem where
+// Playwright worker restarts (on retry) change process.pid and break
+// dependent tests that look for a member created under the old PID.
+const TEST_SURNAME   = 'E2ETestMbr';
 const TEST_FORENAMES = 'Alice';
 
 // Second member for the no-payment (Applicant) path
-const APPLICANT_SURNAME = `E2EAppl${SUFFIX}`;
+const APPLICANT_SURNAME = 'E2EApplMbr';
 
 test.describe('Member list', () => {
   test('page loads with filter controls', async ({ adminPage: page }) => {
@@ -111,12 +111,17 @@ test.describe('Add new member', () => {
     // After save, URL changes to the edit URL (/members/:id)
     await page.waitForURL(/\/members\/[^/]+$/, { timeout: 10_000 });
 
-    // The status select (visible on the edit form) should show "Applicant"
-    await expect(editor.statusSelect()).toHaveValue(/.+/);    // has some value
-    const selectedText = await editor.statusSelect().evaluate(
-      (sel) => sel.options[sel.selectedIndex]?.text,
+    // The status select (visible on the edit form) should show "Applicant".
+    // Wait for the member data to load from the API — the select initially
+    // defaults to the first option ("Current") before the fetched member
+    // data overwrites it with the backend-assigned "Applicant" status.
+    await page.waitForFunction(
+      () => {
+        const sel = document.querySelector('select[name="statusId"]');
+        return sel && sel.options[sel.selectedIndex]?.text === 'Applicant';
+      },
+      { timeout: 10_000 },
     );
-    expect(selectedText).toBe('Applicant');
   });
 
   test('newly created member appears in the member list', async ({ adminPage: page }) => {

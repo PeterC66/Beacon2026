@@ -17,10 +17,11 @@ import { test, expect } from '../fixtures/admin.js';
 import { RoleListPage, UserListPage, UserEditorPage } from '../pages/SettingsPage.js';
 import { MemberEditorPage } from '../pages/MemberEditorPage.js';
 
-const SUFFIX    = process.pid;
-const ROLE_NAME = `E2ERole${SUFFIX}`;
-const USER_UNAME = `e2euser${SUFFIX % 100000}`;  // keep to <=12 lowercase chars
-const MEMBER_SURNAME   = `E2EUserMbr${SUFFIX}`;
+// Fixed suffixes — each CI run has its own tenant so no collision risk.
+// Avoids PID-based suffixes that change when Playwright restarts workers.
+const ROLE_NAME = 'E2ERoleTest';
+const USER_UNAME = 'e2euser42';
+const MEMBER_SURNAME   = 'E2EUserMbr';
 const MEMBER_FORENAMES = 'Test';
 
 // ── Roles ─────────────────────────────────────────────────────────────────
