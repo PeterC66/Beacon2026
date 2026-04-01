@@ -1478,8 +1478,8 @@ router.get('/batches', requirePrivilege('finance_batches', 'view'), async (req, 
     let params;
 
     if (mode === 'since' && date) {
-      // All batches created since a given date
-      whereClause = `cb.account_id = $1 AND cb.created_at >= $2::date`;
+      // All batches with batch_date since a given date
+      whereClause = `cb.account_id = $1 AND COALESCE(cb.batch_date, cb.created_at::date) >= $2::date`;
       params = [accountId, date];
     } else {
       // Default: uncleared batches (at least one uncleared transaction)
@@ -1491,6 +1491,7 @@ router.get('/batches', requirePrivilege('finance_batches', 'view'), async (req, 
     const rows = await tenantQuery(
       req.user.tenantSlug,
       `SELECT cb.id, cb.batch_ref, cb.description, cb.account_id, cb.created_at,
+              COALESCE(cb.batch_date, cb.created_at::date) AS batch_date,
               COUNT(t.id)::int AS txn_count,
               COALESCE(SUM(t.amount), 0)::float AS total_amount,
               COUNT(t.id) FILTER (WHERE t.cleared_at IS NOT NULL)::int AS cleared_count,
@@ -1499,8 +1500,8 @@ router.get('/batches', requirePrivilege('finance_batches', 'view'), async (req, 
        FROM credit_batches cb
        LEFT JOIN transactions t ON t.batch_id = cb.id
        WHERE ${whereClause}
-       GROUP BY cb.id, cb.batch_ref, cb.description, cb.account_id, cb.created_at
-       ORDER BY cb.created_at DESC`,
+       GROUP BY cb.id, cb.batch_ref, cb.description, cb.account_id, cb.created_at, cb.batch_date
+       ORDER BY COALESCE(cb.batch_date, cb.created_at::date) DESC`,
       params,
     );
 
@@ -1539,7 +1540,14 @@ router.get('/batches/:id', requirePrivilege('finance_batches', 'view'), async (r
   try {
     const [batch] = await tenantQuery(
       req.user.tenantSlug,
-      `SELECT id, batch_ref, description, account_id, created_at FROM credit_batches WHERE id = $1`,
+      `SELECT cb.id, cb.batch_ref, cb.description, cb.account_id, cb.created_at,
+              COALESCE(cb.batch_date, cb.created_at::date) AS batch_date,
+              (SELECT COUNT(*)::int FROM credit_batches cb2
+               WHERE cb2.account_id = cb.account_id
+                 AND COALESCE(cb2.batch_date, cb2.created_at::date) <= COALESCE(cb.batch_date, cb.created_at::date)
+                 AND (COALESCE(cb2.batch_date, cb2.created_at::date) < COALESCE(cb.batch_date, cb.created_at::date)
+                      OR cb2.id <= cb.id)) AS batch_number
+       FROM credit_batches cb WHERE cb.id = $1`,
       [req.params.id],
     );
     if (!batch) throw AppError('Batch not found.', 404);
@@ -1582,7 +1590,8 @@ router.post('/batches', requirePrivilege('finance_batches', 'create'), async (re
 
     const [batch] = await tenantQuery(
       req.user.tenantSlug,
-      `INSERT INTO credit_batches (batch_ref, description, account_id) VALUES ($1, $2, $3) RETURNING id, batch_ref, description, account_id, created_at`,
+      `INSERT INTO credit_batches (batch_ref, description, account_id, batch_date) VALUES ($1, $2, $3, CURRENT_DATE)
+       RETURNING id, batch_ref, description, account_id, created_at, batch_date`,
       [data.batch_ref, data.description ?? null, data.account_id],
     );
 
@@ -1659,21 +1668,52 @@ router.delete('/batches/:id/transactions', requirePrivilege('finance_batches', '
   }
 });
 
-// PATCH /finance/batches/:id — update batch description
+// PATCH /finance/batches/:id — update batch ref, description, and/or date
 const updateBatchSchema = z.object({
+  batch_ref:   z.string().min(1).max(100).optional(),
   description: z.string().nullable().optional(),
+  batch_date:  z.string().optional(),
 });
 
 router.patch('/batches/:id', requirePrivilege('finance_batches', 'create'), async (req, res, next) => {
   try {
     const data = updateBatchSchema.parse(req.body);
+
+    const sets = [];
+    const params = [];
+    let idx = 1;
+
+    if (data.batch_ref !== undefined) { sets.push(`batch_ref = $${idx++}`); params.push(data.batch_ref); }
+    if (data.description !== undefined) { sets.push(`description = $${idx++}`); params.push(data.description ?? null); }
+    if (data.batch_date !== undefined) { sets.push(`batch_date = $${idx++}::date`); params.push(data.batch_date); }
+
+    if (sets.length === 0) throw AppError('No fields to update.', 400);
+
+    // If batch_ref changed, check uniqueness before updating
+    if (data.batch_ref !== undefined) {
+      const [current] = await tenantQuery(
+        req.user.tenantSlug,
+        `SELECT account_id FROM credit_batches WHERE id = $1`,
+        [req.params.id],
+      );
+      if (!current) throw AppError('Batch not found.', 404);
+      const [dup] = await tenantQuery(
+        req.user.tenantSlug,
+        `SELECT id FROM credit_batches WHERE account_id = $1 AND batch_ref = $2 AND id != $3`,
+        [current.account_id, data.batch_ref, req.params.id],
+      );
+      if (dup) throw AppError('A batch with that reference already exists for this account.', 409);
+    }
+
+    params.push(req.params.id);
     const [row] = await tenantQuery(
       req.user.tenantSlug,
-      `UPDATE credit_batches SET description = $1 WHERE id = $2
-       RETURNING id, batch_ref, description, account_id, created_at`,
-      [data.description ?? null, req.params.id],
+      `UPDATE credit_batches SET ${sets.join(', ')} WHERE id = $${idx}
+       RETURNING id, batch_ref, description, account_id, created_at, batch_date`,
+      params,
     );
     if (!row) throw AppError('Batch not found.', 404);
+
     res.json(row);
   } catch (err) {
     if (err.name === 'ZodError') return res.status(422).json({ error: 'Validation failed.', issues: err.issues });
