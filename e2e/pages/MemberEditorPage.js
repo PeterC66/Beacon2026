@@ -137,17 +137,21 @@ export class MemberEditorPage {
 
     await this.postcodeInput().fill(postcode);
     if (joinedOn) {
-      await this.joinedOnInput().fill(joinedOn);
-      // The "Next renewal" input is only visible on the edit form (!isNew).
-      // On the new-member form the renewal date is auto-computed in React
-      // state but the field is hidden, so we only wait for it when visible.
-      const renewalVisible = await this.nextRenewalInput().isVisible().catch(() => false);
-      if (renewalVisible) {
-        await this.page.waitForFunction(
-          (sel) => { const el = document.querySelectorAll(sel)[1]; return el && el.value.length > 0; },
-          'input[placeholder="dd/mm/yyyy"]',
-          { timeout: 10_000 },
-        );
+      // The "Joined" and "Next renewal" date inputs are only visible on the
+      // edit form (!isNew).  On the new-member form the component auto-sets
+      // joinedOn to today and computes nextRenewal via useEffect, so the
+      // fields are hidden.  Skip filling when the input isn't present.
+      const joinedVisible = await this.joinedOnInput().isVisible().catch(() => false);
+      if (joinedVisible) {
+        await this.joinedOnInput().fill(joinedOn);
+        const renewalVisible = await this.nextRenewalInput().isVisible().catch(() => false);
+        if (renewalVisible) {
+          await this.page.waitForFunction(
+            (sel) => { const el = document.querySelectorAll(sel)[1]; return el && el.value.length > 0; },
+            'input[placeholder="dd/mm/yyyy"]',
+            { timeout: 10_000 },
+          );
+        }
       }
     }
   }
