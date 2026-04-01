@@ -4,6 +4,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useSearchParams, Link } from 'react-router-dom';
 import { publicApi } from '../../lib/api.js';
+import PortalVersion from '../../components/PortalVersion.jsx';
 
 export default function PortalVerifyEmail() {
   const { slug } = useParams();
@@ -25,7 +26,8 @@ export default function PortalVerifyEmail() {
   }, [slug, searchParams]);
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-slate-100 px-4">
+    <div className="relative min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-slate-100 px-4">
+      <PortalVersion />
       <div className="bg-white rounded-lg shadow-md p-8 max-w-md w-full text-center">
         {status === 'verifying' && (
           <>

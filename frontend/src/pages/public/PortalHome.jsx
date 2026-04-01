@@ -4,6 +4,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { portalApi } from '../../lib/api.js';
+import PortalVersion from '../../components/PortalVersion.jsx';
 
 function fmtDate(d) {
   if (!d) return '';
@@ -51,7 +52,8 @@ export default function PortalHome() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-slate-100">
+      <div className="relative min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-slate-100">
+        <PortalVersion />
         <p className="text-slate-500">Loading...</p>
       </div>
     );
@@ -59,7 +61,8 @@ export default function PortalHome() {
 
   if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-slate-100 px-4">
+      <div className="relative min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-slate-100 px-4">
+        <PortalVersion />
         <div className="bg-white rounded-lg shadow-md p-8 max-w-md w-full text-center">
           <p className="text-red-600 font-medium mb-4">{error}</p>
           <Link to={`/public/${slug}/portal`} className="text-blue-700 hover:underline">
@@ -96,7 +99,8 @@ export default function PortalHome() {
   ].filter(Boolean);
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-slate-100 px-4">
+    <div className="relative min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-slate-100 px-4">
+      <PortalVersion />
       <div className="bg-white rounded-lg shadow-md p-8 max-w-md w-full">
         <div className="text-center mb-6">
           <p className="text-lg font-semibold text-slate-800">

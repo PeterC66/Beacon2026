@@ -4,6 +4,7 @@
 import { useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { publicApi } from '../../lib/api.js';
+import PortalVersion from '../../components/PortalVersion.jsx';
 
 export default function PortalLogin() {
   const { slug } = useParams();
@@ -35,7 +36,8 @@ export default function PortalLogin() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-slate-100 px-4">
+    <div className="relative min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-slate-100 px-4">
+      <PortalVersion />
       <div className="bg-white rounded-lg shadow-md p-8 max-w-md w-full">
         <h1 className="text-xl font-bold text-center mb-1">Members Portal</h1>
         <p className="text-sm text-slate-600 text-center mb-6">Sign in to access your membership</p>

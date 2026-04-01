@@ -6,6 +6,7 @@ import { useParams, Link } from 'react-router-dom';
 import { publicApi } from '../../lib/api.js';
 import RequiredMark from '../../components/RequiredMark.jsx';
 import { scrollToFirstFieldError } from '../../lib/scrollToError.js';
+import PortalVersion from '../../components/PortalVersion.jsx';
 
 export default function PortalRegister() {
   const { slug } = useParams();
@@ -66,7 +67,8 @@ export default function PortalRegister() {
 
   if (success) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-slate-100 px-4">
+      <div className="relative min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-slate-100 px-4">
+        <PortalVersion />
         <div className="bg-white rounded-lg shadow-md p-8 max-w-md w-full text-center">
           <h1 className="text-xl font-bold text-green-700 mb-2">Registration Successful</h1>
           <p className="text-sm text-slate-600 mb-4">
@@ -86,7 +88,8 @@ export default function PortalRegister() {
   const fieldCss = "w-full border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500";
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-slate-100 px-4 py-8">
+    <div className="relative min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-slate-100 px-4 py-8">
+      <PortalVersion />
       <div className="bg-white rounded-lg shadow-md p-8 max-w-md w-full">
         <h1 className="text-xl font-bold text-center mb-1">Register for Members Portal</h1>
         <p className="text-sm text-slate-600 text-center mb-6">

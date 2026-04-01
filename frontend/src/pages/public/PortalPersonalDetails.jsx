@@ -4,6 +4,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { portalApi } from '../../lib/api.js';
+import PortalVersion from '../../components/PortalVersion.jsx';
 
 export default function PortalPersonalDetails() {
   const { slug } = useParams();
@@ -223,7 +224,8 @@ export default function PortalPersonalDetails() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-slate-100">
+      <div className="relative min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-slate-100">
+        <PortalVersion />
         <p className="text-slate-500">Loading...</p>
       </div>
     );
@@ -231,7 +233,8 @@ export default function PortalPersonalDetails() {
 
   if (!form) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-slate-100 px-4">
+      <div className="relative min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-slate-100 px-4">
+        <PortalVersion />
         <div className="bg-white rounded-lg shadow-md p-8 max-w-md w-full text-center">
           <p className="text-red-600 font-medium mb-4">{error || 'Failed to load details.'}</p>
           <Link to={`/public/${slug}/portal/home`} className="text-blue-700 hover:underline">
@@ -247,7 +250,8 @@ export default function PortalPersonalDetails() {
   const errCls = 'text-xs text-red-600 mt-0.5';
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-slate-100 px-4 py-8">
+    <div className="relative min-h-screen bg-gradient-to-br from-blue-50 to-slate-100 px-4 py-8">
+      <PortalVersion />
       <div className="max-w-2xl mx-auto">
         <div className="flex items-center justify-between mb-4">
           <Link to={`/public/${slug}/portal/home`} className="text-sm text-blue-700 hover:underline">
