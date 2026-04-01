@@ -5,6 +5,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
 import { publicApi } from '../../lib/api.js';
+import PortalVersion from '../../components/PortalVersion.jsx';
 
 function formatTime(t) {
   if (!t) return '';
@@ -103,14 +104,16 @@ export default function PublicGroups() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-slate-100">
+      <div className="relative min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-slate-100">
+        <PortalVersion />
         <p className="text-slate-500">Loading groups...</p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-slate-100 px-4 py-8">
+    <div className="relative min-h-screen bg-gradient-to-br from-blue-50 to-slate-100 px-4 py-8">
+      <PortalVersion />
       <div className="max-w-2xl mx-auto">
         {!hideHeader && (
           <h1 className="text-xl font-bold text-center text-slate-800 mb-6">
