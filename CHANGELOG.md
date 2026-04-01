@@ -8,6 +8,8 @@ Format: `## [version] — YYYY-MM-DD` with bullet points per change.
 ## [0.8.2] — 2026-04-01
 
 ### Added
+- **Portal version number** — all 10 portal screens now show the app version discreetly
+  in the top-right corner, matching the main Beacon2 screens
 - **Public groups list** — unauthenticated page at `/public/{slug}/groups` showing all
   active groups; fields controlled by `group_info_config` public flags; supports `?hdr=0`
   to hide header for iframe embedding

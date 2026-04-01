@@ -959,6 +959,7 @@
 |--------|--------|-------|
 | Portal registration | Built | Identity verification (memno + name + postcode) |
 | Portal login | Built | Separate auth on members table |
+| Version number display | Built | All portal screens show app version top-right |
 | Email verification flow | Built | — |
 | Password reset flow | Built | — |
 | Shared email address handling | Not started | Deferred |

@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { publicApi } from '../../lib/api.js';
+import PortalVersion from '../../components/PortalVersion.jsx';
 
 export default function PortalForgotPassword() {
   const { slug } = useParams();
@@ -28,7 +29,8 @@ export default function PortalForgotPassword() {
 
   if (submitted) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-slate-100 px-4">
+      <div className="relative min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-slate-100 px-4">
+        <PortalVersion />
         <div className="bg-white rounded-lg shadow-md p-8 max-w-md w-full text-center">
           <h1 className="text-xl font-bold mb-2">Check your email</h1>
           <p className="text-sm text-slate-600 mb-4">
@@ -44,7 +46,8 @@ export default function PortalForgotPassword() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-slate-100 px-4">
+    <div className="relative min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-slate-100 px-4">
+      <PortalVersion />
       <div className="bg-white rounded-lg shadow-md p-8 max-w-md w-full">
         <h1 className="text-xl font-bold text-center mb-1">Reset Password</h1>
         <p className="text-sm text-slate-600 text-center mb-6">Enter your email address to receive a reset link.</p>
