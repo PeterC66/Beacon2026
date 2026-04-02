@@ -876,6 +876,15 @@ export const portalApi = {
       });
   },
 
+  // Renewal (10.2.1)
+  getRenewalInfo: (slug) => portalRequest(slug, '/renewal-info'),
+  submitRenewal: (slug, data) => portalRequest(slug, '/renew', {
+    method: 'POST', body: JSON.stringify(data),
+  }),
+  confirmRenewal: (slug, data) => portalRequest(slug, '/renewal-confirm', {
+    method: 'POST', body: JSON.stringify(data),
+  }),
+
   // Replacement Card (10.2.5)
   requestCard: (slug) => portalRequest(slug, '/request-card', { method: 'POST' }),
 };

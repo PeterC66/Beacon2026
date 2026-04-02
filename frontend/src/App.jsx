@@ -75,6 +75,7 @@ import PublicGroups        from './pages/public/PublicGroups.jsx';
 import PublicCalendar      from './pages/public/PublicCalendar.jsx';
 import PortalPersonalDetails from './pages/public/PortalPersonalDetails.jsx';
 import PortalRequestCard   from './pages/public/PortalRequestCard.jsx';
+import PortalRenewal       from './pages/public/PortalRenewal.jsx';
 import PortalRegister      from './pages/public/PortalRegister.jsx';
 import PortalVerifyEmail   from './pages/public/PortalVerifyEmail.jsx';
 import PortalForgotPassword from './pages/public/PortalForgotPassword.jsx';
@@ -193,6 +194,8 @@ const router = createBrowserRouter([
       { path: '/public/:slug/portal/calendar',          element: <PortalCalendar /> },
       { path: '/public/:slug/portal/personal-details',  element: <PortalPersonalDetails /> },
       { path: '/public/:slug/portal/request-card',      element: <PortalRequestCard /> },
+      { path: '/public/:slug/portal/renewal',           element: <PortalRenewal /> },
+      { path: '/public/:slug/portal/renewal-complete',  element: <PortalRenewal /> },
       { path: '/public/:slug/portal/register',          element: <PortalRegister /> },
       { path: '/public/:slug/portal/verify',            element: <PortalVerifyEmail /> },
       { path: '/public/:slug/portal/forgot-password',   element: <PortalForgotPassword /> },

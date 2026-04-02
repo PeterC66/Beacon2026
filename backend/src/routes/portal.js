@@ -892,6 +892,483 @@ router.post('/request-card', async (req, res, next) => {
 });
 
 // ═══════════════════════════════════════════════════════════════════════════════
+// 10.2.1 — ONLINE RENEWALS
+// ═══════════════════════════════════════════════════════════════════════════════
+
+// GET /renewal-info — returns member's renewal eligibility, fee, partner info
+router.get('/renewal-info', async (req, res, next) => {
+  try {
+    const slug = req.portal.tenantSlug;
+    const memberId = req.portal.memberId;
+
+    const [[settings], [member], tenant] = await Promise.all([
+      tenantQuery(slug,
+        `SELECT portal_config, year_start_month, year_start_day,
+                advance_renewals_weeks, gift_aid_enabled,
+                gift_aid_online_renewals, paypal_email, online_renew_email
+         FROM tenant_settings WHERE id = 'singleton'`),
+      tenantQuery(slug,
+        `SELECT m.id, m.membership_number, m.forenames, m.surname, m.known_as,
+                m.email, m.next_renewal, m.gift_aid_from, m.class_id, m.partner_id,
+                ms.name AS status_name,
+                mc.name AS class_name, mc.fee::float AS fee, mc.is_joint,
+                mc.gift_aid_fee::float AS gift_aid_fee
+         FROM members m
+         LEFT JOIN member_statuses ms ON m.status_id = ms.id
+         LEFT JOIN member_classes mc ON m.class_id = mc.id
+         WHERE m.id = $1`, [memberId]),
+      prisma.sysTenant.findUnique({ where: { slug } }),
+    ]);
+
+    const portalConfig = { renewals: false, ...(settings?.portal_config ?? {}) };
+    if (!portalConfig.renewals) {
+      return res.status(403).json({ error: 'Online renewal is not enabled for this organisation.' });
+    }
+
+    if (!member) {
+      return res.status(404).json({ error: 'Member not found.' });
+    }
+
+    // Must be Current status
+    const statusLower = (member.status_name ?? '').toLowerCase();
+    if (!statusLower.includes('current')) {
+      return res.status(400).json({
+        error: 'Online renewal is only available for current members. Please contact your Membership Secretary.',
+      });
+    }
+
+    // Check if within renewal window
+    const nextRenewal = member.next_renewal
+      ? new Date(String(member.next_renewal).slice(0, 10))
+      : null;
+    const now = new Date();
+    now.setHours(0, 0, 0, 0);
+
+    if (!nextRenewal) {
+      return res.status(400).json({
+        error: 'No renewal date is set for your membership. Please contact your Membership Secretary.',
+      });
+    }
+
+    // Already renewed (next_renewal is more than 1 year from now - likely already renewed)
+    const advanceWeeks = settings.advance_renewals_weeks ?? 4;
+    const windowStart = new Date(nextRenewal);
+    windowStart.setDate(windowStart.getDate() - advanceWeeks * 7);
+
+    if (now < windowStart) {
+      return res.status(400).json({
+        error: `Your membership is not yet due for renewal. Renewal opens from ${fmtDateISO(windowStart)}.`,
+        nextRenewal: String(member.next_renewal).slice(0, 10),
+      });
+    }
+
+    // If next_renewal has already passed, still allow (they're overdue but still Current)
+
+    // Look up partner info for joint memberships
+    let partner = null;
+    if (member.partner_id && member.is_joint) {
+      const [p] = await tenantQuery(slug,
+        `SELECT m.id, m.membership_number, m.forenames, m.surname, m.known_as,
+                m.gift_aid_from, m.next_renewal,
+                mc.name AS class_name, mc.fee::float AS fee,
+                mc.gift_aid_fee::float AS gift_aid_fee
+         FROM members m
+         LEFT JOIN member_classes mc ON m.class_id = mc.id
+         WHERE m.id = $1`, [member.partner_id]);
+      if (p) {
+        partner = {
+          id: p.id,
+          membershipNumber: p.membership_number,
+          forenames: p.forenames,
+          surname: p.surname,
+          displayName: p.known_as || p.forenames?.split(' ')[0] || p.forenames,
+          fee: p.fee ?? 0,
+          giftAidFrom: p.gift_aid_from ? String(p.gift_aid_from).slice(0, 10) : null,
+          nextRenewal: p.next_renewal ? String(p.next_renewal).slice(0, 10) : null,
+        };
+      }
+    }
+
+    // Compute fees
+    const memberFee = member.fee ?? 0;
+    const partnerFee = partner?.fee ?? 0;
+    const totalFee = member.is_joint ? memberFee + partnerFee : memberFee;
+
+    const showGiftAid = settings.gift_aid_enabled && settings.gift_aid_online_renewals;
+
+    res.json({
+      u3aName: tenant?.name ?? slug,
+      member: {
+        id: member.id,
+        membershipNumber: member.membership_number,
+        forenames: member.forenames,
+        surname: member.surname,
+        displayName: member.known_as || member.forenames?.split(' ')[0] || member.forenames,
+        className: member.class_name,
+        fee: memberFee,
+        nextRenewal: String(member.next_renewal).slice(0, 10),
+        giftAidFrom: member.gift_aid_from ? String(member.gift_aid_from).slice(0, 10) : null,
+        isJoint: member.is_joint ?? false,
+      },
+      partner,
+      totalFee,
+      showGiftAid,
+      onlineRenewEmail: settings.online_renew_email ?? '',
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// POST /renew — process online renewal (creates PayPal payment)
+const portalRenewSchema = z.object({
+  giftAid:        z.boolean().default(false),
+  partnerGiftAid: z.boolean().default(false),
+});
+
+router.post('/renew', async (req, res, next) => {
+  try {
+    const slug = req.portal.tenantSlug;
+    const memberId = req.portal.memberId;
+    const data = portalRenewSchema.parse(req.body);
+
+    const [[settings], [member]] = await Promise.all([
+      tenantQuery(slug,
+        `SELECT portal_config, year_start_month, year_start_day,
+                advance_renewals_weeks, gift_aid_enabled,
+                gift_aid_online_renewals, paypal_email, paypal_cancel_url
+         FROM tenant_settings WHERE id = 'singleton'`),
+      tenantQuery(slug,
+        `SELECT m.id, m.membership_number, m.forenames, m.surname, m.email,
+                m.next_renewal, m.gift_aid_from, m.class_id, m.partner_id,
+                ms.name AS status_name,
+                mc.name AS class_name, mc.fee::float AS fee, mc.is_joint
+         FROM members m
+         LEFT JOIN member_statuses ms ON m.status_id = ms.id
+         LEFT JOIN member_classes mc ON m.class_id = mc.id
+         WHERE m.id = $1`, [memberId]),
+    ]);
+
+    const portalConfig = { renewals: false, ...(settings?.portal_config ?? {}) };
+    if (!portalConfig.renewals) {
+      return res.status(403).json({ error: 'Online renewal is not enabled.' });
+    }
+
+    if (!member) return res.status(404).json({ error: 'Member not found.' });
+
+    const statusLower = (member.status_name ?? '').toLowerCase();
+    if (!statusLower.includes('current')) {
+      return res.status(400).json({ error: 'Online renewal is only available for current members.' });
+    }
+
+    // Validate renewal window
+    const nextRenewal = member.next_renewal
+      ? new Date(String(member.next_renewal).slice(0, 10))
+      : null;
+    if (!nextRenewal) {
+      return res.status(400).json({ error: 'No renewal date set.' });
+    }
+    const now = new Date();
+    now.setHours(0, 0, 0, 0);
+    const advanceWeeks = settings.advance_renewals_weeks ?? 4;
+    const windowStart = new Date(nextRenewal);
+    windowStart.setDate(windowStart.getDate() - advanceWeeks * 7);
+    if (now < windowStart) {
+      return res.status(400).json({ error: 'Renewal window has not opened yet.' });
+    }
+
+    // Get partner for joint
+    let partnerMember = null;
+    if (member.partner_id && member.is_joint) {
+      const [p] = await tenantQuery(slug,
+        `SELECT m.id, m.forenames, m.surname, m.email, m.next_renewal,
+                m.gift_aid_from, m.class_id,
+                mc.fee::float AS fee
+         FROM members m
+         LEFT JOIN member_classes mc ON m.class_id = mc.id
+         WHERE m.id = $1`, [member.partner_id]);
+      if (p) partnerMember = p;
+    }
+
+    // Calculate total amount
+    const memberFee = member.fee ?? 0;
+    const partnerFee = partnerMember?.fee ?? 0;
+    const totalAmount = member.is_joint ? memberFee + partnerFee : memberFee;
+
+    // Store renewal intent: save Gift Aid choices and generate payment token
+    const { randomBytes } = await import('crypto');
+    const paymentToken = randomBytes(24).toString('hex');
+
+    // Store the payment token and renewal metadata on the member
+    await tenantQuery(slug,
+      `UPDATE members SET payment_token = $1, updated_at = now() WHERE id = $2`,
+      [paymentToken, memberId]);
+
+    // Store Gift Aid choices in the token for later (use a simple JSON string in payment_token note)
+    // We'll re-read these on confirmation. For now, store in a temporary way.
+    // Use a combined token: paymentToken|giftAidJson
+    const renewalMeta = JSON.stringify({
+      giftAid: data.giftAid,
+      partnerGiftAid: data.partnerGiftAid,
+      partnerMemberId: partnerMember?.id ?? null,
+    });
+    // Store meta alongside token using a separator
+    const combinedToken = `${paymentToken}|${Buffer.from(renewalMeta).toString('base64')}`;
+    await tenantQuery(slug,
+      `UPDATE members SET payment_token = $1, updated_at = now() WHERE id = $2`,
+      [combinedToken, memberId]);
+
+    // Initiate PayPal payment
+    const { initiatePayment } = await import('../utils/paypal.js');
+    const frontendBase = process.env.CORS_ORIGIN || 'http://localhost:5173';
+    const returnUrl = `${frontendBase}/public/${slug}/portal/renewal-complete`;
+    const cancelUrl = settings.paypal_cancel_url || `${frontendBase}/public/${slug}/portal/home`;
+
+    const description = member.is_joint
+      ? `Membership Renewal: ${member.class_name} (joint — ${member.forenames} & ${partnerMember?.forenames})`
+      : `Membership Renewal: ${member.class_name}`;
+
+    const { paymentId, redirectUrl } = await initiatePayment({
+      amount: totalAmount,
+      description,
+      memberRef: memberId,
+      returnUrl,
+      cancelUrl,
+      paypalEmail: settings.paypal_email,
+    });
+
+    logAudit(slug, {
+      userId: null, userName: `${req.portal.name} (portal)`,
+      action: 'update', entityType: 'member',
+      entityId: memberId, entityName: `${member.forenames} ${member.surname}`,
+      detail: 'Online renewal initiated',
+    });
+
+    res.json({
+      paymentId,
+      redirectUrl,
+      amount: totalAmount,
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// POST /renewal-confirm — confirm payment and update renewal dates
+const renewalConfirmSchema = z.object({
+  paymentId: z.string().min(1),
+});
+
+router.post('/renewal-confirm', async (req, res, next) => {
+  try {
+    const slug = req.portal.tenantSlug;
+    const memberId = req.portal.memberId;
+    const data = renewalConfirmSchema.parse(req.body);
+
+    // Verify payment
+    const { verifyPaymentNotification } = await import('../utils/paypal.js');
+    const verification = await verifyPaymentNotification({
+      paymentId: data.paymentId,
+      rawBody: req.body,
+    });
+    if (!verification.verified) {
+      return res.status(400).json({ error: 'Payment verification failed.' });
+    }
+
+    // Get member with payment token
+    const [member] = await tenantQuery(slug,
+      `SELECT m.id, m.membership_number, m.forenames, m.surname, m.email,
+              m.next_renewal, m.gift_aid_from, m.class_id, m.partner_id,
+              m.payment_token,
+              ms.name AS status_name,
+              mc.name AS class_name, mc.fee::float AS fee, mc.is_joint
+       FROM members m
+       LEFT JOIN member_statuses ms ON m.status_id = ms.id
+       LEFT JOIN member_classes mc ON m.class_id = mc.id
+       WHERE m.id = $1`, [memberId]);
+
+    if (!member) return res.status(404).json({ error: 'Member not found.' });
+
+    // Parse renewal metadata from payment token
+    let renewalMeta = { giftAid: false, partnerGiftAid: false, partnerMemberId: null };
+    if (member.payment_token && member.payment_token.includes('|')) {
+      try {
+        const metaPart = member.payment_token.split('|')[1];
+        renewalMeta = JSON.parse(Buffer.from(metaPart, 'base64').toString('utf8'));
+      } catch { /* use defaults */ }
+    }
+
+    const [settings] = await tenantQuery(slug,
+      `SELECT gift_aid_enabled, gift_aid_online_renewals,
+              year_start_month, year_start_day
+       FROM tenant_settings WHERE id = 'singleton'`);
+
+    const showGiftAid = settings?.gift_aid_enabled && settings?.gift_aid_online_renewals;
+
+    // Calculate new next_renewal (current next_renewal + 1 year)
+    const baseDate = member.next_renewal
+      ? new Date(String(member.next_renewal).slice(0, 10))
+      : new Date();
+    baseDate.setFullYear(baseDate.getFullYear() + 1);
+    const newNextRenewal = baseDate.toISOString().slice(0, 10);
+
+    // Update Gift Aid
+    let giftAidFrom = member.gift_aid_from
+      ? String(member.gift_aid_from).slice(0, 10)
+      : null;
+    if (showGiftAid) {
+      if (renewalMeta.giftAid && !giftAidFrom) {
+        giftAidFrom = new Date().toISOString().slice(0, 10);
+      } else if (!renewalMeta.giftAid) {
+        giftAidFrom = null;
+      }
+    }
+
+    // Update member
+    await tenantQuery(slug,
+      `UPDATE members
+       SET next_renewal = $1::date,
+           gift_aid_from = $2::date,
+           card_printed = false,
+           payment_token = NULL,
+           updated_at = now()
+       WHERE id = $3`,
+      [newNextRenewal, giftAidFrom, memberId]);
+
+    // Handle joint partner renewal
+    let partnerMember = null;
+    if (member.is_joint && renewalMeta.partnerMemberId) {
+      const [p] = await tenantQuery(slug,
+        `SELECT id, forenames, surname, email, next_renewal, gift_aid_from,
+                class_id
+         FROM members WHERE id = $1`, [renewalMeta.partnerMemberId]);
+      if (p) {
+        partnerMember = p;
+        const pBaseDate = p.next_renewal
+          ? new Date(String(p.next_renewal).slice(0, 10))
+          : new Date();
+        pBaseDate.setFullYear(pBaseDate.getFullYear() + 1);
+        const pNewNextRenewal = pBaseDate.toISOString().slice(0, 10);
+
+        let pGiftAidFrom = p.gift_aid_from
+          ? String(p.gift_aid_from).slice(0, 10)
+          : null;
+        if (showGiftAid) {
+          if (renewalMeta.partnerGiftAid && !pGiftAidFrom) {
+            pGiftAidFrom = new Date().toISOString().slice(0, 10);
+          } else if (!renewalMeta.partnerGiftAid) {
+            pGiftAidFrom = null;
+          }
+        }
+
+        await tenantQuery(slug,
+          `UPDATE members
+           SET next_renewal = $1::date,
+               gift_aid_from = $2::date,
+               card_printed = false,
+               payment_token = NULL,
+               updated_at = now()
+           WHERE id = $3`,
+          [pNewNextRenewal, pGiftAidFrom, p.id]);
+      }
+    }
+
+    // Create finance transaction
+    const memberFee = member.fee ?? 0;
+    const partnerFee = partnerMember
+      ? (await tenantQuery(slug,
+          `SELECT fee::float FROM member_classes WHERE id = $1`,
+          [partnerMember.class_id]))[0]?.fee ?? 0
+      : 0;
+    const totalAmount = member.is_joint ? memberFee + partnerFee : memberFee;
+
+    if (totalAmount > 0) {
+      const [paypalAcct] = await tenantQuery(slug,
+        `SELECT id FROM finance_accounts WHERE name ILIKE '%PayPal%' AND active = true LIMIT 1`);
+      const [membershipCat] = await tenantQuery(slug,
+        `SELECT id FROM finance_categories WHERE name = 'Membership' AND active = true LIMIT 1`);
+
+      if (paypalAcct) {
+        const fromTo = partnerMember
+          ? `${member.forenames} ${member.surname} & ${partnerMember.forenames} ${partnerMember.surname}`
+          : `${member.forenames} ${member.surname}`;
+        const detail = member.is_joint ? 'Membership Renewal (joint)' : 'Membership Renewal';
+
+        const txnParams = [paypalAcct.id, fromTo, totalAmount, detail, memberId];
+        let memberIdCols = 'member_id_1';
+        let memberIdVals = '$5';
+        if (partnerMember) {
+          memberIdCols += ', member_id_2';
+          memberIdVals += ', $6';
+          txnParams.push(partnerMember.id);
+        }
+
+        const [txn] = await tenantQuery(slug,
+          `INSERT INTO transactions
+             (account_id, date, type, from_to, amount, payment_method, detail, ${memberIdCols})
+           VALUES ($1, CURRENT_DATE, 'in', $2, $3::numeric, 'Online', $4, ${memberIdVals})
+           RETURNING id, transaction_number`,
+          txnParams);
+
+        if (membershipCat && txn) {
+          await tenantQuery(slug,
+            `INSERT INTO transaction_categories (transaction_id, category_id, amount)
+             VALUES ($1, $2, $3::numeric)`,
+            [txn.id, membershipCat.id, totalAmount]);
+        }
+      }
+    }
+
+    // Send confirmation email
+    const [template] = await tenantQuery(slug,
+      `SELECT subject, body FROM system_messages WHERE id = 'online_renewal_confirm'`);
+    if (template) {
+      const tenant = await prisma.sysTenant.findUnique({ where: { slug } });
+      const u3aName = tenant?.name ?? slug;
+      const emailAddr = member.email;
+      if (emailAddr) {
+        const { subject, body } = resolveTokens(
+          template.subject, template.body,
+          { ...member, class_name: member.class_name }, u3aName,
+        );
+        console.log(`[Portal] Would send renewal confirmation to ${emailAddr}: "${subject}"`);
+      }
+      // Also email partner if joint
+      if (partnerMember?.email) {
+        const pClassName = (await tenantQuery(slug,
+          `SELECT name FROM member_classes WHERE id = $1`,
+          [partnerMember.class_id]))[0]?.name ?? '';
+        const { subject, body } = resolveTokens(
+          template.subject, template.body,
+          { ...partnerMember, class_name: pClassName }, u3aName,
+        );
+        console.log(`[Portal] Would send renewal confirmation to ${partnerMember.email}: "${subject}"`);
+      }
+    }
+
+    logAudit(slug, {
+      userId: null, userName: `${req.portal.name} (portal)`,
+      action: 'renew', entityType: 'member',
+      entityId: memberId, entityName: `${member.forenames} ${member.surname}`,
+      detail: `Online renewal confirmed — new next_renewal: ${newNextRenewal}`,
+    });
+
+    res.json({
+      success: true,
+      newNextRenewal,
+      membershipNumber: member.membership_number,
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
+function fmtDateISO(date) {
+  const d = new Date(date);
+  return d.toISOString().slice(0, 10);
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
 // HELPERS
 // ═══════════════════════════════════════════════════════════════════════════════
 
