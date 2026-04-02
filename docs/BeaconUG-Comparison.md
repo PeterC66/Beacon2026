@@ -738,8 +738,8 @@
 | All fields from Beacon doc 8.3 | Built | Stored and editable |
 | public_phone, public_email, home_page | Partial | Stored but not yet displayed to members (portal, joining form) |
 | email_cards | Partial | Stored but auto-attach logic not wired |
-| gift_aid_online_renewals | Partial | Stored but online renewals not built |
-| online_renew_email | Partial | Stored but online renewals not built |
+| gift_aid_online_renewals | Built | Controls Gift Aid checkboxes on portal renewal page |
+| online_renew_email | Built | Shown on portal renewal page as contact email |
 
 ---
 
@@ -867,8 +867,8 @@
 | Aspect | Status | Notes |
 |--------|--------|-------|
 | Online joining setup guide | Built | Online joining works end-to-end |
-| Joint membership online joining | Not started | Deferred — should show second-person fields for joint classes |
-| Online renewal setup | Not started | Online renewal flow not yet built |
+| Joint membership online joining | Built | Shows second-person fields when joint class selected; creates both members linked at same address |
+| Online renewal setup | Built | Portal renewal with Gift Aid, joint support, PayPal payment |
 
 ---
 
@@ -931,7 +931,7 @@
 
 | Aspect | Status | Notes |
 |--------|--------|-------|
-| Online services overview | Built | Online joining and Members Portal both built; online renewals and public pages (groups list, calendar) not yet built |
+| Online services overview | Built | Online joining, online renewals, Members Portal, and public pages (groups list, calendar) all built |
 
 ---
 
@@ -970,7 +970,7 @@
 
 | Aspect | Status | Notes |
 |--------|--------|-------|
-| Online renewals | Not started | Deferred |
+| Online renewals | Built | Gift Aid opt-in/out, joint renewal, PayPal payment, advance_renewals_weeks window |
 
 ---
 
@@ -1060,14 +1060,14 @@ These are features or architectural aspects of Beacon2 that have no counterpart 
 |--------|-------|-------------|
 | **Built** | 244 | Feature broadly matches UG description |
 | **Partial** | 12 | Feature exists but some aspects missing (PayPal stubs, system settings not yet wired, portal notification stubs) |
-| **Not started** | 17 | Feature not yet implemented (online renewals, public pages, joint online joining, guidance pages, networks/regions) |
+| **Not started** | 15 | Feature not yet implemented (public pages, guidance pages, networks/regions) |
 | **Beacon2 extra** | 12 | New in Beacon2 (architecture, SiteWorks, open meetings, refunds, etc.) |
 
 ### Key gaps (Not started)
 
-1. **Online renewals** (doc 10.2.1) — no portal renewal flow exists
+1. ~~Online renewals~~ — **Done** (v0.8.3)
 2. ~~Public groups list and public calendar~~ — **Done** (v0.8.2)
-3. **Joint membership online joining** (doc 10.1) — no second-person fields in join form
+3. ~~Joint membership online joining~~ — **Done** (v0.8.3)
 4. **Real PayPal API integration** (docs 7.9, 9.8) — stub functions only
 5. **System-wide hide address from group leaders** (doc 4.2.4b) — global setting not implemented
 6. **Networks and Regions** (doc 12) — out of scope for current build

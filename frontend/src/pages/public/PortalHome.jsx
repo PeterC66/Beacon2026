@@ -80,6 +80,10 @@ export default function PortalHome() {
     : null;
 
   const options = [
+    portalConfig.renewals && {
+      label: 'Renew your membership',
+      to: `/public/${slug}/portal/renewal`,
+    },
     portalConfig.groups && {
       label: `${u3aName} u3a groups`,
       to: `/public/${slug}/portal/groups`,

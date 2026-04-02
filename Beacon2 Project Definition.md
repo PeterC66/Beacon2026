@@ -154,7 +154,13 @@ Beacon2 is a ground-up rebuild with these goals:
 - **Online joining** — public form for new members; class selection, personal details,
   address, Gift Aid consent; PayPal payment stub; creates member with Applicant status,
   promotes to Current on payment confirmation; finance transaction creation;
-  confirmation email + officer notifications
+  confirmation email + officer notifications; **joint membership** support (second person
+  fields, shared address, bidirectional partner_id, doubled fee)
+- **Online renewal** (doc 10.2.1) — portal members can renew membership online; shows
+  fee based on membership class; Gift Aid opt-in/out (controlled by
+  `gift_aid_online_renewals`); PayPal payment; advances `next_renewal` by one year;
+  joint members renew together with combined fee; creates finance transaction;
+  sends confirmation emails; eligibility enforced by `advance_renewals_weeks` window
 - **Portal registration/login** — separate auth on members table; identity verification
   (memno + name + postcode); email verification flow; password reset flow
 - **Portal home** (doc 10.2) — dashboard after login showing available features based on
@@ -309,7 +315,6 @@ Greyed-out items in `Home.jsx` (i.e. `to: null`) are the remaining roadmap:
 - ~~Public calendar page~~ (done — unauthenticated, field visibility via calendar_config public flags)
 
 **Partially complete:**
-- Members Portal — online renewals (doc 10.2.1) still to do
 - Data migration tool (standalone import from Beacon — restore already handles this)
 
 **Previously listed, now done:**
