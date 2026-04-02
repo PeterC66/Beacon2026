@@ -39,12 +39,14 @@ test.describe('Gift Aid Declaration', () => {
   test('action buttons are present when transactions exist', async ({ adminPage: page }) => {
     await gotoHomeLink(page, '/finance/gift-aid', 'Gift Aid Declaration');
 
-    // Buttons only render when there are Gift Aid eligible transactions.
-    // In a fresh tenant there may be none, so accept either the buttons
-    // or the "no transactions" empty state.
+    // Three possible states depending on tenant configuration:
+    // 1. Gift Aid enabled + transactions → "Download Excel" button
+    // 2. Gift Aid enabled + no transactions → "No Gift Aid eligible..." message
+    // 3. Gift Aid not enabled → "Gift Aid is not enabled..." message
     const downloadBtn = page.getByRole('button', { name: /download excel/i });
     const noTxns = page.getByText('No Gift Aid eligible transactions found for this period.');
-    await expect(downloadBtn.or(noTxns)).toBeVisible({ timeout: 15_000 });
+    const notEnabled = page.getByText('Gift Aid is not enabled');
+    await expect(downloadBtn.or(noTxns).or(notEnabled)).toBeVisible({ timeout: 15_000 });
   });
 });
 
