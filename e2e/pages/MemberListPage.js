@@ -37,12 +37,14 @@ export class MemberListPage {
     await this.page.getByRole('link', { name: 'Add new member' }).first().click();
   }
 
-  /** Returns the Edit link for the first row containing the given name. */
+  /** Returns a clickable link in the first row containing the given name.
+   *  The member list has no separate "Edit" link — clicking the member's
+   *  name or membership number navigates to the editor. */
   editLinkForMember(name) {
     return this.page
       .getByRole('row')
       .filter({ hasText: name })
-      .getByRole('link', { name: 'Edit' })
+      .getByRole('link')
       .first();
   }
 
