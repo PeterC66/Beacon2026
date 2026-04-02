@@ -25,6 +25,10 @@ export default function JoinForm() {
     email: '', mobile: '',
     houseNo: '', street: '', town: '', county: '', postcode: '', telephone: '',
     giftAid: false,
+    // Joint member (second person) fields
+    p2Title: '', p2Forenames: '', p2Surname: '',
+    p2Email: '', p2Mobile: '',
+    p2GiftAid: false,
   });
 
   useEffect(() => {
@@ -50,6 +54,8 @@ export default function JoinForm() {
     setFieldErrors((prev) => ({ ...prev, [field]: undefined }));
   }
 
+  const isJoint = config?.classes.find((c) => c.id === form.classId)?.is_joint ?? false;
+
   function validate() {
     const errs = {};
     if (!form.classId) errs.classId = 'Please select a membership class.';
@@ -63,6 +69,14 @@ export default function JoinForm() {
       if (!form.title.trim()) errs.title = 'Title is required for Gift Aid (HMRC requirement).';
       if (!form.houseNo.trim()) errs.houseNo = 'House name or number is required for Gift Aid (HMRC requirement).';
     }
+    // Joint member (second person) validation
+    if (isJoint) {
+      if (!form.p2Forenames.trim()) errs.p2Forenames = 'Second person\'s first name is required.';
+      if (!form.p2Surname.trim()) errs.p2Surname = 'Second person\'s surname is required.';
+      if (config?.giftAidEnabled && form.p2GiftAid) {
+        if (!form.p2Title.trim()) errs.p2Title = 'Title is required for Gift Aid (HMRC requirement).';
+      }
+    }
     return errs;
   }
 
@@ -75,7 +89,7 @@ export default function JoinForm() {
     setSubmitting(true);
     setError('');
     try {
-      const result = await publicApi.submitJoin(slug, {
+      const payload = {
         classId: form.classId,
         title: form.title || undefined,
         forenames: form.forenames.trim(),
@@ -91,7 +105,20 @@ export default function JoinForm() {
           telephone: form.telephone.trim() || undefined,
         },
         giftAid: form.giftAid,
-      });
+      };
+
+      if (isJoint) {
+        payload.partner2 = {
+          title: form.p2Title || undefined,
+          forenames: form.p2Forenames.trim(),
+          surname: form.p2Surname.trim(),
+          email: form.p2Email.trim() || undefined,
+          mobile: form.p2Mobile.trim() || undefined,
+          giftAid: form.p2GiftAid,
+        };
+      }
+
+      const result = await publicApi.submitJoin(slug, payload);
 
       // Navigate to the pending page where the applicant can pay or get a link
       navigate(`/public/${slug}/join-pending`, {
@@ -104,6 +131,7 @@ export default function JoinForm() {
           className:        result.className,
           forenames:        form.forenames.trim(),
           surname:          form.surname.trim(),
+          partner2:         result.partner2 ?? null,
         },
       });
     } catch (err) {
@@ -140,6 +168,9 @@ export default function JoinForm() {
   }
 
   const selectedClass = config?.classes.find((c) => c.id === form.classId);
+  const displayFee = selectedClass?.fee != null
+    ? (isJoint ? Number(selectedClass.fee) * 2 : Number(selectedClass.fee))
+    : null;
 
   return (
     <div className="relative min-h-screen bg-gradient-to-br from-blue-50 to-slate-100 py-8 px-4">
@@ -183,11 +214,17 @@ export default function JoinForm() {
               {selectedClass?.explanation && (
                 <p className="text-xs text-slate-500 mt-1">{selectedClass.explanation}</p>
               )}
+              {isJoint && (
+                <p className="text-xs text-blue-600 mt-1 font-medium">
+                  This is a joint membership — please provide details for both people below.
+                  The fee is £{displayFee?.toFixed(2)} for two members.
+                </p>
+              )}
             </fieldset>
 
             {/* Personal details */}
             <fieldset className="mb-6">
-              <legend className="text-sm font-bold text-slate-700 mb-2">Your Details</legend>
+              <legend className="text-sm font-bold text-slate-700 mb-2">{isJoint ? 'First Person' : 'Your Details'}</legend>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">Title</label>
@@ -247,9 +284,73 @@ export default function JoinForm() {
               </div>
             </fieldset>
 
+            {/* Second person (joint membership) */}
+            {isJoint && (
+              <fieldset className="mb-6">
+                <legend className="text-sm font-bold text-slate-700 mb-2">Second Person</legend>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">Title</label>
+                    <input
+                      type="text"
+                      name="p2Title"
+                      value={form.p2Title}
+                      onChange={(e) => handleChange('p2Title', e.target.value)}
+                      placeholder="Mr, Mrs, Ms, Dr..."
+                      className="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                    {fieldErrors.p2Title && <p className="text-sm text-red-600 mt-1 font-medium">{fieldErrors.p2Title}</p>}
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">First name <RequiredMark /></label>
+                    <input
+                      type="text"
+                      name="p2Forenames"
+                      value={form.p2Forenames}
+                      onChange={(e) => handleChange('p2Forenames', e.target.value)}
+                      className="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                    {fieldErrors.p2Forenames && <p className="text-sm text-red-600 mt-1 font-medium">{fieldErrors.p2Forenames}</p>}
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">Surname <RequiredMark /></label>
+                    <input
+                      type="text"
+                      name="p2Surname"
+                      value={form.p2Surname}
+                      onChange={(e) => handleChange('p2Surname', e.target.value)}
+                      className="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                    {fieldErrors.p2Surname && <p className="text-sm text-red-600 mt-1 font-medium">{fieldErrors.p2Surname}</p>}
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">Email</label>
+                    <input
+                      type="email"
+                      name="p2Email"
+                      value={form.p2Email}
+                      onChange={(e) => handleChange('p2Email', e.target.value)}
+                      className="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                    {fieldErrors.p2Email && <p className="text-sm text-red-600 mt-1 font-medium">{fieldErrors.p2Email}</p>}
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">Mobile</label>
+                    <input
+                      type="tel"
+                      name="p2Mobile"
+                      value={form.p2Mobile}
+                      onChange={(e) => handleChange('p2Mobile', e.target.value)}
+                      className="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                </div>
+              </fieldset>
+            )}
+
             {/* Address */}
             <fieldset className="mb-6">
-              <legend className="text-sm font-bold text-slate-700 mb-2">Address</legend>
+              <legend className="text-sm font-bold text-slate-700 mb-2">{isJoint ? 'Shared Address' : 'Address'}</legend>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">House no / name</label>
@@ -330,8 +431,20 @@ export default function JoinForm() {
                     checked={form.giftAid}
                     onChange={(e) => handleChange('giftAid', e.target.checked)}
                   />
-                  I would like my u3a to claim Gift Aid on my subscription
+                  {isJoint
+                    ? `I (${form.forenames.trim() || 'first person'}) would like Gift Aid claimed on my subscription`
+                    : 'I would like my u3a to claim Gift Aid on my subscription'}
                 </label>
+                {isJoint && (
+                  <label className="flex items-center gap-2 text-sm mt-2">
+                    <input
+                      type="checkbox"
+                      checked={form.p2GiftAid}
+                      onChange={(e) => handleChange('p2GiftAid', e.target.checked)}
+                    />
+                    I ({form.p2Forenames.trim() || 'second person'}) would like Gift Aid claimed on my subscription
+                  </label>
+                )}
               </fieldset>
             )}
 
@@ -357,7 +470,7 @@ export default function JoinForm() {
               disabled={submitting}
               className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white rounded px-5 py-3 text-sm font-medium transition-colors"
             >
-              {submitting ? 'Processing...' : `Make Payment${selectedClass?.fee ? ` — £${Number(selectedClass.fee).toFixed(2)}` : ''}`}
+              {submitting ? 'Processing...' : `Make Payment${displayFee ? ` — £${displayFee.toFixed(2)}` : ''}`}
             </button>
           </form>
         </div>

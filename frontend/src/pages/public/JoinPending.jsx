@@ -43,7 +43,7 @@ export default function JoinPending() {
 
   const {
     membershipNumber, redirectUrl, paymentToken,
-    amount, className, forenames, surname,
+    amount, className, forenames, surname, partner2,
   } = data;
 
   const resumeUrl = `${window.location.origin}/public/${slug}/resume-payment/${paymentToken}`;
@@ -83,7 +83,13 @@ export default function JoinPending() {
           <div className="bg-slate-50 rounded-md p-4 mb-6 text-sm space-y-1">
             <p><span className="font-medium text-slate-700">Name:</span> {forenames} {surname}</p>
             <p><span className="font-medium text-slate-700">Membership number:</span> {membershipNumber}</p>
-            <p><span className="font-medium text-slate-700">Membership type:</span> {className}</p>
+            {partner2 && (
+              <>
+                <p><span className="font-medium text-slate-700">Partner:</span> {partner2.forenames} {partner2.surname}</p>
+                <p><span className="font-medium text-slate-700">Partner membership number:</span> {partner2.membershipNumber}</p>
+              </>
+            )}
+            <p><span className="font-medium text-slate-700">Membership type:</span> {className}{partner2 ? ' (joint)' : ''}</p>
             {amount > 0 && (
               <p><span className="font-medium text-slate-700">Amount due:</span> &pound;{Number(amount).toFixed(2)}</p>
             )}

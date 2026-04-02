@@ -867,7 +867,7 @@
 | Aspect | Status | Notes |
 |--------|--------|-------|
 | Online joining setup guide | Built | Online joining works end-to-end |
-| Joint membership online joining | Not started | Deferred — should show second-person fields for joint classes |
+| Joint membership online joining | Built | Shows second-person fields when joint class selected; creates both members linked at same address |
 | Online renewal setup | Not started | Online renewal flow not yet built |
 
 ---
@@ -1060,14 +1060,14 @@ These are features or architectural aspects of Beacon2 that have no counterpart 
 |--------|-------|-------------|
 | **Built** | 244 | Feature broadly matches UG description |
 | **Partial** | 12 | Feature exists but some aspects missing (PayPal stubs, system settings not yet wired, portal notification stubs) |
-| **Not started** | 17 | Feature not yet implemented (online renewals, public pages, joint online joining, guidance pages, networks/regions) |
+| **Not started** | 16 | Feature not yet implemented (online renewals, public pages, guidance pages, networks/regions) |
 | **Beacon2 extra** | 12 | New in Beacon2 (architecture, SiteWorks, open meetings, refunds, etc.) |
 
 ### Key gaps (Not started)
 
 1. **Online renewals** (doc 10.2.1) — no portal renewal flow exists
 2. ~~Public groups list and public calendar~~ — **Done** (v0.8.2)
-3. **Joint membership online joining** (doc 10.1) — no second-person fields in join form
+3. ~~Joint membership online joining~~ — **Done** (v0.8.3)
 4. **Real PayPal API integration** (docs 7.9, 9.8) — stub functions only
 5. **System-wide hide address from group leaders** (doc 4.2.4b) — global setting not implemented
 6. **Networks and Regions** (doc 12) — out of scope for current build

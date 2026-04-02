@@ -5,6 +5,19 @@ Format: `## [version] — YYYY-MM-DD` with bullet points per change.
 
 ---
 
+## [0.8.3] — 2026-04-02
+
+### Added
+- **Joint membership online joining** — when a member selects a joint membership class
+  (`is_joint`), the joining form now shows fields for the second person (title, forenames,
+  surname, email, mobile) and a separate Gift Aid consent checkbox. Both member records are
+  created linked at the same address with bidirectional `partner_id`. Payment amount is
+  doubled (2× class fee). Payment confirmation promotes both members to Current status and
+  creates a single finance transaction with both member IDs. Resume-payment and JoinPending
+  pages show both members' details.
+
+---
+
 ## [0.8.2] — 2026-04-01
 
 ### Added

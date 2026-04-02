@@ -85,6 +85,15 @@ router.get('/:slug/join-config', async (req, res, next) => {
 // Submit an online joining application.
 // Creates member record with Applicant status, then initiates PayPal payment.
 
+const partner2Schema = z.object({
+  title:     z.string().max(20).optional(),
+  forenames: z.string().min(1).max(100),
+  surname:   z.string().min(1).max(100),
+  email:     z.string().email().optional().or(z.literal('')),
+  mobile:    z.string().max(30).optional(),
+  giftAid:   z.boolean().default(false),
+});
+
 const joinSchema = z.object({
   classId:     z.string().min(1),
   title:       z.string().max(20).optional(),
@@ -101,6 +110,7 @@ const joinSchema = z.object({
     telephone: z.string().optional(),
   }),
   giftAid:     z.boolean().default(false),
+  partner2:    partner2Schema.optional(),
 });
 
 router.post('/:slug/join', async (req, res, next) => {
@@ -123,12 +133,17 @@ router.post('/:slug/join', async (req, res, next) => {
     // Verify the class is valid and available online
     const [cls] = await tenantQuery(
       slug,
-      `SELECT id, name, fee::float AS fee, show_online, current
+      `SELECT id, name, fee::float AS fee, show_online, current, is_joint
        FROM member_classes WHERE id = $1`,
       [data.classId],
     );
     if (!cls || !cls.show_online || !cls.current) {
       return res.status(400).json({ error: 'Invalid membership class.' });
+    }
+
+    // If class is joint, partner2 data is required
+    if (cls.is_joint && !data.partner2) {
+      return res.status(400).json({ error: 'Joint membership requires details for the second person.' });
     }
 
     // Find or create the Applicant status
@@ -200,14 +215,64 @@ router.post('/:slug/join', async (req, res, next) => {
       detail: 'Online joining application',
     });
 
+    // ── Joint membership: create second member linked at same address ──
+    let partner2Result = null;
+    if (cls.is_joint && data.partner2) {
+      const p2 = data.partner2;
+      const p2Initials = p2.forenames.split(/\s+/).map(n => n[0]?.toUpperCase()).filter(Boolean).join('');
+      const p2Email = p2.email ? p2.email.toLowerCase() : null;
+      const p2GiftAidFrom = (p2.giftAid && settings.gift_aid_enabled) ? joinedOn : null;
+
+      const [partner] = await tenantQuery(
+        slug,
+        `INSERT INTO members
+           (title, forenames, surname, initials, email, mobile,
+            address_id, status_id, class_id, joined_on, next_renewal, gift_aid_from,
+            payment_token, partner_id)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10::date, $11::date, $12::date, $13, $14)
+         RETURNING id, membership_number, forenames, surname`,
+        [
+          p2.title ?? null, p2.forenames, p2.surname, p2Initials,
+          p2Email, p2.mobile ?? null,
+          newAddr.id, applicantStatus.id, data.classId,
+          joinedOn, nextRenewal, p2GiftAidFrom,
+          paymentToken, member.id,
+        ],
+      );
+
+      // Set primary member's partner_id (bi-directional link)
+      await tenantQuery(
+        slug,
+        `UPDATE members SET partner_id = $1, updated_at = now() WHERE id = $2`,
+        [partner.id, member.id],
+      );
+
+      partner2Result = {
+        memberId:         partner.id,
+        membershipNumber: partner.membership_number,
+        forenames:        p2.forenames,
+        surname:          p2.surname,
+      };
+
+      logAudit(slug, {
+        userId: null, userName: `${p2.forenames} ${p2.surname} (online)`,
+        action: 'create', entityType: 'member',
+        entityId: partner.id, entityName: `${p2.forenames} ${p2.surname}`,
+        detail: 'Online joining application (joint partner)',
+      });
+    }
+
+    // Compute total payment amount (doubled for joint)
+    const totalAmount = cls.is_joint ? (cls.fee ?? 0) * 2 : (cls.fee ?? 0);
+
     // Initiate PayPal payment (stub)
     const frontendBase = process.env.CORS_ORIGIN || 'http://localhost:5173';
     const returnUrl = `${frontendBase}/public/${slug}/join-complete`;
     const cancelUrl = settings.paypal_cancel_url || `${frontendBase}/public/${slug}/join`;
 
     const { paymentId, redirectUrl } = await initiatePayment({
-      amount:      cls.fee ?? 0,
-      description: `Membership: ${cls.name}`,
+      amount:      totalAmount,
+      description: cls.is_joint ? `Joint Membership: ${cls.name} (×2)` : `Membership: ${cls.name}`,
       memberRef:   member.id,
       returnUrl,
       cancelUrl,
@@ -220,8 +285,9 @@ router.post('/:slug/join', async (req, res, next) => {
       paymentId,
       redirectUrl,
       paymentToken,
-      amount:           cls.fee ?? 0,
+      amount:           totalAmount,
       className:        cls.name,
+      partner2:         partner2Result,
     });
   } catch (err) {
     next(err);
@@ -252,12 +318,12 @@ router.post('/:slug/payment-confirm', async (req, res, next) => {
       return res.status(400).json({ error: 'Payment verification failed.' });
     }
 
-    // Find the member
+    // Find the member (include partner and joint info)
     const [member] = await tenantQuery(
       slug,
       `SELECT m.id, m.membership_number, m.forenames, m.surname, m.email,
-              m.title, m.class_id, m.joined_on, m.next_renewal,
-              mc.name AS class_name, mc.fee::float AS fee
+              m.title, m.class_id, m.joined_on, m.next_renewal, m.partner_id,
+              mc.name AS class_name, mc.fee::float AS fee, mc.is_joint
        FROM members m
        LEFT JOIN member_classes mc ON m.class_id = mc.id
        WHERE m.id = $1`,
@@ -278,12 +344,23 @@ router.post('/:slug/payment-confirm', async (req, res, next) => {
         `UPDATE members SET status_id = $1, card_printed = false, payment_token = NULL, updated_at = now() WHERE id = $2`,
         [currentStatus.id, member.id],
       );
+
+      // Also promote the joint partner if present
+      if (member.partner_id && member.is_joint) {
+        await tenantQuery(
+          slug,
+          `UPDATE members SET status_id = $1, card_printed = false, payment_token = NULL, updated_at = now() WHERE id = $2`,
+          [currentStatus.id, member.partner_id],
+        );
+      }
     }
 
+    // Compute total payment amount (doubled for joint)
+    const perPersonFee = member.fee ?? 0;
+    const paypalAmount = member.is_joint ? perPersonFee * 2 : perPersonFee;
+
     // Create finance transaction in PayPal account
-    const paypalAmount = member.fee ?? 0;
     if (paypalAmount > 0) {
-      // Find or note the PayPal account and Membership category
       const [paypalAcct] = await tenantQuery(
         slug,
         `SELECT id FROM finance_accounts WHERE name ILIKE '%PayPal%' AND active = true LIMIT 1`,
@@ -294,14 +371,38 @@ router.post('/:slug/payment-confirm', async (req, res, next) => {
       );
 
       if (paypalAcct) {
-        const memberName = `${member.forenames} ${member.surname}`;
+        // For joint: include both members on the transaction
+        let partnerForTxn = null;
+        if (member.partner_id && member.is_joint) {
+          [partnerForTxn] = await tenantQuery(
+            slug,
+            `SELECT id, forenames, surname FROM members WHERE id = $1`,
+            [member.partner_id],
+          );
+        }
+
+        const memberName = partnerForTxn
+          ? `${member.forenames} ${member.surname} & ${partnerForTxn.forenames} ${partnerForTxn.surname}`
+          : `${member.forenames} ${member.surname}`;
+
+        const detail = member.is_joint ? 'New Joint Membership' : 'New Membership';
+
+        const txnParams = [paypalAcct.id, member.joined_on, memberName, paypalAmount, detail, member.id];
+        let memberIdCols = 'member_id_1';
+        let memberIdVals = '$6';
+        if (partnerForTxn) {
+          memberIdCols += ', member_id_2';
+          memberIdVals += ', $7';
+          txnParams.push(partnerForTxn.id);
+        }
+
         const [txn] = await tenantQuery(
           slug,
           `INSERT INTO transactions
-             (account_id, date, type, from_to, amount, payment_method, detail, member_id_1)
-           VALUES ($1, $2::date, 'in', $3, $4::numeric, 'Online', 'New Membership', $5)
+             (account_id, date, type, from_to, amount, payment_method, detail, ${memberIdCols})
+           VALUES ($1, $2::date, 'in', $3, $4::numeric, 'Online', $5, ${memberIdVals})
            RETURNING id`,
-          [paypalAcct.id, member.joined_on, memberName, paypalAmount, member.id],
+          txnParams,
         );
 
         if (membershipCat && txn) {
@@ -318,6 +419,21 @@ router.post('/:slug/payment-confirm', async (req, res, next) => {
     // Send confirmation email to new member
     await sendJoinConfirmationEmail(slug, member);
 
+    // Send confirmation email to joint partner if applicable
+    if (member.partner_id && member.is_joint) {
+      const [partner] = await tenantQuery(
+        slug,
+        `SELECT m.id, m.membership_number, m.forenames, m.surname, m.email,
+                m.title, m.class_id, m.joined_on, m.next_renewal,
+                mc.name AS class_name
+         FROM members m
+         LEFT JOIN member_classes mc ON m.class_id = mc.id
+         WHERE m.id = $1`,
+        [member.partner_id],
+      );
+      if (partner) await sendJoinConfirmationEmail(slug, partner);
+    }
+
     // Send officer notifications
     await sendOfficerNotifications(slug, member);
 
@@ -325,7 +441,7 @@ router.post('/:slug/payment-confirm', async (req, res, next) => {
       userId: null, userName: 'System (online payment)',
       action: 'update', entityType: 'member',
       entityId: member.id, entityName: `${member.forenames} ${member.surname}`,
-      detail: 'Online joining payment confirmed',
+      detail: member.is_joint ? 'Online joining payment confirmed (joint membership)' : 'Online joining payment confirmed',
     });
 
     res.json({ success: true, membershipNumber: member.membership_number });
@@ -347,12 +463,12 @@ router.get('/:slug/resume-payment/:token', async (req, res, next) => {
       return res.status(400).json({ error: 'Invalid payment link.' });
     }
 
-    // Find the Applicant member by payment token
+    // Find the Applicant member by payment token (either primary or partner may hold it)
     const [member] = await tenantQuery(
       slug,
       `SELECT m.id, m.membership_number, m.forenames, m.surname, m.email,
-              m.class_id, ms.name AS status_name,
-              mc.name AS class_name, mc.fee::float AS fee
+              m.class_id, m.partner_id, ms.name AS status_name,
+              mc.name AS class_name, mc.fee::float AS fee, mc.is_joint
        FROM members m
        LEFT JOIN member_statuses ms ON m.status_id = ms.id
        LEFT JOIN member_classes mc ON m.class_id = mc.id
@@ -372,6 +488,27 @@ router.get('/:slug/resume-payment/:token', async (req, res, next) => {
       });
     }
 
+    // Look up joint partner if applicable
+    let partner2 = null;
+    if (member.partner_id && member.is_joint) {
+      const [p] = await tenantQuery(
+        slug,
+        `SELECT id, membership_number, forenames, surname FROM members WHERE id = $1`,
+        [member.partner_id],
+      );
+      if (p) {
+        partner2 = {
+          memberId:         p.id,
+          membershipNumber: p.membership_number,
+          forenames:        p.forenames,
+          surname:          p.surname,
+        };
+      }
+    }
+
+    // Compute total amount (doubled for joint)
+    const totalAmount = member.is_joint ? (member.fee ?? 0) * 2 : (member.fee ?? 0);
+
     // Re-initiate payment
     const [settings] = await tenantQuery(
       slug,
@@ -383,8 +520,8 @@ router.get('/:slug/resume-payment/:token', async (req, res, next) => {
     const cancelUrl = settings?.paypal_cancel_url || `${frontendBase}/public/${slug}/join`;
 
     const { paymentId, redirectUrl } = await initiatePayment({
-      amount:      member.fee ?? 0,
-      description: `Membership: ${member.class_name}`,
+      amount:      totalAmount,
+      description: member.is_joint ? `Joint Membership: ${member.class_name} (×2)` : `Membership: ${member.class_name}`,
       memberRef:   member.id,
       returnUrl,
       cancelUrl,
@@ -398,9 +535,10 @@ router.get('/:slug/resume-payment/:token', async (req, res, next) => {
       surname:          member.surname,
       email:            member.email,
       className:        member.class_name,
-      amount:           member.fee ?? 0,
+      amount:           totalAmount,
       paymentId,
       redirectUrl,
+      partner2,
     });
   } catch (err) {
     next(err);

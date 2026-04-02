@@ -8,10 +8,9 @@ Items noted during development that need addressing in future sessions.
 
 ## Online Joining / Members Portal (deferred from initial implementation)
 
-1. **Joint membership online joining** — When a member selects a joint membership
-   class (`is_joint`), the joining form should show fields for the second person's
-   details (name, etc.) and create both member records linked at the same address.
-   Deferred to a later phase. Ref: doc 10.1, doc 9.4.1.
+1. ~~**Joint membership online joining**~~ — **Done.** When a joint membership class is
+   selected, the form shows second-person fields and creates both members linked at the
+   same address with bidirectional partner_id.
 
 2. **Duplicate application detection limited by shared emails** — Some members
    genuinely share the same email address (e.g. couples). Any future duplicate

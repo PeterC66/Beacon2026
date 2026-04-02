@@ -76,7 +76,13 @@ export default function ResumePayment() {
           <div className="bg-slate-50 rounded-md p-4 mb-6 text-sm space-y-1">
             <p><span className="font-medium text-slate-700">Name:</span> {data.forenames} {data.surname}</p>
             <p><span className="font-medium text-slate-700">Membership number:</span> {data.membershipNumber}</p>
-            <p><span className="font-medium text-slate-700">Membership type:</span> {data.className}</p>
+            {data.partner2 && (
+              <>
+                <p><span className="font-medium text-slate-700">Partner:</span> {data.partner2.forenames} {data.partner2.surname}</p>
+                <p><span className="font-medium text-slate-700">Partner membership number:</span> {data.partner2.membershipNumber}</p>
+              </>
+            )}
+            <p><span className="font-medium text-slate-700">Membership type:</span> {data.className}{data.partner2 ? ' (joint)' : ''}</p>
             {data.amount > 0 && (
               <p><span className="font-medium text-slate-700">Amount due:</span> &pound;{Number(data.amount).toFixed(2)}</p>
             )}
