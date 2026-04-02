@@ -25,9 +25,10 @@ Items noted during development that need addressing in future sessions.
    PortalPersonalDetails.jsx (base64 storage, JPEG/PNG/GIF, max 2 MB). Photos appear
    on membership cards and group members PDF.
 
-5. **Public groups list and calendar public pages** — The Public Links page now shows
-   URLs for public groups list and calendar, but the actual public-facing pages at
-   those routes are not yet built. Ref: doc 9.4 section (b).
+5. ~~**Public groups list and calendar public pages**~~ — **Done.** Both pages built in
+   v0.8.2: `/public/{slug}/groups` and `/public/{slug}/calendar`. Field visibility
+   controlled by `group_info_config` and `calendar_config` public flags. Supports
+   `?hdr=0` for iframe embedding.
 
 6. **Real PayPal API integration** — The initial implementation uses stub functions
    with clear interfaces. Actual PayPal REST API / IPN integration needs to be
@@ -35,7 +36,10 @@ Items noted during development that need addressing in future sessions.
 
 7. **Shared email address handling** — When two members share an email address,
    the portal registration and login flow needs special handling (doc 10.2
-   section c). Deferred to a later phase.
+   section c). The backend login route has minimal handling (tries each member
+   with that email sequentially), but there is no UI disambiguation — if two
+   members share the same email and password, the user cannot select which
+   member they are. Deferred to a later phase.
 
 ---
 
@@ -117,10 +121,10 @@ All eight optional cookie items are now fully implemented.
 
 1. **Per-group `show_addresses` not wired into visibility logic** — The `show_addresses`
    boolean field exists on the group record and is stored/retrieved via the API, but the
-   group members table in GroupRecord.jsx only checks the per-member `hide_contact` flag
-   when deciding whether to show email/phone. The `show_addresses` toggle should also
-   control whether addresses are visible to group leaders viewing that group's member list.
-   Ref: doc 4.2.4.
+   group members table in GroupRecord.jsx unconditionally renders address, telephone, and
+   mobile for every row. Neither `show_addresses` nor the per-member `hide_contact` flag
+   is checked when deciding what to display. The backend also returns all contact data
+   without filtering. Ref: doc 4.2.4.
 
 2. **System-wide "Hide Address from Group Leaders" setting** — Doc 4.2.4(b) describes a
    global system setting that hides addresses of ALL members from ALL group leaders (unless
@@ -131,11 +135,13 @@ All eight optional cookie items are now fully implemented.
 
 ## Accessibility / E2E
 
-1. **Form labels missing `htmlFor`/`id` association** — ~106 `<label>` elements
-   across ~33 files lack `htmlFor` attributes (and their inputs lack `id`).
-   This breaks Playwright `getByLabel()` and hurts screen-reader accessibility.
-   Login.jsx was fixed; remaining forms should be fixed incrementally as E2E
-   tests are written for each page.
+1. **Form labels missing `htmlFor`/`id` association** — Many `<label>` elements
+   lack `htmlFor` attributes (and their inputs lack `id`). This breaks Playwright
+   `getByLabel()` and hurts screen-reader accessibility. The highest-traffic pages
+   have been fixed (April 2026): MemberEditor, TransactionEditor, GroupRecord,
+   SystemSettings, JoinForm, PortalPersonalDetails, UserEditor, TransferMoney,
+   TransactionRefund, PersonalPreferences, and DateInput. Remaining lower-traffic
+   pages should be fixed incrementally as E2E tests are written for each page.
 
 ---
 

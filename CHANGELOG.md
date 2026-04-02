@@ -7,6 +7,15 @@ Format: `## [version] — YYYY-MM-DD` with bullet points per change.
 
 ## [0.8.3] — 2026-04-02
 
+### Changed
+- **Accessibility: htmlFor/id associations** — added `htmlFor` on labels and `id` on
+  inputs across 10 high-traffic pages: MemberEditor, TransactionEditor, GroupRecord,
+  SystemSettings, JoinForm, PortalPersonalDetails, UserEditor, TransferMoney,
+  TransactionRefund, PersonalPreferences. Improves screen-reader accessibility and
+  enables Playwright `getByLabel()` selectors.
+- **KNOWN-ISSUES.md audit** — marked public groups/calendar as done; updated
+  show_addresses, shared email, and htmlFor descriptions for accuracy
+
 ### Fixed
 - **E2E: MemberEditorPage** — skip filling joinedOn date on new-member form where the
   field is hidden (auto-set by useEffect)

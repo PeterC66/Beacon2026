@@ -884,8 +884,8 @@ export default function MemberEditor() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {!isNew && (
                 <div>
-                  <label className={labelCls}>Status <RequiredMark /></label>
-                  <select name="statusId" value={form.statusId}
+                  <label htmlFor="member-status" className={labelCls}>Status <RequiredMark /></label>
+                  <select id="member-status" name="statusId" value={form.statusId}
                     onChange={(e) => set('statusId', e.target.value)}
                     onBlur={() => handleBlur('statusId')}
                     className={ic('statusId')}>
@@ -896,8 +896,8 @@ export default function MemberEditor() {
                 </div>
               )}
               <div>
-                <label className={labelCls}>Class <RequiredMark /></label>
-                <select name="classId" value={form.classId}
+                <label htmlFor="member-class" className={labelCls}>Class <RequiredMark /></label>
+                <select id="member-class" name="classId" value={form.classId}
                   onChange={(e) => set('classId', e.target.value)}
                   onBlur={() => handleBlur('classId')}
                   className={ic('classId')}>
@@ -908,8 +908,8 @@ export default function MemberEditor() {
               </div>
               {!isNew && (
                 <div>
-                  <label className={labelCls}>Joined <RequiredMark /></label>
-                  <DateInput name="joinedOn" value={form.joinedOn}
+                  <label htmlFor="member-joined" className={labelCls}>Joined <RequiredMark /></label>
+                  <DateInput id="member-joined" name="joinedOn" value={form.joinedOn}
                     onChange={(v) => set('joinedOn', v)}
                     onBlur={() => handleBlur('joinedOn')}
                     className={ic('joinedOn')} />
@@ -918,8 +918,8 @@ export default function MemberEditor() {
               )}
               {!isNew && (
                 <div>
-                  <label className={labelCls}>Next renewal <span className="text-xs text-slate-400 font-normal">(Updated automatically upon renewal)</span></label>
-                  <DateInput name="nextRenewal" value={form.nextRenewal}
+                  <label htmlFor="member-next-renewal" className={labelCls}>Next renewal <span className="text-xs text-slate-400 font-normal">(Updated automatically upon renewal)</span></label>
+                  <DateInput id="member-next-renewal" name="nextRenewal" value={form.nextRenewal}
                     onChange={(v) => set('nextRenewal', v)}
                     className={inputCls} />
                 </div>
@@ -932,53 +932,53 @@ export default function MemberEditor() {
             <h2 className="text-sm font-semibold text-slate-700 uppercase tracking-wide mb-3">Member's Details</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className={labelCls}>Title</label>
-                <select name="title" value={form.title} onChange={(e) => set('title', e.target.value)} className={ic('title')}>
+                <label htmlFor="member-title" className={labelCls}>Title</label>
+                <select id="member-title" name="title" value={form.title} onChange={(e) => set('title', e.target.value)} className={ic('title')}>
                   {TITLES.map((t) => <option key={t} value={t}>{t || '—'}</option>)}
                 </select>
                 {fieldErrors.title && <p className={errMsgCls}>{fieldErrors.title}</p>}
               </div>
               <div>
-                <label className={labelCls}>Forenames <RequiredMark /></label>
-                <input type="text" name="forenames" value={form.forenames}
+                <label htmlFor="member-forenames" className={labelCls}>Forenames <RequiredMark /></label>
+                <input id="member-forenames" type="text" name="forenames" value={form.forenames}
                   onChange={(e) => set('forenames', e.target.value)}
                   onBlur={() => handleBlur('forenames')}
                   className={ic('forenames')} />
                 {fieldErrors.forenames && <p className={errMsgCls}>{fieldErrors.forenames}</p>}
               </div>
               <div>
-                <label className={labelCls}>Surname <RequiredMark /></label>
-                <input type="text" name="surname" value={form.surname}
+                <label htmlFor="member-surname" className={labelCls}>Surname <RequiredMark /></label>
+                <input id="member-surname" type="text" name="surname" value={form.surname}
                   onChange={(e) => set('surname', e.target.value)}
                   onBlur={() => handleBlur('surname')}
                   className={ic('surname')} />
                 {fieldErrors.surname && <p className={errMsgCls}>{fieldErrors.surname}</p>}
               </div>
               <div>
-                <label className={labelCls}>Known as</label>
-                <input type="text" name="knownAs" value={form.knownAs}
+                <label htmlFor="member-known-as" className={labelCls}>Known as</label>
+                <input id="member-known-as" type="text" name="knownAs" value={form.knownAs}
                   onChange={(e) => set('knownAs', e.target.value)}
                   className={inputCls} />
               </div>
               {!isNew && (
                 <div>
-                  <label className={labelCls}>Initials</label>
-                  <input type="text" name="initials" value={form.initials}
+                  <label htmlFor="member-initials" className={labelCls}>Initials</label>
+                  <input id="member-initials" type="text" name="initials" value={form.initials}
                     onChange={(e) => set('initials', e.target.value)}
                     className={inputCls} maxLength={20} />
                 </div>
               )}
               <div className="sm:col-span-2 grid grid-cols-[1fr_2fr_auto] gap-4 items-end">
                 <div>
-                  <label className={labelCls}>Suffix</label>
-                  <input type="text" name="suffix" value={form.suffix}
+                  <label htmlFor="member-suffix" className={labelCls}>Suffix</label>
+                  <input id="member-suffix" type="text" name="suffix" value={form.suffix}
                     onChange={(e) => set('suffix', e.target.value)}
                     title="eg DD, MBE"
                     className={inputCls} maxLength={30} />
                 </div>
                 <div>
-                  <label className={labelCls}>Email</label>
-                  <input type="email" name="email" value={form.email}
+                  <label htmlFor="member-email" className={labelCls}>Email</label>
+                  <input id="member-email" type="email" name="email" value={form.email}
                     onChange={(e) => set('email', e.target.value)}
                     className={inputCls} />
                 </div>
@@ -1000,8 +1000,8 @@ export default function MemberEditor() {
                 )}
               </div>
               <div>
-                <label className={labelCls}>Mobile</label>
-                <input type="text" name="mobile" value={form.mobile}
+                <label htmlFor="member-mobile" className={labelCls}>Mobile</label>
+                <input id="member-mobile" type="text" name="mobile" value={form.mobile}
                   onChange={(e) => set('mobile', e.target.value)}
                   onBlur={() => handleBlur('mobile')}
                   className={ic('mobile')} />
@@ -1009,8 +1009,8 @@ export default function MemberEditor() {
               </div>
               {isAssociate && (
                 <div>
-                  <label className={labelCls}>Home u3a and member no.</label>
-                  <input type="text" name="homeU3a" value={form.homeU3a}
+                  <label htmlFor="member-home-u3a" className={labelCls}>Home u3a and member no.</label>
+                  <input id="member-home-u3a" type="text" name="homeU3a" value={form.homeU3a}
                     onChange={(e) => set('homeU3a', e.target.value)}
                     title="e.g. name of main u3a, etc"
                     className={inputCls} maxLength={100} />
@@ -1018,9 +1018,9 @@ export default function MemberEditor() {
               )}
               {!isNew && (
                 <div>
-                  <label className={labelCls}>Gift Aid from</label>
+                  <label htmlFor="member-gift-aid-from" className={labelCls}>Gift Aid from</label>
                   <div className="flex items-center gap-1">
-                    <DateInput name="giftAidFrom" value={form.giftAidFrom}
+                    <DateInput id="member-gift-aid-from" name="giftAidFrom" value={form.giftAidFrom}
                       onChange={(v) => set('giftAidFrom', v)}
                       max={new Date().toISOString().slice(0, 10)}
                       className={inputCls} />
@@ -1038,16 +1038,16 @@ export default function MemberEditor() {
             </div>
 
             <div className="mt-4">
-              <label className={labelCls}>Emergency contact <span className="text-slate-400 font-normal">(name and phone)</span></label>
-              <input type="text" name="emergencyContact" value={form.emergencyContact}
+              <label htmlFor="member-emergency-contact" className={labelCls}>Emergency contact <span className="text-slate-400 font-normal">(name and phone)</span></label>
+              <input id="member-emergency-contact" type="text" name="emergencyContact" value={form.emergencyContact}
                 onChange={(e) => set('emergencyContact', e.target.value)}
                 className={inputCls} maxLength={200}
                 placeholder="e.g. John Smith 07700 900123" />
             </div>
 
             <div className="mt-4">
-              <label className={labelCls}>Notes</label>
-              <textarea name="notes" rows={3} value={form.notes}
+              <label htmlFor="member-notes" className={labelCls}>Notes</label>
+              <textarea id="member-notes" name="notes" rows={3} value={form.notes}
                 onChange={(e) => set('notes', e.target.value)}
                 className={inputCls} />
             </div>
@@ -1136,7 +1136,7 @@ export default function MemberEditor() {
 
             {/* Partner selector */}
             <div className="mb-4">
-              <label className={labelCls}>
+              <label htmlFor="member-partner" className={labelCls}>
                 Partner <span className="text-slate-400 font-normal">(shares this address)</span>
               </label>
 
@@ -1157,6 +1157,7 @@ export default function MemberEditor() {
                 <>
                   <div className="flex items-center gap-1">
                     <select
+                      id="member-partner"
                       name="existingPartnerId"
                       value={form.existingPartnerId}
                       onChange={(e) => handlePartnerChange(e.target.value)}
@@ -1191,8 +1192,8 @@ export default function MemberEditor() {
                       </label>
                       {renewPartner && (
                         <div className="mt-2 ml-6">
-                          <label className={labelCls}>New renewal date for {partnerName}</label>
-                          <DateInput name="partnerNewRenewal" value={partnerNewRenewal} onChange={setPartnerNewRenewal} className={inputCls} />
+                          <label htmlFor="member-partner-new-renewal" className={labelCls}>New renewal date for {partnerName}</label>
+                          <DateInput id="member-partner-new-renewal" name="partnerNewRenewal" value={partnerNewRenewal} onChange={setPartnerNewRenewal} className={inputCls} />
                         </div>
                       )}
                     </div>
@@ -1220,61 +1221,61 @@ export default function MemberEditor() {
                 <h3 className="text-sm font-semibold text-slate-700">New Partner's Details</h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
-                    <label className={labelCls}>Title</label>
-                    <select name="npTitle" value={npForm.title} onChange={(e) => setNp('title', e.target.value)} className={inputCls}>
+                    <label htmlFor="np-title" className={labelCls}>Title</label>
+                    <select id="np-title" name="npTitle" value={npForm.title} onChange={(e) => setNp('title', e.target.value)} className={inputCls}>
                       {TITLES.map((t) => <option key={t} value={t}>{t || '—'}</option>)}
                     </select>
                   </div>
                   <div>
-                    <label className={labelCls}>Forenames <RequiredMark /></label>
-                    <input type="text" name="npForenames" value={npForm.forenames} onChange={(e) => setNp('forenames', e.target.value)}
+                    <label htmlFor="np-forenames" className={labelCls}>Forenames <RequiredMark /></label>
+                    <input id="np-forenames" type="text" name="npForenames" value={npForm.forenames} onChange={(e) => setNp('forenames', e.target.value)}
                       className={fieldErrors.npForenames ? inputErrCls : inputCls} />
                     {fieldErrors.npForenames && <p className={errMsgCls}>{fieldErrors.npForenames}</p>}
                   </div>
                   <div>
-                    <label className={labelCls}>Surname <RequiredMark /></label>
-                    <input type="text" name="npSurname" value={npForm.surname} onChange={(e) => setNp('surname', e.target.value)}
+                    <label htmlFor="np-surname" className={labelCls}>Surname <RequiredMark /></label>
+                    <input id="np-surname" type="text" name="npSurname" value={npForm.surname} onChange={(e) => setNp('surname', e.target.value)}
                       className={fieldErrors.npSurname ? inputErrCls : inputCls} />
                     {fieldErrors.npSurname && <p className={errMsgCls}>{fieldErrors.npSurname}</p>}
                   </div>
                   <div>
-                    <label className={labelCls}>Known as</label>
-                    <input type="text" name="npKnownAs" value={npForm.knownAs} onChange={(e) => setNp('knownAs', e.target.value)} className={inputCls} />
+                    <label htmlFor="np-known-as" className={labelCls}>Known as</label>
+                    <input id="np-known-as" type="text" name="npKnownAs" value={npForm.knownAs} onChange={(e) => setNp('knownAs', e.target.value)} className={inputCls} />
                   </div>
                   <div>
-                    <label className={labelCls}>Email</label>
-                    <input type="email" name="npEmail" value={npForm.email} onChange={(e) => setNp('email', e.target.value)} className={inputCls} />
+                    <label htmlFor="np-email" className={labelCls}>Email</label>
+                    <input id="np-email" type="email" name="npEmail" value={npForm.email} onChange={(e) => setNp('email', e.target.value)} className={inputCls} />
                   </div>
                   <div>
-                    <label className={labelCls}>Mobile</label>
-                    <input type="text" name="npMobile" value={npForm.mobile} onChange={(e) => setNp('mobile', e.target.value)} className={inputCls} />
+                    <label htmlFor="np-mobile" className={labelCls}>Mobile</label>
+                    <input id="np-mobile" type="text" name="npMobile" value={npForm.mobile} onChange={(e) => setNp('mobile', e.target.value)} className={inputCls} />
                   </div>
                   <div>
-                    <label className={labelCls}>Status <RequiredMark /></label>
-                    <select name="npStatusId" value={npForm.statusId} onChange={(e) => setNp('statusId', e.target.value)} className={inputCls}>
+                    <label htmlFor="np-status" className={labelCls}>Status <RequiredMark /></label>
+                    <select id="np-status" name="npStatusId" value={npForm.statusId} onChange={(e) => setNp('statusId', e.target.value)} className={inputCls}>
                       <option value="">— select —</option>
                       {statuses.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
                     </select>
                   </div>
                   <div>
-                    <label className={labelCls}>Class <RequiredMark /></label>
-                    <select name="npClassId" value={npForm.classId} onChange={(e) => setNp('classId', e.target.value)} className={inputCls}>
+                    <label htmlFor="np-class" className={labelCls}>Class <RequiredMark /></label>
+                    <select id="np-class" name="npClassId" value={npForm.classId} onChange={(e) => setNp('classId', e.target.value)} className={inputCls}>
                       <option value="">— select —</option>
                       {classes.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
                     </select>
                   </div>
                   <div>
-                    <label className={labelCls}>Joined <RequiredMark /></label>
-                    <DateInput name="npJoinedOn" value={npForm.joinedOn} onChange={(v) => setNp('joinedOn', v)} className={inputCls} />
+                    <label htmlFor="np-joined" className={labelCls}>Joined <RequiredMark /></label>
+                    <DateInput id="np-joined" name="npJoinedOn" value={npForm.joinedOn} onChange={(v) => setNp('joinedOn', v)} className={inputCls} />
                   </div>
                   <div>
-                    <label className={labelCls}>Next renewal <RequiredMark /></label>
-                    <DateInput name="npNextRenewal" value={npForm.nextRenewal} onChange={(v) => setNp('nextRenewal', v)} className={fieldErrors.npNextRenewal ? ic('npNextRenewal') : inputCls} />
+                    <label htmlFor="np-next-renewal" className={labelCls}>Next renewal <RequiredMark /></label>
+                    <DateInput id="np-next-renewal" name="npNextRenewal" value={npForm.nextRenewal} onChange={(v) => setNp('nextRenewal', v)} className={fieldErrors.npNextRenewal ? ic('npNextRenewal') : inputCls} />
                     {fieldErrors.npNextRenewal && <p className={errMsgCls}>{fieldErrors.npNextRenewal}</p>}
                   </div>
                   <div>
-                    <label className={labelCls}>Gift Aid from</label>
-                    <DateInput name="npGiftAidFrom" value={npForm.giftAidFrom} onChange={(v) => setNp('giftAidFrom', v)} className={inputCls} />
+                    <label htmlFor="np-gift-aid-from" className={labelCls}>Gift Aid from</label>
+                    <DateInput id="np-gift-aid-from" name="npGiftAidFrom" value={npForm.giftAidFrom} onChange={(v) => setNp('giftAidFrom', v)} className={inputCls} />
                   </div>
                 </div>
                 <p className="text-xs text-slate-400 italic">Address is shared with the primary member above.</p>
@@ -1284,56 +1285,56 @@ export default function MemberEditor() {
             {/* Address fields — locked when a new or existing partner is pending */}
             <div className={`grid grid-cols-1 sm:grid-cols-2 gap-4 ${(form.existingPartnerId && isNew) || addressLocked || (isNew && newPartnerMode) ? 'opacity-40 pointer-events-none' : ''}`}>
               <div>
-                <label className={labelCls}>House / flat no.</label>
-                <input type="text" name="houseNo" value={form.houseNo}
+                <label htmlFor="member-house-no" className={labelCls}>House / flat no.</label>
+                <input id="member-house-no" type="text" name="houseNo" value={form.houseNo}
                   onChange={(e) => set('houseNo', e.target.value)}
                   onBlur={() => handleBlur('houseNo')}
                   className={ic('houseNo')} />
                 {fieldErrors.houseNo && <p className={errMsgCls}>{fieldErrors.houseNo}</p>}
               </div>
               <div>
-                <label className={labelCls}>Street/Building</label>
-                <input type="text" name="street" value={form.street}
+                <label htmlFor="member-street" className={labelCls}>Street/Building</label>
+                <input id="member-street" type="text" name="street" value={form.street}
                   onChange={(e) => set('street', e.target.value)}
                   className={inputCls} />
               </div>
               <div>
-                <label className={labelCls}>Additional line 1</label>
-                <input type="text" name="addLine1" value={form.addLine1}
+                <label htmlFor="member-add-line1" className={labelCls}>Additional line 1</label>
+                <input id="member-add-line1" type="text" name="addLine1" value={form.addLine1}
                   onChange={(e) => set('addLine1', e.target.value)}
                   title="Use these fields for additional lines of address"
                   className={inputCls} />
               </div>
               <div>
-                <label className={labelCls}>Additional line 2</label>
-                <input type="text" name="addLine2" value={form.addLine2}
+                <label htmlFor="member-add-line2" className={labelCls}>Additional line 2</label>
+                <input id="member-add-line2" type="text" name="addLine2" value={form.addLine2}
                   onChange={(e) => set('addLine2', e.target.value)}
                   title="Use these fields for additional lines of address"
                   className={inputCls} />
               </div>
               <div>
-                <label className={labelCls}>Town</label>
-                <input type="text" name="town" value={form.town}
+                <label htmlFor="member-town" className={labelCls}>Town</label>
+                <input id="member-town" type="text" name="town" value={form.town}
                   onChange={(e) => set('town', e.target.value)}
                   className={inputCls} />
               </div>
               <div>
-                <label className={labelCls}>County</label>
-                <input type="text" name="county" value={form.county}
+                <label htmlFor="member-county" className={labelCls}>County</label>
+                <input id="member-county" type="text" name="county" value={form.county}
                   onChange={(e) => set('county', e.target.value)}
                   className={inputCls} />
               </div>
               <div>
-                <label className={labelCls}>Postcode <RequiredMark /></label>
-                <input type="text" name="postcode" value={form.postcode}
+                <label htmlFor="member-postcode" className={labelCls}>Postcode <RequiredMark /></label>
+                <input id="member-postcode" type="text" name="postcode" value={form.postcode}
                   onChange={(e) => set('postcode', e.target.value)}
                   onBlur={() => handleBlur('postcode')}
                   className={ic('postcode')} maxLength={10} />
                 {fieldErrors.postcode && <p className={errMsgCls}>{fieldErrors.postcode}</p>}
               </div>
               <div>
-                <label className={labelCls}>Home telephone <span className="text-slate-400 font-normal">(shared)</span></label>
-                <input type="text" name="telephone" value={form.telephone}
+                <label htmlFor="member-telephone" className={labelCls}>Home telephone <span className="text-slate-400 font-normal">(shared)</span></label>
+                <input id="member-telephone" type="text" name="telephone" value={form.telephone}
                   onChange={(e) => set('telephone', e.target.value)}
                   onBlur={() => handleBlur('telephone')}
                   className={ic('telephone')} />
@@ -1355,10 +1356,11 @@ export default function MemberEditor() {
               )}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className={labelCls}>Amount received</label>
+                  <label htmlFor="member-pay-amount" className={labelCls}>Amount received</label>
                   <div className="relative">
                     <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm">£</span>
                     <input
+                      id="member-pay-amount"
                       type="number" min="0" step="0.01"
                       name="payAmount"
                       value={form.payAmount}
@@ -1369,8 +1371,8 @@ export default function MemberEditor() {
                   </div>
                 </div>
                 <div>
-                  <label className={labelCls}>Payment method</label>
-                  <select name="payMethod" value={form.payMethod} onChange={(e) => {
+                  <label htmlFor="member-pay-method" className={labelCls}>Payment method</label>
+                  <select id="member-pay-method" name="payMethod" value={form.payMethod} onChange={(e) => {
                     const method = e.target.value;
                     set('payMethod', method);
                     const mappedAccId = payDefaults.current.mappings[method];
@@ -1383,15 +1385,15 @@ export default function MemberEditor() {
                   </select>
                 </div>
                 <div>
-                  <label className={labelCls}>Account</label>
-                  <select name="payAccountId" value={form.payAccountId} onChange={(e) => set('payAccountId', e.target.value)} className={inputCls}>
+                  <label htmlFor="member-pay-account" className={labelCls}>Account</label>
+                  <select id="member-pay-account" name="payAccountId" value={form.payAccountId} onChange={(e) => set('payAccountId', e.target.value)} className={inputCls}>
                     <option value="">— select —</option>
                     {accounts.map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}
                   </select>
                 </div>
                 <div>
-                  <label className={labelCls}>Payment ref <span className="text-slate-400 font-normal">(e.g. cheque no.)</span></label>
-                  <input type="text" name="payRef" value={form.payRef}
+                  <label htmlFor="member-pay-ref" className={labelCls}>Payment ref <span className="text-slate-400 font-normal">(e.g. cheque no.)</span></label>
+                  <input id="member-pay-ref" type="text" name="payRef" value={form.payRef}
                     onChange={(e) => set('payRef', e.target.value)}
                     className={inputCls} maxLength={100} />
                 </div>
@@ -1461,8 +1463,8 @@ export default function MemberEditor() {
                   if (!cfLabels[labelKey]) return null;
                   return (
                     <div key={n}>
-                      <label className={labelCls}>{cfLabels[labelKey]}</label>
-                      <input type="text" name={fieldKey} value={form[fieldKey]}
+                      <label htmlFor={`member-custom-field-${n}`} className={labelCls}>{cfLabels[labelKey]}</label>
+                      <input id={`member-custom-field-${n}`} type="text" name={fieldKey} value={form[fieldKey]}
                         onChange={(e) => set(fieldKey, e.target.value)}
                         className={inputCls} />
                     </div>

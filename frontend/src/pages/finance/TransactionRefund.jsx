@@ -184,8 +184,8 @@ export default function TransactionRefund() {
 
             {/* Date */}
             <div>
-              <label className={LBL}>Refund date <RequiredMark /></label>
-              <DateInput name="date" value={date} onChange={setDate} className={INP} />
+              <label htmlFor="refund-date" className={LBL}>Refund date <RequiredMark /></label>
+              <DateInput id="refund-date" name="date" value={date} onChange={setDate} className={INP} />
             </div>
 
             {/* Total refund amount (computed) */}
@@ -198,28 +198,28 @@ export default function TransactionRefund() {
 
             {/* Payment method */}
             <div>
-              <label className={LBL}>Payment method</label>
-              <select name="payMethod" value={payMethod} onChange={(e) => setPayMethod(e.target.value)} className={INP}>
+              <label htmlFor="refund-payment-method" className={LBL}>Payment method</label>
+              <select id="refund-payment-method" name="payMethod" value={payMethod} onChange={(e) => setPayMethod(e.target.value)} className={INP}>
                 {PAYMENT_METHODS.map((m) => <option key={m} value={m}>{m || '— none —'}</option>)}
               </select>
             </div>
 
             {/* Payment reference */}
             <div>
-              <label className={LBL}>Payment reference</label>
-              <input type="text" name="payRef" value={payRef} onChange={(e) => setPayRef(e.target.value)} className={INP} placeholder="Reference" />
+              <label htmlFor="refund-payment-ref" className={LBL}>Payment reference</label>
+              <input id="refund-payment-ref" type="text" name="payRef" value={payRef} onChange={(e) => setPayRef(e.target.value)} className={INP} placeholder="Reference" />
             </div>
 
             {/* Detail */}
             <div className="sm:col-span-2">
-              <label className={LBL}>Detail</label>
-              <input type="text" name="detail" value={detail} onChange={(e) => setDetail(e.target.value)} className={INP} placeholder="Reason for refund" />
+              <label htmlFor="refund-detail" className={LBL}>Detail</label>
+              <input id="refund-detail" type="text" name="detail" value={detail} onChange={(e) => setDetail(e.target.value)} className={INP} placeholder="Reason for refund" />
             </div>
 
             {/* Remarks */}
             <div className="sm:col-span-2">
-              <label className={LBL}>Remarks</label>
-              <textarea name="remarks" value={remarks} onChange={(e) => setRemarks(e.target.value)} rows={2} className={INP} placeholder="Additional notes" />
+              <label htmlFor="refund-remarks" className={LBL}>Remarks</label>
+              <textarea id="refund-remarks" name="remarks" value={remarks} onChange={(e) => setRemarks(e.target.value)} rows={2} className={INP} placeholder="Additional notes" />
             </div>
           </div>
 

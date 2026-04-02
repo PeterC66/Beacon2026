@@ -181,20 +181,20 @@ export default function TransferMoney() {
             <form noValidate onSubmit={(e) => handleSave(e, false)}>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Date <RequiredMark /></label>
-                  <input type="date" name="date" value={form.date} onChange={(e) => set('date', e.target.value)} className={inputCls} />
+                  <label htmlFor="transfer-date" className="block text-sm font-medium text-slate-700 mb-1">Date <RequiredMark /></label>
+                  <input id="transfer-date" type="date" name="date" value={form.date} onChange={(e) => set('date', e.target.value)} className={inputCls} />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Amount (£) <RequiredMark /></label>
-                  <input type="number" name="amount" step="0.01" min="0.01" value={form.amount}
+                  <label htmlFor="transfer-amount" className="block text-sm font-medium text-slate-700 mb-1">Amount (£) <RequiredMark /></label>
+                  <input id="transfer-amount" type="number" name="amount" step="0.01" min="0.01" value={form.amount}
                     onChange={(e) => set('amount', e.target.value)} className={inputCls} placeholder="0.00" />
                 </div>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">From account <RequiredMark /></label>
-                  <select name="from_account_id" value={form.from_account_id} onChange={(e) => set('from_account_id', e.target.value)} className={inputCls}>
+                  <label htmlFor="transfer-from-account" className="block text-sm font-medium text-slate-700 mb-1">From account <RequiredMark /></label>
+                  <select id="transfer-from-account" name="from_account_id" value={form.from_account_id} onChange={(e) => set('from_account_id', e.target.value)} className={inputCls}>
                     <option value="">— select —</option>
                     {accounts.filter((a) => a.active || a.id === form.from_account_id).map((a) => (
                       <option key={a.id} value={a.id}>{a.name}</option>
@@ -202,8 +202,8 @@ export default function TransferMoney() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">To account <RequiredMark /></label>
-                  <select name="to_account_id" value={form.to_account_id} onChange={(e) => set('to_account_id', e.target.value)} className={inputCls}>
+                  <label htmlFor="transfer-to-account" className="block text-sm font-medium text-slate-700 mb-1">To account <RequiredMark /></label>
+                  <select id="transfer-to-account" name="to_account_id" value={form.to_account_id} onChange={(e) => set('to_account_id', e.target.value)} className={inputCls}>
                     <option value="">— select —</option>
                     {accounts.filter((a) => a.active || a.id === form.to_account_id).map((a) => (
                       <option key={a.id} value={a.id}>{a.name}</option>
@@ -214,18 +214,18 @@ export default function TransferMoney() {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Payment reference</label>
-                  <input type="text" name="payment_ref" value={form.payment_ref} onChange={(e) => set('payment_ref', e.target.value)} className={inputCls} />
+                  <label htmlFor="transfer-payment-ref" className="block text-sm font-medium text-slate-700 mb-1">Payment reference</label>
+                  <input id="transfer-payment-ref" type="text" name="payment_ref" value={form.payment_ref} onChange={(e) => set('payment_ref', e.target.value)} className={inputCls} />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Detail</label>
-                  <input type="text" name="detail" value={form.detail} onChange={(e) => set('detail', e.target.value)} className={inputCls} />
+                  <label htmlFor="transfer-detail" className="block text-sm font-medium text-slate-700 mb-1">Detail</label>
+                  <input id="transfer-detail" type="text" name="detail" value={form.detail} onChange={(e) => set('detail', e.target.value)} className={inputCls} />
                 </div>
               </div>
 
               <div className="mb-4">
-                <label className="block text-sm font-medium text-slate-700 mb-1">Notes</label>
-                <textarea name="remarks" value={form.remarks} onChange={(e) => set('remarks', e.target.value)}
+                <label htmlFor="transfer-notes" className="block text-sm font-medium text-slate-700 mb-1">Notes</label>
+                <textarea id="transfer-notes" name="remarks" value={form.remarks} onChange={(e) => set('remarks', e.target.value)}
                   rows={2} className={inputCls} />
               </div>
 
