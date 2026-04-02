@@ -113,6 +113,10 @@ cd frontend && npm test   # vitest --run
 If tests fail: read the error, fix the cause, re-run. Do not report success until green.
 See `CLAUDE-REFERENCE.md` §12 for test architecture and patterns.
 
+**Docs-only changes do not need tests.** If a session only touches documentation files
+(`*.md`, `docs/`, `CHANGELOG.md`, `KNOWN-ISSUES.md`, etc.) with no code changes, skip
+running the test suites.
+
 ---
 
 ## Deferred items
