@@ -168,9 +168,10 @@ test.describe('Credit batches', () => {
     await page.getByRole('button', { name: /add credit batch/i }).click();
     await page.getByRole('heading', { name: /select transactions/i }).waitFor({ timeout: 10_000 });
 
-    // Select all unbatched transactions (if any exist)
+    // Wait for loading to finish — either "Select All" or the empty message appears
     const noTxns = page.getByText('No unbatched credit transactions available.');
     const selectAll = page.getByText('Select All').first();
+    await expect(selectAll.or(noTxns)).toBeVisible({ timeout: 15_000 });
     const hasTransactions = await selectAll.isVisible().catch(() => false);
 
     if (hasTransactions) {
