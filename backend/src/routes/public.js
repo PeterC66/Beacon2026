@@ -9,6 +9,7 @@ import { prisma, tenantQuery, withTenant } from '../utils/db.js';
 import { hashPassword, verifyPassword, generateToken } from '../utils/password.js';
 import { signAccessToken } from '../utils/jwt.js';
 import { resolveTokens } from '../utils/emailTokens.js';
+import { generateSingleCardPdf } from './membershipCards.js';
 import { initiatePayment, verifyPaymentNotification } from '../utils/paypal.js';
 import { logAudit } from '../utils/audit.js';
 import portalRoutes from './portal.js';
@@ -633,7 +634,7 @@ async function sendJoinConfirmationEmail(slug, member) {
     // Use online_join_email as reply-to so members can contact the u3a
     const [settings] = await tenantQuery(
       slug,
-      `SELECT online_join_email FROM tenant_settings WHERE id = 'singleton'`,
+      `SELECT online_join_email, email_cards FROM tenant_settings WHERE id = 'singleton'`,
     );
     const replyTo = settings?.online_join_email || null;
 
@@ -642,9 +643,34 @@ async function sendJoinConfirmationEmail(slug, member) {
       { ...member, class_name: member.class_name }, u3aName,
     );
 
-    // In production, this would call SendGrid.
+    // Build attachment list — attach membership card PDF when email_cards is enabled
+    const attachments = [];
+    if (settings?.email_cards && member.id) {
+      try {
+        const { pdfBuffer, filename } = await generateSingleCardPdf(slug, member.id);
+        attachments.push({
+          content:     pdfBuffer.toString('base64'),
+          filename,
+          type:        'application/pdf',
+          disposition: 'attachment',
+        });
+      } catch (cardErr) {
+        console.error('[Online Join] Failed to generate card PDF for attachment:', cardErr.message);
+      }
+    }
+
+    // In production, this would call SendGrid with the msg object below.
     // For now, log the email that would be sent.
-    console.log(`[Online Join] Would send confirmation email to ${member.email}: "${subject}"${replyTo ? ` (reply-to: ${replyTo})` : ''}`);
+    // const msg = {
+    //   to:          { email: member.email, name: `${member.forenames} ${member.surname}`.trim() },
+    //   from:        { email: FROM_ADDRESS, name: u3aName },
+    //   replyTo:     replyTo ? { email: replyTo, name: u3aName } : undefined,
+    //   subject,
+    //   text:        body,
+    //   attachments: attachments.length > 0 ? attachments : undefined,
+    // };
+    // await sgMail.send(msg);
+    console.log(`[Online Join] Would send confirmation email to ${member.email}: "${subject}"${replyTo ? ` (reply-to: ${replyTo})` : ''}${attachments.length ? ` [+${attachments.length} attachment(s): ${attachments.map(a => a.filename).join(', ')}]` : ''}`);
   } catch (err) {
     console.error('[Online Join] Failed to send confirmation email:', err.message);
   }

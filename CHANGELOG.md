@@ -25,6 +25,12 @@ Format: `## [version] — YYYY-MM-DD` with bullet points per change.
 - **E2E: Member Compact View** — navigation from member editor to compact view
 - **E2E: Credit batch full workflow** — create batch → select transactions → verify
   in list → remove transactions → delete batch
+- **Email cards auto-attach** — when `email_cards` is enabled in tenant settings,
+  online joining confirmation emails and portal card replacement emails now generate
+  and attach a membership card PDF (via extracted `generateSingleCardPdf` helper).
+  Attachment logic is ready; emails remain stubbed pending SendGrid integration.
+- **Backend tests** — added tests for `generateSingleCardPdf` export (valid member,
+  not-found error, advanceYear parameter)
 - **Online membership renewal** (doc 10.2.1) — portal members can now renew their
   membership online. Shows renewal fee, Gift Aid opt-in/out (when enabled via
   `gift_aid_online_renewals`), and initiates PayPal payment. Advances `next_renewal`

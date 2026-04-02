@@ -41,14 +41,14 @@ Items noted during development that need addressing in future sessions.
 
 ## Membership Cards (doc 4.7)
 
-1. **Auto-attach cards to confirmation emails** — `email_cards` setting exists in
-   tenant_settings but the integration with the online joining/renewal confirmation
-   email flow is not yet implemented. Ref: doc 4.7 section about System Settings.
+1. ~~**Auto-attach cards to confirmation emails**~~ — **Done.** When `email_cards`
+   is enabled in tenant_settings, the online joining confirmation email stub now
+   generates and attaches a membership card PDF via `generateSingleCardPdf()`.
+   Will be live when SendGrid integration is completed. Ref: doc 4.7.
 
-2. **Members Portal: Replacement card PDF attachment** — The portal replacement card
-   feature (doc 10.2.5) now exists but currently only sends a confirmation email
-   (stubbed). The actual PDF card attachment to the email needs to be wired up when
-   SendGrid integration is completed.
+2. ~~**Members Portal: Replacement card PDF attachment**~~ — **Done.** The portal
+   card replacement email stub now generates and attaches the membership card PDF
+   via `generateSingleCardPdf()`. Will be live when SendGrid is wired up.
 
 ## Documentation Typos
 
@@ -65,9 +65,8 @@ Items noted during development that need addressing in future sessions.
    on the System Settings page, but not yet displayed anywhere to members (e.g. portal
    login page, online joining form, confirmation emails). Ref: doc 8.3.
 
-2. **email_cards** — The "E-mail membership cards" checkbox is stored but the logic to
-   auto-attach membership card PDFs to online joining/renewal confirmation emails is not
-   yet implemented. Ref: doc 8.3, doc 4.7.
+2. ~~**email_cards**~~ — **Done.** The auto-attach logic is now implemented in the
+   online joining and portal card replacement email stubs. Ref: doc 8.3, doc 4.7.
 
 3. ~~**gift_aid_online_renewals**~~ — **Done.** Controls Gift Aid checkboxes on
    the portal renewal page.

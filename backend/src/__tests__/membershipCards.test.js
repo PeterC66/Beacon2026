@@ -21,6 +21,7 @@ vi.mock('../utils/db.js', () => ({
 
 const { default: app } = await import('../app.js');
 const { tenantQuery } = await import('../utils/db.js');
+const { generateSingleCardPdf } = await import('../routes/membershipCards.js');
 
 const AUTH = makeAuthHeader();
 
@@ -188,5 +189,35 @@ describe('GET /membership-cards/single-pdf', () => {
       .set('Authorization', AUTH);
     expect(res.status).toBe(200);
     expect(res.headers['content-type']).toContain('application/pdf');
+  });
+});
+
+describe('generateSingleCardPdf (exported helper)', () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it('returns a PDF buffer and filename for a valid member', async () => {
+    tenantQuery.mockResolvedValueOnce([SAMPLE_MEMBER]); // fetchMembersById
+    tenantQuery.mockResolvedValueOnce([SETTINGS_ROW]);   // getCardSettings
+    const { pdfBuffer, filename } = await generateSingleCardPdf('test-u3a', 'm1');
+    expect(pdfBuffer).toBeInstanceOf(Buffer);
+    expect(pdfBuffer.length).toBeGreaterThan(0);
+    // PDF magic bytes
+    expect(pdfBuffer.slice(0, 5).toString()).toBe('%PDF-');
+    expect(filename).toContain('1001');
+    expect(filename).toMatch(/\.pdf$/);
+  });
+
+  it('throws when member not found', async () => {
+    tenantQuery.mockResolvedValueOnce([]); // empty result
+    await expect(generateSingleCardPdf('test-u3a', 'm99'))
+      .rejects.toThrow('not found');
+  });
+
+  it('supports advanceYear parameter', async () => {
+    tenantQuery.mockResolvedValueOnce([SAMPLE_MEMBER]);
+    tenantQuery.mockResolvedValueOnce([SETTINGS_ROW]);
+    const { pdfBuffer } = await generateSingleCardPdf('test-u3a', 'm1', true);
+    expect(pdfBuffer).toBeInstanceOf(Buffer);
+    expect(pdfBuffer.length).toBeGreaterThan(0);
   });
 });
