@@ -12,6 +12,7 @@ import { hashPassword, verifyPassword } from '../utils/password.js';
 import { generateToken } from '../utils/password.js';
 import { resolveTokens } from '../utils/emailTokens.js';
 import { logAudit } from '../utils/audit.js';
+import { generateSingleCardPdf } from './membershipCards.js';
 
 const router = Router({ mergeParams: true });
 
@@ -870,8 +871,31 @@ router.post('/request-card', async (req, res, next) => {
         template.subject, template.body,
         { ...member }, u3aName,
       );
-      console.log(`[Portal] Would send card replacement email to ${emailAddr}: "${subject}"`);
-      console.log(`[Portal] (In production, attach single-card PDF)`);
+
+      // Generate the membership card PDF to attach to the email
+      const attachments = [];
+      try {
+        const { pdfBuffer, filename } = await generateSingleCardPdf(slug, memberId);
+        attachments.push({
+          content:     pdfBuffer.toString('base64'),
+          filename,
+          type:        'application/pdf',
+          disposition: 'attachment',
+        });
+      } catch (cardErr) {
+        console.error('[Portal] Failed to generate card PDF for attachment:', cardErr.message);
+      }
+
+      // In production, this would call SendGrid with the msg object below.
+      // const msg = {
+      //   to:          { email: emailAddr, name: `${member.forenames} ${member.surname}`.trim() },
+      //   from:        { email: FROM_ADDRESS, name: u3aName },
+      //   subject,
+      //   text:        body,
+      //   attachments: attachments.length > 0 ? attachments : undefined,
+      // };
+      // await sgMail.send(msg);
+      console.log(`[Portal] Would send card replacement email to ${emailAddr}: "${subject}"${attachments.length ? ` [+card PDF: ${attachments[0].filename}]` : ''}`);
     }
 
     // Mark card as not printed so admin knows to reprint

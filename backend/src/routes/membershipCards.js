@@ -539,41 +539,59 @@ router.get('/single-pdf', requirePrivilege('membership_cards', 'download_and_mar
     }
 
     const slug = req.user.tenantSlug;
-    const members = await fetchMembersById(slug, [memberId]);
-    if (!members.length) {
-      return res.status(404).json({ error: 'Member not found.' });
+    const advance = advanceYear === '1';
+
+    let result;
+    try {
+      result = await generateSingleCardPdf(slug, memberId, advance);
+    } catch (genErr) {
+      if (genErr.message.includes('not found')) {
+        return res.status(404).json({ error: 'Member not found.' });
+      }
+      throw genErr;
     }
 
-    const member = members[0];
-    const settings = await getCardSettings(slug);
-    const advance = advanceYear === '1';
-    const expiryDate = cardExpiryDate(member, settings, advance);
-
-    let barcodePng = null;
-    try {
-      barcodePng = await generateBarcode(member.membership_number);
-    } catch (_) { /* skip barcode */ }
-
-    // Single card centred on page
-    const doc = new PDFDocument({ size: 'A4', margin: 0, autoFirstPage: true });
-    const chunks = [];
-    doc.on('data', (c) => chunks.push(c));
-
-    const x = (PAGE_W - CARD_W) / 2;
-    const y = (PAGE_H - CARD_H) / 2;
-    await drawCard(doc, x, y, member, settings, expiryDate, barcodePng);
-
-    doc.end();
-    await new Promise((resolve) => doc.on('end', resolve));
-
-    const pdfBuffer = Buffer.concat(chunks);
-    const displayName = `${settings.u3aName} ${member.membership_number}`.replace(/\s+/g, '_');
     res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader('Content-Disposition', `attachment; filename="${displayName}.pdf"`);
-    res.send(pdfBuffer);
+    res.setHeader('Content-Disposition', `attachment; filename="${result.filename}"`);
+    res.send(result.pdfBuffer);
   } catch (err) {
     next(err);
   }
 });
+
+// ── Exported helpers for email attachment ────────────────────────────────────
+
+/**
+ * Generate a single-card PDF buffer for one member.
+ * Returns { pdfBuffer: Buffer, filename: string }.
+ * Throws if the member is not found.
+ */
+export async function generateSingleCardPdf(slug, memberId, advanceYear = false) {
+  const members = await fetchMembersById(slug, [memberId]);
+  if (!members.length) throw new Error(`Member ${memberId} not found`);
+
+  const member = members[0];
+  const settings = await getCardSettings(slug);
+  const expiryDate = cardExpiryDate(member, settings, advanceYear);
+
+  let barcodePng = null;
+  try { barcodePng = await generateBarcode(member.membership_number); }
+  catch (_) { /* skip barcode */ }
+
+  const doc = new PDFDocument({ size: 'A4', margin: 0, autoFirstPage: true });
+  const chunks = [];
+  doc.on('data', (c) => chunks.push(c));
+
+  const x = (PAGE_W - CARD_W) / 2;
+  const y = (PAGE_H - CARD_H) / 2;
+  await drawCard(doc, x, y, member, settings, expiryDate, barcodePng);
+
+  doc.end();
+  await new Promise((resolve) => doc.on('end', resolve));
+
+  const pdfBuffer = Buffer.concat(chunks);
+  const filename = `${settings.u3aName} ${member.membership_number}`.replace(/\s+/g, '_') + '.pdf';
+  return { pdfBuffer, filename };
+}
 
 export default router;
