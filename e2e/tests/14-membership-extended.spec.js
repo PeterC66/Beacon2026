@@ -30,6 +30,44 @@ async function gotoHomeLink(page, href, headingText) {
   await page.getByRole('heading', { name: headingText }).waitFor({ timeout: 10_000 });
 }
 
+// ── Member Compact View ─────────────────────────────────────────────────
+
+test.describe('Member Compact View', () => {
+  test('compact view loads for a member', async ({ adminPage: page }) => {
+    // Navigate to the member list and find any member
+    await gotoHomeLink(page, '/members', 'Members');
+
+    // Click the first member link to get to the editor (/members/:id)
+    const memberLink = page.getByRole('row').nth(1).getByRole('link').first();
+    const linkVisible = await memberLink.isVisible().catch(() => false);
+    if (!linkVisible) return;   // no members to test
+    await memberLink.click();
+    await page.waitForURL(/\/members\/[^/]+$/, { timeout: 10_000 });
+
+    // Now switch to compact view by modifying the URL
+    const editUrl = page.url();
+    const compactUrl = editUrl + '/compact';
+    // Use evaluate to trigger SPA navigation via the NavBar "Compact" link
+    const navClicked = await page.evaluate(() => {
+      const link = [...document.querySelectorAll('a')].find(
+        (a) => a.textContent.trim() === 'Compact' || a.href.includes('/compact'),
+      );
+      if (link) { link.click(); return true; }
+      return false;
+    });
+    if (!navClicked) await page.goto(compactUrl);
+
+    await page.waitForURL(/\/compact$/, { timeout: 10_000 });
+
+    // The compact view should show the member's record heading
+    await expect(page.getByText(/member record/i).first()).toBeVisible({ timeout: 10_000 });
+
+    // Action buttons present
+    await expect(page.getByRole('link', { name: /edit member/i })).toBeVisible();
+    await expect(page.getByRole('link', { name: /back to list/i })).toBeVisible();
+  });
+});
+
 // ── Recent Members ───────────────────────────────────────────────────────
 
 test.describe('Recent Members', () => {

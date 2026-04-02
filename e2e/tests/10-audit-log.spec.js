@@ -49,4 +49,21 @@ test.describe('Audit log', () => {
     // "No entries" or similar rather than crashing.
     expect(count).toBeGreaterThanOrEqual(1);
   });
+
+  test('clicking a date navigates to the audit record detail', async ({ adminPage: page }) => {
+    await page.goto('/audit');
+    await page.waitForLoadState('networkidle');
+
+    // The "When" column contains clickable date buttons that navigate
+    // to /audit/:id.  Click the first one (if any data rows exist).
+    const dateBtn = page.locator('table button.text-blue-700').first();
+    const hasDates = await dateBtn.isVisible().catch(() => false);
+    if (hasDates) {
+      await dateBtn.click();
+      await page.waitForURL(/\/audit\/[^/]+$/, { timeout: 10_000 });
+
+      // The audit record detail page should show key fields
+      await expect(page.getByText(/action|entity|user/i).first()).toBeVisible();
+    }
+  });
 });

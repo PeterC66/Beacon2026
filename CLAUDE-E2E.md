@@ -135,6 +135,16 @@ navigate from this starting point using SPA links.
 
 The tenant slug is generated per run (`e2e_<hex>`) to avoid collisions.
 
+### Test data naming — use fixed suffixes, not `process.pid`
+
+Test data names (member surnames, role names, account names) must use **fixed
+string suffixes** (e.g. `'E2ETestMbr'`), not `process.pid`.  Playwright restarts
+workers on retry, which changes the PID.  Tests that depend on data created by
+earlier tests (e.g. "search for the member created in the Add test") would look
+for a member under the new PID that doesn't exist.
+
+Since each CI run creates its own tenant, fixed names cannot collide across runs.
+
 ---
 
 ## Member creation and the Applicant status
