@@ -5,6 +5,29 @@ Format: `## [version] — YYYY-MM-DD` with bullet points per change.
 
 ---
 
+## [0.8.3] — 2026-04-02
+
+### Fixed
+- **E2E: MemberEditorPage** — skip filling joinedOn date on new-member form where the
+  field is hidden (auto-set by useEffect)
+- **E2E: MemberListPage** — fix editLinkForMember; member list has no "Edit" link per
+  row — members are edited by clicking their name/number
+- **E2E: Applicant status race** — wait for member data to load before asserting status
+  on the edit form (was reading default "Current" before API response arrived)
+- **E2E: Stable test suffixes** — replace `process.pid`-based suffixes with fixed strings;
+  PID changes when Playwright restarts workers on retry, breaking dependent tests
+- **E2E: Gift Aid test** — accept "Gift Aid is not enabled" as valid state in fresh tenant
+
+### Added
+- **E2E: Configure Account** — page-load test navigating from finance accounts list
+- **E2E: Payment Method Defaults** — page-load test for membership payment method defaults
+- **E2E: Audit Record detail** — click-through test from audit log to record detail
+- **E2E: Member Compact View** — navigation from member editor to compact view
+- **E2E: Credit batch full workflow** — create batch → select transactions → verify
+  in list → remove transactions → delete batch
+
+---
+
 ## [0.8.2] — 2026-04-01
 
 ### Added

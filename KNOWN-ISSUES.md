@@ -143,8 +143,9 @@ All eight optional cookie items are now fully implemented.
 
 ## E2E Test Coverage — Deferred Items
 
-The following areas have E2E spec files (12–18) covering page-load and structure
-verification, but deeper interaction tests are deferred:
+The following areas have E2E spec files (01–18) covering page-load, structure
+verification, and CRUD workflows. Deeper interaction tests for some areas are
+deferred:
 
 1. **Email send action** — Email compose UI is tested but the Send button is NOT
    clicked in tests because SendGrid integration is not live in the test environment.
@@ -160,8 +161,9 @@ verification, but deeper interaction tests are deferred:
    statuses) is not exercised. Add a full-cycle test: seed member → renew → verify
    status change + transaction.
 
-4. **Credit batch full workflow** — A transaction is created for batching but the
-   full create-batch → add-transactions → clear-batch flow is not tested end-to-end.
+4. ~~**Credit batch full workflow**~~ — **Done.** Spec 13 now tests the full
+   create-batch → select-transactions → create → verify-in-list → delete-batch flow.
+   Falls back gracefully when no unbatched transactions are available.
 
 5. **Portal registration and login flow** — The Members Portal has a separate auth
    system (identity verification, email verification, password). E2E tests for the
@@ -180,3 +182,28 @@ verification, but deeper interaction tests are deferred:
 8. **Data restore** — Only data export is tested (spec 11). The restore flow
    (upload .xlsx → auto-detect format → import) is not tested because it would
    destructively overwrite the test tenant's data mid-run.
+
+### Previously uncovered routes — now tested (April 2026)
+
+The following routes had no E2E coverage and have now been added:
+
+- **Configure Account** (`/finance/accounts/:id/configure`) — page-load test via
+  accounts list → "configure" link. Verifies pending-transactions and refunds
+  controls are visible. (spec 13)
+- **Payment Method Defaults** (`/finance/payment-method-defaults`) — page-load test
+  via accounts list link. (spec 13)
+- **Audit Record detail** (`/audit/:id`) — click-through from the audit log's "When"
+  column, verifies detail page loads. (spec 10)
+- **Member Compact View** (`/members/:id/compact`) — navigates from member editor
+  to compact view, verifies heading and action buttons. (spec 14)
+
+### Remaining uncovered routes
+
+- **Email Delivery Detail** (`/email/delivery/:id`) — requires a SendGrid delivery
+  record; deferred until email integration is testable.
+- **Transaction Refund** (`/finance/transactions/:id/refund`) — requires an eligible
+  transaction (not cleared, not GA-claimed); could be added when a suitable
+  transaction exists in the test flow.
+- **Change Password** (`/change-password`) — requires a user with
+  `must_change_password` flag; adding this test requires creating a user with
+  the flag and logging in as that user (separate browser context).
