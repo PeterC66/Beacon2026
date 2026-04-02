@@ -133,12 +133,13 @@ All eight optional cookie items are now fully implemented.
 
 ## Accessibility / E2E
 
-1. **Form labels missing `htmlFor`/`id` association** — Approximately 375 `<label>`
-   elements across ~53 files lack `htmlFor` attributes (and their inputs lack `id`).
-   This breaks Playwright `getByLabel()` and hurts screen-reader accessibility.
-   Login.jsx was fixed; remaining forms should be fixed incrementally as E2E
-   tests are written for each page. (Count updated April 2026 — the number has
-   grown as new pages were added.)
+1. **Form labels missing `htmlFor`/`id` association** — Many `<label>` elements
+   lack `htmlFor` attributes (and their inputs lack `id`). This breaks Playwright
+   `getByLabel()` and hurts screen-reader accessibility. The highest-traffic pages
+   have been fixed (April 2026): MemberEditor, TransactionEditor, GroupRecord,
+   SystemSettings, JoinForm, PortalPersonalDetails, UserEditor, TransferMoney,
+   TransactionRefund, PersonalPreferences, and DateInput. Remaining lower-traffic
+   pages should be fixed incrementally as E2E tests are written for each page.
 
 ---
 

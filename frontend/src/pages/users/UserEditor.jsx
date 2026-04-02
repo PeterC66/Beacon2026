@@ -213,8 +213,9 @@ export default function UserEditor() {
           {/* Member selection (new) or display (edit) */}
           {isNew ? (
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Member</label>
+              <label htmlFor="user-member" className="block text-sm font-medium text-slate-700 mb-1">Member</label>
               <select
+                id="user-member"
                 name="memberId"
                 value={memberId}
                 onChange={handleMemberChange}
@@ -259,10 +260,11 @@ export default function UserEditor() {
           )}
 
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">
+            <label htmlFor="user-username" className="block text-sm font-medium text-slate-700 mb-1">
               Login name <span className="text-slate-400 font-normal">(username)</span>
             </label>
             <input
+              id="user-username"
               type="text"
               name="username"
               value={username}
@@ -275,14 +277,15 @@ export default function UserEditor() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">User's E-mail</label>
-            <input type="email" name="email" value={email} onChange={(e) => { markDirty(); setEmail(e.target.value); }}
+            <label htmlFor="user-email" className="block text-sm font-medium text-slate-700 mb-1">User's E-mail</label>
+            <input id="user-email" type="email" name="email" value={email} onChange={(e) => { markDirty(); setEmail(e.target.value); }}
               disabled={!canEdit} className={inputCls} />
           </div>
 
           <div className="flex items-center gap-3">
-            <label className="text-sm font-medium text-slate-700">Active</label>
+            <label htmlFor="user-active" className="text-sm font-medium text-slate-700">Active</label>
             <input
+              id="user-active"
               type="checkbox"
               checked={active}
               onChange={(e) => { markDirty(); setActive(e.target.checked); }}

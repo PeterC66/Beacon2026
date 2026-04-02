@@ -227,8 +227,9 @@ export default function JoinForm() {
               <legend className="text-sm font-bold text-slate-700 mb-2">{isJoint ? 'First Person' : 'Your Details'}</legend>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Title</label>
+                  <label htmlFor="join-title" className="block text-sm font-medium text-slate-700 mb-1">Title</label>
                   <input
+                    id="join-title"
                     type="text"
                     name="title"
                     value={form.title}
@@ -239,8 +240,9 @@ export default function JoinForm() {
                   {fieldErrors.title && <p className="text-sm text-red-600 mt-1 font-medium">{fieldErrors.title}</p>}
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">First name <RequiredMark /></label>
+                  <label htmlFor="join-forenames" className="block text-sm font-medium text-slate-700 mb-1">First name <RequiredMark /></label>
                   <input
+                    id="join-forenames"
                     type="text"
                     name="forenames"
                     value={form.forenames}
@@ -250,8 +252,9 @@ export default function JoinForm() {
                   {fieldErrors.forenames && <p className="text-sm text-red-600 mt-1 font-medium">{fieldErrors.forenames}</p>}
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Surname <RequiredMark /></label>
+                  <label htmlFor="join-surname" className="block text-sm font-medium text-slate-700 mb-1">Surname <RequiredMark /></label>
                   <input
+                    id="join-surname"
                     type="text"
                     name="surname"
                     value={form.surname}
@@ -261,8 +264,9 @@ export default function JoinForm() {
                   {fieldErrors.surname && <p className="text-sm text-red-600 mt-1 font-medium">{fieldErrors.surname}</p>}
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Email <RequiredMark /></label>
+                  <label htmlFor="join-email" className="block text-sm font-medium text-slate-700 mb-1">Email <RequiredMark /></label>
                   <input
+                    id="join-email"
                     type="email"
                     name="email"
                     value={form.email}
@@ -272,8 +276,9 @@ export default function JoinForm() {
                   {fieldErrors.email && <p className="text-sm text-red-600 mt-1 font-medium">{fieldErrors.email}</p>}
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Mobile</label>
+                  <label htmlFor="join-mobile" className="block text-sm font-medium text-slate-700 mb-1">Mobile</label>
                   <input
+                    id="join-mobile"
                     type="tel"
                     name="mobile"
                     value={form.mobile}
@@ -290,8 +295,9 @@ export default function JoinForm() {
                 <legend className="text-sm font-bold text-slate-700 mb-2">Second Person</legend>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">Title</label>
+                    <label htmlFor="join2-title" className="block text-sm font-medium text-slate-700 mb-1">Title</label>
                     <input
+                      id="join2-title"
                       type="text"
                       name="p2Title"
                       value={form.p2Title}
@@ -302,8 +308,9 @@ export default function JoinForm() {
                     {fieldErrors.p2Title && <p className="text-sm text-red-600 mt-1 font-medium">{fieldErrors.p2Title}</p>}
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">First name <RequiredMark /></label>
+                    <label htmlFor="join2-forenames" className="block text-sm font-medium text-slate-700 mb-1">First name <RequiredMark /></label>
                     <input
+                      id="join2-forenames"
                       type="text"
                       name="p2Forenames"
                       value={form.p2Forenames}
@@ -313,8 +320,9 @@ export default function JoinForm() {
                     {fieldErrors.p2Forenames && <p className="text-sm text-red-600 mt-1 font-medium">{fieldErrors.p2Forenames}</p>}
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">Surname <RequiredMark /></label>
+                    <label htmlFor="join2-surname" className="block text-sm font-medium text-slate-700 mb-1">Surname <RequiredMark /></label>
                     <input
+                      id="join2-surname"
                       type="text"
                       name="p2Surname"
                       value={form.p2Surname}
@@ -324,8 +332,9 @@ export default function JoinForm() {
                     {fieldErrors.p2Surname && <p className="text-sm text-red-600 mt-1 font-medium">{fieldErrors.p2Surname}</p>}
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">Email</label>
+                    <label htmlFor="join2-email" className="block text-sm font-medium text-slate-700 mb-1">Email</label>
                     <input
+                      id="join2-email"
                       type="email"
                       name="p2Email"
                       value={form.p2Email}
@@ -335,8 +344,9 @@ export default function JoinForm() {
                     {fieldErrors.p2Email && <p className="text-sm text-red-600 mt-1 font-medium">{fieldErrors.p2Email}</p>}
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">Mobile</label>
+                    <label htmlFor="join2-mobile" className="block text-sm font-medium text-slate-700 mb-1">Mobile</label>
                     <input
+                      id="join2-mobile"
                       type="tel"
                       name="p2Mobile"
                       value={form.p2Mobile}
@@ -353,8 +363,9 @@ export default function JoinForm() {
               <legend className="text-sm font-bold text-slate-700 mb-2">{isJoint ? 'Shared Address' : 'Address'}</legend>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">House no / name</label>
+                  <label htmlFor="join-house-no" className="block text-sm font-medium text-slate-700 mb-1">House no / name</label>
                   <input
+                    id="join-house-no"
                     type="text"
                     name="houseNo"
                     value={form.houseNo}
@@ -364,8 +375,9 @@ export default function JoinForm() {
                   {fieldErrors.houseNo && <p className="text-red-600 text-xs mt-1">{fieldErrors.houseNo}</p>}
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Street</label>
+                  <label htmlFor="join-street" className="block text-sm font-medium text-slate-700 mb-1">Street</label>
                   <input
+                    id="join-street"
                     type="text"
                     name="street"
                     value={form.street}
@@ -374,8 +386,9 @@ export default function JoinForm() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Town</label>
+                  <label htmlFor="join-town" className="block text-sm font-medium text-slate-700 mb-1">Town</label>
                   <input
+                    id="join-town"
                     type="text"
                     name="town"
                     value={form.town}
@@ -384,8 +397,9 @@ export default function JoinForm() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">County</label>
+                  <label htmlFor="join-county" className="block text-sm font-medium text-slate-700 mb-1">County</label>
                   <input
+                    id="join-county"
                     type="text"
                     name="county"
                     value={form.county}
@@ -394,8 +408,9 @@ export default function JoinForm() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Postcode <RequiredMark /></label>
+                  <label htmlFor="join-postcode" className="block text-sm font-medium text-slate-700 mb-1">Postcode <RequiredMark /></label>
                   <input
+                    id="join-postcode"
                     type="text"
                     name="postcode"
                     value={form.postcode}
@@ -405,8 +420,9 @@ export default function JoinForm() {
                   {fieldErrors.postcode && <p className="text-sm text-red-600 mt-1 font-medium">{fieldErrors.postcode}</p>}
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Telephone</label>
+                  <label htmlFor="join-telephone" className="block text-sm font-medium text-slate-700 mb-1">Telephone</label>
                   <input
+                    id="join-telephone"
                     type="tel"
                     name="telephone"
                     value={form.telephone}

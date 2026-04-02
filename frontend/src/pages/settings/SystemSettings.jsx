@@ -117,10 +117,10 @@ const INPUT  = 'border border-slate-300 rounded px-3 py-2 text-sm focus:outline-
 const SELECT = INPUT;
 const LABEL  = 'block text-sm font-medium text-slate-700 mb-1';
 
-function Field({ label, children }) {
+function Field({ label, htmlFor, children }) {
   return (
     <div>
-      <label className={LABEL}>{label}</label>
+      <label htmlFor={htmlFor} className={LABEL}>{label}</label>
       {children}
     </div>
   );
@@ -216,9 +216,10 @@ export default function SystemSettings() {
             {/* ── Membership Cards ── */}
             <section className="bg-white/90 rounded-lg shadow-sm p-4 sm:p-6 space-y-4">
               <SectionHeading>Membership Cards</SectionHeading>
-              <Field label="Membership card colour">
+              <Field label="Membership card colour" htmlFor="settings-card-colour">
                 <div className="flex items-center gap-3">
                   <input
+                    id="settings-card-colour"
                     type="color"
                     name="card_colour"
                     value={form.card_colour}
@@ -227,6 +228,7 @@ export default function SystemSettings() {
                     className="h-9 w-16 rounded border border-slate-300 cursor-pointer disabled:opacity-50"
                   />
                   <input
+                    id="settings-card-colour-text"
                     type="text"
                     name="card_colour"
                     value={form.card_colour}
@@ -249,8 +251,9 @@ export default function SystemSettings() {
             <section className="bg-white/90 rounded-lg shadow-sm p-4 sm:p-6 space-y-4">
               <SectionHeading>Contact Details</SectionHeading>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <Field label="Public enquiry telephone">
+                <Field label="Public enquiry telephone" htmlFor="settings-public-phone">
                   <input
+                    id="settings-public-phone"
                     type="tel"
                     name="public_phone"
                     value={form.public_phone}
@@ -260,8 +263,9 @@ export default function SystemSettings() {
                     placeholder="e.g. 01234 567890"
                   />
                 </Field>
-                <Field label="Public enquiry email">
+                <Field label="Public enquiry email" htmlFor="settings-public-email">
                   <input
+                    id="settings-public-email"
                     type="email"
                     name="public_email"
                     value={form.public_email}
@@ -272,8 +276,9 @@ export default function SystemSettings() {
                   />
                 </Field>
               </div>
-              <Field label="u3a home page URL">
+              <Field label="u3a home page URL" htmlFor="settings-home-page">
                 <input
+                  id="settings-home-page"
                   type="url"
                   name="home_page"
                   value={form.home_page}
@@ -284,8 +289,9 @@ export default function SystemSettings() {
                 />
               </Field>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <Field label="Online new member enquiries email">
+                <Field label="Online new member enquiries email" htmlFor="settings-online-join-email">
                   <input
+                    id="settings-online-join-email"
                     type="email"
                     name="online_join_email"
                     value={form.online_join_email}
@@ -295,8 +301,9 @@ export default function SystemSettings() {
                     placeholder="join@example.u3a.org.uk"
                   />
                 </Field>
-                <Field label="Online renewal enquiries email">
+                <Field label="Online renewal enquiries email" htmlFor="settings-online-renew-email">
                   <input
+                    id="settings-online-renew-email"
                     type="email"
                     name="online_renew_email"
                     value={form.online_renew_email}
@@ -313,8 +320,9 @@ export default function SystemSettings() {
             <section className="bg-white/90 rounded-lg shadow-sm p-4 sm:p-6 space-y-4">
               <SectionHeading>Membership Year &amp; Fees</SectionHeading>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <Field label="Membership year start — month">
+                <Field label="Membership year start — month" htmlFor="settings-year-start-month">
                   <select
+                    id="settings-year-start-month"
                     name="year_start_month"
                     value={form.year_start_month}
                     onChange={handleChange}
@@ -326,8 +334,9 @@ export default function SystemSettings() {
                     ))}
                   </select>
                 </Field>
-                <Field label="Membership year start — day">
+                <Field label="Membership year start — day" htmlFor="settings-year-start-day">
                   <input
+                    id="settings-year-start-day"
                     type="number"
                     name="year_start_day"
                     value={form.year_start_day}
@@ -339,8 +348,9 @@ export default function SystemSettings() {
                   />
                 </Field>
               </div>
-              <Field label="Membership fees">
+              <Field label="Membership fees" htmlFor="settings-fee-variation">
                 <select
+                  id="settings-fee-variation"
                   name="fee_variation"
                   value={form.fee_variation}
                   onChange={handleChange}
@@ -351,8 +361,9 @@ export default function SystemSettings() {
                   <option value="varies_by_month">Fees vary by month of joining</option>
                 </select>
               </Field>
-              <Field label="Extended membership — month from which new memberships include the following year">
+              <Field label="Extended membership — month from which new memberships include the following year" htmlFor="settings-extended-membership-month">
                 <select
+                  id="settings-extended-membership-month"
                   name="extended_membership_month"
                   value={form.extended_membership_month}
                   onChange={handleChange}
@@ -366,8 +377,9 @@ export default function SystemSettings() {
                 </select>
               </Field>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <Field label="Advance renewals period (weeks)">
+                <Field label="Advance renewals period (weeks)" htmlFor="settings-advance-renewals-weeks">
                   <input
+                    id="settings-advance-renewals-weeks"
                     type="number"
                     name="advance_renewals_weeks"
                     value={form.advance_renewals_weeks}
@@ -378,8 +390,9 @@ export default function SystemSettings() {
                     className={INPUT}
                   />
                 </Field>
-                <Field label="Grace lapse period (weeks)">
+                <Field label="Grace lapse period (weeks)" htmlFor="settings-grace-lapse-weeks">
                   <input
+                    id="settings-grace-lapse-weeks"
                     type="number"
                     name="grace_lapse_weeks"
                     value={form.grace_lapse_weeks}
@@ -390,8 +403,9 @@ export default function SystemSettings() {
                     className={INPUT}
                   />
                 </Field>
-                <Field label="Non-renewal deletion period (years, 2–7)">
+                <Field label="Non-renewal deletion period (years, 2–7)" htmlFor="settings-deletion-years">
                   <input
+                    id="settings-deletion-years"
                     type="number"
                     name="deletion_years"
                     value={form.deletion_years}
@@ -403,8 +417,9 @@ export default function SystemSettings() {
                   />
                 </Field>
               </div>
-              <Field label="Default payment method">
+              <Field label="Default payment method" htmlFor="settings-default-payment-method">
                 <select
+                  id="settings-default-payment-method"
                   name="default_payment_method"
                   value={form.default_payment_method}
                   onChange={handleChange}
@@ -442,8 +457,9 @@ export default function SystemSettings() {
                 These values are pre-filled when creating a new member record and can be overridden at that point.
               </p>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <Field label="Default town">
+                <Field label="Default town" htmlFor="settings-default-town">
                   <input
+                    id="settings-default-town"
                     type="text"
                     name="default_town"
                     value={form.default_town}
@@ -452,8 +468,9 @@ export default function SystemSettings() {
                     className={INPUT}
                   />
                 </Field>
-                <Field label="Default county">
+                <Field label="Default county" htmlFor="settings-default-county">
                   <input
+                    id="settings-default-county"
                     type="text"
                     name="default_county"
                     value={form.default_county}
@@ -462,8 +479,9 @@ export default function SystemSettings() {
                     className={INPUT}
                   />
                 </Field>
-                <Field label="Default STD code">
+                <Field label="Default STD code" htmlFor="settings-default-std-code">
                   <input
+                    id="settings-default-std-code"
                     type="text"
                     name="default_std_code"
                     value={form.default_std_code}
@@ -479,8 +497,9 @@ export default function SystemSettings() {
             {/* ── Online Payments (PayPal) ── */}
             <section className="bg-white/90 rounded-lg shadow-sm p-4 sm:p-6 space-y-4">
               <SectionHeading>Online Payments (PayPal)</SectionHeading>
-              <Field label="PayPal account email">
+              <Field label="PayPal account email" htmlFor="settings-paypal-email">
                 <input
+                  id="settings-paypal-email"
                   type="email"
                   name="paypal_email"
                   value={form.paypal_email}
@@ -490,8 +509,9 @@ export default function SystemSettings() {
                   placeholder="paypal@example.u3a.org.uk"
                 />
               </Field>
-              <Field label="PayPal cancel return URL">
+              <Field label="PayPal cancel return URL" htmlFor="settings-paypal-cancel-url">
                 <input
+                  id="settings-paypal-cancel-url"
                   type="url"
                   name="paypal_cancel_url"
                   value={form.paypal_cancel_url}

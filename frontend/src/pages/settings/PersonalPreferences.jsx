@@ -199,8 +199,8 @@ export default function PersonalPreferences() {
           <form onSubmit={handleSavePrefs} className="space-y-4" noValidate>
 
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Sort names by</label>
-              <select name="sortBy" value={prefs.sortBy}
+              <label htmlFor="pref-sort-by" className="block text-sm font-medium text-slate-700 mb-1">Sort names by</label>
+              <select id="pref-sort-by" name="sortBy" value={prefs.sortBy}
                 onChange={(e) => { markDirty(); setPrefs((p) => ({ ...p, sortBy: e.target.value })); }}
                 className={inputCls}>
                 <option value="surname">Surname</option>
@@ -209,8 +209,8 @@ export default function PersonalPreferences() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Display format</label>
-              <select name="displayFormat" value={prefs.displayFormat}
+              <label htmlFor="pref-display-format" className="block text-sm font-medium text-slate-700 mb-1">Display format</label>
+              <select id="pref-display-format" name="displayFormat" value={prefs.displayFormat}
                 onChange={(e) => { markDirty(); setPrefs((p) => ({ ...p, displayFormat: e.target.value })); }}
                 className={inputCls}>
                 <option value="surname_first">Surname, Forename (e.g. Smith, John)</option>
@@ -219,10 +219,10 @@ export default function PersonalPreferences() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">
+              <label htmlFor="pref-inactivity-timeout" className="block text-sm font-medium text-slate-700 mb-1">
                 Session timeout (minutes, 5–99)
               </label>
-              <input type="number" name="inactivityTimeout" min={5} max={99}
+              <input id="pref-inactivity-timeout" type="number" name="inactivityTimeout" min={5} max={99}
                 value={prefs.inactivityTimeout}
                 onChange={(e) => { markDirty(); setPrefs((p) => ({ ...p, inactivityTimeout: parseInt(e.target.value, 10) || 20 })); }}
                 className={inputCls} style={{ width: '6rem' }} />
@@ -248,16 +248,16 @@ export default function PersonalPreferences() {
           <form onSubmit={handleChangePw} className="space-y-4" noValidate>
 
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Current password</label>
-              <input type="password" name="currentPassword" value={pwForm.current} autoComplete="current-password"
+              <label htmlFor="pref-current-password" className="block text-sm font-medium text-slate-700 mb-1">Current password</label>
+              <input id="pref-current-password" type="password" name="currentPassword" value={pwForm.current} autoComplete="current-password"
                 onChange={(e) => { markDirty(); setPwForm((f) => ({ ...f, current: e.target.value })); }}
                 className={pwErr.current ? errInCls : inputCls} />
               {pwErr.current && <p className={errMsgCls}>{pwErr.current}</p>}
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">New password</label>
-              <input type="password" name="newPassword" value={pwForm.newPw} autoComplete="new-password"
+              <label htmlFor="pref-new-password" className="block text-sm font-medium text-slate-700 mb-1">New password</label>
+              <input id="pref-new-password" type="password" name="newPassword" value={pwForm.newPw} autoComplete="new-password"
                 onChange={(e) => { markDirty(); setPwForm((f) => ({ ...f, newPw: e.target.value })); }}
                 className={pwErr.newPw ? errInCls : inputCls} />
               {pwForm.newPw && (
@@ -277,8 +277,8 @@ export default function PersonalPreferences() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Confirm new password</label>
-              <input type="password" name="confirmPassword" value={pwForm.confirm} autoComplete="new-password"
+              <label htmlFor="pref-confirm-password" className="block text-sm font-medium text-slate-700 mb-1">Confirm new password</label>
+              <input id="pref-confirm-password" type="password" name="confirmPassword" value={pwForm.confirm} autoComplete="new-password"
                 onChange={(e) => { markDirty(); setPwForm((f) => ({ ...f, confirm: e.target.value })); }}
                 className={pwErr.confirm ? errInCls : inputCls} />
               {pwErr.confirm && <p className={errMsgCls}>{pwErr.confirm}</p>}
@@ -308,8 +308,8 @@ export default function PersonalPreferences() {
           <form onSubmit={handleSaveQA} className="space-y-4" noValidate>
 
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Question</label>
-              <input type="text" name="securityQuestion" value={qa.question} maxLength={200}
+              <label htmlFor="pref-security-question" className="block text-sm font-medium text-slate-700 mb-1">Question</label>
+              <input id="pref-security-question" type="text" name="securityQuestion" value={qa.question} maxLength={200}
                 placeholder="e.g. What was the name of your first pet?"
                 onChange={(e) => { markDirty(); setQa((q) => ({ ...q, question: e.target.value })); }}
                 className={qaErr.question ? errInCls : inputCls} />
@@ -317,8 +317,8 @@ export default function PersonalPreferences() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Answer</label>
-              <input type="text" name="securityAnswer" value={qa.answer} maxLength={200}
+              <label htmlFor="pref-security-answer" className="block text-sm font-medium text-slate-700 mb-1">Answer</label>
+              <input id="pref-security-answer" type="text" name="securityAnswer" value={qa.answer} maxLength={200}
                 placeholder="Your answer (remember the format)"
                 onChange={(e) => { markDirty(); setQa((q) => ({ ...q, answer: e.target.value })); }}
                 className={qaErr.answer ? errInCls : inputCls} />

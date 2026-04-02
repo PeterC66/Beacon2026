@@ -153,16 +153,16 @@ function GroupDetails({ groupId, faculties, venues, onSaved, onDeleted, sitework
 
       {/* Name */}
       <div>
-        <label className={labelCls}>Group Name <RequiredMark /></label>
-        <input name="name" className={`${inputCls} w-full`} required value={form.name}
+        <label htmlFor="group-name" className={labelCls}>Group Name <RequiredMark /></label>
+        <input id="group-name" name="name" className={`${inputCls} w-full`} required value={form.name}
           onChange={(e) => set('name', e.target.value)} disabled={!canChange} />
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         {/* Faculty */}
         <div>
-          <label className={labelCls}>Faculty</label>
-          <select name="facultyId" className={`${inputCls} w-full`} value={form.facultyId}
+          <label htmlFor="group-faculty" className={labelCls}>Faculty</label>
+          <select id="group-faculty" name="facultyId" className={`${inputCls} w-full`} value={form.facultyId}
             onChange={(e) => set('facultyId', e.target.value)} disabled={!canChange}>
             <option value="">— none —</option>
             {faculties.map((f) => <option key={f.id} value={f.id}>{f.name}</option>)}
@@ -171,8 +171,8 @@ function GroupDetails({ groupId, faculties, venues, onSaved, onDeleted, sitework
 
         {/* Status */}
         <div>
-          <label className={labelCls}>Status</label>
-          <select name="status" className={`${inputCls} w-full`} value={form.status}
+          <label htmlFor="group-status" className={labelCls}>Status</label>
+          <select id="group-status" name="status" className={`${inputCls} w-full`} value={form.status}
             onChange={(e) => set('status', e.target.value)} disabled={isNew || !canChange}>
             <option value="active">Active</option>
             <option value="inactive">Inactive</option>
@@ -183,31 +183,31 @@ function GroupDetails({ groupId, faculties, venues, onSaved, onDeleted, sitework
       {!siteworksActivated && (<>
         {/* When */}
         <div>
-          <label className={labelCls}>When</label>
-          <input name="whenText" className={`${inputCls} w-full`} placeholder="e.g. 2nd Thursday at 2:00pm"
+          <label htmlFor="group-when" className={labelCls}>When</label>
+          <input id="group-when" name="whenText" className={`${inputCls} w-full`} placeholder="e.g. 2nd Thursday at 2:00pm"
             value={form.whenText} onChange={(e) => set('whenText', e.target.value)} disabled={!canChange} />
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {/* Start time */}
           <div>
-            <label className={labelCls}>Start time</label>
-            <input name="startTime" type="time" className={`${inputCls} w-full`} value={form.startTime}
+            <label htmlFor="group-start-time" className={labelCls}>Start time</label>
+            <input id="group-start-time" name="startTime" type="time" className={`${inputCls} w-full`} value={form.startTime}
               onChange={(e) => set('startTime', e.target.value)} disabled={!canChange} />
           </div>
 
           {/* End time */}
           <div>
-            <label className={labelCls}>End time</label>
-            <input name="endTime" type="time" className={`${inputCls} w-full`} value={form.endTime}
+            <label htmlFor="group-end-time" className={labelCls}>End time</label>
+            <input id="group-end-time" name="endTime" type="time" className={`${inputCls} w-full`} value={form.endTime}
               onChange={(e) => set('endTime', e.target.value)} disabled={!canChange} />
           </div>
         </div>
 
         {/* Venue */}
         <div>
-          <label className={labelCls}>Venue</label>
-          <select name="venueId" className={`${inputCls} w-full`} value={form.venueId}
+          <label htmlFor="group-venue" className={labelCls}>Venue</label>
+          <select id="group-venue" name="venueId" className={`${inputCls} w-full`} value={form.venueId}
             onChange={(e) => set('venueId', e.target.value)} disabled={!canChange}>
             <option value="">— none —</option>
             {venues.map((v) => <option key={v.id} value={v.id}>{v.name}{v.town ? `, ${v.town}` : ''}</option>)}
@@ -216,8 +216,8 @@ function GroupDetails({ groupId, faculties, venues, onSaved, onDeleted, sitework
 
         {/* Enquiries */}
         <div>
-          <label className={labelCls}>Enquiries</label>
-          <input name="enquiries" className={`${inputCls} w-full`} placeholder="Name/phone for enquirers"
+          <label htmlFor="group-enquiries" className={labelCls}>Enquiries</label>
+          <input id="group-enquiries" name="enquiries" className={`${inputCls} w-full`} placeholder="Name/phone for enquirers"
             value={form.enquiries} onChange={(e) => set('enquiries', e.target.value)} disabled={!canChange} />
         </div>
       </>)}
@@ -225,8 +225,8 @@ function GroupDetails({ groupId, faculties, venues, onSaved, onDeleted, sitework
       {/* Max members */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
-          <label className={labelCls}>Max members</label>
-          <input name="maxMembers" type="number" min="1" className={`${inputCls} w-full`} value={form.maxMembers}
+          <label htmlFor="group-max-members" className={labelCls}>Max members</label>
+          <input id="group-max-members" name="maxMembers" type="number" min="1" className={`${inputCls} w-full`} value={form.maxMembers}
             onChange={(e) => set('maxMembers', e.target.value)} disabled={!canChange} />
         </div>
       </div>
@@ -263,16 +263,16 @@ function GroupDetails({ groupId, faculties, venues, onSaved, onDeleted, sitework
       {/* Information */}
       {!siteworksActivated && (
         <div>
-          <label className={labelCls}>Information (may be shown publicly)</label>
-          <textarea name="information" rows={4} className={`${inputCls} w-full resize-y`} value={form.information}
+          <label htmlFor="group-information" className={labelCls}>Information (may be shown publicly)</label>
+          <textarea id="group-information" name="information" rows={4} className={`${inputCls} w-full resize-y`} value={form.information}
             onChange={(e) => set('information', e.target.value)} disabled={!canChange} />
         </div>
       )}
 
       {/* Notes */}
       <div>
-        <label className={labelCls}>Notes (private)</label>
-        <textarea name="notes" rows={3} className={`${inputCls} w-full resize-y`} value={form.notes}
+        <label htmlFor="group-notes" className={labelCls}>Notes (private)</label>
+        <textarea id="group-notes" name="notes" rows={3} className={`${inputCls} w-full resize-y`} value={form.notes}
           onChange={(e) => set('notes', e.target.value)} disabled={!canChange} />
       </div>
 
@@ -674,8 +674,9 @@ function GroupMembers({ groupId }) {
         <div className="bg-white/90 rounded-lg shadow-sm p-3 space-y-3">
           <div className="flex flex-wrap gap-3 items-end">
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Do with {selected.size} selected member{selected.size !== 1 ? 's' : ''}</label>
+              <label htmlFor="group-bulk-action" className="block text-sm font-medium text-slate-700 mb-1">Do with {selected.size} selected member{selected.size !== 1 ? 's' : ''}</label>
               <select
+                id="group-bulk-action"
                 name="bulkAction"
                 value={bulkAction}
                 onChange={(e) => { setBulkAction(e.target.value); setBulkResult(null); setTargetGroupId(''); }}
@@ -692,8 +693,9 @@ function GroupMembers({ groupId }) {
 
             {bulkAction === 'add_to_group' && (
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Target group</label>
+                <label htmlFor="group-target-group" className="block text-sm font-medium text-slate-700 mb-1">Target group</label>
                 <select
+                  id="group-target-group"
                   name="targetGroupId"
                   value={targetGroupId}
                   onChange={(e) => setTargetGroupId(e.target.value)}
@@ -757,8 +759,9 @@ function GroupMembers({ groupId }) {
           {/* By name */}
           <div className="flex gap-2 items-end">
             <div className="flex-1">
-              <label className="block text-sm font-medium text-slate-700 mb-1">Add member by name</label>
+              <label htmlFor="group-add-by-name" className="block text-sm font-medium text-slate-700 mb-1">Add member by name</label>
               <select
+                id="group-add-by-name"
                 name="addByName"
                 value={addByName}
                 onChange={(e) => setAddByName(e.target.value)}
@@ -784,8 +787,9 @@ function GroupMembers({ groupId }) {
           {/* By membership number */}
           <div className="flex gap-2 items-end">
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Add member by membership number</label>
+              <label htmlFor="group-add-by-number" className="block text-sm font-medium text-slate-700 mb-1">Add member by membership number</label>
               <input
+                id="group-add-by-number"
                 type="number"
                 min="1"
                 name="addByNumber"
@@ -1051,41 +1055,41 @@ function GroupSchedule({ groupId, groupData }) {
                       <td className="px-3 py-2" colSpan={dataColSpan + (canManage ? 1 : 0)}>
                         <div className="flex flex-wrap gap-2 items-end">
                           <div>
-                            <label className={labelCls}>Date <RequiredMark /></label>
-                            <input name="eventDate" type="date" className={inputCls} value={editForm.eventDate}
+                            <label htmlFor="event-edit-date" className={labelCls}>Date <RequiredMark /></label>
+                            <input id="event-edit-date" name="eventDate" type="date" className={inputCls} value={editForm.eventDate}
                               onChange={(e) => setEditForm((p) => ({ ...p, eventDate: e.target.value }))} />
                           </div>
                           <div>
-                            <label className={labelCls}>Start</label>
-                            <input name="startTime" type="time" step="900" className={inputCls} value={editForm.startTime}
+                            <label htmlFor="event-edit-start-time" className={labelCls}>Start</label>
+                            <input id="event-edit-start-time" name="startTime" type="time" step="900" className={inputCls} value={editForm.startTime}
                               onChange={(e) => setEditForm((p) => ({ ...p, startTime: e.target.value }))} />
                           </div>
                           <div>
-                            <label className={labelCls}>Until</label>
-                            <input name="endTime" type="time" step="900" className={inputCls} value={editForm.endTime}
+                            <label htmlFor="event-edit-end-time" className={labelCls}>Until</label>
+                            <input id="event-edit-end-time" name="endTime" type="time" step="900" className={inputCls} value={editForm.endTime}
                               onChange={(e) => setEditForm((p) => ({ ...p, endTime: e.target.value }))} />
                           </div>
                           <div>
-                            <label className={labelCls}>Venue</label>
-                            <select name="venueId" className={inputCls} value={editForm.venueId}
+                            <label htmlFor="event-edit-venue" className={labelCls}>Venue</label>
+                            <select id="event-edit-venue" name="venueId" className={inputCls} value={editForm.venueId}
                               onChange={(e) => setEditForm((p) => ({ ...p, venueId: e.target.value }))}>
                               <option value="">— none —</option>
                               {venues.map((v) => <option key={v.id} value={v.id}>{v.name}</option>)}
                             </select>
                           </div>
                           <div className="min-w-40">
-                            <label className={labelCls}>Topic</label>
-                            <input name="topic" className={`${inputCls} w-full`} value={editForm.topic}
+                            <label htmlFor="event-edit-topic" className={labelCls}>Topic</label>
+                            <input id="event-edit-topic" name="topic" className={`${inputCls} w-full`} value={editForm.topic}
                               onChange={(e) => setEditForm((p) => ({ ...p, topic: e.target.value }))} />
                           </div>
                           <div>
-                            <label className={labelCls}>Enquiries</label>
-                            <input name="contact" className={inputCls} value={editForm.contact}
+                            <label htmlFor="event-edit-contact" className={labelCls}>Enquiries</label>
+                            <input id="event-edit-contact" name="contact" className={inputCls} value={editForm.contact}
                               onChange={(e) => setEditForm((p) => ({ ...p, contact: e.target.value }))} />
                           </div>
                           <div className="flex-1 min-w-48">
-                            <label className={labelCls}>Details</label>
-                            <input name="details" className={`${inputCls} w-full`} value={editForm.details}
+                            <label htmlFor="event-edit-details" className={labelCls}>Details</label>
+                            <input id="event-edit-details" name="details" className={`${inputCls} w-full`} value={editForm.details}
                               onChange={(e) => setEditForm((p) => ({ ...p, details: e.target.value }))} />
                           </div>
                           <label className="flex items-center gap-1 text-xs cursor-pointer mt-4">
@@ -1169,23 +1173,23 @@ function GroupSchedule({ groupId, groupData }) {
           <form onSubmit={handleAdd} noValidate className="space-y-3">
             <div className="flex flex-wrap gap-3 items-end">
               <div>
-                <label className={labelCls}>First date <RequiredMark /></label>
-                <input name="eventDate" type="date" className={inputCls} required value={addForm.eventDate}
+                <label htmlFor="event-add-date" className={labelCls}>First date <RequiredMark /></label>
+                <input id="event-add-date" name="eventDate" type="date" className={inputCls} required value={addForm.eventDate}
                   onChange={(e) => setAdd('eventDate', e.target.value)} />
               </div>
               <div>
-                <label className={labelCls}>Start time</label>
-                <input name="startTime" type="time" step="900" className={inputCls} value={addForm.startTime}
+                <label htmlFor="event-add-start-time" className={labelCls}>Start time</label>
+                <input id="event-add-start-time" name="startTime" type="time" step="900" className={inputCls} value={addForm.startTime}
                   onChange={(e) => setAdd('startTime', e.target.value)} />
               </div>
               <div>
-                <label className={labelCls}>Until</label>
-                <input name="endTime" type="time" step="900" className={inputCls} value={addForm.endTime}
+                <label htmlFor="event-add-end-time" className={labelCls}>Until</label>
+                <input id="event-add-end-time" name="endTime" type="time" step="900" className={inputCls} value={addForm.endTime}
                   onChange={(e) => setAdd('endTime', e.target.value)} />
               </div>
               <div>
-                <label className={labelCls}>Venue</label>
-                <select name="venueId" className={inputCls} value={addForm.venueId}
+                <label htmlFor="event-add-venue" className={labelCls}>Venue</label>
+                <select id="event-add-venue" name="venueId" className={inputCls} value={addForm.venueId}
                   onChange={(e) => setAdd('venueId', e.target.value)}>
                   <option value="">— none —</option>
                   {venues.map((v) => <option key={v.id} value={v.id}>{v.name}</option>)}
@@ -1195,18 +1199,18 @@ function GroupSchedule({ groupId, groupData }) {
 
             <div className="flex flex-wrap gap-3 items-end">
               <div className="min-w-40 flex-1">
-                <label className={labelCls}>Topic</label>
-                <input name="topic" className={`${inputCls} w-full`} value={addForm.topic}
+                <label htmlFor="event-add-topic" className={labelCls}>Topic</label>
+                <input id="event-add-topic" name="topic" className={`${inputCls} w-full`} value={addForm.topic}
                   onChange={(e) => setAdd('topic', e.target.value)} />
               </div>
               <div>
-                <label className={labelCls}>Enquiries</label>
-                <input name="contact" className={inputCls} value={addForm.contact}
+                <label htmlFor="event-add-contact" className={labelCls}>Enquiries</label>
+                <input id="event-add-contact" name="contact" className={inputCls} value={addForm.contact}
                   onChange={(e) => setAdd('contact', e.target.value)} />
               </div>
               <div className="flex-1 min-w-48">
-                <label className={labelCls}>Details</label>
-                <input name="details" className={`${inputCls} w-full`} value={addForm.details}
+                <label htmlFor="event-add-details" className={labelCls}>Details</label>
+                <input id="event-add-details" name="details" className={`${inputCls} w-full`} value={addForm.details}
                   onChange={(e) => setAdd('details', e.target.value)} />
               </div>
               <label className="flex items-center gap-1 text-xs cursor-pointer mt-4">
@@ -1220,14 +1224,14 @@ function GroupSchedule({ groupId, groupData }) {
             <div className="flex flex-wrap gap-3 items-end border-t border-slate-200 pt-3">
               <span className="text-sm text-slate-600 self-end pb-2">then every</span>
               <div>
-                <label className={labelCls}>Count</label>
-                <input name="repeatEvery" type="number" min="1" className={`${inputCls} w-20`} value={addForm.repeatEvery}
+                <label htmlFor="event-add-repeat-count" className={labelCls}>Count</label>
+                <input id="event-add-repeat-count" name="repeatEvery" type="number" min="1" className={`${inputCls} w-20`} value={addForm.repeatEvery}
                   placeholder="—"
                   onChange={(e) => setAdd('repeatEvery', e.target.value)} />
               </div>
               <div>
-                <label className={labelCls}>Unit</label>
-                <select name="repeatUnit" className={inputCls} value={addForm.repeatUnit}
+                <label htmlFor="event-add-repeat-unit" className={labelCls}>Unit</label>
+                <select id="event-add-repeat-unit" name="repeatUnit" className={inputCls} value={addForm.repeatUnit}
                   onChange={(e) => setAdd('repeatUnit', e.target.value)}>
                   <option value="days">days</option>
                   <option value="weeks">weeks</option>
@@ -1235,8 +1239,8 @@ function GroupSchedule({ groupId, groupData }) {
                 </select>
               </div>
               <div>
-                <label className={labelCls}>Until</label>
-                <input name="repeatUntil" type="date" className={inputCls} value={addForm.repeatUntil}
+                <label htmlFor="event-add-repeat-until" className={labelCls}>Until</label>
+                <input id="event-add-repeat-until" name="repeatUntil" type="date" className={inputCls} value={addForm.repeatUntil}
                   onChange={(e) => setAdd('repeatUntil', e.target.value)} />
               </div>
             </div>
@@ -1422,13 +1426,13 @@ function GroupLedger({ groupId }) {
       {/* Date range filter */}
       <div className="flex flex-wrap gap-3 items-end mb-4">
         <div>
-          <label className={labelCls}>From</label>
-          <input name="fromDate" type="date" className={inputCls} value={fromDate}
+          <label htmlFor="ledger-from-date" className={labelCls}>From</label>
+          <input id="ledger-from-date" name="fromDate" type="date" className={inputCls} value={fromDate}
             onChange={(e) => setFromDate(e.target.value)} />
         </div>
         <div>
-          <label className={labelCls}>To</label>
-          <input name="toDate" type="date" className={inputCls} value={toDate}
+          <label htmlFor="ledger-to-date" className={labelCls}>To</label>
+          <input id="ledger-to-date" name="toDate" type="date" className={inputCls} value={toDate}
             onChange={(e) => setToDate(e.target.value)} />
         </div>
         {canDownload && (
@@ -1486,29 +1490,29 @@ function GroupLedger({ groupId }) {
                     <td className="px-2 py-1 border-b border-slate-100" colSpan={canChange || canDelete ? 7 : 6}>
                       <div className="flex flex-wrap gap-2 items-end">
                         <div>
-                          <label className={labelCls}>Date</label>
-                          <input name="entryDate" type="date" className={inputCls} value={editForm.entryDate}
+                          <label htmlFor="ledger-edit-date" className={labelCls}>Date</label>
+                          <input id="ledger-edit-date" name="entryDate" type="date" className={inputCls} value={editForm.entryDate}
                             onChange={(e) => setEditForm((p) => ({ ...p, entryDate: e.target.value }))} />
                         </div>
                         <div className="flex-1 min-w-32">
-                          <label className={labelCls}>Payee</label>
-                          <input name="payee" className={`${inputCls} w-full`} value={editForm.payee}
+                          <label htmlFor="ledger-edit-payee" className={labelCls}>Payee</label>
+                          <input id="ledger-edit-payee" name="payee" className={`${inputCls} w-full`} value={editForm.payee}
                             onChange={(e) => setEditForm((p) => ({ ...p, payee: e.target.value }))} />
                         </div>
                         <div className="flex-1 min-w-40">
-                          <label className={labelCls}>Detail</label>
-                          <input name="detail" className={`${inputCls} w-full`} value={editForm.detail}
+                          <label htmlFor="ledger-edit-detail" className={labelCls}>Detail</label>
+                          <input id="ledger-edit-detail" name="detail" className={`${inputCls} w-full`} value={editForm.detail}
                             onChange={(e) => setEditForm((p) => ({ ...p, detail: e.target.value }))} />
                         </div>
                         <div className="w-24">
-                          <label className={labelCls}>In (£)</label>
-                          <input name="moneyIn" type="number" min="0" step="0.01" className={inputCls}
+                          <label htmlFor="ledger-edit-money-in" className={labelCls}>In (£)</label>
+                          <input id="ledger-edit-money-in" name="moneyIn" type="number" min="0" step="0.01" className={inputCls}
                             value={editForm.moneyIn}
                             onChange={(e) => setEditForm((p) => ({ ...p, moneyIn: e.target.value, moneyOut: '' }))} />
                         </div>
                         <div className="w-24">
-                          <label className={labelCls}>Out (£)</label>
-                          <input name="moneyOut" type="number" min="0" step="0.01" className={inputCls}
+                          <label htmlFor="ledger-edit-money-out" className={labelCls}>Out (£)</label>
+                          <input id="ledger-edit-money-out" name="moneyOut" type="number" min="0" step="0.01" className={inputCls}
                             value={editForm.moneyOut}
                             onChange={(e) => setEditForm((p) => ({ ...p, moneyOut: e.target.value, moneyIn: '' }))} />
                         </div>
@@ -1563,29 +1567,29 @@ function GroupLedger({ groupId }) {
           )}
           <div className="flex flex-wrap gap-3 items-end">
             <div>
-              <label className={labelCls}>Date <RequiredMark /></label>
-              <input name="entryDate" type="date" required className={inputCls} value={addForm.entryDate}
+              <label htmlFor="ledger-add-date" className={labelCls}>Date <RequiredMark /></label>
+              <input id="ledger-add-date" name="entryDate" type="date" required className={inputCls} value={addForm.entryDate}
                 onChange={(e) => setAddForm((p) => ({ ...p, entryDate: e.target.value }))} />
             </div>
             <div className="flex-1 min-w-32">
-              <label className={labelCls}>Payee</label>
-              <input name="payee" className={`${inputCls} w-full`} value={addForm.payee}
+              <label htmlFor="ledger-add-payee" className={labelCls}>Payee</label>
+              <input id="ledger-add-payee" name="payee" className={`${inputCls} w-full`} value={addForm.payee}
                 onChange={(e) => setAddForm((p) => ({ ...p, payee: e.target.value }))} />
             </div>
             <div className="flex-1 min-w-40">
-              <label className={labelCls}>Detail</label>
-              <input name="detail" className={`${inputCls} w-full`} value={addForm.detail}
+              <label htmlFor="ledger-add-detail" className={labelCls}>Detail</label>
+              <input id="ledger-add-detail" name="detail" className={`${inputCls} w-full`} value={addForm.detail}
                 onChange={(e) => setAddForm((p) => ({ ...p, detail: e.target.value }))} />
             </div>
             <div className="w-24">
-              <label className={labelCls}>In (£)</label>
-              <input name="moneyIn" type="number" min="0" step="0.01" className={inputCls}
+              <label htmlFor="ledger-add-money-in" className={labelCls}>In (£)</label>
+              <input id="ledger-add-money-in" name="moneyIn" type="number" min="0" step="0.01" className={inputCls}
                 value={addForm.moneyIn}
                 onChange={(e) => setAddForm((p) => ({ ...p, moneyIn: e.target.value, moneyOut: '' }))} />
             </div>
             <div className="w-24">
-              <label className={labelCls}>Out (£)</label>
-              <input name="moneyOut" type="number" min="0" step="0.01" className={inputCls}
+              <label htmlFor="ledger-add-money-out" className={labelCls}>Out (£)</label>
+              <input id="ledger-add-money-out" name="moneyOut" type="number" min="0" step="0.01" className={inputCls}
                 value={addForm.moneyOut}
                 onChange={(e) => setAddForm((p) => ({ ...p, moneyOut: e.target.value, moneyIn: '' }))} />
             </div>

@@ -396,8 +396,9 @@ export default function TransactionEditor() {
 
             {/* Account */}
             <div>
-              <label className={LBL}>Account <RequiredMark /></label>
+              <label htmlFor="txn-account" className={LBL}>Account <RequiredMark /></label>
               <select
+                id="txn-account"
                 name="account_id"
                 value={form.account_id}
                 onChange={(e) => set('account_id', e.target.value)}
@@ -411,8 +412,9 @@ export default function TransactionEditor() {
 
             {/* Date */}
             <div>
-              <label className={LBL}>Date <RequiredMark /></label>
+              <label htmlFor="txn-date" className={LBL}>Date <RequiredMark /></label>
               <DateInput
+                id="txn-date"
                 name="date"
                 value={form.date}
                 onChange={(v) => set('date', v)}
@@ -423,8 +425,9 @@ export default function TransactionEditor() {
 
             {/* From / To */}
             <div>
-              <label className={LBL}>{form.type === 'in' ? 'From' : 'To'} <RequiredMark /></label>
+              <label htmlFor="txn-from-to" className={LBL}>{form.type === 'in' ? 'From' : 'To'} <RequiredMark /></label>
               <input
+                id="txn-from-to"
                 type="text"
                 name="from_to"
                 value={form.from_to}
@@ -437,8 +440,9 @@ export default function TransactionEditor() {
 
             {/* Amount */}
             <div>
-              <label className={LBL}>Amount (£) <RequiredMark /></label>
+              <label htmlFor="txn-amount" className={LBL}>Amount (£) <RequiredMark /></label>
               <input
+                id="txn-amount"
                 type="number"
                 name="amount"
                 min="0.01"
@@ -453,8 +457,9 @@ export default function TransactionEditor() {
 
             {/* Payment method */}
             <div>
-              <label className={LBL}>Payment method</label>
+              <label htmlFor="txn-payment-method" className={LBL}>Payment method</label>
               <select
+                id="txn-payment-method"
                 name="payment_method"
                 value={form.payment_method}
                 onChange={(e) => set('payment_method', e.target.value)}
@@ -467,8 +472,9 @@ export default function TransactionEditor() {
 
             {/* Payment reference */}
             <div>
-              <label className={LBL}>Payment reference</label>
+              <label htmlFor="txn-payment-ref" className={LBL}>Payment reference</label>
               <input
+                id="txn-payment-ref"
                 type="text"
                 name="payment_ref"
                 value={form.payment_ref}
@@ -484,13 +490,13 @@ export default function TransactionEditor() {
               <div className="sm:col-span-2 flex items-center gap-2">
                 <input
                   type="checkbox"
-                  id="pending"
+                  id="txn-pending"
                   checked={form.pending}
                   onChange={(e) => set('pending', e.target.checked)}
                   disabled={cleared}
                   className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
                 />
-                <label htmlFor="pending" className="text-sm font-medium text-slate-700">
+                <label htmlFor="txn-pending" className="text-sm font-medium text-slate-700">
                   Pending (payment promised but not yet received)
                 </label>
               </div>
@@ -508,8 +514,9 @@ export default function TransactionEditor() {
 
             {/* Detail */}
             <div className="sm:col-span-2">
-              <label className={LBL}>Detail</label>
+              <label htmlFor="txn-detail" className={LBL}>Detail</label>
               <input
+                id="txn-detail"
                 type="text"
                 name="detail"
                 value={form.detail}
@@ -522,8 +529,9 @@ export default function TransactionEditor() {
 
             {/* Remarks */}
             <div className="sm:col-span-2">
-              <label className={LBL}>Remarks</label>
+              <label htmlFor="txn-remarks" className={LBL}>Remarks</label>
               <textarea
+                id="txn-remarks"
                 name="remarks"
                 value={form.remarks}
                 onChange={(e) => set('remarks', e.target.value)}
@@ -542,8 +550,9 @@ export default function TransactionEditor() {
 
               {/* Member 1 */}
               <div>
-                <label className={LBL}>Member 1</label>
+                <label htmlFor="txn-member1" className={LBL}>Member 1</label>
                 <input
+                  id="txn-member1-filter"
                   type="text"
                   name="m1Filter"
                   value={m1Filter}
@@ -553,6 +562,7 @@ export default function TransactionEditor() {
                   placeholder="Search name / number…"
                 />
                 <select
+                  id="txn-member1"
                   name="member_id_1"
                   value={form.member_id_1}
                   onChange={(e) => set('member_id_1', e.target.value)}
@@ -571,11 +581,12 @@ export default function TransactionEditor() {
 
               {/* Member 2 */}
               <div>
-                <label className={LBL}>Member 2</label>
+                <label htmlFor="txn-member2" className={LBL}>Member 2</label>
                 {!form.member_id_1 && (
                   <p className="text-xs text-slate-400 mb-1">Select Member 1 first</p>
                 )}
                 <input
+                  id="txn-member2-filter"
                   type="text"
                   name="m2Filter"
                   value={m2Filter}
@@ -585,6 +596,7 @@ export default function TransactionEditor() {
                   placeholder="Search name / number…"
                 />
                 <select
+                  id="txn-member2"
                   name="member_id_2"
                   value={form.member_id_2}
                   onChange={(e) => set('member_id_2', e.target.value)}
@@ -603,8 +615,9 @@ export default function TransactionEditor() {
 
               {/* Group */}
               <div>
-                <label className={LBL}>Group</label>
+                <label htmlFor="txn-group" className={LBL}>Group</label>
                 <select
+                  id="txn-group"
                   name="group_id"
                   value={form.group_id}
                   onChange={(e) => set('group_id', e.target.value)}
@@ -634,10 +647,11 @@ export default function TransactionEditor() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {form.member_id_1 && (
                   <div>
-                    <label className={LBL}>Gift aid eligible (Member 1)</label>
+                    <label htmlFor="txn-ga-amount1" className={LBL}>Gift aid eligible (Member 1)</label>
                     <div className="flex items-center gap-1">
                       <span className="text-slate-400 text-sm">£</span>
                       <input
+                        id="txn-ga-amount1"
                         type="number" name="gift_aid_amount" min="0" step="0.01"
                         value={form.gift_aid_amount}
                         onChange={(e) => set('gift_aid_amount', e.target.value)}
@@ -649,8 +663,9 @@ export default function TransactionEditor() {
                     </div>
                     {giftAidClaimedAt && (
                       <div className="mt-2">
-                        <label className={LBL}>Gift aid claimed</label>
+                        <label htmlFor="txn-ga-claimed1" className={LBL}>Gift aid claimed</label>
                         <input
+                          id="txn-ga-claimed1"
                           type="text"
                           value={new Date(giftAidClaimedAt).toLocaleDateString('en-GB')}
                           readOnly
@@ -663,10 +678,11 @@ export default function TransactionEditor() {
                 )}
                 {form.member_id_2 && (
                   <div>
-                    <label className={LBL}>Gift aid eligible (Member 2)</label>
+                    <label htmlFor="txn-ga-amount2" className={LBL}>Gift aid eligible (Member 2)</label>
                     <div className="flex items-center gap-1">
                       <span className="text-slate-400 text-sm">£</span>
                       <input
+                        id="txn-ga-amount2"
                         type="number" name="gift_aid_amount_2" min="0" step="0.01"
                         value={form.gift_aid_amount_2}
                         onChange={(e) => set('gift_aid_amount_2', e.target.value)}
@@ -678,8 +694,9 @@ export default function TransactionEditor() {
                     </div>
                     {giftAidClaimedAt2 && (
                       <div className="mt-2">
-                        <label className={LBL}>Gift aid claimed</label>
+                        <label htmlFor="txn-ga-claimed2" className={LBL}>Gift aid claimed</label>
                         <input
+                          id="txn-ga-claimed2"
                           type="text"
                           value={new Date(giftAidClaimedAt2).toLocaleDateString('en-GB')}
                           readOnly
