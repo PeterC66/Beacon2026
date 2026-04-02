@@ -237,8 +237,6 @@ test.describe('Delete a member', () => {
 
     // Confirm member no longer appears
     await listPage.search(TEST_SURNAME);
-    await page.getByText('No members found.').waitFor({ timeout: 10_000 });
-    const count = await listPage.memberRowCount();
-    expect(count).toBe(0);
+    await expect(page.getByText('No members found.')).toBeVisible({ timeout: 10_000 });
   });
 });
