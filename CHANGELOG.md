@@ -25,6 +25,20 @@ Format: `## [version] — YYYY-MM-DD` with bullet points per change.
 - **E2E: Member Compact View** — navigation from member editor to compact view
 - **E2E: Credit batch full workflow** — create batch → select transactions → verify
   in list → remove transactions → delete batch
+- **Online membership renewal** (doc 10.2.1) — portal members can now renew their
+  membership online. Shows renewal fee, Gift Aid opt-in/out (when enabled via
+  `gift_aid_online_renewals`), and initiates PayPal payment. Advances `next_renewal`
+  by one year on confirmation. Joint members renew together with combined fee. Creates
+  finance transaction and sends confirmation emails. Eligibility enforced: must be
+  Current status, within `advance_renewals_weeks` window. "Renew your membership"
+  option appears on PortalHome when `portal_config.renewals` is enabled.
+- **Joint membership online joining** — when a member selects a joint membership class
+  (`is_joint`), the joining form now shows fields for the second person (title, forenames,
+  surname, email, mobile) and a separate Gift Aid consent checkbox. Both member records are
+  created linked at the same address with bidirectional `partner_id`. Payment amount is
+  doubled (2× class fee). Payment confirmation promotes both members to Current status and
+  creates a single finance transaction with both member IDs. Resume-payment and JoinPending
+  pages show both members' details.
 
 ---
 

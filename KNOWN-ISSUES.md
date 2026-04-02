@@ -8,10 +8,9 @@ Items noted during development that need addressing in future sessions.
 
 ## Online Joining / Members Portal (deferred from initial implementation)
 
-1. **Joint membership online joining** — When a member selects a joint membership
-   class (`is_joint`), the joining form should show fields for the second person's
-   details (name, etc.) and create both member records linked at the same address.
-   Deferred to a later phase. Ref: doc 10.1, doc 9.4.1.
+1. ~~**Joint membership online joining**~~ — **Done.** When a joint membership class is
+   selected, the form shows second-person fields and creates both members linked at the
+   same address with bidirectional partner_id.
 
 2. **Duplicate application detection limited by shared emails** — Some members
    genuinely share the same email address (e.g. couples). Any future duplicate
@@ -19,8 +18,8 @@ Items noted during development that need addressing in future sessions.
    email alone would produce false positives. Consider using email + surname
    combination, and warn rather than block.
 
-3. **Members Portal — online renewals** — Online renewals (doc 10.2.1) are not yet
-   built. The portal_config.renewals toggle exists but the feature is deferred.
+3. ~~**Members Portal — online renewals**~~ — **Done.** Portal members can renew online
+   when `portal_config.renewals` is enabled. Supports joint renewal and Gift Aid.
 
 4. ~~**Members Portal — photo upload**~~ — **Done.** Photo upload implemented in
    PortalPersonalDetails.jsx (base64 storage, JPEG/PNG/GIF, max 2 MB). Photos appear
@@ -70,13 +69,11 @@ Items noted during development that need addressing in future sessions.
    auto-attach membership card PDFs to online joining/renewal confirmation emails is not
    yet implemented. Ref: doc 8.3, doc 4.7.
 
-3. **gift_aid_online_renewals** — The "Show Gift Aid for online renewals" checkbox is
-   stored but the online renewal flow itself is not yet built. When online renewals are
-   implemented, this setting should control whether Gift Aid tick boxes appear. Ref: doc 8.3.
+3. ~~**gift_aid_online_renewals**~~ — **Done.** Controls Gift Aid checkboxes on
+   the portal renewal page.
 
-4. **online_renew_email** — Stored and returned in join-config, but the online renewal
-   flow is not yet built. When implemented, use this as reply-to on renewal confirmation
-   emails and display on the renewal form. Ref: doc 8.3.
+4. ~~**online_renew_email**~~ — **Done.** Displayed on the portal renewal page as
+   contact email for renewal enquiries.
 
 ---
 
