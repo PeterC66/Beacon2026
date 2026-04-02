@@ -72,7 +72,7 @@ test.describe('Email Compose', () => {
     // page.goto() destroys the in-memory auth token; the app restores
     // the session via the httpOnly refresh cookie, which can be slow.
     await page.goto('/email/compose');
-    await page.getByRole('heading', { name: 'Send Email' }).waitFor({ timeout: 15_000 });
+    await page.getByRole('heading', { name: 'Send Email' }).waitFor({ timeout: 30_000 });
 
     // Core form elements present
     await expect(page.getByText(/from/i).first()).toBeVisible();

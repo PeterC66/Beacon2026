@@ -202,7 +202,7 @@ test.describe('Credit batches', () => {
         }
         const updateBtn = page.getByRole('button', { name: /update transaction/i });
         if (await updateBtn.isVisible().catch(() => false)) {
-          page.once('dialog', (d) => d.accept());
+          // handleRemoveFromBatch does NOT use confirm(), so no dialog handler needed
           await updateBtn.click();
           await page.waitForTimeout(2_000);
         }
