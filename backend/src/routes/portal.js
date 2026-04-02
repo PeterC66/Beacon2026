@@ -1349,15 +1349,46 @@ router.post('/renewal-confirm', async (req, res, next) => {
     if (template) {
       const tenant = await prisma.sysTenant.findUnique({ where: { slug } });
       const u3aName = tenant?.name ?? slug;
+
+      // Check if card attachment is enabled
+      const [cardSetting] = await tenantQuery(slug,
+        `SELECT email_cards FROM tenant_settings WHERE id = 'singleton'`);
+      const emailCards = cardSetting?.email_cards ?? false;
+
       const emailAddr = member.email;
       if (emailAddr) {
         const { subject, body } = resolveTokens(
           template.subject, template.body,
           { ...member, class_name: member.class_name }, u3aName,
         );
-        console.log(`[Portal] Would send renewal confirmation to ${emailAddr}: "${subject}"`);
+
+        // Attach membership card PDF when email_cards is enabled
+        const attachments = [];
+        if (emailCards) {
+          try {
+            const { pdfBuffer, filename } = await generateSingleCardPdf(slug, memberId);
+            attachments.push({
+              content:     pdfBuffer.toString('base64'),
+              filename,
+              type:        'application/pdf',
+              disposition: 'attachment',
+            });
+          } catch (cardErr) {
+            console.error('[Portal] Failed to generate renewal card PDF:', cardErr.message);
+          }
+        }
+
+        // const msg = {
+        //   to:          { email: emailAddr, name: `${member.forenames} ${member.surname}`.trim() },
+        //   from:        { email: FROM_ADDRESS, name: u3aName },
+        //   subject,
+        //   text:        body,
+        //   attachments: attachments.length > 0 ? attachments : undefined,
+        // };
+        // await sgMail.send(msg);
+        console.log(`[Portal] Would send renewal confirmation to ${emailAddr}: "${subject}"${attachments.length ? ` [+card PDF: ${attachments[0].filename}]` : ''}`);
       }
-      // Also email partner if joint
+      // Also email partner if joint — partner gets their own card
       if (partnerMember?.email) {
         const pClassName = (await tenantQuery(slug,
           `SELECT name FROM member_classes WHERE id = $1`,
@@ -1366,7 +1397,31 @@ router.post('/renewal-confirm', async (req, res, next) => {
           template.subject, template.body,
           { ...partnerMember, class_name: pClassName }, u3aName,
         );
-        console.log(`[Portal] Would send renewal confirmation to ${partnerMember.email}: "${subject}"`);
+
+        const partnerAttachments = [];
+        if (emailCards && partnerMember.id) {
+          try {
+            const { pdfBuffer, filename } = await generateSingleCardPdf(slug, partnerMember.id);
+            partnerAttachments.push({
+              content:     pdfBuffer.toString('base64'),
+              filename,
+              type:        'application/pdf',
+              disposition: 'attachment',
+            });
+          } catch (cardErr) {
+            console.error('[Portal] Failed to generate partner renewal card PDF:', cardErr.message);
+          }
+        }
+
+        // const msg = {
+        //   to:          { email: partnerMember.email, name: `${partnerMember.forenames} ${partnerMember.surname}`.trim() },
+        //   from:        { email: FROM_ADDRESS, name: u3aName },
+        //   subject,
+        //   text:        body,
+        //   attachments: partnerAttachments.length > 0 ? partnerAttachments : undefined,
+        // };
+        // await sgMail.send(msg);
+        console.log(`[Portal] Would send renewal confirmation to ${partnerMember.email}: "${subject}"${partnerAttachments.length ? ` [+card PDF: ${partnerAttachments[0].filename}]` : ''}`);
       }
     }
 
