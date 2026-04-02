@@ -164,8 +164,8 @@ test.describe('Credit batches', () => {
     // Select an account
     await page.locator('select[name="accountId"]').selectOption({ index: 1 });
 
-    // Click "Add credit batch" in the nav bar
-    await page.getByRole('link', { name: /add credit batch/i }).click();
+    // Click "Add credit batch" in the nav bar (rendered as <button> by NavBar)
+    await page.getByRole('button', { name: /add credit batch/i }).click();
     await page.getByRole('heading', { name: /select transactions/i }).waitFor({ timeout: 10_000 });
 
     // Select all unbatched transactions (if any exist)
