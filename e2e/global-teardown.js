@@ -21,8 +21,8 @@ function readSlug() {
 
 const API       = process.env.BEACON2_API_URL || 'http://localhost:3001';
 const SLUG      = readSlug();
-const SADM_USER = process.env.BEACON2_SYSADMIN_USERNAME || 'sysadmin';
-const SADM_PASS = process.env.BEACON2_SYSADMIN_PASSWORD || 'changeme';
+const SADM_EMAIL = process.env.BEACON2_SYSADMIN_EMAIL    || 'admin@beacon2.example';
+const SADM_PASS  = process.env.BEACON2_SYSADMIN_PASSWORD || 'changeme';
 
 async function apiCall(path, { method = 'GET', body, token } = {}) {
   const headers = { 'Content-Type': 'application/json' };
@@ -39,7 +39,7 @@ export default async function globalTeardown() {
   console.log('\n[teardown] Deleting test tenant…');
   const { body: loginBody } = await apiCall('/auth/system/login', {
     method: 'POST',
-    body: { username: SADM_USER, password: SADM_PASS },
+    body: { email: SADM_EMAIL, password: SADM_PASS },
   });
   const sysToken = loginBody?.accessToken;
   if (!sysToken) { console.warn('[teardown] Could not log in — skipping delete.'); return; }
