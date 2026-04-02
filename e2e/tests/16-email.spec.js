@@ -68,11 +68,14 @@ test.describe('Email Compose', () => {
       sessionStorage.setItem('emailComposeMemberIds', JSON.stringify([]));
     });
 
-    // No Home link exists for email compose — must navigate directly.
-    // page.goto() destroys the in-memory auth token; the app restores
-    // the session via the httpOnly refresh cookie, which can be slow.
-    await page.goto('/email/compose');
-    await page.getByRole('heading', { name: 'Send Email' }).waitFor({ timeout: 30_000 });
+    // No Home link exists for email compose — use History API to trigger
+    // React Router navigation without a full page reload (preserves the
+    // in-memory auth token). page.goto() would destroy the token.
+    await page.evaluate(() => {
+      window.history.pushState({}, '', '/email/compose');
+      window.dispatchEvent(new PopStateEvent('popstate'));
+    });
+    await page.getByRole('heading', { name: 'Send Email' }).waitFor({ timeout: 10_000 });
 
     // Core form elements present
     await expect(page.getByText(/from/i).first()).toBeVisible();
