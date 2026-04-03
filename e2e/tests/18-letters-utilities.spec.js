@@ -44,6 +44,11 @@ test.describe('Utilities', () => {
 // We pre-set an empty array so the page loads without recipients.
 
 test.describe('Letter Compose', () => {
+  // No nav link exists for /letters/compose — page.goto falls through to a
+  // full page reload which requires a cookie-based auth refresh.  Allow extra
+  // time for CI environments where the refresh can be slow late in the run.
+  const HEADING_TIMEOUT = 20_000;
+
   test('page loads with editor', async ({ adminPage: page }) => {
     // Pre-set empty recipients in sessionStorage so page loads
     await page.evaluate(() => {
@@ -52,7 +57,7 @@ test.describe('Letter Compose', () => {
 
     // No Home link exists for letter compose — navigate directly
     await page.goto('/letters/compose');
-    await page.getByRole('heading', { name: 'Compose Letter' }).waitFor({ timeout: 10_000 });
+    await page.getByRole('heading', { name: 'Compose Letter' }).waitFor({ timeout: HEADING_TIMEOUT });
 
     // Token panel should be visible
     await expect(page.getByText(/tokens/i).first()).toBeVisible();
@@ -64,7 +69,7 @@ test.describe('Letter Compose', () => {
     });
 
     await page.goto('/letters/compose');
-    await page.getByRole('heading', { name: 'Compose Letter' }).waitFor({ timeout: 10_000 });
+    await page.getByRole('heading', { name: 'Compose Letter' }).waitFor({ timeout: HEADING_TIMEOUT });
 
     await expect(page.getByRole('button', { name: /download/i })).toBeVisible();
   });
