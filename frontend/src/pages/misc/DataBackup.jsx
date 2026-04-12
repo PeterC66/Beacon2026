@@ -24,9 +24,9 @@ const EXPORT_OPTIONS = [
   },
   {
     type: 'groups',
-    label: 'Groups, with members, venues and faculties',
-    desc: 'Group records, membership lists, and faculties.',
-    sheets: 'Groups, Group members, Venues, Faculties',
+    label: 'Groups and teams, with members, venues and faculties',
+    desc: 'Group and team records, membership lists, group ledgers, and faculties.',
+    sheets: 'Groups, Group members, Group Ledgers, Venues, Faculties',
   },
   {
     type: 'calendar',

@@ -95,6 +95,15 @@ Every item below applies to every new feature — no exceptions.
 
 - [ ] **All tenant queries** through `tenantQuery()` or `withTenant()`.
 
+- [ ] **Data export/restore** — when adding or changing columns in `tenant_schema.sql`,
+  update `backend/src/routes/backup.js` to match:
+  1. **Export** — add the column to the relevant `buildXxxSheets` SELECT query and the
+     `addSheet` column list.
+  2. **Beacon2 restore** — add the column to the corresponding INSERT in `restoreFromBeacon2`.
+  3. **Beacon restore** — if the old Beacon format has an equivalent field, map it in
+     `restoreFromBeacon`.
+  When adding an entire new table, add export, restore, and clear (`DELETE FROM …`) entries.
+
 - [ ] **Always use `@map` for snake_case columns** in Prisma models — every field must
   have an explicit `@map("snake_case_name")` annotation so that `prisma db push` creates
   snake_case columns. Without `@map`, Prisma uses the camelCase field name as the column
