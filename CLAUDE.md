@@ -55,6 +55,9 @@ All work goes on a branch whose name starts with `claude/`. Never push directly 
 - Validate all request bodies with **Zod** before processing
 - Never construct SQL with string concatenation — always use parameterised queries
 - Always, before you start, ask any questions one by one, until you are 95% certain that you can carry out this task
+- **Large file creation** — never write a file over ~400 lines in a single tool call.
+  Break it into a skeleton first, then add each section in a separate edit. This avoids
+  stream idle timeouts that lose the entire response.
 
 ---
 
