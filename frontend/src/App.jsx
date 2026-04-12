@@ -23,6 +23,8 @@ import MemberCompactView from './pages/members/MemberCompactView.jsx';
 import AddressesExport   from './pages/members/AddressesExport.jsx';
 import GroupList         from './pages/groups/GroupList.jsx';
 import GroupRecord       from './pages/groups/GroupRecord.jsx';
+import TeamList          from './pages/groups/TeamList.jsx';
+import TeamRecord        from './pages/groups/TeamRecord.jsx';
 import FacultyList       from './pages/groups/FacultyList.jsx';
 import VenueList         from './pages/groups/VenueList.jsx';
 import VenueEditor       from './pages/groups/VenueEditor.jsx';
@@ -142,6 +144,9 @@ const router = createBrowserRouter([
       { path: '/groups',       element: <ProtectedRoute><GroupList /></ProtectedRoute> },
       { path: '/groups/new',   element: <ProtectedRoute><GroupRecord /></ProtectedRoute> },
       { path: '/groups/:id',   element: <ProtectedRoute><GroupRecord /></ProtectedRoute> },
+      { path: '/teams',        element: <ProtectedRoute><TeamList /></ProtectedRoute> },
+      { path: '/teams/new',    element: <ProtectedRoute><TeamRecord /></ProtectedRoute> },
+      { path: '/teams/:id',    element: <ProtectedRoute><TeamRecord /></ProtectedRoute> },
       { path: '/faculties',    element: <ProtectedRoute><FacultyList /></ProtectedRoute> },
       { path: '/venues',       element: <ProtectedRoute><VenueList /></ProtectedRoute> },
       { path: '/venues/new',   element: <ProtectedRoute><VenueEditor /></ProtectedRoute> },

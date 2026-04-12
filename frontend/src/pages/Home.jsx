@@ -43,6 +43,7 @@ export default function Home() {
         { label: 'Venues',    tip: 'Manage venues where groups meet',              to: can('group_venues',   'view') ? '/venues'    : null },
         { label: 'Faculties', tip: 'Organise groups into subject categories',      to: can('group_faculties','view') ? '/faculties' : null },
         { label: 'Calendar',  tip: 'View group meetings in a calendar format',     to: can('calendar', 'view') ? '/calendar' : null },
+        { label: 'Teams',     tip: 'View and manage teams',                        to: can('groups_list',    'view') ? '/teams'     : null },
       ],
     },
     {

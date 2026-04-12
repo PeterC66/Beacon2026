@@ -830,11 +830,11 @@ router.get('/:id/groups', requirePrivilege('member_record', 'view'), async (req,
   try {
     const rows = await tenantQuery(
       req.user.tenantSlug,
-      `SELECT g.id, g.name, g.status, gm.is_leader, gm.waiting_since
+      `SELECT g.id, g.name, g.status, g.type, gm.is_leader, gm.waiting_since
        FROM group_members gm
        JOIN groups g ON g.id = gm.group_id
        WHERE gm.member_id = $1
-       ORDER BY g.name`,
+       ORDER BY g.type, g.name`,
       [req.params.id],
     );
     res.json(rows);
