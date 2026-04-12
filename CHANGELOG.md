@@ -20,6 +20,13 @@ Format: `## [version] — YYYY-MM-DD` with bullet points per change.
   - Member list: "Add to team" bulk action
   - Default role: "Team Leaders" with scoped group-leader privileges
   - All existing group routes filtered to `type = 'group'` to ensure separation
+- **Abbreviated name** — optional short name (max 10 chars) on groups and teams.
+  Displayed everywhere the full name was shown, with full name as tooltip on hover.
+- **Transaction group/team association** — financial transactions can now be
+  associated with a team as well as a group. The picker is a searchable type-ahead
+  with Groups and Teams in separate sections.
+- **Finance ledger** — group view now includes teams; group column links to the
+  correct /groups/ or /teams/ route.
 
 ## [0.8.3] — 2026-04-02
 

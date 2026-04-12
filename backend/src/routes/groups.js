@@ -43,7 +43,7 @@ router.get('/', requirePrivilege('groups_list', 'view'), async (req, res, next) 
 
     const groups = await tenantQuery(
       slug,
-      `SELECT g.id, g.name, g.faculty_id, f.name AS faculty_name,
+      `SELECT g.id, g.name, g.short_name, g.faculty_id, f.name AS faculty_name,
               g.status, g.when_text, g.max_members, g.show_addresses,
               (SELECT COUNT(*)::int FROM group_members gm
                WHERE gm.group_id = g.id AND gm.waiting_since IS NULL) AS member_count,
@@ -96,7 +96,7 @@ router.get('/download', requirePrivilege('groups_list', 'download'), async (req,
 
     const rows = await tenantQuery(
       slug,
-      `SELECT g.id, g.name, g.faculty_id, f.name AS faculty_name,
+      `SELECT g.id, g.name, g.short_name, g.faculty_id, f.name AS faculty_name,
               g.status, g.when_text, g.enquiries, g.information,
               (SELECT COUNT(*)::int FROM group_members gm
                WHERE gm.group_id = g.id AND gm.waiting_since IS NULL) AS member_count,
@@ -215,6 +215,7 @@ router.get('/:id', requirePrivilege('group_records_all', 'view'), async (req, re
 
 const groupSchema = z.object({
   name:                z.string().min(1).max(200),
+  shortName:           z.string().max(10).nullable().optional(),
   facultyId:           z.string().nullable().optional(),
   status:              z.enum(['active', 'inactive']).default('active'),
   whenText:            z.string().nullable().optional(),
@@ -240,13 +241,14 @@ router.post('/', requirePrivilege('group_records_all', 'create'), async (req, re
     const [group] = await tenantQuery(
       slug,
       `INSERT INTO groups
-         (name, faculty_id, status, when_text, start_time, end_time, venue_id, enquiries,
+         (name, short_name, faculty_id, status, when_text, start_time, end_time, venue_id, enquiries,
           max_members, allow_online_join, enable_waiting_list, notify_leader,
           display_waiting_list, information, notes, show_addresses, type)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,'group')
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,'group')
        RETURNING *`,
       [
         data.name,
+        data.shortName     ?? null,
         data.facultyId     ?? null,
         data.status,
         data.whenText      ?? null,
@@ -274,6 +276,7 @@ router.post('/', requirePrivilege('group_records_all', 'create'), async (req, re
 
 const updateGroupSchema = z.object({
   name:                z.string().min(1).max(200).optional(),
+  shortName:           z.string().max(10).nullable().optional(),
   facultyId:           z.string().nullable().optional(),
   status:              z.enum(['active', 'inactive']).optional(),
   whenText:            z.string().nullable().optional(),
@@ -293,6 +296,7 @@ const updateGroupSchema = z.object({
 
 const GROUP_FIELDS = [
   ['name',               'name'],
+  ['shortName',          'short_name'],
   ['facultyId',          'faculty_id'],
   ['status',             'status'],
   ['whenText',           'when_text'],

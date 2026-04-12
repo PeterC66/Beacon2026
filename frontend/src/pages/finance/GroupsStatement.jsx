@@ -146,7 +146,7 @@ export default function GroupsStatement() {
                       <>
                         <tr key={g.id}
                           className={`border-b border-slate-100 ${i % 2 === 0 ? 'bg-yellow-50' : 'bg-white'} ${showTxns && entriesByGroup[g.id] ? 'font-semibold' : ''}`}>
-                          <td className="px-4 py-2">{g.name}</td>
+                          <td className="px-4 py-2" title={g.short_name ? g.name : undefined}>{g.short_name || g.name}</td>
                           <td className="px-4 py-2 text-right font-mono text-slate-700">{g.bf !== 0 ? fmtAmt(g.bf) : ''}</td>
                           <td className="px-4 py-2 text-right font-mono text-green-700">{g.total_in > 0 ? fmtAmt(g.total_in) : ''}</td>
                           <td className="px-4 py-2 text-right font-mono text-red-700">{g.total_out > 0 ? fmtAmt(g.total_out) : ''}</td>

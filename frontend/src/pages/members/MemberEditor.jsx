@@ -1501,9 +1501,9 @@ export default function MemberEditor() {
                               <tr key={g.id} className={`border-b border-slate-100 ${i % 2 === 0 ? 'bg-yellow-50' : 'bg-white'}`}>
                                 <td className="px-3 py-1.5">
                                   {can('group_records_all', 'view') ? (
-                                    <a href={`/groups/${g.id}`} className="text-blue-700 hover:underline" title="Press to access the group record">{g.name}</a>
+                                    <a href={`/groups/${g.id}`} className="text-blue-700 hover:underline" title={g.short_name ? g.name : 'Press to access the group record'}>{g.short_name || g.name}</a>
                                   ) : (
-                                    <span className={g.status === 'inactive' ? 'text-red-600' : ''}>{g.name}</span>
+                                    <span className={g.status === 'inactive' ? 'text-red-600' : ''} title={g.short_name ? g.name : undefined}>{g.short_name || g.name}</span>
                                   )}
                                   {g.is_leader && <span className="ml-1.5 text-amber-500" title="Leader">★</span>}
                                   {g.waiting_since && <span className="ml-1.5 text-slate-400" title="Waiting list">⏳</span>}
@@ -1540,9 +1540,9 @@ export default function MemberEditor() {
                               <tr key={t.id} className={`border-b border-slate-100 ${i % 2 === 0 ? 'bg-yellow-50' : 'bg-white'}`}>
                                 <td className="px-3 py-1.5">
                                   {can('group_records_all', 'view') ? (
-                                    <a href={`/teams/${t.id}`} className="text-blue-700 hover:underline" title="Press to access the team record">{t.name}</a>
+                                    <a href={`/teams/${t.id}`} className="text-blue-700 hover:underline" title={t.short_name ? t.name : 'Press to access the team record'}>{t.short_name || t.name}</a>
                                   ) : (
-                                    <span className={t.status === 'inactive' ? 'text-red-600' : ''}>{t.name}</span>
+                                    <span className={t.status === 'inactive' ? 'text-red-600' : ''} title={t.short_name ? t.name : undefined}>{t.short_name || t.name}</span>
                                   )}
                                   {t.is_leader && <span className="ml-1.5 text-amber-500" title="Leader">★</span>}
                                 </td>

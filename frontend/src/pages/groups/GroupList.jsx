@@ -275,11 +275,12 @@ export default function GroupList() {
                           {can('group_records_all', 'view') ? (
                             <Link
                               to={`/groups/${g.id}`}
+                              title={g.short_name ? g.name : undefined}
                               className="text-blue-700 hover:underline"
                             >
-                              {g.name}
+                              {g.short_name || g.name}
                             </Link>
-                          ) : g.name}
+                          ) : <span title={g.short_name ? g.name : undefined}>{g.short_name || g.name}</span>}
                           {g.status === 'inactive' && (
                             <span className="ml-2 text-xs text-red-500">(inactive)</span>
                           )}

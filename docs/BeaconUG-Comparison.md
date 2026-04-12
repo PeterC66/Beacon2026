@@ -352,6 +352,7 @@
 | Team Record: Details tab | Built | Name, status, information, notes, show-addresses toggle |
 | Team Record: Members tab | Built | Add/remove members, mark leaders, bulk actions (email, download, remove, add to another team) |
 | Team Record: Ledger tab | Built | Same as group ledger — per-team in/out transactions with date range filter |
+| Abbreviated name (groups & teams) | Built | Optional short name (max 10 chars) shown everywhere, full name as tooltip |
 | Teams in Member record | Built | "Groups, Teams and Ledger" tab shows both groups and teams |
 | "Add to team" bulk action on Members list | Built | — |
 | "Team Leaders" default role | Built | Scoped group-leader privileges for team leaders |

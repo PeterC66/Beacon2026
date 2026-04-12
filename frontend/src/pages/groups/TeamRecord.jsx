@@ -26,7 +26,7 @@ function TeamDetails({ teamId, onSaved, onDeleted }) {
   const isNew = !teamId;
 
   const EMPTY = {
-    name: '', status: 'active', information: '', notes: '', showAddresses: false,
+    name: '', shortName: '', status: 'active', information: '', notes: '', showAddresses: false,
   };
 
   const { markDirty, markClean } = useUnsavedChanges();
@@ -47,6 +47,7 @@ function TeamDetails({ teamId, onSaved, onDeleted }) {
       .then((t) => {
         setForm({
           name:           t.name ?? '',
+          shortName:      t.short_name ?? '',
           status:         t.status ?? 'active',
           information:    t.information ?? '',
           notes:          t.notes ?? '',
@@ -71,6 +72,7 @@ function TeamDetails({ teamId, onSaved, onDeleted }) {
     try {
       const payload = {
         name:          form.name,
+        shortName:     form.shortName || null,
         status:        form.status,
         information:   form.information || null,
         notes:         form.notes || null,
@@ -125,11 +127,18 @@ function TeamDetails({ teamId, onSaved, onDeleted }) {
         </p>
       )}
 
-      {/* Name */}
-      <div>
-        <label htmlFor="team-name" className={labelCls}>Team Name <RequiredMark /></label>
-        <input id="team-name" name="name" className={`${inputCls} w-full`} required value={form.name}
-          onChange={(e) => set('name', e.target.value)} disabled={!canChange} />
+      {/* Name + Abbreviated name */}
+      <div className="grid grid-cols-1 sm:grid-cols-[1fr_10rem] gap-4">
+        <div>
+          <label htmlFor="team-name" className={labelCls}>Team Name <RequiredMark /></label>
+          <input id="team-name" name="name" className={`${inputCls} w-full`} required value={form.name}
+            onChange={(e) => set('name', e.target.value)} disabled={!canChange} />
+        </div>
+        <div>
+          <label htmlFor="team-short-name" className={labelCls}>Abbreviated name</label>
+          <input id="team-short-name" name="shortName" maxLength={10} className={`${inputCls} w-full`} value={form.shortName}
+            onChange={(e) => set('shortName', e.target.value)} disabled={!canChange} placeholder="max 10 chars" />
+        </div>
       </div>
 
       {/* Status */}

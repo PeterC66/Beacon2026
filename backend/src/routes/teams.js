@@ -36,7 +36,7 @@ router.get('/', requirePrivilege('groups_list', 'view'), async (req, res, next) 
 
     const teams = await tenantQuery(
       slug,
-      `SELECT g.id, g.name, g.status, g.show_addresses,
+      `SELECT g.id, g.name, g.short_name, g.status, g.show_addresses,
               (SELECT COUNT(*)::int FROM group_members gm
                WHERE gm.group_id = g.id) AS member_count,
               (SELECT COALESCE(
@@ -81,7 +81,7 @@ router.get('/download', requirePrivilege('groups_list', 'download'), async (req,
 
     const rows = await tenantQuery(
       slug,
-      `SELECT g.id, g.name, g.status, g.information,
+      `SELECT g.id, g.name, g.short_name, g.status, g.information,
               (SELECT COUNT(*)::int FROM group_members gm
                WHERE gm.group_id = g.id) AS member_count,
               (SELECT COALESCE(
@@ -192,6 +192,7 @@ router.get('/:id', requirePrivilege('group_records_all', 'view'), async (req, re
 // ─── POST /teams ─────────────────────────────────────────────────────────
 const teamSchema = z.object({
   name:           z.string().min(1).max(200),
+  shortName:      z.string().max(10).nullable().optional(),
   status:         z.enum(['active', 'inactive']).default('active'),
   information:    z.string().nullable().optional(),
   notes:          z.string().nullable().optional(),
@@ -205,10 +206,10 @@ router.post('/', requirePrivilege('group_records_all', 'create'), async (req, re
 
     const [team] = await tenantQuery(
       slug,
-      `INSERT INTO groups (name, status, information, notes, show_addresses, type)
-       VALUES ($1,$2,$3,$4,$5,'team')
+      `INSERT INTO groups (name, short_name, status, information, notes, show_addresses, type)
+       VALUES ($1,$2,$3,$4,$5,$6,'team')
        RETURNING *`,
-      [data.name, data.status, data.information ?? null, data.notes ?? null, data.showAddresses],
+      [data.name, data.shortName ?? null, data.status, data.information ?? null, data.notes ?? null, data.showAddresses],
     );
     res.status(201).json(team);
   } catch (err) {
@@ -219,6 +220,7 @@ router.post('/', requirePrivilege('group_records_all', 'create'), async (req, re
 // ─── PATCH /teams/:id ────────────────────────────────────────────────────
 const updateTeamSchema = z.object({
   name:           z.string().min(1).max(200).optional(),
+  shortName:      z.string().max(10).nullable().optional(),
   status:         z.enum(['active', 'inactive']).optional(),
   information:    z.string().nullable().optional(),
   notes:          z.string().nullable().optional(),
@@ -227,6 +229,7 @@ const updateTeamSchema = z.object({
 
 const TEAM_FIELDS = [
   ['name',          'name'],
+  ['shortName',     'short_name'],
   ['status',        'status'],
   ['information',   'information'],
   ['notes',         'notes'],
