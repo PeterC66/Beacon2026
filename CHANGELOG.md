@@ -5,6 +5,22 @@ Format: `## [version] — YYYY-MM-DD` with bullet points per change.
 
 ---
 
+## [0.8.4] — 2026-04-12
+
+### Added
+- **Teams** — new concept alongside groups. Teams have members (with leader
+  designation) and a group ledger, but no scheduling, venues, faculties, max
+  members, waiting list, or online join. Implemented via a `type` column on
+  the existing `groups` table (`'group'` vs `'team'`).
+  - Backend: `/teams` CRUD routes, member management, ledger operations,
+    download (Excel/PDF)
+  - Frontend: TeamList page, TeamRecord page with Details/Members/Ledger tabs
+  - Home page: Teams link in Groups section
+  - Member record: "Groups, Teams and Ledger" tab shows both groups and teams
+  - Member list: "Add to team" bulk action
+  - Default role: "Team Leaders" with scoped group-leader privileges
+  - All existing group routes filtered to `type = 'group'` to ensure separation
+
 ## [0.8.3] — 2026-04-02
 
 ### Changed

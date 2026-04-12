@@ -343,6 +343,21 @@
 
 ---
 
+### 5.6a Teams (Beacon2 extra)
+
+| Aspect | Status | Notes |
+|--------|--------|-------|
+| **Beacon2 extra:** Teams concept | Built | Teams are like groups but without scheduling, venues, faculties, max members, waiting list, or online join. Implemented via `type` column on `groups` table. |
+| Team List page | Built | Separate list with letter filter, status filter, bulk actions (email leaders, download, add to poll) |
+| Team Record: Details tab | Built | Name, status, information, notes, show-addresses toggle |
+| Team Record: Members tab | Built | Add/remove members, mark leaders, bulk actions (email, download, remove, add to another team) |
+| Team Record: Ledger tab | Built | Same as group ledger — per-team in/out transactions with date range filter |
+| Teams in Member record | Built | "Groups, Teams and Ledger" tab shows both groups and teams |
+| "Add to team" bulk action on Members list | Built | — |
+| "Team Leaders" default role | Built | Scoped group-leader privileges for team leaders |
+
+---
+
 ### 5.7 Group Venues (doc 5.7)
 
 | Aspect | Status | Notes |
