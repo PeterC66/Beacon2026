@@ -35,6 +35,9 @@ Format: `## [version] — YYYY-MM-DD` with bullet points per change.
 - **Transaction redisplay after save** — the GET /transactions/:id endpoint had
   the same GROUP BY omission (`g.short_name, g.type`), causing "Transaction #null"
   and an error message after saving a new transaction despite the save succeeding.
+- **Data export missing teams** — the Groups export sheet now includes `short_name`
+  and `type` columns so teams are preserved on export/restore instead of being
+  silently converted to groups.
 
 ## [0.8.3] — 2026-04-02
 
