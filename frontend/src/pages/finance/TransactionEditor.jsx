@@ -3,7 +3,7 @@
 
 import { useState, useEffect, useMemo, useRef } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
-import { finance as financeApi, groups as groupsApi, members as membersApi, settings as settingsApi } from '../../lib/api.js';
+import { finance as financeApi, groups as groupsApi, teams as teamsApi, members as membersApi, settings as settingsApi } from '../../lib/api.js';
 import { useAuth } from '../../context/AuthContext.jsx';
 import NavBar from '../../components/NavBar.jsx';
 import RequiredMark from '../../components/RequiredMark.jsx';
@@ -47,6 +47,8 @@ export default function TransactionEditor() {
   const [catAmounts, setCatAmounts] = useState({});    // { category_id: string_amount }
   const [accounts,   setAccounts]   = useState([]);
   const [groups,     setGroups]     = useState([]);
+  const [teams,      setTeams]      = useState([]);
+  const [groupFilter, setGroupFilter] = useState('');
   const [allMembers, setAllMembers] = useState([]);
   const [m1Filter,   setM1Filter]   = useState('');
   const [m2Filter,   setM2Filter]   = useState('');
@@ -76,16 +78,18 @@ export default function TransactionEditor() {
   useEffect(() => {
     async function loadRef() {
       try {
-        const [acc, cat, grp, mem, sysSettings] = await Promise.all([
+        const [acc, cat, grp, tm, mem, sysSettings] = await Promise.all([
           financeApi.listAccounts(),
           financeApi.listCategories(),
-          groupsApi.list(),
+          groupsApi.list({ activeOnly: false }),
+          teamsApi.list({ activeOnly: false }),
           membersApi.list(),
           isNew ? settingsApi.get().catch(() => null) : null,
         ]);
         setAccounts(acc.filter((a) => a.active));
         setCategories(cat.filter((c) => c.active));
         setGroups(grp);
+        setTeams(tm);
         setAllMembers(mem);
         // Pre-fill default payment method from system settings for new transactions
         if (isNew && sysSettings?.default_payment_method) {
@@ -203,6 +207,24 @@ export default function TransactionEditor() {
       String(m.membership_number).includes(q)
     ).slice(0, 50);
   }, [allMembers, m2Filter]);
+
+  const filteredGroups = useMemo(() => {
+    const q = groupFilter.trim().toLowerCase();
+    if (!q) return groups;
+    return groups.filter((g) =>
+      g.name.toLowerCase().includes(q) ||
+      (g.short_name && g.short_name.toLowerCase().includes(q))
+    );
+  }, [groups, groupFilter]);
+
+  const filteredTeams = useMemo(() => {
+    const q = groupFilter.trim().toLowerCase();
+    if (!q) return teams;
+    return teams.filter((t) =>
+      t.name.toLowerCase().includes(q) ||
+      (t.short_name && t.short_name.toLowerCase().includes(q))
+    );
+  }, [teams, groupFilter]);
 
   function buildPayload() {
     const cats = Object.entries(catAmounts)
@@ -613,9 +635,18 @@ export default function TransactionEditor() {
                 </select>
               </div>
 
-              {/* Group */}
+              {/* Group / Team */}
               <div>
-                <label htmlFor="txn-group" className={LBL}>Group</label>
+                <label htmlFor="txn-group-filter" className={LBL}>Group / Team</label>
+                <input
+                  id="txn-group-filter"
+                  type="text"
+                  placeholder="Search name / abbreviation…"
+                  value={groupFilter}
+                  onChange={(e) => setGroupFilter(e.target.value)}
+                  disabled={cleared}
+                  className={`${INP} mb-1`}
+                />
                 <select
                   id="txn-group"
                   name="group_id"
@@ -626,15 +657,24 @@ export default function TransactionEditor() {
                   size={5}
                 >
                   <option value="">— none —</option>
-                  {groups.map((g) => (
-                    <option
-                      key={g.id}
-                      value={g.id}
-                      style={g.status === 'inactive' ? { color: '#dc2626' } : {}}
-                    >
-                      {g.name}{g.status === 'inactive' ? ' (inactive)' : ''}
-                    </option>
-                  ))}
+                  {filteredGroups.length > 0 && (
+                    <optgroup label="Groups">
+                      {filteredGroups.map((g) => (
+                        <option key={g.id} value={g.id} style={g.status === 'inactive' ? { color: '#dc2626' } : {}}>
+                          {g.short_name || g.name}{g.status === 'inactive' ? ' (inactive)' : ''}
+                        </option>
+                      ))}
+                    </optgroup>
+                  )}
+                  {filteredTeams.length > 0 && (
+                    <optgroup label="Teams">
+                      {filteredTeams.map((t) => (
+                        <option key={t.id} value={t.id} style={t.status === 'inactive' ? { color: '#dc2626' } : {}}>
+                          {t.short_name || t.name}{t.status === 'inactive' ? ' (inactive)' : ''}
+                        </option>
+                      ))}
+                    </optgroup>
+                  )}
                 </select>
               </div>
             </div>

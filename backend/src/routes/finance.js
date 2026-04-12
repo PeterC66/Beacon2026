@@ -359,7 +359,7 @@ router.get('/transactions', requirePrivilege('finance_ledger', 'view'), async (r
                m1.membership_number AS member_1_no,
                m2.forenames || ' ' || m2.surname AS member_2_name,
                m2.membership_number AS member_2_no,
-               g.name AS group_name,
+               g.name AS group_name, g.short_name AS group_short_name, g.type AS group_type,
                fa.name AS account_name,
                cb.batch_ref AS batch_no,
                cb.description AS batch_description`;
@@ -463,23 +463,23 @@ router.get('/transactions', requirePrivilege('finance_ledger', 'view'), async (r
         let bfSql, bfParams;
         if (groupId === 'all') {
           bfSql = `
-            SELECT t.group_id, g.name AS group_name,
+            SELECT t.group_id, g.name AS group_name, g.short_name AS group_short_name, g.type AS group_type,
                    COALESCE(SUM(CASE WHEN t.type='in' THEN t.amount ELSE -t.amount END), 0)::float AS balance
             FROM transactions t
             LEFT JOIN groups g ON g.id = t.group_id
             WHERE t.group_id IS NOT NULL AND t.date < $1::date AND t.pending = false
-            GROUP BY t.group_id, g.name
+            GROUP BY t.group_id, g.name, g.short_name, g.type
             HAVING SUM(CASE WHEN t.type='in' THEN t.amount ELSE -t.amount END) <> 0
             ORDER BY g.name`;
           bfParams = [yearStart];
         } else {
           bfSql = `
-            SELECT t.group_id, g.name AS group_name,
+            SELECT t.group_id, g.name AS group_name, g.short_name AS group_short_name, g.type AS group_type,
                    COALESCE(SUM(CASE WHEN t.type='in' THEN t.amount ELSE -t.amount END), 0)::float AS balance
             FROM transactions t
             LEFT JOIN groups g ON g.id = t.group_id
             WHERE t.group_id = $1 AND t.date < $2::date AND t.pending = false
-            GROUP BY t.group_id, g.name`;
+            GROUP BY t.group_id, g.name, g.short_name, g.type`;
           bfParams = [groupId, yearStart];
         }
         const groupBfRows = await tenantQuery(req.user.tenantSlug, bfSql, bfParams);
@@ -509,7 +509,7 @@ router.get('/transactions/:id', requirePrivilege('finance_transactions', 'view')
               ref_by.amount::float AS refunded_amount,
               m1.forenames || ' ' || m1.surname AS member_1_name,
               m2.forenames || ' ' || m2.surname AS member_2_name,
-              g.name AS group_name,
+              g.name AS group_name, g.short_name AS group_short_name, g.type AS group_type,
               fa.name AS account_name,
               fa.enable_refunds AS account_enable_refunds,
               COALESCE(
@@ -923,7 +923,7 @@ router.get('/transfers', requirePrivilege('finance_transfer_money', 'view'), asy
               t_out.account_id AS from_account_id,  fa_out.name AS from_account,
               t_in.account_id  AS to_account_id,    fa_in.name  AS to_account,
               t_out.payment_ref, t_out.detail, t_out.remarks,
-              t_out.group_id, g.name AS group_name,
+              t_out.group_id, g.name AS group_name, g.short_name AS group_short_name, g.type AS group_type,
               t_out.cleared_at
        FROM transactions t_out
        JOIN transactions     t_in   ON t_in.transfer_id = t_out.transfer_id AND t_in.type = 'in'
@@ -1344,7 +1344,7 @@ router.get('/statement/download', requirePrivilege('finance_statement', 'downloa
 async function getGroupsStatementData(tenantSlug, from, to) {
   const groups = await tenantQuery(
     tenantSlug,
-    `SELECT g.id, g.name, g.status,
+    `SELECT g.id, g.name, g.short_name, g.type, g.status,
             COALESCE((SELECT SUM(COALESCE(b.money_in, 0)) - SUM(COALESCE(b.money_out, 0))
                       FROM group_ledger_entries b
                       WHERE b.group_id = g.id AND b.entry_date < $1::date), 0)::float AS bf,
@@ -1353,7 +1353,7 @@ async function getGroupsStatementData(tenantSlug, from, to) {
      FROM groups g
      LEFT JOIN group_ledger_entries e ON e.group_id = g.id
        AND e.entry_date BETWEEN $1::date AND $2::date
-     GROUP BY g.id, g.name, g.status
+     GROUP BY g.id, g.name, g.short_name, g.type, g.status
      ORDER BY g.name`,
     [from, to],
   );

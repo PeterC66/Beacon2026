@@ -268,6 +268,9 @@ DO $$ BEGIN
 EXCEPTION WHEN duplicate_object THEN NULL;
 END $$;
 
+-- Abbreviated name for groups/teams (max 10 chars, optional)
+ALTER TABLE :schema.groups ADD COLUMN IF NOT EXISTS short_name TEXT;
+
 -- ─────────────────────────────────────────────
 -- GROUP MEMBERS
 -- ─────────────────────────────────────────────

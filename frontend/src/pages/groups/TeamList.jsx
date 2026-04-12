@@ -245,10 +245,10 @@ export default function TeamList() {
                         </td>
                         <td className="px-3 py-2 font-medium">
                           {can('group_records_all', 'view') ? (
-                            <Link to={`/teams/${t.id}`} className="text-blue-700 hover:underline">
-                              {t.name}
+                            <Link to={`/teams/${t.id}`} title={t.short_name ? t.name : undefined} className="text-blue-700 hover:underline">
+                              {t.short_name || t.name}
                             </Link>
-                          ) : t.name}
+                          ) : <span title={t.short_name ? t.name : undefined}>{t.short_name || t.name}</span>}
                           {t.status === 'inactive' && (
                             <span className="ml-2 text-xs text-red-500">(inactive)</span>
                           )}

@@ -4,7 +4,7 @@
 
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
-import { finance as financeApi, groups as groupsApi } from '../../lib/api.js';
+import { finance as financeApi, groups as groupsApi, teams as teamsApi } from '../../lib/api.js';
 import { useAuth } from '../../context/AuthContext.jsx';
 import NavBar from '../../components/NavBar.jsx';
 import PageHeader from '../../components/PageHeader.jsx';
@@ -57,14 +57,15 @@ export default function FinanceLedger() {
   useEffect(() => {
     async function loadLists() {
       try {
-        const [acc, cat, grp] = await Promise.all([
+        const [acc, cat, grp, tm] = await Promise.all([
           financeApi.listAccounts(),
           financeApi.listCategories(),
-          groupsApi.list(),
+          groupsApi.list({ activeOnly: false }),
+          teamsApi.list({ activeOnly: false }),
         ]);
         setAccounts(acc.filter((a) => a.active));
         setCategories(cat.filter((c) => c.active));
-        setGroups(grp);
+        setGroups([...grp, ...tm]);
       } catch (err) { setError(err.message); }
     }
     loadLists();
@@ -76,7 +77,7 @@ export default function FinanceLedger() {
   const filteredGroups = useMemo(() => {
     const q = groupFilter.trim().toLowerCase();
     if (!q) return groups;
-    return groups.filter((g) => g.name.toLowerCase().includes(q));
+    return groups.filter((g) => g.name.toLowerCase().includes(q) || (g.short_name && g.short_name.toLowerCase().includes(q)));
   }, [groups, groupFilter]);
 
   // Fetch transactions when selId or year changes
@@ -233,10 +234,10 @@ export default function FinanceLedger() {
               {view === 'category' && categories.map((c) => <option key={c.id}  value={c.id}>{c.name}</option>)}
               {view === 'group'    && (
                 <>
-                  <option value="all">All groups</option>
+                  <option value="all">All groups &amp; teams</option>
                   {filteredGroups.map((g) => (
                     <option key={g.id} value={g.id} style={g.status === 'inactive' ? { color: '#dc2626' } : {}}>
-                      {g.name}{g.status === 'inactive' ? ' (inactive)' : ''}
+                      {g.short_name || g.name}{g.status === 'inactive' ? ' (inactive)' : ''}
                     </option>
                   ))}
                 </>
@@ -290,7 +291,7 @@ export default function FinanceLedger() {
                         <SortableHeader col="batch_no"           label="Batch No"     sortKey={sortKey} sortDir={sortDir} onSort={onSort} className={TH} />
                         <SortableHeader col="batch_description"  label="Batch Ref"    sortKey={sortKey} sortDir={sortDir} onSort={onSort} className={TH} />
                         <SortableHeader col="from_to"            label="From/To"      sortKey={sortKey} sortDir={sortDir} onSort={onSort} className={TH} />
-                        <SortableHeader col="group_name"         label="Group"        sortKey={sortKey} sortDir={sortDir} onSort={onSort} className={TH} />
+                        <SortableHeader col="group_name"         label="Group/Team"   sortKey={sortKey} sortDir={sortDir} onSort={onSort} className={TH} />
                         <SortableHeader col="member_1_no"        label="Mem#"         sortKey={sortKey} sortDir={sortDir} onSort={onSort} className={TH} />
                         <th className={TH}>Mem2#</th>
                         <SortableHeader col="detail"             label="Detail"       sortKey={sortKey} sortDir={sortDir} onSort={onSort} className={TH} />
@@ -321,7 +322,7 @@ export default function FinanceLedger() {
                         <tr key={`bf-${bf.group_id}`} className="bg-slate-100 border-b border-slate-200 italic text-slate-600">
                           <td className="px-3 py-2" colSpan={4}></td>
                           <td className="px-3 py-2" colSpan={9}>
-                            Balance b/f{bf.group_name ? ` — ${bf.group_name}` : ''}
+                            Balance b/f{bf.group_name ? ` — ${bf.group_short_name || bf.group_name}` : ''}
                           </td>
                           <td className="px-3 py-2 text-right text-green-700">{bf.balance >= 0 ? fmtAmount(bf.balance) : ''}</td>
                           <td className="px-3 py-2 text-right text-red-700">{bf.balance < 0 ? fmtAmount(Math.abs(bf.balance)) : ''}</td>
@@ -395,9 +396,9 @@ export default function FinanceLedger() {
                           {/* Group */}
                           <td className="px-3 py-2 max-w-[120px] truncate" title={t.group_name ?? ''}>
                             {t.group_name && t.group_id ? (
-                              <Link to={`/groups/${t.group_id}`} className="text-blue-700 hover:underline">{t.group_name}</Link>
+                              <Link to={`/${t.group_type === 'team' ? 'teams' : 'groups'}/${t.group_id}`} className="text-blue-700 hover:underline">{t.group_short_name || t.group_name}</Link>
                             ) : (
-                              t.group_name ?? ''
+                              t.group_short_name || t.group_name || ''
                             )}
                           </td>
                           {/* Mem# */}

@@ -26,7 +26,7 @@ function GroupDetails({ groupId, faculties, venues, onSaved, onDeleted, sitework
   const isNew = !groupId;
 
   const EMPTY = {
-    name: '', facultyId: '', status: 'active', whenText: '',
+    name: '', shortName: '', facultyId: '', status: 'active', whenText: '',
     startTime: '', endTime: '', venueId: '', enquiries: '',
     maxMembers: '', allowOnlineJoin: false, enableWaitingList: false,
     notifyLeader: false, displayWaitingList: false,
@@ -51,6 +51,7 @@ function GroupDetails({ groupId, faculties, venues, onSaved, onDeleted, sitework
       .then((g) => {
         setForm({
           name:                g.name ?? '',
+          shortName:           g.short_name ?? '',
           facultyId:           g.faculty_id ?? '',
           status:              g.status ?? 'active',
           whenText:            g.when_text ?? '',
@@ -86,6 +87,7 @@ function GroupDetails({ groupId, faculties, venues, onSaved, onDeleted, sitework
     try {
       const payload = {
         name:                form.name,
+        shortName:           form.shortName || null,
         facultyId:           form.facultyId || null,
         status:              form.status,
         whenText:            form.whenText || null,
@@ -151,11 +153,18 @@ function GroupDetails({ groupId, faculties, venues, onSaved, onDeleted, sitework
         </p>
       )}
 
-      {/* Name */}
-      <div>
-        <label htmlFor="group-name" className={labelCls}>Group Name <RequiredMark /></label>
-        <input id="group-name" name="name" className={`${inputCls} w-full`} required value={form.name}
-          onChange={(e) => set('name', e.target.value)} disabled={!canChange} />
+      {/* Name + Abbreviated name */}
+      <div className="grid grid-cols-1 sm:grid-cols-[1fr_10rem] gap-4">
+        <div>
+          <label htmlFor="group-name" className={labelCls}>Group Name <RequiredMark /></label>
+          <input id="group-name" name="name" className={`${inputCls} w-full`} required value={form.name}
+            onChange={(e) => set('name', e.target.value)} disabled={!canChange} />
+        </div>
+        <div>
+          <label htmlFor="group-short-name" className={labelCls}>Abbreviated name</label>
+          <input id="group-short-name" name="shortName" maxLength={10} className={`${inputCls} w-full`} value={form.shortName}
+            onChange={(e) => set('shortName', e.target.value)} disabled={!canChange} placeholder="max 10 chars" />
+        </div>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
