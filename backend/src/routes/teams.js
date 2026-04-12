@@ -1,0 +1,850 @@
+// beacon2/backend/src/routes/teams.js
+// Teams are like groups but without scheduling, faculty, venue, or waiting list.
+// They share the same underlying `groups` table (type = 'team') and privileges.
+
+import { Router } from 'express';
+import { z } from 'zod';
+import ExcelJS from 'exceljs';
+import PDFDocument from 'pdfkit';
+import { requireAuth } from '../middleware/auth.js';
+import { requirePrivilege } from '../middleware/requirePrivilege.js';
+import { tenantQuery } from '../utils/db.js';
+import { AppError } from '../middleware/errorHandler.js';
+
+const router = Router();
+router.use(requireAuth);
+
+// ─── GET /teams ───────────────────────────────────────────────────────────
+router.get('/', requirePrivilege('groups_list', 'view'), async (req, res, next) => {
+  try {
+    const slug = req.user.tenantSlug;
+    const { activeOnly = 'true', letter } = req.query;
+
+    const conditions = [`g.type = 'team'`];
+    const params = [];
+    let i = 1;
+
+    if (activeOnly !== 'false') {
+      conditions.push(`g.status = 'active'`);
+    }
+    if (letter && /^[A-Z]$/i.test(letter)) {
+      conditions.push(`upper(g.name) LIKE $${i++}`);
+      params.push(letter.toUpperCase() + '%');
+    }
+
+    const where = `WHERE ${conditions.join(' AND ')}`;
+
+    const teams = await tenantQuery(
+      slug,
+      `SELECT g.id, g.name, g.status, g.show_addresses,
+              (SELECT COUNT(*)::int FROM group_members gm
+               WHERE gm.group_id = g.id) AS member_count,
+              (SELECT COALESCE(
+                 json_agg(json_build_object(
+                   'id',       m.id,
+                   'forenames', m.forenames,
+                   'surname',   m.surname
+                 ) ORDER BY m.surname, m.forenames),
+                 '[]'::json
+               )
+               FROM group_members gm
+               JOIN members m ON m.id = gm.member_id
+               WHERE gm.group_id = g.id AND gm.is_leader = true) AS leaders
+       FROM groups g
+       ${where}
+       ORDER BY g.name`,
+      params,
+    );
+
+    res.json(teams);
+  } catch (err) {
+    next(err);
+  }
+});
+
+// ─── GET /teams/download ─────────────────────────────────────────────────
+const TEAM_LIST_FIELD_DEFS = {
+  name:         { label: 'Team',         get: (g) => g.name ?? '' },
+  leaders:      { label: 'Leader(s)',    get: (g) => (g.leaders ?? []).map((l) => `${l.forenames} ${l.surname}`).join(', ') },
+  member_count: { label: 'Members',      get: (g) => g.member_count ?? 0 },
+  status:       { label: 'Status',       get: (g) => g.status ?? '' },
+  information:  { label: 'Information',  get: (g) => g.information ?? '' },
+};
+
+router.get('/download', requirePrivilege('groups_list', 'download'), async (req, res, next) => {
+  try {
+    const { format = 'excel', ids = '', fields = '' } = req.query;
+    const slug = req.user.tenantSlug;
+
+    const teamIds = ids.split(',').map((s) => s.trim()).filter(Boolean);
+    if (teamIds.length === 0) throw AppError('No teams selected.', 400);
+
+    const rows = await tenantQuery(
+      slug,
+      `SELECT g.id, g.name, g.status, g.information,
+              (SELECT COUNT(*)::int FROM group_members gm
+               WHERE gm.group_id = g.id) AS member_count,
+              (SELECT COALESCE(
+                 json_agg(json_build_object(
+                   'forenames', m.forenames,
+                   'surname',   m.surname
+                 ) ORDER BY m.surname, m.forenames),
+                 '[]'::json
+               )
+               FROM group_members gm
+               JOIN members m ON m.id = gm.member_id
+               WHERE gm.group_id = g.id AND gm.is_leader = true) AS leaders
+       FROM groups g
+       WHERE g.id = ANY($1::text[]) AND g.type = 'team'
+       ORDER BY g.name`,
+      [teamIds],
+    );
+
+    const activeCols = fields.split(',').map((s) => s.trim()).filter((f) => f && TEAM_LIST_FIELD_DEFS[f]);
+    const cols = activeCols.length ? activeCols : Object.keys(TEAM_LIST_FIELD_DEFS);
+
+    const tenantPart = slug.replace(/^u3a_/, '');
+    const stamp = new Date().toISOString().slice(0, 10);
+
+    if (format === 'excel') {
+      const wb = new ExcelJS.Workbook();
+      const ws = wb.addWorksheet('Teams');
+      ws.columns = cols.map((f) => ({ header: TEAM_LIST_FIELD_DEFS[f].label, width: 22 }));
+      ws.getRow(1).font = { bold: true };
+      for (const g of rows) ws.addRow(cols.map((f) => TEAM_LIST_FIELD_DEFS[f].get(g)));
+      res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+      res.setHeader('Content-Disposition', `attachment; filename="${tenantPart}_teams_${stamp}.xlsx"`);
+      await wb.xlsx.write(res);
+      return res.end();
+    }
+
+    if (format === 'pdf') {
+      const PAGE_W = 841.89; const PAGE_H = 595.28;
+      const MARGIN = 36; const FONT_SZ = 8; const ROW_H = 14;
+      const usableW = PAGE_W - MARGIN * 2;
+      const title = `Teams — ${stamp}`;
+
+      const doc = new PDFDocument({ margin: MARGIN, size: 'A4', layout: 'landscape', autoFirstPage: true });
+      const chunks = [];
+      doc.on('data', (c) => chunks.push(c));
+      const done = new Promise((resolve) => doc.on('end', resolve));
+
+      let y = MARGIN + 4;
+      doc.font('Helvetica-Bold').fontSize(10).text(title, MARGIN, y, { lineBreak: false });
+      y += 18;
+
+      const colW = usableW / cols.length;
+
+      function drawHeader(hy) {
+        doc.font('Helvetica-Bold').fontSize(FONT_SZ);
+        cols.forEach((f, idx) => {
+          doc.text(TEAM_LIST_FIELD_DEFS[f].label, MARGIN + idx * colW, hy, { width: colW - 3, lineBreak: false, ellipsis: true });
+        });
+        return hy + ROW_H;
+      }
+
+      y = drawHeader(y);
+      doc.moveTo(MARGIN, y - 2).lineTo(PAGE_W - MARGIN, y - 2).strokeColor('#aaaaaa').stroke();
+
+      doc.font('Helvetica').fontSize(FONT_SZ);
+      for (const g of rows) {
+        if (y + ROW_H > PAGE_H - MARGIN) {
+          doc.addPage({ size: 'A4', layout: 'landscape' });
+          y = MARGIN + 4;
+          y = drawHeader(y);
+          doc.moveTo(MARGIN, y - 2).lineTo(PAGE_W - MARGIN, y - 2).strokeColor('#aaaaaa').stroke();
+          doc.font('Helvetica').fontSize(FONT_SZ);
+        }
+        cols.forEach((f, idx) => {
+          const val = TEAM_LIST_FIELD_DEFS[f].get(g);
+          doc.text(String(val), MARGIN + idx * colW, y, { width: colW - 3, lineBreak: false, ellipsis: true });
+        });
+        y += ROW_H;
+      }
+
+      doc.end();
+      await done;
+      const buf = Buffer.concat(chunks);
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader('Content-Disposition', `attachment; filename="${tenantPart}_teams_${stamp}.pdf"`);
+      return res.send(buf);
+    }
+
+    throw AppError('Invalid format.', 400);
+  } catch (err) { next(err); }
+});
+
+// ─── GET /teams/:id ──────────────────────────────────────────────────────
+router.get('/:id', requirePrivilege('group_records_all', 'view'), async (req, res, next) => {
+  try {
+    const [team] = await tenantQuery(
+      req.user.tenantSlug,
+      `SELECT * FROM groups WHERE id = $1 AND type = 'team'`,
+      [req.params.id],
+    );
+    if (!team) throw AppError('Team not found.', 404);
+    res.json(team);
+  } catch (err) {
+    next(err);
+  }
+});
+
+// ─── POST /teams ─────────────────────────────────────────────────────────
+const teamSchema = z.object({
+  name:           z.string().min(1).max(200),
+  status:         z.enum(['active', 'inactive']).default('active'),
+  information:    z.string().nullable().optional(),
+  notes:          z.string().nullable().optional(),
+  showAddresses:  z.boolean().default(false),
+});
+
+router.post('/', requirePrivilege('group_records_all', 'create'), async (req, res, next) => {
+  try {
+    const data = teamSchema.parse(req.body);
+    const slug = req.user.tenantSlug;
+
+    const [team] = await tenantQuery(
+      slug,
+      `INSERT INTO groups (name, status, information, notes, show_addresses, type)
+       VALUES ($1,$2,$3,$4,$5,'team')
+       RETURNING *`,
+      [data.name, data.status, data.information ?? null, data.notes ?? null, data.showAddresses],
+    );
+    res.status(201).json(team);
+  } catch (err) {
+    next(err);
+  }
+});
+
+// ─── PATCH /teams/:id ────────────────────────────────────────────────────
+const updateTeamSchema = z.object({
+  name:           z.string().min(1).max(200).optional(),
+  status:         z.enum(['active', 'inactive']).optional(),
+  information:    z.string().nullable().optional(),
+  notes:          z.string().nullable().optional(),
+  showAddresses:  z.boolean().optional(),
+});
+
+const TEAM_FIELDS = [
+  ['name',          'name'],
+  ['status',        'status'],
+  ['information',   'information'],
+  ['notes',         'notes'],
+  ['showAddresses', 'show_addresses'],
+];
+
+router.patch('/:id', requirePrivilege('group_records_all', 'change'), async (req, res, next) => {
+  try {
+    const slug = req.user.tenantSlug;
+    const data = updateTeamSchema.parse(req.body);
+
+    const setClauses = [];
+    const values = [];
+    let i = 1;
+    for (const [jsKey, col] of TEAM_FIELDS) {
+      if (data[jsKey] !== undefined) {
+        setClauses.push(`${col} = $${i++}`);
+        values.push(data[jsKey]);
+      }
+    }
+
+    if (setClauses.length === 0) {
+      return res.status(400).json({ error: 'Nothing to update.' });
+    }
+
+    setClauses.push(`updated_at = now()`);
+    values.push(req.params.id);
+
+    const [team] = await tenantQuery(
+      slug,
+      `UPDATE groups SET ${setClauses.join(', ')} WHERE id = $${i} AND type = 'team' RETURNING *`,
+      values,
+    );
+    if (!team) throw AppError('Team not found.', 404);
+    res.json(team);
+  } catch (err) {
+    next(err);
+  }
+});
+
+// ─── DELETE /teams/:id ───────────────────────────────────────────────────
+router.delete('/:id', requirePrivilege('group_records_all', 'delete'), async (req, res, next) => {
+  try {
+    const slug = req.user.tenantSlug;
+    const [existing] = await tenantQuery(slug, `SELECT id FROM groups WHERE id = $1 AND type = 'team'`, [req.params.id]);
+    if (!existing) throw AppError('Team not found.', 404);
+
+    await tenantQuery(slug, `DELETE FROM groups WHERE id = $1 AND type = 'team'`, [req.params.id]);
+    res.json({ message: 'Team deleted.' });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// ─────────────────────────────────────────────────────────────────────────
+// TEAM MEMBERS  sub-resource:  /teams/:id/members
+// ─────────────────────────────────────────────────────────────────────────
+
+// ─── GET /teams/:id/members ──────────────────────────────────────────────
+router.get('/:id/members', requirePrivilege('group_records_all', 'view'), async (req, res, next) => {
+  try {
+    const slug = req.user.tenantSlug;
+
+    const [team] = await tenantQuery(slug, `SELECT id FROM groups WHERE id = $1 AND type = 'team'`, [req.params.id]);
+    if (!team) throw AppError('Team not found.', 404);
+
+    const rows = await tenantQuery(
+      slug,
+      `SELECT gm.id AS gm_id, gm.member_id, gm.is_leader, gm.created_at AS joined_at,
+              m.membership_number, m.title, m.forenames, m.surname, m.known_as,
+              m.email, m.mobile, m.hide_contact, m.next_renewal,
+              ms.name AS status,
+              a.house_no, a.street, a.town, a.postcode, a.telephone
+       FROM group_members gm
+       JOIN members m ON m.id = gm.member_id
+       LEFT JOIN member_statuses ms ON ms.id = m.status_id
+       LEFT JOIN addresses a ON a.id = m.address_id
+       WHERE gm.group_id = $1
+       ORDER BY m.surname, m.forenames`,
+      [req.params.id],
+    );
+
+    res.json(rows);
+  } catch (err) {
+    next(err);
+  }
+});
+
+// ─── GET /teams/:id/members/download ────────────────────────────────────
+const TEAM_MEMBER_FIELD_DEFS = {
+  membership_number: { label: 'Membership No', get: (m) => String(m.membership_number ?? '') },
+  title:        { label: 'Title',       get: (m) => m.title ?? '' },
+  forenames:    { label: 'Forenames',   get: (m) => m.forenames ?? '' },
+  known_as:     { label: 'Known As',    get: (m) => m.known_as ?? '' },
+  surname:      { label: 'Surname',     get: (m) => m.surname ?? '' },
+  email:        { label: 'Email',       get: (m) => m.email ?? '' },
+  mobile:       { label: 'Mobile',      get: (m) => m.mobile ?? '' },
+  telephone:    { label: 'Telephone',   get: (m) => m.telephone ?? '' },
+  address:      { label: 'Address',     get: (m) => [m.house_no, m.street].filter(Boolean).join(', ') },
+  town:         { label: 'Town',        get: (m) => m.town ?? '' },
+  postcode:     { label: 'Postcode',    get: (m) => m.postcode ?? '' },
+  status:       { label: 'Status',      get: (m) => m.status ?? '' },
+  is_leader:    { label: 'Leader',      get: (m) => m.is_leader ? 'Yes' : '' },
+};
+
+router.get('/:id/members/download', requirePrivilege('group_records_all', 'view'), async (req, res, next) => {
+  try {
+    const { format = 'excel', ids = '', fields = '' } = req.query;
+    const slug = req.user.tenantSlug;
+    const teamId = req.params.id;
+
+    const [team] = await tenantQuery(slug, `SELECT id, name FROM groups WHERE id = $1 AND type = 'team'`, [teamId]);
+    if (!team) throw AppError('Team not found.', 404);
+
+    const memberIds = ids.split(',').map((s) => s.trim()).filter(Boolean);
+
+    const rows = await tenantQuery(slug,
+      `SELECT gm.member_id, gm.is_leader,
+              m.membership_number, m.title, m.forenames, m.surname, m.known_as,
+              m.email, m.mobile,
+              m.photo_data, m.photo_mime_type,
+              ms.name AS status,
+              a.house_no, a.street, a.town, a.postcode, a.telephone
+       FROM group_members gm
+       JOIN members m ON m.id = gm.member_id
+       LEFT JOIN member_statuses ms ON ms.id = m.status_id
+       LEFT JOIN addresses a ON a.id = m.address_id
+       WHERE gm.group_id = $1
+         AND ($2::text[] IS NULL OR gm.member_id = ANY($2::text[]))
+       ORDER BY m.surname, m.forenames`,
+      [teamId, memberIds.length ? memberIds : null],
+    );
+
+    const tenantPart = slug.replace(/^u3a_/, '');
+    const safeName   = team.name.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+    const stamp      = new Date().toISOString().slice(0, 10);
+
+    const activeCols = fields.split(',').map((s) => s.trim()).filter((f) => f && TEAM_MEMBER_FIELD_DEFS[f]);
+    const cols = activeCols.length ? activeCols : Object.keys(TEAM_MEMBER_FIELD_DEFS);
+
+    if (format === 'excel') {
+      const wb = new ExcelJS.Workbook();
+      const ws = wb.addWorksheet('Team Members');
+      ws.columns = cols.map((f) => ({ header: TEAM_MEMBER_FIELD_DEFS[f].label, width: 20 }));
+      ws.getRow(1).font = { bold: true };
+      for (const m of rows) ws.addRow(cols.map((f) => TEAM_MEMBER_FIELD_DEFS[f].get(m)));
+      res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+      res.setHeader('Content-Disposition', `attachment; filename="${tenantPart}_${safeName}_members_${stamp}.xlsx"`);
+      await wb.xlsx.write(res);
+      return res.end();
+    }
+
+    if (format === 'pdf') {
+      const PAGE_W = 841.89; const PAGE_H = 595.28;
+      const MARGIN = 36; const FONT_SZ = 7; const ROW_H = 13;
+      const usableW = PAGE_W - MARGIN * 2;
+      const title = `${team.name} — Members — ${stamp}`;
+
+      const hasAnyPhoto = rows.some((m) => m.photo_data && m.photo_mime_type);
+
+      const doc = new PDFDocument({ margin: MARGIN, size: 'A4', layout: 'landscape', autoFirstPage: true });
+      const chunks = [];
+      doc.on('data', (c) => chunks.push(c));
+      const done = new Promise((resolve) => doc.on('end', resolve));
+
+      let y = MARGIN + 4;
+      doc.font('Helvetica-Bold').fontSize(9).text(title, MARGIN, y, { lineBreak: false });
+      y += 16;
+
+      if (hasAnyPhoto) {
+        const PHOTO_SIZE = 36;
+        const PHOTO_ROW_H = PHOTO_SIZE + 6;
+        const TEXT_X = MARGIN + PHOTO_SIZE + 8;
+        const textW = usableW - PHOTO_SIZE - 8;
+
+        for (const m of rows) {
+          if (y + PHOTO_ROW_H > PAGE_H - MARGIN) {
+            doc.addPage({ size: 'A4', layout: 'landscape' });
+            y = MARGIN + 4;
+          }
+          if (m.photo_data && m.photo_mime_type) {
+            try {
+              const photoBuf = Buffer.from(m.photo_data, 'base64');
+              doc.image(photoBuf, MARGIN, y, { width: PHOTO_SIZE, height: PHOTO_SIZE, fit: [PHOTO_SIZE, PHOTO_SIZE] });
+            } catch { /* skip photo */ }
+          }
+          const displayName = [m.title, m.forenames, m.surname].filter(Boolean).join(' ');
+          doc.font('Helvetica-Bold').fontSize(8).fillColor('#000000');
+          doc.text(displayName, TEXT_X, y, { width: textW, lineBreak: false, ellipsis: true });
+          doc.font('Helvetica').fontSize(FONT_SZ).fillColor('#333333');
+          const details = cols
+            .filter((f) => !['title', 'forenames', 'surname'].includes(f))
+            .map((f) => TEAM_MEMBER_FIELD_DEFS[f].get(m))
+            .filter(Boolean)
+            .join('  |  ');
+          doc.text(details, TEXT_X, y + 11, { width: textW, lineBreak: false, ellipsis: true });
+          doc.moveTo(MARGIN, y + PHOTO_ROW_H - 3).lineTo(PAGE_W - MARGIN, y + PHOTO_ROW_H - 3).strokeColor('#dddddd').stroke();
+          y += PHOTO_ROW_H;
+        }
+      } else {
+        const colW = usableW / cols.length;
+        function drawHeader(hy) {
+          doc.font('Helvetica-Bold').fontSize(FONT_SZ);
+          cols.forEach((f, idx) => {
+            doc.text(TEAM_MEMBER_FIELD_DEFS[f].label, MARGIN + idx * colW, hy, { width: colW - 3, lineBreak: false, ellipsis: true });
+          });
+          return hy + ROW_H;
+        }
+        y = drawHeader(y);
+        doc.moveTo(MARGIN, y - 2).lineTo(PAGE_W - MARGIN, y - 2).strokeColor('#aaaaaa').stroke();
+        doc.font('Helvetica').fontSize(FONT_SZ);
+        for (const m of rows) {
+          if (y + ROW_H > PAGE_H - MARGIN) {
+            doc.addPage({ size: 'A4', layout: 'landscape' });
+            y = MARGIN + 4;
+            y = drawHeader(y);
+            doc.moveTo(MARGIN, y - 2).lineTo(PAGE_W - MARGIN, y - 2).strokeColor('#aaaaaa').stroke();
+            doc.font('Helvetica').fontSize(FONT_SZ);
+          }
+          cols.forEach((f, idx) => {
+            doc.text(TEAM_MEMBER_FIELD_DEFS[f].get(m), MARGIN + idx * colW, y, { width: colW - 3, lineBreak: false, ellipsis: true });
+          });
+          y += ROW_H;
+        }
+      }
+
+      doc.end();
+      await done;
+      const buf = Buffer.concat(chunks);
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader('Content-Disposition', `attachment; filename="${tenantPart}_${safeName}_members_${stamp}.pdf"`);
+      return res.send(buf);
+    }
+
+    throw AppError('Invalid format.', 400);
+  } catch (err) { next(err); }
+});
+
+// ─── POST /teams/:id/members ─────────────────────────────────────────────
+const addMemberSchema = z.union([
+  z.object({ memberId: z.string().min(1) }),
+  z.object({ membershipNumber: z.coerce.number().int().positive() }),
+]);
+
+router.post('/:id/members', requirePrivilege('group_records_all', 'change'), async (req, res, next) => {
+  try {
+    const slug = req.user.tenantSlug;
+    const data = addMemberSchema.parse(req.body);
+
+    const [team] = await tenantQuery(slug, `SELECT id FROM groups WHERE id = $1 AND type = 'team'`, [req.params.id]);
+    if (!team) throw AppError('Team not found.', 404);
+
+    let member;
+    if ('memberId' in data) {
+      const [row] = await tenantQuery(slug,
+        `SELECT id, membership_number, forenames, surname FROM members WHERE id = $1`,
+        [data.memberId]);
+      member = row;
+    } else {
+      const [row] = await tenantQuery(slug,
+        `SELECT id, membership_number, forenames, surname FROM members WHERE membership_number = $1`,
+        [data.membershipNumber]);
+      member = row;
+    }
+
+    if (!member) throw AppError('Member not found.', 404);
+
+    const [existing] = await tenantQuery(slug,
+      `SELECT id FROM group_members WHERE group_id = $1 AND member_id = $2`,
+      [req.params.id, member.id]);
+    if (existing) throw AppError('Member is already in this team.', 409);
+
+    // Teams have no waiting list — always add directly
+    const [gm] = await tenantQuery(slug,
+      `INSERT INTO group_members (group_id, member_id) VALUES ($1, $2)
+       RETURNING id, group_id, member_id, is_leader, created_at`,
+      [req.params.id, member.id]);
+
+    res.status(201).json({
+      ...gm,
+      membership_number: member.membership_number,
+      forenames: member.forenames,
+      surname: member.surname,
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// ─── POST /teams/:id/members/bulk ───────────────────────────────────────
+const bulkAddMembersSchema = z.object({
+  memberIds: z.array(z.string().min(1)).min(1),
+});
+
+router.post('/:id/members/bulk', requirePrivilege('group_records_all', 'change'), async (req, res, next) => {
+  try {
+    const slug = req.user.tenantSlug;
+    const { memberIds } = bulkAddMembersSchema.parse(req.body);
+
+    const [team] = await tenantQuery(slug, `SELECT id FROM groups WHERE id = $1 AND type = 'team'`, [req.params.id]);
+    if (!team) throw AppError('Team not found.', 404);
+
+    let added = 0;
+    let skipped = 0;
+
+    for (const memberId of memberIds) {
+      const [existing] = await tenantQuery(slug,
+        `SELECT id FROM group_members WHERE group_id = $1 AND member_id = $2`,
+        [req.params.id, memberId]);
+      if (existing) { skipped++; continue; }
+
+      await tenantQuery(slug,
+        `INSERT INTO group_members (group_id, member_id) VALUES ($1, $2)`,
+        [req.params.id, memberId]);
+      added++;
+    }
+
+    res.json({ added, skipped, waitlisted: 0 });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// ─── PATCH /teams/:id/members/:memberId ──────────────────────────────────
+const patchMemberSchema = z.object({
+  isLeader: z.boolean().optional(),
+});
+
+router.patch('/:id/members/:memberId', requirePrivilege('group_records_all', 'change'), async (req, res, next) => {
+  try {
+    const slug = req.user.tenantSlug;
+    const data = patchMemberSchema.parse(req.body);
+
+    if (data.isLeader === undefined) {
+      return res.status(400).json({ error: 'Nothing to update.' });
+    }
+
+    const [gm] = await tenantQuery(slug,
+      `UPDATE group_members SET is_leader = $1
+       WHERE group_id = $2 AND member_id = $3
+       RETURNING id, member_id, is_leader`,
+      [data.isLeader, req.params.id, req.params.memberId]);
+    if (!gm) throw AppError('Team member not found.', 404);
+    res.json(gm);
+  } catch (err) {
+    next(err);
+  }
+});
+
+// ─── DELETE /teams/:id/members/bulk ──────────────────────────────────────
+const bulkRemoveSchema = z.object({
+  memberIds: z.array(z.string().uuid()).min(1),
+});
+
+router.delete('/:id/members/bulk', requirePrivilege('group_records_all', 'change'), async (req, res, next) => {
+  try {
+    const slug = req.user.tenantSlug;
+    const { memberIds } = bulkRemoveSchema.parse(req.body);
+
+    const [team] = await tenantQuery(slug, `SELECT id FROM groups WHERE id = $1 AND type = 'team'`, [req.params.id]);
+    if (!team) throw AppError('Team not found.', 404);
+
+    const result = await tenantQuery(slug,
+      `DELETE FROM group_members WHERE group_id = $1 AND member_id = ANY($2::uuid[]) RETURNING member_id`,
+      [req.params.id, memberIds]);
+    res.json({ removed: result.length });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// ─── POST /teams/:id/members/bulk-add ───────────────────────────────────
+const bulkAddSchema = z.object({
+  memberIds:    z.array(z.string().uuid()).min(1),
+  targetTeamId: z.string().uuid(),
+});
+
+router.post('/:id/members/bulk-add', requirePrivilege('group_records_all', 'change'), async (req, res, next) => {
+  try {
+    const slug = req.user.tenantSlug;
+    const { memberIds, targetTeamId } = bulkAddSchema.parse(req.body);
+
+    const [targetTeam] = await tenantQuery(slug, `SELECT id FROM groups WHERE id = $1 AND type = 'team'`, [targetTeamId]);
+    if (!targetTeam) throw AppError('Target team not found.', 404);
+
+    const existing = await tenantQuery(slug,
+      `SELECT member_id FROM group_members WHERE group_id = $1 AND member_id = ANY($2::uuid[])`,
+      [targetTeamId, memberIds]);
+    const existingSet = new Set(existing.map((r) => r.member_id));
+    const toAdd = memberIds.filter((id) => !existingSet.has(id));
+
+    let added = 0;
+    for (const memberId of toAdd) {
+      await tenantQuery(slug,
+        `INSERT INTO group_members (group_id, member_id) VALUES ($1, $2)`,
+        [targetTeamId, memberId]);
+      added++;
+    }
+
+    res.json({ added, waitlisted: 0, skipped: existingSet.size });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// ─── DELETE /teams/:id/members/:memberId ─────────────────────────────────
+router.delete('/:id/members/:memberId', requirePrivilege('group_records_all', 'change'), async (req, res, next) => {
+  try {
+    const slug = req.user.tenantSlug;
+    const [gm] = await tenantQuery(slug,
+      `DELETE FROM group_members WHERE group_id = $1 AND member_id = $2 RETURNING id`,
+      [req.params.id, req.params.memberId]);
+    if (!gm) throw AppError('Team member not found.', 404);
+    res.json({ message: 'Member removed from team.' });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// ─────────────────────────────────────────────────────────────────────────
+// TEAM LEDGER  sub-resource:  /teams/:id/ledger
+// Uses same group_ledger_entries table and same privilege checks as groups.
+// ─────────────────────────────────────────────────────────────────────────
+
+async function hasLedgerAccess(req, teamId, action) {
+  const { userId, tenantSlug, privileges } = req.user;
+  if (privileges.includes(`group_ledger_all:${action}`)) return true;
+  if (privileges.includes(`group_ledger_as_leader:${action}`)) {
+    const rows = await tenantQuery(
+      tenantSlug,
+      `SELECT 1 FROM users u
+       JOIN members m ON m.id = u.member_id
+       JOIN group_members gm ON gm.member_id = m.id
+       WHERE u.id = $1 AND gm.group_id = $2 AND gm.is_leader = true`,
+      [userId, teamId],
+    );
+    return rows.length > 0;
+  }
+  return false;
+}
+
+const ledgerEntrySchema = z.object({
+  entryDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  payee:     z.string().max(200).nullable().optional(),
+  detail:    z.string().max(500).nullable().optional(),
+  moneyIn:   z.number().nonnegative().nullable().optional(),
+  moneyOut:  z.number().nonnegative().nullable().optional(),
+});
+
+// GET /teams/:id/ledger
+router.get('/:id/ledger', async (req, res, next) => {
+  try {
+    const teamId = req.params.id;
+    if (!await hasLedgerAccess(req, teamId, 'view')) {
+      return res.status(403).json({ error: 'Forbidden' });
+    }
+    const slug = req.user.tenantSlug;
+
+    const year = new Date().getFullYear();
+    const from = req.query.from || `${year}-01-01`;
+    const to   = req.query.to   || `${year}-12-31`;
+
+    const bfRows = await tenantQuery(slug,
+      `SELECT COALESCE(SUM(money_in),0) - COALESCE(SUM(money_out),0) AS bf
+       FROM group_ledger_entries
+       WHERE group_id = $1 AND entry_date < $2::date`,
+      [teamId, from]);
+    const broughtForward = parseFloat(bfRows[0]?.bf ?? 0);
+
+    const entries = await tenantQuery(slug,
+      `SELECT id, entry_date, payee, detail, money_in, money_out, created_at
+       FROM group_ledger_entries
+       WHERE group_id = $1 AND entry_date >= $2::date AND entry_date <= $3::date
+       ORDER BY entry_date, created_at`,
+      [teamId, from, to]);
+
+    res.json({ broughtForward, entries });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// POST /teams/:id/ledger
+router.post('/:id/ledger', async (req, res, next) => {
+  try {
+    const teamId = req.params.id;
+    if (!await hasLedgerAccess(req, teamId, 'create')) {
+      return res.status(403).json({ error: 'Forbidden' });
+    }
+    const data = ledgerEntrySchema.parse(req.body);
+    const slug = req.user.tenantSlug;
+
+    const [entry] = await tenantQuery(slug,
+      `INSERT INTO group_ledger_entries (group_id, entry_date, payee, detail, money_in, money_out)
+       VALUES ($1, $2::date, $3, $4, $5::numeric, $6::numeric)
+       RETURNING *`,
+      [teamId, data.entryDate, data.payee ?? null, data.detail ?? null,
+       data.moneyIn ?? null, data.moneyOut ?? null]);
+    res.status(201).json(entry);
+  } catch (err) {
+    next(err);
+  }
+});
+
+// PATCH /teams/:id/ledger/:entryId
+router.patch('/:id/ledger/:entryId', async (req, res, next) => {
+  try {
+    const { id: teamId, entryId } = req.params;
+    if (!await hasLedgerAccess(req, teamId, 'change')) {
+      return res.status(403).json({ error: 'Forbidden' });
+    }
+    const data = ledgerEntrySchema.partial().parse(req.body);
+    const slug = req.user.tenantSlug;
+
+    const fields = [];
+    const vals   = [];
+    let pi = 1;
+    if (data.entryDate !== undefined) { fields.push(`entry_date = $${pi++}::date`); vals.push(data.entryDate); }
+    if (data.payee     !== undefined) { fields.push(`payee      = $${pi++}`);       vals.push(data.payee ?? null); }
+    if (data.detail    !== undefined) { fields.push(`detail     = $${pi++}`);       vals.push(data.detail ?? null); }
+    if (data.moneyIn   !== undefined) { fields.push(`money_in   = $${pi++}::numeric`); vals.push(data.moneyIn ?? null); }
+    if (data.moneyOut  !== undefined) { fields.push(`money_out  = $${pi++}::numeric`); vals.push(data.moneyOut ?? null); }
+    if (fields.length === 0) return res.json({});
+
+    fields.push(`updated_at = now()`);
+    const [updated] = await tenantQuery(slug,
+      `UPDATE group_ledger_entries SET ${fields.join(', ')}
+       WHERE id = $${pi++} AND group_id = $${pi++}
+       RETURNING *`,
+      [...vals, entryId, teamId]);
+    if (!updated) return res.status(404).json({ error: 'Entry not found.' });
+    res.json(updated);
+  } catch (err) {
+    next(err);
+  }
+});
+
+// GET /teams/:id/ledger/download
+router.get('/:id/ledger/download', async (req, res, next) => {
+  try {
+    const teamId = req.params.id;
+    if (!await hasLedgerAccess(req, teamId, 'download')) {
+      return res.status(403).json({ error: 'Forbidden' });
+    }
+    const slug = req.user.tenantSlug;
+    const { from, to } = req.query;
+
+    const conditions = ['gle.group_id = $1'];
+    const params = [teamId];
+    let pi = 2;
+    if (from) { conditions.push(`gle.entry_date >= $${pi++}::date`); params.push(from); }
+    if (to)   { conditions.push(`gle.entry_date <= $${pi++}::date`); params.push(to); }
+
+    const [[teamRow], entries] = await Promise.all([
+      tenantQuery(slug, `SELECT name FROM groups WHERE id = $1 AND type = 'team'`, [teamId]),
+      tenantQuery(slug,
+        `SELECT gle.entry_date, gle.payee, gle.detail, gle.money_in, gle.money_out
+         FROM group_ledger_entries gle
+         WHERE ${conditions.join(' AND ')}
+         ORDER BY gle.entry_date, gle.created_at`,
+        params),
+    ]);
+
+    const teamName = teamRow?.name ?? 'Team';
+    const wb = new ExcelJS.Workbook();
+    const ws = wb.addWorksheet('Team Ledger');
+    ws.columns = [
+      { header: 'Date',    key: 'date',      width: 14 },
+      { header: 'Payee',   key: 'payee',     width: 24 },
+      { header: 'Detail',  key: 'detail',    width: 36 },
+      { header: 'In (\u00a3)',  key: 'money_in',  width: 12 },
+      { header: 'Out (\u00a3)', key: 'money_out', width: 12 },
+      { header: 'Balance', key: 'balance',   width: 12 },
+    ];
+    let balance = 0;
+    for (const e of entries) {
+      const inn  = parseFloat(e.money_in)  || 0;
+      const out  = parseFloat(e.money_out) || 0;
+      balance += inn - out;
+      ws.addRow({
+        date:      e.entry_date ? String(e.entry_date).slice(0, 10) : '',
+        payee:     e.payee     ?? '',
+        detail:    e.detail    ?? '',
+        money_in:  e.money_in  != null ? parseFloat(e.money_in)  : null,
+        money_out: e.money_out != null ? parseFloat(e.money_out) : null,
+        balance:   parseFloat(balance.toFixed(2)),
+      });
+    }
+
+    const tenantPart = req.user.tenantSlug.replace(/^u3a_/, '');
+    const safeName   = teamName.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+    const dateStr    = new Date().toISOString().slice(0, 10);
+    const filename   = `${tenantPart}_${safeName}_ledger_${dateStr}.xlsx`;
+
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    await wb.xlsx.write(res);
+    res.end();
+  } catch (err) {
+    next(err);
+  }
+});
+
+// DELETE /teams/:id/ledger/:entryId
+router.delete('/:id/ledger/:entryId', async (req, res, next) => {
+  try {
+    const { id: teamId, entryId } = req.params;
+    if (!await hasLedgerAccess(req, teamId, 'delete')) {
+      return res.status(403).json({ error: 'Forbidden' });
+    }
+    const slug = req.user.tenantSlug;
+    await tenantQuery(slug,
+      `DELETE FROM group_ledger_entries WHERE id = $1 AND group_id = $2`,
+      [entryId, teamId]);
+    res.status(204).end();
+  } catch (err) {
+    next(err);
+  }
+});
+
+export default router;

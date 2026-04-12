@@ -336,6 +336,52 @@ export const groups = {
   deleteLedgerEntry:  (id, entryId)       => request(`/groups/${id}/ledger/${entryId}`, { method: 'DELETE' }),
 };
 
+// ─── Teams ───────────────────────────────────────────────────────────────
+
+export const teams = {
+  list: (params = {}) => {
+    const qs = new URLSearchParams();
+    if (params.activeOnly !== undefined) qs.set('activeOnly', params.activeOnly ? 'true' : 'false');
+    if (params.letter)    qs.set('letter',    params.letter);
+    const query = qs.toString();
+    return request(`/teams${query ? '?' + query : ''}`);
+  },
+  download: (format, ids, fields) => {
+    const qs = new URLSearchParams({ format, ids: ids.join(','), fields: fields.join(',') });
+    return requestBlob(`/teams/download?${qs}`);
+  },
+  bulkAddMembers: (id, memberIds) =>
+    request(`/teams/${id}/members/bulk`, { method: 'POST', body: JSON.stringify({ memberIds }) }),
+  get:    (id)       => request(`/teams/${id}`),
+  create: (data)     => request('/teams', { method: 'POST', body: JSON.stringify(data) }),
+  update: (id, data) => request(`/teams/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
+  delete: (id)       => request(`/teams/${id}`, { method: 'DELETE' }),
+
+  listMembers:  (id) => request(`/teams/${id}/members`),
+  addMember:    (id, data)           => request(`/teams/${id}/members`, { method: 'POST', body: JSON.stringify(data) }),
+  updateMember: (id, memberId, data) => request(`/teams/${id}/members/${memberId}`, { method: 'PATCH', body: JSON.stringify(data) }),
+  removeMember: (id, memberId)       => request(`/teams/${id}/members/${memberId}`, { method: 'DELETE' }),
+  downloadMembers: (id, format, ids, fields) => {
+    const qs = new URLSearchParams({ format, ids: ids.join(','), fields: fields.join(',') });
+    return requestBlob(`/teams/${id}/members/download?${qs}`);
+  },
+  bulkRemoveMembers: (id, memberIds) =>
+    request(`/teams/${id}/members/bulk`, { method: 'DELETE', body: JSON.stringify({ memberIds }) }),
+  bulkAddToTeam: (id, targetTeamId, memberIds) =>
+    request(`/teams/${id}/members/bulk-add`, { method: 'POST', body: JSON.stringify({ memberIds, targetTeamId }) }),
+
+  getLedger: (id, params = {}) => {
+    const qs = new URLSearchParams();
+    if (params.from) qs.set('from', params.from);
+    if (params.to)   qs.set('to',   params.to);
+    const query = qs.toString();
+    return request(`/teams/${id}/ledger${query ? '?' + query : ''}`);
+  },
+  createLedgerEntry:  (id, data)          => request(`/teams/${id}/ledger`, { method: 'POST', body: JSON.stringify(data) }),
+  updateLedgerEntry:  (id, entryId, data) => request(`/teams/${id}/ledger/${entryId}`, { method: 'PATCH', body: JSON.stringify(data) }),
+  deleteLedgerEntry:  (id, entryId)       => request(`/teams/${id}/ledger/${entryId}`, { method: 'DELETE' }),
+};
+
 // ─── Finance ──────────────────────────────────────────────────────────────
 
 export const finance = {

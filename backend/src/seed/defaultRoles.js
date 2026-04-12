@@ -278,6 +278,32 @@ export const DEFAULT_ROLES = [
   },
 
   {
+    name: 'Team Leaders',
+    isCommittee: false,
+    notes: 'Access scoped to teams the user leads.',
+    defaultPrivileges: [
+      // Email
+      { code: 'email',                     action: 'view' },
+      { code: 'email',                     action: 'send' },              // vo
+
+      // Groups (teams share group privileges)
+      { code: 'group_leaders',             action: 'view' },
+      { code: 'group_leaders',             action: 'email_labels' },      // vo
+      { code: 'group_ledger_as_leader',    action: 'view' },
+      { code: 'group_ledger_as_leader',    action: 'create' },
+      { code: 'group_ledger_as_leader',    action: 'change' },
+      { code: 'group_ledger_as_leader',    action: 'delete' },            // vced (no download)
+      { code: 'group_records_as_leader',   action: 'view' },
+      { code: 'group_records_as_leader',   action: 'change' },
+      { code: 'group_records_as_leader',   action: 'delete' },
+      { code: 'group_records_as_leader',   action: 'download_members' },  // vedo
+      { code: 'groups_list',               action: 'view' },              // v
+      { code: 'groups_add_by_name_leader', action: 'change' },            // e
+      { code: 'groups_add_by_no_leader',   action: 'change' },            // e
+    ],
+  },
+
+  {
     name: 'Membership Secretary',
     isCommittee: true,
     notes: 'Manages member records, renewals and communications.',

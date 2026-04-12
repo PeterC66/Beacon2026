@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { members as membersApi, memberStatuses as statusApi, memberClasses as classApi, polls as pollsApi, groups as groupsApi, settings as settingsApi } from '../../lib/api.js';
+import { members as membersApi, memberStatuses as statusApi, memberClasses as classApi, polls as pollsApi, groups as groupsApi, teams as teamsApi, settings as settingsApi } from '../../lib/api.js';
 
 const DOWNLOAD_FIELDS = [
   { key: 'membership_number', label: 'Membership No', default: true },
@@ -73,6 +73,8 @@ export default function MemberList() {
   const [addToPollId,   setAddToPollId]   = useState('');
   const [addToGroupId,  setAddToGroupId]  = useState('');
   const [allGroups,     setAllGroups]     = useState([]);
+  const [addToTeamId,   setAddToTeamId]   = useState('');
+  const [allTeams,      setAllTeams]      = useState([]);
   const [bulkWorking,   setBulkWorking]   = useState(false);
   const [bulkResult,    setBulkResult]    = useState(null);
 
@@ -98,6 +100,7 @@ export default function MemberList() {
       .catch(() => {});
     settingsApi.getCustomFieldLabels().then(setCfLabels).catch(() => {});
     groupsApi.list({ activeOnly: true }).then(setAllGroups).catch(() => {});
+    teamsApi.list({ activeOnly: true }).then(setAllTeams).catch(() => {});
   }, []);
 
   // Load members whenever filters change
@@ -224,6 +227,23 @@ export default function MemberList() {
         setBulkWorking(false);
       }
     }
+    if (bulkAction === 'add_to_team') {
+      if (!addToTeamId) return;
+      setBulkWorking(true);
+      setBulkResult(null);
+      try {
+        const result = await teamsApi.bulkAddMembers(addToTeamId, [...selected]);
+        const teamName = allTeams.find((t) => t.id === addToTeamId)?.name ?? 'team';
+        const parts = [];
+        if (result.added)   parts.push(`${result.added} added`);
+        if (result.skipped) parts.push(`${result.skipped} already in team`);
+        setBulkResult({ type: 'success', msg: `"${teamName}": ${parts.join(', ')}.` });
+      } catch (err) {
+        setBulkResult({ type: 'error', msg: err.message });
+      } finally {
+        setBulkWorking(false);
+      }
+    }
   }
 
   function toggleDlField(key) {
@@ -260,6 +280,7 @@ export default function MemberList() {
 
   const hasBulkPolls = can('poll_set_up', 'change') && polls.length > 0;
   const hasBulkGroups = can('group_records_all', 'change') && allGroups.length > 0;
+  const hasBulkTeams  = can('group_records_all', 'change') && allTeams.length > 0;
 
   return (
     <div className="min-h-screen pb-10">
@@ -550,6 +571,7 @@ export default function MemberList() {
                         {can('letters', 'view') && <option value="send_letter">Send letter</option>}
                         {hasBulkPolls && <option value="add_to_poll">Add to poll</option>}
                         {hasBulkGroups && <option value="add_to_group">Add to group</option>}
+                        {hasBulkTeams && <option value="add_to_team">Add to team</option>}
                         <option value="download_excel">Download Excel</option>
                         <option value="download_pdf">Download PDF</option>
                         <option value="download_emails">Download email addresses</option>
@@ -586,10 +608,25 @@ export default function MemberList() {
                       </div>
                     )}
 
-                    {(bulkAction === 'send_email' || bulkAction === 'send_letter' || bulkAction === 'add_to_poll' || bulkAction === 'add_to_group') && (
+                    {bulkAction === 'add_to_team' && (
+                      <div>
+                        <label className="block text-sm font-medium text-slate-700 mb-1">Team</label>
+                        <select
+                          name="addToTeamId"
+                          value={addToTeamId}
+                          onChange={(e) => setAddToTeamId(e.target.value)}
+                          className="border border-slate-300 rounded px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        >
+                          <option value="">— select team —</option>
+                          {allTeams.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
+                        </select>
+                      </div>
+                    )}
+
+                    {(bulkAction === 'send_email' || bulkAction === 'send_letter' || bulkAction === 'add_to_poll' || bulkAction === 'add_to_group' || bulkAction === 'add_to_team') && (
                       <button
                         onClick={handleBulkDo}
-                        disabled={bulkWorking || (bulkAction === 'add_to_poll' && !addToPollId) || (bulkAction === 'add_to_group' && !addToGroupId)}
+                        disabled={bulkWorking || (bulkAction === 'add_to_poll' && !addToPollId) || (bulkAction === 'add_to_group' && !addToGroupId) || (bulkAction === 'add_to_team' && !addToTeamId)}
                         className="bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white rounded px-4 py-1.5 text-sm font-medium transition-colors"
                       >
                         {bulkWorking ? 'Working…' : 'Do with selected'}

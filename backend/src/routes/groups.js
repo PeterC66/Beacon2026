@@ -23,7 +23,7 @@ router.get('/', requirePrivilege('groups_list', 'view'), async (req, res, next) 
     const slug = req.user.tenantSlug;
     const { activeOnly = 'true', facultyId, letter } = req.query;
 
-    const conditions = [];
+    const conditions = [`g.type = 'group'`];
     const params = [];
     let i = 1;
 
@@ -39,7 +39,7 @@ router.get('/', requirePrivilege('groups_list', 'view'), async (req, res, next) 
       params.push(letter.toUpperCase() + '%');
     }
 
-    const where = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
+    const where = `WHERE ${conditions.join(' AND ')}`;
 
     const groups = await tenantQuery(
       slug,
@@ -112,7 +112,7 @@ router.get('/download', requirePrivilege('groups_list', 'download'), async (req,
                WHERE gm.group_id = g.id AND gm.is_leader = true) AS leaders
        FROM groups g
        LEFT JOIN faculties f ON f.id = g.faculty_id
-       WHERE g.id = ANY($1::text[])
+       WHERE g.id = ANY($1::text[]) AND g.type = 'group'
        ORDER BY g.name`,
       [groupIds],
     );
@@ -201,7 +201,7 @@ router.get('/:id', requirePrivilege('group_records_all', 'view'), async (req, re
        FROM groups g
        LEFT JOIN faculties f ON f.id = g.faculty_id
        LEFT JOIN venues v ON v.id = g.venue_id
-       WHERE g.id = $1`,
+       WHERE g.id = $1 AND g.type = 'group'`,
       [req.params.id],
     );
     if (!group) throw AppError('Group not found.', 404);
@@ -242,8 +242,8 @@ router.post('/', requirePrivilege('group_records_all', 'create'), async (req, re
       `INSERT INTO groups
          (name, faculty_id, status, when_text, start_time, end_time, venue_id, enquiries,
           max_members, allow_online_join, enable_waiting_list, notify_leader,
-          display_waiting_list, information, notes, show_addresses)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16)
+          display_waiting_list, information, notes, show_addresses, type)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,'group')
        RETURNING *`,
       [
         data.name,
@@ -334,7 +334,7 @@ router.patch('/:id', requirePrivilege('group_records_all', 'change'), async (req
 
     const [group] = await tenantQuery(
       slug,
-      `UPDATE groups SET ${setClauses.join(', ')} WHERE id = $${i} RETURNING *`,
+      `UPDATE groups SET ${setClauses.join(', ')} WHERE id = $${i} AND type = 'group' RETURNING *`,
       values,
     );
     if (!group) throw AppError('Group not found.', 404);
@@ -349,10 +349,10 @@ router.patch('/:id', requirePrivilege('group_records_all', 'change'), async (req
 router.delete('/:id', requirePrivilege('group_records_all', 'delete'), async (req, res, next) => {
   try {
     const slug = req.user.tenantSlug;
-    const [existing] = await tenantQuery(slug, `SELECT id FROM groups WHERE id = $1`, [req.params.id]);
+    const [existing] = await tenantQuery(slug, `SELECT id FROM groups WHERE id = $1 AND type = 'group'`, [req.params.id]);
     if (!existing) throw AppError('Group not found.', 404);
 
-    await tenantQuery(slug, `DELETE FROM groups WHERE id = $1`, [req.params.id]);
+    await tenantQuery(slug, `DELETE FROM groups WHERE id = $1 AND type = 'group'`, [req.params.id]);
     res.json({ message: 'Group deleted.' });
   } catch (err) {
     next(err);
@@ -371,7 +371,7 @@ router.get('/:id/members', requirePrivilege('group_records_all', 'view'), async 
     const slug = req.user.tenantSlug;
     const { showWaiting = 'true' } = req.query;
 
-    const [group] = await tenantQuery(slug, `SELECT id FROM groups WHERE id = $1`, [req.params.id]);
+    const [group] = await tenantQuery(slug, `SELECT id FROM groups WHERE id = $1 AND type = 'group'`, [req.params.id]);
     if (!group) throw AppError('Group not found.', 404);
 
     const waitingCondition = showWaiting === 'false' ? 'AND gm.waiting_since IS NULL' : '';
@@ -425,7 +425,7 @@ router.get('/:id/members/download', requirePrivilege('group_records_all', 'view'
     const slug = req.user.tenantSlug;
     const groupId = req.params.id;
 
-    const [group] = await tenantQuery(slug, `SELECT id, name FROM groups WHERE id = $1`, [groupId]);
+    const [group] = await tenantQuery(slug, `SELECT id, name FROM groups WHERE id = $1 AND type = 'group'`, [groupId]);
     if (!group) throw AppError('Group not found.', 404);
 
     const memberIds = ids.split(',').map((s) => s.trim()).filter(Boolean);
@@ -581,7 +581,7 @@ router.post('/:id/members', requirePrivilege('group_records_all', 'change'), asy
     // Validate body first so invalid input returns 422 before any DB call
     const data = addMemberSchema.parse(req.body);
 
-    const [group] = await tenantQuery(slug, `SELECT id FROM groups WHERE id = $1`, [req.params.id]);
+    const [group] = await tenantQuery(slug, `SELECT id FROM groups WHERE id = $1 AND type = 'group'`, [req.params.id]);
     if (!group) throw AppError('Group not found.', 404);
 
     let member;
@@ -616,7 +616,7 @@ router.post('/:id/members', requirePrivilege('group_records_all', 'change'), asy
       slug,
       `SELECT max_members, enable_waiting_list,
               (SELECT COUNT(*)::int FROM group_members WHERE group_id = $1 AND waiting_since IS NULL) AS joined_count
-       FROM groups WHERE id = $1`,
+       FROM groups WHERE id = $1 AND type = 'group'`,
       [req.params.id],
     );
     const addToWaiting = groupInfo?.enable_waiting_list &&
@@ -656,7 +656,7 @@ router.post('/:id/members/bulk', requirePrivilege('group_records_all', 'change')
     const slug = req.user.tenantSlug;
     const { memberIds } = bulkAddMembersSchema.parse(req.body);
 
-    const [group] = await tenantQuery(slug, `SELECT id, max_members, enable_waiting_list FROM groups WHERE id = $1`, [req.params.id]);
+    const [group] = await tenantQuery(slug, `SELECT id, max_members, enable_waiting_list FROM groups WHERE id = $1 AND type = 'group'`, [req.params.id]);
     if (!group) throw AppError('Group not found.', 404);
 
     // Current joined count (excluding waiting list)
@@ -765,7 +765,7 @@ router.delete('/:id/members/bulk', requirePrivilege('group_records_all', 'change
     const slug = req.user.tenantSlug;
     const { memberIds } = bulkRemoveSchema.parse(req.body);
 
-    const [group] = await tenantQuery(slug, `SELECT id FROM groups WHERE id = $1`, [req.params.id]);
+    const [group] = await tenantQuery(slug, `SELECT id FROM groups WHERE id = $1 AND type = 'group'`, [req.params.id]);
     if (!group) throw AppError('Group not found.', 404);
 
     const result = await tenantQuery(
@@ -793,7 +793,7 @@ router.post('/:id/members/bulk-add', requirePrivilege('group_records_all', 'chan
     const slug = req.user.tenantSlug;
     const { memberIds, targetGroupId } = bulkAddSchema.parse(req.body);
 
-    const [targetGroup] = await tenantQuery(slug, `SELECT id, max_members, enable_waiting_list FROM groups WHERE id = $1`, [targetGroupId]);
+    const [targetGroup] = await tenantQuery(slug, `SELECT id, max_members, enable_waiting_list FROM groups WHERE id = $1 AND type = 'group'`, [targetGroupId]);
     if (!targetGroup) throw AppError('Target group not found.', 404);
 
     // Get current joined count for waiting-list logic
@@ -866,7 +866,7 @@ router.delete('/:id/members/:memberId', requirePrivilege('group_records_all', 'c
 router.get('/:id/events', requirePrivilege('group_records_all', 'view'), async (req, res, next) => {
   try {
     const slug = req.user.tenantSlug;
-    const [group] = await tenantQuery(slug, `SELECT id FROM groups WHERE id = $1`, [req.params.id]);
+    const [group] = await tenantQuery(slug, `SELECT id FROM groups WHERE id = $1 AND type = 'group'`, [req.params.id]);
     if (!group) throw AppError('Group not found.', 404);
 
     const events = await tenantQuery(
@@ -908,7 +908,7 @@ const eventSchema = z.object({
 router.post('/:id/events', requirePrivilege('group_records_all', 'change'), async (req, res, next) => {
   try {
     const slug = req.user.tenantSlug;
-    const [group] = await tenantQuery(slug, `SELECT id FROM groups WHERE id = $1`, [req.params.id]);
+    const [group] = await tenantQuery(slug, `SELECT id FROM groups WHERE id = $1 AND type = 'group'`, [req.params.id]);
     if (!group) throw AppError('Group not found.', 404);
 
     const data = eventSchema.parse(req.body);
@@ -1189,7 +1189,7 @@ router.get('/:id/ledger/download', async (req, res, next) => {
     if (to)   { conditions.push(`gle.entry_date <= $${pi++}::date`); params.push(to); }
 
     const [[groupRow], entries] = await Promise.all([
-      tenantQuery(slug, `SELECT name FROM groups WHERE id = $1`, [groupId]),
+      tenantQuery(slug, `SELECT name FROM groups WHERE id = $1 AND type = 'group'`, [groupId]),
       tenantQuery(slug,
         `SELECT gle.entry_date, gle.payee, gle.detail, gle.money_in, gle.money_out
          FROM group_ledger_entries gle

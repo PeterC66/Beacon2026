@@ -261,6 +261,13 @@ ALTER TABLE :schema.venues DROP COLUMN IF EXISTS county;
 -- Add venue_id FK to groups (replaces free-text venue field in the UI)
 ALTER TABLE :schema.groups ADD COLUMN IF NOT EXISTS venue_id TEXT REFERENCES :schema.venues(id) ON DELETE SET NULL;
 
+-- Add type column to groups: 'group' (interest group) or 'team'
+ALTER TABLE :schema.groups ADD COLUMN IF NOT EXISTS type TEXT NOT NULL DEFAULT 'group';
+DO $$ BEGIN
+  ALTER TABLE :schema.groups ADD CONSTRAINT :schema_groups_type_check CHECK (type IN ('group', 'team'));
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
+
 -- ─────────────────────────────────────────────
 -- GROUP MEMBERS
 -- ─────────────────────────────────────────────

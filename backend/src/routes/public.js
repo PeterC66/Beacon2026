@@ -1029,7 +1029,7 @@ router.get('/:slug/groups', async (req, res, next) => {
                 v.name AS venue_name, v.postcode AS venue_postcode
          FROM groups g
          LEFT JOIN venues v ON v.id = g.venue_id
-         WHERE g.status = 'active'
+         WHERE g.status = 'active' AND g.type = 'group'
          ORDER BY g.name`),
     ]);
 
