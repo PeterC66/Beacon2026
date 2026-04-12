@@ -38,6 +38,20 @@ Format: `## [version] — YYYY-MM-DD` with bullet points per change.
 - **Data export missing teams** — the Groups export sheet now includes `short_name`
   and `type` columns so teams are preserved on export/restore instead of being
   silently converted to groups.
+- **Data export/restore coverage audit** — comprehensive fix for columns and tables
+  missing from export and restore:
+  - **Members**: added `custom_field_1..4`, `emergency_contact`
+  - **Transactions**: added `transfer_id`, `pending`, `gift_aid_amount/claimed_at` (x2),
+    `batch_id`, `refund_of_id`, `refunded_by_id`
+  - **Finance accounts**: added `balance_brought_forward`
+  - **Tenant settings**: added `year_start_month/day`, `online_joining_enabled`,
+    `privacy_policy_url`, `group_bf_enabled`, `siteworks_activated`,
+    `custom_field_label_1..4`, `portal_config`, `group_info_config`, `calendar_config`
+  - **New tables exported**: credit_batches, group_events, system_messages,
+    standard_messages, standard_letters, payment_method_defaults
+  - `clearTenantData` updated for all new tables
+  - DataBackup UI text updated to reflect new sheets and teams
+  - Added CLAUDE-STANDARDS checklist item for export/restore on schema changes
 
 ## [0.8.3] — 2026-04-02
 

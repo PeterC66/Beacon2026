@@ -95,6 +95,8 @@ export async function buildMembersSheet(wb, slug) {
     SELECT m.id, m.membership_number, m.title, m.forenames, m.surname, m.suffix,
            m.known_as, m.initials, m.mobile, m.email, m.home_u3a,
            m.joined_on, m.next_renewal, m.gift_aid_from, m.notes, m.hide_contact,
+           m.emergency_contact,
+           m.custom_field_1, m.custom_field_2, m.custom_field_3, m.custom_field_4,
            m.status_id, s.name AS status_name,
            m.class_id, c.name AS class_name,
            m.partner_id,
@@ -111,6 +113,8 @@ export async function buildMembersSheet(wb, slug) {
     'id', 'membership_number', 'title', 'forenames', 'surname', 'suffix',
     'known_as', 'initials', 'mobile', 'email', 'home_u3a',
     'joined_on', 'next_renewal', 'gift_aid_from', 'notes', 'hide_contact',
+    'emergency_contact',
+    'custom_field_1', 'custom_field_2', 'custom_field_3', 'custom_field_4',
     'status_id', 'status_name', 'class_id', 'class_name', 'partner_id',
     'address_id', 'house_no', 'street', 'add_line1', 'add_line2',
     'town', 'county', 'postcode', 'telephone',
@@ -124,12 +128,16 @@ export async function buildMembersSheet(wb, slug) {
 }
 
 export async function buildFinanceSheets(wb, slug) {
-  const [txns, cats] = await Promise.all([
+  const [txns, cats, batches] = await Promise.all([
     tenantQuery(slug, `
       SELECT t.id, t.transaction_number, t.date, t.type, t.from_to, t.amount,
              t.payment_method, t.payment_ref, t.detail, t.remarks, t.cleared_at,
              t.account_id, a.name AS account_name,
-             t.member_id_1, t.member_id_2, t.group_id
+             t.member_id_1, t.member_id_2, t.group_id,
+             t.transfer_id, t.pending, t.batch_id,
+             t.gift_aid_amount, t.gift_aid_claimed_at,
+             t.gift_aid_amount_2, t.gift_aid_claimed_at_2,
+             t.refund_of_id, t.refunded_by_id
       FROM transactions t
       LEFT JOIN finance_accounts a ON t.account_id = a.id
       ORDER BY t.date, t.transaction_number
@@ -140,26 +148,46 @@ export async function buildFinanceSheets(wb, slug) {
       LEFT JOIN finance_categories c ON tc.category_id = c.id
       ORDER BY tc.transaction_id
     `),
+    tenantQuery(slug, `
+      SELECT cb.id, cb.batch_ref, cb.account_id, a.name AS account_name,
+             cb.description, cb.batch_date
+      FROM credit_batches cb
+      LEFT JOIN finance_accounts a ON cb.account_id = a.id
+      ORDER BY cb.batch_ref
+    `),
   ]);
 
   addSheet(wb, 'Ledger', [
     'id', 'transaction_number', 'date', 'type', 'from_to', 'amount',
     'payment_method', 'payment_ref', 'detail', 'remarks', 'cleared_at',
     'account_id', 'account_name', 'member_id_1', 'member_id_2', 'group_id',
+    'transfer_id', 'pending', 'batch_id',
+    'gift_aid_amount', 'gift_aid_claimed_at',
+    'gift_aid_amount_2', 'gift_aid_claimed_at_2',
+    'refund_of_id', 'refunded_by_id',
   ], txns.map((r) => ({
     ...r,
-    date:       dateToStr(r.date),
-    cleared_at: dateToStr(r.cleared_at),
-    amount:     r.amount != null ? Number(r.amount) : null,
+    date:                dateToStr(r.date),
+    cleared_at:          dateToStr(r.cleared_at),
+    amount:              r.amount != null ? Number(r.amount) : null,
+    pending:             boolInt(r.pending),
+    gift_aid_amount:     r.gift_aid_amount != null ? Number(r.gift_aid_amount) : null,
+    gift_aid_claimed_at: dateToStr(r.gift_aid_claimed_at),
+    gift_aid_amount_2:   r.gift_aid_amount_2 != null ? Number(r.gift_aid_amount_2) : null,
+    gift_aid_claimed_at_2: dateToStr(r.gift_aid_claimed_at_2),
   })));
 
   addSheet(wb, 'Detail', [
     'transaction_id', 'category_id', 'category_name', 'amount',
   ], cats.map((r) => ({ ...r, amount: r.amount != null ? Number(r.amount) : null })));
+
+  addSheet(wb, 'Credit Batches', [
+    'id', 'batch_ref', 'account_id', 'account_name', 'description', 'batch_date',
+  ], batches.map((r) => ({ ...r, batch_date: dateToStr(r.batch_date) })));
 }
 
 export async function buildGroupsSheets(wb, slug) {
-  const [groups, gm, faculties, venues, gle] = await Promise.all([
+  const [groups, gm, faculties, venues, gle, events] = await Promise.all([
     tenantQuery(slug, `
       SELECT g.id, g.name, g.short_name, g.type, g.faculty_id, f.name AS faculty_name, g.status,
              g.when_text,
@@ -192,6 +220,17 @@ export async function buildGroupsSheets(wb, slug) {
       FROM group_ledger_entries gle
       JOIN groups g ON gle.group_id = g.id
       ORDER BY g.name, gle.entry_date
+    `),
+    tenantQuery(slug, `
+      SELECT ge.id, ge.group_id, g.name AS group_name,
+             ge.event_date, ge.start_time::text AS start_time,
+             ge.end_time::text AS end_time,
+             ge.venue_id, v.name AS venue_name,
+             ge.contact, ge.details, ge.topic, ge.is_private
+      FROM group_events ge
+      LEFT JOIN groups g ON ge.group_id = g.id
+      LEFT JOIN venues v ON ge.venue_id = v.id
+      ORDER BY ge.event_date, ge.start_time
     `),
   ]);
 
@@ -237,6 +276,15 @@ export async function buildGroupsSheets(wb, slug) {
   })));
 
   addSheet(wb, 'Faculties', ['id', 'name'], faculties);
+
+  addSheet(wb, 'Group Events', [
+    'id', 'group_id', 'group_name', 'event_date', 'start_time', 'end_time',
+    'venue_id', 'venue_name', 'contact', 'details', 'topic', 'is_private',
+  ], events.map((r) => ({
+    ...r,
+    event_date: dateToStr(r.event_date),
+    is_private: boolInt(r.is_private),
+  })));
 }
 
 export async function buildCalendarSheet(wb) {
@@ -310,11 +358,18 @@ export async function buildSettingsSheets(wb, slug) {
              extended_membership_month, advance_renewals_weeks, grace_lapse_weeks,
              deletion_years, default_payment_method, gift_aid_enabled, gift_aid_online_renewals,
              default_town, default_county, default_std_code,
-             paypal_email, paypal_cancel_url, shared_address_warning
+             paypal_email, paypal_cancel_url, shared_address_warning,
+             year_start_month, year_start_day,
+             online_joining_enabled, privacy_policy_url,
+             group_bf_enabled, siteworks_activated,
+             custom_field_label_1, custom_field_label_2,
+             custom_field_label_3, custom_field_label_4,
+             portal_config, group_info_config, calendar_config
       FROM tenant_settings
     `),
     tenantQuery(slug, `
-      SELECT id, name, active, locked, sort_order, pending_config, pending_types, enable_refunds
+      SELECT id, name, active, locked, sort_order, pending_config, pending_types,
+             enable_refunds, balance_brought_forward
       FROM finance_accounts ORDER BY sort_order, name
     `),
     tenantQuery(slug, `
@@ -366,6 +421,19 @@ export async function buildSettingsSheets(wb, slug) {
     { setting: 'paypal_email',              value: str(s.paypal_email) },
     { setting: 'paypal_cancel_url',         value: str(s.paypal_cancel_url) },
     { setting: 'shared_address_warning',    value: boolInt(s.shared_address_warning) },
+    { setting: 'year_start_month',          value: s.year_start_month ?? 1 },
+    { setting: 'year_start_day',            value: s.year_start_day ?? 1 },
+    { setting: 'online_joining_enabled',    value: boolInt(s.online_joining_enabled) },
+    { setting: 'privacy_policy_url',        value: str(s.privacy_policy_url) },
+    { setting: 'group_bf_enabled',          value: boolInt(s.group_bf_enabled) },
+    { setting: 'siteworks_activated',       value: boolInt(s.siteworks_activated) },
+    { setting: 'custom_field_label_1',      value: str(s.custom_field_label_1) },
+    { setting: 'custom_field_label_2',      value: str(s.custom_field_label_2) },
+    { setting: 'custom_field_label_3',      value: str(s.custom_field_label_3) },
+    { setting: 'custom_field_label_4',      value: str(s.custom_field_label_4) },
+    { setting: 'portal_config',             value: JSON.stringify(s.portal_config || {}) },
+    { setting: 'group_info_config',         value: JSON.stringify(s.group_info_config || {}) },
+    { setting: 'calendar_config',           value: JSON.stringify(s.calendar_config || {}) },
   ];
   addSheet(wb, 'Site Settings 1', ['setting', 'value'], settingsRows);
 
@@ -375,13 +443,14 @@ export async function buildSettingsSheets(wb, slug) {
 
   addSheet(wb, 'Finance Accounts', [
     'id', 'name', 'active', 'locked', 'sort_order',
-    'pending_config', 'pending_types', 'enable_refunds',
+    'pending_config', 'pending_types', 'enable_refunds', 'balance_brought_forward',
   ], accounts.map((r) => ({
     ...r,
     active: boolInt(r.active),
     locked: boolInt(r.locked),
     enable_refunds: boolInt(r.enable_refunds),
     pending_types: JSON.stringify(r.pending_types || []),
+    balance_brought_forward: r.balance_brought_forward != null ? Number(r.balance_brought_forward) : 0,
   })));
 
   addSheet(wb, 'Finance Categories', [
@@ -420,9 +489,24 @@ export async function buildSettingsSheets(wb, slug) {
     'poll_id', 'poll_name', 'member_id', 'membership_number',
   ], pollMembers);
 
-  const wsSM = wb.addWorksheet('System Messages');
-  wsSM.addRow(['note']);
-  wsSM.addRow(['System Messages are not yet implemented in Beacon2.']);
+  const [sysMsgs, stdMsgs, stdLetters, pmDefaults] = await Promise.all([
+    tenantQuery(slug, `SELECT id, name, subject, body FROM system_messages ORDER BY name`),
+    tenantQuery(slug, `SELECT id, name, subject, body FROM standard_messages ORDER BY name`),
+    tenantQuery(slug, `SELECT id, name, body FROM standard_letters ORDER BY name`),
+    tenantQuery(slug, `
+      SELECT pmd.payment_method, pmd.account_id, fa.name AS account_name
+      FROM payment_method_defaults pmd
+      LEFT JOIN finance_accounts fa ON pmd.account_id = fa.id
+      ORDER BY pmd.payment_method
+    `),
+  ]);
+
+  addSheet(wb, 'System Messages', ['id', 'name', 'subject', 'body'], sysMsgs);
+  addSheet(wb, 'Standard Messages', ['id', 'name', 'subject', 'body'], stdMsgs);
+  addSheet(wb, 'Standard Letters', ['id', 'name', 'body'], stdLetters);
+  addSheet(wb, 'Payment Method Defaults', [
+    'payment_method', 'account_id', 'account_name',
+  ], pmDefaults);
 }
 
 // ── Export route ───────────────────────────────────────────────────────────────
@@ -494,10 +578,15 @@ export async function clearTenantData(tx) {
     'DELETE FROM polls',
     'DELETE FROM transaction_categories',
     'DELETE FROM transactions',
+    'DELETE FROM credit_batches',
     'DELETE FROM offices',
+    'DELETE FROM group_events',
     'DELETE FROM group_members',
     'DELETE FROM groups',
     'DELETE FROM faculties',
+    'DELETE FROM standard_messages',
+    'DELETE FROM standard_letters',
+    'DELETE FROM payment_method_defaults',
     'DELETE FROM finance_accounts',
     'DELETE FROM finance_categories',
     'UPDATE members SET partner_id = NULL',
@@ -588,8 +677,10 @@ export async function restoreBeacon2(tx, wb) {
       `INSERT INTO members
          (id, membership_number, title, forenames, surname, suffix, known_as, initials,
           mobile, email, home_u3a, joined_on, next_renewal, gift_aid_from, notes, hide_contact,
+          emergency_contact, custom_field_1, custom_field_2, custom_field_3, custom_field_4,
           status_id, class_id, address_id)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12::date,$13::date,$14::date,$15,$16,$17,$18,$19)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12::date,$13::date,$14::date,$15,$16,
+               $17,$18,$19,$20,$21,$22,$23,$24)
        ON CONFLICT (id) DO NOTHING`,
       r.id, parseInt(r.membership_number), str(r.title),
       String(r.forenames || ''), String(r.surname || ''),
@@ -597,6 +688,8 @@ export async function restoreBeacon2(tx, wb) {
       str(r.mobile), str(r.email), str(r.home_u3a),
       parseDate(r.joined_on), parseDate(r.next_renewal), parseDate(r.gift_aid_from),
       str(r.notes), parseBool(r.hide_contact),
+      str(r.emergency_contact), str(r.custom_field_1), str(r.custom_field_2),
+      str(r.custom_field_3), str(r.custom_field_4),
       str(r.status_id), str(r.class_id), str(r.address_id),
     );
   }
@@ -675,6 +768,20 @@ export async function restoreBeacon2(tx, wb) {
     );
   }
 
+  // 9c. Group events (schedule)
+  for (const r of get('Group Events')) {
+    if (!r.id) continue;
+    await tx.$executeRawUnsafe(
+      `INSERT INTO group_events
+         (id, group_id, event_date, start_time, end_time, venue_id, contact, details, topic, is_private)
+       VALUES ($1,$2,$3::date,$4::time,$5::time,$6,$7,$8,$9,$10) ON CONFLICT (id) DO NOTHING`,
+      r.id, str(r.group_id), parseDate(r.event_date),
+      str(r.start_time) || null, str(r.end_time) || null,
+      str(r.venue_id), str(r.contact), str(r.details), str(r.topic),
+      parseBool(r.is_private),
+    );
+  }
+
   // 10. Finance Accounts
   for (const r of get('Finance Accounts')) {
     if (!r.id) continue;
@@ -684,11 +791,13 @@ export async function restoreBeacon2(tx, wb) {
     const ptStr = '{' + ptArr.map((s) => '"' + String(s).replace(/\\/g, '\\\\').replace(/"/g, '\\"') + '"').join(',') + '}';
     await tx.$executeRawUnsafe(
       `INSERT INTO finance_accounts
-         (id, name, active, locked, sort_order, pending_config, pending_types, enable_refunds)
-       VALUES ($1,$2,$3,$4,$5,$6,$7::text[],$8) ON CONFLICT (id) DO NOTHING`,
+         (id, name, active, locked, sort_order, pending_config, pending_types,
+          enable_refunds, balance_brought_forward)
+       VALUES ($1,$2,$3,$4,$5,$6,$7::text[],$8,$9::numeric) ON CONFLICT (id) DO NOTHING`,
       r.id, String(r.name || ''), parseBool(r.active), parseBool(r.locked),
       r.sort_order ? parseInt(r.sort_order) : 0,
       String(r.pending_config || 'disabled'), ptStr, parseBool(r.enable_refunds),
+      parseDec(r.balance_brought_forward) ?? 0,
     );
   }
 
@@ -703,6 +812,17 @@ export async function restoreBeacon2(tx, wb) {
     );
   }
 
+  // 11b. Credit Batches (must precede transactions for batch_id FK)
+  for (const r of get('Credit Batches')) {
+    if (!r.id) continue;
+    await tx.$executeRawUnsafe(
+      `INSERT INTO credit_batches (id, batch_ref, account_id, description, batch_date)
+       VALUES ($1,$2,$3,$4,$5::date) ON CONFLICT (id) DO NOTHING`,
+      r.id, String(r.batch_ref || ''), r.account_id,
+      str(r.description), parseDate(r.batch_date),
+    );
+  }
+
   // 12. Transactions
   for (const r of get('Ledger')) {
     if (!r.id || !r.account_id) continue;
@@ -710,13 +830,22 @@ export async function restoreBeacon2(tx, wb) {
       `INSERT INTO transactions
          (id, transaction_number, account_id, date, type, from_to, amount,
           payment_method, payment_ref, detail, remarks,
-          member_id_1, member_id_2, group_id, cleared_at)
-       VALUES ($1,$2,$3,$4::date,$5,$6,$7::numeric,$8,$9,$10,$11,$12,$13,$14,$15::date)
+          member_id_1, member_id_2, group_id, cleared_at,
+          transfer_id, pending, batch_id,
+          gift_aid_amount, gift_aid_claimed_at,
+          gift_aid_amount_2, gift_aid_claimed_at_2,
+          refund_of_id, refunded_by_id)
+       VALUES ($1,$2,$3,$4::date,$5,$6,$7::numeric,$8,$9,$10,$11,$12,$13,$14,$15::date,
+               $16,$17,$18,$19::numeric,$20::date,$21::numeric,$22::date,$23,$24)
        ON CONFLICT (id) DO NOTHING`,
       r.id, parseInt(r.transaction_number), r.account_id, parseDate(r.date),
       String(r.type || 'in'), str(r.from_to), parseDec(r.amount),
       str(r.payment_method), str(r.payment_ref), str(r.detail), str(r.remarks),
       str(r.member_id_1), str(r.member_id_2), str(r.group_id), parseDate(r.cleared_at),
+      str(r.transfer_id), parseBool(r.pending), str(r.batch_id),
+      parseDec(r.gift_aid_amount), parseDate(r.gift_aid_claimed_at),
+      parseDec(r.gift_aid_amount_2), parseDate(r.gift_aid_claimed_at_2),
+      str(r.refund_of_id), str(r.refunded_by_id),
     );
   }
 
@@ -811,6 +940,11 @@ export async function restoreBeacon2(tx, wb) {
     const v    = (key) => { const val = sm[key]; return (val == null || val === '') ? null : val; };
     const vBool = (key) => { const val = sm[key]; return val == null ? null : parseBool(val); };
     const vInt  = (key) => { const val = sm[key]; return (val != null && val !== '') ? parseInt(val) : null; };
+    const vJson = (key) => {
+      const val = sm[key];
+      if (val == null || val === '') return null;
+      try { return typeof val === 'string' ? JSON.parse(val) : val; } catch { return null; }
+    };
 
     await tx.$executeRawUnsafe(`
       UPDATE tenant_settings SET
@@ -834,7 +968,20 @@ export async function restoreBeacon2(tx, wb) {
         default_std_code          = $18,
         paypal_email              = $19,
         paypal_cancel_url         = $20,
-        shared_address_warning    = COALESCE($21, shared_address_warning)
+        shared_address_warning    = COALESCE($21, shared_address_warning),
+        year_start_month          = COALESCE($22, year_start_month),
+        year_start_day            = COALESCE($23, year_start_day),
+        online_joining_enabled    = COALESCE($24, online_joining_enabled),
+        privacy_policy_url        = $25,
+        group_bf_enabled          = COALESCE($26, group_bf_enabled),
+        siteworks_activated       = COALESCE($27, siteworks_activated),
+        custom_field_label_1      = $28,
+        custom_field_label_2      = $29,
+        custom_field_label_3      = $30,
+        custom_field_label_4      = $31,
+        portal_config             = COALESCE($32::jsonb, portal_config),
+        group_info_config         = COALESCE($33::jsonb, group_info_config),
+        calendar_config           = COALESCE($34::jsonb, calendar_config)
       WHERE id = 'singleton'`,
       v('card_colour'), vBool('email_cards'),
       v('public_phone'), v('public_email'), v('home_page'),
@@ -845,6 +992,53 @@ export async function restoreBeacon2(tx, wb) {
       vBool('gift_aid_enabled'), vBool('gift_aid_online_renewals'),
       v('default_town'), v('default_county'), v('default_std_code'),
       v('paypal_email'), v('paypal_cancel_url'), vBool('shared_address_warning'),
+      vInt('year_start_month'), vInt('year_start_day'),
+      vBool('online_joining_enabled'), v('privacy_policy_url'),
+      vBool('group_bf_enabled'), vBool('siteworks_activated'),
+      v('custom_field_label_1'), v('custom_field_label_2'),
+      v('custom_field_label_3'), v('custom_field_label_4'),
+      vJson('portal_config') ? JSON.stringify(vJson('portal_config')) : null,
+      vJson('group_info_config') ? JSON.stringify(vJson('group_info_config')) : null,
+      vJson('calendar_config') ? JSON.stringify(vJson('calendar_config')) : null,
+    );
+  }
+
+  // 22. System messages (UPDATE — rows are seeded at tenant creation)
+  for (const r of get('System Messages')) {
+    if (!r.id) continue;
+    await tx.$executeRawUnsafe(
+      `UPDATE system_messages SET name = $1, subject = $2, body = $3 WHERE id = $4`,
+      String(r.name || ''), String(r.subject || ''), String(r.body || ''), r.id,
+    );
+  }
+
+  // 23. Standard messages (user-created email templates)
+  for (const r of get('Standard Messages')) {
+    if (!r.id) continue;
+    await tx.$executeRawUnsafe(
+      `INSERT INTO standard_messages (id, name, subject, body)
+       VALUES ($1,$2,$3,$4) ON CONFLICT (id) DO NOTHING`,
+      r.id, String(r.name || ''), String(r.subject || ''), String(r.body || ''),
+    );
+  }
+
+  // 24. Standard letters (user-created letter templates)
+  for (const r of get('Standard Letters')) {
+    if (!r.id) continue;
+    await tx.$executeRawUnsafe(
+      `INSERT INTO standard_letters (id, name, body)
+       VALUES ($1,$2,$3) ON CONFLICT (id) DO NOTHING`,
+      r.id, String(r.name || ''), String(r.body || ''),
+    );
+  }
+
+  // 25. Payment method defaults
+  for (const r of get('Payment Method Defaults')) {
+    if (!r.payment_method) continue;
+    await tx.$executeRawUnsafe(
+      `INSERT INTO payment_method_defaults (payment_method, account_id)
+       VALUES ($1,$2) ON CONFLICT (payment_method) DO UPDATE SET account_id = $2`,
+      String(r.payment_method), str(r.account_id),
     );
   }
 
