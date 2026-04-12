@@ -19,20 +19,20 @@ const EXPORT_OPTIONS = [
   {
     type: 'finance',
     label: 'Finance ledger with detail',
-    desc: 'All transactions and category splits.',
-    sheets: 'Ledger, Detail',
+    desc: 'All transactions, category splits, and credit batches.',
+    sheets: 'Ledger, Detail, Credit Batches',
   },
   {
     type: 'groups',
     label: 'Groups and teams, with members, venues and faculties',
-    desc: 'Group and team records, membership lists, group ledgers, and faculties.',
-    sheets: 'Groups, Group members, Group Ledgers, Venues, Faculties',
+    desc: 'Group and team records, membership lists, group ledgers, schedule events, and faculties.',
+    sheets: 'Groups, Group members, Group Ledgers, Group Events, Venues, Faculties',
   },
   {
     type: 'calendar',
     label: 'Calendar',
-    desc: 'Calendar events (not yet implemented in Beacon2).',
-    sheets: 'Calendar',
+    desc: 'Calendar events are included in the Groups export (Group Events sheet).',
+    sheets: '(see Groups export)',
   },
   {
     type: 'system',
@@ -49,8 +49,8 @@ const EXPORT_OPTIONS = [
   {
     type: 'settings',
     label: 'Site settings and set up',
-    desc: 'System settings, finance accounts/categories, classes, statuses, polls.',
-    sheets: 'Site Settings 1/2, Finance Accounts/Categories, Membership Classes/Fees, Member Statuses, Polls, Poll assignments, System Messages',
+    desc: 'System settings, finance accounts/categories, classes, statuses, polls, templates.',
+    sheets: 'Site Settings 1/2, Finance Accounts/Categories, Membership Classes/Fees, Member Statuses, Polls, Poll assignments, System Messages, Standard Messages, Standard Letters, Payment Method Defaults',
   },
 ];
 

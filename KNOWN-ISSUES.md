@@ -211,3 +211,22 @@ The following routes had no E2E coverage and have now been added:
 - **Change Password** (`/change-password`) — requires a user with
   `must_change_password` flag; adding this test requires creating a user with
   the flag and logging in as that user (separate browser context).
+
+---
+
+## Data Export / Restore — deferred items
+
+1. **Member photos not exported** — `photo_data` (base64, up to 2.7 MB per member)
+   and `photo_mime_type` are excluded from the Members export because large base64
+   blobs would make Excel files unmanageably large. A separate photo export mechanism
+   (e.g. ZIP of images keyed by membership number) would be needed.
+
+2. **Email batches / recipients not exported** — `email_batches` and
+   `email_recipients` are delivery history (SendGrid message IDs, per-recipient
+   status). This is transient data that cannot be meaningfully restored, so it
+   is deliberately excluded.
+
+3. **Calendar export type is a no-op** — the "Calendar" export button in Data Backup
+   currently just notes that events are in the Groups export. Consider removing the
+   Calendar export option entirely, or having it produce the same Group Events sheet
+   independently.

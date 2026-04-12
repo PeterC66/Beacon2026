@@ -30,7 +30,7 @@ describe('DataBackup page', () => {
     const { getByText } = render(<MemoryRouter><DataBackup /></MemoryRouter>);
     expect(getByText('Members and addresses')).toBeInTheDocument();
     expect(getByText('Finance ledger with detail')).toBeInTheDocument();
-    expect(getByText('Groups, with members, venues and faculties')).toBeInTheDocument();
+    expect(getByText('Groups and teams, with members, venues and faculties')).toBeInTheDocument();
     expect(getByText('Calendar')).toBeInTheDocument();
     expect(getByText('System users, roles and privileges')).toBeInTheDocument();
     expect(getByText('u3a Officers')).toBeInTheDocument();
