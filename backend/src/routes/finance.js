@@ -527,7 +527,7 @@ router.get('/transactions/:id', requirePrivilege('finance_transactions', 'view')
        LEFT JOIN transaction_categories tc ON tc.transaction_id = t.id
        LEFT JOIN finance_categories fc ON fc.id = tc.category_id
        WHERE t.id = $1
-       GROUP BY t.id, m1.forenames, m1.surname, m2.forenames, m2.surname, g.name, fa.name, cb.batch_ref,
+       GROUP BY t.id, m1.forenames, m1.surname, m2.forenames, m2.surname, g.name, g.short_name, g.type, fa.name, cb.batch_ref,
                 ref_orig.transaction_number, ref_by.transaction_number, ref_by.amount, fa.enable_refunds`,
       [req.params.id],
     );
