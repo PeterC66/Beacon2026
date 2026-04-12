@@ -26,7 +26,12 @@ Format: `## [version] — YYYY-MM-DD` with bullet points per change.
   associated with a team as well as a group. The picker is a searchable type-ahead
   with Groups and Teams in separate sections.
 - **Finance ledger** — group view now includes teams; group column links to the
-  correct /groups/ or /teams/ route.
+  correct /groups/ or /teams/ route; view-by button labelled "Group/Team".
+
+### Fixed
+- **Finance ledger GROUP BY error** — adding short_name and type to the SELECT
+  without adding them to GROUP BY caused all transaction queries to fail with a
+  PostgreSQL error. Fixed by including `g.short_name, g.type` in commonGroupBy.
 
 ## [0.8.3] — 2026-04-02
 

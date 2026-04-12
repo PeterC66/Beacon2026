@@ -13,6 +13,7 @@ import ScrollButtons from '../../components/ScrollButtons.jsx';
 import { useSortedData } from '../../hooks/useSortedData.js';
 
 const VIEWS = ['account', 'category', 'group'];
+const VIEW_LABELS = { account: 'Account', category: 'Category', group: 'Group/Team' };
 const thisYear = new Date().getFullYear();
 const YEARS = Array.from({ length: 6 }, (_, i) => thisYear - i);
 
@@ -200,11 +201,11 @@ export default function FinanceLedger() {
                 <button
                   key={v}
                   onClick={() => { setView(v); setSearchParams({ view: v }); }}
-                  className={`px-3 py-1.5 rounded text-sm font-medium transition-colors capitalize ${
+                  className={`px-3 py-1.5 rounded text-sm font-medium transition-colors ${
                     view === v ? 'bg-blue-600 text-white' : 'border border-slate-300 text-slate-700 hover:bg-slate-50'
                   }`}
                 >
-                  {v}
+                  {VIEW_LABELS[v]}
                 </button>
               ))}
             </div>
@@ -212,14 +213,14 @@ export default function FinanceLedger() {
 
           {/* Selector */}
           <div className="flex-1 min-w-[180px]">
-            <label className="block text-xs font-medium text-slate-600 mb-1 capitalize">{view}</label>
+            <label className="block text-xs font-medium text-slate-600 mb-1">{VIEW_LABELS[view]}</label>
             {view === 'group' && (
               <input
                 type="text"
                 name="groupFilter"
                 value={groupFilter}
                 onChange={(e) => setGroupFilter(e.target.value)}
-                placeholder="Filter groups…"
+                placeholder="Filter groups & teams…"
                 className="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 mb-1"
               />
             )}

@@ -507,12 +507,12 @@
 
 | Aspect | Status | Notes |
 |--------|--------|-------|
-| Account/category/group views | Built | — |
+| Account/category/group views | Built | Group view includes teams; button labelled "Group/Team" |
 | Year selector | Built | Calendar year filtering |
 | Running balance | Built | Shown in all views; excludes pending transactions |
 | Group view with per-group B/F rows | Built | When enabled via 7.10.6 setting |
 | Full ledger columns | Built | Account, #, Date, Batch No, Batch Ref, From/To, Group, Mem#, Mem2#, Detail, Category, Payment Ref, Method, In, Out, Refund, Balance, Cleared |
-| Clickable links | Built | # → transaction, Batch No → batch, Group → group record, Mem# / Mem2# → member record, Refund → transaction |
+| Clickable links | Built | # → transaction, Batch No → batch, Group/Team → correct record type, Mem# / Mem2# → member record, Refund → transaction |
 
 ---
 

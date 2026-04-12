@@ -380,7 +380,7 @@ router.get('/transactions', requirePrivilege('finance_ledger', 'view'), async (r
                ) AS categories`;
     const commonGroupBy = `t.id, m1.forenames, m1.surname, m1.membership_number,
                  m2.forenames, m2.surname, m2.membership_number,
-                 g.name, fa.name, cb.batch_ref, cb.description,
+                 g.name, g.short_name, g.type, fa.name, cb.batch_ref, cb.description,
                  ref_orig.transaction_number, ref_by.transaction_number`;
 
     if (memberId) {
