@@ -161,7 +161,7 @@ export async function buildFinanceSheets(wb, slug) {
 export async function buildGroupsSheets(wb, slug) {
   const [groups, gm, faculties, venues, gle] = await Promise.all([
     tenantQuery(slug, `
-      SELECT g.id, g.name, g.faculty_id, f.name AS faculty_name, g.status,
+      SELECT g.id, g.name, g.short_name, g.type, g.faculty_id, f.name AS faculty_name, g.status,
              g.when_text,
              g.start_time::text AS start_time, g.end_time::text AS end_time,
              g.venue, g.venue_id, g.enquiries, g.max_members,
@@ -196,7 +196,7 @@ export async function buildGroupsSheets(wb, slug) {
   ]);
 
   addSheet(wb, 'Groups', [
-    'id', 'name', 'faculty_id', 'faculty_name', 'status',
+    'id', 'name', 'short_name', 'type', 'faculty_id', 'faculty_name', 'status',
     'when_text', 'start_time', 'end_time', 'venue', 'venue_id', 'enquiries', 'max_members',
     'allow_online_join', 'enable_waiting_list', 'notify_leader',
     'display_waiting_list', 'information', 'notes', 'show_addresses',
@@ -636,12 +636,13 @@ export async function restoreBeacon2(tx, wb) {
     if (!r.id) continue;
     await tx.$executeRawUnsafe(
       `INSERT INTO groups
-         (id, name, faculty_id, status, when_text, start_time, end_time, venue, venue_id,
+         (id, name, short_name, type, faculty_id, status, when_text, start_time, end_time, venue, venue_id,
           enquiries, max_members, allow_online_join, enable_waiting_list, notify_leader,
           display_waiting_list, information, notes, show_addresses)
-       VALUES ($1,$2,$3,$4,$5,$6::time,$7::time,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8::time,$9::time,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20)
        ON CONFLICT (id) DO NOTHING`,
-      r.id, String(r.name || ''), str(r.faculty_id),
+      r.id, String(r.name || ''), str(r.short_name) || null,
+      String(r.type || 'group'), str(r.faculty_id),
       String(r.status || 'active'), str(r.when_text),
       str(r.start_time) || null, str(r.end_time) || null,
       str(r.venue), str(r.venue_id),
