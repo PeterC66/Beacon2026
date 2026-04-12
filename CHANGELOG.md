@@ -32,6 +32,9 @@ Format: `## [version] — YYYY-MM-DD` with bullet points per change.
 - **Finance ledger GROUP BY error** — adding short_name and type to the SELECT
   without adding them to GROUP BY caused all transaction queries to fail with a
   PostgreSQL error. Fixed by including `g.short_name, g.type` in commonGroupBy.
+- **Transaction redisplay after save** — the GET /transactions/:id endpoint had
+  the same GROUP BY omission (`g.short_name, g.type`), causing "Transaction #null"
+  and an error message after saving a new transaction despite the save succeeding.
 
 ## [0.8.3] — 2026-04-02
 
