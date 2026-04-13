@@ -8,6 +8,13 @@ Format: `## [version] — YYYY-MM-DD` with bullet points per change.
 ## [0.8.5] — 2026-04-13
 
 ### Added
+- **Team events / schedule** — teams now support the same event scheduling as groups.
+  Schedule tab added to TeamRecord with full CRUD (add single/recurring, inline edit,
+  bulk delete). Shared `Schedule` component extracted from GroupRecord for reuse.
+  Backend: `/teams/:id/events` CRUD routes (GET/POST/PATCH/DELETE).
+  Team events also appear in the Calendar view (group/team filter).
+- **Groups / Teams switching links** — "Switch to Teams" link on Groups list page
+  and "Switch to Groups" link on Teams list page for quick navigation.
 - **Event types** — flexible system replacing the single "Open Meetings" concept.
   Non-group events now belong to a configurable event type (e.g. Open Meetings,
   Social Events, Guest Lectures). Default "Open Meetings" type seeded automatically

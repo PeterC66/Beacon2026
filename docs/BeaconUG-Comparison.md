@@ -284,7 +284,7 @@
 
 | Aspect | Status | Notes |
 |--------|--------|-------|
-| Sortable groups list | Built | — |
+| Sortable groups list | Built | "Switch to Teams" link at top |
 | Create/edit/delete groups | Built | — |
 | Row selection + bulk actions | Built | Send email to leaders, download Excel/PDF, add members to poll |
 
@@ -347,10 +347,11 @@
 
 | Aspect | Status | Notes |
 |--------|--------|-------|
-| **Beacon2 extra:** Teams concept | Built | Teams are like groups but without scheduling, venues, faculties, max members, waiting list, or online join. Implemented via `type` column on `groups` table. |
-| Team List page | Built | Separate list with letter filter, status filter, bulk actions (email leaders, download, add to poll) |
+| **Beacon2 extra:** Teams concept | Built | Teams are like groups but without faculties, max members, waiting list, or online join. Implemented via `type` column on `groups` table. |
+| Team List page | Built | Separate list with letter filter, status filter, bulk actions (email leaders, download, add to poll); "Switch to Groups" link |
 | Team Record: Details tab | Built | Name, status, information, notes, show-addresses toggle |
 | Team Record: Members tab | Built | Add/remove members, mark leaders, bulk actions (email, download, remove, add to another team) |
+| Team Record: Schedule tab | Built | Same features as group schedule — single + recurring events, inline edit, bulk delete; shared `Schedule` component |
 | Team Record: Ledger tab | Built | Same as group ledger — per-team in/out transactions with date range filter |
 | Abbreviated name (groups & teams) | Built | Optional short name (max 10 chars) shown everywhere, full name as tooltip |
 | Teams in Member record | Built | "Groups, Teams and Ledger" tab shows both groups and teams |
