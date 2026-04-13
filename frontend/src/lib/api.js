@@ -685,6 +685,7 @@ export const calendar = {
     if (params.memberId)    qs.set('memberId',    params.memberId);
     if (params.venueId)     qs.set('venueId',     params.venueId);
     if (params.groupId)     qs.set('groupId',     params.groupId);
+    if (params.groupsOnly)  qs.set('groupsOnly',  params.groupsOnly);
     if (params.eventTypeId) qs.set('eventTypeId', params.eventTypeId);
     const q = qs.toString();
     return request(`/calendar/events${q ? '?' + q : ''}`);
@@ -696,6 +697,7 @@ export const calendar = {
     if (params.memberId)    qs.set('memberId',    params.memberId);
     if (params.venueId)     qs.set('venueId',     params.venueId);
     if (params.groupId)     qs.set('groupId',     params.groupId);
+    if (params.groupsOnly)  qs.set('groupsOnly',  params.groupsOnly);
     if (params.eventTypeId) qs.set('eventTypeId', params.eventTypeId);
     const q = qs.toString();
     return requestBlob(`/calendar/events/pdf${q ? '?' + q : ''}`);
