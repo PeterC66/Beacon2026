@@ -6,6 +6,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { teams as teamsApi, members as membersApi, requestBlob } from '../../lib/api.js';
+import Schedule from '../../components/Schedule.jsx';
 import { useAuth } from '../../context/AuthContext.jsx';
 import NavBar from '../../components/NavBar.jsx';
 import RequiredMark from '../../components/RequiredMark.jsx';
@@ -977,9 +978,10 @@ export default function TeamRecord() {
   ];
 
   const tabs = [
-    { key: 'details', label: 'Details',  available: true },
-    { key: 'members', label: 'Members',  available: !isNew },
-    { key: 'ledger',  label: 'Ledger',   available: !isNew && (can('group_ledger_all', 'view') || can('group_ledger_as_leader', 'view')) },
+    { key: 'details',  label: 'Details',  available: true },
+    { key: 'members',  label: 'Members',  available: !isNew },
+    { key: 'schedule', label: 'Schedule', available: !isNew },
+    { key: 'ledger',   label: 'Ledger',   available: !isNew && (can('group_ledger_all', 'view') || can('group_ledger_as_leader', 'view')) },
   ];
 
   return (
@@ -1030,6 +1032,9 @@ export default function TeamRecord() {
           )}
           {!isNew && activeTab === 'members' && (
             <TeamMembers teamId={id} />
+          )}
+          {!isNew && activeTab === 'schedule' && (
+            <Schedule entityId={id} api={teamsApi} />
           )}
           {!isNew && activeTab === 'ledger' && (
             <TeamLedger teamId={id} />

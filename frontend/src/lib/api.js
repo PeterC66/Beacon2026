@@ -380,6 +380,11 @@ export const teams = {
   createLedgerEntry:  (id, data)          => request(`/teams/${id}/ledger`, { method: 'POST', body: JSON.stringify(data) }),
   updateLedgerEntry:  (id, entryId, data) => request(`/teams/${id}/ledger/${entryId}`, { method: 'PATCH', body: JSON.stringify(data) }),
   deleteLedgerEntry:  (id, entryId)       => request(`/teams/${id}/ledger/${entryId}`, { method: 'DELETE' }),
+
+  listEvents:   (id)             => request(`/teams/${id}/events`),
+  createEvents: (id, data)       => request(`/teams/${id}/events`, { method: 'POST', body: JSON.stringify(data) }),
+  updateEvent:  (id, evId, data) => request(`/teams/${id}/events/${evId}`, { method: 'PATCH', body: JSON.stringify(data) }),
+  deleteEvents: (id, ids)        => request(`/teams/${id}/events`, { method: 'DELETE', body: JSON.stringify({ ids }) }),
 };
 
 // ─── Finance ──────────────────────────────────────────────────────────────

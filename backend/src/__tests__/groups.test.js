@@ -413,3 +413,97 @@ describe('DELETE /groups/:id/ledger/:entryId', () => {
     expect(res.status).toBe(204);
   });
 });
+
+// ── TEAM EVENTS (/teams/:id/events) ──────────────────────────────────────
+
+const SAMPLE_TEAM = { id: 't1', type: 'team' };
+const SAMPLE_TEAM_EVENT = {
+  id: 'te1', event_date: '2026-05-01', start_time: '10:00', end_time: '12:00',
+  venue_id: 'v1', venue_name: 'Town Hall', topic: 'Planning', contact: 'Jane',
+  details: null, is_private: false,
+};
+
+describe('GET /teams/:id/events', () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it('returns events for a team', async () => {
+    tenantQuery
+      .mockResolvedValueOnce([SAMPLE_TEAM])
+      .mockResolvedValueOnce([SAMPLE_TEAM_EVENT]);
+    const res = await request(app)
+      .get('/teams/t1/events')
+      .set('Authorization', AUTH);
+    expect(res.status).toBe(200);
+    expect(res.body).toHaveLength(1);
+    expect(res.body[0].topic).toBe('Planning');
+  });
+
+  it('returns 404 for non-existent team', async () => {
+    tenantQuery.mockResolvedValueOnce([]);
+    const res = await request(app)
+      .get('/teams/bad/events')
+      .set('Authorization', AUTH);
+    expect(res.status).toBe(404);
+  });
+});
+
+describe('POST /teams/:id/events', () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it('creates an event for a team', async () => {
+    tenantQuery
+      .mockResolvedValueOnce([SAMPLE_TEAM])
+      .mockResolvedValueOnce([{ id: 'te2', event_date: '2026-06-01' }]);
+    const res = await request(app)
+      .post('/teams/t1/events')
+      .set('Authorization', AUTH)
+      .send({ eventDate: '2026-06-01', topic: 'Budget review' });
+    expect(res.status).toBe(201);
+    expect(res.body).toHaveLength(1);
+  });
+
+  it('returns 404 for non-existent team', async () => {
+    tenantQuery.mockResolvedValueOnce([]);
+    const res = await request(app)
+      .post('/teams/bad/events')
+      .set('Authorization', AUTH)
+      .send({ eventDate: '2026-06-01' });
+    expect(res.status).toBe(404);
+  });
+});
+
+describe('PATCH /teams/:id/events/:eventId', () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it('updates a team event', async () => {
+    tenantQuery.mockResolvedValueOnce([{ ...SAMPLE_TEAM_EVENT, topic: 'Updated' }]);
+    const res = await request(app)
+      .patch('/teams/t1/events/te1')
+      .set('Authorization', AUTH)
+      .send({ topic: 'Updated' });
+    expect(res.status).toBe(200);
+    expect(res.body.topic).toBe('Updated');
+  });
+
+  it('returns 400 with empty body', async () => {
+    const res = await request(app)
+      .patch('/teams/t1/events/te1')
+      .set('Authorization', AUTH)
+      .send({});
+    expect(res.status).toBe(400);
+  });
+});
+
+describe('DELETE /teams/:id/events', () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it('deletes team events', async () => {
+    tenantQuery.mockResolvedValueOnce([{ id: 'te1' }]);
+    const res = await request(app)
+      .delete('/teams/t1/events')
+      .set('Authorization', AUTH)
+      .send({ ids: ['te1'] });
+    expect(res.status).toBe(200);
+    expect(res.body.deleted).toBe(1);
+  });
+});
