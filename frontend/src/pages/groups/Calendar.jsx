@@ -92,10 +92,9 @@ export default function Calendar() {
       groupsApi.list({ activeOnly: false }),
       teamsApi.list({ activeOnly: false }),
     ]).then(([groups, teams]) => {
-      const combined = [
-        ...groups.map((g) => ({ ...g, type: 'group' })),
-        ...teams.map((t) => ({ ...t, type: 'team' })),
-      ].sort((a, b) => a.name.localeCompare(b.name));
+      const sortedGroups = groups.map((g) => ({ ...g, type: 'group' })).sort((a, b) => a.name.localeCompare(b.name));
+      const sortedTeams  = teams.map((t) => ({ ...t, type: 'team' })).sort((a, b) => a.name.localeCompare(b.name));
+      const combined = [...sortedGroups, ...sortedTeams];
       setGroupTeamList(combined);
     }).catch(() => {});
     calendarApi.listEventTypes().then(setEventTypeList).catch(() => {});
@@ -423,16 +422,11 @@ export default function Calendar() {
               <p className="text-center text-slate-500 py-8">Loading...</p>
             ) : (
               <>
-                {/* Event count + Show Detail */}
+                {/* Event count */}
                 <div className="flex items-center justify-between">
                   <h2 className="text-sm font-semibold text-slate-700">
                     {otherEvents.length} event{otherEvents.length !== 1 ? 's' : ''}
                   </h2>
-                  <label className="flex items-center gap-2 text-sm cursor-pointer">
-                    <input type="checkbox" className={cbCls} checked={showDetail}
-                      onChange={(e) => setShowDetail(e.target.checked)} />
-                    Show Detail
-                  </label>
                 </div>
 
                 {/* Bulk actions */}
@@ -522,6 +516,14 @@ export default function Calendar() {
                               {fmtDate(ev.event_date)}
                               {ev.start_time ? ` ${fmtTime(ev.start_time)}` : ''}
                             </Link>
+                          ) : canViewMeetings ? (
+                            <button
+                              onClick={() => { setFilterMode('other'); setEventTypeId(ev.event_type_id || ''); clearMember(); setVenueId(''); setGroupId(''); }}
+                              className="text-blue-700 hover:underline text-left whitespace-nowrap"
+                            >
+                              {fmtDate(ev.event_date)}
+                              {ev.start_time ? ` ${fmtTime(ev.start_time)}` : ''}
+                            </button>
                           ) : (
                             <span>
                               {fmtDate(ev.event_date)}
