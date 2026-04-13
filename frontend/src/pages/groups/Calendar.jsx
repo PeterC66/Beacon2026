@@ -1,9 +1,9 @@
 // beacon2/frontend/src/pages/groups/Calendar.jsx
 // Calendar — chronological list of all group/team events + non-group events.
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import { calendar as calendarApi, venues as venuesApi, groups as groupsApi, teams as teamsApi } from '../../lib/api.js';
+import { calendar as calendarApi, venues as venuesApi, groups as groupsApi, teams as teamsApi, members as membersApi } from '../../lib/api.js';
 import { useAuth } from '../../context/AuthContext.jsx';
 import NavBar from '../../components/NavBar.jsx';
 import PageHeader from '../../components/PageHeader.jsx';
@@ -61,13 +61,9 @@ export default function Calendar() {
   const [groupId,    setGroupId]    = useState('');
   const [eventTypeId, setEventTypeId] = useState('');
 
-  // Member search autocomplete
-  const [memberQuery,   setMemberQuery]   = useState('');
-  const [memberResults, setMemberResults] = useState([]);
-  const [memberLabel,   setMemberLabel]   = useState('');
-  const [showDropdown,  setShowDropdown]  = useState(false);
-  const searchTimeout = useRef(null);
-  const dropdownRef   = useRef(null);
+  // Member filter + select
+  const [allMembers,    setAllMembers]    = useState([]);
+  const [memberFilter,  setMemberFilter]  = useState('');
 
   // "Other" mode — event management
   const [otherEvents, setOtherEvents] = useState([]);
@@ -103,23 +99,22 @@ export default function Calendar() {
       setGroupTeamList(combined);
     }).catch(() => {});
     calendarApi.listEventTypes().then(setEventTypeList).catch(() => {});
+    membersApi.list().then(setAllMembers).catch(() => {});
   }, []);
+
+  const filteredMembers = useMemo(() => {
+    const q = memberFilter.trim().toLowerCase();
+    if (!q) return allMembers.slice(0, 50);
+    return allMembers.filter((m) =>
+      `${m.forenames} ${m.surname}`.toLowerCase().includes(q) ||
+      String(m.membership_number).includes(q)
+    ).slice(0, 50);
+  }, [allMembers, memberFilter]);
 
   // Load events when calendar filters change (not for "other" mode)
   useEffect(() => {
     if (filterMode !== 'other') loadEvents();
   }, [from, to, filterMode, memberId, venueId, groupId]);
-
-  // Close dropdown on click outside
-  useEffect(() => {
-    function handleClick(e) {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
-        setShowDropdown(false);
-      }
-    }
-    document.addEventListener('mousedown', handleClick);
-    return () => document.removeEventListener('mousedown', handleClick);
-  }, []);
 
   async function loadEvents() {
     setLoading(true);
@@ -275,36 +270,9 @@ export default function Calendar() {
     }
   }
 
-  function handleMemberSearch(q) {
-    setMemberQuery(q);
-    if (searchTimeout.current) clearTimeout(searchTimeout.current);
-    if (q.length < 2) {
-      setMemberResults([]);
-      setShowDropdown(false);
-      return;
-    }
-    searchTimeout.current = setTimeout(async () => {
-      try {
-        const results = await calendarApi.searchMembers(q);
-        setMemberResults(results);
-        setShowDropdown(true);
-      } catch { /* ignore */ }
-    }, 300);
-  }
-
-  function selectMember(m) {
-    setMemberId(m.id);
-    setMemberLabel(`${m.last_name}, ${m.first_name}`);
-    setMemberQuery(`${m.last_name}, ${m.first_name}`);
-    setShowDropdown(false);
-    setMemberResults([]);
-  }
-
   function clearMember() {
     setMemberId('');
-    setMemberLabel('');
-    setMemberQuery('');
-    setMemberResults([]);
+    setMemberFilter('');
   }
 
   async function handleDownloadPdf() {
@@ -356,32 +324,29 @@ export default function Calendar() {
               for member
             </label>
             {filterMode === 'member' && (
-              <div className="relative" ref={dropdownRef}>
+              <div>
                 <input
                   type="text"
-                  name="memberQuery"
-                  className={inputCls + ' w-56'}
-                  placeholder="Search member name..."
-                  value={memberQuery}
-                  onChange={(e) => handleMemberSearch(e.target.value)}
-                  onFocus={() => { if (memberResults.length > 0) setShowDropdown(true); }}
+                  name="memberFilter"
+                  className={`${inputCls} w-48 mb-1`}
+                  placeholder="Search name / number…"
+                  value={memberFilter}
+                  onChange={(e) => setMemberFilter(e.target.value)}
                 />
-                {memberLabel && (
-                  <button onClick={clearMember} className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-red-500 text-xs">
-                    x
-                  </button>
-                )}
-                {showDropdown && memberResults.length > 0 && (
-                  <ul className="absolute z-20 top-full left-0 mt-1 bg-white border border-slate-300 rounded shadow-lg max-h-48 overflow-y-auto w-64">
-                    {memberResults.map((m) => (
-                      <li key={m.id}
-                        className="px-3 py-1.5 text-sm hover:bg-blue-50 cursor-pointer"
-                        onMouseDown={() => selectMember(m)}>
-                        {m.last_name}, {m.first_name} {m.member_no ? `(${m.member_no})` : ''}
-                      </li>
-                    ))}
-                  </ul>
-                )}
+                <select
+                  name="memberId"
+                  className={inputCls}
+                  value={memberId}
+                  onChange={(e) => setMemberId(e.target.value)}
+                  size={4}
+                >
+                  <option value="">— none —</option>
+                  {filteredMembers.map((m) => (
+                    <option key={m.id} value={m.id}>
+                      {m.membership_number} {m.forenames} {m.surname}
+                    </option>
+                  ))}
+                </select>
               </div>
             )}
 
