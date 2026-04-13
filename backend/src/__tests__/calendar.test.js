@@ -92,6 +92,16 @@ describe('GET /calendar/events', () => {
     expect(call[2]).toContain('g1');
   });
 
+  it('excludes open meetings when groupsOnly is true', async () => {
+    tenantQuery.mockResolvedValueOnce([SAMPLE_EVENT]);
+    const res = await request(app)
+      .get('/calendar/events?from=2026-01-01&to=2026-12-31&groupsOnly=true')
+      .set('Authorization', AUTH);
+    expect(res.status).toBe(200);
+    const call = tenantQuery.mock.calls[0];
+    expect(call[1]).toContain('group_id IS NOT NULL');
+  });
+
   it('returns 401 without token', async () => {
     const res = await request(app).get('/calendar/events');
     expect(res.status).toBe(401);

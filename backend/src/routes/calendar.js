@@ -37,7 +37,7 @@ function fmtTime(t) {
 router.get('/events', requirePrivilege('calendar', 'view'), async (req, res, next) => {
   try {
     const slug = req.user.tenantSlug;
-    const { from, to, memberId, venueId, groupId, eventTypeId } = req.query;
+    const { from, to, memberId, venueId, groupId, eventTypeId, groupsOnly } = req.query;
 
     const conditions = [];
     const params = [];
@@ -58,6 +58,8 @@ router.get('/events', requirePrivilege('calendar', 'view'), async (req, res, nex
     if (groupId) {
       conditions.push(`ge.group_id = $${i++}`);
       params.push(groupId);
+    } else if (groupsOnly === 'true') {
+      conditions.push(`ge.group_id IS NOT NULL`);
     }
     if (eventTypeId) {
       conditions.push(`ge.event_type_id = $${i++}`);
@@ -99,7 +101,7 @@ router.get('/events', requirePrivilege('calendar', 'view'), async (req, res, nex
 router.get('/events/pdf', requirePrivilege('calendar', 'download'), async (req, res, next) => {
   try {
     const slug = req.user.tenantSlug;
-    const { from, to, memberId, venueId, groupId, eventTypeId } = req.query;
+    const { from, to, memberId, venueId, groupId, eventTypeId, groupsOnly } = req.query;
 
     const conditions = [];
     const params = [];
@@ -120,6 +122,8 @@ router.get('/events/pdf', requirePrivilege('calendar', 'download'), async (req, 
     if (groupId) {
       conditions.push(`ge.group_id = $${i++}`);
       params.push(groupId);
+    } else if (groupsOnly === 'true') {
+      conditions.push(`ge.group_id IS NOT NULL`);
     }
     if (eventTypeId) {
       conditions.push(`ge.event_type_id = $${i++}`);

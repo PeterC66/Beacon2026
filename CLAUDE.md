@@ -58,6 +58,9 @@ All work goes on a branch whose name starts with `claude/`. Never push directly 
 - **Large file creation** — never write a file over ~400 lines in a single tool call.
   Break it into a skeleton first, then add each section in a separate edit. This avoids
   stream idle timeouts that lose the entire response.
+- **Lock files** — `package-lock.json` files are tracked in git. When bumping a version
+  in `package.json`, run `npm install` in that package directory and commit the updated
+  `package-lock.json` in the same commit.
 
 ---
 

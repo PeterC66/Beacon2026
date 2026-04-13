@@ -23,6 +23,10 @@ Format: `## [version] — YYYY-MM-DD` with bullet points per change.
 - **Event Types settings page** — CRUD page for managing event types under Set up,
   with inline editing, default type protection, and privilege-gated access
 
+### Fixed
+- **Calendar group/team filter** — Open Meetings (non-group events) no longer appear
+  when the Calendar is filtered by group/team
+
 ### Changed
 - **Calendar page** — removed standalone Open Meetings menu item; non-group event
   management is now embedded in the Calendar page under the "Other" radio option

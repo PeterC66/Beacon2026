@@ -129,6 +129,7 @@ export default function Calendar() {
       if (filterMode === 'member' && memberId) params.memberId = memberId;
       if (filterMode === 'venue'  && venueId)  params.venueId  = venueId;
       if (filterMode === 'group'  && groupId)  params.groupId  = groupId;
+      if (filterMode === 'group'  && !groupId) params.groupsOnly = 'true';
       const data = await calendarApi.listEvents(params);
       setEvents(data);
     } catch (err) {
@@ -312,6 +313,7 @@ export default function Calendar() {
       if (filterMode === 'member' && memberId) params.memberId = memberId;
       if (filterMode === 'venue'  && venueId)  params.venueId  = venueId;
       if (filterMode === 'group'  && groupId)  params.groupId  = groupId;
+      if (filterMode === 'group'  && !groupId) params.groupsOnly = 'true';
       if (filterMode === 'other'  && eventTypeId) params.eventTypeId = eventTypeId;
       await calendarApi.downloadPdf(params);
     } catch (err) {
