@@ -187,7 +187,7 @@ export async function buildFinanceSheets(wb, slug) {
 }
 
 export async function buildGroupsSheets(wb, slug) {
-  const [groups, gm, faculties, venues, gle, events] = await Promise.all([
+  const [groups, gm, faculties, venues, gle, events, eventTypes] = await Promise.all([
     tenantQuery(slug, `
       SELECT g.id, g.name, g.short_name, g.type, g.faculty_id, f.name AS faculty_name, g.status,
              g.when_text,
@@ -226,11 +226,16 @@ export async function buildGroupsSheets(wb, slug) {
              ge.event_date, ge.start_time::text AS start_time,
              ge.end_time::text AS end_time,
              ge.venue_id, v.name AS venue_name,
+             ge.event_type_id, et.name AS event_type_name,
              ge.contact, ge.details, ge.topic, ge.is_private
       FROM group_events ge
       LEFT JOIN groups g ON ge.group_id = g.id
       LEFT JOIN venues v ON ge.venue_id = v.id
+      LEFT JOIN event_types et ON ge.event_type_id = et.id
       ORDER BY ge.event_date, ge.start_time
+    `),
+    tenantQuery(slug, `
+      SELECT id, name, description, is_default FROM event_types ORDER BY is_default DESC, name
     `),
   ]);
 
@@ -277,9 +282,17 @@ export async function buildGroupsSheets(wb, slug) {
 
   addSheet(wb, 'Faculties', ['id', 'name'], faculties);
 
+  addSheet(wb, 'Event Types', [
+    'id', 'name', 'description', 'is_default',
+  ], eventTypes.map((r) => ({
+    ...r,
+    is_default: boolInt(r.is_default),
+  })));
+
   addSheet(wb, 'Group Events', [
     'id', 'group_id', 'group_name', 'event_date', 'start_time', 'end_time',
-    'venue_id', 'venue_name', 'contact', 'details', 'topic', 'is_private',
+    'venue_id', 'venue_name', 'event_type_id', 'event_type_name',
+    'contact', 'details', 'topic', 'is_private',
   ], events.map((r) => ({
     ...r,
     event_date: dateToStr(r.event_date),
@@ -581,6 +594,7 @@ export async function clearTenantData(tx) {
     'DELETE FROM credit_batches',
     'DELETE FROM offices',
     'DELETE FROM group_events',
+    'DELETE FROM event_types',
     'DELETE FROM group_members',
     'DELETE FROM groups',
     'DELETE FROM faculties',
@@ -768,17 +782,27 @@ export async function restoreBeacon2(tx, wb) {
     );
   }
 
-  // 9c. Group events (schedule)
+  // 9c. Event types
+  for (const r of get('Event Types')) {
+    if (!r.id) continue;
+    await tx.$executeRawUnsafe(
+      `INSERT INTO event_types (id, name, description, is_default)
+       VALUES ($1,$2,$3,$4) ON CONFLICT (id) DO NOTHING`,
+      r.id, String(r.name || ''), str(r.description), parseBool(r.is_default),
+    );
+  }
+
+  // 9d. Group events (schedule)
   for (const r of get('Group Events')) {
     if (!r.id) continue;
     await tx.$executeRawUnsafe(
       `INSERT INTO group_events
-         (id, group_id, event_date, start_time, end_time, venue_id, contact, details, topic, is_private)
-       VALUES ($1,$2,$3::date,$4::time,$5::time,$6,$7,$8,$9,$10) ON CONFLICT (id) DO NOTHING`,
+         (id, group_id, event_date, start_time, end_time, venue_id, contact, details, topic, is_private, event_type_id)
+       VALUES ($1,$2,$3::date,$4::time,$5::time,$6,$7,$8,$9,$10,$11) ON CONFLICT (id) DO NOTHING`,
       r.id, str(r.group_id), parseDate(r.event_date),
       str(r.start_time) || null, str(r.end_time) || null,
       str(r.venue_id), str(r.contact), str(r.details), str(r.topic),
-      parseBool(r.is_private),
+      parseBool(r.is_private), str(r.event_type_id),
     );
   }
 

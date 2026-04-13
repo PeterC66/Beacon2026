@@ -1173,47 +1173,71 @@ Currently generates fake paymentId and redirects to own confirmation endpoint.
 
 ### Data model
 
-Open meetings reuse the `group_events` table with `group_id = NULL`.
+Non-group events reuse the `group_events` table with `group_id = NULL`.
 The `group_id` column was made nullable via `ALTER TABLE ... ALTER COLUMN group_id DROP NOT NULL`
 in `tenant_schema.sql`. No separate table is needed.
+
+Each non-group event has an `event_type_id` FK referencing the `event_types` table.
+The `event_types` table has: `id`, `name` (unique), `description`, `is_default`,
+`created_at`, `updated_at`. A default "Open Meetings" type is seeded automatically
+and protected from rename/delete (`is_default = true`).
+
+On startup, existing non-group events without an event_type_id are auto-migrated
+to the default event type.
 
 ### Backend routes (`backend/src/routes/calendar.js`)
 
 | Route | Privilege | Purpose |
 |-------|-----------|---------|
-| `GET /calendar/events` | `calendar:view` | List all events across groups + open meetings; filters: `from`, `to`, `memberId`, `venueId`, `groupId` |
+| `GET /calendar/events` | `calendar:view` | List all events across groups + non-group events; filters: `from`, `to`, `memberId`, `venueId`, `groupId`, `eventTypeId` |
 | `GET /calendar/events/pdf` | `calendar:download` | Same filters, returns PDF download |
 | `GET /calendar/members/search` | `calendar:view` | Member name search for filter autocomplete (`?q=...`, min 2 chars, limit 20) |
-| `GET /calendar/open-events` | `meetings:view` | List open meetings (group_id IS NULL) |
-| `POST /calendar/open-events` | `meetings:create` | Create open meeting(s) with recurrence |
-| `PATCH /calendar/open-events/:id` | `meetings:change` | Update single open meeting |
+| `GET /calendar/event-types` | `calendar:view` | List event types for calendar dropdown |
+| `GET /calendar/open-events` | `meetings:view` | List non-group events (group_id IS NULL); filter by `eventTypeId` |
+| `POST /calendar/open-events` | `meetings:create` | Create non-group event(s) with recurrence; includes `eventTypeId` |
+| `PATCH /calendar/open-events/:id` | `meetings:change` | Update single non-group event; includes `eventTypeId` |
 | `DELETE /calendar/open-events` | `meetings:delete` | Bulk delete by ids array |
+
+### Backend routes (`backend/src/routes/eventTypes.js`)
+
+| Route | Privilege | Purpose |
+|-------|-----------|---------|
+| `GET /event-types` | `event_types:view` | List all event types (ordered by is_default DESC, name) |
+| `POST /event-types` | `event_types:create` | Create event type (name required, description optional) |
+| `PATCH /event-types/:id` | `event_types:change` | Update event type (default cannot be renamed) |
+| `DELETE /event-types/:id` | `event_types:delete` | Delete event type (default cannot be deleted, types with events cannot be deleted) |
 
 ### Frontend pages
 
 | File | Route | Description |
 |------|-------|-------------|
-| `frontend/src/pages/groups/Calendar.jsx` | `/calendar` | Main calendar view with filters, date range, PDF download |
-| `frontend/src/pages/groups/OpenMeetings.jsx` | `/calendar/open-meetings` | Open meetings CRUD (same pattern as GroupSchedule) |
+| `frontend/src/pages/groups/Calendar.jsx` | `/calendar` | Main calendar view with filters (All / Group-Team / Own / Other); "Other" mode embeds full event management for selected event type |
+| `frontend/src/pages/settings/EventTypeList.jsx` | `/event-types` | Event types CRUD settings page (inline edit, default type protection) |
 
 ### Privileges
 
 - `calendar` resource: `[view, download]` — already seeded in `privilegeResources.js`
 - `meetings` resource: `[view, create, change, delete]` — already seeded
-- Both are granted to Administration, Groups Coordinator, and Group Leaders roles in `defaultRoles.js`
+- `event_types` resource: `[view, create, change, delete]` — seeded for settings page
+- Calendar and meetings granted to Administration, Groups Coordinator, and Group Leaders roles
+- Event types granted to Administration role
 
 ### Key decisions
 
-- **Open meetings** share the `group_events` table (nullable `group_id`) rather than a separate table
+- **Non-group events** share the `group_events` table (nullable `group_id`) rather than a separate table
+- **Event types** are a single flexible system — no per-type privileges
+- **Calendar "Other" mode** embeds event management inline rather than a separate page
+- **Calendar "Group/Team" mode** combines groups and teams in a single dropdown
+- **Default event type** ("Open Meetings") is protected: cannot be renamed or deleted
+- **ON DELETE RESTRICT** on event_type_id FK prevents deleting types that have events
 - **Member filter** uses search/autocomplete (not dropdown) for scalability with large memberships
 - **Date/time click** in calendar navigates to Group Record Schedule tab (`/groups/:id?tab=schedule`), not inline edit
 - **Map links** use Google Maps (`google.com/maps/search/?api=1&query=POSTCODE`)
+- **Portal Calendar** also has "Other" filter with event type dropdown
+- **Data export/restore** includes Event Types sheet and event_type_id on Group Events sheet
 
 ### Deferred items (in KNOWN-ISSUES.md)
 
-- Joint membership online joining
-- Members Portal — online renewals (doc 10.2.1)
-- Public groups list and calendar pages (URLs shown on Public Links, pages not yet built)
 - Real PayPal API integration
 - Shared email handling in portal registration
 

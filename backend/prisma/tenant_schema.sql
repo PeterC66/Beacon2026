@@ -285,6 +285,25 @@ CREATE TABLE IF NOT EXISTS :schema.group_members (
 );
 
 -- ─────────────────────────────────────────────
+-- EVENT TYPES  (e.g. Open Meetings, Social Events)
+-- ─────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS :schema.event_types (
+  id          TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
+  name        TEXT NOT NULL,
+  description TEXT,
+  is_default  BOOLEAN NOT NULL DEFAULT false,
+  created_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at  TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE UNIQUE INDEX IF NOT EXISTS :schema_idx_event_types_name ON :schema.event_types (name);
+
+-- Seed the default "Open Meetings" event type
+INSERT INTO :schema.event_types (name, description, is_default)
+VALUES ('Open Meetings', 'u3a-wide events not tied to any group', true)
+ON CONFLICT (name) DO UPDATE SET is_default = true;
+
+-- ─────────────────────────────────────────────
 -- GROUP EVENTS  (schedule)
 -- ─────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS :schema.group_events (
@@ -308,6 +327,15 @@ CREATE INDEX IF NOT EXISTS :schema_idx_group_events_group ON :schema.group_event
 CREATE INDEX IF NOT EXISTS :schema_idx_group_events_date  ON :schema.group_events (event_date);
 
 ALTER TABLE :schema.group_events ADD COLUMN IF NOT EXISTS topic TEXT;
+
+-- Event type FK on group_events (for non-group events)
+ALTER TABLE :schema.group_events ADD COLUMN IF NOT EXISTS event_type_id TEXT REFERENCES :schema.event_types(id) ON DELETE RESTRICT;
+CREATE INDEX IF NOT EXISTS :schema_idx_group_events_event_type ON :schema.group_events (event_type_id);
+
+-- Migrate existing open meetings (group_id IS NULL) to the default event type
+UPDATE :schema.group_events
+SET event_type_id = (SELECT id FROM :schema.event_types WHERE is_default = true LIMIT 1)
+WHERE group_id IS NULL AND event_type_id IS NULL;
 
 -- ─────────────────────────────────────────────
 -- GROUP LEDGER ENTRIES  (doc 5.5 — separate from Finance Ledger)

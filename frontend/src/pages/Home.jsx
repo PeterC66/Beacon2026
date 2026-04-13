@@ -88,6 +88,7 @@ export default function Home() {
         { label: 'Member statuses',     tip: 'View the lifecycle statuses for members',      to: can('member_statuses', 'view') ? '/membership/statuses' : null },
         { label: 'Poll',                tip: 'Set up and manage membership polls',            to: can('poll_set_up', 'view') ? '/polls' : null },
         { label: 'Custom fields',      tip: 'Define up to 4 free-form fields on member records', to: can('custom_fields', 'view') ? '/custom-fields' : null },
+        { label: 'Event types',       tip: 'Define event types for non-group events',          to: can('event_types', 'view') ? '/event-types' : null },
       ],
     },
   ];

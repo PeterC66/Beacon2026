@@ -45,6 +45,12 @@ export const DEFAULT_ROLES = [
       { code: 'email_standard_messages',  action: 'change' },
       { code: 'email_standard_messages',  action: 'delete' },            // vced
 
+      // Event types
+      { code: 'event_types',              action: 'view' },
+      { code: 'event_types',              action: 'create' },
+      { code: 'event_types',              action: 'change' },
+      { code: 'event_types',              action: 'delete' },            // vced
+
       // Finance
       { code: 'finance_accounts',         action: 'view' },
       { code: 'finance_accounts',         action: 'create' },

@@ -32,9 +32,11 @@ export default function PortalCalendar() {
   const navigate = useNavigate();
   const [events, setEvents] = useState([]);
   const [groupList, setGroupList] = useState([]);
+  const [eventTypeList, setEventTypeList] = useState([]);
   const [canDownload, setCanDownload] = useState(false);
-  const [filter, setFilter] = useState('all'); // 'all' | 'own' | groupId
+  const [filter, setFilter] = useState('all'); // 'all' | 'own' | 'group' | 'other'
   const [selectedGroup, setSelectedGroup] = useState('');
+  const [selectedEventType, setSelectedEventType] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [downloading, setDownloading] = useState(false);
@@ -46,7 +48,7 @@ export default function PortalCalendar() {
 
   useEffect(() => {
     loadCalendar();
-  }, [slug, filter, selectedGroup]);
+  }, [slug, filter, selectedGroup, selectedEventType]);
 
   async function loadCalendar() {
     setLoading(true);
@@ -56,6 +58,9 @@ export default function PortalCalendar() {
         params.filter = 'own';
       } else if (filter === 'group' && selectedGroup) {
         params.groupId = selectedGroup;
+      } else if (filter === 'other') {
+        params.filter = 'other';
+        if (selectedEventType) params.eventTypeId = selectedEventType;
       }
       // If filter === 'group' but no selectedGroup, show open meetings only
       if (filter === 'group' && !selectedGroup) {
@@ -65,7 +70,12 @@ export default function PortalCalendar() {
       const data = await portalApi.getCalendar(slug, params);
       setEvents(data.events || []);
       setGroupList(data.groups || []);
+      setEventTypeList(data.eventTypes || []);
       setCanDownload(data.canDownload ?? false);
+      // Auto-select first event type if entering "other" mode
+      if (filter === 'other' && !selectedEventType && (data.eventTypes || []).length > 0) {
+        setSelectedEventType(data.eventTypes[0].id);
+      }
     } catch (err) {
       if (err.message.includes('expired') || err.message.includes('401')) {
         navigate(`/public/${slug}/portal`, { replace: true });
@@ -83,6 +93,10 @@ export default function PortalCalendar() {
       const params = { from: fromDate, to: toDate };
       if (filter === 'own') params.filter = 'own';
       else if (filter === 'group' && selectedGroup) params.groupId = selectedGroup;
+      else if (filter === 'other') {
+        params.filter = 'other';
+        if (selectedEventType) params.eventTypeId = selectedEventType;
+      }
       await portalApi.downloadCalendarPdf(slug, params);
     } catch (err) {
       setError(err.message);
@@ -120,7 +134,7 @@ export default function PortalCalendar() {
               type="radio"
               name="calFilter"
               checked={filter === 'all'}
-              onChange={() => { setFilter('all'); setSelectedGroup(''); }}
+              onChange={() => { setFilter('all'); setSelectedGroup(''); setSelectedEventType(''); }}
             />
             All
           </label>
@@ -130,7 +144,7 @@ export default function PortalCalendar() {
               type="radio"
               name="calFilter"
               checked={filter === 'group'}
-              onChange={() => setFilter('group')}
+              onChange={() => { setFilter('group'); setSelectedEventType(''); }}
             />
             Group
           </label>
@@ -142,7 +156,7 @@ export default function PortalCalendar() {
               onChange={(e) => setSelectedGroup(e.target.value)}
               className="border border-slate-300 rounded px-2 py-1 text-sm"
             >
-              <option value="">Open meetings only</option>
+              <option value="">— select group —</option>
               {groupList.map((g) => (
                 <option key={g.id} value={g.id}>{g.name}</option>
               ))}
@@ -154,10 +168,33 @@ export default function PortalCalendar() {
               type="radio"
               name="calFilter"
               checked={filter === 'own'}
-              onChange={() => { setFilter('own'); setSelectedGroup(''); }}
+              onChange={() => { setFilter('own'); setSelectedGroup(''); setSelectedEventType(''); }}
             />
             Own groups and general meetings
           </label>
+
+          <label className="flex items-center gap-1 text-sm">
+            <input
+              type="radio"
+              name="calFilter"
+              checked={filter === 'other'}
+              onChange={() => { setFilter('other'); setSelectedGroup(''); }}
+            />
+            Other
+          </label>
+
+          {filter === 'other' && eventTypeList.length > 0 && (
+            <select
+              name="eventTypeFilter"
+              value={selectedEventType}
+              onChange={(e) => setSelectedEventType(e.target.value)}
+              className="border border-slate-300 rounded px-2 py-1 text-sm"
+            >
+              {eventTypeList.map((et) => (
+                <option key={et.id} value={et.id}>{et.name}</option>
+              ))}
+            </select>
+          )}
         </div>
 
         {loading ? (

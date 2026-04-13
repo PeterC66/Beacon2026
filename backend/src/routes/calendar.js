@@ -32,11 +32,12 @@ function fmtTime(t) {
 // ─── GET /calendar/events ─────────────────────────────────────────────────────
 // Returns all events across all groups + open meetings within a date range.
 // Query: ?from=YYYY-MM-DD&to=YYYY-MM-DD&memberId=...&venueId=...&groupId=...
+//        &eventTypeId=... (filter to a specific event type)
 
 router.get('/events', requirePrivilege('calendar', 'view'), async (req, res, next) => {
   try {
     const slug = req.user.tenantSlug;
-    const { from, to, memberId, venueId, groupId } = req.query;
+    const { from, to, memberId, venueId, groupId, eventTypeId } = req.query;
 
     const conditions = [];
     const params = [];
@@ -58,6 +59,10 @@ router.get('/events', requirePrivilege('calendar', 'view'), async (req, res, nex
       conditions.push(`ge.group_id = $${i++}`);
       params.push(groupId);
     }
+    if (eventTypeId) {
+      conditions.push(`ge.event_type_id = $${i++}`);
+      params.push(eventTypeId);
+    }
     if (memberId) {
       conditions.push(`(ge.group_id IS NULL OR ge.group_id IN (SELECT group_id FROM group_members WHERE member_id = $${i++}))`);
       params.push(memberId);
@@ -71,11 +76,13 @@ router.get('/events', requirePrivilege('calendar', 'view'), async (req, res, nex
       slug,
       `SELECT ge.id, ge.event_date, ge.start_time, ge.end_time,
               ge.group_id, g.name AS group_name,
+              ge.event_type_id, et.name AS event_type_name,
               ge.venue_id, v.name AS venue_name, v.postcode AS venue_postcode,
               ge.topic, ge.contact, ge.details, ge.is_private
        FROM group_events ge
        LEFT JOIN groups g ON g.id = ge.group_id
        LEFT JOIN venues v ON v.id = ge.venue_id
+       LEFT JOIN event_types et ON et.id = ge.event_type_id
        ${where}
        ORDER BY ge.event_date, ge.start_time, g.name`,
       params,
@@ -92,7 +99,7 @@ router.get('/events', requirePrivilege('calendar', 'view'), async (req, res, nex
 router.get('/events/pdf', requirePrivilege('calendar', 'download'), async (req, res, next) => {
   try {
     const slug = req.user.tenantSlug;
-    const { from, to, memberId, venueId, groupId } = req.query;
+    const { from, to, memberId, venueId, groupId, eventTypeId } = req.query;
 
     const conditions = [];
     const params = [];
@@ -114,6 +121,10 @@ router.get('/events/pdf', requirePrivilege('calendar', 'download'), async (req, 
       conditions.push(`ge.group_id = $${i++}`);
       params.push(groupId);
     }
+    if (eventTypeId) {
+      conditions.push(`ge.event_type_id = $${i++}`);
+      params.push(eventTypeId);
+    }
     if (memberId) {
       conditions.push(`(ge.group_id IS NULL OR ge.group_id IN (SELECT group_id FROM group_members WHERE member_id = $${i++}))`);
       params.push(memberId);
@@ -127,11 +138,13 @@ router.get('/events/pdf', requirePrivilege('calendar', 'download'), async (req, 
       slug,
       `SELECT ge.id, ge.event_date, ge.start_time, ge.end_time,
               ge.group_id, g.name AS group_name,
+              ge.event_type_id, et.name AS event_type_name,
               ge.venue_id, v.name AS venue_name,
               ge.topic, ge.contact, ge.details
        FROM group_events ge
        LEFT JOIN groups g ON g.id = ge.group_id
        LEFT JOIN venues v ON v.id = ge.venue_id
+       LEFT JOIN event_types et ON et.id = ge.event_type_id
        ${where}
        ORDER BY ge.event_date, ge.start_time, g.name`,
       params,
@@ -179,7 +192,7 @@ router.get('/events/pdf', requirePrivilege('calendar', 'download'), async (req, 
 
       const dateStr = fmtDateUK(ev.event_date) + (ev.start_time ? ' ' + fmtTime(ev.start_time) : '');
       const endStr = fmtTime(ev.end_time);
-      const group = ev.group_name || 'Open Meeting';
+      const group = ev.group_name || ev.event_type_name || 'Open Meeting';
       const venue = ev.venue_name || '';
       const topic = ev.topic || '';
       const contact = ev.contact || '';
@@ -234,25 +247,55 @@ router.get('/members/search', requirePrivilege('calendar', 'view'), async (req, 
   }
 });
 
+// ─── GET /calendar/event-types ────────────────────────────────────────────────
+// Returns all event types for the calendar UI dropdown (requires calendar:view).
+
+router.get('/event-types', requirePrivilege('calendar', 'view'), async (req, res, next) => {
+  try {
+    const rows = await tenantQuery(
+      req.user.tenantSlug,
+      `SELECT id, name, description, is_default FROM event_types ORDER BY is_default DESC, name`,
+    );
+    res.json(rows);
+  } catch (err) {
+    next(err);
+  }
+});
+
 // ─────────────────────────────────────────────────────────────────────────────
-// OPEN MEETINGS  — events with group_id = NULL
+// NON-GROUP EVENTS  — events with group_id = NULL, filtered by event type
 // ─────────────────────────────────────────────────────────────────────────────
 
 // ─── GET /calendar/open-events ────────────────────────────────────────────────
+// Query: ?eventTypeId=... to filter by event type
 
 router.get('/open-events', requirePrivilege('meetings', 'view'), async (req, res, next) => {
   try {
     const slug = req.user.tenantSlug;
+    const { eventTypeId } = req.query;
+
+    const conditions = ['ge.group_id IS NULL'];
+    const params = [];
+    let i = 1;
+    if (eventTypeId) {
+      conditions.push(`ge.event_type_id = $${i++}`);
+      params.push(eventTypeId);
+    }
+    const where = 'WHERE ' + conditions.join(' AND ');
+
     const events = await tenantQuery(
       slug,
       `SELECT ge.id, ge.event_date, ge.start_time, ge.end_time,
               ge.venue_id, v.name AS venue_name,
+              ge.event_type_id, et.name AS event_type_name,
               ge.topic, ge.contact, ge.details, ge.is_private,
               ge.created_at, ge.updated_at
        FROM group_events ge
        LEFT JOIN venues v ON v.id = ge.venue_id
-       WHERE ge.group_id IS NULL
+       LEFT JOIN event_types et ON et.id = ge.event_type_id
+       ${where}
        ORDER BY ge.event_date, ge.start_time`,
+      params,
     );
     res.json(events);
   } catch (err) {
@@ -271,6 +314,7 @@ const openEventSchema = z.object({
   contact:      z.string().nullable().optional(),
   details:      z.string().nullable().optional(),
   isPrivate:    z.boolean().default(false),
+  eventTypeId:  z.string().nullable().optional(),
   repeatEvery:  z.number().int().positive().nullable().optional(),
   repeatUnit:   z.enum(['days', 'weeks', 'months']).optional(),
   repeatUntil:  z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullable().optional(),
@@ -307,8 +351,8 @@ router.post('/open-events', requirePrivilege('meetings', 'create'), async (req, 
       const [ev] = await tenantQuery(
         slug,
         `INSERT INTO group_events
-           (group_id, event_date, start_time, end_time, venue_id, topic, contact, details, is_private)
-         VALUES (NULL, $1::date, $2::time, $3::time, $4, $5, $6, $7, $8)
+           (group_id, event_date, start_time, end_time, venue_id, topic, contact, details, is_private, event_type_id)
+         VALUES (NULL, $1::date, $2::time, $3::time, $4, $5, $6, $7, $8, $9)
          RETURNING *`,
         [
           date,
@@ -319,6 +363,7 @@ router.post('/open-events', requirePrivilege('meetings', 'create'), async (req, 
           data.contact ?? null,
           data.details ?? null,
           data.isPrivate,
+          data.eventTypeId ?? null,
         ],
       );
       created.push(ev);
@@ -332,25 +377,27 @@ router.post('/open-events', requirePrivilege('meetings', 'create'), async (req, 
 // ─── PATCH /calendar/open-events/:eventId ─────────────────────────────────────
 
 const updateOpenEventSchema = z.object({
-  eventDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
-  startTime: z.string().nullable().optional(),
-  endTime:   z.string().nullable().optional(),
-  venueId:   z.string().nullable().optional(),
-  topic:     z.string().nullable().optional(),
-  contact:   z.string().nullable().optional(),
-  details:   z.string().nullable().optional(),
-  isPrivate: z.boolean().optional(),
+  eventDate:   z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+  startTime:   z.string().nullable().optional(),
+  endTime:     z.string().nullable().optional(),
+  venueId:     z.string().nullable().optional(),
+  topic:       z.string().nullable().optional(),
+  contact:     z.string().nullable().optional(),
+  details:     z.string().nullable().optional(),
+  isPrivate:   z.boolean().optional(),
+  eventTypeId: z.string().nullable().optional(),
 });
 
 const EVENT_FIELDS = [
-  ['eventDate', 'event_date', '::date'],
-  ['startTime', 'start_time', '::time'],
-  ['endTime',   'end_time',   '::time'],
-  ['venueId',   'venue_id'],
-  ['topic',     'topic'],
-  ['contact',   'contact'],
-  ['details',   'details'],
-  ['isPrivate', 'is_private'],
+  ['eventDate',   'event_date',    '::date'],
+  ['startTime',   'start_time',    '::time'],
+  ['endTime',     'end_time',      '::time'],
+  ['venueId',     'venue_id'],
+  ['topic',       'topic'],
+  ['contact',     'contact'],
+  ['details',     'details'],
+  ['isPrivate',   'is_private'],
+  ['eventTypeId', 'event_type_id'],
 ];
 
 router.patch('/open-events/:eventId', requirePrivilege('meetings', 'change'), async (req, res, next) => {

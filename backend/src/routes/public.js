@@ -1112,11 +1112,13 @@ router.get('/:slug/calendar', async (req, res, next) => {
     const events = await tenantQuery(slug,
       `SELECT ge.id, ge.event_date, ge.start_time, ge.end_time,
               ge.group_id, g.name AS group_name,
+              ge.event_type_id, et.name AS event_type_name,
               ge.venue_id, v.name AS venue_name, v.postcode AS venue_postcode,
               ge.topic, ge.contact, ge.details
        FROM group_events ge
        LEFT JOIN groups g ON g.id = ge.group_id
        LEFT JOIN venues v ON v.id = ge.venue_id
+       LEFT JOIN event_types et ON et.id = ge.event_type_id
        ${where}
        ORDER BY ge.event_date, ge.start_time, g.name`,
       params);
@@ -1127,7 +1129,7 @@ router.get('/:slug/calendar', async (req, res, next) => {
       startTime: ev.start_time,
       endTime: ev.end_time,
       groupId: ev.group_id,
-      groupName: ev.group_name || 'Open Meeting',
+      groupName: ev.group_name || ev.event_type_name || 'Open Meeting',
       ...(calConfig.venue?.public && {
         venue: ev.venue_name || null,
         venuePostcode: ev.venue_postcode || null,

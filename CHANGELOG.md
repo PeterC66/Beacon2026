@@ -5,6 +5,31 @@ Format: `## [version] — YYYY-MM-DD` with bullet points per change.
 
 ---
 
+## [0.8.5] — 2026-04-13
+
+### Added
+- **Event types** — flexible system replacing the single "Open Meetings" concept.
+  Non-group events now belong to a configurable event type (e.g. Open Meetings,
+  Social Events, Guest Lectures). Default "Open Meetings" type seeded automatically
+  and protected from rename/delete.
+  - Backend: `event_types` table, `/event-types` CRUD routes, `event_type_id` FK
+    on `group_events`, migration of existing open meetings to default type
+  - Frontend: Event Types settings page (System Settings → Event Types), Calendar
+    "Other" filter mode with embedded event management, Portal Calendar "Other"
+    filter with event type dropdown
+  - Calendar "Group" filter renamed to "Group/Team" and now includes teams
+  - Data export/restore includes event types sheet and event_type_id on events
+  - Existing open meetings (group_id IS NULL) auto-migrated to "Open Meetings" type
+- **Event Types settings page** — CRUD page for managing event types under Set up,
+  with inline editing, default type protection, and privilege-gated access
+
+### Changed
+- **Calendar page** — removed standalone Open Meetings menu item; non-group event
+  management is now embedded in the Calendar page under the "Other" radio option
+- **Portal Calendar** — added "Other" radio option with event type dropdown filter
+
+---
+
 ## [0.8.4] — 2026-04-12
 
 ### Added
