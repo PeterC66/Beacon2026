@@ -28,6 +28,8 @@ Format: `## [version] — YYYY-MM-DD` with bullet points per change.
   when the Calendar is filtered by group/team
 
 ### Changed
+- **Calendar member filter** — replaced autocomplete search with filter+select dropdown
+  matching the TransactionEditor member picker pattern
 - **Calendar page** — removed standalone Open Meetings menu item; non-group event
   management is now embedded in the Calendar page under the "Other" radio option
 - **Portal Calendar** — added "Other" radio option with event type dropdown filter
