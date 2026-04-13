@@ -14,19 +14,19 @@ Home page.
 
 ## Export types
 
-Eight export options are available [A]. Each one downloads an Excel
-spreadsheet (`.xlsx` file) containing one or more sheets:
+Seven export options are available [A], plus a full backup. Each one
+downloads an Excel spreadsheet (`.xlsx` file) containing one or more sheets:
 
 | # | Export | What it includes |
 |---|--------|------------------|
-| 1 | **Members and addresses** [B] | All member records with postal and email addresses, phone numbers, statuses, and membership details. |
-| 2 | **Finance ledger with detail** [C] | All financial transactions with full line-item detail, accounts, and categories. |
-| 3 | **Groups with members/venues/faculties** [D] | All groups together with their member lists, assigned venues, and faculty (subject) categories. |
-| 4 | **Calendar** [E] | All scheduled meetings and events from the calendar. |
+| 1 | **Members and addresses** [B] | All member records with postal and email addresses, phone numbers, statuses, membership details, custom fields, and emergency contacts. |
+| 2 | **Finance ledger with detail** [C] | All financial transactions (including transfer links, pending status, Gift Aid amounts, refund links), category splits, and credit batches. |
+| 3 | **Groups and teams** [D] | All groups and teams with their member lists, group ledger entries, scheduled events (Group Events), assigned venues, and faculty categories. |
+| 4 | **Calendar** [E] | Calendar events are included in the Groups and teams export (see above). |
 | 5 | **System users/roles/privileges** [F] | All system user accounts, the roles defined in your system, and the privileges assigned to each role. |
 | 6 | **u3a Officers** [G] | The list of offices and their current post holders (as shown on the u3a Officers page). |
-| 7 | **Site settings and set up** [H] | Your system settings, finance accounts, finance categories, membership classes, member statuses, and other configuration data. |
-| 8 | **Backup all data** [I] | A comprehensive download combining all of the above into a single file with multiple sheets. |
+| 7 | **Site settings and set up** [H] | Your system settings, finance accounts and categories, membership classes and fees, member statuses, polls, system messages, standard email and letter templates, and payment method defaults. |
+| 8 | **Backup all data** [I] | A comprehensive download combining all of the above into a single file with multiple sheets. This is the recommended option for a full backup. |
 
 To download an export, click the corresponding **Download** button. The file
 will be generated and saved to your computer's downloads folder.

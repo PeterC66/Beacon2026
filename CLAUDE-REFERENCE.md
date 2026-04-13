@@ -627,6 +627,58 @@ Multer passes non-multipart requests unchanged.
 - Uses `requestBlob` helper in `api.js` (auth token in memory, can't use browser navigation)
 - Filenames include tenant display name + type + timestamp
 
+#### Sheets per export type
+
+| Type | Sheets | Builder function |
+|------|--------|-----------------|
+| `members` | Members | `buildMembersSheet` |
+| `finance` | Ledger, Detail, Credit Batches | `buildFinanceSheets` |
+| `groups` | Groups, Group members, Group Ledgers, Group Events, Venues, Faculties | `buildGroupsSheets` |
+| `calendar` | Calendar (placeholder — events are in Groups export) | `buildCalendarSheet` |
+| `system` | System Users, User roles, Roles, Privileges | `buildSystemSheets` |
+| `officers` | u3a Officers | `buildOfficersSheet` |
+| `settings` | Site Settings 1/2, Finance Accounts, Finance Categories, Membership Classes, Membership Fees, Member Statuses, Polls, Poll assignments, System Messages, Standard Messages, Standard Letters, Payment Method Defaults | `buildSettingsSheets` |
+| `all` | All of the above | Runs all builders |
+
+#### Columns exported per table
+
+**Members** — id, membership_number, title, forenames, surname, suffix, known_as,
+initials, mobile, email, home_u3a, joined_on, next_renewal, gift_aid_from, notes,
+hide_contact, emergency_contact, custom_field_1..4, status_id/name, class_id/name,
+partner_id, address_id + address fields. *Not exported*: photo_data, photo_mime_type
+(too large for Excel — see KNOWN-ISSUES.md).
+
+**Transactions (Ledger)** — id, transaction_number, date, type, from_to, amount,
+payment_method, payment_ref, detail, remarks, cleared_at, account_id/name,
+member_id_1, member_id_2, group_id, transfer_id, pending, batch_id,
+gift_aid_amount/claimed_at (x2), refund_of_id, refunded_by_id.
+
+**Finance Accounts** — id, name, active, locked, sort_order, pending_config,
+pending_types (JSON), enable_refunds, balance_brought_forward.
+
+**Credit Batches** — id, batch_ref, account_id/name, description, batch_date.
+
+**Groups** — id, name, short_name, type (`group`/`team`), faculty_id/name, status,
+when_text, start/end_time, venue, venue_id, enquiries, max_members, boolean flags,
+information, notes, show_addresses.
+
+**Group Events** — id, group_id/name, event_date, start/end_time, venue_id/name,
+contact, details, topic, is_private.
+
+**Tenant Settings** — exported as key/value rows. Includes all 34 settings:
+card_colour, email_cards, public_phone/email, home_page, online_join/renew_email,
+fee_variation, extended_membership_month, advance_renewals_weeks, grace_lapse_weeks,
+deletion_years, default_payment_method, gift_aid_enabled/online_renewals,
+default_town/county/std_code, paypal_email/cancel_url, shared_address_warning,
+year_start_month/day, online_joining_enabled, privacy_policy_url, group_bf_enabled,
+siteworks_activated, custom_field_label_1..4, portal_config (JSON),
+group_info_config (JSON), calendar_config (JSON).
+
+**System Messages, Standard Messages, Standard Letters** — id, name, subject, body
+(standard_letters has no subject).
+
+**Payment Method Defaults** — payment_method, account_id, account_name.
+
 ### Restore (system admin only)
 
 `POST /system/restore/:tenantSlug` — multipart upload, auto-detects format:
