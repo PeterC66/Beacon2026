@@ -9,7 +9,7 @@
 > - **Not started** — feature not yet implemented
 > - **Beacon2 extra** — functionality in Beacon2 that is not in the original Beacon
 >
-> **Last updated:** 2026-03-28
+> **Last updated:** 2026-04-13
 
 ---
 
@@ -384,7 +384,7 @@
 
 | Aspect | Status | Notes |
 |--------|--------|-------|
-| Chronological event view | Built | All group events + open meetings within date range |
+| Chronological event view | Built | All group events + non-group events within date range; "Other" filter mode for event-type-specific management |
 | Date range (default next 3 months) | Built | — |
 | Filters (all/member/venue/group) | Built | Member search autocomplete |
 | Show Detail toggle | Built | — |
@@ -407,7 +407,7 @@
 | Aspect | Status | Notes |
 |--------|--------|-------|
 | One-off event groups | Built | Can create groups for single events |
-| **Beacon2 extra:** Open Meetings | Beacon2 extra | Events not tied to any group (group_id = NULL); dedicated Open Meetings page with recurrence support |
+| **Beacon2 extra:** Event Types | Beacon2 extra | Non-group events with flexible event types (e.g. Open Meetings, Social Events); managed via Calendar "Other" mode with recurrence support; configurable event types in Set up |
 
 ---
 
@@ -1007,7 +1007,7 @@
 | Aspect | Status | Notes |
 |--------|--------|-------|
 | Calendar event list | Built | Events from now to end of year |
-| Filter: All / Group / Own groups | Built | Radio buttons + group dropdown |
+| Filter: All / Group / Own groups / Other | Built | Radio buttons + group dropdown; "Other" shows event type dropdown |
 | Column visibility (Venue, Topic, Enquiries) | Built | Controlled by calendar_config.members toggles |
 | Download PDF | Built | Controlled by calendar_config.download.members toggle |
 
@@ -1055,7 +1055,7 @@ These are features or architectural aspects of Beacon2 that have no counterpart 
 | **Auto-migration** | `migrateTenantSchemas()` re-runs idempotent DDL on every startup; no manual schema management |
 | **JWT + refresh token auth** | Access token (15 min, in-memory only) + refresh token (30 days, httpOnly cookie); bcrypt 12 rounds (replaces Beacon's session-based auth) |
 | **SiteWorks integration** | Tenant-wide toggle hides group scheduling/venue fields when SiteWorks manages events |
-| **Open Meetings** | Calendar events not tied to any group; dedicated page with recurrence support |
+| **Event Types** | Non-group events with flexible, configurable event types (replaces single Open Meetings concept); managed via Calendar "Other" mode; Event Types settings page for CRUD |
 | **Membership Payment Method Defaults** | Per-type default account and payment method; auto-populates member editor and renewals |
 | **Refund system** | Per-account enable; dedicated refund form; reciprocal linking; statement netting; ledger column |
 | **Credit batches** | Group incoming transactions into batches; appear as single rows in reconciliation |

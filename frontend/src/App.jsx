@@ -63,7 +63,6 @@ import EmailUnblocker      from './pages/email/EmailUnblocker.jsx';
 import SystemMessages      from './pages/settings/SystemMessages.jsx';
 import PublicLinks         from './pages/misc/PublicLinks.jsx';
 import Calendar            from './pages/groups/Calendar.jsx';
-import OpenMeetings        from './pages/groups/OpenMeetings.jsx';
 import LetterCompose       from './pages/letters/LetterCompose.jsx';
 import JoinForm            from './pages/public/JoinForm.jsx';
 import JoinPending         from './pages/public/JoinPending.jsx';
@@ -84,6 +83,7 @@ import PortalForgotPassword from './pages/public/PortalForgotPassword.jsx';
 import PortalResetPassword  from './pages/public/PortalResetPassword.jsx';
 import ChangePassword       from './pages/ChangePassword.jsx';
 import CustomFields         from './pages/settings/CustomFields.jsx';
+import EventTypeList        from './pages/settings/EventTypeList.jsx';
 
 function ProtectedRoute({ children }) {
   const { isLoggedIn, mustChangePassword } = useAuth();
@@ -170,6 +170,7 @@ const router = createBrowserRouter([
       { path: '/admin/validate-members',              element: <ProtectedRoute><MemberValidator /></ProtectedRoute> },
       { path: '/polls',                               element: <ProtectedRoute><PollList /></ProtectedRoute> },
       { path: '/custom-fields',                       element: <ProtectedRoute><CustomFields /></ProtectedRoute> },
+      { path: '/event-types',                        element: <ProtectedRoute><EventTypeList /></ProtectedRoute> },
       { path: '/audit',                               element: <ProtectedRoute><AuditLog /></ProtectedRoute> },
       { path: '/audit/:id',                            element: <ProtectedRoute><AuditRecord /></ProtectedRoute> },
       { path: '/gift-aid-log',                         element: <ProtectedRoute><GiftAidLog /></ProtectedRoute> },
@@ -183,7 +184,6 @@ const router = createBrowserRouter([
       { path: '/system-messages',                       element: <ProtectedRoute><SystemMessages /></ProtectedRoute> },
       { path: '/public-links',                          element: <ProtectedRoute><PublicLinks /></ProtectedRoute> },
       { path: '/calendar',                               element: <ProtectedRoute><Calendar /></ProtectedRoute> },
-      { path: '/calendar/open-meetings',                  element: <ProtectedRoute><OpenMeetings /></ProtectedRoute> },
       { path: '/letters/compose',                          element: <ProtectedRoute><LetterCompose /></ProtectedRoute> },
 
       // Public pages (no auth required)

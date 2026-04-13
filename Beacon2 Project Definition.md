@@ -185,13 +185,16 @@ Beacon2 is a ground-up rebuild with these goals:
   copyable public URLs, PayPal status indicator
 
 ### Calendar module
-- **Calendar page** — chronological view of all group events + open meetings within date range
-  (default: next 3 months); filters by all / member (search autocomplete) / venue / group;
+- **Calendar page** — chronological view of all group events + non-group events within date range
+  (default: next 3 months); filters by All / Group-Team / Own / Other;
   Show Detail toggle; clickable date/time → Group Schedule tab; clickable group/venue → record;
   Google Maps link for venues with postcode; Download PDF
-- **Open Meetings** — events not tied to any group (group_id = NULL in group_events);
-  add/edit/delete with recurrence support; same UI pattern as Group Schedule;
-  controlled by `meetings` privilege resource
+- **Event types** — flexible system for non-group events (replaces single Open Meetings concept);
+  configurable event types with name and description; default "Open Meetings" type protected
+  from rename/delete; Calendar "Other" mode embeds full event management for selected type;
+  Portal Calendar also has "Other" filter with event type dropdown
+- **Event Types settings page** — CRUD page under Set up for managing event types;
+  controlled by `event_types` privilege resource
 
 ### Admin / Misc module
 - **Audit log** — date-filtered view + delete-before-date; clickable When → Audit Record detail; clickable Record → entity view
@@ -275,8 +278,8 @@ frontend/
                            CreditBatches  ReconcileAccount  ConfigureAccount
                            FinancialStatement  GroupsStatement  GiftAidDeclaration
                            PaymentMethodDefaults
-      groups/              GroupList  GroupRecord  Calendar  OpenMeetings
-                           VenueList  VenueEditor  FacultyList
+      groups/              GroupList  GroupRecord  TeamList  TeamRecord
+                           Calendar  VenueList  VenueEditor  FacultyList
       members/             MemberList  MemberEditor  MemberCompactView
                            AddressesExport  MemberStatistics  RecentMembers
       membership/          MemberClassList  MemberClassEditor  MemberStatusList
@@ -286,7 +289,7 @@ frontend/
       letters/             LetterCompose
       roles/               RoleList  RoleEditor
       settings/            SystemSettings  PersonalPreferences  SystemMessages
-                           CustomFields
+                           CustomFields  EventTypeList
       system/              SystemLogin  SystemDashboard
       users/               UserList  UserEditor
       email/               EmailCompose  EmailDelivery  EmailDeliveryDetail
@@ -321,7 +324,7 @@ Greyed-out items in `Home.jsx` (i.e. `to: null`) are the remaining roadmap:
 - ~~Letters~~ (done — docs 6.2, 6.2.1, 6.2.2)
 - ~~Membership cards~~ (done)
 - ~~Calendar~~ (done)
-- ~~Open Meetings~~ (done — accessible via Calendar page)
+- ~~Open Meetings~~ (done — replaced by flexible Event Types system; Calendar "Other" mode)
 - ~~Portal photo upload~~ (done)
 
 ---

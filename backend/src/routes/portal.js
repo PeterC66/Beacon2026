@@ -318,8 +318,8 @@ router.get('/calendar', async (req, res, next) => {
   try {
     const slug = req.portal.tenantSlug;
     const memberId = req.portal.memberId;
-    const { from, to, groupId, filter } = req.query;
-    // filter: 'all' | 'own' | groupId
+    const { from, to, groupId, eventTypeId, filter } = req.query;
+    // filter: 'all' | 'own' | 'other'
 
     const [settings] = await tenantQuery(slug,
       `SELECT portal_config, calendar_config
@@ -353,6 +353,13 @@ router.get('/calendar', async (req, res, next) => {
       // Own groups + general/open meetings
       conditions.push(`(ge.group_id IS NULL OR ge.group_id IN (SELECT group_id FROM group_members WHERE member_id = $${i++}))`);
       params.push(memberId);
+    } else if (filter === 'other') {
+      // Non-group events only, optionally filtered by event type
+      conditions.push('ge.group_id IS NULL');
+      if (eventTypeId) {
+        conditions.push(`ge.event_type_id = $${i++}`);
+        params.push(eventTypeId);
+      }
     } else if (groupId) {
       conditions.push(`ge.group_id = $${i++}`);
       params.push(groupId);
@@ -364,11 +371,13 @@ router.get('/calendar', async (req, res, next) => {
     const events = await tenantQuery(slug,
       `SELECT ge.id, ge.event_date, ge.start_time, ge.end_time,
               ge.group_id, g.name AS group_name,
+              ge.event_type_id, et.name AS event_type_name,
               ge.venue_id, v.name AS venue_name, v.postcode AS venue_postcode,
               ge.topic, ge.contact, ge.details, ge.is_private
        FROM group_events ge
        LEFT JOIN groups g ON g.id = ge.group_id
        LEFT JOIN venues v ON v.id = ge.venue_id
+       LEFT JOIN event_types et ON et.id = ge.event_type_id
        ${where}
        ORDER BY ge.event_date, ge.start_time, g.name`,
       params);
@@ -380,7 +389,9 @@ router.get('/calendar', async (req, res, next) => {
       startTime: ev.start_time,
       endTime: ev.end_time,
       groupId: ev.group_id,
-      groupName: ev.group_name || 'Open Meeting',
+      groupName: ev.group_name || ev.event_type_name || 'Open Meeting',
+      eventTypeId: ev.event_type_id,
+      eventTypeName: ev.event_type_name,
       ...(calConfig.venue?.members && {
         venue: ev.venue_name || null,
         venuePostcode: ev.venue_postcode || null,
@@ -397,7 +408,11 @@ router.get('/calendar', async (req, res, next) => {
        WHERE g.status = 'active'
        ORDER BY g.name`);
 
-    res.json({ events: result, groups, canDownload: calConfig.download?.members ?? false });
+    // Also return event types for the "Other" filter
+    const eventTypes = await tenantQuery(slug,
+      `SELECT id, name FROM event_types ORDER BY is_default DESC, name`);
+
+    res.json({ events: result, groups, eventTypes, canDownload: calConfig.download?.members ?? false });
   } catch (err) {
     next(err);
   }
@@ -409,7 +424,7 @@ router.get('/calendar/pdf', async (req, res, next) => {
   try {
     const slug = req.portal.tenantSlug;
     const memberId = req.portal.memberId;
-    const { from, to, groupId, filter } = req.query;
+    const { from, to, groupId, eventTypeId, filter } = req.query;
 
     const [settings] = await tenantQuery(slug,
       `SELECT calendar_config FROM tenant_settings WHERE id = 'singleton'`);
@@ -427,6 +442,12 @@ router.get('/calendar/pdf', async (req, res, next) => {
     if (filter === 'own') {
       conditions.push(`(ge.group_id IS NULL OR ge.group_id IN (SELECT group_id FROM group_members WHERE member_id = $${i++}))`);
       params.push(memberId);
+    } else if (filter === 'other') {
+      conditions.push('ge.group_id IS NULL');
+      if (eventTypeId) {
+        conditions.push(`ge.event_type_id = $${i++}`);
+        params.push(eventTypeId);
+      }
     } else if (groupId) {
       conditions.push(`ge.group_id = $${i++}`);
       params.push(groupId);
@@ -435,11 +456,13 @@ router.get('/calendar/pdf', async (req, res, next) => {
     const where = conditions.length > 0 ? 'WHERE ' + conditions.join(' AND ') : '';
     const events = await tenantQuery(slug,
       `SELECT ge.event_date, ge.start_time, ge.end_time,
-              g.name AS group_name, v.name AS venue_name,
+              g.name AS group_name, et.name AS event_type_name,
+              v.name AS venue_name,
               ge.topic, ge.contact, ge.details
        FROM group_events ge
        LEFT JOIN groups g ON g.id = ge.group_id
        LEFT JOIN venues v ON v.id = ge.venue_id
+       LEFT JOIN event_types et ON et.id = ge.event_type_id
        ${where}
        ORDER BY ge.event_date, ge.start_time, g.name`,
       params);
@@ -488,7 +511,7 @@ router.get('/calendar/pdf', async (req, res, next) => {
       const dateStr = fmtDateUK(ev.event_date) + (ev.start_time ? ' ' + fmtTime(ev.start_time) : '');
       doc.text(dateStr,                    cols[0].x, y, { width: cols[0].w, ellipsis: true });
       doc.text(fmtTime(ev.end_time),      cols[1].x, y, { width: cols[1].w, ellipsis: true });
-      doc.text(ev.group_name || 'Open Meeting', cols[2].x, y, { width: cols[2].w, ellipsis: true });
+      doc.text(ev.group_name || ev.event_type_name || 'Open Meeting', cols[2].x, y, { width: cols[2].w, ellipsis: true });
       doc.text(ev.venue_name || '',        cols[3].x, y, { width: cols[3].w, ellipsis: true });
       doc.text(ev.topic || '',             cols[4].x, y, { width: cols[4].w, ellipsis: true });
       doc.text(ev.contact || '',           cols[5].x, y, { width: cols[5].w, ellipsis: true });
