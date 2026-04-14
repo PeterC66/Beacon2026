@@ -869,7 +869,7 @@
 
 | Aspect | Status | Notes |
 |--------|--------|-------|
-| Online joining toggle | Built | — |
+| Online joining toggle | Built | Now controlled via Feature Configuration page (onlineJoining toggle) |
 | Privacy policy URL | Built | — |
 | Copyable member services URLs | Built | Join URL and Members Portal URL |
 | Copyable public information URLs | Built | Groups list and Calendar URLs (public pages not yet built) |

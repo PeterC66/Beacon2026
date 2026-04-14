@@ -1618,9 +1618,24 @@ are treated as off. If you add a new sub-feature, add it to **both** maps.
 
 ### Backend patterns
 
-- `requireFeature(key)` middleware — checks key, its default, and its parent
+- `requireFeature(key)` middleware — checks key, its default, and its parent (auth routes)
+- `isFeatureEnabled(slug, key)` async helper — same logic, for use in public/portal routes
+  that don't have `req.user` (both exported from `requireFeature.js`)
 - Feature config is fetched by frontend on login and session restore
 - `refreshFeatureConfig()` re-fetches after saving changes
+
+### Unified toggles
+
+Several settings that previously lived as columns in `tenant_settings` have been
+unified onto the Feature Configuration page. The DB columns remain for backward
+compatibility (backup/restore) but are no longer read at runtime:
+
+| Old column | Feature key | Notes |
+|---|---|---|
+| `siteworks_activated` | `siteworks` | Group scheduling fields |
+| `gift_aid_enabled` | `giftAid` | Gift Aid across the system (`gift_aid_online_renewals` stays in System Settings as a sub-option) |
+| `online_joining_enabled` | `onlineJoining` | Public join form |
+| (none — new) | `portal` | Master on/off for all portal routes (portal_config sub-toggles remain) |
 
 ### System Dashboard integration
 

@@ -11,6 +11,7 @@ import { signAccessToken } from '../utils/jwt.js';
 import { resolveTokens } from '../utils/emailTokens.js';
 import { generateSingleCardPdf } from './membershipCards.js';
 import { initiatePayment, verifyPaymentNotification } from '../utils/paypal.js';
+import { isFeatureEnabled } from '../middleware/requireFeature.js';
 import { logAudit } from '../utils/audit.js';
 import portalRoutes from './portal.js';
 
@@ -44,20 +45,19 @@ router.use('/:slug', resolveTenant);
 router.get('/:slug/join-config', async (req, res, next) => {
   try {
     const slug = req.tenantSlug;
-    const [settings] = await tenantQuery(
-      slug,
-      `SELECT online_joining_enabled, privacy_policy_url,
-              gift_aid_enabled, paypal_email, default_town, default_county,
-              online_join_email, online_renew_email
-       FROM tenant_settings WHERE id = 'singleton'`,
-    );
-
-    if (!settings?.online_joining_enabled) {
+    if (!await isFeatureEnabled(slug, 'onlineJoining')) {
       return res.status(403).json({
         error: `Online joining is not enabled for ${req.tenant.name}.`,
         u3aName: req.tenant.name,
       });
     }
+
+    const [settings] = await tenantQuery(
+      slug,
+      `SELECT privacy_policy_url, paypal_email, default_town, default_county,
+              online_join_email, online_renew_email
+       FROM tenant_settings WHERE id = 'singleton'`,
+    );
 
     const classes = await tenantQuery(
       slug,
@@ -70,7 +70,7 @@ router.get('/:slug/join-config', async (req, res, next) => {
     res.json({
       u3aName:            req.tenant.name,
       privacyPolicyUrl:   settings.privacy_policy_url ?? '',
-      giftAidEnabled:     settings.gift_aid_enabled ?? false,
+      giftAidEnabled:     await isFeatureEnabled(slug, 'giftAid'),
       defaultTown:        settings.default_town ?? '',
       defaultCounty:      settings.default_county ?? '',
       onlineJoinEmail:    settings.online_join_email ?? '',
@@ -120,16 +120,16 @@ router.post('/:slug/join', async (req, res, next) => {
     const data = joinSchema.parse(req.body);
 
     // Verify online joining is enabled
-    const [settings] = await tenantQuery(
-      slug,
-      `SELECT online_joining_enabled, paypal_email, paypal_cancel_url,
-              gift_aid_enabled, year_start_month, year_start_day
-       FROM tenant_settings WHERE id = 'singleton'`,
-    );
-
-    if (!settings?.online_joining_enabled) {
+    if (!await isFeatureEnabled(slug, 'onlineJoining')) {
       return res.status(403).json({ error: `Online joining is not enabled for ${req.tenant.name}.` });
     }
+
+    const [settings] = await tenantQuery(
+      slug,
+      `SELECT paypal_email, paypal_cancel_url,
+              year_start_month, year_start_day
+       FROM tenant_settings WHERE id = 'singleton'`,
+    );
 
     // Verify the class is valid and available online
     const [cls] = await tenantQuery(
@@ -186,7 +186,8 @@ router.post('/:slug/join', async (req, res, next) => {
     const initials = data.forenames.split(/\s+/).map(n => n[0]?.toUpperCase()).filter(Boolean).join('');
 
     // Set gift_aid_from if opted in and enabled
-    const giftAidFrom = (data.giftAid && settings.gift_aid_enabled) ? joinedOn : null;
+    const giftAidEnabled = await isFeatureEnabled(slug, 'giftAid');
+    const giftAidFrom = (data.giftAid && giftAidEnabled) ? joinedOn : null;
 
     // Generate a payment token so the applicant can resume payment later
     const paymentToken = randomBytes(24).toString('hex');
@@ -222,7 +223,7 @@ router.post('/:slug/join', async (req, res, next) => {
       const p2 = data.partner2;
       const p2Initials = p2.forenames.split(/\s+/).map(n => n[0]?.toUpperCase()).filter(Boolean).join('');
       const p2Email = p2.email ? p2.email.toLowerCase() : null;
-      const p2GiftAidFrom = (p2.giftAid && settings.gift_aid_enabled) ? joinedOn : null;
+      const p2GiftAidFrom = (p2.giftAid && giftAidEnabled) ? joinedOn : null;
 
       const [partner] = await tenantQuery(
         slug,

@@ -8,10 +8,18 @@ Format: `## [version] — YYYY-MM-DD` with bullet points per change.
 ## [0.8.6] — 2026-04-14
 
 ### Changed
-- **SiteWorks toggle unified** — removed the redundant `SiteWorks Activated`
-  checkbox from System Settings. The SiteWorks Integration toggle on the Feature
-  Configuration page is now the single control that hides scheduling fields and
-  the Schedule tab from group records.
+- **Feature toggles unified with system settings** — four feature toggles that
+  existed as both a Feature Configuration toggle and a separate system settings
+  checkbox have been unified onto the Feature Configuration page:
+  - **SiteWorks** — removed `SiteWorks Activated` from System Settings; the Feature
+    Config toggle now controls group scheduling fields.
+  - **Gift Aid** — removed `Gift Aid declaration enabled` from System Settings; the
+    Feature Config toggle now controls Gift Aid across the system. The "Show Gift
+    Aid tick boxes for online renewals" sub-setting remains on System Settings.
+  - **Online Joining** — removed `Enable online membership applications` from
+    Public Links; the Feature Config toggle now gates the public join form.
+  - **Portal** — the portal master toggle now gates all backend portal routes
+    (previously only hid the admin link).
 
 ### Fixed
 - **Feature toggles** — disabling a master module (e.g. Events & Calendar) now

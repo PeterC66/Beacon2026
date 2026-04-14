@@ -27,7 +27,6 @@ vi.mock('../lib/api.js', () => ({
       grace_lapse_weeks:         4,
       deletion_years:            7,
       default_payment_method:    'Cheque',
-      gift_aid_enabled:          false,
       gift_aid_online_renewals:  false,
       default_town:              null,
       default_county:            null,

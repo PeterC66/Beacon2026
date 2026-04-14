@@ -14,10 +14,10 @@ const COLS = `
   card_colour, email_cards, public_phone, public_email, home_page,
   online_join_email, online_renew_email, fee_variation,
   extended_membership_month, advance_renewals_weeks, grace_lapse_weeks,
-  deletion_years, default_payment_method, gift_aid_enabled,
+  deletion_years, default_payment_method,
   gift_aid_online_renewals, default_town, default_county, default_std_code,
   paypal_email, paypal_cancel_url, shared_address_warning,
-  year_start_month, year_start_day, online_joining_enabled,
+  year_start_month, year_start_day,
   privacy_policy_url, group_bf_enabled, updated_at
 `;
 
@@ -146,7 +146,6 @@ const updateSchema = z.object({
   graceLapseWeeks:          z.number().int().min(0).max(52).optional(),
   deletionYears:            z.number().int().min(2).max(7).optional(),
   defaultPaymentMethod:     z.string().min(1).optional(),
-  giftAidEnabled:           z.boolean().optional(),
   giftAidOnlineRenewals:    z.boolean().optional(),
   defaultTown:              z.string().nullable().optional(),
   defaultCounty:            z.string().nullable().optional(),
@@ -156,7 +155,6 @@ const updateSchema = z.object({
   sharedAddressWarning:     z.boolean().optional(),
   yearStartMonth:           z.number().int().min(1).max(12).optional(),
   yearStartDay:             z.number().int().min(1).max(31).optional(),
-  onlineJoiningEnabled:     z.boolean().optional(),
   privacyPolicyUrl:         z.string().nullable().optional(),
   groupBfEnabled:           z.boolean().optional(),
 });
@@ -181,7 +179,6 @@ router.patch('/', requirePrivilege('settings', 'change'), async (req, res, next)
     if (data.graceLapseWeeks         !== undefined) { fields.push(`grace_lapse_weeks = $${i++}`);         values.push(data.graceLapseWeeks); }
     if (data.deletionYears           !== undefined) { fields.push(`deletion_years = $${i++}`);            values.push(data.deletionYears); }
     if (data.defaultPaymentMethod    !== undefined) { fields.push(`default_payment_method = $${i++}`);    values.push(data.defaultPaymentMethod); }
-    if (data.giftAidEnabled          !== undefined) { fields.push(`gift_aid_enabled = $${i++}`);          values.push(data.giftAidEnabled); }
     if (data.giftAidOnlineRenewals   !== undefined) { fields.push(`gift_aid_online_renewals = $${i++}`);  values.push(data.giftAidOnlineRenewals); }
     if (data.defaultTown             !== undefined) { fields.push(`default_town = $${i++}`);              values.push(data.defaultTown); }
     if (data.defaultCounty           !== undefined) { fields.push(`default_county = $${i++}`);            values.push(data.defaultCounty); }
@@ -191,7 +188,6 @@ router.patch('/', requirePrivilege('settings', 'change'), async (req, res, next)
     if (data.sharedAddressWarning    !== undefined) { fields.push(`shared_address_warning = $${i++}`);    values.push(data.sharedAddressWarning); }
     if (data.yearStartMonth          !== undefined) { fields.push(`year_start_month = $${i++}`);           values.push(data.yearStartMonth); }
     if (data.yearStartDay            !== undefined) { fields.push(`year_start_day = $${i++}`);             values.push(data.yearStartDay); }
-    if (data.onlineJoiningEnabled    !== undefined) { fields.push(`online_joining_enabled = $${i++}`);     values.push(data.onlineJoiningEnabled); }
     if (data.privacyPolicyUrl        !== undefined) { fields.push(`privacy_policy_url = $${i++}`);         values.push(data.privacyPolicyUrl); }
     if (data.groupBfEnabled          !== undefined) { fields.push(`group_bf_enabled = $${i++}`);           values.push(data.groupBfEnabled); }
 

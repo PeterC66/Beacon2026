@@ -80,7 +80,6 @@ export default function PublicLinks() {
   const { tenant, can } = useAuth();
   const [data, setData] = useState(null);
   const [form, setForm] = useState({
-    onlineJoiningEnabled: false,
     privacyPolicyUrl: '',
     portalConfig: {},
     groupInfoConfig: {},
@@ -95,7 +94,6 @@ export default function PublicLinks() {
     api.get().then((d) => {
       setData(d);
       setForm({
-        onlineJoiningEnabled: d.onlineJoiningEnabled,
         privacyPolicyUrl: d.privacyPolicyUrl || '',
         portalConfig: d.portalConfig || {},
         groupInfoConfig: d.groupInfoConfig || {},
@@ -223,16 +221,6 @@ export default function PublicLinks() {
           <h2 className="font-bold text-sm mb-3">Online Joining</h2>
 
           <div className="space-y-4">
-            <label className="flex items-center gap-2 text-sm">
-              <input
-                type="checkbox"
-                checked={form.onlineJoiningEnabled}
-                onChange={(e) => handleChange('onlineJoiningEnabled', e.target.checked)}
-                disabled={!canChange}
-              />
-              Enable online membership applications
-            </label>
-
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">
                 Privacy policy URL

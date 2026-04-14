@@ -41,7 +41,6 @@ const DEFAULTS = {
   grace_lapse_weeks:         4,
   deletion_years:            7,
   default_payment_method:    'Cheque',
-  gift_aid_enabled:          false,
   gift_aid_online_renewals:  false,
   default_town:              '',
   default_county:            '',
@@ -68,7 +67,6 @@ function toForm(s) {
     grace_lapse_weeks:         s.grace_lapse_weeks         ?? DEFAULTS.grace_lapse_weeks,
     deletion_years:            s.deletion_years            ?? DEFAULTS.deletion_years,
     default_payment_method:    s.default_payment_method    ?? DEFAULTS.default_payment_method,
-    gift_aid_enabled:          s.gift_aid_enabled          ?? DEFAULTS.gift_aid_enabled,
     gift_aid_online_renewals:  s.gift_aid_online_renewals  ?? DEFAULTS.gift_aid_online_renewals,
     default_town:              s.default_town              ?? '',
     default_county:            s.default_county            ?? '',
@@ -96,7 +94,6 @@ function toPayload(f) {
     graceLapseWeeks:          Number(f.grace_lapse_weeks),
     deletionYears:            Number(f.deletion_years),
     defaultPaymentMethod:     f.default_payment_method,
-    giftAidEnabled:           f.gift_aid_enabled,
     giftAidOnlineRenewals:    f.gift_aid_online_renewals,
     defaultTown:              f.default_town    || null,
     defaultCounty:            f.default_county  || null,
@@ -433,12 +430,6 @@ export default function SystemSettings() {
             {/* ── Gift Aid ── */}
             <section className="bg-white/90 rounded-lg shadow-sm p-4 sm:p-6 space-y-3">
               <SectionHeading>Gift Aid</SectionHeading>
-              <CheckField
-                label="Gift Aid declaration enabled"
-                name="gift_aid_enabled"
-                value={form.gift_aid_enabled}
-                onChange={handleChange}
-              />
               <CheckField
                 label="Show Gift Aid tick boxes for online renewals"
                 name="gift_aid_online_renewals"
