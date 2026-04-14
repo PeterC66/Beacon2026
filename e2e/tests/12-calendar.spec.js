@@ -97,8 +97,9 @@ test.describe('Calendar', () => {
     const groupSelect = page.locator('select[name="groupId"]');
     await expect(groupSelect).toBeVisible({ timeout: 5_000 });
 
-    // Should have at least the placeholder option
-    await expect(groupSelect.locator('option').first()).toBeVisible();
+    // Should have at least the placeholder option (options inside a closed
+    // <select> are not "visible" per Playwright, so check count instead)
+    await expect(groupSelect.locator('option')).not.toHaveCount(0);
   });
 });
 
