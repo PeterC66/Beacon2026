@@ -29,13 +29,15 @@ beacon2/
 │   │   ├── components/        PageHeader  NavBar  SortableHeader  DateInput
 │   │   ├── hooks/             useSortedData  usePreferences  useUnsavedChanges
 │   │   ├── pages/             Login  Home  members/*  groups/*  finance/*
-│   │   │                      email/*  settings/*  admin/*  misc/*  ...
+│   │   │                      email/*  settings/*  admin/*  misc/*
+│   │   │                      public/*  calendar/*  ...
 │   │   └── __tests__/        vitest + React Testing Library smoke tests
 │   └── vite.config.js         also used as vitest config
 │
 ├── e2e/                       Playwright end-to-end tests
 │
 ├── docs/
+│   ├── Beacon2UG/             Beacon2 User Guide (64 sections, Markdown)
 │   ├── BeaconUG/              Beacon User Guide pages (Markdown + images)
 │   └── FromBeacon/            Selected files from the original Beacon codebase
 │
@@ -139,7 +141,8 @@ Render (backend + Postgres) and Vercel (frontend) — no command-line knowledge 
 - [x] Recent members and statistics
 - [x] Addresses export and label printing
 - [x] Groups (list, record, members, schedule, ledger, venues, faculties)
-- [x] Calendar and Open Meetings
+- [x] Teams (list, record, members, schedule, ledger)
+- [x] Calendar, event types, event attendance, and event financials
 - [x] Finance (accounts, categories, ledger, transactions, transfers, reconciliation, gift aid on transactions)
 - [x] Credit batches (with batch date, description, detailed transaction management)
 - [x] Financial statement and groups statement
@@ -152,6 +155,8 @@ Render (backend + Postgres) and Vercel (frontend) — no command-line knowledge 
 - [x] Data export & backup / restore (Beacon2 + legacy Beacon format)
 - [x] Polls (setup, member assignment)
 - [x] System settings
+- [x] Feature configuration (per-u3a module and sub-feature toggles)
 - [x] System messages (auto-sent email templates)
 - [x] Public links (online joining toggle, portal URLs)
-- [x] Members Portal (self-service: login, groups, calendar, personal details, card request)
+- [x] Public pages (groups list, calendar — unauthenticated)
+- [x] Members Portal (self-service: login, groups, calendar, personal details, online renewal, card request)
