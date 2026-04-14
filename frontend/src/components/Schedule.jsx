@@ -6,6 +6,7 @@
 //   privilege — privilege resource for canManage check (default: 'group_records_all')
 
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { venues as venuesApi } from '../lib/api.js';
 import { useAuth } from '../context/AuthContext.jsx';
 import RequiredMark from './RequiredMark.jsx';
@@ -336,7 +337,11 @@ export default function Schedule({ entityId, api, privilege = 'group_records_all
                       <td className="px-3 py-2 text-slate-600">{ev.venue_name ?? ''}</td>
                       <td className="px-3 py-2 text-slate-700">{ev.topic ?? ''}</td>
                       <td className="px-3 py-2 text-slate-600">{ev.contact ?? ''}</td>
-                      {canManage && <td className="px-3 py-2"></td>}
+                      {canManage && (
+                        <td className="px-3 py-2">
+                          <Link to={`/calendar/events/${ev.id}`} className="text-blue-700 hover:underline text-xs">View</Link>
+                        </td>
+                      )}
                     </tr>
                     {showDetail && ev.details && (
                       <tr key={`${ev.id}-detail`} className={rowBg}>

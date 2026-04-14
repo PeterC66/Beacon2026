@@ -3,7 +3,7 @@
 
 import { useState, useEffect, useMemo, useRef } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
-import { finance as financeApi, groups as groupsApi, teams as teamsApi, members as membersApi, settings as settingsApi } from '../../lib/api.js';
+import { finance as financeApi, groups as groupsApi, teams as teamsApi, members as membersApi, settings as settingsApi, calendar as calendarApi } from '../../lib/api.js';
 import { useAuth } from '../../context/AuthContext.jsx';
 import NavBar from '../../components/NavBar.jsx';
 import RequiredMark from '../../components/RequiredMark.jsx';
@@ -30,6 +30,7 @@ const BLANK = {
   member_id_1:      '',
   member_id_2:      '',
   group_id:         '',
+  event_id:         '',
   pending:          false,
   gift_aid_amount:  '',
   gift_aid_amount_2: '',
@@ -42,7 +43,7 @@ export default function TransactionEditor() {
   const { can, tenant }  = useAuth();
   const isNew            = !id || id === 'new';
 
-  const [form,       setForm]       = useState({ ...BLANK, account_id: searchParams.get('accountId') ?? '' });
+  const [form,       setForm]       = useState({ ...BLANK, account_id: searchParams.get('accountId') ?? '', event_id: searchParams.get('eventId') ?? '' });
   const [categories, setCategories] = useState([]);   // all active finance categories
   const [catAmounts, setCatAmounts] = useState({});    // { category_id: string_amount }
   const [accounts,   setAccounts]   = useState([]);
@@ -71,6 +72,9 @@ export default function TransactionEditor() {
   const [canRefund, setCanRefund] = useState(false);
   const [giftAidClaimedAt,  setGiftAidClaimedAt]  = useState(null);
   const [giftAidClaimedAt2, setGiftAidClaimedAt2] = useState(null);
+  const [eventSearch,  setEventSearch]  = useState('');
+  const [eventResults, setEventResults] = useState([]);
+  const [eventLabel,   setEventLabel]   = useState('');
   const savedTimer = useRef(null);
   const { markDirty, markClean } = useUnsavedChanges();
 
@@ -123,6 +127,7 @@ export default function TransactionEditor() {
           member_id_1:    t.member_id_1    ?? '',
           member_id_2:    t.member_id_2    ?? '',
           group_id:          t.group_id          ?? '',
+          event_id:          t.event_id          ?? '',
           pending:           t.pending           ?? false,
           gift_aid_amount:   t.gift_aid_amount != null ? String(t.gift_aid_amount) : '',
           gift_aid_amount_2: t.gift_aid_amount_2 != null ? String(t.gift_aid_amount_2) : '',
@@ -157,6 +162,25 @@ export default function TransactionEditor() {
     }
     load();
   }, [id, isNew]);
+
+  // Load event label when existing transaction has event_id
+  useEffect(() => {
+    if (!form.event_id) { setEventLabel(''); return; }
+    calendarApi.getEvent(form.event_id).then((ev) => {
+      const lbl = ev.topic || ev.group_name || ev.event_type_name || '';
+      const d = ev.event_date ? String(ev.event_date).slice(0, 10) : '';
+      setEventLabel(`${lbl}${d ? ` (${d})` : ''}`);
+    }).catch(() => setEventLabel(''));
+  }, [form.event_id]);
+
+  // Event search-as-you-type
+  useEffect(() => {
+    if (eventSearch.length < 2) { setEventResults([]); return; }
+    const timer = setTimeout(() => {
+      calendarApi.searchEvents(eventSearch).then(setEventResults).catch(() => setEventResults([]));
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [eventSearch]);
 
   const set = (k, v) => {
     markDirty();
@@ -244,6 +268,7 @@ export default function TransactionEditor() {
       member_id_1:       form.member_id_1    || null,
       member_id_2:       form.member_id_2    || null,
       group_id:          form.group_id       || null,
+      event_id:          form.event_id       || null,
       pending:           form.pending,
       gift_aid_amount:   form.member_id_1 && form.type === 'in' && parseFloat(form.gift_aid_amount) > 0
                            ? parseFloat(form.gift_aid_amount) : null,
@@ -676,6 +701,48 @@ export default function TransactionEditor() {
                     </optgroup>
                   )}
                 </select>
+              </div>
+
+              {/* Event */}
+              <div>
+                <label htmlFor="txn-event-search" className={LBL}>Event</label>
+                {form.event_id ? (
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-slate-700">{eventLabel || form.event_id}</span>
+                    <button type="button" onClick={() => { set('event_id', ''); setEventLabel(''); setEventSearch(''); }}
+                      disabled={cleared}
+                      className="text-red-600 hover:underline text-xs">Clear</button>
+                  </div>
+                ) : (
+                  <>
+                    <input
+                      id="txn-event-search"
+                      type="text"
+                      placeholder="Search by topic, group name, or date…"
+                      value={eventSearch}
+                      onChange={(e) => setEventSearch(e.target.value)}
+                      disabled={cleared}
+                      className={`${INP} mb-1`}
+                    />
+                    {eventResults.length > 0 && (
+                      <ul className="border border-slate-200 rounded max-h-40 overflow-y-auto text-sm">
+                        {eventResults.map((ev) => {
+                          const lbl = ev.topic || ev.group_name || ev.event_type_name || 'Event';
+                          const d = ev.event_date ? String(ev.event_date).slice(0, 10) : '';
+                          return (
+                            <li key={ev.id}>
+                              <button type="button"
+                                onClick={() => { set('event_id', ev.id); setEventLabel(`${lbl} (${d})`); setEventSearch(''); setEventResults([]); }}
+                                className="block w-full text-left px-2 py-1 hover:bg-blue-50">
+                                {lbl}{d ? ` — ${d}` : ''}
+                              </button>
+                            </li>
+                          );
+                        })}
+                      </ul>
+                    )}
+                  </>
+                )}
               </div>
             </div>
           </div>

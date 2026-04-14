@@ -735,6 +735,24 @@ export const calendar = {
   createOpenEvents:(data)         => request('/calendar/open-events', { method: 'POST', body: JSON.stringify(data) }),
   updateOpenEvent: (id, data)     => request(`/calendar/open-events/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
   deleteOpenEvents:(ids)          => request('/calendar/open-events', { method: 'DELETE', body: JSON.stringify({ ids }) }),
+
+  // Single event
+  getEvent:       (id)            => request(`/calendar/events/${id}`),
+  searchEvents:   (q, limit = 20) => request(`/calendar/events/search?q=${encodeURIComponent(q)}&limit=${limit}`),
+
+  // Event members
+  listEventMembers:   (eventId)              => request(`/calendar/events/${eventId}/members`),
+  addEventMembers:    (eventId, memberIds, isOrganiser = false) =>
+    request(`/calendar/events/${eventId}/members`, { method: 'POST', body: JSON.stringify({ memberIds, isOrganiser }) }),
+  copyGroupToEvent:   (eventId)              => request(`/calendar/events/${eventId}/members/from-group`, { method: 'POST' }),
+  updateEventMember:  (eventId, memberId, data) =>
+    request(`/calendar/events/${eventId}/members/${memberId}`, { method: 'PATCH', body: JSON.stringify(data) }),
+  removeEventMembers: (eventId, ids)         =>
+    request(`/calendar/events/${eventId}/members`, { method: 'DELETE', body: JSON.stringify({ ids }) }),
+  downloadEventMembers: (eventId)            => requestBlob(`/calendar/events/${eventId}/members/download`),
+
+  // Event financials
+  getEventFinancials: (eventId)              => request(`/calendar/events/${eventId}/financials`),
 };
 
 // ─── Event Types ─────────────────────────────────────────────────────────

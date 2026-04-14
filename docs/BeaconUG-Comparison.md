@@ -409,6 +409,8 @@
 |--------|--------|-------|
 | One-off event groups | Built | Can create groups for single events |
 | **Beacon2 extra:** Event Types | Beacon2 extra | Non-group events with flexible event types (e.g. Open Meetings, Social Events); managed via Calendar "Other" mode with recurrence support; configurable event types in Set up |
+| **Beacon2 extra:** Event Members | Beacon2 extra | Track members registered for any event (group or standalone); add by name/number; "Copy from group" for one-time snapshot; organiser toggle; download PDF |
+| **Beacon2 extra:** Event Financials | Beacon2 extra | Per-event financial summary (income/costs/net); transactions linkable to events via TransactionEditor; Event Record page with Details/Members/Financials tabs |
 
 ---
 

@@ -5,6 +5,29 @@ Format: `## [version] — YYYY-MM-DD` with bullet points per change.
 
 ---
 
+## [0.9.0] — 2026-04-14
+
+### Added
+- **Event Members** — events (both group schedule entries and standalone) now track
+  registered members with organiser/member roles, add-by-name/number, and
+  "Copy from group" for one-time snapshot of group membership
+- **Event Financials** — per-event financial summary showing income, costs, net balance,
+  and attendee count, with links to individual transactions
+- **Event Record page** — `/calendar/events/:eventId` with Details, Members, and
+  Financials tabs (matching GroupRecord tabbed pattern)
+- **Transaction ↔ Event linkage** — transactions can now be linked to an event via a
+  search-as-you-type selector in TransactionEditor; event column shown in Finance Ledger
+- **Event search API** — `GET /calendar/events/search?q=...` for topic/group/date search
+- **Event attendance feature toggle** — `eventAttendance` sub-feature under Events
+- **New privileges** — `event_attendance` (view/change/download) and `event_finance` (view)
+  with appropriate default role grants
+- **Backup/Restore** — Event Members sheet added to data export; `event_id` column added
+  to Ledger sheet; restore handles both gracefully for backward compatibility
+- **Calendar click-through** — all calendar entries now link to Event Record page
+- **Schedule "View" link** — group schedule rows include link to Event Record
+
+---
+
 ## [0.8.7] — 2026-04-14
 
 ### Changed

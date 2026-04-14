@@ -394,12 +394,19 @@ export default function FinanceLedger() {
                           <td className="px-3 py-2 max-w-[120px] truncate" title={t.batch_description ?? ''}>{t.batch_description ?? ''}</td>
                           {/* From/To */}
                           <td className="px-3 py-2 max-w-[140px] truncate" title={t.from_to}>{t.from_to}</td>
-                          {/* Group */}
+                          {/* Group / Event */}
                           <td className="px-3 py-2 max-w-[120px] truncate" title={t.group_name ?? ''}>
                             {t.group_name && t.group_id ? (
                               <Link to={`/${t.group_type === 'team' ? 'teams' : 'groups'}/${t.group_id}`} className="text-blue-700 hover:underline">{t.group_short_name || t.group_name}</Link>
                             ) : (
                               t.group_short_name || t.group_name || ''
+                            )}
+                            {t.event_id && (
+                              <div className="text-xs">
+                                <Link to={`/calendar/events/${t.event_id}`} className="text-blue-600 hover:underline">
+                                  {t.event_label || t.event_topic || 'Event'}
+                                </Link>
+                              </div>
                             )}
                           </td>
                           {/* Mem# */}

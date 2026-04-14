@@ -133,7 +133,7 @@ export async function buildFinanceSheets(wb, slug) {
       SELECT t.id, t.transaction_number, t.date, t.type, t.from_to, t.amount,
              t.payment_method, t.payment_ref, t.detail, t.remarks, t.cleared_at,
              t.account_id, a.name AS account_name,
-             t.member_id_1, t.member_id_2, t.group_id,
+             t.member_id_1, t.member_id_2, t.group_id, t.event_id,
              t.transfer_id, t.pending, t.batch_id,
              t.gift_aid_amount, t.gift_aid_claimed_at,
              t.gift_aid_amount_2, t.gift_aid_claimed_at_2,
@@ -160,7 +160,7 @@ export async function buildFinanceSheets(wb, slug) {
   addSheet(wb, 'Ledger', [
     'id', 'transaction_number', 'date', 'type', 'from_to', 'amount',
     'payment_method', 'payment_ref', 'detail', 'remarks', 'cleared_at',
-    'account_id', 'account_name', 'member_id_1', 'member_id_2', 'group_id',
+    'account_id', 'account_name', 'member_id_1', 'member_id_2', 'group_id', 'event_id',
     'transfer_id', 'pending', 'batch_id',
     'gift_aid_amount', 'gift_aid_claimed_at',
     'gift_aid_amount_2', 'gift_aid_claimed_at_2',
@@ -187,7 +187,7 @@ export async function buildFinanceSheets(wb, slug) {
 }
 
 export async function buildGroupsSheets(wb, slug) {
-  const [groups, gm, faculties, venues, gle, events, eventTypes] = await Promise.all([
+  const [groups, gm, faculties, venues, gle, events, eventTypes, eventMembers] = await Promise.all([
     tenantQuery(slug, `
       SELECT g.id, g.name, g.short_name, g.type, g.faculty_id, f.name AS faculty_name, g.status,
              g.when_text,
@@ -236,6 +236,14 @@ export async function buildGroupsSheets(wb, slug) {
     `),
     tenantQuery(slug, `
       SELECT id, name, description, is_default FROM event_types ORDER BY is_default DESC, name
+    `),
+    tenantQuery(slug, `
+      SELECT em.id, em.event_id, em.member_id,
+             m.membership_number, m.forenames, m.surname,
+             em.is_organiser, em.notes
+      FROM event_members em
+      JOIN members m ON em.member_id = m.id
+      ORDER BY em.event_id, m.surname, m.forenames
     `),
   ]);
 
@@ -297,6 +305,14 @@ export async function buildGroupsSheets(wb, slug) {
     ...r,
     event_date: dateToStr(r.event_date),
     is_private: boolInt(r.is_private),
+  })));
+
+  addSheet(wb, 'Event Members', [
+    'id', 'event_id', 'member_id', 'membership_number',
+    'forenames', 'surname', 'is_organiser', 'notes',
+  ], eventMembers.map((r) => ({
+    ...r,
+    is_organiser: boolInt(r.is_organiser),
   })));
 }
 
@@ -595,6 +611,7 @@ export async function clearTenantData(tx) {
     'DELETE FROM transactions',
     'DELETE FROM credit_batches',
     'DELETE FROM offices',
+    'DELETE FROM event_members',
     'DELETE FROM group_events',
     'DELETE FROM event_types',
     'DELETE FROM group_members',
@@ -808,6 +825,16 @@ export async function restoreBeacon2(tx, wb) {
     );
   }
 
+  // 9e. Event members
+  for (const r of get('Event Members')) {
+    if (!r.id || !r.event_id || !r.member_id) continue;
+    await tx.$executeRawUnsafe(
+      `INSERT INTO event_members (id, event_id, member_id, is_organiser, notes)
+       VALUES ($1,$2,$3,$4,$5) ON CONFLICT (id) DO NOTHING`,
+      r.id, r.event_id, r.member_id, parseBool(r.is_organiser), str(r.notes),
+    );
+  }
+
   // 10. Finance Accounts
   for (const r of get('Finance Accounts')) {
     if (!r.id) continue;
@@ -856,18 +883,18 @@ export async function restoreBeacon2(tx, wb) {
       `INSERT INTO transactions
          (id, transaction_number, account_id, date, type, from_to, amount,
           payment_method, payment_ref, detail, remarks,
-          member_id_1, member_id_2, group_id, cleared_at,
+          member_id_1, member_id_2, group_id, event_id, cleared_at,
           transfer_id, pending, batch_id,
           gift_aid_amount, gift_aid_claimed_at,
           gift_aid_amount_2, gift_aid_claimed_at_2,
           refund_of_id, refunded_by_id)
-       VALUES ($1,$2,$3,$4::date,$5,$6,$7::numeric,$8,$9,$10,$11,$12,$13,$14,$15::date,
-               $16,$17,$18,$19::numeric,$20::date,$21::numeric,$22::date,$23,$24)
+       VALUES ($1,$2,$3,$4::date,$5,$6,$7::numeric,$8,$9,$10,$11,$12,$13,$14,$15,$16::date,
+               $17,$18,$19,$20::numeric,$21::date,$22::numeric,$23::date,$24,$25)
        ON CONFLICT (id) DO NOTHING`,
       r.id, parseInt(r.transaction_number), r.account_id, parseDate(r.date),
       String(r.type || 'in'), str(r.from_to), parseDec(r.amount),
       str(r.payment_method), str(r.payment_ref), str(r.detail), str(r.remarks),
-      str(r.member_id_1), str(r.member_id_2), str(r.group_id), parseDate(r.cleared_at),
+      str(r.member_id_1), str(r.member_id_2), str(r.group_id), str(r.event_id), parseDate(r.cleared_at),
       str(r.transfer_id), parseBool(r.pending), str(r.batch_id),
       parseDec(r.gift_aid_amount), parseDate(r.gift_aid_claimed_at),
       parseDec(r.gift_aid_amount_2), parseDate(r.gift_aid_claimed_at_2),

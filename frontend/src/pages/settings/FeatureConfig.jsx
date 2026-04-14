@@ -46,8 +46,9 @@ const SECTIONS = [
     description: 'Calendar views and non-group event types.',
     master: { key: 'events', label: 'Events & Calendar module', defaultValue: true, tip: 'Calendar page and event management' },
     toggles: [
-      { key: 'calendar',   label: 'Calendar',    defaultValue: true, dependsOn: 'events', tip: 'Calendar view of group meetings and events' },
-      { key: 'eventTypes', label: 'Event Types',  defaultValue: true, dependsOn: 'events', tip: 'Non-group event types (Open Meetings, etc.)' },
+      { key: 'calendar',        label: 'Calendar',          defaultValue: true, dependsOn: 'events', tip: 'Calendar view of group meetings and events' },
+      { key: 'eventTypes',      label: 'Event Types',       defaultValue: true, dependsOn: 'events', tip: 'Non-group event types (Open Meetings, etc.)' },
+      { key: 'eventAttendance', label: 'Event Attendance',  defaultValue: true, dependsOn: 'events', tip: 'Track members registered for each event' },
     ],
   },
   {

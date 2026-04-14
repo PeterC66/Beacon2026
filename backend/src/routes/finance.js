@@ -335,10 +335,10 @@ router.delete('/categories/:id', requirePrivilege('finance_categories', 'delete'
 
 // ─── TRANSACTIONS ─────────────────────────────────────────────────────────
 
-// GET /finance/transactions?accountId=&categoryId=&groupId=&memberId=&year=
+// GET /finance/transactions?accountId=&categoryId=&groupId=&memberId=&eventId=&year=
 router.get('/transactions', requirePrivilege('finance_ledger', 'view'), async (req, res, next) => {
   try {
-    const { accountId, categoryId, groupId, memberId, year } = req.query;
+    const { accountId, categoryId, groupId, memberId, eventId, year } = req.query;
     const yearNum = year ? parseInt(year, 10) : new Date().getFullYear();
     const yearStart = `${yearNum}-01-01`;
     const yearEnd   = `${yearNum}-12-31`;
@@ -350,7 +350,7 @@ router.get('/transactions', requirePrivilege('finance_ledger', 'view'), async (r
                t.id, t.transaction_number, t.account_id, t.date, t.type,
                t.from_to, t.amount::float, t.payment_method, t.payment_ref,
                t.detail, t.remarks, t.cleared_at, t.pending,
-               t.member_id_1, t.member_id_2, t.group_id,
+               t.member_id_1, t.member_id_2, t.group_id, t.event_id,
                t.batch_id,
                t.refund_of_id, t.refunded_by_id,
                ref_orig.transaction_number AS refund_of_txn_number,
@@ -360,6 +360,8 @@ router.get('/transactions', requirePrivilege('finance_ledger', 'view'), async (r
                m2.forenames || ' ' || m2.surname AS member_2_name,
                m2.membership_number AS member_2_no,
                g.name AS group_name, g.short_name AS group_short_name, g.type AS group_type,
+               ge_ev.event_date AS event_date, ge_ev.topic AS event_topic,
+               COALESCE(ge_g.name, ge_et.name) AS event_label,
                fa.name AS account_name,
                cb.batch_ref AS batch_no,
                cb.description AS batch_description`;
@@ -367,6 +369,9 @@ router.get('/transactions', requirePrivilege('finance_ledger', 'view'), async (r
         LEFT JOIN members m1 ON m1.id = t.member_id_1
         LEFT JOIN members m2 ON m2.id = t.member_id_2
         LEFT JOIN groups g   ON g.id  = t.group_id
+        LEFT JOIN group_events ge_ev ON ge_ev.id = t.event_id
+        LEFT JOIN groups ge_g ON ge_g.id = ge_ev.group_id
+        LEFT JOIN event_types ge_et ON ge_et.id = ge_ev.event_type_id
         LEFT JOIN finance_accounts fa ON fa.id = t.account_id
         LEFT JOIN credit_batches cb ON cb.id = t.batch_id
         LEFT JOIN transactions ref_orig ON ref_orig.id = t.refund_of_id
@@ -380,7 +385,9 @@ router.get('/transactions', requirePrivilege('finance_ledger', 'view'), async (r
                ) AS categories`;
     const commonGroupBy = `t.id, m1.forenames, m1.surname, m1.membership_number,
                  m2.forenames, m2.surname, m2.membership_number,
-                 g.name, g.short_name, g.type, fa.name, cb.batch_ref, cb.description,
+                 g.name, g.short_name, g.type,
+                 ge_ev.event_date, ge_ev.topic, ge_g.name, ge_et.name,
+                 fa.name, cb.batch_ref, cb.description,
                  ref_orig.transaction_number, ref_by.transaction_number`;
 
     if (memberId) {
@@ -428,6 +435,17 @@ router.get('/transactions', requirePrivilege('finance_ledger', 'view'), async (r
         GROUP BY ${commonGroupBy}
         ORDER BY t.date, t.transaction_number`;
       params = [groupId, yearStart, yearEnd];
+
+    } else if (eventId) {
+      sql = `
+        SELECT ${commonCols},
+               ${categoriesAgg}
+        FROM transactions t
+        ${commonJoins}
+        WHERE t.event_id = $1
+        GROUP BY ${commonGroupBy}
+        ORDER BY t.date, t.transaction_number`;
+      params = [eventId];
 
     } else {
       return res.json([]);
@@ -499,7 +517,7 @@ router.get('/transactions/:id', requirePrivilege('finance_transactions', 'view')
       `SELECT t.id, t.transaction_number, t.account_id, t.date, t.type,
               t.from_to, t.amount::float, t.payment_method, t.payment_ref,
               t.detail, t.remarks, t.cleared_at, t.pending, t.transfer_id,
-              t.member_id_1, t.member_id_2, t.group_id,
+              t.member_id_1, t.member_id_2, t.group_id, t.event_id,
               t.gift_aid_amount::float AS gift_aid_amount, t.gift_aid_claimed_at,
               t.gift_aid_amount_2::float AS gift_aid_amount_2, t.gift_aid_claimed_at_2,
               t.batch_id, cb.batch_ref,
@@ -510,6 +528,8 @@ router.get('/transactions/:id', requirePrivilege('finance_transactions', 'view')
               m1.forenames || ' ' || m1.surname AS member_1_name,
               m2.forenames || ' ' || m2.surname AS member_2_name,
               g.name AS group_name, g.short_name AS group_short_name, g.type AS group_type,
+              ge_ev.event_date AS event_date, ge_ev.topic AS event_topic,
+              COALESCE(ge_g.name, ge_et.name) AS event_label,
               fa.name AS account_name,
               fa.enable_refunds AS account_enable_refunds,
               COALESCE(
@@ -520,6 +540,9 @@ router.get('/transactions/:id', requirePrivilege('finance_transactions', 'view')
        LEFT JOIN members m1 ON m1.id = t.member_id_1
        LEFT JOIN members m2 ON m2.id = t.member_id_2
        LEFT JOIN groups g   ON g.id  = t.group_id
+       LEFT JOIN group_events ge_ev ON ge_ev.id = t.event_id
+       LEFT JOIN groups ge_g ON ge_g.id = ge_ev.group_id
+       LEFT JOIN event_types ge_et ON ge_et.id = ge_ev.event_type_id
        LEFT JOIN finance_accounts fa ON fa.id = t.account_id
        LEFT JOIN credit_batches cb ON cb.id = t.batch_id
        LEFT JOIN transactions ref_orig ON ref_orig.id = t.refund_of_id
@@ -527,7 +550,9 @@ router.get('/transactions/:id', requirePrivilege('finance_transactions', 'view')
        LEFT JOIN transaction_categories tc ON tc.transaction_id = t.id
        LEFT JOIN finance_categories fc ON fc.id = tc.category_id
        WHERE t.id = $1
-       GROUP BY t.id, m1.forenames, m1.surname, m2.forenames, m2.surname, g.name, g.short_name, g.type, fa.name, cb.batch_ref,
+       GROUP BY t.id, m1.forenames, m1.surname, m2.forenames, m2.surname, g.name, g.short_name, g.type,
+                ge_ev.event_date, ge_ev.topic, ge_g.name, ge_et.name,
+                fa.name, cb.batch_ref,
                 ref_orig.transaction_number, ref_by.transaction_number, ref_by.amount, fa.enable_refunds`,
       [req.params.id],
     );
@@ -555,6 +580,7 @@ const createTxnSchema = z.object({
   member_id_1:       z.string().optional().nullable(),
   member_id_2:       z.string().optional().nullable(),
   group_id:          z.string().optional().nullable(),
+  event_id:          z.string().optional().nullable(),
   pending:           z.boolean().optional(),
   gift_aid_amount:   z.number().min(0).optional().nullable(),
   gift_aid_amount_2: z.number().min(0).optional().nullable(),
@@ -591,8 +617,8 @@ router.post('/transactions', requirePrivilege('finance_transactions', 'create'),
     const [txn] = await tenantQuery(
       req.user.tenantSlug,
       `INSERT INTO transactions
-         (account_id, date, type, from_to, amount, payment_method, payment_ref, detail, remarks, member_id_1, member_id_2, group_id, pending, gift_aid_amount, gift_aid_amount_2)
-       VALUES ($1, $2::date, $3, $4, $5::numeric, $6, $7, $8, $9, $10, $11, $12, $13, $14::numeric, $15::numeric)
+         (account_id, date, type, from_to, amount, payment_method, payment_ref, detail, remarks, member_id_1, member_id_2, group_id, event_id, pending, gift_aid_amount, gift_aid_amount_2)
+       VALUES ($1, $2::date, $3, $4, $5::numeric, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15::numeric, $16::numeric)
        RETURNING id, transaction_number`,
       [
         data.account_id, data.date, data.type,
@@ -600,7 +626,7 @@ router.post('/transactions', requirePrivilege('finance_transactions', 'create'),
         data.payment_method ?? null, data.payment_ref ?? null,
         data.detail ?? null, data.remarks ?? null,
         data.member_id_1 ?? null, data.member_id_2 ?? null, data.group_id ?? null,
-        pending,
+        data.event_id ?? null, pending,
         data.gift_aid_amount ?? null, data.gift_aid_amount_2 ?? null,
       ],
     );
@@ -705,6 +731,7 @@ router.patch('/transactions/:id', requirePrivilege('finance_transactions', 'chan
     if (data.member_id_1    !== undefined) { fields.push(`member_id_1 = $${i++}`);    values.push(data.member_id_1); }
     if (data.member_id_2    !== undefined) { fields.push(`member_id_2 = $${i++}`);    values.push(data.member_id_2); }
     if (data.group_id       !== undefined) { fields.push(`group_id = $${i++}`);       values.push(data.group_id); }
+    if (data.event_id       !== undefined) { fields.push(`event_id = $${i++}`);       values.push(data.event_id); }
     if (data.batch_id       !== undefined) { fields.push(`batch_id = $${i++}`);       values.push(data.batch_id); }
     if (data.pending        !== undefined) { fields.push(`pending = $${i++}`);        values.push(data.pending); }
     if (data.gift_aid_amount   !== undefined) { fields.push(`gift_aid_amount = $${i++}::numeric`);   values.push(data.gift_aid_amount); }

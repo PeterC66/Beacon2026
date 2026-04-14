@@ -220,6 +220,8 @@ const VALID_FEATURE_KEYS = [
   // Membership sub-features
   'membershipCards', 'membershipRenewals', 'addressesExport', 'giftAid',
   'customFields', 'polls', 'statistics',
+  // Event sub-features
+  'eventAttendance',
   // Groups sub-features
   'teams', 'venues', 'faculties', 'groupLedger', 'siteworks',
   // Events sub-features

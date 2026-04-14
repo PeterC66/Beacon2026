@@ -204,6 +204,12 @@ Beacon2 is a ground-up rebuild with these goals:
   Portal Calendar also has "Other" filter with event type dropdown
 - **Event Types settings page** — CRUD page under Set up for managing event types;
   controlled by `event_types` privilege resource
+- **Event Record page** — `/calendar/events/:eventId` with Details, Members, and Financials
+  tabs; clickable from Calendar and Schedule; `event_attendance` and `event_finance` privileges
+- **Event members** — per-event member tracking; add by name/number; copy from group;
+  organiser toggle; download PDF; `eventAttendance` feature toggle
+- **Event financials** — per-event income/costs summary with transaction links;
+  "Add transaction" pre-fills event_id; transactions linkable to events via search-as-you-type
 
 ### Admin / Misc module
 - **Audit log** — date-filtered view + delete-before-date; clickable When → Audit Record detail; clickable Record → entity view

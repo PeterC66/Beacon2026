@@ -15,6 +15,10 @@ vi.mock('../utils/db.js', () => ({
   withTenant:  vi.fn(),
 }));
 
+vi.mock('../utils/audit.js', () => ({
+  logAudit: vi.fn().mockResolvedValue(undefined),
+}));
+
 const { default: app } = await import('../app.js');
 const { tenantQuery } = await import('../utils/db.js');
 
@@ -281,5 +285,178 @@ describe('DELETE /calendar/open-events', () => {
       .set('Authorization', AUTH)
       .send({ ids: [] });
     expect(res.status).toBe(422);
+  });
+});
+
+// ── GET /calendar/events/search ──────────────────────────────────────────
+
+describe('GET /calendar/events/search', () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it('returns matching events', async () => {
+    tenantQuery.mockResolvedValueOnce([{ id: 'ev1', topic: 'WW2 Lecture', event_date: '2026-04-01' }]);
+    const res = await request(app)
+      .get('/calendar/events/search?q=WW2')
+      .set('Authorization', AUTH);
+    expect(res.status).toBe(200);
+    expect(res.body).toHaveLength(1);
+  });
+
+  it('returns empty for short query', async () => {
+    const res = await request(app)
+      .get('/calendar/events/search?q=W')
+      .set('Authorization', AUTH);
+    expect(res.status).toBe(200);
+    expect(res.body).toEqual([]);
+  });
+});
+
+// ── GET /calendar/events/:eventId ────────────────────────────────────────
+
+describe('GET /calendar/events/:eventId', () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it('returns event with member count', async () => {
+    tenantQuery.mockResolvedValueOnce([{ ...SAMPLE_EVENT, member_count: 5 }]);
+    const res = await request(app)
+      .get('/calendar/events/ev1')
+      .set('Authorization', AUTH);
+    expect(res.status).toBe(200);
+    expect(res.body.member_count).toBe(5);
+  });
+
+  it('returns 404 for missing event', async () => {
+    tenantQuery.mockResolvedValueOnce([]);
+    const res = await request(app)
+      .get('/calendar/events/missing')
+      .set('Authorization', AUTH);
+    expect(res.status).toBe(404);
+  });
+});
+
+// ── Event Members CRUD ──────────────────────────────────────────────────
+
+describe('GET /calendar/events/:eventId/members', () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it('returns event members', async () => {
+    tenantQuery.mockResolvedValueOnce([
+      { id: 'em1', member_id: 'm1', forenames: 'John', surname: 'Smith', is_organiser: false },
+    ]);
+    const res = await request(app)
+      .get('/calendar/events/ev1/members')
+      .set('Authorization', AUTH);
+    expect(res.status).toBe(200);
+    expect(res.body).toHaveLength(1);
+    expect(res.body[0].surname).toBe('Smith');
+  });
+});
+
+describe('POST /calendar/events/:eventId/members', () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it('adds members and returns 201', async () => {
+    tenantQuery
+      .mockResolvedValueOnce([{ id: 'ev1' }])           // event exists
+      .mockResolvedValueOnce([{ id: 'em1' }]);           // INSERT member
+    const res = await request(app)
+      .post('/calendar/events/ev1/members')
+      .set('Authorization', AUTH)
+      .send({ memberIds: ['m1'] });
+    expect(res.status).toBe(201);
+    expect(res.body).toHaveLength(1);
+  });
+
+  it('returns 404 for missing event', async () => {
+    tenantQuery.mockResolvedValueOnce([]);
+    const res = await request(app)
+      .post('/calendar/events/missing/members')
+      .set('Authorization', AUTH)
+      .send({ memberIds: ['m1'] });
+    expect(res.status).toBe(404);
+  });
+});
+
+describe('POST /calendar/events/:eventId/members/from-group', () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it('copies group members into event', async () => {
+    tenantQuery
+      .mockResolvedValueOnce([{ id: 'ev1', group_id: 'g1' }])   // event with group
+      .mockResolvedValueOnce([{ id: 'em1' }, { id: 'em2' }]);    // INSERT...SELECT
+    const res = await request(app)
+      .post('/calendar/events/ev1/members/from-group')
+      .set('Authorization', AUTH);
+    expect(res.status).toBe(201);
+    expect(res.body.added).toBe(2);
+  });
+
+  it('returns 400 for non-group event', async () => {
+    tenantQuery.mockResolvedValueOnce([{ id: 'oe1', group_id: null }]);
+    const res = await request(app)
+      .post('/calendar/events/oe1/members/from-group')
+      .set('Authorization', AUTH);
+    expect(res.status).toBe(400);
+  });
+});
+
+describe('PATCH /calendar/events/:eventId/members/:memberId', () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it('updates member organiser flag', async () => {
+    tenantQuery.mockResolvedValueOnce([{ id: 'em1', is_organiser: true }]);
+    const res = await request(app)
+      .patch('/calendar/events/ev1/members/m1')
+      .set('Authorization', AUTH)
+      .send({ isOrganiser: true });
+    expect(res.status).toBe(200);
+    expect(res.body.is_organiser).toBe(true);
+  });
+
+  it('returns 400 for empty body', async () => {
+    const res = await request(app)
+      .patch('/calendar/events/ev1/members/m1')
+      .set('Authorization', AUTH)
+      .send({});
+    expect(res.status).toBe(400);
+  });
+});
+
+describe('DELETE /calendar/events/:eventId/members', () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it('removes members', async () => {
+    tenantQuery.mockResolvedValueOnce([{ id: 'em1' }]);
+    const res = await request(app)
+      .delete('/calendar/events/ev1/members')
+      .set('Authorization', AUTH)
+      .send({ ids: ['m1'] });
+    expect(res.status).toBe(200);
+    expect(res.body.deleted).toBe(1);
+  });
+});
+
+// ── Event Financials ─────────────────────────────────────────────────────
+
+describe('GET /calendar/events/:eventId/financials', () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it('returns financial summary', async () => {
+    tenantQuery
+      .mockResolvedValueOnce([
+        { id: 't1', type: 'in', amount: '50.00', from_to: 'Smith', account_name: 'Main' },
+        { id: 't2', type: 'out', amount: '20.00', from_to: 'Venue', account_name: 'Main' },
+      ])
+      .mockResolvedValueOnce([{ count: 10 }]);
+    const res = await request(app)
+      .get('/calendar/events/ev1/financials')
+      .set('Authorization', AUTH);
+    expect(res.status).toBe(200);
+    expect(res.body.totalIncome).toBe(50);
+    expect(res.body.totalCosts).toBe(20);
+    expect(res.body.netBalance).toBe(30);
+    expect(res.body.attendeeCount).toBe(10);
+    expect(res.body.income).toHaveLength(1);
+    expect(res.body.costs).toHaveLength(1);
   });
 });
