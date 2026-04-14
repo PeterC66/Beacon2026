@@ -23,8 +23,8 @@ const API   = process.env.BEACON2_API_URL             || 'http://localhost:3001'
 const RUN_ID = Date.now().toString(16).slice(-6);
 const SLUG  = process.env.BEACON2_TEST_TENANT_SLUG    || `e2e_${RUN_ID}`;
 const NAME  = process.env.BEACON2_TEST_TENANT_NAME    || `E2E Test u3a ${RUN_ID}`;
-const SADM_EMAIL = process.env.BEACON2_SYSADMIN_EMAIL    || 'admin@beacon2.example';
-const SADM_PASS  = process.env.BEACON2_SYSADMIN_PASSWORD || 'changeme';
+const SADM_EMAIL = process.env.BEACON2_SYSADMIN_EMAIL    || 'admin@beacon2.local';
+const SADM_PASS  = process.env.BEACON2_SYSADMIN_PASSWORD || 'ChangeMe123!';
 const ADM_USER  = process.env.BEACON2_TEST_ADMIN_USERNAME || 'testadmin';
 const ADM_PASS  = process.env.BEACON2_TEST_ADMIN_PASSWORD || 'TestAdmin99!';
 const ADM_NAME  = process.env.BEACON2_TEST_ADMIN_NAME     || 'Test Administrator';
@@ -204,6 +204,28 @@ async function seedMemberClass(tenantToken) {
   }
 }
 
+// ── Step 7: enable feature flags needed by E2E tests ─────────────────────
+// groupLedger and giftAid default to OFF — enable them so ledger tabs
+// and Gift Aid pages are accessible during tests.
+
+async function enableTestFeatures(tenantToken) {
+  const features = {
+    groupLedger: true,
+    giftAid:     true,
+  };
+  const { status } = await apiCall('/settings/feature-config', {
+    method:     'PATCH',
+    token:      tenantToken,
+    tenantSlug: SLUG,
+    body:       features,
+  });
+  if (status === 200) {
+    console.log(`[setup] Features enabled: ${Object.keys(features).join(', ')}.`);
+  } else {
+    console.warn(`[setup] Feature enablement returned ${status} — continuing.`);
+  }
+}
+
 // ── Main ──────────────────────────────────────────────────────────────────
 
 export default async function globalSetup() {
@@ -231,6 +253,7 @@ export default async function globalSetup() {
   await seedFinanceAccount(tenantToken);
   await seedFinanceCategory(tenantToken);
   await seedMemberClass(tenantToken);
+  await enableTestFeatures(tenantToken);
 
   // Persist the generated slug so test fixtures and teardown can read it.
   writeFileSync(STATE_PATH, JSON.stringify({ slug: SLUG }));

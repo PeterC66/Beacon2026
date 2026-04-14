@@ -295,6 +295,7 @@ export default function Calendar() {
   const navLinks = [
     { label: 'Home',   to: '/' },
     { label: 'Groups', to: '/groups' },
+    ...(canViewMeetings ? [{ label: 'Open Meetings', to: '/calendar/open-meetings' }] : []),
   ];
 
   return (

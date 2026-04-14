@@ -63,6 +63,7 @@ import EmailUnblocker      from './pages/email/EmailUnblocker.jsx';
 import SystemMessages      from './pages/settings/SystemMessages.jsx';
 import PublicLinks         from './pages/misc/PublicLinks.jsx';
 import Calendar            from './pages/groups/Calendar.jsx';
+import OpenMeetings        from './pages/groups/OpenMeetings.jsx';
 import LetterCompose       from './pages/letters/LetterCompose.jsx';
 import JoinForm            from './pages/public/JoinForm.jsx';
 import JoinPending         from './pages/public/JoinPending.jsx';
@@ -183,8 +184,9 @@ const router = createBrowserRouter([
       { path: '/venues/:id',   element: <PF feature="venues"><VenueEditor /></PF> },
 
       // Events & Calendar — gated by 'events' / sub-toggles
-      { path: '/calendar',     element: <PF feature="calendar"><Calendar /></PF> },
-      { path: '/event-types',  element: <PF feature="eventTypes"><EventTypeList /></PF> },
+      { path: '/calendar',                element: <PF feature="calendar"><Calendar /></PF> },
+      { path: '/calendar/open-meetings', element: <PF feature="calendar"><OpenMeetings /></PF> },
+      { path: '/event-types',            element: <PF feature="eventTypes"><EventTypeList /></PF> },
 
       // Finance — gated by 'finance' master toggle + sub-toggles
       { path: '/finance/accounts',                   element: <PF feature="finance"><FinanceAccounts /></PF> },
