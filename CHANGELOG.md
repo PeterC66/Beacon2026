@@ -5,6 +5,16 @@ Format: `## [version] — YYYY-MM-DD` with bullet points per change.
 
 ---
 
+## [0.9.2] — 2026-04-14
+
+### Changed
+- **Split finance.js route** (R5) — monolithic `backend/src/routes/finance.js` (1,779 lines)
+  split into 7 focused sub-route files under `backend/src/routes/finance/`: `accounts.js`,
+  `categories.js`, `transactions.js`, `transfers.js`, `reconciliation.js`, `statements.js`,
+  and `batches.js`, plus a shared `helpers.js` and `index.js` parent router
+
+---
+
 ## [0.9.1] — 2026-04-14
 
 ### Changed
