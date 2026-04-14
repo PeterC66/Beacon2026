@@ -377,7 +377,8 @@ export async function buildSettingsSheets(wb, slug) {
              group_bf_enabled, siteworks_activated,
              custom_field_label_1, custom_field_label_2,
              custom_field_label_3, custom_field_label_4,
-             portal_config, group_info_config, calendar_config
+             portal_config, group_info_config, calendar_config,
+             feature_config
       FROM tenant_settings
     `),
     tenantQuery(slug, `
@@ -447,6 +448,7 @@ export async function buildSettingsSheets(wb, slug) {
     { setting: 'portal_config',             value: JSON.stringify(s.portal_config || {}) },
     { setting: 'group_info_config',         value: JSON.stringify(s.group_info_config || {}) },
     { setting: 'calendar_config',           value: JSON.stringify(s.calendar_config || {}) },
+    { setting: 'feature_config',            value: JSON.stringify(s.feature_config || {}) },
   ];
   addSheet(wb, 'Site Settings 1', ['setting', 'value'], settingsRows);
 
@@ -1005,7 +1007,8 @@ export async function restoreBeacon2(tx, wb) {
         custom_field_label_4      = $31,
         portal_config             = COALESCE($32::jsonb, portal_config),
         group_info_config         = COALESCE($33::jsonb, group_info_config),
-        calendar_config           = COALESCE($34::jsonb, calendar_config)
+        calendar_config           = COALESCE($34::jsonb, calendar_config),
+        feature_config            = COALESCE($35::jsonb, feature_config)
       WHERE id = 'singleton'`,
       v('card_colour'), vBool('email_cards'),
       v('public_phone'), v('public_email'), v('home_page'),
@@ -1024,6 +1027,7 @@ export async function restoreBeacon2(tx, wb) {
       vJson('portal_config') ? JSON.stringify(vJson('portal_config')) : null,
       vJson('group_info_config') ? JSON.stringify(vJson('group_info_config')) : null,
       vJson('calendar_config') ? JSON.stringify(vJson('calendar_config')) : null,
+      vJson('feature_config') ? JSON.stringify(vJson('feature_config')) : null,
     );
   }
 

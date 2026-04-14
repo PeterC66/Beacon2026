@@ -234,4 +234,59 @@ router.post('/restore/:tenantSlug', upload.single('backup'), async (req, res, ne
   }
 });
 
+// ─── GET /system/tenants/:slug/feature-config ───────────────────────────────
+// Returns the feature config for a specific tenant. System admin can view any tenant's config.
+router.get('/tenants/:slug/feature-config', async (req, res, next) => {
+  try {
+    const { slug } = req.params;
+    const tenant = await prisma.sysTenant.findUnique({ where: { slug } });
+    if (!tenant) return next(AppError('Tenant not found.', 404));
+
+    const [row] = await tenantQuery(slug, `SELECT feature_config FROM tenant_settings WHERE id = 'singleton'`);
+    res.json(row?.feature_config ?? {});
+  } catch (err) {
+    next(err);
+  }
+});
+
+// ─── PATCH /system/tenants/:slug/feature-config ───────────────────────────���─
+// System admin can update any feature toggle for any tenant (including sys-admin-only keys).
+const featureConfigSchema = z.record(z.string(), z.boolean());
+
+const VALID_FEATURE_KEYS = [
+  'groups', 'finance', 'email', 'portal', 'onlineJoining', 'events',
+  'membershipCards', 'membershipRenewals', 'addressesExport', 'giftAid',
+  'customFields', 'polls', 'statistics',
+  'teams', 'venues', 'faculties', 'groupLedger', 'siteworks',
+  'calendar', 'eventTypes',
+  'creditBatches', 'reconciliation', 'financialStatement', 'groupsStatement', 'transferMoney',
+];
+
+router.patch('/tenants/:slug/feature-config', async (req, res, next) => {
+  try {
+    const { slug } = req.params;
+    const tenant = await prisma.sysTenant.findUnique({ where: { slug } });
+    if (!tenant) return next(AppError('Tenant not found.', 404));
+
+    const incoming = featureConfigSchema.parse(req.body);
+    const updates = {};
+    for (const [key, value] of Object.entries(incoming)) {
+      if (VALID_FEATURE_KEYS.includes(key)) updates[key] = value;
+    }
+    if (Object.keys(updates).length === 0) {
+      const [row] = await tenantQuery(slug, `SELECT feature_config FROM tenant_settings WHERE id = 'singleton'`);
+      return res.json(row?.feature_config ?? {});
+    }
+
+    const [row] = await tenantQuery(
+      slug,
+      `UPDATE tenant_settings SET feature_config = feature_config || $1::jsonb WHERE id = 'singleton' RETURNING feature_config`,
+      [JSON.stringify(updates)],
+    );
+    res.json(row?.feature_config ?? {});
+  } catch (err) {
+    next(err);
+  }
+});
+
 export default router;

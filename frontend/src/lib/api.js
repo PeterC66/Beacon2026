@@ -594,6 +594,18 @@ export const system = {
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
       body: JSON.stringify(data),
     }).then((r) => r.json().then((b) => { if (!r.ok) throw new Error(b.error ?? `HTTP ${r.status}`); return b; })),
+
+  getFeatureConfig: (token, slug) =>
+    fetch(`${BASE}/system/tenants/${slug}/feature-config`, {
+      headers: { Authorization: `Bearer ${token}` },
+    }).then((r) => r.json().then((b) => { if (!r.ok) throw new Error(b.error ?? `HTTP ${r.status}`); return b; })),
+
+  updateFeatureConfig: (token, slug, data) =>
+    fetch(`${BASE}/system/tenants/${slug}/feature-config`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify(data),
+    }).then((r) => r.json().then((b) => { if (!r.ok) throw new Error(b.error ?? `HTTP ${r.status}`); return b; })),
 };
 
 // ─── Audit log ────────────────────────────────────────────────────────────

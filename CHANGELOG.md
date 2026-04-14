@@ -14,8 +14,24 @@ Format: `## [version] — YYYY-MM-DD` with bullet points per change.
   `hasFeature()` didn't check the parent dependency chain.
 - **Group Ledger tab** — the Ledger tab on group and team records now respects the
   `groupLedger` feature toggle and is hidden when the feature is configured off.
+- **Default-off features** — features that default to off (Gift Aid, Group Ledger,
+  SiteWorks) were treated as on when never explicitly toggled, because missing keys
+  in `feature_config` defaulted to true. Now `hasFeature()` and `requireFeature()`
+  consult a defaults list so these features are correctly off until enabled.
+- **Schedule tab** — the Schedule tab on group and team records is now hidden when
+  the Events & Calendar module is turned off.
 
 ### Added
+- **Feature config — System Dashboard** — system admins can now view and edit feature
+  configuration for any tenant via a "Features" button on each tenant row in the
+  System Dashboard. All toggles are available (including system-admin-only ones like
+  Finance, Email, Portal, Online Joining).
+- **Feature config — confirmation dialogs** — turning off a master module toggle now
+  shows a confirmation dialog warning that the module will be hidden from users and
+  that existing data is preserved.
+- **Feature config — backup/restore** — `feature_config` is now included in the data
+  export (Settings sheet) and restored in the Beacon2 restore path. Legacy Beacon
+  restores leave feature config as the default (all on).
 - **Feature configuration** — new per-u3a feature toggles system. Each u3a can
   choose which modules and sub-features are active via a new "Feature Configuration"
   page under Set up. 25 toggles across 6 master modules (Groups, Finance, Email &

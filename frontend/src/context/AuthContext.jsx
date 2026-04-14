@@ -19,6 +19,16 @@ const FEATURE_DEPS = {
   transferMoney: 'finance',
 };
 
+// Features that default to OFF when the key is missing from feature_config.
+// All other features default to ON (opt-out model).
+const FEATURE_DEFAULTS_OFF = new Set(['giftAid', 'groupLedger', 'siteworks']);
+
+/** Is a single feature key on, considering its default? */
+function isOn(config, key) {
+  if (key in config) return config[key] !== false;
+  return !FEATURE_DEFAULTS_OFF.has(key);
+}
+
 // Read the beacon_last_u3a cookie (set on successful login by Login.jsx)
 function getLastU3aCookie() {
   if (!hasOptionalCookieConsent()) return '';
@@ -142,14 +152,15 @@ export function AuthProvider({ children }) {
 
   /**
    * Check if a feature toggle is enabled for this tenant.
-   * Missing keys default to true (opt-out model).
+   * Most missing keys default to true (opt-out model), but features in
+   * FEATURE_DEFAULTS_OFF default to false when never explicitly set.
    * Also checks parent dependency — e.g. if 'events' is off, 'calendar' is off too.
    * @param {string} key  e.g. 'finance', 'giftAid'
    */
   const hasFeature = useCallback((key) => {
-    if (featureConfig[key] === false) return false;
+    if (!isOn(featureConfig, key)) return false;
     const parent = FEATURE_DEPS[key];
-    if (parent && featureConfig[parent] === false) return false;
+    if (parent && !isOn(featureConfig, parent)) return false;
     return true;
   }, [featureConfig]);
 
