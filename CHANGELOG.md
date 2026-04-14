@@ -7,6 +7,15 @@ Format: `## [version] — YYYY-MM-DD` with bullet points per change.
 
 ## [0.9.3] — 2026-04-14
 
+### Added
+- **Shared UI primitives** (R10) — new `frontend/src/components/ui/` with `Button.jsx`
+  (6 variants: primary, danger, dangerOutline, secondary, success; 3 sizes) and
+  `Input.jsx` (inputCls, inputClsCompact, inputErrCls, selectCls, labelCls constants).
+  Available for incremental adoption in new and existing pages
+- **Backend tests for 6 routes** (R12) — `settings.test.js` (20 tests),
+  `venues.test.js` (13), `eventTypes.test.js` (14), `customFields.test.js` (7),
+  `addressExport.test.js` (12), `privileges.test.js` (3). Total: 69 new tests
+
 ### Changed
 - **Move calendar & team pages** (R8) — moved `Calendar.jsx`, `EventRecord.jsx`,
   and `OpenMeetings.jsx` from `pages/groups/` to new `pages/calendar/` directory;

@@ -817,11 +817,23 @@ Design decisions:
 **Exception**: RoleEditor privilege matrix keeps Beacon colours:
 `#ffffcc`/`#f0f0f0` rows, `#0000cc` resource text, `#e08000` save button.
 
+### Shared UI primitives — `components/ui/`
+
+**For new code, prefer these shared primitives over local class definitions:**
+
+- `import Button from '../../components/ui/Button.jsx'` — `<Button variant="primary">` /
+  `"danger"` / `"dangerOutline"` / `"secondary"` / `"success"`, sizes `"sm"` / `"default"` / `"lg"`
+- `import { inputCls, inputErrCls, labelCls } from '../../components/ui/Input.jsx'` —
+  use with `<input className={inputCls} />`
+
+Existing files still use local `const inputCls` / `const btnCls` definitions — adopt
+the shared versions incrementally when touching a file for other reasons.
+
 ### Common Tailwind patterns
 
-- Input: `border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500`
-- Primary button: `bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white rounded px-5 py-2 text-sm font-medium transition-colors`
-- Destructive button: `border border-red-300 text-red-600 hover:bg-red-50 rounded px-5 py-2 text-sm`
+- Input: `border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500` (or `inputCls` from `components/ui/Input.jsx`)
+- Primary button: `bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white rounded px-5 py-2 text-sm font-medium transition-colors` (or `<Button>` from `components/ui/Button.jsx`)
+- Destructive button: `border border-red-300 text-red-600 hover:bg-red-50 rounded px-5 py-2 text-sm` (or `<Button variant="dangerOutline">`)
 - Table rows: `i % 2 === 0 ? 'bg-yellow-50' : 'bg-white'` with `bg-slate-50` header
 - Content cards: `bg-white/90 rounded-lg shadow-sm p-4 sm:p-6`
 - Labels: `block text-sm font-medium text-slate-700 mb-1`
