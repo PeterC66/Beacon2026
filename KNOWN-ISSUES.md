@@ -230,3 +230,23 @@ The following routes had no E2E coverage and have now been added:
    currently just notes that events are in the Groups export. Consider removing the
    Calendar export option entirely, or having it produce the same Group Events sheet
    independently.
+
+---
+
+## Feature Toggles — deferred phases
+
+1. **System Dashboard integration** — System admins should be able to view and change
+   feature configuration for any tenant from the System Dashboard. Currently,
+   system-admin-only toggles (Finance, Email, Portal, Online Joining) can only be
+   changed via direct database access. Ref: `SYS_ADMIN_ONLY_KEYS` in
+   `backend/src/routes/settings.js`.
+
+2. **Confirmation dialogs** — When turning off a master toggle for a module that has
+   existing data (e.g. turning off Finance when transactions exist), the UI should
+   show a confirmation dialog warning that the feature will become inaccessible.
+   Currently toggles switch immediately with no warning.
+
+3. **Feature config in data backup/restore** — The `feature_config` column is not
+   included in the data export/restore cycle. Add it to the backup Excel export and
+   restore import so that feature configuration is preserved across backup/restore
+   operations. Ref: `backend/src/routes/backup.js`.
