@@ -132,7 +132,7 @@ Event Record pages.
 
 ---
 
-### R9. Extract shared Zod schemas on the backend
+### ~~R9. Extract shared Zod schemas on the backend~~ ✅ Done (v0.9.3)
 
 **Problem:** 93 `z.object()` definitions are inline across 26 route files. Some are
 near-duplicates between `groups.js` and `teams.js`:
