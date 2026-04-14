@@ -163,6 +163,7 @@ export default function GroupList() {
   const navLinks = [
     { label: 'Home', to: '/' },
     ...(can('group_records_all', 'create') ? [{ label: 'Add New Group', to: '/groups/new' }] : []),
+    { label: 'Teams', to: '/teams' },
   ];
 
   return (
@@ -172,9 +173,6 @@ export default function GroupList() {
 
       <div className="max-w-6xl mx-auto px-4 py-4">
         <h1 className="text-xl font-bold text-center mb-3">Groups</h1>
-        <div className="text-center mb-3">
-          <Link to="/teams" className="text-sm text-blue-700 hover:underline">Switch to Teams</Link>
-        </div>
 
         {/* ── Filters ──────────────────────────────────────────────── */}
         <div className="bg-white/90 rounded-lg shadow-sm p-3 mb-3 flex flex-wrap gap-4 items-end">
