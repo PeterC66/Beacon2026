@@ -1,4 +1,4 @@
-// beacon2/frontend/src/pages/misc/auditHelpers.js
+// beacon2/frontend/src/lib/auditHelpers.js
 // Shared helpers for audit log pages
 
 // Maps entity_type values to their frontend route prefix.

@@ -1,4 +1,4 @@
-// beacon2/frontend/src/pages/misc/GiftAidLog.jsx
+// beacon2/frontend/src/pages/finance/GiftAidLog.jsx
 // Gift Aid log viewer — doc 9.2(b)
 // Shows when Gift Aid consent was given or withdrawn, with date range and member filters.
 

@@ -23,6 +23,10 @@ Format: `## [version] — YYYY-MM-DD` with bullet points per change.
 ## [0.9.2] — 2026-04-14
 
 ### Changed
+- **Dissolve misc/ directory** (R7) — relocated 7 files from `pages/misc/` to domain
+  directories: `AuditLog`/`AuditRecord` to `pages/audit/`, `auditHelpers` to `lib/`,
+  `DataBackup` to `pages/admin/`, `GiftAidLog` to `pages/finance/`, `OfficerList` to
+  `pages/officers/`, `PublicLinks` to `pages/settings/`; updated all imports and tests
 - **Lazy loading** — all 82 page components in `App.jsx` are now loaded with
   `React.lazy()` and wrapped in a `<Suspense>` boundary, reducing the initial
   bundle size by code-splitting each page into its own chunk
