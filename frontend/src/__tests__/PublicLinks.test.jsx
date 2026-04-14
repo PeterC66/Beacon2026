@@ -11,7 +11,7 @@ vi.mock('react-router-dom', async (importActual) => {
 });
 
 vi.mock('../context/AuthContext.jsx', () => ({
-  useAuth: () => ({ tenant: 'test-u3a', can: vi.fn().mockReturnValue(true) }),
+  useAuth: () => ({ tenant: 'test-u3a', can: vi.fn().mockReturnValue(true), hasFeature: vi.fn().mockReturnValue(true) }),
 }));
 
 vi.mock('../lib/api.js', () => ({
