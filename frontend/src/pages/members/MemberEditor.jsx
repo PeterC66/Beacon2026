@@ -2,8 +2,9 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { isValidPhoneNumber } from 'libphonenumber-js';
 import { members as membersApi, memberStatuses as statusApi, memberClasses as classApi, finance as financeApi, polls as pollsApi, settings as settingsApi, publicApi } from '../../lib/api.js';
+import { MEMBER_PAYMENT_METHODS as PAYMENT_METHODS } from '../../lib/constants.js';
+import { isValidUKPostcode, validatePhone } from '../../lib/validation.js';
 import { useAuth } from '../../context/AuthContext.jsx';
 import NavBar from '../../components/NavBar.jsx';
 import RequiredMark from '../../components/RequiredMark.jsx';
@@ -30,25 +31,7 @@ const BLANK_FORM = {
   payAmount: '', payMethod: '', payAccountId: '', payRef: '',
 };
 
-const PAYMENT_METHODS = ['Cash', 'Cheque', 'Standing Order', 'Direct Debit', 'BACS', 'Online', 'Other'];
-
 const TITLES = ['', 'Mr', 'Mrs', 'Ms', 'Miss', 'Dr', 'Prof', 'Rev', 'Sir', 'Lady'];
-
-// Standard UK postcode pattern (outward + optional space + inward)
-const UK_POSTCODE_RE = /^(GIR\s?0AA|[A-Z]{1,2}[0-9][0-9A-Z]?\s?[0-9][ABD-HJLNP-UW-Z]{2})$/i;
-
-function isValidUKPostcode(value) {
-  return UK_POSTCODE_RE.test(value.trim());
-}
-
-function validatePhone(value) {
-  if (!value || !value.trim()) return null;
-  try {
-    return isValidPhoneNumber(value, 'GB') ? null : 'Enter a valid UK phone number';
-  } catch {
-    return 'Enter a valid UK phone number';
-  }
-}
 
 /**
  * Compute next renewal date from joined date and year-config settings.

@@ -10,9 +10,9 @@ import RequiredMark from '../../components/RequiredMark.jsx';
 import PageHeader from '../../components/PageHeader.jsx';
 import DateInput from '../../components/DateInput.jsx';
 import { scrollToFormError } from '../../lib/scrollToError.js';
+import { FINANCE_PAYMENT_METHODS } from '../../lib/constants.js';
 
-const PAYMENT_METHODS = ['', 'Cheque', 'Cash', 'PayPal', 'Standing Order', 'Direct Debit',
-                         'BACS', 'Debit card', 'Account transfer', 'Credit card'];
+const PAYMENT_METHODS = ['', ...FINANCE_PAYMENT_METHODS];
 
 const today = () => new Date().toISOString().slice(0, 10);
 

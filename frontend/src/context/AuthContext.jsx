@@ -5,29 +5,9 @@ import { createContext, useContext, useState, useEffect, useRef, useCallback } f
 import { auth as authApi, settings as settingsApi, setAuth, clearAuth, restoreSession } from '../lib/api.js';
 import { getPreferences } from '../hooks/usePreferences.js';
 import { hasOptionalCookieConsent } from '../hooks/useCookieConsent.js';
+import { FEATURE_DEPS, isOn } from '../lib/constants.js';
 
 const AuthContext = createContext(null);
-
-// Sub-feature → master-toggle dependency map.
-// When a master toggle is off, all its dependents are treated as off too.
-const FEATURE_DEPS = {
-  teams: 'groups', venues: 'groups', faculties: 'groups',
-  groupLedger: 'groups', siteworks: 'groups',
-  calendar: 'events', eventTypes: 'events',
-  creditBatches: 'finance', reconciliation: 'finance',
-  financialStatement: 'finance', groupsStatement: 'finance',
-  transferMoney: 'finance',
-};
-
-// Features that default to OFF when the key is missing from feature_config.
-// All other features default to ON (opt-out model).
-const FEATURE_DEFAULTS_OFF = new Set(['giftAid', 'groupLedger', 'siteworks']);
-
-/** Is a single feature key on, considering its default? */
-function isOn(config, key) {
-  if (key in config) return config[key] !== false;
-  return !FEATURE_DEFAULTS_OFF.has(key);
-}
 
 // Read the beacon_last_u3a cookie (set on successful login by Login.jsx)
 function getLastU3aCookie() {

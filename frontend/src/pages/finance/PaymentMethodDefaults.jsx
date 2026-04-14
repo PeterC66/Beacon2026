@@ -8,9 +8,9 @@ import { finance as financeApi } from '../../lib/api.js';
 import { useAuth } from '../../context/AuthContext.jsx';
 import NavBar from '../../components/NavBar.jsx';
 import PageHeader from '../../components/PageHeader.jsx';
+import { FINANCE_PAYMENT_METHODS } from '../../lib/constants.js';
 
-const PAYMENT_METHODS = ['', 'Cheque', 'Cash', 'PayPal', 'Standing Order', 'Direct Debit',
-                         'BACS', 'Debit card', 'Account transfer', 'Credit card'];
+const PAYMENT_METHODS = ['', ...FINANCE_PAYMENT_METHODS];
 
 const inputCls   = 'border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500';
 const btnPrimary = 'bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white rounded px-5 py-2 text-sm font-medium transition-colors';

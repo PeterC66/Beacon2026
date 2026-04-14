@@ -5,6 +5,22 @@ Format: `## [version] — YYYY-MM-DD` with bullet points per change.
 
 ---
 
+## [0.9.1] — 2026-04-14
+
+### Changed
+- **Shared constants** — `FEATURE_DEPS`, `FEATURE_DEFAULTS_OFF`, `isOn()`, payment method
+  lists, and `UK_POSTCODE_RE` now live in `shared/constants.js` (repo root) and are
+  imported by both backend and frontend, eliminating 7 duplicate definitions
+- **Shared validation** — `isValidUKPostcode()` and `validatePhone()` extracted to
+  `frontend/src/lib/validation.js`, removing duplication from MemberEditor, MemberValidator,
+  and JoinForm
+- **API client split** — `api.js` (1,044 → 626 lines) now imports infrastructure from
+  `api/core.js` and delegates system-admin, public, and portal APIs to their own modules
+  (`api/system.js`, `api/public.js`, `api/portal.js`), cleanly separating 3 different
+  auth patterns
+
+---
+
 ## [0.9.0] — 2026-04-14
 
 ### Added

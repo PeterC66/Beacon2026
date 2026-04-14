@@ -9,8 +9,7 @@ import { members as membersApi } from '../../lib/api.js';
 import { useAuth } from '../../context/AuthContext.jsx';
 import NavBar from '../../components/NavBar.jsx';
 import PageHeader from '../../components/PageHeader.jsx';
-
-const UK_POSTCODE_RE = /^(GIR\s?0AA|[A-Z]{1,2}[0-9][0-9A-Z]?\s?[0-9][ABD-HJLNP-UW-Z]{2})$/i;
+import { UK_POSTCODE_RE } from '../../lib/constants.js';
 
 function checkPostcode(v) {
   if (!v || !v.trim()) return 'Missing postcode';

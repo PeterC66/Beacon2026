@@ -113,6 +113,9 @@ Every item below applies to every new feature — no exceptions.
 ## API and network
 
 - [ ] **Use `frontend/src/lib/api.js` for all backend calls** — never raw `fetch()`.
+  The API client is split into modules under `frontend/src/lib/api/` (core, system,
+  public, portal), all re-exported from `api.js`. Add new tenant-scoped namespaces
+  to `api.js`; add new public/portal/system methods to the appropriate module.
   The client auto-attaches the Bearer token and tenant slug, handles 401 refresh,
   and sends credentials for the httpOnly cookie.
 
@@ -126,6 +129,14 @@ Every item below applies to every new feature — no exceptions.
 - [ ] **Zod validation** on all request bodies before processing.
 
 - [ ] **Access token in memory only** — never localStorage or sessionStorage.
+
+- [ ] **Shared constants** — feature toggles (`FEATURE_DEPS`, `FEATURE_DEFAULTS_OFF`,
+  `isOn`), payment-method lists, and `UK_POSTCODE_RE` live in `shared/constants.js`
+  at the repo root. Frontend re-exports via `frontend/src/lib/constants.js`.
+  Never redefine these locally — import from the shared location.
+
+- [ ] **Shared validation** — `isValidUKPostcode()` and `validatePhone()` live in
+  `frontend/src/lib/validation.js`. Import from there rather than duplicating.
 
 - [ ] **Auth context** — use `useAuth()` from `frontend/src/context/AuthContext.jsx`
   to access `{ user, tenant, can(resource, action), isSiteAdmin }`. Never roll
