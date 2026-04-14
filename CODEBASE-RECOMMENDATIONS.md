@@ -31,7 +31,7 @@ Implemented in v0.9.2. See `backend/src/routes/finance/` directory.
 
 ---
 
-### R6. Lazy loading in App.jsx
+### R6. Lazy loading in App.jsx ✅ Done
 
 **Problem:** `frontend/src/App.jsx` (263 lines) eagerly imports all 82 page components.
 Every page is in the initial bundle. Also, `PF` is used 42 times but the abbreviation

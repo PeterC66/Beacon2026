@@ -8,6 +8,11 @@ Format: `## [version] — YYYY-MM-DD` with bullet points per change.
 ## [0.9.2] — 2026-04-14
 
 ### Changed
+- **Lazy loading** — all 82 page components in `App.jsx` are now loaded with
+  `React.lazy()` and wrapped in a `<Suspense>` boundary, reducing the initial
+  bundle size by code-splitting each page into its own chunk
+- **Route guard cleanup** — renamed cryptic `PF` component to `ProtectedFeatureRoute`;
+  merged single-use `AuthRequired` into `ProtectedRoute` with a `skipPasswordCheck` prop
 - **Split finance.js route** (R5) — monolithic `backend/src/routes/finance.js` (1,779 lines)
   split into 7 focused sub-route files under `backend/src/routes/finance/`: `accounts.js`,
   `categories.js`, `transactions.js`, `transfers.js`, `reconciliation.js`, `statements.js`,
