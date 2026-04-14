@@ -100,7 +100,7 @@ Gift Aid Log, Officers, and Public Links in the browser.
 
 ---
 
-### R8. Move calendar and team pages to their own directories
+### R8. Move calendar and team pages to their own directories ✅
 
 **Problem:** `frontend/src/pages/groups/` contains 10 files spanning groups, teams,
 calendar, events, faculties, and venues — despite teams, calendar, and event types

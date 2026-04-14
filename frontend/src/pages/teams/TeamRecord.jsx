@@ -1,4 +1,4 @@
-// beacon2/frontend/src/pages/groups/TeamRecord.jsx
+// beacon2/frontend/src/pages/teams/TeamRecord.jsx
 // Team record page with Details, Members, and Ledger tabs.
 // Route /teams/new → create mode (Details only, no tabs)
 // Route /teams/:id → view/edit mode with Details + Members + Ledger tabs
