@@ -10,6 +10,8 @@ import { requireAuth } from '../middleware/auth.js';
 import { requirePrivilege } from '../middleware/requirePrivilege.js';
 import { tenantQuery } from '../utils/db.js';
 import { AppError } from '../middleware/errorHandler.js';
+import { addMemberSchema, bulkAddMembersSchema, bulkMemberIdsSchema, patchMemberSchema, eventSchema, updateEventSchema, bulkDeleteIdsSchema, ledgerEntrySchema } from '../schemas/common.js';
+import { bulkAddToTeamSchema } from '../schemas/teams.js';
 
 const router = Router();
 router.use(requireAuth);
@@ -469,11 +471,6 @@ router.get('/:id/members/download', requirePrivilege('group_records_all', 'view'
 });
 
 // ─── POST /teams/:id/members ─────────────────────────────────────────────
-const addMemberSchema = z.union([
-  z.object({ memberId: z.string().min(1) }),
-  z.object({ membershipNumber: z.coerce.number().int().positive() }),
-]);
-
 router.post('/:id/members', requirePrivilege('group_records_all', 'change'), async (req, res, next) => {
   try {
     const slug = req.user.tenantSlug;
@@ -520,10 +517,6 @@ router.post('/:id/members', requirePrivilege('group_records_all', 'change'), asy
 });
 
 // ─── POST /teams/:id/members/bulk ───────────────────────────────────────
-const bulkAddMembersSchema = z.object({
-  memberIds: z.array(z.string().min(1)).min(1),
-});
-
 router.post('/:id/members/bulk', requirePrivilege('group_records_all', 'change'), async (req, res, next) => {
   try {
     const slug = req.user.tenantSlug;
@@ -554,10 +547,6 @@ router.post('/:id/members/bulk', requirePrivilege('group_records_all', 'change')
 });
 
 // ─── PATCH /teams/:id/members/:memberId ──────────────────────────────────
-const patchMemberSchema = z.object({
-  isLeader: z.boolean().optional(),
-});
-
 router.patch('/:id/members/:memberId', requirePrivilege('group_records_all', 'change'), async (req, res, next) => {
   try {
     const slug = req.user.tenantSlug;
@@ -580,14 +569,10 @@ router.patch('/:id/members/:memberId', requirePrivilege('group_records_all', 'ch
 });
 
 // ─── DELETE /teams/:id/members/bulk ──────────────────────────────────────
-const bulkRemoveSchema = z.object({
-  memberIds: z.array(z.string().uuid()).min(1),
-});
-
 router.delete('/:id/members/bulk', requirePrivilege('group_records_all', 'change'), async (req, res, next) => {
   try {
     const slug = req.user.tenantSlug;
-    const { memberIds } = bulkRemoveSchema.parse(req.body);
+    const { memberIds } = bulkMemberIdsSchema.parse(req.body);
 
     const [team] = await tenantQuery(slug, `SELECT id FROM groups WHERE id = $1 AND type = 'team'`, [req.params.id]);
     if (!team) throw AppError('Team not found.', 404);
@@ -602,15 +587,10 @@ router.delete('/:id/members/bulk', requirePrivilege('group_records_all', 'change
 });
 
 // ─── POST /teams/:id/members/bulk-add ───────────────────────────────────
-const bulkAddSchema = z.object({
-  memberIds:    z.array(z.string().uuid()).min(1),
-  targetTeamId: z.string().uuid(),
-});
-
 router.post('/:id/members/bulk-add', requirePrivilege('group_records_all', 'change'), async (req, res, next) => {
   try {
     const slug = req.user.tenantSlug;
-    const { memberIds, targetTeamId } = bulkAddSchema.parse(req.body);
+    const { memberIds, targetTeamId } = bulkAddToTeamSchema.parse(req.body);
 
     const [targetTeam] = await tenantQuery(slug, `SELECT id FROM groups WHERE id = $1 AND type = 'team'`, [targetTeamId]);
     if (!targetTeam) throw AppError('Target team not found.', 404);
@@ -670,14 +650,6 @@ async function hasLedgerAccess(req, teamId, action) {
   }
   return false;
 }
-
-const ledgerEntrySchema = z.object({
-  entryDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
-  payee:     z.string().max(200).nullable().optional(),
-  detail:    z.string().max(500).nullable().optional(),
-  moneyIn:   z.number().nonnegative().nullable().optional(),
-  moneyOut:  z.number().nonnegative().nullable().optional(),
-});
 
 // GET /teams/:id/ledger
 router.get('/:id/ledger', async (req, res, next) => {
@@ -882,20 +854,6 @@ router.get('/:id/events', requirePrivilege('group_records_all', 'view'), async (
 
 // ─── POST /teams/:id/events ──────────────────────────────────────────────
 
-const eventSchema = z.object({
-  eventDate:  z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
-  startTime:  z.string().nullable().optional(),
-  endTime:    z.string().nullable().optional(),
-  venueId:    z.string().nullable().optional(),
-  topic:      z.string().nullable().optional(),
-  contact:    z.string().nullable().optional(),
-  details:    z.string().nullable().optional(),
-  isPrivate:  z.boolean().default(false),
-  repeatEvery:  z.number().int().positive().nullable().optional(),
-  repeatUnit:   z.enum(['days', 'weeks', 'months']).optional(),
-  repeatUntil:  z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullable().optional(),
-});
-
 router.post('/:id/events', requirePrivilege('group_records_all', 'change'), async (req, res, next) => {
   try {
     const slug = req.user.tenantSlug;
@@ -955,17 +913,6 @@ router.post('/:id/events', requirePrivilege('group_records_all', 'change'), asyn
 
 // ─── PATCH /teams/:id/events/:eventId ────────────────────────────────────
 
-const updateEventSchema = z.object({
-  eventDate:  z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
-  startTime:  z.string().nullable().optional(),
-  endTime:    z.string().nullable().optional(),
-  venueId:    z.string().nullable().optional(),
-  topic:      z.string().nullable().optional(),
-  contact:    z.string().nullable().optional(),
-  details:    z.string().nullable().optional(),
-  isPrivate:  z.boolean().optional(),
-});
-
 const EVENT_FIELDS = [
   ['eventDate', 'event_date', '::date'],
   ['startTime', 'start_time', '::time'],
@@ -1016,7 +963,7 @@ router.patch('/:id/events/:eventId', requirePrivilege('group_records_all', 'chan
 router.delete('/:id/events', requirePrivilege('group_records_all', 'change'), async (req, res, next) => {
   try {
     const slug = req.user.tenantSlug;
-    const { ids } = z.object({ ids: z.array(z.string()).min(1) }).parse(req.body);
+    const { ids } = bulkDeleteIdsSchema.parse(req.body);
 
     const placeholders = ids.map((_, idx) => `$${idx + 2}`).join(', ');
     const result = await tenantQuery(

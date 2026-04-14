@@ -100,7 +100,7 @@ Gift Aid Log, Officers, and Public Links in the browser.~~
 
 ---
 
-### R8. Move calendar and team pages to their own directories
+### R8. Move calendar and team pages to their own directories ✅
 
 **Problem:** `frontend/src/pages/groups/` contains 10 files spanning groups, teams,
 calendar, events, faculties, and venues — despite teams, calendar, and event types
@@ -132,7 +132,7 @@ Event Record pages.
 
 ---
 
-### R9. Extract shared Zod schemas on the backend
+### ~~R9. Extract shared Zod schemas on the backend~~ ✅ Done (v0.9.3)
 
 **Problem:** 93 `z.object()` definitions are inline across 26 route files. Some are
 near-duplicates between `groups.js` and `teams.js`:

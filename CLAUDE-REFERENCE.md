@@ -368,6 +368,19 @@ which requires categories). Users can categorize later.
 Members and Schedule tabs use shared components (`EntityMembers.jsx`, `Schedule.jsx`)
 parameterised by `entityType` (`'group'`/`'team'`), `api`, and `entityId`.
 
+### Shared Zod schemas (`backend/src/schemas/`)
+
+Shared validation schemas for groups and teams are in `backend/src/schemas/`:
+
+- **`common.js`** — 8 schemas shared by both routes: `addMemberSchema`, `bulkAddMembersSchema`,
+  `bulkMemberIdsSchema`, `patchMemberSchema`, `eventSchema`, `updateEventSchema`,
+  `bulkDeleteIdsSchema`, `ledgerEntrySchema`.
+- **`groups.js`** — group-specific extensions: `patchGroupMemberSchema` (adds `waitingSince`),
+  `bulkAddToGroupSchema` (adds `targetGroupId`). Both use `.extend()` on common base schemas.
+- **`teams.js`** — team-specific extension: `bulkAddToTeamSchema` (adds `targetTeamId`).
+
+Entity-specific schemas (e.g. `groupSchema`, `teamSchema`) remain inline in their route files.
+
 ### Venues (doc 5.7)
 
 - DB: `venues` table — all optional except `name`; `private_address`, `accessible` booleans

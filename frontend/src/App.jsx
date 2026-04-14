@@ -25,8 +25,8 @@ const MemberCompactView  = lazy(() => import('./pages/members/MemberCompactView.
 const AddressesExport    = lazy(() => import('./pages/members/AddressesExport.jsx'));
 const GroupList          = lazy(() => import('./pages/groups/GroupList.jsx'));
 const GroupRecord        = lazy(() => import('./pages/groups/GroupRecord.jsx'));
-const TeamList           = lazy(() => import('./pages/groups/TeamList.jsx'));
-const TeamRecord         = lazy(() => import('./pages/groups/TeamRecord.jsx'));
+const TeamList           = lazy(() => import('./pages/teams/TeamList.jsx'));
+const TeamRecord         = lazy(() => import('./pages/teams/TeamRecord.jsx'));
 const FacultyList        = lazy(() => import('./pages/groups/FacultyList.jsx'));
 const VenueList          = lazy(() => import('./pages/groups/VenueList.jsx'));
 const VenueEditor        = lazy(() => import('./pages/groups/VenueEditor.jsx'));
@@ -64,9 +64,9 @@ const EmailDeliveryDetail = lazy(() => import('./pages/email/EmailDeliveryDetail
 const EmailUnblocker     = lazy(() => import('./pages/email/EmailUnblocker.jsx'));
 const SystemMessages     = lazy(() => import('./pages/settings/SystemMessages.jsx'));
 const PublicLinks        = lazy(() => import('./pages/settings/PublicLinks.jsx'));
-const Calendar           = lazy(() => import('./pages/groups/Calendar.jsx'));
-const EventRecord        = lazy(() => import('./pages/groups/EventRecord.jsx'));
-const OpenMeetings       = lazy(() => import('./pages/groups/OpenMeetings.jsx'));
+const Calendar           = lazy(() => import('./pages/calendar/Calendar.jsx'));
+const EventRecord        = lazy(() => import('./pages/calendar/EventRecord.jsx'));
+const OpenMeetings       = lazy(() => import('./pages/calendar/OpenMeetings.jsx'));
 const LetterCompose      = lazy(() => import('./pages/letters/LetterCompose.jsx'));
 const JoinForm           = lazy(() => import('./pages/public/JoinForm.jsx'));
 const JoinPending        = lazy(() => import('./pages/public/JoinPending.jsx'));

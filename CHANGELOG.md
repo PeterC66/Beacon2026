@@ -5,6 +5,21 @@ Format: `## [version] — YYYY-MM-DD` with bullet points per change.
 
 ---
 
+## [0.9.3] — 2026-04-14
+
+### Changed
+- **Move calendar & team pages** (R8) — moved `Calendar.jsx`, `EventRecord.jsx`,
+  and `OpenMeetings.jsx` from `pages/groups/` to new `pages/calendar/` directory;
+  moved `TeamList.jsx` and `TeamRecord.jsx` to new `pages/teams/` directory, so
+  each page directory mirrors a single backend domain
+- **Extract shared Zod schemas** (R9) — created `backend/src/schemas/` directory with
+  `common.js`, `groups.js`, and `teams.js`. Extracted 9 duplicated Zod schemas from
+  `routes/groups.js` and `routes/teams.js` into shared modules, using `.extend()` for
+  near-identical schemas (patchGroupMemberSchema, bulkAddToGroupSchema, bulkAddToTeamSchema).
+  Net −108 lines of duplication removed
+
+---
+
 ## [0.9.2] — 2026-04-14
 
 ### Changed

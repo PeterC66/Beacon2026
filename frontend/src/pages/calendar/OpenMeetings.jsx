@@ -1,4 +1,4 @@
-// beacon2/frontend/src/pages/groups/OpenMeetings.jsx
+// beacon2/frontend/src/pages/calendar/OpenMeetings.jsx
 // Open Meetings & Events — events not tied to a specific group.
 // Follows the same UI pattern as GroupSchedule in GroupRecord.jsx.
 
