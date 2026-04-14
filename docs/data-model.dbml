@@ -1,5 +1,5 @@
 // Beacon2 Data Model — paste into https://dbdiagram.io/d
-// Generated 2026-03-26
+// Generated 2026-04-14
 
 // ═══════════════════════════════════════════════
 // PUBLIC SCHEMA (system-level)
@@ -179,6 +179,8 @@ Table members {
   custom_field_3      text
   custom_field_4      text
   emergency_contact   text
+  photo_data          text [note: 'base64-encoded photo (jpg/png/gif, max 2MB)']
+  photo_mime_type     varchar(20) [note: 'e.g. image/jpeg, image/png, image/gif']
   card_printed        boolean [default: false]
   portal_email        varchar
   portal_password_hash varchar
@@ -187,6 +189,7 @@ Table members {
   portal_verification_expires timestamptz
   portal_reset_token  varchar
   portal_reset_expires timestamptz
+  payment_token       varchar [note: 'online joining resume-payment link']
   created_at          timestamptz [default: `now()`]
   updated_at          timestamptz
 }
@@ -203,14 +206,12 @@ Table faculties {
 Table venues {
   id              varchar [pk]
   name            varchar [not null]
-  address1        varchar
-  address2        varchar
-  town            varchar
-  county          varchar
+  address         varchar [note: 'single-line address']
   postcode        varchar
   telephone       varchar
   email           varchar
   website         varchar
+  contact         varchar
   notes           text
   private_address boolean [default: false]
   accessible      boolean [default: false]
@@ -221,6 +222,8 @@ Table venues {
 Table groups {
   id                   varchar [pk]
   name                 varchar [not null]
+  short_name           varchar [note: 'optional, max 10 chars']
+  type                 varchar [not null, default: 'group', note: 'group | team']
   faculty_id           varchar [ref: > faculties.id]
   status               varchar [not null, default: 'active', note: 'active | inactive']
   when_text            varchar [note: 'e.g. 2nd Thursday at 2:00pm']
@@ -254,19 +257,42 @@ Table group_members {
   }
 }
 
+Table event_types {
+  id          varchar [pk]
+  name        varchar [not null, unique]
+  description text
+  is_default  boolean [default: false]
+  created_at  timestamptz [default: `now()`]
+  updated_at  timestamptz
+}
+
 Table group_events {
-  id         varchar [pk]
-  group_id   varchar [ref: > groups.id, note: 'nullable for open meetings']
-  event_date date [not null]
-  start_time time
-  end_time   time
-  venue_id   varchar [ref: > venues.id]
-  contact    varchar
-  details    text
-  topic      text
-  is_private boolean [default: false]
-  created_at timestamptz [default: `now()`]
-  updated_at timestamptz
+  id            varchar [pk]
+  group_id      varchar [ref: > groups.id, note: 'nullable — set for group events']
+  event_type_id varchar [ref: > event_types.id, note: 'set for non-group events (e.g. Open Meetings)']
+  event_date    date [not null]
+  start_time    time
+  end_time      time
+  venue_id      varchar [ref: > venues.id]
+  contact       varchar
+  details       text
+  topic         text
+  is_private    boolean [default: false]
+  created_at    timestamptz [default: `now()`]
+  updated_at    timestamptz
+}
+
+Table event_members {
+  id           varchar [pk]
+  event_id     varchar [not null, ref: > group_events.id]
+  member_id    varchar [not null, ref: > members.id]
+  is_organiser boolean [default: false]
+  notes        text
+  created_at   timestamptz [default: `now()`]
+
+  indexes {
+    (event_id, member_id) [unique]
+  }
 }
 
 Table group_ledger_entries {
@@ -308,10 +334,12 @@ Table finance_categories {
 }
 
 Table credit_batches {
-  id         varchar [pk]
-  batch_ref  varchar [not null]
-  account_id varchar [not null, ref: > finance_accounts.id]
-  created_at timestamptz [default: `now()`]
+  id          varchar [pk]
+  batch_ref   varchar [not null]
+  account_id  varchar [not null, ref: > finance_accounts.id]
+  description text
+  batch_date  date
+  created_at  timestamptz [default: `now()`]
 
   indexes {
     (account_id, batch_ref) [unique]
@@ -332,15 +360,18 @@ Table transactions {
   remarks            text
   member_id_1        varchar [ref: > members.id]
   member_id_2        varchar [ref: > members.id]
-  group_id           varchar [ref: > groups.id]
-  cleared_at         date
-  transfer_id        varchar [note: 'pairs transfer transactions']
-  pending            boolean [default: false]
-  gift_aid_amount    decimal(10,2)
+  group_id            varchar [ref: > groups.id]
+  event_id            varchar [ref: > group_events.id, note: 'links transaction to a specific event']
+  cleared_at          date
+  transfer_id         varchar [note: 'pairs transfer transactions']
+  pending             boolean [default: false]
+  gift_aid_amount     decimal(10,2)
   gift_aid_claimed_at date
-  batch_id           varchar [ref: > credit_batches.id]
-  refund_of_id       varchar [ref: > transactions.id, note: 'original txn']
-  refunded_by_id     varchar [ref: > transactions.id, note: 'refund txn']
+  gift_aid_amount_2   decimal(10,2) [note: 'Gift Aid for member 2']
+  gift_aid_claimed_at_2 date
+  batch_id            varchar [ref: > credit_batches.id]
+  refund_of_id        varchar [ref: > transactions.id, note: 'original txn']
+  refunded_by_id      varchar [ref: > transactions.id, note: 'refund txn']
   created_at         timestamptz [default: `now()`]
   updated_at         timestamptz
 }
@@ -494,5 +525,6 @@ Table tenant_settings {
   portal_config             varchar [note: 'JSONB']
   group_info_config         varchar [note: 'JSONB']
   calendar_config           varchar [note: 'JSONB']
+  feature_config            varchar [note: 'JSONB — per-tenant feature toggles']
   updated_at                timestamptz
 }

@@ -1,5 +1,5 @@
 // Beacon2 Data Model — paste into https://dbdiagram.io/d
-// Generated 2026-03-26
+// Generated 2026-04-14
 
 // ═══════════════════════════════════════════════
 // PUBLIC SCHEMA (system-level)
@@ -191,6 +191,8 @@ Table members {
   custom_field_3      text
   custom_field_4      text
   emergency_contact   text
+  photo_data          text [note: 'base64-encoded photo (jpg/png/gif, max 2MB)']
+  photo_mime_type     varchar(20) [note: 'e.g. image/jpeg, image/png, image/gif']
   card_printed        boolean [default: false]
   portal_email        varchar
   portal_password_hash varchar
@@ -199,6 +201,7 @@ Table members {
   portal_verification_expires timestamptz
   portal_reset_token  varchar
   portal_reset_expires timestamptz
+  payment_token       varchar [note: 'online joining resume-payment link']
   created_at          timestamptz [default: `now()`]
   updated_at          timestamptz
 }
@@ -226,14 +229,12 @@ Table faculties {
 Table venues {
   id              varchar [pk]
   name            varchar [not null]
-  address1        varchar
-  address2        varchar
-  town            varchar
-  county          varchar
+  address         varchar [note: 'single-line address']
   postcode        varchar
   telephone       varchar
   email           varchar
   website         varchar
+  contact         varchar
   notes           text
   private_address boolean [default: false]
   accessible      boolean [default: false]
@@ -244,6 +245,8 @@ Table venues {
 Table groups {
   id                   varchar [pk]
   name                 varchar [not null]
+  short_name           varchar [note: 'optional, max 10 chars']
+  type                 varchar [not null, default: 'group', note: 'group | team']
   faculty_id           varchar
   status               varchar [not null, default: 'active', note: 'active | inactive']
   when_text            varchar [note: 'e.g. 2nd Thursday at 2:00pm']
@@ -277,19 +280,42 @@ Table group_members {
   }
 }
 
+Table event_types {
+  id          varchar [pk]
+  name        varchar [not null, unique]
+  description text
+  is_default  boolean [default: false]
+  created_at  timestamptz [default: `now()`]
+  updated_at  timestamptz
+}
+
 Table group_events {
-  id         varchar [pk]
-  group_id   varchar [note: 'nullable for open meetings']
-  event_date date [not null]
-  start_time time
-  end_time   time
-  venue_id   varchar
-  contact    varchar
-  details    text
-  topic      text
-  is_private boolean [default: false]
-  created_at timestamptz [default: `now()`]
-  updated_at timestamptz
+  id            varchar [pk]
+  group_id      varchar [note: 'nullable — set for group events']
+  event_type_id varchar [note: 'set for non-group events (e.g. Open Meetings)']
+  event_date    date [not null]
+  start_time    time
+  end_time      time
+  venue_id      varchar
+  contact       varchar
+  details       text
+  topic         text
+  is_private    boolean [default: false]
+  created_at    timestamptz [default: `now()`]
+  updated_at    timestamptz
+}
+
+Table event_members {
+  id           varchar [pk]
+  event_id     varchar [not null]
+  member_id    varchar [not null]
+  is_organiser boolean [default: false]
+  notes        text
+  created_at   timestamptz [default: `now()`]
+
+  indexes {
+    (event_id, member_id) [unique]
+  }
 }
 
 Table group_ledger_entries {
@@ -331,10 +357,12 @@ Table finance_categories {
 }
 
 Table credit_batches {
-  id         varchar [pk]
-  batch_ref  varchar [not null]
-  account_id varchar [not null]
-  created_at timestamptz [default: `now()`]
+  id          varchar [pk]
+  batch_ref   varchar [not null]
+  account_id  varchar [not null]
+  description text
+  batch_date  date
+  created_at  timestamptz [default: `now()`]
 
   indexes {
     (account_id, batch_ref) [unique]
@@ -355,15 +383,18 @@ Table transactions {
   remarks            text
   member_id_1        varchar
   member_id_2        varchar
-  group_id           varchar
-  cleared_at         date
-  transfer_id        varchar [note: 'pairs transfer transactions']
-  pending            boolean [default: false]
-  gift_aid_amount    decimal(10,2)
+  group_id            varchar
+  event_id            varchar [note: 'links transaction to a specific event']
+  cleared_at          date
+  transfer_id         varchar [note: 'pairs transfer transactions']
+  pending             boolean [default: false]
+  gift_aid_amount     decimal(10,2)
   gift_aid_claimed_at date
-  batch_id           varchar
-  refund_of_id       varchar [note: 'original txn']
-  refunded_by_id     varchar [note: 'refund txn']
+  gift_aid_amount_2   decimal(10,2) [note: 'Gift Aid for member 2']
+  gift_aid_claimed_at_2 date
+  batch_id            varchar
+  refund_of_id        varchar [note: 'original txn']
+  refunded_by_id      varchar [note: 'refund txn']
   created_at         timestamptz [default: `now()`]
   updated_at         timestamptz
 }
@@ -495,6 +526,7 @@ Table tenant_settings {
   portal_config             varchar [note: 'JSONB']
   group_info_config         varchar [note: 'JSONB']
   calendar_config           varchar [note: 'JSONB']
+  feature_config            varchar [note: 'JSONB — per-tenant feature toggles']
   updated_at                timestamptz
 }
 
@@ -528,7 +560,9 @@ TableGroup groups_and_events [color: #0891B2] {
   venues
   groups
   group_members
+  event_types
   group_events
+  event_members
   group_ledger_entries
 }
 
@@ -576,12 +610,16 @@ Ref: group_members.group_id > groups.id
 Ref: group_members.member_id > members.id
 Ref: group_events.group_id > groups.id
 Ref: group_events.venue_id > venues.id
+Ref: group_events.event_type_id > event_types.id
+Ref: event_members.event_id > group_events.id
+Ref: event_members.member_id > members.id
 Ref: group_ledger_entries.group_id > groups.id
 Ref: credit_batches.account_id > finance_accounts.id
 Ref: transactions.account_id > finance_accounts.id
 Ref: transactions.member_id_1 > members.id
 Ref: transactions.member_id_2 > members.id
 Ref: transactions.group_id > groups.id
+Ref: transactions.event_id > group_events.id
 Ref: transactions.batch_id > credit_batches.id
 Ref: transactions.refund_of_id > transactions.id
 Ref: transactions.refunded_by_id > transactions.id
