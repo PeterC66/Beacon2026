@@ -50,6 +50,11 @@ Format: `## [version] — YYYY-MM-DD` with bullet points per change.
 ### Fixed
 - **Calendar group/team filter** — Open Meetings (non-group events) no longer appear
   when the Calendar is filtered by group/team
+- **Calendar "Other" mode** — removed duplicate "Show Detail" checkbox
+- **Calendar "all" mode** — Open Meeting dates are now clickable; clicking switches
+  to "Other" mode with the correct event type for editing
+- **Calendar group/team dropdown** — groups listed first, then teams (no longer
+  interleaved alphabetically)
 
 ### Changed
 - **Calendar member filter** — replaced autocomplete search with filter+select dropdown
