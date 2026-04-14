@@ -17,6 +17,8 @@ export const PRIVILEGE_RESOURCES = [
   r('custom_fields',              'Custom fields',                   ['view', 'change']),
   r('data_export_backup',        'Data export + backup',            ['view', 'download', 'restore']),
   r('email',                     'E-mail',                          ['view', 'send']),
+  r('event_attendance',           'Event attendance',                ['view', 'change', 'download']),
+  r('event_finance',              'Event finance',                   ['view']),
   r('event_types',               'Event types',                     ['view', 'create', 'change', 'delete']),
   r('email_addresses',           'E-mail addresses',                ['download']),
   r('email_delivery',            'E-mail delivery',                 ['view', 'all']),

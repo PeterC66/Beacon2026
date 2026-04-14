@@ -509,28 +509,13 @@ export default function Calendar() {
                     <>
                       <tr key={ev.id} className={`border-b border-slate-100 ${rowBg}`}>
                         <td className="px-3 py-2 whitespace-nowrap">
-                          {ev.group_id ? (
-                            <Link
-                              to={`/groups/${ev.group_id}?tab=schedule`}
-                              className="text-blue-700 hover:underline"
-                            >
-                              {fmtDate(ev.event_date)}
-                              {ev.start_time ? ` ${fmtTime(ev.start_time)}` : ''}
-                            </Link>
-                          ) : canViewMeetings ? (
-                            <button
-                              onClick={() => { setFilterMode('other'); setEventTypeId(ev.event_type_id || ''); clearMember(); setVenueId(''); setGroupId(''); }}
-                              className="text-blue-700 hover:underline text-left whitespace-nowrap"
-                            >
-                              {fmtDate(ev.event_date)}
-                              {ev.start_time ? ` ${fmtTime(ev.start_time)}` : ''}
-                            </button>
-                          ) : (
-                            <span>
-                              {fmtDate(ev.event_date)}
-                              {ev.start_time ? ` ${fmtTime(ev.start_time)}` : ''}
-                            </span>
-                          )}
+                          <Link
+                            to={`/calendar/events/${ev.id}`}
+                            className="text-blue-700 hover:underline"
+                          >
+                            {fmtDate(ev.event_date)}
+                            {ev.start_time ? ` ${fmtTime(ev.start_time)}` : ''}
+                          </Link>
                         </td>
                         <td className="px-3 py-2 text-slate-600 whitespace-nowrap">
                           {fmtTime(ev.end_time)}

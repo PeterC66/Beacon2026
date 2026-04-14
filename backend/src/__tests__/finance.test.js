@@ -228,7 +228,7 @@ describe('POST /finance/transactions', () => {
     expect(res.status).toBe(201);
     // The INSERT call should include pending=true as the last param
     const insertCall = tenantQuery.mock.calls[1];
-    expect(insertCall[2][12]).toBe(true); // pending param
+    expect(insertCall[2][13]).toBe(true); // pending param (after event_id at [12])
   });
 
   it('returns 400 when category amounts do not sum to total', async () => {

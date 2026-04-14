@@ -49,6 +49,12 @@ export const DEFAULT_ROLES = [
       { code: 'feature_config',           action: 'view' },
       { code: 'feature_config',           action: 'change' },            // ve
 
+      // Event attendance & finance
+      { code: 'event_attendance',         action: 'view' },
+      { code: 'event_attendance',         action: 'change' },
+      { code: 'event_attendance',         action: 'download' },          // veo
+      { code: 'event_finance',            action: 'view' },              // v
+
       // Event types
       { code: 'event_types',              action: 'view' },
       { code: 'event_types',              action: 'create' },
@@ -216,6 +222,10 @@ export const DEFAULT_ROLES = [
       { code: 'calendar',                  action: 'view' },
       { code: 'calendar',                  action: 'download' },          // vo
 
+      // Event attendance
+      { code: 'event_attendance',          action: 'view' },
+      { code: 'event_attendance',          action: 'change' },            // ve
+
       // Email
       { code: 'email',                     action: 'view' },
       { code: 'email',                     action: 'send' },              // vo
@@ -250,6 +260,12 @@ export const DEFAULT_ROLES = [
       // Calendar
       { code: 'calendar',                 action: 'view' },
       { code: 'calendar',                 action: 'download' },           // vo
+
+      // Event attendance & finance
+      { code: 'event_attendance',         action: 'view' },
+      { code: 'event_attendance',         action: 'change' },
+      { code: 'event_attendance',         action: 'download' },           // veo
+      { code: 'event_finance',            action: 'view' },               // v
 
       // Email
       { code: 'email',                    action: 'view' },
@@ -390,6 +406,9 @@ export const DEFAULT_ROLES = [
       // Email
       { code: 'email',                    action: 'view' },
       { code: 'email',                    action: 'send' },               // vo
+
+      // Event finance
+      { code: 'event_finance',            action: 'view' },               // v
 
       // Finance
       { code: 'finance_accounts',         action: 'view' },

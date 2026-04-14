@@ -43,6 +43,8 @@ export const ALL_PRIVS = [
   'address_labels:download',
   'email:view', 'email:send',
   'feature_config:view', 'feature_config:change',
+  'event_attendance:view', 'event_attendance:change', 'event_attendance:download',
+  'event_finance:view',
   'event_types:view', 'event_types:create', 'event_types:change', 'event_types:delete',
   'email_delivery:view', 'email_delivery:all',
   'email_standard_messages:view', 'email_standard_messages:create', 'email_standard_messages:change', 'email_standard_messages:delete',

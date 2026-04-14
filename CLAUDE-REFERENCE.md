@@ -1264,15 +1264,32 @@ to the default event type.
 | File | Route | Description |
 |------|-------|-------------|
 | `frontend/src/pages/groups/Calendar.jsx` | `/calendar` | Main calendar view with filters (All / Group-Team / Own / Other); "Other" mode embeds full event management for selected event type |
+| `frontend/src/pages/groups/EventRecord.jsx` | `/calendar/events/:eventId` | Event Record page with Details/Members/Financials tabs |
 | `frontend/src/pages/settings/EventTypeList.jsx` | `/event-types` | Event types CRUD settings page (inline edit, default type protection) |
+
+### Components
+
+| File | Description |
+|------|-------------|
+| `frontend/src/components/EventMembers.jsx` | Event Members tab — add/remove members, organiser toggle, copy-from-group, download PDF |
+| `frontend/src/components/EventFinancials.jsx` | Event Financials tab — summary cards (income/costs/net/count) + transaction lists |
+
+### Database tables
+
+- `event_members` — junction table linking `group_events` ↔ `members` with `is_organiser` boolean and notes; CASCADE on event delete, CASCADE on member delete
+- `transactions.event_id` — nullable FK to `group_events`; ON DELETE SET NULL (preserves financial records when event deleted)
 
 ### Privileges
 
 - `calendar` resource: `[view, download]` — already seeded in `privilegeResources.js`
 - `meetings` resource: `[view, create, change, delete]` — already seeded
 - `event_types` resource: `[view, create, change, delete]` — seeded for settings page
+- `event_attendance` resource: `[view, change, download]` — manages who's registered for events
+- `event_finance` resource: `[view]` — viewing per-event financial summary
 - Calendar and meetings granted to Administration, Groups Coordinator, and Group Leaders roles
 - Event types granted to Administration role
+- Event attendance: Administration (all), Groups Coordinator (all), Group Leaders (view+change)
+- Event finance: Administration, Groups Coordinator, Treasurer (view only)
 
 ### Key decisions
 
@@ -1283,10 +1300,13 @@ to the default event type.
 - **Default event type** ("Open Meetings") is protected: cannot be renamed or deleted
 - **ON DELETE RESTRICT** on event_type_id FK prevents deleting types that have events
 - **Member filter** uses search/autocomplete (not dropdown) for scalability with large memberships
-- **Date/time click** in calendar navigates to Group Record Schedule tab (`/groups/:id?tab=schedule`), not inline edit
+- **Date/time click** in calendar navigates to Event Record page (`/calendar/events/:eventId`)
 - **Map links** use Google Maps (`google.com/maps/search/?api=1&query=POSTCODE`)
 - **Portal Calendar** also has "Other" filter with event type dropdown
-- **Data export/restore** includes Event Types sheet and event_type_id on Group Events sheet
+- **Data export/restore** includes Event Types sheet, Event Members sheet, and event_type_id/event_id on Group Events/Ledger sheets
+- **event_members is independent of group_members** — "Copy from group" is a one-time snapshot, not a live link
+- **Transaction event_id** — mirrors existing `group_id` FK pattern; search-as-you-type in TransactionEditor
+- **Feature toggle** — `eventAttendance` sub-feature under Events section; controls Members tab visibility
 
 ### Deferred items (in KNOWN-ISSUES.md)
 
@@ -1569,7 +1589,7 @@ to `false` (off) when never set: `giftAid`, `groupLedger`, `siteworks`. See
 **Groups sub-features (5):** `teams`, `venues`, `faculties`, `groupLedger` (default off),
 `siteworks` (default off)
 
-**Events sub-features (2):** `calendar`, `eventTypes`
+**Events sub-features (3):** `calendar`, `eventTypes`, `eventAttendance`
 
 **Finance sub-features (5):** `creditBatches`, `reconciliation`, `financialStatement`,
 `groupsStatement`, `transferMoney`

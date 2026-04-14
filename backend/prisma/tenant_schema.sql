@@ -338,6 +338,22 @@ SET event_type_id = (SELECT id FROM :schema.event_types WHERE is_default = true 
 WHERE group_id IS NULL AND event_type_id IS NULL;
 
 -- ─────────────────────────────────────────────
+-- EVENT MEMBERS  (attendee/organiser tracking per event)
+-- ─────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS :schema.event_members (
+  id            TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
+  event_id      TEXT NOT NULL REFERENCES :schema.group_events(id) ON DELETE CASCADE,
+  member_id     TEXT NOT NULL REFERENCES :schema.members(id) ON DELETE CASCADE,
+  is_organiser  BOOLEAN NOT NULL DEFAULT false,
+  notes         TEXT,
+  created_at    TIMESTAMPTZ NOT NULL DEFAULT now(),
+  UNIQUE (event_id, member_id)
+);
+
+CREATE INDEX IF NOT EXISTS :schema_idx_event_members_event  ON :schema.event_members (event_id);
+CREATE INDEX IF NOT EXISTS :schema_idx_event_members_member ON :schema.event_members (member_id);
+
+-- ─────────────────────────────────────────────
 -- GROUP LEDGER ENTRIES  (doc 5.5 — separate from Finance Ledger)
 -- ─────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS :schema.group_ledger_entries (
@@ -750,6 +766,11 @@ ALTER TABLE :schema.tenant_settings ADD COLUMN IF NOT EXISTS group_bf_enabled BO
 -- ─── Refund transaction linking (doc 7.10.7) ──────────────────────────
 ALTER TABLE :schema.transactions ADD COLUMN IF NOT EXISTS refund_of_id  TEXT REFERENCES :schema.transactions(id);
 ALTER TABLE :schema.transactions ADD COLUMN IF NOT EXISTS refunded_by_id TEXT REFERENCES :schema.transactions(id);
+
+-- ─── Event linkage on transactions ──────────────────────────────────────
+ALTER TABLE :schema.transactions ADD COLUMN IF NOT EXISTS event_id TEXT
+  REFERENCES :schema.group_events(id) ON DELETE SET NULL;
+CREATE INDEX IF NOT EXISTS :schema_idx_transactions_event ON :schema.transactions (event_id);
 
 -- ─── Users → Members FK (doc 8.2) ──────────────────────────────────────
 -- Activate the member_id column as a proper FK to members table.
