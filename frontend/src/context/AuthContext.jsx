@@ -2,7 +2,7 @@
 // Provides authentication state and actions to the whole app.
 
 import { createContext, useContext, useState, useEffect, useRef, useCallback } from 'react';
-import { auth as authApi, setAuth, clearAuth, restoreSession } from '../lib/api.js';
+import { auth as authApi, settings as settingsApi, setAuth, clearAuth, restoreSession } from '../lib/api.js';
 import { getPreferences } from '../hooks/usePreferences.js';
 import { hasOptionalCookieConsent } from '../hooks/useCookieConsent.js';
 
@@ -21,6 +21,7 @@ export function AuthProvider({ children }) {
   const [privs,   setPrivs]   = useState([]);     // string[] of "resource:action"
   const [siteAdmin, setSiteAdmin] = useState(false); // true for site administrator
   const [mustChangePassword, setMustChangePassword] = useState(false);
+  const [featureConfig, setFeatureConfig] = useState({}); // feature toggles from tenant_settings
   const [loading, setLoading] = useState(false);
   const [error,   setError]   = useState(null);
   const [restoring, setRestoring] = useState(true); // true while checking refresh cookie
@@ -29,7 +30,7 @@ export function AuthProvider({ children }) {
   useEffect(() => {
     const slug = getLastU3aCookie();
     if (!slug) { setRestoring(false); return; }
-    restoreSession(slug).then((data) => {
+    restoreSession(slug).then(async (data) => {
       if (data) {
         const payload = parseJwt(data.accessToken);
         setUser(data.user);
@@ -37,6 +38,7 @@ export function AuthProvider({ children }) {
         setPrivs(payload.privileges ?? []);
         setSiteAdmin(payload.isSiteAdmin || false);
         setMustChangePassword(data.mustChangePassword || false);
+        try { setFeatureConfig(await settingsApi.getFeatureConfig()); } catch {}
       }
     }).finally(() => setRestoring(false));
   }, []);
@@ -76,6 +78,7 @@ export function AuthProvider({ children }) {
       setPrivs([]);
       setSiteAdmin(false);
       setMustChangePassword(false);
+      setFeatureConfig({});
     };
     window.addEventListener('auth:expired', handler);
     return () => window.removeEventListener('auth:expired', handler);
@@ -95,6 +98,7 @@ export function AuthProvider({ children }) {
       setPrivs(payload.privileges ?? []);
       setSiteAdmin(payload.isSiteAdmin || false);
       setMustChangePassword(data.mustChangePassword || false);
+      try { setFeatureConfig(await settingsApi.getFeatureConfig()); } catch {}
       return true;
     } catch (err) {
       setError(err.message);
@@ -112,6 +116,7 @@ export function AuthProvider({ children }) {
     setPrivs([]);
     setSiteAdmin(false);
     setMustChangePassword(false);
+    setFeatureConfig({});
   }, []);
 
   /**
@@ -124,6 +129,20 @@ export function AuthProvider({ children }) {
     return privs.includes(`${resource}:${action}`);
   }, [privs, siteAdmin]);
 
+  /**
+   * Check if a feature toggle is enabled for this tenant.
+   * Missing keys default to true (opt-out model).
+   * @param {string} key  e.g. 'finance', 'giftAid'
+   */
+  const hasFeature = useCallback((key) => {
+    return featureConfig[key] !== false;
+  }, [featureConfig]);
+
+  /** Re-fetch feature config from backend (call after updating toggles). */
+  const refreshFeatureConfig = useCallback(async () => {
+    try { setFeatureConfig(await settingsApi.getFeatureConfig()); } catch {}
+  }, []);
+
   const clearMustChangePassword = useCallback(() => {
     setMustChangePassword(false);
   }, []);
@@ -133,7 +152,7 @@ export function AuthProvider({ children }) {
   if (restoring) return null;
 
   return (
-    <AuthContext.Provider value={{ user, tenant, privs, loading, error, login, logout, can, isLoggedIn: !!user, isSiteAdmin: siteAdmin, mustChangePassword, clearMustChangePassword }}>
+    <AuthContext.Provider value={{ user, tenant, privs, loading, error, login, logout, can, hasFeature, featureConfig, refreshFeatureConfig, isLoggedIn: !!user, isSiteAdmin: siteAdmin, mustChangePassword, clearMustChangePassword }}>
       {children}
     </AuthContext.Provider>
   );

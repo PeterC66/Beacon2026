@@ -21,6 +21,7 @@ export const PRIVILEGE_RESOURCES = [
   r('email_addresses',           'E-mail addresses',                ['download']),
   r('email_delivery',            'E-mail delivery',                 ['view', 'all']),
   r('email_standard_messages',   'E-mail standard messages',        ['view', 'create', 'change', 'delete']),
+  r('feature_config',            'Feature configuration',           ['view', 'change']),
   r('finance_accounts',          'Finance: accounts',               ['view', 'create', 'change', 'delete']),
   r('finance_batches',           'Finance: batches',                ['view', 'create', 'delete']),
   r('finance_categories',        'Finance: categories',             ['view', 'create', 'change', 'delete']),

@@ -84,6 +84,7 @@ import PortalResetPassword  from './pages/public/PortalResetPassword.jsx';
 import ChangePassword       from './pages/ChangePassword.jsx';
 import CustomFields         from './pages/settings/CustomFields.jsx';
 import EventTypeList        from './pages/settings/EventTypeList.jsx';
+import FeatureConfig        from './pages/settings/FeatureConfig.jsx';
 
 function ProtectedRoute({ children }) {
   const { isLoggedIn, mustChangePassword } = useAuth();
@@ -95,6 +96,18 @@ function ProtectedRoute({ children }) {
 function AuthRequired({ children }) {
   const { isLoggedIn } = useAuth();
   return isLoggedIn ? children : <Navigate to="/login" replace />;
+}
+
+/** Redirects to Home if a feature toggle is disabled. */
+function FeatureRoute({ feature, children }) {
+  const { hasFeature } = useAuth();
+  if (!hasFeature(feature)) return <Navigate to="/" replace />;
+  return children;
+}
+
+/** Shorthand: ProtectedRoute + FeatureRoute */
+function PF({ feature, children }) {
+  return <ProtectedRoute><FeatureRoute feature={feature}>{children}</FeatureRoute></ProtectedRoute>;
 }
 
 function RootLayout() {
@@ -119,7 +132,7 @@ const router = createBrowserRouter([
       // Force-change-password (requires login but not subject to mustChangePassword redirect)
       { path: '/change-password', element: <AuthRequired><ChangePassword /></AuthRequired> },
 
-      // Protected tenant routes
+      // Protected tenant routes — always available
       { path: '/',           element: <ProtectedRoute><Home /></ProtectedRoute> },
       { path: '/roles',      element: <ProtectedRoute><RoleList /></ProtectedRoute> },
       { path: '/roles/new',  element: <ProtectedRoute><RoleEditor /></ProtectedRoute> },
@@ -127,64 +140,75 @@ const router = createBrowserRouter([
       { path: '/users',      element: <ProtectedRoute><UserList /></ProtectedRoute> },
       { path: '/users/new',  element: <ProtectedRoute><UserEditor /></ProtectedRoute> },
       { path: '/users/:id',  element: <ProtectedRoute><UserEditor /></ProtectedRoute> },
-      { path: '/membership/renewals',     element: <ProtectedRoute><MembershipRenewals /></ProtectedRoute> },
-      { path: '/membership/non-renewals', element: <ProtectedRoute><NonRenewals /></ProtectedRoute> },
+      { path: '/settings',            element: <ProtectedRoute><SystemSettings /></ProtectedRoute> },
+      { path: '/feature-config',      element: <ProtectedRoute><FeatureConfig /></ProtectedRoute> },
+      { path: '/utilities',           element: <ProtectedRoute><Utilities /></ProtectedRoute> },
+      { path: '/admin/validate-members', element: <ProtectedRoute><MemberValidator /></ProtectedRoute> },
+      { path: '/audit',               element: <ProtectedRoute><AuditLog /></ProtectedRoute> },
+      { path: '/audit/:id',           element: <ProtectedRoute><AuditRecord /></ProtectedRoute> },
+      { path: '/officers',            element: <ProtectedRoute><OfficerList /></ProtectedRoute> },
+      { path: '/backup',              element: <ProtectedRoute><DataBackup /></ProtectedRoute> },
+      { path: '/preferences',         element: <ProtectedRoute><PersonalPreferences /></ProtectedRoute> },
+      { path: '/public-links',        element: <ProtectedRoute><PublicLinks /></ProtectedRoute> },
+
+      // Membership — always available (core), sub-features gated
+      { path: '/members',             element: <ProtectedRoute><MemberList /></ProtectedRoute> },
+      { path: '/members/new',         element: <ProtectedRoute><MemberEditor /></ProtectedRoute> },
+      { path: '/members/:id',         element: <ProtectedRoute><MemberEditor /></ProtectedRoute> },
+      { path: '/members/:id/compact', element: <ProtectedRoute><MemberCompactView /></ProtectedRoute> },
+      { path: '/members/recent',      element: <ProtectedRoute><RecentMembers /></ProtectedRoute> },
       { path: '/membership/classes',      element: <ProtectedRoute><MemberClassList /></ProtectedRoute> },
       { path: '/membership/classes/new',  element: <ProtectedRoute><MemberClassEditor /></ProtectedRoute> },
       { path: '/membership/classes/:id',  element: <ProtectedRoute><MemberClassEditor /></ProtectedRoute> },
       { path: '/membership/statuses',     element: <ProtectedRoute><MemberStatusList /></ProtectedRoute> },
-      { path: '/membership/cards',       element: <ProtectedRoute><MembershipCards /></ProtectedRoute> },
-      { path: '/members',             element: <ProtectedRoute><MemberList /></ProtectedRoute> },
-      { path: '/members/new',         element: <ProtectedRoute><MemberEditor /></ProtectedRoute> },
-      { path: '/members/recent',       element: <ProtectedRoute><RecentMembers /></ProtectedRoute> },
-      { path: '/members/statistics',   element: <ProtectedRoute><MemberStatistics /></ProtectedRoute> },
-      { path: '/members/:id',         element: <ProtectedRoute><MemberEditor /></ProtectedRoute> },
-      { path: '/members/:id/compact', element: <ProtectedRoute><MemberCompactView /></ProtectedRoute> },
-      { path: '/addresses-export',    element: <ProtectedRoute><AddressesExport /></ProtectedRoute> },
-      { path: '/groups',       element: <ProtectedRoute><GroupList /></ProtectedRoute> },
-      { path: '/groups/new',   element: <ProtectedRoute><GroupRecord /></ProtectedRoute> },
-      { path: '/groups/:id',   element: <ProtectedRoute><GroupRecord /></ProtectedRoute> },
-      { path: '/teams',        element: <ProtectedRoute><TeamList /></ProtectedRoute> },
-      { path: '/teams/new',    element: <ProtectedRoute><TeamRecord /></ProtectedRoute> },
-      { path: '/teams/:id',    element: <ProtectedRoute><TeamRecord /></ProtectedRoute> },
-      { path: '/faculties',    element: <ProtectedRoute><FacultyList /></ProtectedRoute> },
-      { path: '/venues',       element: <ProtectedRoute><VenueList /></ProtectedRoute> },
-      { path: '/venues/new',   element: <ProtectedRoute><VenueEditor /></ProtectedRoute> },
-      { path: '/venues/:id',   element: <ProtectedRoute><VenueEditor /></ProtectedRoute> },
-      { path: '/settings',                        element: <ProtectedRoute><SystemSettings /></ProtectedRoute> },
-      { path: '/finance/accounts',                    element: <ProtectedRoute><FinanceAccounts /></ProtectedRoute> },
-      { path: '/finance/accounts/:id/configure',     element: <ProtectedRoute><ConfigureAccount /></ProtectedRoute> },
-      { path: '/finance/payment-method-defaults',    element: <ProtectedRoute><PaymentMethodDefaults /></ProtectedRoute> },
-      { path: '/finance/categories',                  element: <ProtectedRoute><FinanceCategories /></ProtectedRoute> },
-      { path: '/finance/ledger',                      element: <ProtectedRoute><FinanceLedger /></ProtectedRoute> },
-      { path: '/finance/transactions/new',            element: <ProtectedRoute><TransactionEditor /></ProtectedRoute> },
-      { path: '/finance/transactions/:id/refund',    element: <ProtectedRoute><TransactionRefund /></ProtectedRoute> },
-      { path: '/finance/transactions/:id',            element: <ProtectedRoute><TransactionEditor /></ProtectedRoute> },
-      { path: '/finance/transfers',                   element: <ProtectedRoute><TransferMoney /></ProtectedRoute> },
-      { path: '/finance/reconcile',                   element: <ProtectedRoute><ReconcileAccount /></ProtectedRoute> },
-      { path: '/finance/statement',                   element: <ProtectedRoute><FinancialStatement /></ProtectedRoute> },
-      { path: '/finance/groups-statement',            element: <ProtectedRoute><GroupsStatement /></ProtectedRoute> },
-      { path: '/finance/gift-aid',                      element: <ProtectedRoute><GiftAidDeclaration /></ProtectedRoute> },
-      { path: '/finance/batches',                       element: <ProtectedRoute><CreditBatches /></ProtectedRoute> },
-      { path: '/utilities',                            element: <ProtectedRoute><Utilities /></ProtectedRoute> },
-      { path: '/admin/validate-members',              element: <ProtectedRoute><MemberValidator /></ProtectedRoute> },
-      { path: '/polls',                               element: <ProtectedRoute><PollList /></ProtectedRoute> },
-      { path: '/custom-fields',                       element: <ProtectedRoute><CustomFields /></ProtectedRoute> },
-      { path: '/event-types',                        element: <ProtectedRoute><EventTypeList /></ProtectedRoute> },
-      { path: '/audit',                               element: <ProtectedRoute><AuditLog /></ProtectedRoute> },
-      { path: '/audit/:id',                            element: <ProtectedRoute><AuditRecord /></ProtectedRoute> },
-      { path: '/gift-aid-log',                         element: <ProtectedRoute><GiftAidLog /></ProtectedRoute> },
-      { path: '/officers',                            element: <ProtectedRoute><OfficerList /></ProtectedRoute> },
-      { path: '/backup',                              element: <ProtectedRoute><DataBackup /></ProtectedRoute> },
-      { path: '/preferences',                         element: <ProtectedRoute><PersonalPreferences /></ProtectedRoute> },
-      { path: '/email/compose',                       element: <ProtectedRoute><EmailCompose /></ProtectedRoute> },
-      { path: '/email/delivery',                      element: <ProtectedRoute><EmailDelivery /></ProtectedRoute> },
-      { path: '/email/delivery/:id',                  element: <ProtectedRoute><EmailDeliveryDetail /></ProtectedRoute> },
-      { path: '/email/unblocker',                     element: <ProtectedRoute><EmailUnblocker /></ProtectedRoute> },
-      { path: '/system-messages',                       element: <ProtectedRoute><SystemMessages /></ProtectedRoute> },
-      { path: '/public-links',                          element: <ProtectedRoute><PublicLinks /></ProtectedRoute> },
-      { path: '/calendar',                               element: <ProtectedRoute><Calendar /></ProtectedRoute> },
-      { path: '/letters/compose',                          element: <ProtectedRoute><LetterCompose /></ProtectedRoute> },
+      { path: '/membership/renewals',     element: <PF feature="membershipRenewals"><MembershipRenewals /></PF> },
+      { path: '/membership/non-renewals', element: <PF feature="membershipRenewals"><NonRenewals /></PF> },
+      { path: '/membership/cards',        element: <PF feature="membershipCards"><MembershipCards /></PF> },
+      { path: '/members/statistics',      element: <PF feature="statistics"><MemberStatistics /></PF> },
+      { path: '/addresses-export',        element: <PF feature="addressesExport"><AddressesExport /></PF> },
+      { path: '/polls',                   element: <PF feature="polls"><PollList /></PF> },
+      { path: '/custom-fields',           element: <PF feature="customFields"><CustomFields /></PF> },
+      { path: '/gift-aid-log',            element: <PF feature="giftAid"><GiftAidLog /></PF> },
+
+      // Groups — gated by 'groups' master toggle
+      { path: '/groups',       element: <PF feature="groups"><GroupList /></PF> },
+      { path: '/groups/new',   element: <PF feature="groups"><GroupRecord /></PF> },
+      { path: '/groups/:id',   element: <PF feature="groups"><GroupRecord /></PF> },
+      { path: '/teams',        element: <PF feature="teams"><TeamList /></PF> },
+      { path: '/teams/new',    element: <PF feature="teams"><TeamRecord /></PF> },
+      { path: '/teams/:id',    element: <PF feature="teams"><TeamRecord /></PF> },
+      { path: '/faculties',    element: <PF feature="faculties"><FacultyList /></PF> },
+      { path: '/venues',       element: <PF feature="venues"><VenueList /></PF> },
+      { path: '/venues/new',   element: <PF feature="venues"><VenueEditor /></PF> },
+      { path: '/venues/:id',   element: <PF feature="venues"><VenueEditor /></PF> },
+
+      // Events & Calendar — gated by 'events' / sub-toggles
+      { path: '/calendar',     element: <PF feature="calendar"><Calendar /></PF> },
+      { path: '/event-types',  element: <PF feature="eventTypes"><EventTypeList /></PF> },
+
+      // Finance — gated by 'finance' master toggle + sub-toggles
+      { path: '/finance/accounts',                   element: <PF feature="finance"><FinanceAccounts /></PF> },
+      { path: '/finance/accounts/:id/configure',     element: <PF feature="finance"><ConfigureAccount /></PF> },
+      { path: '/finance/payment-method-defaults',    element: <PF feature="finance"><PaymentMethodDefaults /></PF> },
+      { path: '/finance/categories',                 element: <PF feature="finance"><FinanceCategories /></PF> },
+      { path: '/finance/ledger',                     element: <PF feature="finance"><FinanceLedger /></PF> },
+      { path: '/finance/transactions/new',           element: <PF feature="finance"><TransactionEditor /></PF> },
+      { path: '/finance/transactions/:id/refund',    element: <PF feature="finance"><TransactionRefund /></PF> },
+      { path: '/finance/transactions/:id',           element: <PF feature="finance"><TransactionEditor /></PF> },
+      { path: '/finance/transfers',                  element: <PF feature="transferMoney"><TransferMoney /></PF> },
+      { path: '/finance/reconcile',                  element: <PF feature="reconciliation"><ReconcileAccount /></PF> },
+      { path: '/finance/statement',                  element: <PF feature="financialStatement"><FinancialStatement /></PF> },
+      { path: '/finance/groups-statement',           element: <PF feature="groupsStatement"><GroupsStatement /></PF> },
+      { path: '/finance/gift-aid',                   element: <PF feature="giftAid"><GiftAidDeclaration /></PF> },
+      { path: '/finance/batches',                    element: <PF feature="creditBatches"><CreditBatches /></PF> },
+
+      // Email & Letters — gated by 'email' master toggle
+      { path: '/email/compose',        element: <PF feature="email"><EmailCompose /></PF> },
+      { path: '/email/delivery',       element: <PF feature="email"><EmailDelivery /></PF> },
+      { path: '/email/delivery/:id',   element: <PF feature="email"><EmailDeliveryDetail /></PF> },
+      { path: '/email/unblocker',      element: <PF feature="email"><EmailUnblocker /></PF> },
+      { path: '/system-messages',      element: <PF feature="email"><SystemMessages /></PF> },
+      { path: '/letters/compose',      element: <PF feature="email"><LetterCompose /></PF> },
 
       // Public pages (no auth required)
       { path: '/public/:slug/join',                     element: <JoinForm /> },

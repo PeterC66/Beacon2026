@@ -8,7 +8,7 @@ import { settings as settingsApi } from '../lib/api.js';
 import PageHeader from '../components/PageHeader.jsx';
 
 export default function Home() {
-  const { user, tenant, logout, can } = useAuth();
+  const { user, tenant, logout, can, hasFeature } = useAuth();
   const navigate = useNavigate();
 
   const [homeInfo, setHomeInfo] = useState(null);
@@ -22,86 +22,102 @@ export default function Home() {
     navigate('/login');
   };
 
+  // f = feature key (item hidden when that feature is off)
   const sections = [
     {
       title: 'Membership',
+      feature: null, // always shown
       items: [
         { label: 'Members',             tip: 'Search, view and edit member records', to: can('members_list', 'view')   ? '/members'     : null },
         { label: 'Add new member',      tip: 'Create a new member record',          to: can('member_record', 'create') ? '/members/new' : null },
-        { label: 'Membership renewals', tip: 'Process annual membership renewals',  to: can('membership_renewals', 'view') ? '/membership/renewals' : null },
+        { label: 'Membership renewals', tip: 'Process annual membership renewals',  to: can('membership_renewals', 'view') ? '/membership/renewals' : null, f: 'membershipRenewals' },
         { label: 'Recent members',      tip: 'View recently added or changed members', to: can('members_recent', 'view') ? '/members/recent' : null },
-        { label: 'Non-renewals',        tip: 'View and lapse members who have not renewed', to: can('members_non_renewals', 'view') ? '/membership/non-renewals' : null },
-        { label: 'Membership cards',    tip: 'Generate and download membership cards', to: can('membership_cards', 'view') ? '/membership/cards' : null },
-        { label: 'Addresses export',    tip: 'Export member addresses for labels or mail merge', to: can('addresses_export', 'view') ? '/addresses-export' : null },
-        { label: 'Statistics',          tip: 'Membership counts and trends',        to: can('membership_statistics', 'view') ? '/members/statistics' : null },
+        { label: 'Non-renewals',        tip: 'View and lapse members who have not renewed', to: can('members_non_renewals', 'view') ? '/membership/non-renewals' : null, f: 'membershipRenewals' },
+        { label: 'Membership cards',    tip: 'Generate and download membership cards', to: can('membership_cards', 'view') ? '/membership/cards' : null, f: 'membershipCards' },
+        { label: 'Addresses export',    tip: 'Export member addresses for labels or mail merge', to: can('addresses_export', 'view') ? '/addresses-export' : null, f: 'addressesExport' },
+        { label: 'Statistics',          tip: 'Membership counts and trends',        to: can('membership_statistics', 'view') ? '/members/statistics' : null, f: 'statistics' },
       ],
     },
     {
       title: 'Groups',
+      feature: 'groups',
       items: [
         { label: 'Groups',    tip: 'View and manage interest groups',              to: can('groups_list',    'view') ? '/groups'    : null },
-        { label: 'Venues',    tip: 'Manage venues where groups meet',              to: can('group_venues',   'view') ? '/venues'    : null },
-        { label: 'Faculties', tip: 'Organise groups into subject categories',      to: can('group_faculties','view') ? '/faculties' : null },
-        { label: 'Calendar',  tip: 'View group meetings in a calendar format',     to: can('calendar', 'view') ? '/calendar' : null },
-        { label: 'Teams',     tip: 'View and manage teams',                        to: can('groups_list',    'view') ? '/teams'     : null },
+        { label: 'Venues',    tip: 'Manage venues where groups meet',              to: can('group_venues',   'view') ? '/venues'    : null, f: 'venues' },
+        { label: 'Faculties', tip: 'Organise groups into subject categories',      to: can('group_faculties','view') ? '/faculties' : null, f: 'faculties' },
+        { label: 'Calendar',  tip: 'View group meetings in a calendar format',     to: can('calendar', 'view') ? '/calendar' : null, f: 'calendar' },
+        { label: 'Teams',     tip: 'View and manage teams',                        to: can('groups_list',    'view') ? '/teams'     : null, f: 'teams' },
       ],
     },
     {
       title: 'Finance',
+      feature: 'finance',
       items: [
         { label: 'Ledger (by account)',  tip: 'View transactions listed by bank account',    to: can('finance_ledger', 'view') ? '/finance/ledger?view=account'  : null },
         { label: 'Ledger (by category)', tip: 'View transactions listed by income/expense category', to: can('finance_ledger', 'view') ? '/finance/ledger?view=category' : null },
         { label: 'Ledger (by group)',    tip: 'View transactions listed by interest group',  to: can('finance_ledger', 'view') ? '/finance/ledger?view=group'    : null },
         { label: 'Add transaction',      tip: 'Record a new payment or receipt',             to: can('finance_transactions', 'create') ? '/finance/transactions/new' : null },
-        { label: 'Transfer money',       tip: 'Transfer funds between accounts',             to: can('finance_transfer_money', 'view') ? '/finance/transfers' : null },
-        { label: 'Credit batches',       tip: 'Process batches of member credits',           to: can('finance_batches', 'view') ? '/finance/batches' : null },
-        { label: 'Reconcile account',    tip: 'Match transactions against bank statements',  to: can('finance_reconcile', 'view') ? '/finance/reconcile' : null },
-        { label: 'Financial statement',  tip: 'Summary of income and expenditure by period', to: can('finance_statement', 'view') ? '/finance/statement' : null },
-        { label: 'Groups statement',     tip: 'Financial summary broken down by group',      to: can('group_statement', 'view') ? '/finance/groups-statement' : null },
-        { label: 'Gift Aid declaration', tip: 'Generate Gift Aid declarations for HMRC',     to: can('gift_aid_declaration', 'view') ? '/finance/gift-aid' : null },
+        { label: 'Transfer money',       tip: 'Transfer funds between accounts',             to: can('finance_transfer_money', 'view') ? '/finance/transfers' : null, f: 'transferMoney' },
+        { label: 'Credit batches',       tip: 'Process batches of member credits',           to: can('finance_batches', 'view') ? '/finance/batches' : null, f: 'creditBatches' },
+        { label: 'Reconcile account',    tip: 'Match transactions against bank statements',  to: can('finance_reconcile', 'view') ? '/finance/reconcile' : null, f: 'reconciliation' },
+        { label: 'Financial statement',  tip: 'Summary of income and expenditure by period', to: can('finance_statement', 'view') ? '/finance/statement' : null, f: 'financialStatement' },
+        { label: 'Groups statement',     tip: 'Financial summary broken down by group',      to: can('group_statement', 'view') ? '/finance/groups-statement' : null, f: 'groupsStatement' },
+        { label: 'Gift Aid declaration', tip: 'Generate Gift Aid declarations for HMRC',     to: can('gift_aid_declaration', 'view') ? '/finance/gift-aid' : null, f: 'giftAid' },
       ],
     },
     {
       title: 'Misc',
+      feature: null,
       items: [
         { label: 'Audit log',             tip: 'Review a log of changes made by users',       to: can('audit_trail', 'view') ? '/audit' : null },
-        { label: 'Gift aid log',          tip: 'View history of Gift Aid declarations sent',   to: can('gift_aid_declaration', 'view') ? '/gift-aid-log' : null },
+        { label: 'Gift aid log',          tip: 'View history of Gift Aid declarations sent',   to: can('gift_aid_declaration', 'view') ? '/gift-aid-log' : null, f: 'giftAid' },
         { label: 'u3a Officers',          tip: 'Manage committee and officer appointments',    to: can('offices', 'view') ? '/officers' : null },
         { label: 'Public links',          tip: 'Configure online joining and members portal',  to: can('public_links', 'view') ? '/public-links' : null },
         { label: 'Data export & backup',  tip: 'Export data or back up the database',          to: can('data_export_backup', 'view') ? '/backup' : null },
-        { label: 'E-mail delivery',       tip: 'Track the status of sent emails',              to: can('email_delivery', 'view') ? '/email/delivery' : null },
-        { label: 'E-mail unblocker',      tip: 'Remove members from the email block list',     to: can('email_delivery', 'all')  ? '/email/unblocker' : null },
+        { label: 'E-mail delivery',       tip: 'Track the status of sent emails',              to: can('email_delivery', 'view') ? '/email/delivery' : null, f: 'email' },
+        { label: 'E-mail unblocker',      tip: 'Remove members from the email block list',     to: can('email_delivery', 'all')  ? '/email/unblocker' : null, f: 'email' },
         { label: 'Personal preferences',  tip: 'Change your password, name display and timeout settings', to: '/preferences' },
         { label: 'Utilities',              tip: 'Administrative utilities',                                to: can('utilities', 'view') ? '/utilities' : null },
       ],
     },
     {
       title: 'Set up',
+      feature: null,
       items: [
+        { label: 'Feature configuration', tip: 'Choose which modules are available for your u3a', to: can('feature_config', 'view') ? '/feature-config' : null },
         { label: 'System users',        tip: 'Manage who can log in and their access',       to: can('users_list', 'view') ? '/users' : null },
         { label: 'Roles and privileges', tip: 'Define roles and what each role can do',       to: can('role_record', 'view') ? '/roles' : null },
         { label: 'System settings',     tip: 'Configure u3a name, financial year and other settings', to: can('settings', 'view') ? '/settings' : null },
-        { label: 'System messages',     tip: 'Edit standard email and letter templates',      to: can('system_messages', 'view') ? '/system-messages' : null },
-        { label: 'Finance accounts',    tip: 'Set up bank accounts and payment methods',     to: can('finance_accounts', 'view') ? '/finance/accounts' : null },
-        { label: 'Finance categories',  tip: 'Set up income and expenditure categories',     to: can('finance_categories', 'view') ? '/finance/categories' : null },
+        { label: 'System messages',     tip: 'Edit standard email and letter templates',      to: can('system_messages', 'view') ? '/system-messages' : null, f: 'email' },
+        { label: 'Finance accounts',    tip: 'Set up bank accounts and payment methods',     to: can('finance_accounts', 'view') ? '/finance/accounts' : null, f: 'finance' },
+        { label: 'Finance categories',  tip: 'Set up income and expenditure categories',     to: can('finance_categories', 'view') ? '/finance/categories' : null, f: 'finance' },
         { label: 'Membership classes',  tip: 'Define membership types and their fees',       to: can('member_classes',  'view') ? '/membership/classes'  : null },
         { label: 'Member statuses',     tip: 'View the lifecycle statuses for members',      to: can('member_statuses', 'view') ? '/membership/statuses' : null },
-        { label: 'Poll',                tip: 'Set up and manage membership polls',            to: can('poll_set_up', 'view') ? '/polls' : null },
-        { label: 'Custom fields',      tip: 'Define up to 4 free-form fields on member records', to: can('custom_fields', 'view') ? '/custom-fields' : null },
-        { label: 'Event types',       tip: 'Define event types for non-group events',          to: can('event_types', 'view') ? '/event-types' : null },
+        { label: 'Poll',                tip: 'Set up and manage membership polls',            to: can('poll_set_up', 'view') ? '/polls' : null, f: 'polls' },
+        { label: 'Custom fields',      tip: 'Define up to 4 free-form fields on member records', to: can('custom_fields', 'view') ? '/custom-fields' : null, f: 'customFields' },
+        { label: 'Event types',       tip: 'Define event types for non-group events',          to: can('event_types', 'view') ? '/event-types' : null, f: 'eventTypes' },
       ],
     },
   ];
 
+  // Filter items by feature toggles, then filter out empty sections
+  const visibleSections = sections
+    .filter((s) => !s.feature || hasFeature(s.feature))
+    .map((s) => ({
+      ...s,
+      items: s.items.filter((item) => !item.f || hasFeature(item.f)),
+    }))
+    .filter((s) => s.items.length > 0);
+
   const tenantName = homeInfo?.tenantName ?? '';
 
-  // Public website links use the tenant slug
+  // Public website links use the tenant slug — filtered by feature toggles
   const publicLinks = [
-    { label: `Join ${tenantName || 'us'} now!`, to: `/public/${tenant}/join` },
-    { label: 'Members Portal', to: `/public/${tenant}/portal` },
-    { label: 'Public groups list', to: `/public/${tenant}/groups` },
-    { label: 'Public calendar', to: `/public/${tenant}/calendar` },
-  ];
+    hasFeature('onlineJoining') && { label: `Join ${tenantName || 'us'} now!`, to: `/public/${tenant}/join` },
+    hasFeature('portal')        && { label: 'Members Portal', to: `/public/${tenant}/portal` },
+    hasFeature('groups')        && { label: 'Public groups list', to: `/public/${tenant}/groups` },
+    hasFeature('calendar')      && { label: 'Public calendar', to: `/public/${tenant}/calendar` },
+  ].filter(Boolean);
 
   return (
     <div className="min-h-screen pb-10">
@@ -126,7 +142,7 @@ export default function Home() {
 
         {/* Mobile: stacked sections (single column) */}
         <div className="md:hidden space-y-3">
-          {sections.map((section) => (
+          {visibleSections.map((section) => (
             <div key={section.title} className="bg-white/85 rounded-lg shadow-sm overflow-hidden">
               <div className="bg-gradient-to-r from-amber-100 to-amber-200 px-4 py-2 font-bold text-sm border-b border-amber-200">
                 {section.title}
@@ -144,10 +160,12 @@ export default function Home() {
           ))}
         </div>
 
-        {/* Desktop: 5-column grid */}
-        <div className="hidden md:grid grid-cols-5 bg-gradient-to-br from-yellow-50 to-amber-100 border border-slate-300 rounded-lg overflow-hidden shadow-sm">
-          {sections.map((section, si) => (
-            <div key={section.title} className={`${si < sections.length - 1 ? 'border-r border-slate-300' : ''}`}>
+        {/* Desktop: dynamic column grid based on visible sections */}
+        <div className={`hidden md:grid bg-gradient-to-br from-yellow-50 to-amber-100 border border-slate-300 rounded-lg overflow-hidden shadow-sm ${
+          visibleSections.length <= 3 ? 'grid-cols-3' : visibleSections.length === 4 ? 'grid-cols-4' : 'grid-cols-5'
+        }`}>
+          {visibleSections.map((section, si) => (
+            <div key={section.title} className={`${si < visibleSections.length - 1 ? 'border-r border-slate-300' : ''}`}>
               <div className="font-bold text-sm px-4 py-2 border-b border-slate-300 bg-gradient-to-r from-amber-100 to-amber-200 whitespace-nowrap">
                 {section.title}
               </div>
