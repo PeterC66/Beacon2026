@@ -4,37 +4,19 @@ Items noted during development that need addressing in future sessions.
 
 ---
 
----
+## Online Joining / Members Portal
 
-## Online Joining / Members Portal (deferred from initial implementation)
-
-1. ~~**Joint membership online joining**~~ — **Done.** When a joint membership class is
-   selected, the form shows second-person fields and creates both members linked at the
-   same address with bidirectional partner_id.
-
-2. **Duplicate application detection limited by shared emails** — Some members
+1. **Duplicate application detection limited by shared emails** — Some members
    genuinely share the same email address (e.g. couples). Any future duplicate
    detection logic for online applications must account for this — checking by
    email alone would produce false positives. Consider using email + surname
    combination, and warn rather than block.
 
-3. ~~**Members Portal — online renewals**~~ — **Done.** Portal members can renew online
-   when `portal_config.renewals` is enabled. Supports joint renewal and Gift Aid.
-
-4. ~~**Members Portal — photo upload**~~ — **Done.** Photo upload implemented in
-   PortalPersonalDetails.jsx (base64 storage, JPEG/PNG/GIF, max 2 MB). Photos appear
-   on membership cards and group members PDF.
-
-5. ~~**Public groups list and calendar public pages**~~ — **Done.** Both pages built in
-   v0.8.2: `/public/{slug}/groups` and `/public/{slug}/calendar`. Field visibility
-   controlled by `group_info_config` and `calendar_config` public flags. Supports
-   `?hdr=0` for iframe embedding.
-
-6. **Real PayPal API integration** — The initial implementation uses stub functions
+2. **Real PayPal API integration** — The initial implementation uses stub functions
    with clear interfaces. Actual PayPal REST API / IPN integration needs to be
    built. Ref: docs 7.9, 7.9.1, 9.8.
 
-7. **Shared email address handling** — When two members share an email address,
+3. **Shared email address handling** — When two members share an email address,
    the portal registration and login flow needs special handling (doc 10.2
    section c). The backend login route has minimal handling (tries each member
    with that email sequentially), but there is no UI disambiguation — if two
@@ -42,18 +24,6 @@ Items noted during development that need addressing in future sessions.
    member they are. Deferred to a later phase.
 
 ---
-
-## Membership Cards (doc 4.7)
-
-1. ~~**Auto-attach cards to confirmation emails**~~ — **Done.** When `email_cards`
-   is enabled in tenant_settings, the online joining and online renewal confirmation
-   email stubs now generate and attach a membership card PDF via
-   `generateSingleCardPdf()`. Joint renewal emails attach each partner's own card.
-   Will be live when SendGrid integration is completed. Ref: doc 4.7.
-
-2. ~~**Members Portal: Replacement card PDF attachment**~~ — **Done.** The portal
-   card replacement email stub now generates and attaches the membership card PDF
-   via `generateSingleCardPdf()`. Will be live when SendGrid is wired up.
 
 ## Documentation Typos
 
@@ -70,47 +40,11 @@ Items noted during development that need addressing in future sessions.
    on the System Settings page, but not yet displayed anywhere to members (e.g. portal
    login page, online joining form, confirmation emails). Ref: doc 8.3.
 
-2. ~~**email_cards**~~ — **Done.** The auto-attach logic is now implemented in the
-   online joining, online renewal, and portal card replacement email stubs.
-   Ref: doc 8.3, doc 4.7.
-
-3. ~~**gift_aid_online_renewals**~~ — **Done.** Controls Gift Aid checkboxes on
-   the portal renewal page.
-
-4. ~~**online_renew_email**~~ — **Done.** Displayed on the portal renewal page as
-   contact email for renewal enquiries.
-
----
-
-## Migration DDL warnings
-
-1. ~~**`users_member_id_fkey` constraint already exists**~~ — **Fixed.** Resolved by
-   wrapping the `ALTER TABLE ADD CONSTRAINT` in a `DO $$ ... EXCEPTION WHEN
-   duplicate_object THEN NULL; END $$` block in `tenant_schema.sql` (line ~701).
-   No more cosmetic error on re-runs.
-
----
-
-## Cookie Consent — Deferred Optional Cookie Items
-
-The cookie consent dialog lists eight optional items. The following are fully
-implemented and persist via localStorage gated by cookie consent:
-
-- Last u3a site, inactivity timeout, name sort/display, text size/theme (original four)
-- Last membership class for exporting addresses and labels (`beacon2_last_export_class`)
-- Label printing settings (`beacon2_label_settings`) — now consent-gated
-- Email compose 'From' address and copy selection (`beacon2_email_compose_prefs`)
-
-All eight optional cookie items are now fully implemented.
-
 ---
 
 ## Member Record (doc 4.2 / 4.3)
 
-1. ~~**Photo upload**~~ — **Done.** Photo upload/view/remove implemented on member record
-   and Members Portal; photos appear on membership cards and group members PDF.
-
-2. **Member-to-member navigation in compact view** — The original Beacon member record
+1. **Member-to-member navigation in compact view** — The original Beacon member record
    has a dropdown with < > arrows to navigate directly between members without returning
    to the Members List. This should be added to the compact member view
    (`MemberCompactView.jsx`) as a future enhancement. Ref: Beacon member record screenshot.
@@ -147,10 +81,6 @@ All eight optional cookie items are now fully implemented.
 
 ## E2E Test Coverage — Deferred Items
 
-The following areas have E2E spec files (01–18) covering page-load, structure
-verification, and CRUD workflows. Deeper interaction tests for some areas are
-deferred:
-
 1. **Email send action** — Email compose UI is tested but the Send button is NOT
    clicked in tests because SendGrid integration is not live in the test environment.
    When SendGrid is enabled, add a test that sends to a test address and verifies
@@ -162,44 +92,26 @@ deferred:
 
 3. **Membership renewals bulk action** — The renewals page structure is tested but
    the "Renew selected" bulk action (which creates finance transactions and changes
-   statuses) is not exercised. Add a full-cycle test: seed member → renew → verify
+   statuses) is not exercised. Add a full-cycle test: seed member -> renew -> verify
    status change + transaction.
 
-4. ~~**Credit batch full workflow**~~ — **Done.** Spec 13 now tests the full
-   create-batch → select-transactions → create → verify-in-list → delete-batch flow.
-   Falls back gracefully when no unbatched transactions are available.
-
-5. **Portal registration and login flow** — The Members Portal has a separate auth
+4. **Portal registration and login flow** — The Members Portal has a separate auth
    system (identity verification, email verification, password). E2E tests for the
-   full portal flow (register → verify email → login → view groups → edit details →
+   full portal flow (register -> verify email -> login -> view groups -> edit details ->
    request card) are deferred due to complexity (separate browser context, email
    verification step). Ref: docs 10.1, 10.2.
 
-6. **Online joining flow** — The public joining form → PayPal stub → payment
+5. **Online joining flow** — The public joining form -> PayPal stub -> payment
    confirmation flow is not tested end-to-end. Deferred until PayPal integration
    is real or a dedicated test mode is added.
 
-7. **Password recovery and force-change-password** — Multi-step auth flows
-   (identify user → security Q&A → temp password → force change) are not tested.
+6. **Password recovery and force-change-password** — Multi-step auth flows
+   (identify user -> security Q&A -> temp password -> force change) are not tested.
    These require careful state management (user with `must_change_password` flag).
 
-8. **Data restore** — Only data export is tested (spec 11). The restore flow
-   (upload .xlsx → auto-detect format → import) is not tested because it would
+7. **Data restore** — Only data export is tested (spec 11). The restore flow
+   (upload .xlsx -> auto-detect format -> import) is not tested because it would
    destructively overwrite the test tenant's data mid-run.
-
-### Previously uncovered routes — now tested (April 2026)
-
-The following routes had no E2E coverage and have now been added:
-
-- **Configure Account** (`/finance/accounts/:id/configure`) — page-load test via
-  accounts list → "configure" link. Verifies pending-transactions and refunds
-  controls are visible. (spec 13)
-- **Payment Method Defaults** (`/finance/payment-method-defaults`) — page-load test
-  via accounts list link. (spec 13)
-- **Audit Record detail** (`/audit/:id`) — click-through from the audit log's "When"
-  column, verifies detail page loads. (spec 10)
-- **Member Compact View** (`/members/:id/compact`) — navigates from member editor
-  to compact view, verifies heading and action buttons. (spec 14)
 
 ### Remaining uncovered routes
 
@@ -214,7 +126,7 @@ The following routes had no E2E coverage and have now been added:
 
 ---
 
-## Data Export / Restore — deferred items
+## Data Export / Restore — Deferred Items
 
 1. **Member photos not exported** — `photo_data` (base64, up to 2.7 MB per member)
    and `photo_mime_type` are excluded from the Members export because large base64
