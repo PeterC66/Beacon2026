@@ -8,6 +8,12 @@ Format: `## [version] — YYYY-MM-DD` with bullet points per change.
 ## [0.8.7] — 2026-04-14
 
 ### Changed
+- **Public Links page** — sections are now greyed out with an explanatory banner
+  when their corresponding feature (Members Portal or Online Joining) is disabled
+  in Feature Configuration. Controls remain visible but disabled so admins can see
+  what options are available.
+- **Groups/Teams navigation** — replaced "Switch to Teams/Groups" links below the
+  page heading with NavBar links for consistency (Home -- Add New Group -- Teams).
 - **KNOWN-ISSUES.md** — removed 14 resolved items; only current open issues remain
 - **E2E tests** — added coverage for recent features:
   - Feature Configuration page (sections, toggles, Update button)

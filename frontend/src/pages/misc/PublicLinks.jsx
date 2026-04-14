@@ -29,15 +29,24 @@ function renderCopyableUrl(label, value, name) {
   );
 }
 
-function renderToggleGrid(title, rows, config, audience1, audience2, onChange, disabled) {
+function renderFeatureOffBanner(featureName) {
+  return (
+    <p className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded px-3 py-2 mb-3">
+      {featureName} is disabled in Feature Configuration. Enable it there to use these settings.
+    </p>
+  );
+}
+
+function renderToggleGrid(title, rows, config, audience1, audience2, onChange, disabled, audience1Disabled) {
   return (
     <div className="bg-white/90 rounded-lg shadow-sm p-4 sm:p-6 mb-4">
       <h2 className="font-bold text-sm mb-3">{title}</h2>
+      {audience1Disabled && renderFeatureOffBanner('Members Portal')}
       <table className="w-full text-sm">
         <thead>
           <tr className="border-b border-slate-200">
             <th className="text-left py-2 pr-4 font-medium text-slate-700">Show:</th>
-            <th className="text-center py-2 px-4 font-medium text-slate-700">{audience1}</th>
+            <th className={`text-center py-2 px-4 font-medium ${audience1Disabled ? 'text-slate-400' : 'text-slate-700'}`}>{audience1}</th>
             <th className="text-center py-2 px-4 font-medium text-slate-700">{audience2}</th>
           </tr>
         </thead>
@@ -53,7 +62,7 @@ function renderToggleGrid(title, rows, config, audience1, audience2, onChange, d
                   type="checkbox"
                   checked={config[key]?.members ?? false}
                   onChange={(e) => onChange(key, 'members', e.target.checked)}
-                  disabled={disabled}
+                  disabled={disabled || audience1Disabled}
                   className="rounded"
                 />
               </td>
@@ -77,7 +86,7 @@ function renderToggleGrid(title, rows, config, audience1, audience2, onChange, d
 // ── Component ────────────────────────────────────────────────────────────
 
 export default function PublicLinks() {
-  const { tenant, can } = useAuth();
+  const { tenant, can, hasFeature } = useAuth();
   const [data, setData] = useState(null);
   const [form, setForm] = useState({
     privacyPolicyUrl: '',
@@ -142,6 +151,8 @@ export default function PublicLinks() {
   }
 
   const canChange = can('public_links', 'change');
+  const portalOn = hasFeature('portal');
+  const joiningOn = hasFeature('onlineJoining');
   const frontendBase = window.location.origin;
   const slug = data?.tenantSlug || '';
 
@@ -198,8 +209,14 @@ export default function PublicLinks() {
             and the Members Portal. When copying a URL, make sure the entire link is included.
           </p>
           <div className="space-y-3">
-            {renderCopyableUrl('New membership application', slug ? `${frontendBase}/public/${slug}/join` : '', 'joinUrl')}
-            {renderCopyableUrl('Members Portal', slug ? `${frontendBase}/public/${slug}/portal` : '', 'portalUrl')}
+            <div className={!joiningOn ? 'opacity-50' : ''}>
+              {!joiningOn && renderFeatureOffBanner('Online Joining')}
+              {renderCopyableUrl('New membership application', slug ? `${frontendBase}/public/${slug}/join` : '', 'joinUrl')}
+            </div>
+            <div className={!portalOn ? 'opacity-50' : ''}>
+              {!portalOn && renderFeatureOffBanner('Members Portal')}
+              {renderCopyableUrl('Members Portal', slug ? `${frontendBase}/public/${slug}/portal` : '', 'portalUrl')}
+            </div>
           </div>
         </div>
 
@@ -217,8 +234,9 @@ export default function PublicLinks() {
         </div>
 
         {/* Online Joining Configuration */}
-        <div className="bg-white/90 rounded-lg shadow-sm p-4 sm:p-6 mb-4">
+        <div className={`bg-white/90 rounded-lg shadow-sm p-4 sm:p-6 mb-4${!joiningOn ? ' opacity-50' : ''}`}>
           <h2 className="font-bold text-sm mb-3">Online Joining</h2>
+          {!joiningOn && renderFeatureOffBanner('Online Joining')}
 
           <div className="space-y-4">
             <div>
@@ -230,7 +248,7 @@ export default function PublicLinks() {
                 name="privacyPolicyUrl"
                 value={form.privacyPolicyUrl}
                 onChange={(e) => handleChange('privacyPolicyUrl', e.target.value)}
-                disabled={!canChange}
+                disabled={!canChange || !joiningOn}
                 placeholder="https://your-u3a.org.uk/privacy"
                 className="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
@@ -252,8 +270,9 @@ export default function PublicLinks() {
         </div>
 
         {/* (c) Configure Members Portal */}
-        <div className="bg-white/90 rounded-lg shadow-sm p-4 sm:p-6 mb-4">
+        <div className={`bg-white/90 rounded-lg shadow-sm p-4 sm:p-6 mb-4${!portalOn ? ' opacity-50' : ''}`}>
           <h2 className="font-bold text-sm mb-3">Configure Members Portal</h2>
+          {!portalOn && renderFeatureOffBanner('Members Portal')}
           <p className="text-sm text-slate-600 mb-3">
             Tick boxes control the options available to members when they log in to the Members Portal.
           </p>
@@ -270,7 +289,7 @@ export default function PublicLinks() {
                   type="checkbox"
                   checked={form.portalConfig[key] ?? false}
                   onChange={(e) => handlePortalToggle(key, e.target.checked)}
-                  disabled={!canChange}
+                  disabled={!canChange || !portalOn}
                   className="rounded"
                 />
                 {label}
@@ -287,6 +306,7 @@ export default function PublicLinks() {
           'to members', 'to public',
           (rowKey, audience, checked) => handleGridToggle('groupInfoConfig', rowKey, audience, checked),
           !canChange,
+          !portalOn,
         )}
 
         {/* (e) Configure Calendar */}
@@ -297,6 +317,7 @@ export default function PublicLinks() {
           'to members', 'to public',
           (rowKey, audience, checked) => handleGridToggle('calendarConfig', rowKey, audience, checked),
           !canChange,
+          !portalOn,
         )}
 
         {canChange && (
