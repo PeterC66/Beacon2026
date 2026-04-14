@@ -14,6 +14,12 @@ Format: `## [version] — YYYY-MM-DD` with bullet points per change.
   `hasFeature()` didn't check the parent dependency chain.
 - **Group Ledger tab** — the Ledger tab on group and team records now respects the
   `groupLedger` feature toggle and is hidden when the feature is configured off.
+- **Default-off features** — features that default to off (Gift Aid, Group Ledger,
+  SiteWorks) were treated as on when never explicitly toggled, because missing keys
+  in `feature_config` defaulted to true. Now `hasFeature()` and `requireFeature()`
+  consult a defaults list so these features are correctly off until enabled.
+- **Schedule tab** — the Schedule tab on group and team records is now hidden when
+  the Events & Calendar module is turned off.
 
 ### Added
 - **Feature configuration** — new per-u3a feature toggles system. Each u3a can
