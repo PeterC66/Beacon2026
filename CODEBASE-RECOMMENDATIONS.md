@@ -1,6 +1,6 @@
 # Codebase Rationalisation — Remaining Recommendations
 
-Produced 2026-04-14. Priority 1 items (R1–R3) were implemented; the rest are
+Produced 2026-04-14. Priority 1 items (R1–R3) and R4 were implemented; the rest are
 documented below with enough detail to implement in standalone sessions.
 
 ---
@@ -12,114 +12,22 @@ documented below with enough detail to implement in standalone sessions.
 | R1 | Shared constants | `shared/constants.js` at repo root; `frontend/src/lib/constants.js` barrel |
 | R2 | Shared validation | `frontend/src/lib/validation.js` (`isValidUKPostcode`, `validatePhone`) |
 | R3 | Split api.js | `api/core.js`, `api/system.js`, `api/public.js`, `api/portal.js`; `api.js` now 626 lines |
+| R5 | Split finance.js | 7 sub-route files under `backend/src/routes/finance/` with shared `helpers.js` |
+| R4 | Extract EntityMembers | `components/EntityMembers.jsx` shared by GroupRecord and TeamRecord; net −936 lines |
 
 ---
 
 ## Priority 2 — High Impact, Medium Effort
 
-### R4. Extract shared EntityMembers component from GroupRecord / TeamRecord
+### ~~R4. Extract shared EntityMembers component from GroupRecord / TeamRecord~~
 
-**Problem:** `GroupRecord.jsx` (1,291 lines) and `TeamRecord.jsx` (1,045 lines) are
-~70% structurally identical. Their inner Members sub-components share the same logic
-for add-by-name, add-by-number, member table with sortable headers, bulk selection,
-bulk actions (remove, copy-to-another, send-email), download with field picker, and
-leader toggle. The only differences are:
-
-1. API namespace (`groupsApi` vs `teamsApi`)
-2. Whether waiting-list filtering applies (groups only)
-3. The `targetGroupId` vs `targetTeamId` field name in bulk-add
-4. Download field definitions (GroupRecord has 14 fields including `waiting_since`;
-   TeamRecord has 13)
-
-The codebase already proves this pattern works — `Schedule.jsx` was extracted as a
-shared component used by both GroupRecord and TeamRecord.
-
-**Implementation steps:**
-
-1. Create `frontend/src/components/EntityMembers.jsx`
-2. Extract the Members sub-component from GroupRecord (roughly lines 400–850)
-3. Parameterise via props:
-   - `entityType` — `'group'` or `'team'`
-   - `entityId` — the group/team UUID
-   - `api` — the API namespace object (`groupsApi` or `teamsApi`)
-   - `downloadFields` — array of `{ key, label, default }` objects
-   - `showWaitingList` — boolean (true for groups, false for teams)
-   - `privilegeResource` — `'group_record'` or `'team_record'`
-   - `bulkAddTargetKey` — `'targetGroupId'` or `'targetTeamId'`
-4. Update GroupRecord to render `<EntityMembers entityType="group" ... />`
-5. Update TeamRecord to render `<EntityMembers entityType="team" ... />`
-6. **Also consider** extracting a shared `TabLayout` component (both files implement
-   the same tab-strip pattern with `useState` for active tab and conditional rendering)
-7. **Also consider** extracting a `useFormSave` hook for the shared
-   `[saving, setSaving] + [error, setError] + [saved, setSaved]` triplet with
-   3-second auto-dismiss timer
-
-**Files to modify:**
-- `frontend/src/pages/groups/GroupRecord.jsx` — extract Members, slim down ~400 lines
-- `frontend/src/pages/groups/TeamRecord.jsx` — extract Members, slim down ~400 lines
-- Create `frontend/src/components/EntityMembers.jsx` (~350 lines)
-
-**Testing:** Run `cd frontend && npm test` — the GroupRecord and TeamRecord tests
-will verify the extraction. Manually test add/remove/toggle/bulk/download on both
-a group record and a team record.
+**Completed** — see completed table above.
 
 ---
 
-### R5. Split finance.js backend route into sub-route files
+### ~~R5. Split finance.js backend route into sub-route files~~ ✓ Completed
 
-**Problem:** `backend/src/routes/finance.js` is 1,779 lines handling 12 distinct
-resource sections:
-
-| Section | Lines | Description |
-|---------|-------|-------------|
-| Accounts | 18–155 | CRUD + config for finance accounts |
-| Group B/F Setting | 156–181 | Single toggle |
-| Payment Method Defaults | 182–246 | Default method + per-type mappings |
-| Categories | 247–331 | CRUD for finance categories |
-| Transactions | 332–641 | CRUD + complex creation with splits |
-| Bulk Pending | 642–791 | Bulk pending status toggle |
-| Refunds | 792–921 | Refund creation |
-| Transfers | 922–1083 | CRUD for money transfers |
-| Reconciliation | 1084–1194 | Account reconciliation |
-| Financial Statement | 1195–1363 | Statement generation + Excel export |
-| Groups Statement | 1364–1491 | Groups statement + Excel export |
-| Credit Batches | 1492–1779 | Batch CRUD + transaction management |
-
-**Implementation steps:**
-
-1. Create directory `backend/src/routes/finance/`
-2. Create `finance/index.js` — parent Router that mounts sub-routers:
-   ```js
-   import { Router } from 'express';
-   import { requireAuth } from '../../middleware/auth.js';
-   import accountsRouter from './accounts.js';
-   import categoriesRouter from './categories.js';
-   // ... etc
-   const router = Router();
-   router.use(requireAuth);
-   router.use('/', accountsRouter);
-   // ...
-   export default router;
-   ```
-3. Create these sub-route files (each gets its own Router):
-   - `accounts.js` — Accounts + Group B/F + Payment Method Defaults (~230 lines)
-   - `categories.js` — Categories (~85 lines)
-   - `transactions.js` — Transactions + Bulk Pending + Refunds (~460 lines)
-   - `transfers.js` — Transfer Money (~162 lines)
-   - `reconciliation.js` — Reconcile Account (~111 lines)
-   - `statements.js` — Financial Statement + Groups Statement (~297 lines)
-   - `batches.js` — Credit Batches (~288 lines)
-4. Each file imports: `{ Router } from 'express'`, `{ z } from 'zod'`,
-   `{ requirePrivilege }`, `{ tenantQuery }`, `{ AppError }`, `{ logAudit }`,
-   `{ FINANCE_PAYMENT_METHODS } from '../../../shared/constants.js'` (where needed)
-5. Update `backend/src/app.js` to mount the new router — it currently does
-   `app.use('/finance', financeRouter)` which should still work if `finance/index.js`
-   exports a router the same way
-6. Delete the old `finance.js` once all sub-routes are verified
-
-**Testing:** Run `cd backend && npm test` — the existing `finance.test.js` tests
-all the routes via HTTP, so it should pass without changes. Also verify the finance
-ledger, transaction editor, and statements in the browser.
+Implemented in v0.9.2. See `backend/src/routes/finance/` directory.
 
 ---
 

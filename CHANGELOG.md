@@ -13,6 +13,10 @@ Format: `## [version] — YYYY-MM-DD` with bullet points per change.
   bundle size by code-splitting each page into its own chunk
 - **Route guard cleanup** — renamed cryptic `PF` component to `ProtectedFeatureRoute`;
   merged single-use `AuthRequired` into `ProtectedRoute` with a `skipPasswordCheck` prop
+- **Split finance.js route** (R5) — monolithic `backend/src/routes/finance.js` (1,779 lines)
+  split into 7 focused sub-route files under `backend/src/routes/finance/`: `accounts.js`,
+  `categories.js`, `transactions.js`, `transfers.js`, `reconciliation.js`, `statements.js`,
+  and `batches.js`, plus a shared `helpers.js` and `index.js` parent router
 
 ---
 
@@ -29,6 +33,10 @@ Format: `## [version] — YYYY-MM-DD` with bullet points per change.
   `api/core.js` and delegates system-admin, public, and portal APIs to their own modules
   (`api/system.js`, `api/public.js`, `api/portal.js`), cleanly separating 3 different
   auth patterns
+- **Shared EntityMembers** — extracted `components/EntityMembers.jsx` from the nearly
+  identical Members sub-components in GroupRecord and TeamRecord; parameterised by
+  `entityType` (`'group'`/`'team'`), `api`, and `entityId`. GroupRecord: 1,291 → 770 lines;
+  TeamRecord: 1,045 → 630 lines (net −936 lines of duplication removed)
 
 ---
 
