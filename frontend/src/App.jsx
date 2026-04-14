@@ -1,103 +1,100 @@
 // beacon2/frontend/src/App.jsx
 
-import { useEffect } from 'react';
+import { useEffect, lazy, Suspense } from 'react';
 import { createBrowserRouter, RouterProvider, Navigate, Outlet } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext.jsx';
 import { getPreferences } from './hooks/usePreferences.js';
 import CookieConsent   from './components/CookieConsent.jsx';
 import HelpWidget from './components/HelpWidget.jsx';
-import Login           from './pages/Login.jsx';
-import Home            from './pages/Home.jsx';
-import RoleList        from './pages/roles/RoleList.jsx';
-import RoleEditor      from './pages/roles/RoleEditor.jsx';
-import UserList        from './pages/users/UserList.jsx';
-import UserEditor      from './pages/users/UserEditor.jsx';
-import SystemLogin       from './pages/system/SystemLogin.jsx';
-import SystemDashboard   from './pages/system/SystemDashboard.jsx';
-import MemberClassList   from './pages/membership/MemberClassList.jsx';
-import MemberClassEditor from './pages/membership/MemberClassEditor.jsx';
-import MemberStatusList  from './pages/membership/MemberStatusList.jsx';
-import MemberList        from './pages/members/MemberList.jsx';
-import MemberEditor      from './pages/members/MemberEditor.jsx';
-import MemberCompactView from './pages/members/MemberCompactView.jsx';
-import AddressesExport   from './pages/members/AddressesExport.jsx';
-import GroupList         from './pages/groups/GroupList.jsx';
-import GroupRecord       from './pages/groups/GroupRecord.jsx';
-import TeamList          from './pages/groups/TeamList.jsx';
-import TeamRecord        from './pages/groups/TeamRecord.jsx';
-import FacultyList       from './pages/groups/FacultyList.jsx';
-import VenueList         from './pages/groups/VenueList.jsx';
-import VenueEditor       from './pages/groups/VenueEditor.jsx';
-import SystemSettings    from './pages/settings/SystemSettings.jsx';
-import FinanceAccounts    from './pages/finance/FinanceAccounts.jsx';
-import FinanceCategories  from './pages/finance/FinanceCategories.jsx';
-import FinanceLedger      from './pages/finance/FinanceLedger.jsx';
-import TransactionEditor  from './pages/finance/TransactionEditor.jsx';
-import TransactionRefund  from './pages/finance/TransactionRefund.jsx';
-import ConfigureAccount       from './pages/finance/ConfigureAccount.jsx';
-import PaymentMethodDefaults from './pages/finance/PaymentMethodDefaults.jsx';
-import TransferMoney      from './pages/finance/TransferMoney.jsx';
-import ReconcileAccount   from './pages/finance/ReconcileAccount.jsx';
-import FinancialStatement from './pages/finance/FinancialStatement.jsx';
-import GroupsStatement    from './pages/finance/GroupsStatement.jsx';
-import GiftAidDeclaration from './pages/finance/GiftAidDeclaration.jsx';
-import CreditBatches      from './pages/finance/CreditBatches.jsx';
-import MemberValidator    from './pages/admin/MemberValidator.jsx';
-import Utilities          from './pages/admin/Utilities.jsx';
-import PollList           from './pages/admin/PollList.jsx';
-import AuditLog           from './pages/misc/AuditLog.jsx';
-import AuditRecord        from './pages/misc/AuditRecord.jsx';
-import GiftAidLog         from './pages/misc/GiftAidLog.jsx';
-import OfficerList        from './pages/misc/OfficerList.jsx';
-import DataBackup         from './pages/misc/DataBackup.jsx';
-import PersonalPreferences from './pages/settings/PersonalPreferences.jsx';
-import RecentMembers      from './pages/members/RecentMembers.jsx';
-import MemberStatistics   from './pages/members/MemberStatistics.jsx';
-import MembershipRenewals from './pages/membership/MembershipRenewals.jsx';
-import NonRenewals        from './pages/membership/NonRenewals.jsx';
-import MembershipCards    from './pages/membership/MembershipCards.jsx';
-import EmailCompose        from './pages/email/EmailCompose.jsx';
-import EmailDelivery       from './pages/email/EmailDelivery.jsx';
-import EmailDeliveryDetail from './pages/email/EmailDeliveryDetail.jsx';
-import EmailUnblocker      from './pages/email/EmailUnblocker.jsx';
-import SystemMessages      from './pages/settings/SystemMessages.jsx';
-import PublicLinks         from './pages/misc/PublicLinks.jsx';
-import Calendar            from './pages/groups/Calendar.jsx';
-import EventRecord         from './pages/groups/EventRecord.jsx';
-import OpenMeetings        from './pages/groups/OpenMeetings.jsx';
-import LetterCompose       from './pages/letters/LetterCompose.jsx';
-import JoinForm            from './pages/public/JoinForm.jsx';
-import JoinPending         from './pages/public/JoinPending.jsx';
-import JoinComplete        from './pages/public/JoinComplete.jsx';
-import ResumePayment       from './pages/public/ResumePayment.jsx';
-import PortalLogin         from './pages/public/PortalLogin.jsx';
-import PortalHome          from './pages/public/PortalHome.jsx';
-import PortalGroups        from './pages/public/PortalGroups.jsx';
-import PortalCalendar      from './pages/public/PortalCalendar.jsx';
-import PublicGroups        from './pages/public/PublicGroups.jsx';
-import PublicCalendar      from './pages/public/PublicCalendar.jsx';
-import PortalPersonalDetails from './pages/public/PortalPersonalDetails.jsx';
-import PortalRequestCard   from './pages/public/PortalRequestCard.jsx';
-import PortalRenewal       from './pages/public/PortalRenewal.jsx';
-import PortalRegister      from './pages/public/PortalRegister.jsx';
-import PortalVerifyEmail   from './pages/public/PortalVerifyEmail.jsx';
-import PortalForgotPassword from './pages/public/PortalForgotPassword.jsx';
-import PortalResetPassword  from './pages/public/PortalResetPassword.jsx';
-import ChangePassword       from './pages/ChangePassword.jsx';
-import CustomFields         from './pages/settings/CustomFields.jsx';
-import EventTypeList        from './pages/settings/EventTypeList.jsx';
-import FeatureConfig        from './pages/settings/FeatureConfig.jsx';
 
-function ProtectedRoute({ children }) {
+// Pages — lazy-loaded for code splitting
+const Login              = lazy(() => import('./pages/Login.jsx'));
+const Home               = lazy(() => import('./pages/Home.jsx'));
+const RoleList           = lazy(() => import('./pages/roles/RoleList.jsx'));
+const RoleEditor         = lazy(() => import('./pages/roles/RoleEditor.jsx'));
+const UserList           = lazy(() => import('./pages/users/UserList.jsx'));
+const UserEditor         = lazy(() => import('./pages/users/UserEditor.jsx'));
+const SystemLogin        = lazy(() => import('./pages/system/SystemLogin.jsx'));
+const SystemDashboard    = lazy(() => import('./pages/system/SystemDashboard.jsx'));
+const MemberClassList    = lazy(() => import('./pages/membership/MemberClassList.jsx'));
+const MemberClassEditor  = lazy(() => import('./pages/membership/MemberClassEditor.jsx'));
+const MemberStatusList   = lazy(() => import('./pages/membership/MemberStatusList.jsx'));
+const MemberList         = lazy(() => import('./pages/members/MemberList.jsx'));
+const MemberEditor       = lazy(() => import('./pages/members/MemberEditor.jsx'));
+const MemberCompactView  = lazy(() => import('./pages/members/MemberCompactView.jsx'));
+const AddressesExport    = lazy(() => import('./pages/members/AddressesExport.jsx'));
+const GroupList          = lazy(() => import('./pages/groups/GroupList.jsx'));
+const GroupRecord        = lazy(() => import('./pages/groups/GroupRecord.jsx'));
+const TeamList           = lazy(() => import('./pages/groups/TeamList.jsx'));
+const TeamRecord         = lazy(() => import('./pages/groups/TeamRecord.jsx'));
+const FacultyList        = lazy(() => import('./pages/groups/FacultyList.jsx'));
+const VenueList          = lazy(() => import('./pages/groups/VenueList.jsx'));
+const VenueEditor        = lazy(() => import('./pages/groups/VenueEditor.jsx'));
+const SystemSettings     = lazy(() => import('./pages/settings/SystemSettings.jsx'));
+const FinanceAccounts    = lazy(() => import('./pages/finance/FinanceAccounts.jsx'));
+const FinanceCategories  = lazy(() => import('./pages/finance/FinanceCategories.jsx'));
+const FinanceLedger      = lazy(() => import('./pages/finance/FinanceLedger.jsx'));
+const TransactionEditor  = lazy(() => import('./pages/finance/TransactionEditor.jsx'));
+const TransactionRefund  = lazy(() => import('./pages/finance/TransactionRefund.jsx'));
+const ConfigureAccount   = lazy(() => import('./pages/finance/ConfigureAccount.jsx'));
+const PaymentMethodDefaults = lazy(() => import('./pages/finance/PaymentMethodDefaults.jsx'));
+const TransferMoney      = lazy(() => import('./pages/finance/TransferMoney.jsx'));
+const ReconcileAccount   = lazy(() => import('./pages/finance/ReconcileAccount.jsx'));
+const FinancialStatement = lazy(() => import('./pages/finance/FinancialStatement.jsx'));
+const GroupsStatement    = lazy(() => import('./pages/finance/GroupsStatement.jsx'));
+const GiftAidDeclaration = lazy(() => import('./pages/finance/GiftAidDeclaration.jsx'));
+const CreditBatches      = lazy(() => import('./pages/finance/CreditBatches.jsx'));
+const MemberValidator    = lazy(() => import('./pages/admin/MemberValidator.jsx'));
+const Utilities          = lazy(() => import('./pages/admin/Utilities.jsx'));
+const PollList           = lazy(() => import('./pages/admin/PollList.jsx'));
+const AuditLog           = lazy(() => import('./pages/misc/AuditLog.jsx'));
+const AuditRecord        = lazy(() => import('./pages/misc/AuditRecord.jsx'));
+const GiftAidLog         = lazy(() => import('./pages/misc/GiftAidLog.jsx'));
+const OfficerList        = lazy(() => import('./pages/misc/OfficerList.jsx'));
+const DataBackup         = lazy(() => import('./pages/misc/DataBackup.jsx'));
+const PersonalPreferences = lazy(() => import('./pages/settings/PersonalPreferences.jsx'));
+const RecentMembers      = lazy(() => import('./pages/members/RecentMembers.jsx'));
+const MemberStatistics   = lazy(() => import('./pages/members/MemberStatistics.jsx'));
+const MembershipRenewals = lazy(() => import('./pages/membership/MembershipRenewals.jsx'));
+const NonRenewals        = lazy(() => import('./pages/membership/NonRenewals.jsx'));
+const MembershipCards    = lazy(() => import('./pages/membership/MembershipCards.jsx'));
+const EmailCompose       = lazy(() => import('./pages/email/EmailCompose.jsx'));
+const EmailDelivery      = lazy(() => import('./pages/email/EmailDelivery.jsx'));
+const EmailDeliveryDetail = lazy(() => import('./pages/email/EmailDeliveryDetail.jsx'));
+const EmailUnblocker     = lazy(() => import('./pages/email/EmailUnblocker.jsx'));
+const SystemMessages     = lazy(() => import('./pages/settings/SystemMessages.jsx'));
+const PublicLinks        = lazy(() => import('./pages/misc/PublicLinks.jsx'));
+const Calendar           = lazy(() => import('./pages/groups/Calendar.jsx'));
+const EventRecord        = lazy(() => import('./pages/groups/EventRecord.jsx'));
+const OpenMeetings       = lazy(() => import('./pages/groups/OpenMeetings.jsx'));
+const LetterCompose      = lazy(() => import('./pages/letters/LetterCompose.jsx'));
+const JoinForm           = lazy(() => import('./pages/public/JoinForm.jsx'));
+const JoinPending        = lazy(() => import('./pages/public/JoinPending.jsx'));
+const JoinComplete       = lazy(() => import('./pages/public/JoinComplete.jsx'));
+const ResumePayment      = lazy(() => import('./pages/public/ResumePayment.jsx'));
+const PortalLogin        = lazy(() => import('./pages/public/PortalLogin.jsx'));
+const PortalHome         = lazy(() => import('./pages/public/PortalHome.jsx'));
+const PortalGroups       = lazy(() => import('./pages/public/PortalGroups.jsx'));
+const PortalCalendar     = lazy(() => import('./pages/public/PortalCalendar.jsx'));
+const PublicGroups       = lazy(() => import('./pages/public/PublicGroups.jsx'));
+const PublicCalendar     = lazy(() => import('./pages/public/PublicCalendar.jsx'));
+const PortalPersonalDetails = lazy(() => import('./pages/public/PortalPersonalDetails.jsx'));
+const PortalRequestCard  = lazy(() => import('./pages/public/PortalRequestCard.jsx'));
+const PortalRenewal      = lazy(() => import('./pages/public/PortalRenewal.jsx'));
+const PortalRegister     = lazy(() => import('./pages/public/PortalRegister.jsx'));
+const PortalVerifyEmail  = lazy(() => import('./pages/public/PortalVerifyEmail.jsx'));
+const PortalForgotPassword = lazy(() => import('./pages/public/PortalForgotPassword.jsx'));
+const PortalResetPassword = lazy(() => import('./pages/public/PortalResetPassword.jsx'));
+const ChangePassword     = lazy(() => import('./pages/ChangePassword.jsx'));
+const CustomFields       = lazy(() => import('./pages/settings/CustomFields.jsx'));
+const EventTypeList      = lazy(() => import('./pages/settings/EventTypeList.jsx'));
+const FeatureConfig      = lazy(() => import('./pages/settings/FeatureConfig.jsx'));
+
+function ProtectedRoute({ skipPasswordCheck, children }) {
   const { isLoggedIn, mustChangePassword } = useAuth();
   if (!isLoggedIn) return <Navigate to="/login" replace />;
-  if (mustChangePassword) return <Navigate to="/change-password" replace />;
+  if (!skipPasswordCheck && mustChangePassword) return <Navigate to="/change-password" replace />;
   return children;
-}
-
-function AuthRequired({ children }) {
-  const { isLoggedIn } = useAuth();
-  return isLoggedIn ? children : <Navigate to="/login" replace />;
 }
 
 /** Redirects to Home if a feature toggle is disabled. */
@@ -107,15 +104,17 @@ function FeatureRoute({ feature, children }) {
   return children;
 }
 
-/** Shorthand: ProtectedRoute + FeatureRoute */
-function PF({ feature, children }) {
+/** ProtectedRoute + FeatureRoute combined. */
+function ProtectedFeatureRoute({ feature, children }) {
   return <ProtectedRoute><FeatureRoute feature={feature}>{children}</FeatureRoute></ProtectedRoute>;
 }
 
 function RootLayout() {
   return (
     <>
-      <Outlet />
+      <Suspense fallback={<p className="text-center text-slate-500 py-8">Loading...</p>}>
+        <Outlet />
+      </Suspense>
       <HelpWidget />
     </>
   );
@@ -132,7 +131,7 @@ const router = createBrowserRouter([
       { path: '/system',       element: <SystemDashboard /> },
 
       // Force-change-password (requires login but not subject to mustChangePassword redirect)
-      { path: '/change-password', element: <AuthRequired><ChangePassword /></AuthRequired> },
+      { path: '/change-password', element: <ProtectedRoute skipPasswordCheck><ChangePassword /></ProtectedRoute> },
 
       // Protected tenant routes — always available
       { path: '/',           element: <ProtectedRoute><Home /></ProtectedRoute> },
@@ -163,56 +162,56 @@ const router = createBrowserRouter([
       { path: '/membership/classes/new',  element: <ProtectedRoute><MemberClassEditor /></ProtectedRoute> },
       { path: '/membership/classes/:id',  element: <ProtectedRoute><MemberClassEditor /></ProtectedRoute> },
       { path: '/membership/statuses',     element: <ProtectedRoute><MemberStatusList /></ProtectedRoute> },
-      { path: '/membership/renewals',     element: <PF feature="membershipRenewals"><MembershipRenewals /></PF> },
-      { path: '/membership/non-renewals', element: <PF feature="membershipRenewals"><NonRenewals /></PF> },
-      { path: '/membership/cards',        element: <PF feature="membershipCards"><MembershipCards /></PF> },
-      { path: '/members/statistics',      element: <PF feature="statistics"><MemberStatistics /></PF> },
-      { path: '/addresses-export',        element: <PF feature="addressesExport"><AddressesExport /></PF> },
-      { path: '/polls',                   element: <PF feature="polls"><PollList /></PF> },
-      { path: '/custom-fields',           element: <PF feature="customFields"><CustomFields /></PF> },
-      { path: '/gift-aid-log',            element: <PF feature="giftAid"><GiftAidLog /></PF> },
+      { path: '/membership/renewals',     element: <ProtectedFeatureRoute feature="membershipRenewals"><MembershipRenewals /></ProtectedFeatureRoute> },
+      { path: '/membership/non-renewals', element: <ProtectedFeatureRoute feature="membershipRenewals"><NonRenewals /></ProtectedFeatureRoute> },
+      { path: '/membership/cards',        element: <ProtectedFeatureRoute feature="membershipCards"><MembershipCards /></ProtectedFeatureRoute> },
+      { path: '/members/statistics',      element: <ProtectedFeatureRoute feature="statistics"><MemberStatistics /></ProtectedFeatureRoute> },
+      { path: '/addresses-export',        element: <ProtectedFeatureRoute feature="addressesExport"><AddressesExport /></ProtectedFeatureRoute> },
+      { path: '/polls',                   element: <ProtectedFeatureRoute feature="polls"><PollList /></ProtectedFeatureRoute> },
+      { path: '/custom-fields',           element: <ProtectedFeatureRoute feature="customFields"><CustomFields /></ProtectedFeatureRoute> },
+      { path: '/gift-aid-log',            element: <ProtectedFeatureRoute feature="giftAid"><GiftAidLog /></ProtectedFeatureRoute> },
 
       // Groups — gated by 'groups' master toggle
-      { path: '/groups',       element: <PF feature="groups"><GroupList /></PF> },
-      { path: '/groups/new',   element: <PF feature="groups"><GroupRecord /></PF> },
-      { path: '/groups/:id',   element: <PF feature="groups"><GroupRecord /></PF> },
-      { path: '/teams',        element: <PF feature="teams"><TeamList /></PF> },
-      { path: '/teams/new',    element: <PF feature="teams"><TeamRecord /></PF> },
-      { path: '/teams/:id',    element: <PF feature="teams"><TeamRecord /></PF> },
-      { path: '/faculties',    element: <PF feature="faculties"><FacultyList /></PF> },
-      { path: '/venues',       element: <PF feature="venues"><VenueList /></PF> },
-      { path: '/venues/new',   element: <PF feature="venues"><VenueEditor /></PF> },
-      { path: '/venues/:id',   element: <PF feature="venues"><VenueEditor /></PF> },
+      { path: '/groups',       element: <ProtectedFeatureRoute feature="groups"><GroupList /></ProtectedFeatureRoute> },
+      { path: '/groups/new',   element: <ProtectedFeatureRoute feature="groups"><GroupRecord /></ProtectedFeatureRoute> },
+      { path: '/groups/:id',   element: <ProtectedFeatureRoute feature="groups"><GroupRecord /></ProtectedFeatureRoute> },
+      { path: '/teams',        element: <ProtectedFeatureRoute feature="teams"><TeamList /></ProtectedFeatureRoute> },
+      { path: '/teams/new',    element: <ProtectedFeatureRoute feature="teams"><TeamRecord /></ProtectedFeatureRoute> },
+      { path: '/teams/:id',    element: <ProtectedFeatureRoute feature="teams"><TeamRecord /></ProtectedFeatureRoute> },
+      { path: '/faculties',    element: <ProtectedFeatureRoute feature="faculties"><FacultyList /></ProtectedFeatureRoute> },
+      { path: '/venues',       element: <ProtectedFeatureRoute feature="venues"><VenueList /></ProtectedFeatureRoute> },
+      { path: '/venues/new',   element: <ProtectedFeatureRoute feature="venues"><VenueEditor /></ProtectedFeatureRoute> },
+      { path: '/venues/:id',   element: <ProtectedFeatureRoute feature="venues"><VenueEditor /></ProtectedFeatureRoute> },
 
       // Events & Calendar — gated by 'events' / sub-toggles
-      { path: '/calendar',                      element: <PF feature="calendar"><Calendar /></PF> },
-      { path: '/calendar/events/:eventId',      element: <PF feature="calendar"><EventRecord /></PF> },
-      { path: '/calendar/open-meetings',        element: <PF feature="calendar"><OpenMeetings /></PF> },
-      { path: '/event-types',            element: <PF feature="eventTypes"><EventTypeList /></PF> },
+      { path: '/calendar',                      element: <ProtectedFeatureRoute feature="calendar"><Calendar /></ProtectedFeatureRoute> },
+      { path: '/calendar/events/:eventId',      element: <ProtectedFeatureRoute feature="calendar"><EventRecord /></ProtectedFeatureRoute> },
+      { path: '/calendar/open-meetings',        element: <ProtectedFeatureRoute feature="calendar"><OpenMeetings /></ProtectedFeatureRoute> },
+      { path: '/event-types',            element: <ProtectedFeatureRoute feature="eventTypes"><EventTypeList /></ProtectedFeatureRoute> },
 
       // Finance — gated by 'finance' master toggle + sub-toggles
-      { path: '/finance/accounts',                   element: <PF feature="finance"><FinanceAccounts /></PF> },
-      { path: '/finance/accounts/:id/configure',     element: <PF feature="finance"><ConfigureAccount /></PF> },
-      { path: '/finance/payment-method-defaults',    element: <PF feature="finance"><PaymentMethodDefaults /></PF> },
-      { path: '/finance/categories',                 element: <PF feature="finance"><FinanceCategories /></PF> },
-      { path: '/finance/ledger',                     element: <PF feature="finance"><FinanceLedger /></PF> },
-      { path: '/finance/transactions/new',           element: <PF feature="finance"><TransactionEditor /></PF> },
-      { path: '/finance/transactions/:id/refund',    element: <PF feature="finance"><TransactionRefund /></PF> },
-      { path: '/finance/transactions/:id',           element: <PF feature="finance"><TransactionEditor /></PF> },
-      { path: '/finance/transfers',                  element: <PF feature="transferMoney"><TransferMoney /></PF> },
-      { path: '/finance/reconcile',                  element: <PF feature="reconciliation"><ReconcileAccount /></PF> },
-      { path: '/finance/statement',                  element: <PF feature="financialStatement"><FinancialStatement /></PF> },
-      { path: '/finance/groups-statement',           element: <PF feature="groupsStatement"><GroupsStatement /></PF> },
-      { path: '/finance/gift-aid',                   element: <PF feature="giftAid"><GiftAidDeclaration /></PF> },
-      { path: '/finance/batches',                    element: <PF feature="creditBatches"><CreditBatches /></PF> },
+      { path: '/finance/accounts',                   element: <ProtectedFeatureRoute feature="finance"><FinanceAccounts /></ProtectedFeatureRoute> },
+      { path: '/finance/accounts/:id/configure',     element: <ProtectedFeatureRoute feature="finance"><ConfigureAccount /></ProtectedFeatureRoute> },
+      { path: '/finance/payment-method-defaults',    element: <ProtectedFeatureRoute feature="finance"><PaymentMethodDefaults /></ProtectedFeatureRoute> },
+      { path: '/finance/categories',                 element: <ProtectedFeatureRoute feature="finance"><FinanceCategories /></ProtectedFeatureRoute> },
+      { path: '/finance/ledger',                     element: <ProtectedFeatureRoute feature="finance"><FinanceLedger /></ProtectedFeatureRoute> },
+      { path: '/finance/transactions/new',           element: <ProtectedFeatureRoute feature="finance"><TransactionEditor /></ProtectedFeatureRoute> },
+      { path: '/finance/transactions/:id/refund',    element: <ProtectedFeatureRoute feature="finance"><TransactionRefund /></ProtectedFeatureRoute> },
+      { path: '/finance/transactions/:id',           element: <ProtectedFeatureRoute feature="finance"><TransactionEditor /></ProtectedFeatureRoute> },
+      { path: '/finance/transfers',                  element: <ProtectedFeatureRoute feature="transferMoney"><TransferMoney /></ProtectedFeatureRoute> },
+      { path: '/finance/reconcile',                  element: <ProtectedFeatureRoute feature="reconciliation"><ReconcileAccount /></ProtectedFeatureRoute> },
+      { path: '/finance/statement',                  element: <ProtectedFeatureRoute feature="financialStatement"><FinancialStatement /></ProtectedFeatureRoute> },
+      { path: '/finance/groups-statement',           element: <ProtectedFeatureRoute feature="groupsStatement"><GroupsStatement /></ProtectedFeatureRoute> },
+      { path: '/finance/gift-aid',                   element: <ProtectedFeatureRoute feature="giftAid"><GiftAidDeclaration /></ProtectedFeatureRoute> },
+      { path: '/finance/batches',                    element: <ProtectedFeatureRoute feature="creditBatches"><CreditBatches /></ProtectedFeatureRoute> },
 
       // Email & Letters — gated by 'email' master toggle
-      { path: '/email/compose',        element: <PF feature="email"><EmailCompose /></PF> },
-      { path: '/email/delivery',       element: <PF feature="email"><EmailDelivery /></PF> },
-      { path: '/email/delivery/:id',   element: <PF feature="email"><EmailDeliveryDetail /></PF> },
-      { path: '/email/unblocker',      element: <PF feature="email"><EmailUnblocker /></PF> },
-      { path: '/system-messages',      element: <PF feature="email"><SystemMessages /></PF> },
-      { path: '/letters/compose',      element: <PF feature="email"><LetterCompose /></PF> },
+      { path: '/email/compose',        element: <ProtectedFeatureRoute feature="email"><EmailCompose /></ProtectedFeatureRoute> },
+      { path: '/email/delivery',       element: <ProtectedFeatureRoute feature="email"><EmailDelivery /></ProtectedFeatureRoute> },
+      { path: '/email/delivery/:id',   element: <ProtectedFeatureRoute feature="email"><EmailDeliveryDetail /></ProtectedFeatureRoute> },
+      { path: '/email/unblocker',      element: <ProtectedFeatureRoute feature="email"><EmailUnblocker /></ProtectedFeatureRoute> },
+      { path: '/system-messages',      element: <ProtectedFeatureRoute feature="email"><SystemMessages /></ProtectedFeatureRoute> },
+      { path: '/letters/compose',      element: <ProtectedFeatureRoute feature="email"><LetterCompose /></ProtectedFeatureRoute> },
 
       // Public pages (no auth required)
       { path: '/public/:slug/join',                     element: <JoinForm /> },

@@ -5,6 +5,17 @@ Format: `## [version] — YYYY-MM-DD` with bullet points per change.
 
 ---
 
+## [0.9.2] — 2026-04-14
+
+### Changed
+- **Lazy loading** — all 82 page components in `App.jsx` are now loaded with
+  `React.lazy()` and wrapped in a `<Suspense>` boundary, reducing the initial
+  bundle size by code-splitting each page into its own chunk
+- **Route guard cleanup** — renamed cryptic `PF` component to `ProtectedFeatureRoute`;
+  merged single-use `AuthRequired` into `ProtectedRoute` with a `skipPasswordCheck` prop
+
+---
+
 ## [0.9.1] — 2026-04-14
 
 ### Changed
