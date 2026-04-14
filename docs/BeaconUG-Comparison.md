@@ -877,6 +877,7 @@
 | Members Portal feature toggles | Built | Configure renewals, groups, calendar, personal details, replacement card toggles (stored in `portal_config` JSONB; portal features themselves not yet built) |
 | Group Information display options | Built | Grid of to-members/to-public toggles for status, venue, contact, detail, enquiries, join group (stored in `group_info_config` JSONB) |
 | Calendar display options | Built | Grid of to-members/to-public toggles for venue, topic, enquiries, detail, download (stored in `calendar_config` JSONB) |
+| Feature-aware sections | Built | Sections grey out with explanatory banner when Members Portal or Online Joining is disabled in Feature Configuration |
 
 ---
 
