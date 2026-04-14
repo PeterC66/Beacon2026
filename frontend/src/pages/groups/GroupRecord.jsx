@@ -5,7 +5,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
-import { groups as groupsApi, faculties as facultiesApi, members as membersApi, venues as venuesApi, settings as settingsApi, requestBlob } from '../../lib/api.js';
+import { groups as groupsApi, faculties as facultiesApi, members as membersApi, venues as venuesApi, requestBlob } from '../../lib/api.js';
 import Schedule from '../../components/Schedule.jsx';
 import { useAuth } from '../../context/AuthContext.jsx';
 import NavBar from '../../components/NavBar.jsx';
@@ -1180,21 +1180,18 @@ export default function GroupRecord() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
-  const { can, tenant } = useAuth();
+  const { can, tenant, hasFeature } = useAuth();
   const [faculties, setFaculties] = useState([]);
   const [allVenues, setAllVenues] = useState([]);
   const [groupName, setGroupName] = useState('');
-  const [siteworksActivated, setSiteworksActivated] = useState(false);
 
+  const siteworksActivated = hasFeature('siteworks');
   const isNew = id === undefined;
   const activeTab = searchParams.get('tab') ?? 'details';
 
   useEffect(() => {
     facultiesApi.list().then(setFaculties).catch(() => {});
     venuesApi.list().then(setAllVenues).catch(() => {});
-    settingsApi.getSiteworksConfig()
-      .then((cfg) => setSiteworksActivated(cfg.siteworksActivated ?? false))
-      .catch(() => {});
   }, []);
 
   useEffect(() => {
@@ -1226,8 +1223,8 @@ export default function GroupRecord() {
   const tabs = [
     { key: 'details',  label: 'Details',  available: true },
     { key: 'members',  label: 'Members',  available: !isNew },
-    { key: 'schedule', label: 'Schedule', available: !isNew && !siteworksActivated },
-    { key: 'ledger',   label: 'Ledger',   available: !isNew && (can('group_ledger_all', 'view') || can('group_ledger_as_leader', 'view')) },
+    { key: 'schedule', label: 'Schedule', available: !isNew && !siteworksActivated && hasFeature('events') },
+    { key: 'ledger',   label: 'Ledger',   available: !isNew && hasFeature('groupLedger') && (can('group_ledger_all', 'view') || can('group_ledger_as_leader', 'view')) },
   ];
 
   return (
@@ -1245,20 +1242,17 @@ export default function GroupRecord() {
         {/* Tab navigation (only when editing existing) */}
         {!isNew && (
           <div role="tablist" className="flex gap-0 mb-4 border-b border-slate-300">
-            {tabs.map((tab) => (
+            {tabs.filter((tab) => tab.available).map((tab) => (
               <button
                 key={tab.key}
                 role="tab"
                 aria-selected={activeTab === tab.key}
-                disabled={!tab.available}
-                onClick={() => tab.available && setSearchParams(tab.key === 'details' ? {} : { tab: tab.key })}
+                onClick={() => setSearchParams(tab.key === 'details' ? {} : { tab: tab.key })}
                 className={[
                   'px-5 py-2 text-sm font-medium border-b-2 -mb-px transition-colors',
-                  tab.available && activeTab === tab.key
+                  activeTab === tab.key
                     ? 'border-blue-600 text-blue-700'
-                    : tab.available
-                    ? 'border-transparent text-slate-600 hover:text-slate-900'
-                    : 'border-transparent text-slate-300 cursor-not-allowed',
+                    : 'border-transparent text-slate-600 hover:text-slate-900',
                 ].join(' ')}
               >
                 {tab.label}

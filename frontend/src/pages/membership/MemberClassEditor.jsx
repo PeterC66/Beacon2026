@@ -32,7 +32,8 @@ function blankMonthlyFees() {
 export default function MemberClassEditor() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { can, tenant } = useAuth();
+  const { can, tenant, hasFeature } = useAuth();
+  const giftAidEnabled = hasFeature('giftAid');
   const isNew = !id || id === 'new';
 
   const { markDirty, markClean } = useUnsavedChanges();
@@ -50,7 +51,6 @@ export default function MemberClassEditor() {
 
   // System fee variation setting
   const [feeVariation,  setFeeVariation]  = useState('same_all_year');
-  const [giftAidEnabled, setGiftAidEnabled] = useState(false);
 
   // Monthly fees (13 rows)
   const [monthlyFees,   setMonthlyFees]   = useState(blankMonthlyFees());
@@ -60,7 +60,6 @@ export default function MemberClassEditor() {
     settingsApi.get()
       .then((s) => {
         setFeeVariation(s.fee_variation ?? 'same_all_year');
-        setGiftAidEnabled(s.gift_aid_enabled ?? false);
       })
       .catch(() => {});
   }, []);

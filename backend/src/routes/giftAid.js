@@ -7,6 +7,7 @@ import ExcelJS from 'exceljs';
 import { tenantQuery } from '../utils/db.js';
 import { requireAuth } from '../middleware/auth.js';
 import { requirePrivilege } from '../middleware/requirePrivilege.js';
+import { requireFeature } from '../middleware/requireFeature.js';
 import { logAudit } from '../utils/audit.js';
 
 const router = Router();
@@ -93,18 +94,14 @@ async function fetchDeclarationRows(tenantSlug, from, to, excludeClaimed) {
 // ─── LIST ──────────────────────────────────────────────────────────────────
 
 // GET /gift-aid?year=&excludeClaimed=
-router.get('/', requirePrivilege('gift_aid_declaration', 'view'), async (req, res, next) => {
+router.get('/', requirePrivilege('gift_aid_declaration', 'view'), requireFeature('giftAid'), async (req, res, next) => {
   try {
     const slug = req.user.tenantSlug;
     const [settings] = await tenantQuery(
       slug,
-      `SELECT year_start_month, year_start_day, gift_aid_enabled
+      `SELECT year_start_month, year_start_day
        FROM tenant_settings WHERE id = 'singleton'`,
     );
-
-    if (!settings?.gift_aid_enabled) {
-      return res.json({ enabled: false, rows: [], yearNum: null });
-    }
 
     const startMonth = settings.year_start_month;
     const startDay   = settings.year_start_day;
@@ -138,7 +135,7 @@ const downloadSchema = z.object({
 });
 
 // POST /gift-aid/download  body: { ids, from, to }
-router.post('/download', requirePrivilege('gift_aid_declaration', 'download_and_mark'), async (req, res, next) => {
+router.post('/download', requirePrivilege('gift_aid_declaration', 'download_and_mark'), requireFeature('giftAid'), async (req, res, next) => {
   try {
     const data = downloadSchema.parse(req.body);
     const slug = req.user.tenantSlug;
@@ -212,7 +209,7 @@ const markSchema = z.object({
 // POST /gift-aid/mark  body: { ids, ids_2 }
 // ids = transaction IDs to mark member_slot 1 as claimed
 // ids_2 = transaction IDs to mark member_slot 2 as claimed
-router.post('/mark', requirePrivilege('gift_aid_declaration', 'download_and_mark'), async (req, res, next) => {
+router.post('/mark', requirePrivilege('gift_aid_declaration', 'download_and_mark'), requireFeature('giftAid'), async (req, res, next) => {
   try {
     const data = markSchema.parse(req.body);
     const slug = req.user.tenantSlug;
@@ -272,7 +269,7 @@ router.post('/mark', requirePrivilege('gift_aid_declaration', 'download_and_mark
 // GET /gift-aid/log?from=&to=&memberId=
 // Returns audit entries for gift_aid_consent and gift_aid_withdrawn actions.
 
-router.get('/log', requirePrivilege('gift_aid_declaration', 'view'), async (req, res, next) => {
+router.get('/log', requirePrivilege('gift_aid_declaration', 'view'), requireFeature('giftAid'), async (req, res, next) => {
   try {
     const slug = req.user.tenantSlug;
 

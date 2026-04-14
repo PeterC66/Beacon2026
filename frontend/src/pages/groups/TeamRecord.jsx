@@ -945,7 +945,7 @@ export default function TeamRecord() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
-  const { can, tenant } = useAuth();
+  const { can, tenant, hasFeature } = useAuth();
   const [teamName, setTeamName] = useState('');
 
   const isNew = id === undefined;
@@ -980,8 +980,8 @@ export default function TeamRecord() {
   const tabs = [
     { key: 'details',  label: 'Details',  available: true },
     { key: 'members',  label: 'Members',  available: !isNew },
-    { key: 'schedule', label: 'Schedule', available: !isNew },
-    { key: 'ledger',   label: 'Ledger',   available: !isNew && (can('group_ledger_all', 'view') || can('group_ledger_as_leader', 'view')) },
+    { key: 'schedule', label: 'Schedule', available: !isNew && hasFeature('events') },
+    { key: 'ledger',   label: 'Ledger',   available: !isNew && hasFeature('groupLedger') && (can('group_ledger_all', 'view') || can('group_ledger_as_leader', 'view')) },
   ];
 
   return (
@@ -999,20 +999,17 @@ export default function TeamRecord() {
         {/* Tab navigation (only when editing existing) */}
         {!isNew && (
           <div role="tablist" className="flex gap-0 mb-4 border-b border-slate-300">
-            {tabs.map((tab) => (
+            {tabs.filter((tab) => tab.available).map((tab) => (
               <button
                 key={tab.key}
                 role="tab"
                 aria-selected={activeTab === tab.key}
-                disabled={!tab.available}
-                onClick={() => tab.available && setSearchParams(tab.key === 'details' ? {} : { tab: tab.key })}
+                onClick={() => setSearchParams(tab.key === 'details' ? {} : { tab: tab.key })}
                 className={[
                   'px-5 py-2 text-sm font-medium border-b-2 -mb-px transition-colors',
-                  tab.available && activeTab === tab.key
+                  activeTab === tab.key
                     ? 'border-blue-600 text-blue-700'
-                    : tab.available
-                    ? 'border-transparent text-slate-600 hover:text-slate-900'
-                    : 'border-transparent text-slate-300 cursor-not-allowed',
+                    : 'border-transparent text-slate-600 hover:text-slate-900',
                 ].join(' ')}
               >
                 {tab.label}

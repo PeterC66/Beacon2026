@@ -17,7 +17,6 @@ vi.mock('../context/AuthContext.jsx', () => ({
 vi.mock('../lib/api.js', () => ({
   publicLinks: {
     get: vi.fn().mockResolvedValue({
-      onlineJoiningEnabled: false,
       privacyPolicyUrl: '',
       paypalEmail: '',
       tenantSlug: 'test-u3a',

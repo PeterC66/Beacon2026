@@ -1554,9 +1554,10 @@ Per-tenant feature configuration allowing each u3a to choose which modules are a
 
 ### Storage
 
-Single JSONB column `feature_config` on `tenant_settings` (singleton row). The **opt-out
-model** means missing keys default to `true` (everything on). Only keys explicitly set to
-`false` are disabled. This means existing tenants continue unchanged after the migration.
+Single JSONB column `feature_config` on `tenant_settings` (singleton row). Uses an
+**opt-out model** where most missing keys default to `true` (on). Three features default
+to `false` (off) when never set: `giftAid`, `groupLedger`, `siteworks`. See
+"Default-off features" below.
 
 ### Toggle inventory (25 toggles)
 
@@ -1592,19 +1593,68 @@ model** means missing keys default to `true` (everything on). Only keys explicit
 | `frontend/src/pages/Home.jsx` | Menu filtering via `hasFeature()` |
 | `frontend/src/App.jsx` | `FeatureRoute` / `PF` route guards |
 
+### Default-off features
+
+Three features default to **off** when their key is missing from `feature_config`:
+`giftAid`, `groupLedger`, `siteworks`. Both `hasFeature()` and `requireFeature()`
+use a `FEATURE_DEFAULTS_OFF` set for these. All other features default to on (opt-out
+model). If you add a new feature that should default to off, add it to the set in
+**both** `AuthContext.jsx` and `requireFeature.js`.
+
+### Parent dependency chain
+
+Sub-features have a parent master toggle (defined in `FEATURE_DEPS` maps in both
+`AuthContext.jsx` and `requireFeature.js`). When a master is off, all its dependents
+are treated as off. If you add a new sub-feature, add it to **both** maps.
+
 ### Frontend patterns
 
-- `hasFeature(key)` from `useAuth()` — returns `true` if key is missing or truthy
+- `hasFeature(key)` from `useAuth()` — checks the key, its default, and its parent
 - `FeatureRoute` component redirects to Home if feature is off
 - `PF` shorthand = `ProtectedRoute` + `FeatureRoute`
 - Home.jsx items have optional `f` property for feature key filtering
 - Home.jsx sections have optional `feature` property for master toggle filtering
+- Group/Team record tabs use `hasFeature()` for Schedule (`events`) and Ledger (`groupLedger`)
 
 ### Backend patterns
 
-- `requireFeature(key)` middleware — reads `feature_config` from `tenant_settings`
+- `requireFeature(key)` middleware — checks key, its default, and its parent (auth routes)
+- `isFeatureEnabled(slug, key)` async helper — same logic, for use in public/portal routes
+  that don't have `req.user` (both exported from `requireFeature.js`)
 - Feature config is fetched by frontend on login and session restore
 - `refreshFeatureConfig()` re-fetches after saving changes
+
+### Unified toggles
+
+Several settings that previously lived as columns in `tenant_settings` have been
+unified onto the Feature Configuration page. The DB columns remain for backward
+compatibility (backup/restore) but are no longer read at runtime:
+
+| Old column | Feature key | Notes |
+|---|---|---|
+| `siteworks_activated` | `siteworks` | Group scheduling fields |
+| `gift_aid_enabled` | `giftAid` | Gift Aid across the system (`gift_aid_online_renewals` stays in System Settings as a sub-option) |
+| `online_joining_enabled` | `onlineJoining` | Public join form |
+| (none — new) | `portal` | Master on/off for all portal routes (portal_config sub-toggles remain) |
+
+### System Dashboard integration
+
+System admins can view/edit any tenant's feature config via:
+- `GET /system/tenants/:slug/feature-config` — returns JSONB
+- `PATCH /system/tenants/:slug/feature-config` — merges updates, no sys-admin-only restriction
+- Frontend: "Features" button on each tenant row opens a modal with all toggles
+
+### Confirmation dialogs
+
+Turning off a master toggle shows a confirmation dialog (FeatureConfig.jsx).
+The `onConfirmMasterOff` callback is passed to `FeatureSection`; the parent
+component manages the `confirmOff` state and renders the modal.
+
+### Backup / restore
+
+`feature_config` is included in the "Site Settings 1" sheet of the backup export
+and restored by the Beacon2 restore path. Legacy Beacon restores skip it (no
+equivalent data exists).
 
 ---
 

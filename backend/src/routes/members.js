@@ -9,6 +9,7 @@ import { requireAuth } from '../middleware/auth.js';
 import { requirePrivilege } from '../middleware/requirePrivilege.js';
 import { tenantQuery } from '../utils/db.js';
 import { AppError } from '../middleware/errorHandler.js';
+import { isFeatureEnabled } from '../middleware/requireFeature.js';
 import { logAudit } from '../utils/audit.js';
 
 const router = Router();
@@ -20,12 +21,13 @@ router.use(requireAuth);
  *  Returns null if GA is not enabled, member has no GA declaration, or no GA fee configured.
  */
 async function resolveGiftAidAmount(slug, memberId, classId, transactionDate) {
-  // Check if GA is enabled
+  // Check if GA feature is enabled
+  if (!await isFeatureEnabled(slug, 'giftAid')) return null;
+
   const [settings] = await tenantQuery(
     slug,
-    `SELECT gift_aid_enabled, fee_variation FROM tenant_settings WHERE id = 'singleton'`,
+    `SELECT fee_variation FROM tenant_settings WHERE id = 'singleton'`,
   );
-  if (!settings?.gift_aid_enabled) return null;
 
   // Check if member has a GA declaration at or before the transaction date
   const [m] = await tenantQuery(

@@ -22,7 +22,45 @@ Format: `## [version] — YYYY-MM-DD` with bullet points per change.
 
 ## [0.8.6] — 2026-04-14
 
+### Changed
+- **Feature toggles unified with system settings** — four feature toggles that
+  existed as both a Feature Configuration toggle and a separate system settings
+  checkbox have been unified onto the Feature Configuration page:
+  - **SiteWorks** — removed `SiteWorks Activated` from System Settings; the Feature
+    Config toggle now controls group scheduling fields.
+  - **Gift Aid** — removed `Gift Aid declaration enabled` from System Settings; the
+    Feature Config toggle now controls Gift Aid across the system. The "Show Gift
+    Aid tick boxes for online renewals" sub-setting remains on System Settings.
+  - **Online Joining** — removed `Enable online membership applications` from
+    Public Links; the Feature Config toggle now gates the public join form.
+  - **Portal** — the portal master toggle now gates all backend portal routes
+    (previously only hid the admin link).
+
+### Fixed
+- **Feature toggles** — disabling a master module (e.g. Events & Calendar) now
+  correctly hides its sub-features (Calendar, Event Types) from the menu and
+  blocks route access. Previously sub-features remained visible because
+  `hasFeature()` didn't check the parent dependency chain.
+- **Group Ledger tab** — the Ledger tab on group and team records now respects the
+  `groupLedger` feature toggle and is hidden when the feature is configured off.
+- **Default-off features** — features that default to off (Gift Aid, Group Ledger,
+  SiteWorks) were treated as on when never explicitly toggled, because missing keys
+  in `feature_config` defaulted to true. Now `hasFeature()` and `requireFeature()`
+  consult a defaults list so these features are correctly off until enabled.
+- **Schedule tab** — the Schedule tab on group and team records is now hidden when
+  the Events & Calendar module is turned off.
+
 ### Added
+- **Feature config — System Dashboard** — system admins can now view and edit feature
+  configuration for any tenant via a "Features" button on each tenant row in the
+  System Dashboard. All toggles are available (including system-admin-only ones like
+  Finance, Email, Portal, Online Joining).
+- **Feature config — confirmation dialogs** — turning off a master module toggle now
+  shows a confirmation dialog warning that the module will be hidden from users and
+  that existing data is preserved.
+- **Feature config — backup/restore** — `feature_config` is now included in the data
+  export (Settings sheet) and restored in the Beacon2 restore path. Legacy Beacon
+  restores leave feature config as the default (all on).
 - **Feature configuration** — new per-u3a feature toggles system. Each u3a can
   choose which modules and sub-features are active via a new "Feature Configuration"
   page under Set up. 25 toggles across 6 master modules (Groups, Finance, Email &

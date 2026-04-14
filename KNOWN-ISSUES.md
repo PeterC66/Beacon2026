@@ -142,3 +142,9 @@ Items noted during development that need addressing in future sessions.
    currently just notes that events are in the Groups export. Consider removing the
    Calendar export option entirely, or having it produce the same Group Events sheet
    independently.
+
+---
+
+## Feature Toggles — deferred phases
+
+All items in this section have been completed (v0.8.6).

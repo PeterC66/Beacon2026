@@ -20,10 +20,11 @@ const { tenantQuery } = await import('../utils/db.js');
 
 const AUTH = makeAuthHeader();
 
+const FEATURE_ON = { feature_config: { giftAid: true } };
+
 const SETTINGS = {
   year_start_month: 1,
   year_start_day: 1,
-  gift_aid_enabled: true,
 };
 
 const SAMPLE_ROW = {
@@ -40,6 +41,7 @@ describe('GET /gift-aid', () => {
   beforeEach(() => vi.clearAllMocks());
 
   it('returns 200 with eligible rows', async () => {
+    tenantQuery.mockResolvedValueOnce([FEATURE_ON]); // requireFeature
     tenantQuery.mockResolvedValueOnce([SETTINGS]);   // settings
     tenantQuery.mockResolvedValueOnce([SAMPLE_ROW]); // fetchDeclarationRows
     const res = await request(app).get('/gift-aid').set('Authorization', AUTH);
@@ -50,12 +52,10 @@ describe('GET /gift-aid', () => {
     expect(res.body.yearNum).toBe(2026);
   });
 
-  it('returns enabled:false when Gift Aid is disabled', async () => {
-    tenantQuery.mockResolvedValueOnce([{ ...SETTINGS, gift_aid_enabled: false }]);
+  it('returns 403 when giftAid feature is disabled', async () => {
+    tenantQuery.mockResolvedValueOnce([{ feature_config: { giftAid: false } }]);
     const res = await request(app).get('/gift-aid').set('Authorization', AUTH);
-    expect(res.status).toBe(200);
-    expect(res.body.enabled).toBe(false);
-    expect(res.body.rows).toEqual([]);
+    expect(res.status).toBe(403);
   });
 
   it('returns 401 without token', async () => {
@@ -75,6 +75,7 @@ describe('POST /gift-aid/download', () => {
   beforeEach(() => vi.clearAllMocks());
 
   it('returns 200 with Excel file', async () => {
+    tenantQuery.mockResolvedValueOnce([FEATURE_ON]); // requireFeature
     tenantQuery.mockResolvedValueOnce([SAMPLE_ROW]); // fetchDeclarationRows
     const res = await request(app)
       .post('/gift-aid/download')
@@ -86,6 +87,7 @@ describe('POST /gift-aid/download', () => {
   });
 
   it('returns 400 when no matching transactions', async () => {
+    tenantQuery.mockResolvedValueOnce([FEATURE_ON]); // requireFeature
     tenantQuery.mockResolvedValueOnce([]); // no rows
     const res = await request(app)
       .post('/gift-aid/download')
@@ -95,6 +97,7 @@ describe('POST /gift-aid/download', () => {
   });
 
   it('returns 422 with invalid body', async () => {
+    tenantQuery.mockResolvedValueOnce([FEATURE_ON]); // requireFeature
     const res = await request(app)
       .post('/gift-aid/download')
       .set('Authorization', AUTH)
@@ -109,6 +112,7 @@ describe('POST /gift-aid/mark', () => {
   beforeEach(() => vi.clearAllMocks());
 
   it('returns 200 with count of marked transactions', async () => {
+    tenantQuery.mockResolvedValueOnce([FEATURE_ON]); // requireFeature
     tenantQuery.mockResolvedValueOnce([{ id: 't1' }]); // UPDATE RETURNING
     const res = await request(app)
       .post('/gift-aid/mark')
@@ -119,6 +123,7 @@ describe('POST /gift-aid/mark', () => {
   });
 
   it('returns 422 with empty ids', async () => {
+    tenantQuery.mockResolvedValueOnce([FEATURE_ON]); // requireFeature
     const res = await request(app)
       .post('/gift-aid/mark')
       .set('Authorization', AUTH)

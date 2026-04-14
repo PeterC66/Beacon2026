@@ -40,13 +40,11 @@ router.get('/', requirePrivilege('public_links', 'view'), async (req, res, next)
   try {
     const [settings] = await tenantQuery(
       req.user.tenantSlug,
-      `SELECT online_joining_enabled, privacy_policy_url,
-              paypal_email, paypal_cancel_url,
+      `SELECT privacy_policy_url, paypal_email, paypal_cancel_url,
               portal_config, group_info_config, calendar_config
        FROM tenant_settings WHERE id = 'singleton'`,
     );
     res.json({
-      onlineJoiningEnabled: settings?.online_joining_enabled ?? false,
       privacyPolicyUrl:     settings?.privacy_policy_url ?? '',
       paypalEmail:          settings?.paypal_email ?? '',
       paypalCancelUrl:      settings?.paypal_cancel_url ?? '',
@@ -93,7 +91,6 @@ const calendarConfigSchema = z.object({
 }).optional();
 
 const updateSchema = z.object({
-  onlineJoiningEnabled: z.boolean().optional(),
   privacyPolicyUrl:     z.string().nullable().optional(),
   portalConfig:         portalConfigSchema,
   groupInfoConfig:      groupInfoConfigSchema,
@@ -107,7 +104,6 @@ router.patch('/', requirePrivilege('public_links', 'change'), async (req, res, n
     const values = [];
     let i = 1;
 
-    if (data.onlineJoiningEnabled !== undefined) { fields.push(`online_joining_enabled = $${i++}`); values.push(data.onlineJoiningEnabled); }
     if (data.privacyPolicyUrl     !== undefined) { fields.push(`privacy_policy_url = $${i++}`);     values.push(data.privacyPolicyUrl); }
     if (data.portalConfig         !== undefined) { fields.push(`portal_config = $${i++}::jsonb`);   values.push(JSON.stringify(data.portalConfig)); }
     if (data.groupInfoConfig      !== undefined) { fields.push(`group_info_config = $${i++}::jsonb`); values.push(JSON.stringify(data.groupInfoConfig)); }
@@ -120,7 +116,7 @@ router.patch('/', requirePrivilege('public_links', 'change'), async (req, res, n
     const [updated] = await tenantQuery(
       req.user.tenantSlug,
       `UPDATE tenant_settings SET ${fields.join(', ')} WHERE id = 'singleton'
-       RETURNING online_joining_enabled, privacy_policy_url,
+       RETURNING privacy_policy_url,
                  portal_config, group_info_config, calendar_config`,
       values,
     );
@@ -132,7 +128,6 @@ router.patch('/', requirePrivilege('public_links', 'change'), async (req, res, n
     });
 
     res.json({
-      onlineJoiningEnabled: updated.online_joining_enabled,
       privacyPolicyUrl:     updated.privacy_policy_url,
       portalConfig:         { ...DEFAULT_PORTAL_CONFIG, ...(updated.portal_config ?? {}) },
       groupInfoConfig:      { ...DEFAULT_GROUP_INFO_CONFIG, ...(updated.group_info_config ?? {}) },

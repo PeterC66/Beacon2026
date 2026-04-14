@@ -22,7 +22,7 @@ describe('Public Links routes', () => {
 
   it('GET /public-links returns settings including config sections', async () => {
     tenantQuery.mockResolvedValueOnce([{
-      online_joining_enabled: true,
+
       privacy_policy_url: 'https://example.com/privacy',
       paypal_email: 'pay@test.com',
       paypal_cancel_url: 'https://test.com',
@@ -36,7 +36,6 @@ describe('Public Links routes', () => {
       .set('Authorization', auth);
 
     expect(res.status).toBe(200);
-    expect(res.body.onlineJoiningEnabled).toBe(true);
     expect(res.body.privacyPolicyUrl).toBe('https://example.com/privacy');
     expect(res.body.portalConfig.renewals).toBe(true);
     expect(res.body.portalConfig.replacementCard).toBe(true);
@@ -47,7 +46,7 @@ describe('Public Links routes', () => {
 
   it('GET /public-links returns defaults when config columns are null', async () => {
     tenantQuery.mockResolvedValueOnce([{
-      online_joining_enabled: false,
+
       privacy_policy_url: null,
       paypal_email: null,
       paypal_cancel_url: null,
@@ -69,7 +68,7 @@ describe('Public Links routes', () => {
 
   it('PATCH /public-links updates settings', async () => {
     tenantQuery.mockResolvedValueOnce([{
-      online_joining_enabled: true,
+
       privacy_policy_url: 'https://example.com/privacy',
       portal_config: { renewals: true, groups: false, calendar: false, personalDetails: false, replacementCard: false },
       group_info_config: {},
@@ -79,7 +78,7 @@ describe('Public Links routes', () => {
     const res = await request(app)
       .patch('/public-links')
       .set('Authorization', auth)
-      .send({ onlineJoiningEnabled: true, privacyPolicyUrl: 'https://example.com/privacy' });
+      .send({ privacyPolicyUrl: 'https://example.com/privacy' });
 
     expect(res.status).toBe(200);
   });
@@ -87,7 +86,7 @@ describe('Public Links routes', () => {
   it('PATCH /public-links updates portal config', async () => {
     const portalConfig = { renewals: true, groups: true, calendar: true, personalDetails: true, replacementCard: false };
     tenantQuery.mockResolvedValueOnce([{
-      online_joining_enabled: false,
+
       privacy_policy_url: null,
       portal_config: portalConfig,
       group_info_config: {},
@@ -108,7 +107,7 @@ describe('Public Links routes', () => {
     const groupInfoConfig = { status: { members: true, public: true }, venue: { members: false, public: true } };
     const calendarConfig = { venue: { members: true, public: false }, topic: { members: true, public: true } };
     tenantQuery.mockResolvedValueOnce([{
-      online_joining_enabled: false,
+
       privacy_policy_url: null,
       portal_config: {},
       group_info_config: groupInfoConfig,
