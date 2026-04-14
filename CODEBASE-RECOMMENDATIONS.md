@@ -1,6 +1,6 @@
 # Codebase Rationalisation — Remaining Recommendations
 
-Produced 2026-04-14. Priority 1 items (R1–R3) were implemented; the rest are
+Produced 2026-04-14. Priority 1 items (R1–R3) and R4 were implemented; the rest are
 documented below with enough detail to implement in standalone sessions.
 
 ---
@@ -12,56 +12,15 @@ documented below with enough detail to implement in standalone sessions.
 | R1 | Shared constants | `shared/constants.js` at repo root; `frontend/src/lib/constants.js` barrel |
 | R2 | Shared validation | `frontend/src/lib/validation.js` (`isValidUKPostcode`, `validatePhone`) |
 | R3 | Split api.js | `api/core.js`, `api/system.js`, `api/public.js`, `api/portal.js`; `api.js` now 626 lines |
+| R4 | Extract EntityMembers | `components/EntityMembers.jsx` shared by GroupRecord and TeamRecord; net −936 lines |
 
 ---
 
 ## Priority 2 — High Impact, Medium Effort
 
-### R4. Extract shared EntityMembers component from GroupRecord / TeamRecord
+### ~~R4. Extract shared EntityMembers component from GroupRecord / TeamRecord~~
 
-**Problem:** `GroupRecord.jsx` (1,291 lines) and `TeamRecord.jsx` (1,045 lines) are
-~70% structurally identical. Their inner Members sub-components share the same logic
-for add-by-name, add-by-number, member table with sortable headers, bulk selection,
-bulk actions (remove, copy-to-another, send-email), download with field picker, and
-leader toggle. The only differences are:
-
-1. API namespace (`groupsApi` vs `teamsApi`)
-2. Whether waiting-list filtering applies (groups only)
-3. The `targetGroupId` vs `targetTeamId` field name in bulk-add
-4. Download field definitions (GroupRecord has 14 fields including `waiting_since`;
-   TeamRecord has 13)
-
-The codebase already proves this pattern works — `Schedule.jsx` was extracted as a
-shared component used by both GroupRecord and TeamRecord.
-
-**Implementation steps:**
-
-1. Create `frontend/src/components/EntityMembers.jsx`
-2. Extract the Members sub-component from GroupRecord (roughly lines 400–850)
-3. Parameterise via props:
-   - `entityType` — `'group'` or `'team'`
-   - `entityId` — the group/team UUID
-   - `api` — the API namespace object (`groupsApi` or `teamsApi`)
-   - `downloadFields` — array of `{ key, label, default }` objects
-   - `showWaitingList` — boolean (true for groups, false for teams)
-   - `privilegeResource` — `'group_record'` or `'team_record'`
-   - `bulkAddTargetKey` — `'targetGroupId'` or `'targetTeamId'`
-4. Update GroupRecord to render `<EntityMembers entityType="group" ... />`
-5. Update TeamRecord to render `<EntityMembers entityType="team" ... />`
-6. **Also consider** extracting a shared `TabLayout` component (both files implement
-   the same tab-strip pattern with `useState` for active tab and conditional rendering)
-7. **Also consider** extracting a `useFormSave` hook for the shared
-   `[saving, setSaving] + [error, setError] + [saved, setSaved]` triplet with
-   3-second auto-dismiss timer
-
-**Files to modify:**
-- `frontend/src/pages/groups/GroupRecord.jsx` — extract Members, slim down ~400 lines
-- `frontend/src/pages/groups/TeamRecord.jsx` — extract Members, slim down ~400 lines
-- Create `frontend/src/components/EntityMembers.jsx` (~350 lines)
-
-**Testing:** Run `cd frontend && npm test` — the GroupRecord and TeamRecord tests
-will verify the extraction. Manually test add/remove/toggle/bulk/download on both
-a group record and a team record.
+**Completed** — see completed table above.
 
 ---
 
