@@ -151,12 +151,12 @@ test.describe('Event Types', () => {
   test('add a new event type', async ({ adminPage: page }) => {
     await gotoHomeLink(page, '/event-types', 'Event Types');
 
-    // Fill the add-new form
-    const nameInput = page.locator('input[name="name"]').first();
+    // Fill the add-new form (input names are "newName" / "newDesc")
+    const nameInput = page.locator('input[name="newName"]').first();
     await nameInput.waitFor({ timeout: 5_000 });
     await nameInput.fill(`E2EEventType${SUFFIX}`);
 
-    const descInput = page.locator('input[name="description"]').first();
+    const descInput = page.locator('input[name="newDesc"]').first();
     if (await descInput.isVisible()) await descInput.fill('Test event type');
 
     await page.getByRole('button', { name: /save/i }).first().click();
