@@ -210,8 +210,9 @@ async function seedMemberClass(tenantToken) {
 
 async function enableTestFeatures(tenantToken) {
   const features = {
-    groupLedger: true,
-    giftAid:     true,
+    groupLedger:     true,
+    giftAid:         true,
+    eventAttendance: true,
   };
   const { status } = await apiCall('/settings/feature-config', {
     method:     'PATCH',
