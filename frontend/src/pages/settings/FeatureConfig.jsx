@@ -131,12 +131,21 @@ function ToggleSwitch({ checked, onChange, disabled, label, tip, sysAdminOnly })
 
 // ─── Section component ───────────────────────────────────────────────────
 
-function FeatureSection({ section, config, isSysAdmin, onChange }) {
+function FeatureSection({ section, config, isSysAdmin, onChange, onConfirmMasterOff }) {
   const [expanded, setExpanded] = useState(true);
   const { master, toggles } = section;
 
   const masterOn = master ? getVal(config, master.key, master.defaultValue) : true;
   const masterDisabled = master?.sysAdminOnly && !isSysAdmin;
+
+  const handleMasterChange = (val) => {
+    if (!val && masterOn) {
+      // Turning off — request confirmation
+      onConfirmMasterOff(master.key, section.title);
+    } else {
+      onChange(master.key, val);
+    }
+  };
 
   return (
     <section className="bg-white/90 rounded-lg shadow-sm overflow-hidden">
@@ -171,7 +180,7 @@ function FeatureSection({ section, config, isSysAdmin, onChange }) {
             <div className="border-b border-slate-100 pb-2 mb-2">
               <ToggleSwitch
                 checked={masterOn}
-                onChange={(val) => onChange(master.key, val)}
+                onChange={handleMasterChange}
                 disabled={masterDisabled}
                 label={master.label}
                 tip={master.tip}
@@ -217,6 +226,7 @@ export default function FeatureConfig() {
   const [saving,  setSaving]  = useState(false);
   const [error,   setError]   = useState(null);
   const [success, setSuccess] = useState(false);
+  const [confirmOff, setConfirmOff] = useState(null); // { key, title } when awaiting confirm
 
   useEffect(() => {
     settingsApi.getFeatureConfig()
@@ -230,6 +240,11 @@ export default function FeatureConfig() {
     setSuccess(false);
     markDirty();
   }, [markDirty]);
+
+  /** Called when a master toggle is being turned off — show confirmation first. */
+  const handleConfirmMasterOff = useCallback((key, title) => {
+    setConfirmOff({ key, title });
+  }, []);
 
   async function handleSave(e) {
     e.preventDefault();
@@ -320,6 +335,7 @@ export default function FeatureConfig() {
                 config={config}
                 isSysAdmin={false}
                 onChange={handleChange}
+                onConfirmMasterOff={handleConfirmMasterOff}
               />
             ))}
 
@@ -339,6 +355,37 @@ export default function FeatureConfig() {
               <p className="text-sm text-slate-500 italic text-right">
                 You do not have permission to change feature configuration.
               </p>
+            )}
+
+            {/* Confirmation dialog for turning off a master module */}
+            {confirmOff && (
+              <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+                <div className="bg-white rounded-lg shadow-xl max-w-sm mx-4 p-6">
+                  <h3 className="text-lg font-semibold text-slate-800 mb-2">
+                    Turn off {confirmOff.title}?
+                  </h3>
+                  <p className="text-sm text-slate-600 mb-4">
+                    This will hide all {confirmOff.title} features from users.
+                    Existing data is preserved and will reappear if you turn it back on.
+                  </p>
+                  <div className="flex justify-end gap-3">
+                    <button
+                      type="button"
+                      onClick={() => setConfirmOff(null)}
+                      className="px-4 py-2 text-sm text-slate-700 hover:text-slate-900 border border-slate-300 rounded transition-colors"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => { handleChange(confirmOff.key, false); setConfirmOff(null); }}
+                      className="px-4 py-2 text-sm text-white bg-red-600 hover:bg-red-700 rounded transition-colors"
+                    >
+                      Turn off
+                    </button>
+                  </div>
+                </div>
+              </div>
             )}
           </form>
         )}

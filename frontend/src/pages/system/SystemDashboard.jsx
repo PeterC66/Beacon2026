@@ -9,6 +9,73 @@ import { useSortedData } from '../../hooks/useSortedData.js';
 
 const EMPTY_FORM = { name: '', slug: '', adminEmail: '', adminName: '', adminPassword: '', adminUsername: '' };
 
+// ─── Feature toggle definitions (same structure as FeatureConfig.jsx) ────────
+const SECTIONS = [
+  {
+    title: 'Membership',
+    master: null,
+    toggles: [
+      { key: 'membershipCards',     label: 'Membership Cards',     defaultValue: true },
+      { key: 'membershipRenewals',  label: 'Membership Renewals',  defaultValue: true },
+      { key: 'addressesExport',     label: 'Addresses Export',     defaultValue: true },
+      { key: 'giftAid',            label: 'Gift Aid',             defaultValue: false },
+      { key: 'customFields',       label: 'Custom Fields',        defaultValue: true },
+      { key: 'polls',              label: 'Polls',                defaultValue: true },
+      { key: 'statistics',         label: 'Membership Statistics', defaultValue: true },
+    ],
+  },
+  {
+    title: 'Groups',
+    master: { key: 'groups', label: 'Groups module', defaultValue: true },
+    toggles: [
+      { key: 'teams',       label: 'Teams',         defaultValue: true,  dependsOn: 'groups' },
+      { key: 'venues',      label: 'Venues',        defaultValue: true,  dependsOn: 'groups' },
+      { key: 'faculties',   label: 'Faculties',     defaultValue: true,  dependsOn: 'groups' },
+      { key: 'groupLedger', label: 'Group Ledger',  defaultValue: false, dependsOn: 'groups' },
+      { key: 'siteworks',   label: 'SiteWorks',     defaultValue: false, dependsOn: 'groups' },
+    ],
+  },
+  {
+    title: 'Events & Calendar',
+    master: { key: 'events', label: 'Events & Calendar module', defaultValue: true },
+    toggles: [
+      { key: 'calendar',   label: 'Calendar',    defaultValue: true, dependsOn: 'events' },
+      { key: 'eventTypes', label: 'Event Types',  defaultValue: true, dependsOn: 'events' },
+    ],
+  },
+  {
+    title: 'Finance',
+    master: { key: 'finance', label: 'Finance module', defaultValue: true },
+    toggles: [
+      { key: 'creditBatches',      label: 'Credit Batches',      defaultValue: true, dependsOn: 'finance' },
+      { key: 'reconciliation',     label: 'Reconciliation',      defaultValue: true, dependsOn: 'finance' },
+      { key: 'financialStatement', label: 'Financial Statement',  defaultValue: true, dependsOn: 'finance' },
+      { key: 'groupsStatement',    label: 'Groups Statement',    defaultValue: true, dependsOn: 'finance' },
+      { key: 'transferMoney',      label: 'Transfer Money',      defaultValue: true, dependsOn: 'finance' },
+    ],
+  },
+  {
+    title: 'Email & Letters',
+    master: { key: 'email', label: 'Email & Letters module', defaultValue: true },
+    toggles: [],
+  },
+  {
+    title: 'Members Portal',
+    master: { key: 'portal', label: 'Members Portal', defaultValue: true },
+    toggles: [],
+  },
+  {
+    title: 'Online Joining',
+    master: { key: 'onlineJoining', label: 'Online Joining', defaultValue: true },
+    toggles: [],
+  },
+];
+
+function getVal(config, key, defaultValue) {
+  if (key in config) return config[key];
+  return defaultValue;
+}
+
 export default function SystemDashboard() {
   const navigate  = useNavigate();
   const token     = sessionStorage.getItem('sysToken');
@@ -27,6 +94,15 @@ export default function SystemDashboard() {
   const [sysMessageOrig,  setSysMessageOrig] = useState('');
   const [sysMessageSaving, setSysMessageSaving] = useState(false);
   const [sysMessageSaved,  setSysMessageSaved]  = useState(false);
+
+  // Feature config modal state
+  const [fcTenant,  setFcTenant]  = useState(null);  // { slug, name } of tenant being edited
+  const [fcConfig,  setFcConfig]  = useState({});
+  const [fcSaved,   setFcSaved]   = useState({});
+  const [fcLoading, setFcLoading] = useState(false);
+  const [fcSaving,  setFcSaving]  = useState(false);
+  const [fcError,   setFcError]   = useState(null);
+  const [fcSuccess, setFcSuccess] = useState(false);
 
   // Restore state
   const restoreFileRef = useRef(null);
@@ -166,6 +242,66 @@ export default function SystemDashboard() {
     }
   }
 
+  async function openFeatureConfig(tenant) {
+    setFcTenant(tenant);
+    setFcLoading(true);
+    setFcError(null);
+    setFcSuccess(false);
+    try {
+      const cfg = await system.getFeatureConfig(token, tenant.slug);
+      setFcConfig(cfg);
+      setFcSaved(cfg);
+    } catch (err) {
+      setFcError(err.message);
+    } finally {
+      setFcLoading(false);
+    }
+  }
+
+  function handleFcChange(key, value) {
+    setFcConfig((prev) => ({ ...prev, [key]: value }));
+    setFcSuccess(false);
+  }
+
+  async function handleFcSave() {
+    // Build diff
+    const diff = {};
+    for (const section of SECTIONS) {
+      if (section.master) {
+        const k = section.master.key;
+        const cur = fcConfig[k] ?? section.master.defaultValue;
+        const prev = fcSaved[k] ?? section.master.defaultValue;
+        if (cur !== prev) diff[k] = fcConfig[k] ?? section.master.defaultValue;
+      }
+      for (const t of section.toggles) {
+        const cur = fcConfig[t.key] ?? t.defaultValue;
+        const prev = fcSaved[t.key] ?? t.defaultValue;
+        if (cur !== prev) diff[t.key] = fcConfig[t.key] ?? t.defaultValue;
+      }
+    }
+    // Also catch explicitly changed keys not in SECTIONS defaults
+    for (const key of Object.keys(fcConfig)) {
+      if (fcConfig[key] !== fcSaved[key] && !(key in diff)) diff[key] = fcConfig[key];
+    }
+    if (Object.keys(diff).length === 0) return;
+
+    setFcSaving(true);
+    setFcError(null);
+    try {
+      const updated = await system.updateFeatureConfig(token, fcTenant.slug, diff);
+      setFcConfig(updated);
+      setFcSaved(updated);
+      setFcSuccess(true);
+      setTimeout(() => setFcSuccess(false), 3000);
+    } catch (err) {
+      setFcError(err.message);
+    } finally {
+      setFcSaving(false);
+    }
+  }
+
+  const fcDirty = fcTenant && JSON.stringify(fcConfig) !== JSON.stringify(fcSaved);
+
   return (
     <div className="min-h-screen bg-slate-100">
       {/* Header */}
@@ -235,6 +371,13 @@ export default function SystemDashboard() {
                         className="text-xs text-slate-500 hover:text-slate-800 underline"
                       >
                         {t.active ? 'Disable' : 'Enable'}
+                      </button>
+                      <button
+                        onClick={() => openFeatureConfig(t)}
+                        className="text-xs text-blue-600 hover:text-blue-800 underline"
+                        title="View and edit feature toggles for this tenant"
+                      >
+                        Features
                       </button>
                       <button
                         onClick={() => handleSetTempPassword(t)}
@@ -437,7 +580,7 @@ export default function SystemDashboard() {
 
       </main>
 
-      {/* Confirmation modal */}
+      {/* Restore confirmation modal */}
       {confirmOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
           <div className="bg-white rounded-lg shadow-xl p-6 max-w-md mx-4">
@@ -468,6 +611,106 @@ export default function SystemDashboard() {
               >
                 Yes, restore now
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Feature config modal */}
+      {fcTenant && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <div className="bg-white rounded-lg shadow-xl max-w-lg mx-4 w-full max-h-[85vh] flex flex-col">
+            {/* Header */}
+            <div className="px-6 py-4 border-b border-slate-200">
+              <h3 className="text-lg font-bold text-slate-800">
+                Feature Configuration
+              </h3>
+              <p className="text-sm text-slate-500">{fcTenant.name} ({fcTenant.slug})</p>
+            </div>
+
+            {/* Scrollable content */}
+            <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4">
+              {fcLoading && <p className="text-center text-slate-500 py-4">Loading...</p>}
+
+              {fcError && (
+                <p className="rounded-md bg-red-50 border border-red-300 px-3 py-2 text-red-700 text-sm">
+                  {fcError}
+                </p>
+              )}
+
+              {fcSuccess && (
+                <p className="rounded-md bg-green-50 border border-green-300 px-3 py-2 text-green-700 text-sm font-medium">
+                  Feature configuration saved.
+                </p>
+              )}
+
+              {!fcLoading && SECTIONS.map((section) => {
+                const masterOn = section.master
+                  ? getVal(fcConfig, section.master.key, section.master.defaultValue)
+                  : true;
+                return (
+                  <div key={section.title} className="border border-slate-200 rounded-lg overflow-hidden">
+                    <div className="bg-gradient-to-r from-amber-50 to-amber-100 px-4 py-2 font-semibold text-sm text-slate-800">
+                      {section.title}
+                    </div>
+                    <div className="px-4 py-2 space-y-1">
+                      {section.master && (
+                        <label className="flex items-center gap-3 py-1 text-sm cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={masterOn}
+                            onChange={(e) => handleFcChange(section.master.key, e.target.checked)}
+                            className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                          />
+                          <span className="font-medium text-slate-700">{section.master.label}</span>
+                        </label>
+                      )}
+                      {section.toggles.length > 0 && (
+                        <div className="pl-6 space-y-1">
+                          {section.toggles.map((t) => {
+                            const parentOff = t.dependsOn && !getVal(fcConfig, t.dependsOn, true);
+                            const checked = parentOff ? false : getVal(fcConfig, t.key, t.defaultValue);
+                            return (
+                              <label
+                                key={t.key}
+                                className={`flex items-center gap-3 py-0.5 text-sm ${parentOff ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer'}`}
+                              >
+                                <input
+                                  type="checkbox"
+                                  checked={checked}
+                                  disabled={parentOff}
+                                  onChange={(e) => handleFcChange(t.key, e.target.checked)}
+                                  className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                                />
+                                <span className="text-slate-700">{t.label}</span>
+                              </label>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Footer */}
+            <div className="px-6 py-4 border-t border-slate-200 flex justify-end gap-3">
+              <button
+                onClick={() => setFcTenant(null)}
+                className="border border-slate-300 text-slate-700 hover:bg-slate-50 rounded px-5 py-2 text-sm"
+              >
+                {fcDirty ? 'Cancel' : 'Close'}
+              </button>
+              {fcDirty && (
+                <button
+                  onClick={handleFcSave}
+                  disabled={fcSaving}
+                  className="bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white rounded px-5 py-2 text-sm font-medium"
+                >
+                  {fcSaving ? 'Saving...' : 'Save'}
+                </button>
+              )}
             </div>
           </div>
         </div>
