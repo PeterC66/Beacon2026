@@ -204,6 +204,28 @@ async function seedMemberClass(tenantToken) {
   }
 }
 
+// ── Step 7: enable feature flags needed by E2E tests ─────────────────────
+// groupLedger and giftAid default to OFF — enable them so ledger tabs
+// and Gift Aid pages are accessible during tests.
+
+async function enableTestFeatures(tenantToken) {
+  const features = {
+    groupLedger: true,
+    giftAid:     true,
+  };
+  const { status } = await apiCall('/settings/feature-config', {
+    method:     'PATCH',
+    token:      tenantToken,
+    tenantSlug: SLUG,
+    body:       features,
+  });
+  if (status === 200) {
+    console.log(`[setup] Features enabled: ${Object.keys(features).join(', ')}.`);
+  } else {
+    console.warn(`[setup] Feature enablement returned ${status} — continuing.`);
+  }
+}
+
 // ── Main ──────────────────────────────────────────────────────────────────
 
 export default async function globalSetup() {
@@ -231,6 +253,7 @@ export default async function globalSetup() {
   await seedFinanceAccount(tenantToken);
   await seedFinanceCategory(tenantToken);
   await seedMemberClass(tenantToken);
+  await enableTestFeatures(tenantToken);
 
   // Persist the generated slug so test fixtures and teardown can read it.
   writeFileSync(STATE_PATH, JSON.stringify({ slug: SLUG }));

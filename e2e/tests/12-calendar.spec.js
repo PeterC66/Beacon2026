@@ -89,8 +89,9 @@ test.describe('Calendar', () => {
   test('Group/Team filter dropdown is present', async ({ adminPage: page }) => {
     await gotoHomeLink(page, '/calendar', 'Calendar');
 
-    // Click the "group" radio to show the group/team dropdown
+    // Wait for filter controls to render, then click the "group" radio
     const groupRadio = page.locator('input[name="filter"][value="group"]');
+    await expect(groupRadio).toBeVisible({ timeout: 10_000 });
     await groupRadio.click();
 
     const groupSelect = page.locator('select[name="groupId"]');

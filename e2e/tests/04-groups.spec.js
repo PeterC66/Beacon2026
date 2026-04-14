@@ -155,9 +155,10 @@ test.describe('Groups / Teams switching', () => {
     const listPage = new GroupListPage(page);
     await listPage.goto();
 
-    const switchLink = page.getByRole('link', { name: 'Switch to Teams' }).first();
-    await expect(switchLink).toBeVisible({ timeout: 5_000 });
-    await switchLink.click();
+    // NavBar link labelled "Teams" (not "Switch to Teams")
+    const teamsLink = page.getByRole('link', { name: 'Teams' }).first();
+    await expect(teamsLink).toBeVisible({ timeout: 5_000 });
+    await teamsLink.click();
 
     await expect(page.getByRole('heading', { name: 'Teams' })).toBeVisible({ timeout: 10_000 });
   });
@@ -172,9 +173,10 @@ test.describe('Groups / Teams switching', () => {
     if (!clicked) await page.goto('/teams');
     await page.getByRole('heading', { name: 'Teams' }).waitFor({ timeout: 10_000 });
 
-    const switchLink = page.getByRole('link', { name: 'Switch to Groups' }).first();
-    await expect(switchLink).toBeVisible({ timeout: 5_000 });
-    await switchLink.click();
+    // NavBar link labelled "Groups" (not "Switch to Groups")
+    const groupsLink = page.getByRole('link', { name: 'Groups' }).first();
+    await expect(groupsLink).toBeVisible({ timeout: 5_000 });
+    await groupsLink.click();
 
     await expect(page.getByRole('heading', { name: 'Groups' })).toBeVisible({ timeout: 10_000 });
   });
