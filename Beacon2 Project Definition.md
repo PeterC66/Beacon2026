@@ -23,7 +23,7 @@ Beacon2 is a ground-up rebuild with these goals:
 
 ---
 
-## What has been built (as of version 0.8.1)
+## What has been built (as of version 0.9.9)
 
 ### Infrastructure and platform
 - Full multi-tenant architecture (PostgreSQL schema-per-tenant)
@@ -265,11 +265,11 @@ backend/
     server.js              # migrateAndSeed() then app.listen()
     middleware/             auth.js  requirePrivilege.js  errorHandler.js
     routes/                auth  users  roles  privileges  system  members
-                           memberClasses  memberStatuses  groups  venues
+                           memberClasses  memberStatuses  groups  teams  venues
                            faculties  settings  finance  polls  backup
                            addressExport  email  giftAid  systemMessages
-                           publicLinks  public  portal  calendar  letters
-                           membershipCards  officers  customFields  audit
+                           publicLinks  public  portal  calendar  eventTypes
+                           letters  membershipCards  officers  customFields  audit
     services/              authService
     utils/                 db  jwt  password  redis  migrate  audit  emailTokens  paypal
     seed/                  index  createTenant  privilegeResources  defaultRoles
@@ -294,7 +294,7 @@ frontend/
                            FinancialStatement  GroupsStatement  GiftAidDeclaration
                            PaymentMethodDefaults
       groups/              GroupList  GroupRecord  TeamList  TeamRecord
-                           Calendar  VenueList  VenueEditor  FacultyList
+                           Calendar  EventRecord  VenueList  VenueEditor  FacultyList
       members/             MemberList  MemberEditor  MemberCompactView
                            AddressesExport  MemberStatistics  RecentMembers
       membership/          MemberClassList  MemberClassEditor  MemberStatusList
@@ -304,7 +304,7 @@ frontend/
       letters/             LetterCompose
       roles/               RoleList  RoleEditor
       settings/            SystemSettings  PersonalPreferences  SystemMessages
-                           CustomFields  EventTypeList
+                           CustomFields  EventTypeList  FeatureConfig
       system/              SystemLogin  SystemDashboard
       users/               UserList  UserEditor
       email/               EmailCompose  EmailDelivery  EmailDeliveryDetail
@@ -313,12 +313,14 @@ frontend/
                            PortalLogin  PortalRegister  PortalVerifyEmail
                            PortalForgotPassword  PortalResetPassword  PortalHome
                            PortalGroups  PortalCalendar  PortalPersonalDetails
-                           PortalRequestCard
+                           PortalRenewal  PortalRequestCard
+                           PublicGroups  PublicCalendar
 
 e2e/                       Playwright E2E tests against staging
 docs/
   Beacon2UG/               Beacon2 User Guide (64 sections + index, Markdown)
   BeaconUG/                Beacon User Guide pages (Markdown + images)
+  BeaconUG-Comparison.md   Feature comparison: Beacon2 vs original Beacon
   FromBeacon/              Selected files from original Beacon codebase
 ```
 
@@ -326,21 +328,8 @@ docs/
 
 ## What still needs building
 
-Greyed-out items in `Home.jsx` (i.e. `to: null`) are the remaining roadmap:
-
-**Previously listed, now done:**
-- ~~Public groups list page~~ (done — unauthenticated, field visibility via group_info_config public flags)
-- ~~Public calendar page~~ (done — unauthenticated, field visibility via calendar_config public flags)
-
 **Partially complete:**
 - Data migration tool (standalone import from Beacon — restore already handles this)
-
-**Previously listed, now done:**
-- ~~Letters~~ (done — docs 6.2, 6.2.1, 6.2.2)
-- ~~Membership cards~~ (done)
-- ~~Calendar~~ (done)
-- ~~Open Meetings~~ (done — replaced by flexible Event Types system; Calendar "Other" mode)
-- ~~Portal photo upload~~ (done)
 
 ---
 
