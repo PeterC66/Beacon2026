@@ -35,7 +35,6 @@ vi.mock('../lib/api.js', () => ({
       paypal_email:              null,
       paypal_cancel_url:         null,
       shared_address_warning:    false,
-      siteworks_activated:       false,
     }),
     update: vi.fn().mockResolvedValue({}),
   },

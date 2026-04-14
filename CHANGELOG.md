@@ -7,6 +7,12 @@ Format: `## [version] — YYYY-MM-DD` with bullet points per change.
 
 ## [0.8.6] — 2026-04-14
 
+### Changed
+- **SiteWorks toggle unified** — removed the redundant `SiteWorks Activated`
+  checkbox from System Settings. The SiteWorks Integration toggle on the Feature
+  Configuration page is now the single control that hides scheduling fields and
+  the Schedule tab from group records.
+
 ### Fixed
 - **Feature toggles** — disabling a master module (e.g. Events & Calendar) now
   correctly hides its sub-features (Calendar, Event Types) from the menu and

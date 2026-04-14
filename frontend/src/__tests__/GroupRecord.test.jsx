@@ -29,7 +29,6 @@ vi.mock('../lib/api.js', () => ({
   faculties: { list: vi.fn().mockResolvedValue([]) },
   members:   { list: vi.fn().mockResolvedValue([]) },
   venues:    { list: vi.fn().mockResolvedValue([]) },
-  settings:  { getSiteworksConfig: vi.fn().mockResolvedValue({ siteworksActivated: false }) },
 }));
 
 describe('GroupRecord page — new group', () => {

@@ -18,7 +18,7 @@ const COLS = `
   gift_aid_online_renewals, default_town, default_county, default_std_code,
   paypal_email, paypal_cancel_url, shared_address_warning,
   year_start_month, year_start_day, online_joining_enabled,
-  privacy_policy_url, group_bf_enabled, siteworks_activated, updated_at
+  privacy_policy_url, group_bf_enabled, updated_at
 `;
 
 // ─── GET /settings/year-config ────────────────────────────────────────────
@@ -79,23 +79,6 @@ router.get('/custom-field-labels', async (req, res, next) => {
       label4: row?.custom_field_label_4 ?? '',
     });
   } catch (err) { next(err); }
-});
-
-// ─── GET /settings/siteworks-config ────────────────────────────────────────
-// Returns the SiteWorks activation flag. No privilege required — any
-// authenticated user viewing a group record needs this.
-router.get('/siteworks-config', async (req, res, next) => {
-  try {
-    const [row] = await tenantQuery(
-      req.user.tenantSlug,
-      `SELECT siteworks_activated FROM tenant_settings WHERE id = 'singleton'`,
-    );
-    res.json({
-      siteworksActivated: row?.siteworks_activated ?? false,
-    });
-  } catch (err) {
-    next(err);
-  }
 });
 
 // ─── GET /settings/home-info ──────────────────────────────────────────────
@@ -176,7 +159,6 @@ const updateSchema = z.object({
   onlineJoiningEnabled:     z.boolean().optional(),
   privacyPolicyUrl:         z.string().nullable().optional(),
   groupBfEnabled:           z.boolean().optional(),
-  siteworksActivated:       z.boolean().optional(),
 });
 
 router.patch('/', requirePrivilege('settings', 'change'), async (req, res, next) => {
@@ -212,7 +194,6 @@ router.patch('/', requirePrivilege('settings', 'change'), async (req, res, next)
     if (data.onlineJoiningEnabled    !== undefined) { fields.push(`online_joining_enabled = $${i++}`);     values.push(data.onlineJoiningEnabled); }
     if (data.privacyPolicyUrl        !== undefined) { fields.push(`privacy_policy_url = $${i++}`);         values.push(data.privacyPolicyUrl); }
     if (data.groupBfEnabled          !== undefined) { fields.push(`group_bf_enabled = $${i++}`);           values.push(data.groupBfEnabled); }
-    if (data.siteworksActivated      !== undefined) { fields.push(`siteworks_activated = $${i++}`);       values.push(data.siteworksActivated); }
 
     if (fields.length === 0) return res.status(400).json({ error: 'Nothing to update.' });
 
