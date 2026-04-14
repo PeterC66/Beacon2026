@@ -12,6 +12,8 @@ Format: `## [version] — YYYY-MM-DD` with bullet points per change.
   correctly hides its sub-features (Calendar, Event Types) from the menu and
   blocks route access. Previously sub-features remained visible because
   `hasFeature()` didn't check the parent dependency chain.
+- **Group Ledger tab** — the Ledger tab on group and team records now respects the
+  `groupLedger` feature toggle and is hidden when the feature is configured off.
 
 ### Added
 - **Feature configuration** — new per-u3a feature toggles system. Each u3a can
