@@ -13,8 +13,7 @@ import { useSortedData } from '../../hooks/useSortedData.js';
 import { formatMemberName } from '../../hooks/usePreferences.js';
 import { isSubscriptionOverdue } from '../../lib/memberFormatters.js';
 import NoEmailIcon from '../../components/NoEmailIcon.jsx';
-
-const PAYMENT_METHODS = ['Cash', 'Cheque', 'Standing Order', 'Direct Debit', 'Online', 'Other'];
+import { SETTINGS_PAYMENT_METHODS as PAYMENT_METHODS } from '../../lib/constants.js';
 
 function fmtDate(d) {
   if (!d) return '—';

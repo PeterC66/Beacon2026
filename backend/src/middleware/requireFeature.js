@@ -6,27 +6,7 @@
 //   router.get('/finance', requireAuth, requireFeature('finance'), handler)
 
 import { tenantQuery } from '../utils/db.js';
-
-// Sub-feature → master-toggle dependency map.
-// When a master toggle is off, all its dependents are treated as off too.
-const FEATURE_DEPS = {
-  teams: 'groups', venues: 'groups', faculties: 'groups',
-  groupLedger: 'groups', siteworks: 'groups',
-  calendar: 'events', eventTypes: 'events',
-  creditBatches: 'finance', reconciliation: 'finance',
-  financialStatement: 'finance', groupsStatement: 'finance',
-  transferMoney: 'finance',
-};
-
-// Features that default to OFF when the key is missing from feature_config.
-// All other features default to ON (opt-out model).
-const FEATURE_DEFAULTS_OFF = new Set(['giftAid', 'groupLedger', 'siteworks']);
-
-/** Is a single feature key on, considering its default? */
-function isOn(config, key) {
-  if (key in config) return config[key] !== false;
-  return !FEATURE_DEFAULTS_OFF.has(key);
-}
+import { FEATURE_DEPS, FEATURE_DEFAULTS_OFF, isOn } from '../../../shared/constants.js';
 
 /**
  * Check whether a feature is enabled for a tenant (non-middleware version).

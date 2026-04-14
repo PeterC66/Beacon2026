@@ -10,6 +10,7 @@ import { requirePrivilege } from '../middleware/requirePrivilege.js';
 import { tenantQuery } from '../utils/db.js';
 import { AppError } from '../middleware/errorHandler.js';
 import { logAudit } from '../utils/audit.js';
+import { FINANCE_PAYMENT_METHODS } from '../../../shared/constants.js';
 
 const router = Router();
 router.use(requireAuth);
@@ -87,13 +88,10 @@ router.patch('/accounts/:id', requirePrivilege('finance_accounts', 'change'), as
 
 // PATCH /finance/accounts/:id/config — configure pending and refund settings.
 // Name is also editable here for unlocked accounts.
-const PENDING_TYPES = ['Cheque', 'Cash', 'PayPal', 'Standing Order', 'Direct Debit',
-                       'BACS', 'Debit card', 'Account transfer', 'Credit card'];
-
 const configSchema = z.object({
   name:           z.string().min(1).max(100).optional(),
   pending_config: z.enum(['disabled', 'optional', 'by_type']),
-  pending_types:  z.array(z.enum(PENDING_TYPES)).optional().default([]),
+  pending_types:  z.array(z.enum(FINANCE_PAYMENT_METHODS)).optional().default([]),
   enable_refunds: z.boolean(),
 });
 
@@ -183,8 +181,6 @@ router.patch('/group-bf-setting', requirePrivilege('finance_accounts', 'change')
 
 // ─── PAYMENT METHOD DEFAULTS (doc 8.6c) ──────────────────────────────────
 
-const PAYMENT_METHODS_LIST = ['Cheque', 'Cash', 'PayPal', 'Standing Order', 'Direct Debit',
-                              'BACS', 'Debit card', 'Account transfer', 'Credit card'];
 
 // GET /finance/payment-method-defaults — returns default method + per-type account mappings.
 router.get('/payment-method-defaults', requirePrivilege('finance_accounts', 'view'), async (req, res, next) => {
@@ -212,7 +208,7 @@ router.put('/payment-method-defaults', requirePrivilege('finance_accounts', 'cha
     const data = paymentMethodDefaultsSchema.parse(req.body);
 
     // Validate that referenced accounts exist
-    if (data.defaultMethod && !PAYMENT_METHODS_LIST.includes(data.defaultMethod)) {
+    if (data.defaultMethod && !FINANCE_PAYMENT_METHODS.includes(data.defaultMethod)) {
       throw new AppError(`Invalid default payment method: ${data.defaultMethod}`, 400);
     }
     const accountIds = Object.values(data.mappings).filter(Boolean);
@@ -232,7 +228,7 @@ router.put('/payment-method-defaults', requirePrivilege('finance_accounts', 'cha
       [data.defaultMethod || null]);
 
     // Upsert each payment type mapping
-    for (const pm of PAYMENT_METHODS_LIST) {
+    for (const pm of FINANCE_PAYMENT_METHODS) {
       const accId = data.mappings[pm] || null;
       await tenantQuery(slug,
         `INSERT INTO payment_method_defaults (payment_method, account_id, updated_at)

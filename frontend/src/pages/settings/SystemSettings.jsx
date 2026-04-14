@@ -7,6 +7,7 @@ import PageHeader from '../../components/PageHeader.jsx';
 import NavBar from '../../components/NavBar.jsx';
 import { settings as settingsApi } from '../../lib/api.js';
 import { useUnsavedChanges } from '../../hooks/useUnsavedChanges.js';
+import { SETTINGS_PAYMENT_METHODS as PAYMENT_METHODS } from '../../lib/constants.js';
 
 function fmtTimestamp(ts) {
   if (!ts) return '';
@@ -24,8 +25,6 @@ const MONTHS = [
   'January', 'February', 'March', 'April', 'May', 'June',
   'July', 'August', 'September', 'October', 'November', 'December',
 ];
-
-const PAYMENT_METHODS = ['Cash', 'Cheque', 'Standing Order', 'Direct Debit', 'Online', 'Other'];
 
 const DEFAULTS = {
   card_colour:               '#0066cc',

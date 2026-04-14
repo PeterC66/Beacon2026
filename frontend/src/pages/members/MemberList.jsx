@@ -36,8 +36,7 @@ import { useSortedData } from '../../hooks/useSortedData.js';
 import { formatShortAddress, isSubscriptionOverdue } from '../../lib/memberFormatters.js';
 import { formatMemberName } from '../../hooks/usePreferences.js';
 import NoEmailIcon from '../../components/NoEmailIcon.jsx';
-
-const PAYMENT_METHODS = ['Cash', 'Cheque', 'PayPal', 'Standing Order', 'Direct Debit', 'BACS', 'Debit card', 'Account transfer', 'Credit card', 'Online', 'Other'];
+import { ALL_PAYMENT_METHODS as PAYMENT_METHODS } from '../../lib/constants.js';
 
 const ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
 

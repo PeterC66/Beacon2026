@@ -65,6 +65,15 @@ and strips invalid chars.
 - Refresh token: 30 days, httpOnly cookie
 - Privileges embedded in JWT at login
 - `api.js` auto-refreshes on 401
+- API client is split into modules under `frontend/src/lib/api/`:
+  - `core.js` — request infrastructure, token management, blob/multipart helpers
+  - `system.js` — system-admin API (separate token per call, raw fetch)
+  - `public.js` — public/unauthenticated API (raw fetch, no auth)
+  - `portal.js` — members-portal API (sessionStorage JWT)
+  - `api.js` — barrel re-export + tenant-scoped namespaces (use `request()` from core)
+- Shared constants live in `shared/constants.js` (repo root), re-exported via
+  `frontend/src/lib/constants.js` for convenient frontend imports
+- Shared validation (UK postcode, phone) in `frontend/src/lib/validation.js`
 
 ### Session invalidation
 

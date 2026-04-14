@@ -8,8 +8,7 @@ import { publicApi } from '../../lib/api.js';
 import RequiredMark from '../../components/RequiredMark.jsx';
 import { scrollToFirstFieldError } from '../../lib/scrollToError.js';
 import PortalVersion from '../../components/PortalVersion.jsx';
-
-const UK_POSTCODE_RE = /^(GIR\s?0AA|[A-Z]{1,2}[0-9][0-9A-Z]?\s?[0-9][ABD-HJLNP-UW-Z]{2})$/i;
+import { UK_POSTCODE_RE } from '../../lib/constants.js';
 
 export default function JoinForm() {
   const { slug } = useParams();
