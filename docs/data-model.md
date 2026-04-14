@@ -1,6 +1,6 @@
 # Beacon2 Data Model
 
-Generated 2026-03-26. Sources: `backend/prisma/schema.prisma` (public schema)
+Generated 2026-04-14. Sources: `backend/prisma/schema.prisma` (public schema)
 and `backend/prisma/tenant_schema.sql` (per-tenant schema).
 
 ---
@@ -97,12 +97,15 @@ addresses                        members
                                 | partner_id        FK--->|---->members (self)
                                 | custom_field_1..4       |
                                 | emergency_contact       |
+                                | photo_data         TEXT |
+                                | photo_mime_type         |
                                 | card_printed            |
                                 | portal_email            |
                                 | portal_password_hash    |
                                 | portal_email_verified   |
                                 | portal_verification_*   |
                                 | portal_reset_*          |
+                                | payment_token           |
                                 | created_at              |
                                 | updated_at              |
                                 +-------------------------+
@@ -142,8 +145,10 @@ faculties                        groups
 | id            PK  |<----------| faculty_id         FK   |
 | name          UQ  |           | id                 PK   |
 | created_at        |           | name                    |
-| updated_at        |           | status  (active/inactive)|
-+-------------------+           | when_text               |
+| updated_at        |           | short_name   (max 10)   |
++-------------------+           | type  ('group'|'team')  |
+                                | status  (active/inactive)|
+                                | when_text               |
                                 | start_time         TIME |
                                 | end_time           TIME |
                                 | venue          (legacy) |
@@ -161,31 +166,50 @@ faculties                        groups
                                 | updated_at             |
                                 +-------------------------+
                                     |              |
-          group_members             |     group_events
+          group_members             |     event_types
           +-------------------+     |     +-------------------+
           | id            PK  |     |     | id            PK  |
-          | group_id     FK-->|-----+     | group_id     FK-->|---->groups (nullable)
-          | member_id    FK-->|---->members| event_date   DATE |
-          | is_leader         |           | start_time   TIME |
-          | waiting_since DATE|           | end_time     TIME |
-          | created_at        |           | venue_id    FK--->|---->venues
-          | UQ(group,member)  |           | contact           |
-          +-------------------+           | details           |
-                                          | topic             |
-          group_ledger_entries            | is_private        |
-          +-------------------+           | created_at        |
-          | id            PK  |           | updated_at        |
-          | group_id     FK-->|---->groups +-------------------+
+          | group_id     FK-->|-----+     | name          UQ  |
+          | member_id    FK-->|---->members| description       |
+          | is_leader         |           | is_default        |
+          | waiting_since DATE|           | created_at        |
+          | created_at        |           | updated_at        |
+          | UQ(group,member)  |           +-------------------+
+          +-------------------+                  |
+                                          group_events
+          group_ledger_entries            +---------------------+
+          +-------------------+           | id              PK  |
+          | id            PK  |           | group_id       FK-->|---->groups (nullable)
+          | group_id     FK-->|---->groups | event_type_id  FK-->|---->event_types
+          | entry_date   DATE |           | event_date     DATE |
+          | payee             |           | start_time     TIME |
+          | detail            |           | end_time       TIME |
+          | money_in          |           | venue_id      FK--->|---->venues
+          | money_out         |           | contact             |
+          | created_at        |           | details             |
+          | updated_at        |           | topic               |
+          +-------------------+           | is_private          |
+                                          | created_at          |
+          event_members                   | updated_at          |
+          +-------------------+           +---------------------+
+          | id            PK  |
+          | event_id     FK-->|---->group_events
+          | member_id    FK-->|---->members
+          | is_organiser      |
+          | notes             |
+          | created_at        |
+          | UQ(event,member)  |
+          +-------------------+
           | entry_date   DATE |
           | payee             |   venues
           | detail            |   +-------------------+
           | money_in          |   | id            PK  |
           | money_out         |   | name              |
-          | created_at        |   | address1..2       |
-          | updated_at        |   | town, county      |
-          +-------------------+   | postcode          |
-                                  | telephone, email  |
+          | created_at        |   | address           |
+          | updated_at        |   | postcode          |
+          +-------------------+   | telephone, email  |
                                   | website           |
+                                  | contact           |
                                   | notes             |
                                   | private_address   |
                                   | accessible        |
@@ -228,11 +252,14 @@ finance_accounts                  finance_categories
                 | member_id_1       FK--->|---->members
                 | member_id_2       FK--->|---->members
                 | group_id          FK--->|---->groups
+                | event_id          FK--->|---->group_events
                 | cleared_at        DATE  |
                 | transfer_id             |  (pairs transfer txns)
                 | pending                 |
                 | gift_aid_amount         |
                 | gift_aid_claimed_at DATE|
+                | gift_aid_amount_2       |  (Gift Aid member 2)
+                | gift_aid_claimed_at_2   |
                 | batch_id          FK--->|---->credit_batches
                 | refund_of_id      FK--->|---->transactions (self)
                 | refunded_by_id    FK--->|---->transactions (self)
@@ -245,7 +272,9 @@ credit_batches                    payment_method_defaults
 | id            PK  |             | payment_method PK |
 | batch_ref         |             | account_id        |
 | account_id   FK-->|---->finance | updated_at        |
-| created_at        |  _accounts  +-------------------+
+| description       |  _accounts  +-------------------+
+| batch_date   DATE |
+| created_at        |
 | UQ(account,ref)   |
 +-------------------+
 ```
@@ -300,7 +329,9 @@ system_messages                  offices
    gift_aid_payment,
    online_renewal_confirm,
    card_replacement_confirm,
-   home_page_notice)
+   portal_details_updated,
+   home_page_notice,
+   online_join_payment_link)
 
 audit_log
 +-------------------+
@@ -374,6 +405,9 @@ tenant_settings
 | group_info_config                  |
 | calendar_config                    |
 |                                    |
+| -- Feature toggles (JSONB)        |
+| feature_config                     |
+|                                    |
 | updated_at                         |
 +------------------------------------+
 ```
@@ -397,11 +431,15 @@ tenant_settings
 | groups | faculties | N:1 | groups.faculty_id |
 | groups | venues | N:1 | groups.venue_id |
 | group_events | groups | N:1 (nullable) | group_events.group_id |
+| group_events | event_types | N:1 (nullable) | group_events.event_type_id |
 | group_events | venues | N:1 | group_events.venue_id |
+| event_members | group_events | N:1 | event_members.event_id |
+| event_members | members | N:1 | event_members.member_id |
 | transactions | finance_accounts | N:1 | transactions.account_id |
 | transactions | finance_categories | M:N | transaction_categories |
 | transactions | members | N:1 (x2) | member_id_1, member_id_2 |
 | transactions | groups | N:1 | transactions.group_id |
+| transactions | group_events | N:1 (nullable) | transactions.event_id |
 | transactions | credit_batches | N:1 | transactions.batch_id |
 | transactions | transactions | 1:1 | refund_of_id / refunded_by_id |
 | member_classes | class_monthly_fees | 1:N | class_monthly_fees.class_id |
