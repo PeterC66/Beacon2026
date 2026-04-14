@@ -1226,7 +1226,7 @@ export default function GroupRecord() {
   const tabs = [
     { key: 'details',  label: 'Details',  available: true },
     { key: 'members',  label: 'Members',  available: !isNew },
-    { key: 'schedule', label: 'Schedule', available: !isNew && !siteworksActivated },
+    { key: 'schedule', label: 'Schedule', available: !isNew && !siteworksActivated && hasFeature('events') },
     { key: 'ledger',   label: 'Ledger',   available: !isNew && hasFeature('groupLedger') && (can('group_ledger_all', 'view') || can('group_ledger_as_leader', 'view')) },
   ];
 

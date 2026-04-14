@@ -18,6 +18,16 @@ const FEATURE_DEPS = {
   transferMoney: 'finance',
 };
 
+// Features that default to OFF when the key is missing from feature_config.
+// All other features default to ON (opt-out model).
+const FEATURE_DEFAULTS_OFF = new Set(['giftAid', 'groupLedger', 'siteworks']);
+
+/** Is a single feature key on, considering its default? */
+function isOn(config, key) {
+  if (key in config) return config[key] !== false;
+  return !FEATURE_DEFAULTS_OFF.has(key);
+}
+
 /**
  * Middleware factory.
  * @param {string} featureKey - feature toggle key, e.g. 'finance', 'giftAid'
@@ -30,10 +40,8 @@ export function requireFeature(featureKey) {
         `SELECT feature_config FROM tenant_settings WHERE id = 'singleton'`,
       );
       const config = row?.feature_config ?? {};
-      // Missing key = enabled (opt-out model)
-      // Also check parent dependency — e.g. if 'events' is off, 'calendar' is off too.
       const parent = FEATURE_DEPS[featureKey];
-      if (config[featureKey] === false || (parent && config[parent] === false)) {
+      if (!isOn(config, featureKey) || (parent && !isOn(config, parent))) {
         return res.status(403).json({
           error: 'This feature is not enabled for your u3a.',
           feature: featureKey,
