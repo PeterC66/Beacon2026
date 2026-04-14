@@ -25,6 +25,9 @@ Format: `## [version] — YYYY-MM-DD` with bullet points per change.
   to Ledger sheet; restore handles both gracefully for backward compatibility
 - **Calendar click-through** — all calendar entries now link to Event Record page
 - **Schedule "View" link** — group schedule rows include link to Event Record
+- **E2E tests** — Playwright spec `19-event-members.spec.js` covering EventRecord
+  navigation, member add/remove/copy-from-group/organiser toggle, event financials
+  with transaction linking, and Schedule "View" link
 
 ---
 
