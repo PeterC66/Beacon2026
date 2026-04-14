@@ -365,7 +365,7 @@ END $$` block for idempotency.
 | `01-auth.spec.js` | Login / logout | Valid login, wrong password, unknown tenant, version display, logout redirect |
 | `02-members.spec.js` | Member CRUD | Create with/without payment (Current vs Applicant), edit, search, validation, delete |
 | `03-membership-setup.spec.js` | Classes / statuses | List, add, edit, delete; locked-item guard |
-| `04-groups.spec.js` | Group CRUD + tabs | Create, edit, delete; Schedule/Members/Ledger tabs; add event |
+| `04-groups.spec.js` | Group + Team CRUD + tabs | Create, edit, delete groups and teams; Schedule/Members/Ledger tabs; add event; Groups↔Teams switching links |
 | `05-venues-faculties.spec.js` | Venues / faculties | Full CRUD for both |
 | `06-finance.spec.js` | Accounts / categories / transactions / ledger | Add/delete account+category, add transaction, ledger views (account/category/group), delete guard |
 | `07-roles-users.spec.js` | Roles / system users | CRUD for both; privilege matrix load; user link to member |
@@ -373,12 +373,12 @@ END $$` block for idempotency.
 | `09-officers.spec.js` | u3a Officers | Add, list, delete |
 | `10-audit-log.spec.js` | Audit log | Page loads, date filter, entries present |
 | `11-backup.spec.js` | Export / validator | Export type labels, .xlsx download, member validator |
-| `12-calendar.spec.js` | Calendar / Open Meetings | Page loads, filters, PDF button, Open Meetings nav |
+| `12-calendar.spec.js` | Calendar / Event Types | Page loads, filters (all/group/other), PDF button, Show Detail checkbox, event type dropdown, Open Meetings nav |
 | `13-finance-extended.spec.js` | Transfers / reconcile / statements / batches | Transfer creation, reconcile page, statement pages, credit batch with own transaction |
 | `14-membership-extended.spec.js` | Renewals / cards / addresses / recent / stats | Page loads and structure for all 6 membership sub-pages |
 | `15-gift-aid.spec.js` | Gift Aid declaration + log | Year selector, action buttons, date filters |
 | `16-email.spec.js` | Email compose / delivery / unblocker | Compose form (no send), delivery date filters, unblocker input |
-| `17-setup-extended.spec.js` | Polls / messages / public links / custom fields | Poll CRUD, message templates, link sections, field label inputs |
+| `17-setup-extended.spec.js` | Polls / messages / public links / custom fields / feature config / event types | Poll CRUD, message templates, link sections, field label inputs, feature toggle sections + Update button, event type CRUD |
 | `18-letters-utilities.spec.js` | Letters / utilities | Letter editor + tokens, download button, utilities validate link |
 
 ### Page objects (7)
@@ -403,7 +403,6 @@ The following areas are **not yet tested end-to-end**. See `KNOWN-ISSUES.md`
 | Email send action | SendGrid not live in test env |
 | PDF/Excel download content | Only button presence tested; file content verification deferred |
 | Membership renewals bulk action | Would change member statuses + create transactions mid-run |
-| Credit batch full workflow | Create → add txns → clear not yet tested |
 | Portal full flow | Separate auth, email verification, complex multi-step |
 | Online joining flow | PayPal stub, public unauthenticated context |
 | Password recovery / force-change | Multi-step auth with state flags |

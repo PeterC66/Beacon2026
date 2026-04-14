@@ -1,5 +1,6 @@
 // beacon2/e2e/tests/17-setup-extended.spec.js
-// Extended setup tests: Polls, System Messages, Public Links, Custom Fields.
+// Extended setup tests: Polls, System Messages, Public Links, Custom Fields,
+// Feature Configuration, Event Types.
 // Beacon UG §§8.8, 9.4, 8.3
 //
 // Tests:
@@ -8,6 +9,10 @@
 //  ✓ System Messages page loads with message templates
 //  ✓ Public Links page loads with sections
 //  ✓ Custom Fields page loads with label inputs
+//  ✓ Feature Configuration page loads with sections and toggles
+//  ✓ Feature Configuration has Update button
+//  ✓ Event Types page loads with table
+//  ✓ Add and delete an event type
 
 import { test, expect } from '../fixtures/admin.js';
 
@@ -110,5 +115,64 @@ test.describe('Custom Fields', () => {
   test('save button is present', async ({ adminPage: page }) => {
     await gotoHomeLink(page, '/custom-fields', 'Custom Fields');
     await expect(page.getByRole('button', { name: /save/i })).toBeVisible();
+  });
+});
+
+// ── Feature Configuration ───────────────────────────────────────────────
+
+test.describe('Feature Configuration', () => {
+  test('page loads with sections and toggles', async ({ adminPage: page }) => {
+    await gotoHomeLink(page, '/feature-config', 'Feature Configuration');
+
+    // Should show at least one expandable section heading (e.g. Groups, Finance)
+    await expect(page.getByText(/groups/i).first()).toBeVisible({ timeout: 10_000 });
+
+    // Should have toggle switches (rendered as button with role="switch")
+    const toggles = page.getByRole('switch');
+    await expect(toggles.first()).toBeVisible({ timeout: 5_000 });
+  });
+
+  test('Update button is present', async ({ adminPage: page }) => {
+    await gotoHomeLink(page, '/feature-config', 'Feature Configuration');
+    await expect(page.getByRole('button', { name: /update/i })).toBeVisible({ timeout: 10_000 });
+  });
+});
+
+// ── Event Types ─────────────────────────────────────────────────────────
+
+test.describe('Event Types', () => {
+  test('page loads with table', async ({ adminPage: page }) => {
+    await gotoHomeLink(page, '/event-types', 'Event Types');
+
+    // Should show the default "Open Meetings" event type
+    await expect(page.getByText(/open meetings/i).first()).toBeVisible({ timeout: 10_000 });
+  });
+
+  test('add a new event type', async ({ adminPage: page }) => {
+    await gotoHomeLink(page, '/event-types', 'Event Types');
+
+    // Fill the add-new form
+    const nameInput = page.locator('input[name="name"]').first();
+    await nameInput.waitFor({ timeout: 5_000 });
+    await nameInput.fill(`E2EEventType${SUFFIX}`);
+
+    const descInput = page.locator('input[name="description"]').first();
+    if (await descInput.isVisible()) await descInput.fill('Test event type');
+
+    await page.getByRole('button', { name: /save/i }).first().click();
+
+    await expect(page.getByText(`E2EEventType${SUFFIX}`)).toBeVisible({ timeout: 6_000 });
+  });
+
+  test('delete the event type', async ({ adminPage: page }) => {
+    await gotoHomeLink(page, '/event-types', 'Event Types');
+
+    const row = page.getByRole('row').filter({ hasText: `E2EEventType${SUFFIX}` });
+    const rowVisible = await row.isVisible().catch(() => false);
+    if (rowVisible) {
+      page.once('dialog', (d) => d.accept());
+      await row.getByRole('button', { name: /delete/i }).click();
+      await expect(page.getByText(`E2EEventType${SUFFIX}`)).toBeHidden({ timeout: 6_000 });
+    }
   });
 });

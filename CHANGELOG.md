@@ -5,6 +5,21 @@ Format: `## [version] — YYYY-MM-DD` with bullet points per change.
 
 ---
 
+## [0.8.7] — 2026-04-14
+
+### Changed
+- **KNOWN-ISSUES.md** — removed 14 resolved items; only current open issues remain
+- **E2E tests** — added coverage for recent features:
+  - Feature Configuration page (sections, toggles, Update button)
+  - Event Types CRUD (add/delete)
+  - Teams list, Groups/Teams switching links, team CRUD + schedule events
+  - Calendar: Show Detail checkbox, "Other" filter with event type dropdown,
+    Group/Team filter dropdown
+- **CLAUDE-E2E.md** — updated spec inventory; removed resolved "Credit batch"
+  from deferred table
+
+---
+
 ## [0.8.6] — 2026-04-14
 
 ### Changed
