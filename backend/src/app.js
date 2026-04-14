@@ -24,7 +24,7 @@ import venueRoutes         from './routes/venues.js';
 import groupRoutes         from './routes/groups.js';
 import teamRoutes          from './routes/teams.js';
 import settingsRoutes      from './routes/settings.js';
-import financeRoutes       from './routes/finance.js';
+import financeRoutes       from './routes/finance/index.js';
 import pollRoutes          from './routes/polls.js';
 import auditRoutes         from './routes/audit.js';
 import officeRoutes        from './routes/offices.js';
