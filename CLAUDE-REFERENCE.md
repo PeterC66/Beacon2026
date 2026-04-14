@@ -1622,6 +1622,25 @@ are treated as off. If you add a new sub-feature, add it to **both** maps.
 - Feature config is fetched by frontend on login and session restore
 - `refreshFeatureConfig()` re-fetches after saving changes
 
+### System Dashboard integration
+
+System admins can view/edit any tenant's feature config via:
+- `GET /system/tenants/:slug/feature-config` — returns JSONB
+- `PATCH /system/tenants/:slug/feature-config` — merges updates, no sys-admin-only restriction
+- Frontend: "Features" button on each tenant row opens a modal with all toggles
+
+### Confirmation dialogs
+
+Turning off a master toggle shows a confirmation dialog (FeatureConfig.jsx).
+The `onConfirmMasterOff` callback is passed to `FeatureSection`; the parent
+component manages the `confirmOff` state and renders the modal.
+
+### Backup / restore
+
+`feature_config` is included in the "Site Settings 1" sheet of the backup export
+and restored by the Beacon2 restore path. Legacy Beacon restores skip it (no
+equivalent data exists).
+
 ---
 
 ## 26. Deployment and Infrastructure
