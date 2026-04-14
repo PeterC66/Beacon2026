@@ -41,7 +41,6 @@ const DEFAULTS = {
   grace_lapse_weeks:         4,
   deletion_years:            7,
   default_payment_method:    'Cheque',
-  gift_aid_enabled:          false,
   gift_aid_online_renewals:  false,
   default_town:              '',
   default_county:            '',
@@ -51,7 +50,6 @@ const DEFAULTS = {
   shared_address_warning:    false,
   year_start_month:          1,
   year_start_day:            1,
-  siteworks_activated:       false,
 };
 
 function toForm(s) {
@@ -69,7 +67,6 @@ function toForm(s) {
     grace_lapse_weeks:         s.grace_lapse_weeks         ?? DEFAULTS.grace_lapse_weeks,
     deletion_years:            s.deletion_years            ?? DEFAULTS.deletion_years,
     default_payment_method:    s.default_payment_method    ?? DEFAULTS.default_payment_method,
-    gift_aid_enabled:          s.gift_aid_enabled          ?? DEFAULTS.gift_aid_enabled,
     gift_aid_online_renewals:  s.gift_aid_online_renewals  ?? DEFAULTS.gift_aid_online_renewals,
     default_town:              s.default_town              ?? '',
     default_county:            s.default_county            ?? '',
@@ -79,7 +76,6 @@ function toForm(s) {
     shared_address_warning:    s.shared_address_warning    ?? DEFAULTS.shared_address_warning,
     year_start_month:          s.year_start_month          ?? DEFAULTS.year_start_month,
     year_start_day:            s.year_start_day            ?? DEFAULTS.year_start_day,
-    siteworks_activated:       s.siteworks_activated       ?? DEFAULTS.siteworks_activated,
   };
 }
 
@@ -98,7 +94,6 @@ function toPayload(f) {
     graceLapseWeeks:          Number(f.grace_lapse_weeks),
     deletionYears:            Number(f.deletion_years),
     defaultPaymentMethod:     f.default_payment_method,
-    giftAidEnabled:           f.gift_aid_enabled,
     giftAidOnlineRenewals:    f.gift_aid_online_renewals,
     defaultTown:              f.default_town    || null,
     defaultCounty:            f.default_county  || null,
@@ -108,7 +103,6 @@ function toPayload(f) {
     sharedAddressWarning:     f.shared_address_warning,
     yearStartMonth:           Number(f.year_start_month),
     yearStartDay:             Number(f.year_start_day),
-    siteworksActivated:       f.siteworks_activated,
   };
 }
 
@@ -437,12 +431,6 @@ export default function SystemSettings() {
             <section className="bg-white/90 rounded-lg shadow-sm p-4 sm:p-6 space-y-3">
               <SectionHeading>Gift Aid</SectionHeading>
               <CheckField
-                label="Gift Aid declaration enabled"
-                name="gift_aid_enabled"
-                value={form.gift_aid_enabled}
-                onChange={handleChange}
-              />
-              <CheckField
                 label="Show Gift Aid tick boxes for online renewals"
                 name="gift_aid_online_renewals"
                 value={form.gift_aid_online_renewals}
@@ -532,36 +520,6 @@ export default function SystemSettings() {
                 value={form.shared_address_warning}
                 onChange={handleChange}
               />
-            </section>
-
-            {/* ── External Systems ── */}
-            <section className="bg-white/90 rounded-lg shadow-sm p-4 sm:p-6 space-y-3">
-              <SectionHeading>External Systems</SectionHeading>
-              <div className="flex items-start gap-2">
-                <CheckField
-                  label="SiteWorks Activated"
-                  name="siteworks_activated"
-                  value={form.siteworks_activated}
-                  onChange={handleChange}
-                />
-                <button
-                  type="button"
-                  onClick={() => window.alert(
-                    'When SiteWorks is activated, scheduling and venue information ' +
-                    'for groups is managed in SiteWorks instead of Beacon2.\n\n' +
-                    'The following will be hidden from the Group screen:\n' +
-                    '• Schedule tab\n' +
-                    '• When, Start time, End time, Venue, Enquiries, and Information fields\n\n' +
-                    'Existing data is preserved and will reappear if this setting is turned off.'
-                  )}
-                  className="mt-px text-slate-400 hover:text-blue-600 transition-colors"
-                  title="What does this do?"
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
-                  </svg>
-                </button>
-              </div>
             </section>
 
             {/* ── Status / Save ── */}

@@ -518,7 +518,6 @@ export const settings = {
   getYearConfig:          () => request('/settings/year-config'),
   getNewMemberDefaults:   () => request('/settings/new-member-defaults'),
   getCustomFieldLabels:   () => request('/settings/custom-field-labels'),
-  getSiteworksConfig:     () => request('/settings/siteworks-config'),
   getHomeInfo:            () => request('/settings/home-info'),
   getFeatureConfig:       () => request('/settings/feature-config'),
   updateFeatureConfig:    (data) => request('/settings/feature-config', { method: 'PATCH', body: JSON.stringify(data) }),

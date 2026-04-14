@@ -297,7 +297,7 @@
 | Group details tab | Built | — |
 | Venue dropdown | Built | — |
 | Faculty assignment | Built | — |
-| **Beacon2 extra:** SiteWorks integration | Beacon2 extra | Tenant-wide toggle hides scheduling/venue fields when SiteWorks manages events |
+| **Beacon2 extra:** SiteWorks integration | Beacon2 extra | Feature Configuration toggle hides scheduling/venue fields when SiteWorks manages events |
 | **Beacon2 extra:** Record timestamps | Beacon2 extra | "Group record created …; last changed …" shown at the bottom of the Details tab |
 
 ---
@@ -309,7 +309,7 @@
 | Single + recurring events | Built | — |
 | Inline edit | Built | — |
 | Bulk delete | Built | — |
-| Hidden when SiteWorks activated | Built | SiteWorks toggle hides Schedule tab |
+| Hidden when SiteWorks activated | Built | Feature Configuration SiteWorks toggle hides Schedule tab |
 
 ---
 
@@ -869,7 +869,7 @@
 
 | Aspect | Status | Notes |
 |--------|--------|-------|
-| Online joining toggle | Built | — |
+| Online joining toggle | Built | Now controlled via Feature Configuration page (onlineJoining toggle) |
 | Privacy policy URL | Built | — |
 | Copyable member services URLs | Built | Join URL and Members Portal URL |
 | Copyable public information URLs | Built | Groups list and Calendar URLs (public pages not yet built) |

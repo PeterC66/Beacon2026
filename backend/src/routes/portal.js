@@ -11,6 +11,7 @@ import { verifyAccessToken } from '../utils/jwt.js';
 import { hashPassword, verifyPassword } from '../utils/password.js';
 import { generateToken } from '../utils/password.js';
 import { resolveTokens } from '../utils/emailTokens.js';
+import { isFeatureEnabled } from '../middleware/requireFeature.js';
 import { logAudit } from '../utils/audit.js';
 import { generateSingleCardPdf } from './membershipCards.js';
 
@@ -42,6 +43,18 @@ async function requirePortalAuth(req, res, next) {
 }
 
 router.use(requirePortalAuth);
+
+// Gate all portal routes on the portal feature toggle
+router.use(async (req, res, next) => {
+  try {
+    if (!await isFeatureEnabled(req.portal.tenantSlug, 'portal')) {
+      return res.status(403).json({ error: 'The Members Portal is not enabled for this organisation.' });
+    }
+    next();
+  } catch (err) {
+    next(err);
+  }
+});
 
 // ─── GET /home — portal dashboard config ─────────────────────────────────────
 
@@ -951,8 +964,8 @@ router.get('/renewal-info', async (req, res, next) => {
     const [[settings], [member], tenant] = await Promise.all([
       tenantQuery(slug,
         `SELECT portal_config, year_start_month, year_start_day,
-                advance_renewals_weeks, gift_aid_enabled,
-                gift_aid_online_renewals, paypal_email, online_renew_email
+                advance_renewals_weeks, gift_aid_online_renewals,
+                paypal_email, online_renew_email
          FROM tenant_settings WHERE id = 'singleton'`),
       tenantQuery(slug,
         `SELECT m.id, m.membership_number, m.forenames, m.surname, m.known_as,
@@ -1041,7 +1054,8 @@ router.get('/renewal-info', async (req, res, next) => {
     const partnerFee = partner?.fee ?? 0;
     const totalFee = member.is_joint ? memberFee + partnerFee : memberFee;
 
-    const showGiftAid = settings.gift_aid_enabled && settings.gift_aid_online_renewals;
+    const giftAidFeatureOn = await isFeatureEnabled(slug, 'giftAid');
+    const showGiftAid = giftAidFeatureOn && settings.gift_aid_online_renewals;
 
     res.json({
       u3aName: tenant?.name ?? slug,
@@ -1082,8 +1096,8 @@ router.post('/renew', async (req, res, next) => {
     const [[settings], [member]] = await Promise.all([
       tenantQuery(slug,
         `SELECT portal_config, year_start_month, year_start_day,
-                advance_renewals_weeks, gift_aid_enabled,
-                gift_aid_online_renewals, paypal_email, paypal_cancel_url
+                advance_renewals_weeks, gift_aid_online_renewals,
+                paypal_email, paypal_cancel_url
          FROM tenant_settings WHERE id = 'singleton'`),
       tenantQuery(slug,
         `SELECT m.id, m.membership_number, m.forenames, m.surname, m.email,
@@ -1246,11 +1260,11 @@ router.post('/renewal-confirm', async (req, res, next) => {
     }
 
     const [settings] = await tenantQuery(slug,
-      `SELECT gift_aid_enabled, gift_aid_online_renewals,
-              year_start_month, year_start_day
+      `SELECT gift_aid_online_renewals, year_start_month, year_start_day
        FROM tenant_settings WHERE id = 'singleton'`);
 
-    const showGiftAid = settings?.gift_aid_enabled && settings?.gift_aid_online_renewals;
+    const giftAidFeatureOn = await isFeatureEnabled(slug, 'giftAid');
+    const showGiftAid = giftAidFeatureOn && settings?.gift_aid_online_renewals;
 
     // Calculate new next_renewal (current next_renewal + 1 year)
     const baseDate = member.next_renewal

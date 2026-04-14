@@ -29,6 +29,23 @@ function isOn(config, key) {
 }
 
 /**
+ * Check whether a feature is enabled for a tenant (non-middleware version).
+ * Use this in routes that don't go through requireAuth (public, portal).
+ * @param {string} tenantSlug
+ * @param {string} featureKey
+ * @returns {Promise<boolean>}
+ */
+export async function isFeatureEnabled(tenantSlug, featureKey) {
+  const [row] = await tenantQuery(
+    tenantSlug,
+    `SELECT feature_config FROM tenant_settings WHERE id = 'singleton'`,
+  );
+  const config = row?.feature_config ?? {};
+  const parent = FEATURE_DEPS[featureKey];
+  return isOn(config, featureKey) && (!parent || isOn(config, parent));
+}
+
+/**
  * Middleware factory.
  * @param {string} featureKey - feature toggle key, e.g. 'finance', 'giftAid'
  */

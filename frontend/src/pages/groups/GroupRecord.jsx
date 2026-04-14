@@ -5,7 +5,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
-import { groups as groupsApi, faculties as facultiesApi, members as membersApi, venues as venuesApi, settings as settingsApi, requestBlob } from '../../lib/api.js';
+import { groups as groupsApi, faculties as facultiesApi, members as membersApi, venues as venuesApi, requestBlob } from '../../lib/api.js';
 import Schedule from '../../components/Schedule.jsx';
 import { useAuth } from '../../context/AuthContext.jsx';
 import NavBar from '../../components/NavBar.jsx';
@@ -1184,17 +1184,14 @@ export default function GroupRecord() {
   const [faculties, setFaculties] = useState([]);
   const [allVenues, setAllVenues] = useState([]);
   const [groupName, setGroupName] = useState('');
-  const [siteworksActivated, setSiteworksActivated] = useState(false);
 
+  const siteworksActivated = hasFeature('siteworks');
   const isNew = id === undefined;
   const activeTab = searchParams.get('tab') ?? 'details';
 
   useEffect(() => {
     facultiesApi.list().then(setFaculties).catch(() => {});
     venuesApi.list().then(setAllVenues).catch(() => {});
-    settingsApi.getSiteworksConfig()
-      .then((cfg) => setSiteworksActivated(cfg.siteworksActivated ?? false))
-      .catch(() => {});
   }, []);
 
   useEffect(() => {
