@@ -45,6 +45,10 @@ export const DEFAULT_ROLES = [
       { code: 'email_standard_messages',  action: 'change' },
       { code: 'email_standard_messages',  action: 'delete' },            // vced
 
+      // Feature configuration
+      { code: 'feature_config',           action: 'view' },
+      { code: 'feature_config',           action: 'change' },            // ve
+
       // Event types
       { code: 'event_types',              action: 'view' },
       { code: 'event_types',              action: 'create' },

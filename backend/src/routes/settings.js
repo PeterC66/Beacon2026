@@ -231,4 +231,85 @@ router.patch('/', requirePrivilege('settings', 'change'), async (req, res, next)
   }
 });
 
+// ─── Feature configuration ───────────────────────────────────────────
+
+// Keys that only a system admin may change (require external service setup)
+const SYS_ADMIN_ONLY_KEYS = ['finance', 'email', 'portal', 'onlineJoining'];
+
+// All valid feature toggle keys
+const VALID_FEATURE_KEYS = [
+  // Master toggles
+  'groups', 'finance', 'email', 'portal', 'onlineJoining', 'events',
+  // Membership sub-features
+  'membershipCards', 'membershipRenewals', 'addressesExport', 'giftAid',
+  'customFields', 'polls', 'statistics',
+  // Groups sub-features
+  'teams', 'venues', 'faculties', 'groupLedger', 'siteworks',
+  // Events sub-features
+  'calendar', 'eventTypes',
+  // Finance sub-features
+  'creditBatches', 'reconciliation', 'financialStatement', 'groupsStatement', 'transferMoney',
+];
+
+// GET /settings/feature-config — returns current feature toggles.
+// No special privilege — any authenticated user needs this to render nav.
+router.get('/feature-config', async (req, res, next) => {
+  try {
+    const [row] = await tenantQuery(
+      req.user.tenantSlug,
+      `SELECT feature_config FROM tenant_settings WHERE id = 'singleton'`,
+    );
+    res.json(row?.feature_config ?? {});
+  } catch (err) {
+    next(err);
+  }
+});
+
+// PATCH /settings/feature-config — update feature toggles.
+const featureConfigSchema = z.record(z.string(), z.boolean());
+
+router.patch('/feature-config', requirePrivilege('feature_config', 'change'), async (req, res, next) => {
+  try {
+    const incoming = featureConfigSchema.parse(req.body);
+    const isSysAdmin = req.user.isSysAdmin || false;
+
+    // Validate keys and strip sys-admin-only keys for non-sys-admins
+    const updates = {};
+    for (const [key, value] of Object.entries(incoming)) {
+      if (!VALID_FEATURE_KEYS.includes(key)) continue;
+      if (SYS_ADMIN_ONLY_KEYS.includes(key) && !isSysAdmin) continue;
+      updates[key] = value;
+    }
+
+    if (Object.keys(updates).length === 0) {
+      return res.status(400).json({ error: 'Nothing to update.' });
+    }
+
+    // Merge with existing config (shallow merge — new values override)
+    const [row] = await tenantQuery(
+      req.user.tenantSlug,
+      `UPDATE tenant_settings
+       SET feature_config = feature_config || $1::jsonb,
+           updated_at = now()
+       WHERE id = 'singleton'
+       RETURNING feature_config`,
+      [JSON.stringify(updates)],
+    );
+
+    logAudit(req.user.tenantSlug, {
+      userId: req.user.userId,
+      userName: req.user.name,
+      action: 'update',
+      entityType: 'setting',
+      entityId: 'singleton',
+      entityName: 'Feature Configuration',
+      detail: JSON.stringify(updates),
+    });
+
+    res.json(row?.feature_config ?? {});
+  } catch (err) {
+    next(err);
+  }
+});
+
 export default router;

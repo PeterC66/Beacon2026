@@ -9,7 +9,8 @@ vi.mock('../context/AuthContext.jsx', () => ({
     user:   { name: 'Test User', email: 'test@test.com' },
     tenant: 'test-u3a',
     logout: vi.fn().mockResolvedValue(undefined),
-    can:    vi.fn().mockReturnValue(true),
+    can:        vi.fn().mockReturnValue(true),
+    hasFeature: vi.fn().mockReturnValue(true),
   }),
 }));
 

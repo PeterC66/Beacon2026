@@ -5,6 +5,23 @@ Format: `## [version] — YYYY-MM-DD` with bullet points per change.
 
 ---
 
+## [0.8.6] — 2026-04-14
+
+### Added
+- **Feature configuration** — new per-u3a feature toggles system. Each u3a can
+  choose which modules and sub-features are active via a new "Feature Configuration"
+  page under Set up. 25 toggles across 6 master modules (Groups, Finance, Email &
+  Letters, Members Portal, Online Joining, Events & Calendar) plus sub-features
+  within Membership, Groups, Events, and Finance. Turning off a feature hides it
+  from all users; existing data is preserved. System-admin-only toggles for features
+  requiring external service setup (Finance, Email, Portal, Online Joining).
+  - Backend: `feature_config` JSONB column, `GET/PATCH /settings/feature-config`,
+    `requireFeature` middleware, `feature_config` privilege resource
+  - Frontend: `hasFeature()` in AuthContext, FeatureConfig page with expandable
+    toggle sections, Home page menu filtering, FeatureRoute guards on all routes
+
+---
+
 ## [0.8.5] — 2026-04-13
 
 ### Added
