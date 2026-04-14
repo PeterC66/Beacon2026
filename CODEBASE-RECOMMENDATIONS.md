@@ -1,6 +1,6 @@
 # Codebase Rationalisation — Remaining Recommendations
 
-Produced 2026-04-14. Priority 1 items (R1–R3) and R4 were implemented; the rest are
+Produced 2026-04-14. Priority 1 items (R1–R3), R4, and R5–R7 were implemented; the rest are
 documented below with enough detail to implement in standalone sessions.
 
 ---
@@ -14,6 +14,7 @@ documented below with enough detail to implement in standalone sessions.
 | R3 | Split api.js | `api/core.js`, `api/system.js`, `api/public.js`, `api/portal.js`; `api.js` now 626 lines |
 | R5 | Split finance.js | 7 sub-route files under `backend/src/routes/finance/` with shared `helpers.js` |
 | R4 | Extract EntityMembers | `components/EntityMembers.jsx` shared by GroupRecord and TeamRecord; net −936 lines |
+| R7 | Dissolve misc/ directory | 7 files relocated to `pages/audit/`, `pages/admin/`, `pages/finance/`, `pages/officers/`, `pages/settings/`, and `lib/` |
 
 ---
 
@@ -63,40 +64,39 @@ between pages to verify lazy loading works (check network tab for chunk loading)
 
 ## Priority 3 — Medium Impact, Medium Effort
 
-### R7. Dissolve the misc/ page directory
+### ~~R7. Dissolve the misc/ page directory~~ ✓ Completed
 
-**Problem:** `frontend/src/pages/misc/` contains 7 files from 5 unrelated domains.
-Each has a natural home elsewhere:
+Implemented in v0.9.2. Seven files relocated from `pages/misc/` to domain directories:
+`pages/audit/`, `pages/admin/`, `pages/finance/`, `pages/officers/`, `pages/settings/`,
+and `lib/auditHelpers.js`.
+
+~~**Problem:** `frontend/src/pages/misc/` contains 7 files from 5 unrelated domains.
+Each has a natural home elsewhere:~~
 
 | File | Current location | Proposed location | Backend route |
 |------|-----------------|-------------------|---------------|
-| `AuditLog.jsx` | misc/ | **new `pages/audit/`** | `audit.js` |
-| `AuditRecord.jsx` | misc/ | **new `pages/audit/`** | `audit.js` |
-| `auditHelpers.js` | misc/ | **`lib/auditHelpers.js`** | (utility) |
-| `DataBackup.jsx` | misc/ | **`pages/admin/`** | `backup.js` |
-| `GiftAidLog.jsx` | misc/ | **`pages/finance/`** | `giftAid.js` |
-| `OfficerList.jsx` | misc/ | **new `pages/officers/`** | `offices.js` |
-| `PublicLinks.jsx` | misc/ | **`pages/settings/`** | `publicLinks.js` |
+| `AuditLog.jsx` | ~~misc/~~ audit/ | **`pages/audit/`** | `audit.js` |
+| `AuditRecord.jsx` | ~~misc/~~ audit/ | **`pages/audit/`** | `audit.js` |
+| `auditHelpers.js` | ~~misc/~~ lib/ | **`lib/auditHelpers.js`** | (utility) |
+| `DataBackup.jsx` | ~~misc/~~ admin/ | **`pages/admin/`** | `backup.js` |
+| `GiftAidLog.jsx` | ~~misc/~~ finance/ | **`pages/finance/`** | `giftAid.js` |
+| `OfficerList.jsx` | ~~misc/~~ officers/ | **`pages/officers/`** | `offices.js` |
+| `PublicLinks.jsx` | ~~misc/~~ settings/ | **`pages/settings/`** | `publicLinks.js` |
 
-**Implementation steps:**
+~~**Implementation steps:**~~
 
-1. Create `pages/audit/` directory
-2. Move `AuditLog.jsx` and `AuditRecord.jsx` to `pages/audit/`
-3. Move `auditHelpers.js` to `lib/auditHelpers.js`
-4. Move `DataBackup.jsx` to `pages/admin/`
-5. Move `GiftAidLog.jsx` to `pages/finance/`
-6. Create `pages/officers/` and move `OfficerList.jsx` there
-7. Move `PublicLinks.jsx` to `pages/settings/`
-8. Update all import paths in:
-   - `App.jsx` (route definitions)
-   - The moved files themselves (their `../../lib/` and `../../components/` imports
-     stay the same depth since they're still 2 levels deep in pages/)
-   - `AuditRecord.jsx` imports `auditHelpers.js` — update to `../../lib/auditHelpers.js`
-   - `AuditLog.jsx` imports `auditHelpers.js` — update to `../../lib/auditHelpers.js`
-9. Delete empty `pages/misc/` directory
+~~1. Create `pages/audit/` directory~~
+~~2. Move `AuditLog.jsx` and `AuditRecord.jsx` to `pages/audit/`~~
+~~3. Move `auditHelpers.js` to `lib/auditHelpers.js`~~
+~~4. Move `DataBackup.jsx` to `pages/admin/`~~
+~~5. Move `GiftAidLog.jsx` to `pages/finance/`~~
+~~6. Create `pages/officers/` and move `OfficerList.jsx` there~~
+~~7. Move `PublicLinks.jsx` to `pages/settings/`~~
+~~8. Update all import paths~~
+~~9. Delete empty `pages/misc/` directory~~
 
-**Testing:** Run `cd frontend && npm test`. Navigate to Audit Log, Data Backup,
-Gift Aid Log, Officers, and Public Links in the browser.
+~~**Testing:** Run `cd frontend && npm test`. Navigate to Audit Log, Data Backup,
+Gift Aid Log, Officers, and Public Links in the browser.~~
 
 ---
 
