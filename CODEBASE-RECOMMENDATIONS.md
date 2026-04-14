@@ -1,7 +1,7 @@
 # Codebase Rationalisation — Remaining Recommendations
 
-Produced 2026-04-14. Priority 1 items (R1–R3), R4, and R5–R7 were implemented; the rest are
-documented below with enough detail to implement in standalone sessions.
+Produced 2026-04-14. R1–R12 implemented (except R11 which was already done as part of R6);
+remaining recommendations documented below.
 
 ---
 
@@ -15,6 +15,9 @@ documented below with enough detail to implement in standalone sessions.
 | R5 | Split finance.js | 7 sub-route files under `backend/src/routes/finance/` with shared `helpers.js` |
 | R4 | Extract EntityMembers | `components/EntityMembers.jsx` shared by GroupRecord and TeamRecord; net −936 lines |
 | R7 | Dissolve misc/ directory | 7 files relocated to `pages/audit/`, `pages/admin/`, `pages/finance/`, `pages/officers/`, `pages/settings/`, and `lib/` |
+| R10 | Shared UI primitives | `components/ui/Button.jsx` (6 variants, 3 sizes) and `components/ui/Input.jsx` (inputCls, inputErrCls, labelCls, etc.) |
+| R11 | Rename PF → ProtectedFeatureRoute | Already done as part of R6 (lazy loading) |
+| R12 | Add missing backend tests | 6 new test files: settings, venues, customFields, eventTypes, privileges, addressExport (69 tests) |
 
 ---
 
@@ -172,62 +175,34 @@ near-duplicates between `groups.js` and `teams.js`:
 
 ## Priority 4 — Quality of Life
 
-### R10. Shared UI primitives for repeated Tailwind patterns
+### ~~R10. Shared UI primitives for repeated Tailwind patterns~~ ✓ Completed
 
-**Problem:** The primary button class string `bg-blue-600 hover:bg-blue-700
-disabled:bg-blue-300 text-white rounded px-5 py-2 text-sm font-medium
-transition-colors` appears **116 times across 68 files**. `const inputCls` is
-redefined locally in **31 files** with near-identical values.
+Implemented in v0.9.3. Created `frontend/src/components/ui/`:
+- `Button.jsx` — 6 variants (primary, danger, dangerOutline, secondary, success) × 3 sizes (sm, default, lg)
+- `Input.jsx` — exports `inputCls`, `inputClsCompact`, `inputErrCls`, `selectCls`, `labelCls`
 
-**Implementation steps:**
-
-1. Create `frontend/src/components/ui/Button.jsx`:
-   ```jsx
-   const VARIANTS = {
-     primary: 'bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white',
-     danger:  'bg-red-600 hover:bg-red-700 disabled:bg-red-300 text-white',
-     secondary: 'bg-white hover:bg-slate-50 border border-slate-300 text-slate-700',
-   };
-   export default function Button({ variant = 'primary', className = '', ...props }) {
-     return <button className={`${VARIANTS[variant]} rounded px-5 py-2 text-sm font-medium transition-colors ${className}`} {...props} />;
-   }
-   ```
-2. Create `frontend/src/components/ui/Input.jsx` exporting the `inputCls` string
-   as a constant (or a component if preferred)
-3. Incrementally adopt — don't do a big-bang replacement. Start with new code and
-   migrate existing files opportunistically (e.g. when touching a file for other reasons)
-
-**Files to create:**
-- `frontend/src/components/ui/Button.jsx`
-- `frontend/src/components/ui/Input.jsx`
-
-**Testing:** Run `cd frontend && npm test` after each batch of file migrations.
+Available for incremental adoption — not yet imported by existing files.
 
 ---
 
-### R11. Rename PF → ProtectedFeatureRoute in App.jsx
+### ~~R11. Rename PF → ProtectedFeatureRoute in App.jsx~~ ✓ Completed
 
-**Problem:** `PF` is defined at `App.jsx:111` and used 42 times. The abbreviation
-gives no indication of what it does.
-
-**Implementation steps:**
-
-1. Rename the function definition at line 111:
-   `function PF(` → `function ProtectedFeatureRoute(`
-2. Replace all 42 JSX usages: `<PF ` → `<ProtectedFeatureRoute ` and
-   `</PF>` → `</ProtectedFeatureRoute>`
-3. Use the Edit tool with `replace_all: true`
-
-**Files to modify:**
-- `frontend/src/App.jsx` only
-
-**Testing:** Run `cd frontend && npm test`.
+Already done as part of R6 (lazy loading). The component was named
+`ProtectedFeatureRoute` from the start in the current codebase.
 
 ---
 
-### R12. Add missing backend tests
+### ~~R12. Add missing backend tests~~ ✓ Partially completed
 
-**Problem:** These route files have no corresponding test file:
+Implemented in v0.9.3 for the 6 low-risk routes (69 new tests):
+- `settings.test.js` (20 tests) — all `/settings` endpoints + feature config
+- `venues.test.js` (13 tests) — full CRUD
+- `eventTypes.test.js` (14 tests) — full CRUD + default-type business rules
+- `customFields.test.js` (7 tests) — GET/PATCH
+- `addressExport.test.js` (12 tests) — view, download (CSV/TSV/Excel), labels (PDF)
+- `privileges.test.js` (3 tests) — GET /privileges/resources
+
+**Still missing** (high/medium risk, future sessions):
 
 | Route file | Lines | Risk |
 |-----------|-------|------|
@@ -236,22 +211,7 @@ gives no indication of what it does.
 | `public.js` | 1,153 | **High** — public joining flow |
 | `teams.js` | 1,033 | **Medium** — largely mirrors groups.js |
 | `email.js` | 499 | **Medium** — SendGrid integration |
-| `settings.js` | ~320 | **Low** — simple CRUD |
-| `venues.js` | ~100 | **Low** — simple CRUD |
-| `addressExport.js` | ~100 | **Low** — query + formatting |
-| `customFields.js` | ~50 | **Low** — simple CRUD |
-| `eventTypes.js` | ~80 | **Low** — simple CRUD |
-| `privileges.js` | ~20 | **Low** — read-only |
 | `system.js` | ~200 | **Low** — system admin only |
-
-**Recommended order:** backup → portal → public → teams → email → settings
-
-**Implementation:** Follow the existing test pattern in `backend/src/__tests__/`:
-- Import `supertest` and `{ describe, it, expect, vi, beforeEach }` from `vitest`
-- Mock `../utils/db.js` (tenantQuery), `../utils/audit.js` (logAudit),
-  `../utils/redis.js`, etc.
-- Use the `helpers.js` file for `mockUser()`, `ALL_PRIVS`, etc.
-- See `groups.test.js` or `finance.test.js` as templates
 
 ---
 
