@@ -1,10 +1,13 @@
 // beacon2/e2e/tests/12-calendar.spec.js
-// Calendar and Open Meetings tests.
+// Calendar and Event Types tests.
 // Beacon UG §5.9 — "The Calendar"
 //
 // Tests:
 //  ✓ Calendar page loads with heading and filter controls
 //  ✓ Calendar has date range inputs and Download PDF button
+//  ✓ Show Detail checkbox is present (exactly one)
+//  ✓ "Other" filter mode shows event type dropdown
+//  ✓ Group/Team filter dropdown is present
 //  ✓ Open Meetings page loads from Calendar nav link
 
 import { test, expect } from '../fixtures/admin.js';
@@ -49,6 +52,52 @@ test.describe('Calendar', () => {
     const pdfBtn = page.getByRole('button', { name: /download pdf/i });
     const noEvents = page.getByText(/no events/i);
     await expect(pdfBtn.or(noEvents).first()).toBeVisible({ timeout: 15_000 });
+  });
+
+  test('Show Detail checkbox is present exactly once', async ({ adminPage: page }) => {
+    await gotoHomeLink(page, '/calendar', 'Calendar');
+
+    // Wait for the filter controls to render
+    await expect(page.locator('input[type="date"][name="from"]')).toBeVisible();
+
+    // "Show Detail" checkbox should appear exactly once (no duplicate)
+    const showDetailCheckboxes = page.getByText('Show Detail');
+    await expect(showDetailCheckboxes).toHaveCount(1);
+  });
+
+  test('"Other" filter mode shows event type dropdown', async ({ adminPage: page }) => {
+    await gotoHomeLink(page, '/calendar', 'Calendar');
+
+    // Click the "other" radio button
+    const otherRadio = page.locator('input[name="filter"][value="other"]');
+    // "Other" mode is only shown if user has meetings:view — check if it exists
+    const otherExists = await otherRadio.isVisible().catch(() => false);
+    if (!otherExists) {
+      // Skip — feature may be toggled off in the test tenant
+      return;
+    }
+    await otherRadio.click();
+
+    // Event type dropdown should appear
+    const eventTypeSelect = page.locator('select[name="eventTypeId"]');
+    await expect(eventTypeSelect).toBeVisible({ timeout: 5_000 });
+
+    // Should have at least the default "Open Meetings" option
+    await expect(eventTypeSelect.locator('option')).not.toHaveCount(0);
+  });
+
+  test('Group/Team filter dropdown is present', async ({ adminPage: page }) => {
+    await gotoHomeLink(page, '/calendar', 'Calendar');
+
+    // Click the "group" radio to show the group/team dropdown
+    const groupRadio = page.locator('input[name="filter"][value="group"]');
+    await groupRadio.click();
+
+    const groupSelect = page.locator('select[name="groupId"]');
+    await expect(groupSelect).toBeVisible({ timeout: 5_000 });
+
+    // Should have at least the placeholder option
+    await expect(groupSelect.locator('option').first()).toBeVisible();
   });
 });
 

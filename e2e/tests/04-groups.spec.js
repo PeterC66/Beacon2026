@@ -1,5 +1,5 @@
 // beacon2/e2e/tests/04-groups.spec.js
-// Group management tests.
+// Group and Team management tests.
 // Beacon UG §5   — "Groups"
 // Beacon UG §5.1 — "The Group List"
 // Beacon UG §5.2 — "Group Details"
@@ -14,6 +14,13 @@
 //  ✓ Add a schedule event to a group
 //  ✓ Group ledger tab is accessible
 //  ✓ Delete a group
+//  ✓ Switch to Teams link on group list
+//  ✓ Team list page loads
+//  ✓ Switch to Groups link on team list
+//  ✓ Add a new team → appears in list
+//  ✓ Team tabs: Schedule and Ledger are accessible
+//  ✓ Add a schedule event to a team
+//  ✓ Delete a team
 
 import { test, expect } from '../fixtures/admin.js';
 import { GroupListPage, GroupRecordPage } from '../pages/GroupsPage.js';
@@ -138,5 +145,169 @@ test.describe('Delete a group', () => {
 
     await page.waitForURL('/groups', { timeout: 10_000 });
     await expect(page.getByText(GROUP_NAME)).toBeHidden({ timeout: 5_000 });
+  });
+});
+
+// ── Groups ↔ Teams switching ────────────────────────────────────────────
+
+test.describe('Groups / Teams switching', () => {
+  test('Switch to Teams link on group list', async ({ adminPage: page }) => {
+    const listPage = new GroupListPage(page);
+    await listPage.goto();
+
+    const switchLink = page.getByRole('link', { name: 'Switch to Teams' }).first();
+    await expect(switchLink).toBeVisible({ timeout: 5_000 });
+    await switchLink.click();
+
+    await expect(page.getByRole('heading', { name: 'Teams' })).toBeVisible({ timeout: 10_000 });
+  });
+
+  test('Switch to Groups link on team list', async ({ adminPage: page }) => {
+    // Navigate to teams first
+    const clicked = await page.evaluate(() => {
+      const link = document.querySelector('a[href="/teams"]');
+      if (link) { link.click(); return true; }
+      return false;
+    });
+    if (!clicked) await page.goto('/teams');
+    await page.getByRole('heading', { name: 'Teams' }).waitFor({ timeout: 10_000 });
+
+    const switchLink = page.getByRole('link', { name: 'Switch to Groups' }).first();
+    await expect(switchLink).toBeVisible({ timeout: 5_000 });
+    await switchLink.click();
+
+    await expect(page.getByRole('heading', { name: 'Groups' })).toBeVisible({ timeout: 10_000 });
+  });
+});
+
+// ── Teams ───────────────────────────────────────────────────────────────
+
+const TEAM_NAME = `E2ETeam${SUFFIX}`;
+
+test.describe('Team list', () => {
+  test('page loads with heading', async ({ adminPage: page }) => {
+    const clicked = await page.evaluate(() => {
+      const link = document.querySelector('a[href="/teams"]');
+      if (link) { link.click(); return true; }
+      return false;
+    });
+    if (!clicked) await page.goto('/teams');
+    await expect(page.getByRole('heading', { name: 'Teams' })).toBeVisible({ timeout: 10_000 });
+  });
+});
+
+test.describe('Add and edit a team', () => {
+  async function gotoTeamNew(page) {
+    // Navigate to /teams first, then click "Add new team"
+    const clicked = await page.evaluate(() => {
+      const link = document.querySelector('a[href="/teams/new"]');
+      if (link) { link.click(); return true; }
+      return false;
+    });
+    if (!clicked) {
+      const listClicked = await page.evaluate(() => {
+        const link = document.querySelector('a[href="/teams"]');
+        if (link) { link.click(); return true; }
+        return false;
+      });
+      if (!listClicked) await page.goto('/teams');
+      await page.getByRole('heading', { name: 'Teams' }).waitFor();
+      await page.getByRole('link', { name: /add new team/i }).first().click();
+    }
+    await page.getByRole('heading', { name: /add new team/i }).waitFor({ timeout: 10_000 });
+  }
+
+  test('create a new team', async ({ adminPage: page }) => {
+    await gotoTeamNew(page);
+
+    await page.locator('input[name="name"]').first().fill(TEAM_NAME);
+    await page.getByRole('button', { name: /add team/i }).first().click();
+
+    // After save, URL should become /teams/:id
+    await page.waitForURL(/\/teams\/(?!new\b)[^/]+$/, { timeout: 10_000 });
+    await expect(page.getByRole('heading', { name: TEAM_NAME })).toBeVisible({ timeout: 10_000 });
+  });
+
+  test('new team appears in the team list', async ({ adminPage: page }) => {
+    const clicked = await page.evaluate(() => {
+      const link = document.querySelector('a[href="/teams"]');
+      if (link) { link.click(); return true; }
+      return false;
+    });
+    if (!clicked) await page.goto('/teams');
+    await page.getByRole('heading', { name: 'Teams' }).waitFor({ timeout: 10_000 });
+
+    await expect(page.getByRole('link', { name: TEAM_NAME }).first()).toBeVisible({ timeout: 6_000 });
+  });
+});
+
+test.describe('Team tabs', () => {
+  async function openTeam(page) {
+    const clicked = await page.evaluate(() => {
+      const link = document.querySelector('a[href="/teams"]');
+      if (link) { link.click(); return true; }
+      return false;
+    });
+    if (!clicked) await page.goto('/teams');
+    await page.getByRole('heading', { name: 'Teams' }).waitFor({ timeout: 10_000 });
+
+    await page.getByRole('link', { name: TEAM_NAME }).first().click();
+    await expect(page.getByRole('heading', { name: TEAM_NAME })).toBeVisible({ timeout: 10_000 });
+  }
+
+  test('Schedule tab is visible and clickable', async ({ adminPage: page }) => {
+    await openTeam(page);
+    const scheduleTab = page.getByRole('tab', { name: /schedule/i }).first();
+    await expect(scheduleTab).toBeVisible();
+    await scheduleTab.click();
+    await expect(page.getByText(/schedule/i).first()).toBeVisible();
+  });
+
+  test('Ledger tab is visible and clickable', async ({ adminPage: page }) => {
+    await openTeam(page);
+    const ledgerTab = page.getByRole('tab', { name: /ledger/i }).first();
+    await expect(ledgerTab).toBeVisible();
+    await ledgerTab.click();
+    await expect(page.getByText(/brought forward/i).first()).toBeVisible({ timeout: 6_000 });
+  });
+
+  test('add a schedule event to a team', async ({ adminPage: page }) => {
+    await openTeam(page);
+    await page.getByRole('tab', { name: /schedule/i }).first().click();
+
+    const dateInput = page.locator('input[name="eventDate"]').first();
+    await expect(dateInput).toBeVisible({ timeout: 5_000 });
+    await dateInput.fill('2026-07-15');
+
+    const timeInput = page.locator('input[name="startTime"]').first();
+    if (await timeInput.isVisible()) await timeInput.fill('14:00');
+
+    const topicInput = page.locator('input[name="topic"]').first();
+    if (await topicInput.isVisible()) await topicInput.fill('E2E Team Meeting');
+
+    await page.getByRole('button', { name: /add event/i }).first().click();
+
+    await expect(page.getByText('E2E Team Meeting')).toBeVisible({ timeout: 6_000 });
+  });
+});
+
+test.describe('Delete a team', () => {
+  test('delete the test team', async ({ adminPage: page }) => {
+    const clicked = await page.evaluate(() => {
+      const link = document.querySelector('a[href="/teams"]');
+      if (link) { link.click(); return true; }
+      return false;
+    });
+    if (!clicked) await page.goto('/teams');
+    await page.getByRole('heading', { name: 'Teams' }).waitFor({ timeout: 10_000 });
+
+    await page.getByRole('link', { name: TEAM_NAME }).first().click();
+    await expect(page.getByRole('heading', { name: TEAM_NAME })).toBeVisible({ timeout: 10_000 });
+
+    page.once('dialog', (d) => d.accept());
+    await page.getByRole('button', { name: /delete/i }).first().click();
+
+    await page.waitForURL('/teams', { timeout: 10_000 });
+    await expect(page.getByText(TEAM_NAME)).toBeHidden({ timeout: 5_000 });
   });
 });
