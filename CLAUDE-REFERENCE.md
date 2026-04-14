@@ -1548,7 +1548,67 @@ When adding a new page/route, add a corresponding entry to `ROUTE_HELP_TERMS` in
 
 ---
 
-## 25. Deployment and Infrastructure
+## 25. Feature Toggles
+
+Per-tenant feature configuration allowing each u3a to choose which modules are active.
+
+### Storage
+
+Single JSONB column `feature_config` on `tenant_settings` (singleton row). The **opt-out
+model** means missing keys default to `true` (everything on). Only keys explicitly set to
+`false` are disabled. This means existing tenants continue unchanged after the migration.
+
+### Toggle inventory (25 toggles)
+
+**Master toggles (6):** `groups`, `finance`, `email`, `portal`, `onlineJoining`, `events`
+
+**Membership sub-features (7):** `membershipCards`, `membershipRenewals`, `addressesExport`,
+`giftAid` (default off), `customFields`, `polls`, `statistics`
+
+**Groups sub-features (5):** `teams`, `venues`, `faculties`, `groupLedger` (default off),
+`siteworks` (default off)
+
+**Events sub-features (2):** `calendar`, `eventTypes`
+
+**Finance sub-features (5):** `creditBatches`, `reconciliation`, `financialStatement`,
+`groupsStatement`, `transferMoney`
+
+### System-admin-only toggles
+
+`finance`, `email`, `portal`, `onlineJoining` — these require external service setup
+(SendGrid, PayPal, etc.). Backend enforces this: `SYS_ADMIN_ONLY_KEYS` in
+`backend/src/routes/settings.js` strips these from non-sys-admin PATCH requests.
+
+### Key files
+
+| File | Role |
+|------|------|
+| `backend/prisma/tenant_schema.sql` | `feature_config JSONB` column |
+| `backend/src/routes/settings.js` | `GET/PATCH /settings/feature-config` |
+| `backend/src/middleware/requireFeature.js` | Route-level enforcement middleware |
+| `backend/src/seed/privilegeResources.js` | `feature_config` privilege resource |
+| `frontend/src/context/AuthContext.jsx` | `hasFeature()`, `refreshFeatureConfig()` |
+| `frontend/src/pages/settings/FeatureConfig.jsx` | Config page with expandable sections |
+| `frontend/src/pages/Home.jsx` | Menu filtering via `hasFeature()` |
+| `frontend/src/App.jsx` | `FeatureRoute` / `PF` route guards |
+
+### Frontend patterns
+
+- `hasFeature(key)` from `useAuth()` — returns `true` if key is missing or truthy
+- `FeatureRoute` component redirects to Home if feature is off
+- `PF` shorthand = `ProtectedRoute` + `FeatureRoute`
+- Home.jsx items have optional `f` property for feature key filtering
+- Home.jsx sections have optional `feature` property for master toggle filtering
+
+### Backend patterns
+
+- `requireFeature(key)` middleware — reads `feature_config` from `tenant_settings`
+- Feature config is fetched by frontend on login and session restore
+- `refreshFeatureConfig()` re-fetches after saving changes
+
+---
+
+## 26. Deployment and Infrastructure
 
 See `DEPLOYMENT.md` for the full step-by-step guide (written for non-technical users).
 Key facts for developers:
