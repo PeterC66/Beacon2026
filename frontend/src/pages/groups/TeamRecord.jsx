@@ -945,7 +945,7 @@ export default function TeamRecord() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
-  const { can, tenant } = useAuth();
+  const { can, tenant, hasFeature } = useAuth();
   const [teamName, setTeamName] = useState('');
 
   const isNew = id === undefined;
@@ -981,7 +981,7 @@ export default function TeamRecord() {
     { key: 'details',  label: 'Details',  available: true },
     { key: 'members',  label: 'Members',  available: !isNew },
     { key: 'schedule', label: 'Schedule', available: !isNew },
-    { key: 'ledger',   label: 'Ledger',   available: !isNew && (can('group_ledger_all', 'view') || can('group_ledger_as_leader', 'view')) },
+    { key: 'ledger',   label: 'Ledger',   available: !isNew && hasFeature('groupLedger') && (can('group_ledger_all', 'view') || can('group_ledger_as_leader', 'view')) },
   ];
 
   return (

@@ -8,6 +8,17 @@ import { hasOptionalCookieConsent } from '../hooks/useCookieConsent.js';
 
 const AuthContext = createContext(null);
 
+// Sub-feature → master-toggle dependency map.
+// When a master toggle is off, all its dependents are treated as off too.
+const FEATURE_DEPS = {
+  teams: 'groups', venues: 'groups', faculties: 'groups',
+  groupLedger: 'groups', siteworks: 'groups',
+  calendar: 'events', eventTypes: 'events',
+  creditBatches: 'finance', reconciliation: 'finance',
+  financialStatement: 'finance', groupsStatement: 'finance',
+  transferMoney: 'finance',
+};
+
 // Read the beacon_last_u3a cookie (set on successful login by Login.jsx)
 function getLastU3aCookie() {
   if (!hasOptionalCookieConsent()) return '';
@@ -132,10 +143,14 @@ export function AuthProvider({ children }) {
   /**
    * Check if a feature toggle is enabled for this tenant.
    * Missing keys default to true (opt-out model).
+   * Also checks parent dependency — e.g. if 'events' is off, 'calendar' is off too.
    * @param {string} key  e.g. 'finance', 'giftAid'
    */
   const hasFeature = useCallback((key) => {
-    return featureConfig[key] !== false;
+    if (featureConfig[key] === false) return false;
+    const parent = FEATURE_DEPS[key];
+    if (parent && featureConfig[parent] === false) return false;
+    return true;
   }, [featureConfig]);
 
   /** Re-fetch feature config from backend (call after updating toggles). */
