@@ -8,6 +8,8 @@ import { requireAuth } from '../middleware/auth.js';
 import { requirePrivilege } from '../middleware/requirePrivilege.js';
 import { tenantQuery } from '../utils/db.js';
 import { AppError } from '../middleware/errorHandler.js';
+import { addMemberSchema, bulkAddMembersSchema, bulkMemberIdsSchema, eventSchema, updateEventSchema, bulkDeleteIdsSchema, ledgerEntrySchema } from '../schemas/common.js';
+import { patchGroupMemberSchema, bulkAddToGroupSchema } from '../schemas/groups.js';
 
 const router = Router();
 router.use(requireAuth);
@@ -573,11 +575,6 @@ router.get('/:id/members/download', requirePrivilege('group_records_all', 'view'
 // ─── POST /groups/:id/members ─────────────────────────────────────────────
 // Add member by memberId OR membershipNumber
 
-const addMemberSchema = z.union([
-  z.object({ memberId: z.string().min(1) }),
-  z.object({ membershipNumber: z.coerce.number().int().positive() }),
-]);
-
 router.post('/:id/members', requirePrivilege('group_records_all', 'change'), async (req, res, next) => {
   try {
     const slug = req.user.tenantSlug;
@@ -651,10 +648,6 @@ router.post('/:id/members', requirePrivilege('group_records_all', 'change'), asy
 // Bulk-add multiple members to a group (from Members list "Add to group").
 // Respects max-members / waiting-list logic per member.
 
-const bulkAddMembersSchema = z.object({
-  memberIds: z.array(z.string().min(1)).min(1),
-});
-
 router.post('/:id/members/bulk', requirePrivilege('group_records_all', 'change'), async (req, res, next) => {
   try {
     const slug = req.user.tenantSlug;
@@ -714,15 +707,10 @@ router.post('/:id/members/bulk', requirePrivilege('group_records_all', 'change')
 // ─── PATCH /groups/:id/members/:memberId ──────────────────────────────────
 // Toggle leader status; or promote from waiting list (waitingSince: null)
 
-const patchMemberSchema = z.object({
-  isLeader:     z.boolean().optional(),
-  waitingSince: z.null().optional(),   // pass null to promote from waiting list
-});
-
 router.patch('/:id/members/:memberId', requirePrivilege('group_records_all', 'change'), async (req, res, next) => {
   try {
     const slug = req.user.tenantSlug;
-    const data = patchMemberSchema.parse(req.body);
+    const data = patchGroupMemberSchema.parse(req.body);
 
     const setClauses = [];
     const values = [];
@@ -760,14 +748,10 @@ router.patch('/:id/members/:memberId', requirePrivilege('group_records_all', 'ch
 // Bulk-remove multiple members from a group.
 // NOTE: Must be registered before /:memberId to avoid Express treating "bulk" as a param.
 
-const bulkRemoveSchema = z.object({
-  memberIds: z.array(z.string().uuid()).min(1),
-});
-
 router.delete('/:id/members/bulk', requirePrivilege('group_records_all', 'change'), async (req, res, next) => {
   try {
     const slug = req.user.tenantSlug;
-    const { memberIds } = bulkRemoveSchema.parse(req.body);
+    const { memberIds } = bulkMemberIdsSchema.parse(req.body);
 
     const [group] = await tenantQuery(slug, `SELECT id FROM groups WHERE id = $1 AND type = 'group'`, [req.params.id]);
     if (!group) throw AppError('Group not found.', 404);
@@ -787,15 +771,10 @@ router.delete('/:id/members/bulk', requirePrivilege('group_records_all', 'change
 // Add multiple members to another group (from the current group's member list).
 // NOTE: Must be registered before the POST /:id/members route.
 
-const bulkAddSchema = z.object({
-  memberIds:    z.array(z.string().uuid()).min(1),
-  targetGroupId: z.string().uuid(),
-});
-
 router.post('/:id/members/bulk-add', requirePrivilege('group_records_all', 'change'), async (req, res, next) => {
   try {
     const slug = req.user.tenantSlug;
-    const { memberIds, targetGroupId } = bulkAddSchema.parse(req.body);
+    const { memberIds, targetGroupId } = bulkAddToGroupSchema.parse(req.body);
 
     const [targetGroup] = await tenantQuery(slug, `SELECT id, max_members, enable_waiting_list FROM groups WHERE id = $1 AND type = 'group'`, [targetGroupId]);
     if (!targetGroup) throw AppError('Target group not found.', 404);
@@ -894,21 +873,6 @@ router.get('/:id/events', requirePrivilege('group_records_all', 'view'), async (
 // ─── POST /groups/:id/events ──────────────────────────────────────────────
 // Create one or more events (recurring support via repeat count)
 
-const eventSchema = z.object({
-  eventDate:  z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
-  startTime:  z.string().nullable().optional(),
-  endTime:    z.string().nullable().optional(),
-  venueId:    z.string().nullable().optional(),
-  topic:      z.string().nullable().optional(),
-  contact:    z.string().nullable().optional(),
-  details:    z.string().nullable().optional(),
-  isPrivate:  z.boolean().default(false),
-  // Recurrence
-  repeatEvery:  z.number().int().positive().nullable().optional(),
-  repeatUnit:   z.enum(['days', 'weeks', 'months']).optional(),
-  repeatUntil:  z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullable().optional(),
-});
-
 router.post('/:id/events', requirePrivilege('group_records_all', 'change'), async (req, res, next) => {
   try {
     const slug = req.user.tenantSlug;
@@ -971,17 +935,6 @@ router.post('/:id/events', requirePrivilege('group_records_all', 'change'), asyn
 
 // ─── PATCH /groups/:id/events/:eventId ────────────────────────────────────
 
-const updateEventSchema = z.object({
-  eventDate:  z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
-  startTime:  z.string().nullable().optional(),
-  endTime:    z.string().nullable().optional(),
-  venueId:    z.string().nullable().optional(),
-  topic:      z.string().nullable().optional(),
-  contact:    z.string().nullable().optional(),
-  details:    z.string().nullable().optional(),
-  isPrivate:  z.boolean().optional(),
-});
-
 // [jsKey, col, cast?]
 const EVENT_FIELDS = [
   ['eventDate', 'event_date', '::date'],
@@ -1034,7 +987,7 @@ router.patch('/:id/events/:eventId', requirePrivilege('group_records_all', 'chan
 router.delete('/:id/events', requirePrivilege('group_records_all', 'change'), async (req, res, next) => {
   try {
     const slug = req.user.tenantSlug;
-    const { ids } = z.object({ ids: z.array(z.string()).min(1) }).parse(req.body);
+    const { ids } = bulkDeleteIdsSchema.parse(req.body);
 
     const placeholders = ids.map((_, idx) => `$${idx + 2}`).join(', ');
     const result = await tenantQuery(
@@ -1068,14 +1021,6 @@ async function hasLedgerAccess(req, groupId, action) {
   }
   return false;
 }
-
-const ledgerEntrySchema = z.object({
-  entryDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
-  payee:     z.string().max(200).nullable().optional(),
-  detail:    z.string().max(500).nullable().optional(),
-  moneyIn:   z.number().nonnegative().nullable().optional(),
-  moneyOut:  z.number().nonnegative().nullable().optional(),
-});
 
 // GET /groups/:id/ledger?from=YYYY-MM-DD&to=YYYY-MM-DD
 // Returns { broughtForward, entries }
