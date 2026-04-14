@@ -1,4 +1,4 @@
-// beacon2/frontend/src/pages/misc/PublicLinks.jsx
+// beacon2/frontend/src/pages/settings/PublicLinks.jsx
 // Admin page showing public URLs and online joining configuration (doc 9.4).
 // Sections: (a) Member Services, (b) Public Information,
 // (c) Configure Members Portal, (d) Configure Group Information,

@@ -3,7 +3,7 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
-import DataBackup from '../pages/misc/DataBackup.jsx';
+import DataBackup from '../pages/admin/DataBackup.jsx';
 
 vi.mock('../context/AuthContext.jsx', () => ({
   useAuth: () => ({ tenant: 'test-u3a', can: vi.fn().mockReturnValue(true) }),

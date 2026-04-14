@@ -3,7 +3,7 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
-import AuditLog from '../pages/misc/AuditLog.jsx';
+import AuditLog from '../pages/audit/AuditLog.jsx';
 
 vi.mock('react-router-dom', async (importActual) => {
   const actual = await importActual();

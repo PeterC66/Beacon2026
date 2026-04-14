@@ -1,4 +1,4 @@
-// beacon2/frontend/src/pages/misc/OfficerList.jsx
+// beacon2/frontend/src/pages/officers/OfficerList.jsx
 // u3a Officers (offices and post holders) — doc 9.3
 
 import { useState, useEffect, useRef } from 'react';

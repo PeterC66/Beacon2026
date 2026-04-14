@@ -1,4 +1,4 @@
-// beacon2/frontend/src/pages/misc/AuditLog.jsx
+// beacon2/frontend/src/pages/audit/AuditLog.jsx
 // Audit log viewer — doc 9.2(a)
 
 import { useState, useEffect, useRef } from 'react';
@@ -9,7 +9,7 @@ import NavBar from '../../components/NavBar.jsx';
 import PageHeader from '../../components/PageHeader.jsx';
 import DateInput from '../../components/DateInput.jsx';
 import ScrollButtons from '../../components/ScrollButtons.jsx';
-import { ENTITY_ROUTES } from './auditHelpers.js';
+import { ENTITY_ROUTES } from '../../lib/auditHelpers.js';
 
 function isoToday() {
   return new Date().toISOString().slice(0, 10);

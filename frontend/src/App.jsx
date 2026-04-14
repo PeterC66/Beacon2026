@@ -47,11 +47,11 @@ const CreditBatches      = lazy(() => import('./pages/finance/CreditBatches.jsx'
 const MemberValidator    = lazy(() => import('./pages/admin/MemberValidator.jsx'));
 const Utilities          = lazy(() => import('./pages/admin/Utilities.jsx'));
 const PollList           = lazy(() => import('./pages/admin/PollList.jsx'));
-const AuditLog           = lazy(() => import('./pages/misc/AuditLog.jsx'));
-const AuditRecord        = lazy(() => import('./pages/misc/AuditRecord.jsx'));
-const GiftAidLog         = lazy(() => import('./pages/misc/GiftAidLog.jsx'));
-const OfficerList        = lazy(() => import('./pages/misc/OfficerList.jsx'));
-const DataBackup         = lazy(() => import('./pages/misc/DataBackup.jsx'));
+const AuditLog           = lazy(() => import('./pages/audit/AuditLog.jsx'));
+const AuditRecord        = lazy(() => import('./pages/audit/AuditRecord.jsx'));
+const GiftAidLog         = lazy(() => import('./pages/finance/GiftAidLog.jsx'));
+const OfficerList        = lazy(() => import('./pages/officers/OfficerList.jsx'));
+const DataBackup         = lazy(() => import('./pages/admin/DataBackup.jsx'));
 const PersonalPreferences = lazy(() => import('./pages/settings/PersonalPreferences.jsx'));
 const RecentMembers      = lazy(() => import('./pages/members/RecentMembers.jsx'));
 const MemberStatistics   = lazy(() => import('./pages/members/MemberStatistics.jsx'));
@@ -63,7 +63,7 @@ const EmailDelivery      = lazy(() => import('./pages/email/EmailDelivery.jsx'))
 const EmailDeliveryDetail = lazy(() => import('./pages/email/EmailDeliveryDetail.jsx'));
 const EmailUnblocker     = lazy(() => import('./pages/email/EmailUnblocker.jsx'));
 const SystemMessages     = lazy(() => import('./pages/settings/SystemMessages.jsx'));
-const PublicLinks        = lazy(() => import('./pages/misc/PublicLinks.jsx'));
+const PublicLinks        = lazy(() => import('./pages/settings/PublicLinks.jsx'));
 const Calendar           = lazy(() => import('./pages/groups/Calendar.jsx'));
 const EventRecord        = lazy(() => import('./pages/groups/EventRecord.jsx'));
 const OpenMeetings       = lazy(() => import('./pages/groups/OpenMeetings.jsx'));

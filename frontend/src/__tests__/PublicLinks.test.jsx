@@ -3,7 +3,7 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
-import PublicLinks from '../pages/misc/PublicLinks.jsx';
+import PublicLinks from '../pages/settings/PublicLinks.jsx';
 
 vi.mock('react-router-dom', async (importActual) => {
   const actual = await importActual();
