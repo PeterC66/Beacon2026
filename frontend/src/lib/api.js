@@ -213,6 +213,8 @@ export const groups = {
     request(`/groups/${id}/members/bulk`, { method: 'DELETE', body: JSON.stringify({ memberIds }) }),
   bulkAddToGroup: (id, targetGroupId, memberIds) =>
     request(`/groups/${id}/members/bulk-add`, { method: 'POST', body: JSON.stringify({ memberIds, targetGroupId }) }),
+  bulkAddToEntity: (id, targetEntityId, memberIds) =>
+    request(`/groups/${id}/members/bulk-add`, { method: 'POST', body: JSON.stringify({ memberIds, targetGroupId: targetEntityId }) }),
 
   listEvents:   (id)             => request(`/groups/${id}/events`),
   createEvents: (id, data)       => request(`/groups/${id}/events`, { method: 'POST', body: JSON.stringify(data) }),
@@ -264,6 +266,8 @@ export const teams = {
     request(`/teams/${id}/members/bulk`, { method: 'DELETE', body: JSON.stringify({ memberIds }) }),
   bulkAddToTeam: (id, targetTeamId, memberIds) =>
     request(`/teams/${id}/members/bulk-add`, { method: 'POST', body: JSON.stringify({ memberIds, targetTeamId }) }),
+  bulkAddToEntity: (id, targetEntityId, memberIds) =>
+    request(`/teams/${id}/members/bulk-add`, { method: 'POST', body: JSON.stringify({ memberIds, targetTeamId: targetEntityId }) }),
 
   getLedger: (id, params = {}) => {
     const qs = new URLSearchParams();

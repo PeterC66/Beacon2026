@@ -28,6 +28,10 @@ Format: `## [version] — YYYY-MM-DD` with bullet points per change.
   `api/core.js` and delegates system-admin, public, and portal APIs to their own modules
   (`api/system.js`, `api/public.js`, `api/portal.js`), cleanly separating 3 different
   auth patterns
+- **Shared EntityMembers** — extracted `components/EntityMembers.jsx` from the nearly
+  identical Members sub-components in GroupRecord and TeamRecord; parameterised by
+  `entityType` (`'group'`/`'team'`), `api`, and `entityId`. GroupRecord: 1,291 → 770 lines;
+  TeamRecord: 1,045 → 630 lines (net −936 lines of duplication removed)
 
 ---
 

@@ -363,6 +363,10 @@ which requires categories). Users can categorize later.
 ### Group record tabs
 
 `GroupRecord.jsx` at `/groups/:id` — Details tab, Members tab, Schedule tab, Ledger tab.
+`TeamRecord.jsx` at `/teams/:id` — Details tab, Members tab, Schedule tab, Ledger tab.
+
+Members and Schedule tabs use shared components (`EntityMembers.jsx`, `Schedule.jsx`)
+parameterised by `entityType` (`'group'`/`'team'`), `api`, and `entityId`.
 
 ### Venues (doc 5.7)
 
