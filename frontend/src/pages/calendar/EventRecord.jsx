@@ -1,4 +1,4 @@
-// beacon2/frontend/src/pages/groups/EventRecord.jsx
+// beacon2/frontend/src/pages/calendar/EventRecord.jsx
 // Event Record page — tabbed view for a single event (details / members / financials).
 
 import { useState, useEffect } from 'react';
