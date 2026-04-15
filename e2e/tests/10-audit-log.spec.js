@@ -29,8 +29,9 @@ test.describe('Audit log', () => {
   test('date-range filter controls are present', async ({ adminPage: page }) => {
     await page.goto('/audit');
 
-    // From / To date inputs
+    // From / To date inputs — wait for at least one to render before counting
     const dateInputs = page.getByPlaceholder('dd/mm/yyyy');
+    await expect(dateInputs.first()).toBeVisible();
     const count = await dateInputs.count();
     expect(count).toBeGreaterThanOrEqual(2);  // From and To
   });
