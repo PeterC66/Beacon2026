@@ -21,6 +21,9 @@ Format: `## [version] — YYYY-MM-DD` with bullet points per change.
   and `OpenMeetings.jsx` from `pages/groups/` to new `pages/calendar/` directory;
   moved `TeamList.jsx` and `TeamRecord.jsx` to new `pages/teams/` directory, so
   each page directory mirrors a single backend domain
+- **Split E2E teams tests** — extracted team tests from `04-groups.spec.js` into new
+  `04b-teams.spec.js` with a dedicated `TeamsPage.js` page object, matching R8's
+  `pages/teams/` directory split
 - **Extract shared Zod schemas** (R9) — created `backend/src/schemas/` directory with
   `common.js`, `groups.js`, and `teams.js`. Extracted 9 duplicated Zod schemas from
   `routes/groups.js` and `routes/teams.js` into shared modules, using `.extend()` for
