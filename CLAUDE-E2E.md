@@ -135,15 +135,45 @@ navigate from this starting point using SPA links.
 
 The tenant slug is generated per run (`e2e_<hex>`) to avoid collisions.
 
-### Test data naming — use fixed suffixes, not `process.pid`
+### Test data naming — use fixed suffixes, not `process.pid` or `Date.now()`
 
 Test data names (member surnames, role names, account names) must use **fixed
-string suffixes** (e.g. `'E2ETestMbr'`), not `process.pid`.  Playwright restarts
-workers on retry, which changes the PID.  Tests that depend on data created by
-earlier tests (e.g. "search for the member created in the Add test") would look
-for a member under the new PID that doesn't exist.
+string suffixes** (e.g. `'E2ETestMbr'`), not `process.pid` or `Date.now()`.
+Playwright restarts workers on retry, which changes both the PID and the
+timestamp.  Tests that depend on data created by earlier tests (e.g. "search
+for the member created in the Add test") would look for a member under the
+new PID/timestamp that doesn't exist.
 
 Since each CI run creates its own tenant, fixed names cannot collide across runs.
+
+### Prefer auto-waiting assertions over snapshot checks
+
+Playwright's `locator.count()` is a snapshot — it checks the DOM once and
+returns immediately.  If the React component hasn't finished rendering, `count()`
+returns 0.  Instead, wait for at least one element first:
+
+```js
+// BAD — snapshot, may return 0 before React renders
+const count = await page.getByPlaceholder('dd/mm/yyyy').count();
+expect(count).toBeGreaterThanOrEqual(2);
+
+// GOOD — auto-waits, then counts
+const inputs = page.getByPlaceholder('dd/mm/yyyy');
+await expect(inputs.first()).toBeVisible();
+const count = await inputs.count();
+expect(count).toBeGreaterThanOrEqual(2);
+```
+
+### Page-object `goto()` methods should wait for data
+
+When a list page loads, the heading renders before the API data arrives.  The
+page object's `goto()` should wait for the loading indicator to disappear so
+that callers can immediately assert on list content:
+
+```js
+await this.page.getByRole('heading', { name: 'Groups' }).waitFor();
+await this.page.getByText('Loading…').waitFor({ state: 'hidden', timeout: 15_000 });
+```
 
 ---
 
