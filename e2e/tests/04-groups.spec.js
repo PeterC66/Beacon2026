@@ -20,8 +20,11 @@
 import { test, expect } from '../fixtures/admin.js';
 import { GroupListPage, GroupRecordPage } from '../pages/GroupsPage.js';
 
-const SUFFIX    = Date.now();
-const GROUP_NAME = `E2EGroup${SUFFIX}`;
+// Each CI run creates its own tenant, so a fixed name is safe — no
+// cross-run collisions.  A fixed string avoids the problem where
+// Playwright worker restarts (on retry) change Date.now() and break
+// dependent tests that look for a group created under the old timestamp.
+const GROUP_NAME = 'E2EGroup';
 
 test.describe('Group list', () => {
   test('page loads with heading and Add new group link', async ({ adminPage: page }) => {
@@ -52,7 +55,7 @@ test.describe('Add and edit a group', () => {
   test('new group appears in the group list', async ({ adminPage: page }) => {
     const listPage = new GroupListPage(page);
     await listPage.goto();
-    await expect(listPage.groupLink(GROUP_NAME)).toBeVisible({ timeout: 6_000 });
+    await expect(listPage.groupLink(GROUP_NAME)).toBeVisible({ timeout: 15_000 });
   });
 
   test('edit group details', async ({ adminPage: page }) => {

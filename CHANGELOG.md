@@ -5,6 +5,15 @@ Format: `## [version] — YYYY-MM-DD` with bullet points per change.
 
 ---
 
+## [0.9.4] — 2026-04-15
+
+### Fixed
+- **E2E group list tests** — replaced `Date.now()` with fixed `GROUP_NAME` to
+  prevent retry failures; increased visibility timeout from 6s to 15s; made
+  `GroupListPage.goto()` wait for data to load before returning
+- **E2E audit log date filter test** — added auto-waiting `toBeVisible()` before
+  snapshot `count()` to prevent race with React rendering
+
 ## [0.9.3] — 2026-04-14
 
 ### Added

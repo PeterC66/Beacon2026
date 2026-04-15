@@ -16,6 +16,8 @@ export class GroupListPage {
     });
     if (!clicked) await this.page.goto('/groups');
     await this.page.getByRole('heading', { name: 'Groups' }).waitFor();
+    // Wait for the group list data to finish loading
+    await this.page.getByText('Loading…').waitFor({ state: 'hidden', timeout: 15_000 });
   }
 
   addNewButton() {
