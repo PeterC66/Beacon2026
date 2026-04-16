@@ -193,7 +193,7 @@ test.describe('EventRecord navigation and details', () => {
     // Date in DD/MM/YYYY format
     await expect(page.getByText('15/06/2026', { exact: true })).toBeVisible();
     // Time
-    await expect(page.getByText('10:00')).toBeVisible();
+    await expect(page.getByText('10:00', { exact: true })).toBeVisible();
     // Group name as a link
     await expect(page.getByRole('link', { name: GROUP_NAME })).toBeVisible();
     // Topic
