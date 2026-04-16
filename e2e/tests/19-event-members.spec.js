@@ -195,7 +195,7 @@ test.describe('EventRecord navigation and details', () => {
     // Time
     await expect(page.getByText('10:00', { exact: true })).toBeVisible();
     // Group name as a link
-    await expect(page.getByRole('link', { name: GROUP_NAME })).toBeVisible();
+    await expect(page.getByRole('link', { name: GROUP_NAME }).first()).toBeVisible();
     // Topic
     await expect(page.getByText(EVENT_TOPIC)).toBeVisible();
   });
