@@ -60,9 +60,11 @@ async function gotoHomeLink(page, href, headingText) {
 /** Navigate to Calendar, find the test event, click into EventRecord. */
 async function gotoEventViaCalendar(page) {
   await gotoHomeLink(page, '/calendar', 'Calendar');
-  // Wait for events to load — look for our event link
-  const eventLink = page.locator('a[href^="/calendar/events/"]').filter({ hasText: EVENT_TOPIC });
-  await expect(eventLink.first()).toBeVisible({ timeout: 15_000 });
+  // Wait for events to load — find the row containing our topic
+  const eventRow = page.getByRole('row').filter({ hasText: EVENT_TOPIC });
+  await expect(eventRow.first()).toBeVisible({ timeout: 15_000 });
+  // The event link (date/time) is in the first cell of that row
+  const eventLink = eventRow.locator('a[href^="/calendar/events/"]');
   await eventLink.first().click();
   await page.getByRole('heading', { name: EVENT_TOPIC }).waitFor({ timeout: 10_000 });
 }
@@ -154,8 +156,10 @@ test.describe('Event members setup', () => {
       { timeout: 10_000 },
     );
 
-    // Select the test member from the dropdown
-    await page.locator('#group-add-by-name').selectOption({ label: new RegExp(MEMBER_SUR) });
+    // Select the test member from the dropdown — find the exact label text first
+    const groupOption = page.locator('#group-add-by-name option').filter({ hasText: MEMBER_SUR });
+    const groupLabel = await groupOption.first().textContent();
+    await page.locator('#group-add-by-name').selectOption({ label: groupLabel });
 
     // Click the Add button next to the name dropdown
     const addSection = page.locator('label[for="group-add-by-name"]').locator('..');
@@ -242,8 +246,10 @@ test.describe('Event Members', () => {
       { timeout: 10_000 },
     );
 
-    // Select the test member
-    await page.locator('#event-add-by-name').selectOption({ label: new RegExp(MEMBER_SUR) });
+    // Select the test member — find the exact label text first
+    const eventOption = page.locator('#event-add-by-name option').filter({ hasText: MEMBER_SUR });
+    const eventLabel = await eventOption.first().textContent();
+    await page.locator('#event-add-by-name').selectOption({ label: eventLabel });
 
     // Click the Add button next to the name dropdown
     const addSection = page.locator('label[for="event-add-by-name"]').locator('..');

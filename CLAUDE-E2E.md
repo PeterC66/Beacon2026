@@ -377,6 +377,37 @@ elements are `<a>` links, `<button>` buttons, or clickable `<td>` cells:
 - **UserList**: Name is a `<button>` (`getByRole('button')`), not a link
 - **UserList**: Delete is a `<button>` in the list row, not on the editor page
 
+### `selectOption` does not accept RegExp for `label`
+
+Playwright's `selectOption({ label: ... })` requires a **string**, not a
+`RegExp`. To match an option by partial text, first locate the `<option>`
+element, read its text, then pass the exact string:
+
+```javascript
+// BAD — throws "expected string, got object"
+await page.locator('#my-select').selectOption({ label: new RegExp('Foo') });
+
+// GOOD — find exact label, then select
+const opt = page.locator('#my-select option').filter({ hasText: 'Foo' });
+const label = await opt.first().textContent();
+await page.locator('#my-select').selectOption({ label });
+```
+
+### Calendar event links contain date/time, not topic
+
+The Calendar table renders the event **date and time** inside the `<a>` link,
+while the topic is in a separate `<td>` cell. To navigate to an event by topic,
+find the **table row** containing the topic text, then click the link within it:
+
+```javascript
+// BAD — link text is "15/06/2026 10:00", not the topic
+page.locator('a[href^="/calendar/events/"]').filter({ hasText: 'My Topic' });
+
+// GOOD — find row by topic, then click the link in that row
+const row = page.getByRole('row').filter({ hasText: 'My Topic' });
+await row.locator('a[href^="/calendar/events/"]').first().click();
+```
+
 ### DDL idempotency
 
 `ALTER TABLE ... ADD CONSTRAINT` fails with code `42710` if the constraint
@@ -388,7 +419,7 @@ END $$` block for idempotency.
 
 ## Test coverage inventory
 
-### Spec files (18)
+### Spec files (19)
 
 | File | Area | Key tests |
 |------|------|-----------|
@@ -410,6 +441,7 @@ END $$` block for idempotency.
 | `16-email.spec.js` | Email compose / delivery / unblocker | Compose form (no send), delivery date filters, unblocker input |
 | `17-setup-extended.spec.js` | Polls / messages / public links / custom fields / feature config / event types | Poll CRUD, message templates, link sections, field label inputs, feature toggle sections + Update button, event type CRUD |
 | `18-letters-utilities.spec.js` | Letters / utilities | Letter editor + tokens, download button, utilities validate link |
+| `19-event-members.spec.js` | Event members / financials | EventRecord nav, details/members/financials tabs, add/remove member, copy from group, linked transaction, schedule view link |
 
 ### Page objects (7)
 

@@ -5,6 +5,14 @@ Format: `## [version] — YYYY-MM-DD` with bullet points per change.
 
 ---
 
+## [0.9.5] — 2026-04-16
+
+### Fixed
+- **E2E event-members tests** — replaced `selectOption({ label: RegExp })` with
+  exact-string lookup (Playwright does not accept RegExp for label); fixed calendar
+  event navigation to locate the table row by topic text then click the link within
+  it (the `<a>` contains date/time, not the topic)
+
 ## [0.9.4] — 2026-04-15
 
 ### Fixed
