@@ -197,7 +197,7 @@ test.describe('EventRecord navigation and details', () => {
     // Group name as a link
     await expect(page.getByRole('link', { name: GROUP_NAME }).first()).toBeVisible();
     // Topic
-    await expect(page.getByText(EVENT_TOPIC)).toBeVisible();
+    await expect(page.getByRole('paragraph').filter({ hasText: EVENT_TOPIC })).toBeVisible();
   });
 
   test('all three tabs are visible and clickable', async ({ adminPage: page }) => {
