@@ -5,6 +5,15 @@ Format: `## [version] — YYYY-MM-DD` with bullet points per change.
 
 ---
 
+## [0.9.6] — 2026-04-17
+
+### Added
+- **`docs/website-editing-options.md`** — management-facing options document for
+  enabling Beacon2 users to edit the u3a SiteWorks WordPress site. Sets out four
+  integration architectures (link-out, managed WP users, SSO, embedded editor)
+  and five editing tiers, with costs and trade-offs. Recommends starting with a
+  link-out + WordPress Editor/Author roles for fastest, most reversible delivery
+
 ## [0.9.5] — 2026-04-16
 
 ### Fixed
