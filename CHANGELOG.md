@@ -39,6 +39,34 @@ Format: `## [version] — YYYY-MM-DD` with bullet points per change.
   `SystemLogin`, and `SystemDashboard` now use these helpers instead of
   `sessionStorage`, so XSS can no longer exfiltrate either token. Page reload now
   clears the portal/system session — users log in again
+- **Security H1 — refresh token tenant slug is now validated** —
+  `refreshTokens()` in `backend/src/services/authService.js` rejects any refresh
+  whose embedded `payload.tenantSlug` does not match the `x-tenant-slug` header,
+  before any DB lookup. Defense-in-depth alongside the existing per-tenant
+  refresh_tokens table
+- **Security H2 — account lockout after repeated failed logins** — added
+  `failed_login_count` and `locked_until` columns to `:schema.users` (idempotent
+  ALTER applied on startup). `loginUser()` increments the counter on each wrong
+  password; once it reaches `MAX_FAILED_LOGINS` (default 5) the account is
+  locked for `LOCKOUT_MINUTES` (default 15). Locked accounts refuse login even
+  with the correct password, without revealing whether the lock or the
+  credentials caused the failure. Both env vars are tunable. Successful login
+  resets the counter. Every failure and lockout is written to the tenant audit
+  log via `logAudit`
+- **Security H3 — Redis is now required in production** —
+  `backend/src/utils/redis.js` throws on startup when `NODE_ENV=production` and
+  `REDIS_URL` is missing, unless the operator has explicitly opted out with
+  `USE_REDIS=false` (in which case a loud warning is logged naming the
+  consequence). Without Redis, role/privilege revocation only takes effect
+  after the access token expires
+- **Security H5 — CORS_ORIGIN is now required in production** —
+  `backend/src/app.js` throws at startup when `NODE_ENV=production` and
+  `CORS_ORIGIN` is unset. Previously the cors middleware silently sent no
+  headers, breaking the frontend with no diagnostic
+- **Security L1 — JWT algorithm pinned to HS256** — `backend/src/utils/jwt.js`
+  now passes `{ algorithm: 'HS256' }` to `jwt.sign()` and
+  `{ algorithms: ['HS256'] }` to `jwt.verify()` for both access and refresh
+  tokens, blocking algorithm-confusion attacks (e.g. `alg: none` swaps)
 
 ## [0.9.6] — 2026-04-17
 

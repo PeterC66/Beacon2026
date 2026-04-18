@@ -7,6 +7,14 @@ import { hashPassword, verifyPassword } from '../utils/password.js';
 import { signAccessToken, signRefreshToken, verifyRefreshToken } from '../utils/jwt.js';
 import { invalidateUserSessions } from '../utils/redis.js';
 import { AppError } from '../middleware/errorHandler.js';
+import { logAudit } from '../utils/audit.js';
+
+// ─── Account lockout config ───────────────────────────────────────────────
+// After MAX_FAILED_LOGINS consecutive failures, the account is locked for
+// LOCKOUT_MINUTES. Both are env-tunable to make tightening / loosening
+// straightforward in production.
+const MAX_FAILED_LOGINS = parseInt(process.env.MAX_FAILED_LOGINS ?? '5', 10);
+const LOCKOUT_MINUTES   = parseInt(process.env.LOCKOUT_MINUTES   ?? '15', 10);
 
 // ─── Login ────────────────────────────────────────────────────────────────
 
@@ -25,16 +33,18 @@ export async function loginUser(tenantSlug, username, password) {
 
   // 2. Find user in tenant schema — try username first, fall back to email
   //    (fallback allows existing users without a username set to still log in)
+  const userCols = `id, email, name, password_hash, active, is_site_admin,
+                    must_change_password, failed_login_count, locked_until`;
   let [user] = await tenantQuery(
     tenantSlug,
-    `SELECT id, email, name, password_hash, active, is_site_admin, must_change_password FROM users WHERE username = $1`,
+    `SELECT ${userCols} FROM users WHERE username = $1`,
     [username.toLowerCase()],
   );
 
   if (!user) {
     [user] = await tenantQuery(
       tenantSlug,
-      `SELECT id, email, name, password_hash, active, is_site_admin, must_change_password FROM users WHERE email = $1`,
+      `SELECT ${userCols} FROM users WHERE email = $1`,
       [username.toLowerCase()],
     );
   }
@@ -44,8 +54,29 @@ export async function loginUser(tenantSlug, username, password) {
   const hashToCheck = user?.password_hash ?? dummyHash;
 
   const valid = await verifyPassword(password, hashToCheck);
-  if (!user || !valid || !user.active) {
+
+  // Locked account: refuse without revealing whether it was the lock or the
+  // wrong password that caused the failure. The bcrypt comparison above runs
+  // either way to keep timing consistent.
+  const lockedUntil = user?.locked_until ? new Date(user.locked_until) : null;
+  if (user && lockedUntil && lockedUntil > new Date()) {
     throw AppError('Invalid credentials.', 401);
+  }
+
+  if (!user || !valid || !user.active) {
+    if (user) {
+      await registerFailedLogin(tenantSlug, user, username);
+    }
+    throw AppError('Invalid credentials.', 401);
+  }
+
+  // Successful login — clear any failure counter / lockout window
+  if (user.failed_login_count > 0 || user.locked_until) {
+    await tenantQuery(
+      tenantSlug,
+      `UPDATE users SET failed_login_count = 0, locked_until = NULL WHERE id = $1`,
+      [user.id],
+    );
   }
 
   // 3. Compute effective privileges (union across all assigned roles)
@@ -99,6 +130,14 @@ export async function refreshTokens(tenantSlug, refreshToken) {
     payload = verifyRefreshToken(refreshToken);
   } catch {
     throw AppError('Invalid or expired refresh token.', 401);
+  }
+
+  // Defence in depth — refuse a refresh whose JWT was issued for a different
+  // tenant than the one named in the request. The token-hash lookup below
+  // would already fail (each tenant has its own refresh_tokens table) but
+  // explicit cross-tenant rejection makes the invariant obvious.
+  if (payload.tenantSlug !== tenantSlug) {
+    throw AppError('Invalid refresh token.', 401);
   }
 
   const tokenHash = hashToken(refreshToken);
@@ -227,4 +266,38 @@ export async function computeAllPrivileges(tenantSlug) {
 
 function hashToken(token) {
   return crypto.createHash('sha256').update(token).digest('hex');
+}
+
+/**
+ * Increment the failed-login counter on a user. If the new count reaches
+ * MAX_FAILED_LOGINS the account is locked for LOCKOUT_MINUTES. The counter
+ * is reset on a successful login (see loginUser).
+ *
+ * Both the failed attempt and any resulting lockout are written to the
+ * tenant audit log so admins can spot brute-force activity.
+ */
+async function registerFailedLogin(tenantSlug, user, attemptedUsername) {
+  const newCount = (user.failed_login_count ?? 0) + 1;
+  const willLock = newCount >= MAX_FAILED_LOGINS;
+  const lockedUntil = willLock
+    ? new Date(Date.now() + LOCKOUT_MINUTES * 60_000)
+    : null;
+
+  await tenantQuery(
+    tenantSlug,
+    `UPDATE users SET failed_login_count = $1, locked_until = $2 WHERE id = $3`,
+    [willLock ? 0 : newCount, lockedUntil, user.id],
+  );
+
+  await logAudit(tenantSlug, {
+    userId:     user.id,
+    userName:   user.name ?? attemptedUsername,
+    action:     willLock ? 'login_locked' : 'login_failed',
+    entityType: 'user',
+    entityId:   user.id,
+    entityName: user.name ?? attemptedUsername,
+    detail:     willLock
+      ? `Account locked for ${LOCKOUT_MINUTES} min after ${MAX_FAILED_LOGINS} failed attempts`
+      : `Failed attempt ${newCount}/${MAX_FAILED_LOGINS}`,
+  });
 }

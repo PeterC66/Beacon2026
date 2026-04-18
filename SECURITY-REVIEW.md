@@ -78,7 +78,7 @@ fixes are implemented.
 
 ### HIGH
 
-#### H1 — Refresh token tenant slug not validated against JWT payload — `OPEN`
+#### H1 — Refresh token tenant slug not validated against JWT payload — `FIXED`
 - **File:** `backend/src/routes/auth.js:78`, `backend/src/services/authService.js:96-103`
 - **Issue:** The `/auth/refresh` endpoint takes `tenantSlug` from the `x-tenant-slug`
   header (client-controlled). `refreshTokens()` verifies the JWT and gets
@@ -89,8 +89,13 @@ fixes are implemented.
   extremely unlikely.
 - **Fix:** Add `if (payload.tenantSlug !== tenantSlug) throw AppError(...)` after
   line 99 in `authService.js` as defense-in-depth.
+- **Resolution:** `refreshTokens()` now compares `payload.tenantSlug` against the
+  caller-supplied `tenantSlug` immediately after JWT verification and rejects with
+  `401 Invalid refresh token` on mismatch — before any DB lookup. Covered by a unit
+  test in `backend/src/__tests__/authService.test.js` that asserts no
+  `tenantQuery()` call is made when the slugs differ.
 
-#### H2 — No account lockout after failed login attempts — `OPEN`
+#### H2 — No account lockout after failed login attempts — `FIXED`
 - **Files:** `backend/src/services/authService.js:21-49`,
   `backend/src/routes/auth.js:34-48`
 - **Issue:** Failed login attempts are not tracked. The only protection is the rate
@@ -99,8 +104,19 @@ fixes are implemented.
   limiter counts all users together.
 - **Fix:** Track failed attempts per (tenantSlug, username) in Redis or DB. Lock
   account temporarily after N failures (e.g., 5). Log failed attempts to audit log.
+- **Resolution:** Added `failed_login_count` and `locked_until` columns to
+  `:schema.users` (idempotent ALTER, picked up on every startup). `loginUser()` now:
+  (1) refuses to authenticate while `locked_until > now()` — even on a correct
+  password — without leaking which condition failed; (2) increments
+  `failed_login_count` on every wrong password; (3) once the count reaches
+  `MAX_FAILED_LOGINS` (default 5) it sets `locked_until = now() + LOCKOUT_MINUTES`
+  (default 15); (4) resets both columns on a successful login. Each failure and
+  lockout is written to the tenant audit log via `logAudit`. Both env vars are
+  tunable. Non-existent users still incur the dummy bcrypt comparison (timing) but
+  no DB write. Covered by four unit tests in
+  `backend/src/__tests__/authService.test.js`.
 
-#### H3 — Session invalidation silently disabled without Redis — `OPEN`
+#### H3 — Session invalidation silently disabled without Redis — `FIXED`
 - **File:** `backend/src/utils/redis.js:7,14,35-36`
 - **Issue:** When `REDIS_URL` is not set, `isSessionInvalidated()` always returns
   `false`. This means role/privilege changes don't take effect until the access token
@@ -109,6 +125,11 @@ fixes are implemented.
   In production this should be considered unacceptable.
 - **Fix:** At minimum, log a startup WARNING that session invalidation is disabled.
   Require Redis for production (`NODE_ENV=production` without `REDIS_URL` should error).
+- **Resolution:** `backend/src/utils/redis.js` now refuses to start in production
+  when `REDIS_URL` is missing — unless the operator has explicitly opted out with
+  `USE_REDIS=false`, in which case a loud startup WARNING is emitted naming the
+  consequence (revoked roles remain effective until the access token expires).
+  Dev/test runs without Redis behave as before.
 
 #### H4 — npm audit vulnerabilities — `OPEN`
 - **Issue:** `npm audit` reports 11 backend vulnerabilities (1 critical, 4 high,
@@ -116,13 +137,17 @@ fixes are implemented.
 - **Fix:** Run `npm audit fix` in both `backend/` and `frontend/`. For remaining
   issues, evaluate `npm audit fix --force` or pin specific package versions.
 
-#### H5 — CORS_ORIGIN not validated at startup — `OPEN`
+#### H5 — CORS_ORIGIN not validated at startup — `FIXED`
 - **File:** `backend/src/app.js:51`
 - **Issue:** `process.env.CORS_ORIGIN` is used directly in the cors middleware. If the
   env var is unset, origin will be `undefined`, which causes the cors middleware to not
   send CORS headers — breaking the frontend silently. There's no startup validation.
 - **Fix:** Add a startup check: if `NODE_ENV === 'production'` and `CORS_ORIGIN` is not
   set, throw an error. Consider also validating it's a proper URL.
+- **Resolution:** `backend/src/app.js` now throws at module load when
+  `NODE_ENV === 'production'` and `CORS_ORIGIN` is unset, with a message naming the
+  expected value (the frontend URL). Dev/test runs without `CORS_ORIGIN` are
+  unaffected — the test environment supplies it via `vitest.config.js`.
 
 ---
 
@@ -188,12 +213,18 @@ fixes are implemented.
 
 ### LOW
 
-#### L1 — JWT algorithm not explicitly specified — `OPEN`
+#### L1 — JWT algorithm not explicitly specified — `FIXED`
 - **File:** `backend/src/utils/jwt.js:25,34,42,50`
 - **Issue:** `jwt.sign()` and `jwt.verify()` don't specify `{ algorithms: ['HS256'] }`.
   The jsonwebtoken library defaults to HS256 for HMAC secrets, but explicit is better.
 - **Fix:** Add `{ algorithms: ['HS256'] }` to `jwt.verify()` calls to prevent algorithm
   confusion attacks.
+- **Resolution:** Pinned the algorithm to HS256 in all four call sites in
+  `backend/src/utils/jwt.js`: both `jwt.sign()` calls now pass
+  `{ algorithm: 'HS256', ... }` and both `jwt.verify()` calls pass
+  `{ algorithms: ['HS256'] }`. This blocks the classic alg-confusion attack where
+  an attacker sets `alg: none` or swaps to a public-key algorithm the server then
+  validates against the HMAC secret.
 
 #### L2 — LIKE wildcard not escaped in member search — `OPEN`
 - **File:** `backend/src/routes/members.js:119-137`
