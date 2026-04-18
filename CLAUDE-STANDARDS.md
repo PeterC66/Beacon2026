@@ -217,6 +217,23 @@ Every item below applies to every new feature — no exceptions.
 - [ ] **Multiple text instances** — if heading appears in NavBar breadcrumb AND `<h1>`,
   use `getAllByText` not `getByText` in tests.
 
+## Reports, design notes, and estimates
+
+- [ ] **State the basis for every effort estimate.** Never give a bare
+  "X weeks" number — the unit is ambiguous without context and invites
+  wrong assumptions. Give estimates two ways:
+  - **Developer-weeks by hand** — one experienced developer, full-time,
+    no AI assistance. This is the classic costing basis.
+  - **Calendar time with Claude Code in the loop** — compressed
+    developer time with an active human driver; typically a third to a
+    half of the by-hand figure. It is *not* "Claude running 24/7" —
+    Claude waits on the driver for most decisions.
+
+  Also call out what each figure excludes: the driver's own time, test
+  environments, external integrations, onboarding and user support.
+  See `docs/website-editing-options.md` and
+  `docs/website-post-types-from-beacon2.md` for worked examples.
+
 ## Naming and style
 
 - [ ] **u3a** always lowercase.
