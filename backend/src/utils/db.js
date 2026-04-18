@@ -54,3 +54,16 @@ export async function tenantQuery(tenantSlug, sql, params = []) {
     return tx.$queryRawUnsafe(sql, ...params);
   });
 }
+
+/**
+ * Escape PostgreSQL LIKE/ILIKE wildcards (`%`, `_`) and the default escape
+ * character (`\`) in a user-supplied search term, so the term is matched
+ * literally. The caller adds the surrounding `%` wildcards themselves, e.g.
+ *   params.push(`%${escapeLike(q)}%`);
+ * Without this, an input of `_` matches any single character and `%`
+ * matches everything — letting users broaden a search beyond what the UI
+ * implies.
+ */
+export function escapeLike(value) {
+  return String(value).replace(/[\\%_]/g, (ch) => `\\${ch}`);
+}

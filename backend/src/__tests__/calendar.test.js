@@ -13,6 +13,7 @@ vi.mock('../utils/db.js', () => ({
   prisma:      { $disconnect: vi.fn() },
   tenantQuery: vi.fn(),
   withTenant:  vi.fn(),
+  escapeLike:  (s) => String(s).replace(/[\\%_]/g, (ch) => `\\${ch}`),
 }));
 
 vi.mock('../utils/audit.js', () => ({
@@ -167,6 +168,19 @@ describe('GET /calendar/members/search', () => {
       .set('Authorization', AUTH);
     expect(res.status).toBe(200);
     expect(res.body).toEqual([]);
+  });
+
+  it('escapes LIKE wildcards in the search term (L2)', async () => {
+    tenantQuery.mockResolvedValueOnce([]);
+    await request(app)
+      .get('/calendar/members/search?q=' + encodeURIComponent('a_b%c'))
+      .set('Authorization', AUTH);
+    // The last param of the last tenantQuery call is the bound search term;
+    // wildcards and the escape char must be backslash-escaped so they match
+    // literally rather than broadening the search.
+    const call = tenantQuery.mock.calls.at(-1);
+    const params = call[2];
+    expect(params).toEqual(['a\\_b\\%c']);
   });
 });
 

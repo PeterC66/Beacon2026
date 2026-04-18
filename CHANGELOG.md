@@ -112,6 +112,15 @@ Format: `## [version] — YYYY-MM-DD` with bullet points per change.
   `entity_type=tenant`, `user_name="System Admin: <name>"`, detail
   recording the affected user count). Previously this powerful operation
   left no trail in the tenant's audit view
+- **Security L2 — LIKE wildcards escaped in user search** — added
+  `escapeLike()` in `backend/src/utils/db.js` which backslash-escapes
+  `%`, `_`, and `\` before they are bound into an ILIKE pattern.
+  Applied to the member-list search (`q` and `cf` branches in
+  `members.js`) and the calendar member picker (`calendar.js`). A user
+  typing `_` or `%` previously broadened the search to match any
+  single/many characters; those characters now match literally. The
+  "surname starts with letter" filters are unchanged — their input is
+  already constrained to a single A–Z letter
 
 ## [0.9.6] — 2026-04-17
 

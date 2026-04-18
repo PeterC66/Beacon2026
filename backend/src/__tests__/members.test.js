@@ -13,6 +13,7 @@ vi.mock('../utils/db.js', () => ({
   prisma:      { $disconnect: vi.fn() },
   tenantQuery: vi.fn(),
   withTenant:  vi.fn(),
+  escapeLike:  (s) => String(s).replace(/[\\%_]/g, (ch) => `\\${ch}`),
 }));
 
 const { default: app } = await import('../app.js');

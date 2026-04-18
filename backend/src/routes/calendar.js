@@ -6,7 +6,7 @@ import { z } from 'zod';
 import PDFDocument from 'pdfkit';
 import { requireAuth } from '../middleware/auth.js';
 import { requirePrivilege } from '../middleware/requirePrivilege.js';
-import { tenantQuery } from '../utils/db.js';
+import { tenantQuery, escapeLike } from '../utils/db.js';
 import { AppError } from '../middleware/errorHandler.js';
 import { logAudit } from '../utils/audit.js';
 
@@ -244,7 +244,7 @@ router.get('/members/search', requirePrivilege('calendar', 'view'), async (req, 
           OR last_name ILIKE $1 || '%'
        ORDER BY last_name, first_name
        LIMIT 20`,
-      [q],
+      [escapeLike(q)],
     );
     res.json(members);
   } catch (err) {
