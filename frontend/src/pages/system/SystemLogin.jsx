@@ -3,7 +3,7 @@
 
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { system } from '../../lib/api.js';
+import { system, setSysToken } from '../../lib/api.js';
 
 export default function SystemLogin() {
   const navigate = useNavigate();
@@ -20,7 +20,7 @@ export default function SystemLogin() {
     setLoading(true);
     try {
       const data = await system.login(form.email, form.password);
-      sessionStorage.setItem('sysToken', data.accessToken);
+      setSysToken(data.accessToken);
       navigate('/system');
     } catch (err) {
       setError(err.message);

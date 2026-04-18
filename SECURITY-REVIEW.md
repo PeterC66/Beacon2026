@@ -36,7 +36,7 @@ fixes are implemented.
   Password is no longer echoed to stdout; only the email and a reminder to change the
   password on first login are logged.
 
-#### C2 — Recovery temp password logged to console — `OPEN`
+#### C2 — Recovery temp password logged to console — `FIXED`
 - **File:** `backend/src/routes/auth.js:332`
 - **Issue:** `sendRecoveryEmail()` logs the temporary password in plaintext:
   `console.log('[Recovery] Would send email to ... — ...')`. This is a dev stub that
@@ -46,8 +46,12 @@ fixes are implemented.
 - **Fix:** Remove the console.log, or at minimum redact the password. When SendGrid is
   configured, send via email only. When not configured, log a warning that recovery
   emails are disabled — never log the actual password.
+- **Resolution:** `sendRecoveryEmail()` now sends the recovery email via SendGrid when
+  `SENDGRID_API_KEY` is set. When unset, it logs a warning naming the recipient only
+  (no password, no message body) so operators can see email delivery is disabled.
+  Send failures are logged with `err.message` only — the email body is never logged.
 
-#### C3 — Portal & system tokens stored in sessionStorage (architecture violation) — `OPEN`
+#### C3 — Portal & system tokens stored in sessionStorage (architecture violation) — `FIXED`
 - **Files:**
   - `frontend/src/pages/public/PortalLogin.jsx:27` — writes `portalToken`
   - `frontend/src/pages/system/SystemLogin.jsx:23` — writes `sysToken`
@@ -61,6 +65,14 @@ fixes are implemented.
 - **Fix:** Move both tokens to module-level variables (same pattern as `core.js`).
   Update the portal and system API modules to use in-memory token storage with
   getter/setter functions.
+- **Resolution:** Added module-level `portalToken` in `frontend/src/lib/api/portal.js`
+  and `sysToken` in `frontend/src/lib/api/system.js`, each with
+  `set…Token / clear…Token / get…Token / has…Token` exports, mirroring the pattern
+  used by the main `core.js` access token. Updated `PortalLogin`, `PortalHome`,
+  `PortalRenewal`, `PortalPersonalDetails`, `SystemLogin`, and `SystemDashboard` to
+  use the new helpers instead of reading/writing `sessionStorage`. Non-secret portal
+  state (`portalMember`, `portalSlug`) remains in sessionStorage. Reloading the page
+  now clears the portal/system session — the user must log in again.
 
 ---
 

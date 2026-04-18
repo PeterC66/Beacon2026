@@ -3,7 +3,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { system } from '../../lib/api.js';
+import { system, getSysToken, clearSysToken } from '../../lib/api.js';
 import SortableHeader from '../../components/SortableHeader.jsx';
 import { useSortedData } from '../../hooks/useSortedData.js';
 
@@ -78,7 +78,7 @@ function getVal(config, key, defaultValue) {
 
 export default function SystemDashboard() {
   const navigate  = useNavigate();
-  const token     = sessionStorage.getItem('sysToken');
+  const token     = getSysToken();
 
   const [tenants,  setTenants]  = useState([]);
   const { sorted: sortedTenants, sortKey, sortDir, onSort } = useSortedData(tenants);
@@ -113,7 +113,7 @@ export default function SystemDashboard() {
   const [restoreError,   setRestoreError]   = useState('');
   const [confirmOpen,    setConfirmOpen]    = useState(false);
 
-  const logout = () => { sessionStorage.removeItem('sysToken'); navigate('/system/login'); };
+  const logout = () => { clearSysToken(); navigate('/system/login'); };
 
   const loadTenants = useCallback(async () => {
     setLoadErr(null);

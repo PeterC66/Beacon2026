@@ -21,12 +21,12 @@ vi.mock('../lib/api.js', () => ({
       onlineRenewEmail: '',
     }),
   },
+  hasPortalToken: vi.fn().mockReturnValue(true),
+  clearPortalToken: vi.fn(),
 }));
 
 describe('PortalRenewal page', () => {
   it('renders without crashing', () => {
-    // Simulate a logged-in portal session
-    sessionStorage.setItem('portalToken', 'test-token');
     const { container } = render(
       <MemoryRouter initialEntries={['/public/test-u3a/portal/renewal']}>
         <Routes>
@@ -35,6 +35,5 @@ describe('PortalRenewal page', () => {
       </MemoryRouter>,
     );
     expect(container).toBeTruthy();
-    sessionStorage.removeItem('portalToken');
   });
 });

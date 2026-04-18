@@ -1,14 +1,21 @@
-// api/portal.js — Members Portal API (authenticated member via sessionStorage).
-// Uses its own fetch wrappers because portal auth uses a separate JWT
-// stored in sessionStorage, not the module-level accessToken.
+// api/portal.js — Members Portal API (authenticated member via in-memory token).
+// The portal JWT is held in a module-level variable — never in localStorage or
+// sessionStorage — so that XSS cannot exfiltrate it. Page reload clears the
+// session; members log in again.
 
 import { BASE } from './core.js';
 
+let portalToken = null;
+
+export function setPortalToken(token) { portalToken = token; }
+export function clearPortalToken()     { portalToken = null; }
+export function getPortalToken()       { return portalToken; }
+export function hasPortalToken()       { return !!portalToken; }
+
 function portalRequest(slug, path, options = {}) {
-  const token = sessionStorage.getItem('portalToken');
   const headers = {
     'Content-Type': 'application/json',
-    ...(token && { Authorization: `Bearer ${token}` }),
+    ...(portalToken && { Authorization: `Bearer ${portalToken}` }),
     ...options.headers,
   };
   return fetch(`${BASE}/public/${slug}/portal/app${path}`, { ...options, headers })
@@ -19,8 +26,7 @@ function portalRequest(slug, path, options = {}) {
 }
 
 function portalBlobRequest(slug, path) {
-  const token = sessionStorage.getItem('portalToken');
-  const headers = { ...(token && { Authorization: `Bearer ${token}` }) };
+  const headers = { ...(portalToken && { Authorization: `Bearer ${portalToken}` }) };
   return fetch(`${BASE}/public/${slug}/portal/app${path}`, { headers })
     .then(async (r) => {
       if (!r.ok) {
@@ -84,8 +90,7 @@ export const portalApi = {
   }),
   deletePhoto: (slug) => portalRequest(slug, '/photo', { method: 'DELETE' }),
   getPhotoBlob: (slug) => {
-    const token = sessionStorage.getItem('portalToken');
-    const headers = { ...(token && { Authorization: `Bearer ${token}` }) };
+    const headers = { ...(portalToken && { Authorization: `Bearer ${portalToken}` }) };
     return fetch(`${BASE}/public/${slug}/portal/app/photo`, { headers })
       .then(async (r) => {
         if (!r.ok) return null;
