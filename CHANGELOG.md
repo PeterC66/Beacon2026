@@ -74,14 +74,17 @@ Format: `## [version] — YYYY-MM-DD` with bullet points per change.
   now passes `{ algorithm: 'HS256' }` to `jwt.sign()` and
   `{ algorithms: ['HS256'] }` to `jwt.verify()` for both access and refresh
   tokens, blocking algorithm-confusion attacks (e.g. `alg: none` swaps)
-- **Security H4 — npm audit vulnerabilities (partial)** — ran `npm audit fix`
-  in both `backend/` and `frontend/` and upgraded `bcrypt` 5 → 6 in the
-  backend. Test suites remain green (386 / 133). All backend highs are now
-  cleared: backend 11 → 4 vulns (0 high, 4 moderate); frontend 5 → 4 vulns
-  (0 high, 4 moderate). bcrypt's `hash`/`compare` API is unchanged — no code
-  change required in `backend/src/utils/password.js`. Remaining advisories
-  are all dev-only (`vitest`/`vite`/`esbuild` chain) and deferred to a
-  dedicated upgrade PR — see `SECURITY-REVIEW.md` §H4
+- **Security H4 — npm audit vulnerabilities cleared** — completed the
+  three-pass fix started earlier in this release: (1) `npm audit fix` in
+  both `backend/` and `frontend/`; (2) `bcrypt` 5 → 6 in the backend;
+  (3) `vitest` 1 → 4 in the backend, and `vite` 5 → 8, `vitest` 1 → 4, and
+  `@vitejs/plugin-react` bumped to the latest in the frontend. Both
+  packages now report **0 vulnerabilities**. Test suites remain green
+  (backend 386 / frontend 133) and `vite build` succeeds on vite 8. No
+  source changes were required — the existing `vitest.config.js`,
+  `vite.config.js`, and `vi` mock usage in the test suites are compatible
+  with vitest 4 and vite 8 out of the box. All upgraded packages are
+  `devDependencies`; nothing ships to production
 
 ## [0.9.6] — 2026-04-17
 
