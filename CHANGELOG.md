@@ -68,12 +68,13 @@ Format: `## [version] — YYYY-MM-DD` with bullet points per change.
   `{ algorithms: ['HS256'] }` to `jwt.verify()` for both access and refresh
   tokens, blocking algorithm-confusion attacks (e.g. `alg: none` swaps)
 - **Security H4 — npm audit vulnerabilities (partial)** — ran `npm audit fix`
-  in both `backend/` and `frontend/`. Test suites remain green (386 / 133).
-  Backend reduced from 11 → 7 vulnerabilities (fixed transitive `axios`,
-  `brace-expansion`, `follow-redirects`, `path-to-regexp`); frontend reduced
-  from 5 → 4 (fixed transitive `picomatch`). Remaining advisories all need
-  semver-major upgrades (`bcrypt` 5 → 6 and `vitest`/`vite` major bumps) and
-  are deferred to dedicated PRs — see `SECURITY-REVIEW.md` §H4
+  in both `backend/` and `frontend/` and upgraded `bcrypt` 5 → 6 in the
+  backend. Test suites remain green (386 / 133). All backend highs are now
+  cleared: backend 11 → 4 vulns (0 high, 4 moderate); frontend 5 → 4 vulns
+  (0 high, 4 moderate). bcrypt's `hash`/`compare` API is unchanged — no code
+  change required in `backend/src/utils/password.js`. Remaining advisories
+  are all dev-only (`vitest`/`vite`/`esbuild` chain) and deferred to a
+  dedicated upgrade PR — see `SECURITY-REVIEW.md` §H4
 
 ## [0.9.6] — 2026-04-17
 
