@@ -25,12 +25,21 @@ export async function migrateAndSeed() {
     throw err;
   }
 
-  // 2. Seed the system admin if one doesn't exist yet
+  // 2. Seed the system admin if one doesn't exist yet.
+  //    SEED_ADMIN_EMAIL and SEED_ADMIN_PASSWORD are required — we refuse to
+  //    create an admin account with a hardcoded fallback password.
   const existing = await prisma.sysAdmin.findFirst();
   if (!existing) {
-    const email    = process.env.SEED_ADMIN_EMAIL    ?? 'admin@beacon2.local';
-    const password = process.env.SEED_ADMIN_PASSWORD ?? 'ChangeMe123!';
-    const name     = process.env.SEED_ADMIN_NAME     ?? 'System Administrator';
+    const email    = process.env.SEED_ADMIN_EMAIL;
+    const password = process.env.SEED_ADMIN_PASSWORD;
+    const name     = process.env.SEED_ADMIN_NAME ?? 'System Administrator';
+
+    if (!email || !password) {
+      throw new Error(
+        'No system administrator exists and SEED_ADMIN_EMAIL / SEED_ADMIN_PASSWORD are not set. ' +
+        'Set both environment variables before starting the server.',
+      );
+    }
 
     const passwordHash = await hashPassword(password);
     await prisma.sysAdmin.create({ data: { email, name, passwordHash, active: true } });
@@ -38,8 +47,8 @@ export async function migrateAndSeed() {
     console.log('');
     console.log('✓ System administrator created:');
     console.log(`  Email:    ${email}`);
-    console.log(`  Password: ${password}`);
-    console.log('  IMPORTANT: Set SEED_ADMIN_PASSWORD in your environment variables.');
+    console.log(`  Password: (set via SEED_ADMIN_PASSWORD env var)`);
+    console.log('  IMPORTANT: Change this password immediately after first login.');
     console.log('');
   }
 
