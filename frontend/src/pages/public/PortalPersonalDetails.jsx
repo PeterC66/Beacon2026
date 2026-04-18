@@ -3,7 +3,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { portalApi } from '../../lib/api.js';
+import { portalApi, clearPortalToken } from '../../lib/api.js';
 import PortalVersion from '../../components/PortalVersion.jsx';
 
 export default function PortalPersonalDetails() {
@@ -172,7 +172,7 @@ export default function PortalPersonalDetails() {
       if (result.emailChanged) {
         // Log out — they need to re-verify
         setTimeout(() => {
-          sessionStorage.removeItem('portalToken');
+          clearPortalToken();
           sessionStorage.removeItem('portalMember');
           navigate(`/public/${slug}/portal`);
         }, 3000);

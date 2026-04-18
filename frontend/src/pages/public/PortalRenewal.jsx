@@ -4,7 +4,7 @@
 
 import { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate, useSearchParams } from 'react-router-dom';
-import { portalApi } from '../../lib/api.js';
+import { portalApi, hasPortalToken, clearPortalToken } from '../../lib/api.js';
 import PortalVersion from '../../components/PortalVersion.jsx';
 
 function fmtDate(d) {
@@ -35,8 +35,7 @@ export default function PortalRenewal() {
   const [completedData, setCompletedData] = useState(null);
 
   useEffect(() => {
-    const token = sessionStorage.getItem('portalToken');
-    if (!token) {
+    if (!hasPortalToken()) {
       navigate(`/public/${slug}/portal`, { replace: true });
       return;
     }
@@ -63,7 +62,7 @@ export default function PortalRenewal() {
       }
     } catch (err) {
       if (err.message.includes('expired') || err.message.includes('401')) {
-        sessionStorage.removeItem('portalToken');
+        clearPortalToken();
         navigate(`/public/${slug}/portal`, { replace: true });
       } else {
         setError(err.message);
@@ -80,7 +79,7 @@ export default function PortalRenewal() {
       setCompleted(true);
     } catch (err) {
       if (err.message.includes('expired') || err.message.includes('401')) {
-        sessionStorage.removeItem('portalToken');
+        clearPortalToken();
         navigate(`/public/${slug}/portal`, { replace: true });
       } else {
         setError(err.message);
@@ -103,7 +102,7 @@ export default function PortalRenewal() {
       }
     } catch (err) {
       if (err.message.includes('expired') || err.message.includes('401')) {
-        sessionStorage.removeItem('portalToken');
+        clearPortalToken();
         navigate(`/public/${slug}/portal`, { replace: true });
       } else {
         setError(err.message);

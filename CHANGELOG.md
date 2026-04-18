@@ -14,6 +14,18 @@ Format: `## [version] — YYYY-MM-DD` with bullet points per change.
   and `admin@beacon2.local` fallbacks are gone; if no sysadmin exists and either var
   is missing the process exits with a clear error. The seed password is no longer
   echoed to stdout — only the email is printed
+- **Security C2 — recovery temp password no longer logged** — `sendRecoveryEmail()`
+  in `backend/src/routes/auth.js` now delivers the recovery email via SendGrid when
+  `SENDGRID_API_KEY` is configured. With no key set it logs a warning naming the
+  recipient only — the temporary password and email body are never written to stdout
+- **Security C3 — portal & system tokens moved out of sessionStorage** — added
+  module-level, in-memory token storage to `frontend/src/lib/api/portal.js` and
+  `frontend/src/lib/api/system.js`, each with `set…Token / clear…Token / get…Token /
+  has…Token` helpers (same pattern as the tenant `accessToken` in `core.js`).
+  `PortalLogin`, `PortalHome`, `PortalRenewal`, `PortalPersonalDetails`,
+  `SystemLogin`, and `SystemDashboard` now use these helpers instead of
+  `sessionStorage`, so XSS can no longer exfiltrate either token. Page reload now
+  clears the portal/system session — users log in again
 
 ## [0.9.6] — 2026-04-17
 

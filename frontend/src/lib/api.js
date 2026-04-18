@@ -8,9 +8,9 @@
 
 import { request, requestBlob, requestMultipart, fetchAuthBlob } from './api/core.js';
 export { setAuth, clearAuth, getAccessToken, restoreSession, ApiError, requestBlob } from './api/core.js';
-export { system } from './api/system.js';
+export { system, setSysToken, clearSysToken, getSysToken, hasSysToken } from './api/system.js';
 export { publicApi } from './api/public.js';
-export { portalApi } from './api/portal.js';
+export { portalApi, setPortalToken, clearPortalToken, getPortalToken, hasPortalToken } from './api/portal.js';
 
 // ─── Auth ─────────────────────────────────────────────────────────────────
 

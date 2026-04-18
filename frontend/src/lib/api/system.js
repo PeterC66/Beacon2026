@@ -1,8 +1,16 @@
 // api/system.js — System admin API (separate token, no tenant context).
-// Uses raw fetch() because system-admin auth is a separate token passed
-// per-call, not the module-level accessToken used by tenant routes.
+// Uses raw fetch() because system-admin auth is a separate token, distinct
+// from the tenant accessToken managed in core.js. Token is held in memory
+// only — never in localStorage or sessionStorage — so XSS cannot steal it.
 
 import { BASE } from './core.js';
+
+let sysToken = null;
+
+export function setSysToken(token) { sysToken = token; }
+export function clearSysToken()     { sysToken = null; }
+export function getSysToken()       { return sysToken; }
+export function hasSysToken()       { return !!sysToken; }
 
 function systemFetch(url, options = {}) {
   return fetch(url, options).then((r) =>

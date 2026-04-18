@@ -4,6 +4,7 @@
 import { Router } from 'express';
 import crypto from 'crypto';
 import { z } from 'zod';
+import sgMail from '@sendgrid/mail';
 import { loginUser, logoutUser, refreshTokens, loginSysAdmin } from '../services/authService.js';
 import { requireAuth } from '../middleware/auth.js';
 import { tenantQuery, prisma } from '../utils/db.js';
@@ -12,6 +13,12 @@ import { AppError } from '../middleware/errorHandler.js';
 import { logAudit } from '../utils/audit.js';
 
 const router = Router();
+
+if (process.env.SENDGRID_API_KEY) {
+  sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+}
+
+const RECOVERY_FROM = process.env.RECOVERY_FROM_ADDRESS ?? 'noreply@u3abeacon.org.uk';
 
 const COOKIE_NAME = 'beacon2_refresh';
 const cookieOptions = {
@@ -315,7 +322,10 @@ function generateTempPassword() {
   return Array.from(bytes).map((b) => chars[b % chars.length]).join('');
 }
 
-/** Generate temp password, update user, and send recovery email. */
+/** Generate temp password, update user, and send recovery email.
+ *  The temp password is never logged. If SendGrid is not configured the
+ *  recovery email cannot be delivered — we log a warning (without the
+ *  password) so operators can see that email delivery is disabled. */
 async function sendRecoveryEmail(tenantSlug, user) {
   const tempPassword = generateTempPassword();
   const hash = await hashPassword(tempPassword);
@@ -326,10 +336,28 @@ async function sendRecoveryEmail(tenantSlug, user) {
     [hash, user.id],
   );
 
-  // In production, send via SendGrid. For now, log the email.
   const subject = 'Your Beacon2 login credentials';
   const body = `Your username is: ${user.username}\n\nA temporary password has been set: ${tempPassword}\n\nYou will be required to change this password when you next log in.`;
-  console.log(`[Recovery] Would send email to ${user.email}: "${subject}" — ${body}`);
+
+  if (!process.env.SENDGRID_API_KEY) {
+    console.warn(
+      `[Recovery] SendGrid not configured — cannot deliver recovery email to ${user.email}. ` +
+      `Set SENDGRID_API_KEY to enable account recovery emails.`,
+    );
+    return;
+  }
+
+  try {
+    await sgMail.send({
+      to: user.email,
+      from: RECOVERY_FROM,
+      subject,
+      text: body,
+    });
+  } catch (err) {
+    // Never include the body/password in the error log.
+    console.error(`[Recovery] Failed to send recovery email to ${user.email}:`, err.message);
+  }
 }
 
 export default router;

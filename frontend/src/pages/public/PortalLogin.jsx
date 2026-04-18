@@ -3,7 +3,7 @@
 
 import { useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { publicApi } from '../../lib/api.js';
+import { publicApi, setPortalToken } from '../../lib/api.js';
 import PortalVersion from '../../components/PortalVersion.jsx';
 
 export default function PortalLogin() {
@@ -24,7 +24,7 @@ export default function PortalLogin() {
     setSubmitting(true);
     try {
       const result = await publicApi.portalLogin(slug, email.trim(), password);
-      sessionStorage.setItem('portalToken', result.token);
+      setPortalToken(result.token);
       sessionStorage.setItem('portalMember', JSON.stringify(result.member));
       sessionStorage.setItem('portalSlug', slug);
       navigate(`/public/${slug}/portal/home`);

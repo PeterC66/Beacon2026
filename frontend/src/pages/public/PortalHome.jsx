@@ -3,7 +3,7 @@
 
 import { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { portalApi } from '../../lib/api.js';
+import { portalApi, hasPortalToken, clearPortalToken } from '../../lib/api.js';
 import PortalVersion from '../../components/PortalVersion.jsx';
 
 function fmtDate(d) {
@@ -24,8 +24,7 @@ export default function PortalHome() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const token = sessionStorage.getItem('portalToken');
-    if (!token) {
+    if (!hasPortalToken()) {
       navigate(`/public/${slug}/portal`, { replace: true });
       return;
     }
@@ -33,7 +32,7 @@ export default function PortalHome() {
       .then(setData)
       .catch((err) => {
         if (err.message.includes('expired') || err.message.includes('401')) {
-          sessionStorage.removeItem('portalToken');
+          clearPortalToken();
           sessionStorage.removeItem('portalMember');
           navigate(`/public/${slug}/portal`, { replace: true });
         } else {
@@ -44,7 +43,7 @@ export default function PortalHome() {
   }, [slug, navigate]);
 
   function handleLogout() {
-    sessionStorage.removeItem('portalToken');
+    clearPortalToken();
     sessionStorage.removeItem('portalMember');
     sessionStorage.removeItem('portalSlug');
     navigate(`/public/${slug}/portal`);
