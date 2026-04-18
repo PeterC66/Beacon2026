@@ -35,12 +35,28 @@ Every realistic solution is a combination of two independent choices.
 
 ### Decision 1 — How does a Beacon2 user get into the website editor?
 
-| Option | What it feels like for the user | What it costs to build | What it gives up |
-|---|---|---|---|
-| **A. Link out to WordPress** | Click "Edit website" in Beacon2, arrive at the WordPress login page, sign in again. | Less than a day of development. | Two passwords. WordPress roles are managed inside WordPress, not Beacon2. |
-| **B. Beacon2 creates WordPress accounts automatically** | User still logs into WordPress separately, but their account is created and kept up to date by Beacon2 when their Beacon2 role changes. | Roughly one week. | Still two passwords, but we no longer have to remember to update WordPress when someone joins or leaves. |
-| **C. Single sign-on** | User clicks "Edit website" and is logged straight into WordPress with their Beacon2 identity. | Roughly two to three weeks (a small custom WordPress plugin plus work in Beacon2). | Ongoing responsibility to maintain that plugin across WordPress upgrades. |
-| **D. Editor built inside Beacon2** | The user never leaves Beacon2; a small editor inside Beacon2 lets them change specific website content. | Four to eight weeks, depending on scope. | We are reinventing part of WordPress. Only simple edits are practical; complex layouts will still need WordPress. |
+Effort figures below are given two ways:
+
+- **Developer-weeks by hand** — one experienced developer, full-time,
+  no AI assistance. This is the classic costing basis.
+- **Calendar time with Claude Code in the loop** — compressed
+  developer time with an active human driver; typically a third to a
+  half of the by-hand figure. Coding is much faster but design
+  decisions, browser testing and review still bottleneck on the human,
+  and Claude waits on the driver for most decisions. It is *not*
+  "Claude running 24/7".
+
+Neither figure includes your driving time, a test environment, or
+post-launch support and onboarding. See
+`docs/website-post-types-from-beacon2.md` for a worked example of the
+two-figure estimating basis.
+
+| Option | What it feels like for the user | By hand | With Claude Code | What it gives up |
+|---|---|---|---|---|
+| **A. Link out to WordPress** | Click "Edit website" in Beacon2, arrive at the WordPress login page, sign in again. | Less than a day. | A few hours. | Two passwords. WordPress roles are managed inside WordPress, not Beacon2. |
+| **B. Beacon2 creates WordPress accounts automatically** | User still logs into WordPress separately, but their account is created and kept up to date by Beacon2 when their Beacon2 role changes. | Roughly one week. | 2–3 days. | Still two passwords, but we no longer have to remember to update WordPress when someone joins or leaves. |
+| **C. Single sign-on** | User clicks "Edit website" and is logged straight into WordPress with their Beacon2 identity. | Two to three weeks (small custom WordPress plugin plus work in Beacon2). | 1–1½ weeks. | Ongoing responsibility to maintain that plugin across WordPress upgrades. |
+| **D. Editor built inside Beacon2** | The user never leaves Beacon2; a small editor inside Beacon2 lets them change specific website content. | Four to eight weeks, depending on scope. | 2–4 weeks. See `docs/website-post-types-from-beacon2.md` for the specific case of the four SiteWorks structured post-types (`u3a_group`, `u3a_event`, `u3a_venue`, `u3a_contact`). | We are reinventing part of WordPress. Only simple edits are practical; complex layouts will still need WordPress. |
 
 ### Decision 2 — What should users be allowed to change?
 

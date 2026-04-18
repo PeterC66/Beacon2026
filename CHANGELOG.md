@@ -8,6 +8,11 @@ Format: `## [version] — YYYY-MM-DD` with bullet points per change.
 ## [0.9.7] — 2026-04-18
 
 ### Added
+- **`CLAUDE-STANDARDS.md` — "Reports, design notes, and estimates"**
+  section requiring every effort estimate in a report or design note to
+  be given two ways (developer-weeks by hand; calendar time with Claude
+  Code in the loop), with the basis stated and the exclusions spelled
+  out
 - **`docs/website-post-types-from-beacon2.md`** — design note extending
   `docs/website-editing-options.md`. Sets out what would be required for Beacon2
   to create and modify the four in-scope SiteWorks custom post-types
@@ -79,6 +84,13 @@ Format: `## [version] — YYYY-MM-DD` with bullet points per change.
   dedicated upgrade PR — see `SECURITY-REVIEW.md` §H4
 
 ## [0.9.6] — 2026-04-17
+
+### Changed
+- **`docs/website-editing-options.md` — effort estimates now given two ways**
+  (developer-weeks by hand; calendar time with Claude Code in the loop), with
+  the basis and exclusions stated above the options table. Option D entry
+  cross-refers to `docs/website-post-types-from-beacon2.md` for the worked
+  SiteWorks post-type case
 
 ### Added
 - **`docs/website-editing-options.md`** — management-facing options document for
