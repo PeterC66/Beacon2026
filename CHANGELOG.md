@@ -18,7 +18,9 @@ Format: `## [version] — YYYY-MM-DD` with bullet points per change.
   for WP-side deletes), covers the backend/frontend work, the companion
   plugin, field-mapping gotchas (including `u3a_contact` privacy), the
   comparison utility, a feasibility note on one-off data load from
-  SiteWorks, phased rollout with rough effort estimates, and open risks
+  SiteWorks, phased rollout with effort estimates given two ways
+  (developer-weeks by hand vs. calendar time with Claude Code in the
+  loop), and open risks
 
 ### Fixed
 - **Security C1 — hardcoded default admin credentials removed** — `SEED_ADMIN_EMAIL`

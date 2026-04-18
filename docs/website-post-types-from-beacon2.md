@@ -194,14 +194,33 @@ post-types are in production and there is real evidence of demand.
 
 ---
 
-## Phased rollout
+## Phased rollout and effort
 
-| Phase | Contents | Rough effort |
-|---|---|---|
-| **1** | All scaffolding — outbox, worker, settings page, privilege, companion plugin, reconciliation framework, comparison utility — plus the first post-type end-to-end: `u3a_group`. | 3 weeks |
-| **2** | `u3a_event` (including notices). Mostly a new mapper; scaffolding is reused. | 1 week |
-| **3** | `u3a_venue` and `u3a_contact`. Contacts carries the privacy-filter work. | 2 weeks |
-| **4 (later)** | Generic `post` / `page` import, if demand appears. | Defer; estimate when scoped. |
+Estimates are given two ways because the single "weeks" number is
+misleading on its own:
+
+- **Developer-weeks** is the classic unit: an experienced full-time
+  developer writing this by hand, including design, coding, tests,
+  review and iteration. This is the number most project plans assume,
+  and it is the basis for scoping and cost.
+- **Calendar time with Claude Code in the loop** is what this project
+  will actually see. Coding itself is much faster, but the human driver
+  is still the bottleneck on design decisions, testing behaviour in a
+  real browser against a real WordPress site, reading diffs, and
+  deciding what "good enough" looks like. A realistic figure is
+  **about a third to a half of the developer-weeks number** — not a
+  tenth. It is not "Claude running 24/7": Claude waits for the driver
+  on most decisions.
+
+Both numbers below are rough — honest enough for go / no-go, not
+accurate enough to commit a date to.
+
+| Phase | Contents | Developer-weeks (one human, by hand) | Calendar with Claude Code in the loop |
+|---|---|---|---|
+| **1** | All scaffolding — outbox, worker, settings page, privilege, companion plugin, reconciliation framework, comparison utility — plus the first post-type end-to-end: `u3a_group`. | 3 weeks | 1–1½ weeks |
+| **2** | `u3a_event` (including notices). Mostly a new mapper; scaffolding is reused. | 1 week | 2–4 days |
+| **3** | `u3a_venue` and `u3a_contact`. Contacts carries the privacy-filter work. | 2 weeks | ½–1 week |
+| **4 (later)** | Generic `post` / `page` import, if demand appears. | Defer; estimate when scoped. | — |
 
 Phase 1 is deliberately heavier because nothing is useful until the
 outbox, worker and companion plugin all exist. Phases 2 and 3 are
@@ -209,6 +228,19 @@ incremental and low-risk once phase 1 lands.
 
 Each phase is a self-contained release behind a per-u3a toggle, so a
 u3a can opt in to groups-only without the others.
+
+### What the "with Claude Code" figure does not include
+
+- **Your time.** Those calendar figures assume you are actively driving
+  the session — answering design questions, reviewing diffs, testing in
+  the browser. A day of calendar time is still several focused hours
+  from you. This figure is *compressed* human-developer time, not time
+  you can spend elsewhere.
+- **WordPress access and a test site.** A throwaway SiteWorks instance
+  to point Beacon2 at is essential; setting one up is not in the
+  estimates above.
+- **Real-world u3a roll-out** — onboarding the first u3a, training,
+  documentation, support. None of these scale down with Claude.
 
 ---
 
@@ -248,10 +280,12 @@ companion plugin, privilege, settings, reconciliation, comparison — are
 front-loaded into phase 1 and then reused for each subsequent type.
 
 Total effort to cover all four in-scope post-types is in the region of
-**six weeks** of focused development, delivered in three releasable
-phases. A one-off import from SiteWorks is feasible for the four
-post-types (low value) and for generic pages/posts (blocked on the
-absence of a Beacon2 destination module, best deferred).
+**six developer-weeks** (one experienced developer, full-time, by hand)
+— or roughly **two to three calendar weeks of active driving with Claude
+Code in the loop**, delivered in three releasable phases. A one-off
+import from SiteWorks is feasible for the four post-types (low value)
+and for generic pages/posts (blocked on the absence of a Beacon2
+destination module, best deferred).
 
 The design stays compatible with the existing `website-editing-options.md`
 recommendation: it sits alongside option A (link-out editing) rather than
