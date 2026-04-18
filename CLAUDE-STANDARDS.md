@@ -87,6 +87,14 @@ Every item below applies to every new feature — no exceptions.
 
 - [ ] **Parameterised queries only** — never string concatenation.
 
+- [ ] **Escape LIKE/ILIKE wildcards in user input** — wrap any
+  user-supplied search term with `escapeLike()` from
+  `backend/src/utils/db.js` before binding it into a `LIKE` / `ILIKE`
+  pattern, e.g. `` params.push(`%${escapeLike(q)}%`) ``. Without this,
+  a user typing `_` or `%` broadens the search beyond what the UI
+  implies. Not needed when the input is constrained to characters with
+  no wildcard meaning (e.g. a single `/^[A-Z]$/i` letter).
+
 - [ ] **Explicit PostgreSQL casts** for non-text columns in `$queryRawUnsafe`:
   `::date`, `::time`, `::numeric`.
 

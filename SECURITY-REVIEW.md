@@ -278,7 +278,7 @@ fixes are implemented.
   an attacker sets `alg: none` or swaps to a public-key algorithm the server then
   validates against the HMAC secret.
 
-#### L2 — LIKE wildcard not escaped in member search — `OPEN`
+#### L2 — LIKE wildcard not escaped in member search — `FIXED`
 - **File:** `backend/src/routes/members.js:119-137`
 - **Issue:** Search query `q` is used in ILIKE with `%${q}%`. PostgreSQL LIKE special
   characters (`%`, `_`) in user input aren't escaped.
@@ -286,6 +286,17 @@ fixes are implemented.
   matches any single character). This is data disclosure, not injection.
 - **Fix:** Escape `%` and `_` in the search term before interpolating into the LIKE
   pattern.
+- **Resolution:** Added `escapeLike()` in `backend/src/utils/db.js`, which
+  backslash-escapes `%`, `_`, and `\` so the bound search term matches
+  literally. Applied at the three user-driven ILIKE call sites:
+  `members.js` (the `q` and `cf` branches of the list endpoint) and
+  `calendar.js` (the calendar member picker's `/members/search`). The two
+  remaining `LIKE` usages — the "surname starts with letter" filters in
+  `members.js`, `groups.js`, and `teams.js` — validate input with
+  `/^[A-Z]$/i` so no wildcard can reach the query and no escaping is
+  needed. Covered by a new test in
+  `backend/src/__tests__/calendar.test.js` that asserts `a_b%c` is bound
+  as `a\_b\%c`.
 
 #### L3 — No explicit bcrypt max-length validation — `ALREADY HANDLED`
 - **File:** `backend/src/routes/auth.js:115`

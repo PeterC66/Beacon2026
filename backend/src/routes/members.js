@@ -7,7 +7,7 @@ import ExcelJS from 'exceljs';
 import PDFDocument from 'pdfkit';
 import { requireAuth } from '../middleware/auth.js';
 import { requirePrivilege } from '../middleware/requirePrivilege.js';
-import { tenantQuery } from '../utils/db.js';
+import { tenantQuery, escapeLike } from '../utils/db.js';
 import { AppError } from '../middleware/errorHandler.js';
 import { isFeatureEnabled } from '../middleware/requireFeature.js';
 import { logAudit } from '../utils/audit.js';
@@ -117,7 +117,7 @@ router.get('/', requirePrivilege('members_list', 'view'), async (req, res, next)
     }
 
     if (q) {
-      const like = `%${q}%`;
+      const like = `%${escapeLike(q)}%`;
       conditions.push(`(
         m.surname        ILIKE $${i}   OR
         m.forenames      ILIKE $${i}   OR
@@ -138,7 +138,7 @@ router.get('/', requirePrivilege('members_list', 'view'), async (req, res, next)
     }
 
     if (cf) {
-      const cfLike = `%${cf}%`;
+      const cfLike = `%${escapeLike(cf)}%`;
       conditions.push(`(
         m.custom_field_1 ILIKE $${i}   OR
         m.custom_field_2 ILIKE $${i}   OR
