@@ -67,6 +67,13 @@ Format: `## [version] — YYYY-MM-DD` with bullet points per change.
   now passes `{ algorithm: 'HS256' }` to `jwt.sign()` and
   `{ algorithms: ['HS256'] }` to `jwt.verify()` for both access and refresh
   tokens, blocking algorithm-confusion attacks (e.g. `alg: none` swaps)
+- **Security H4 — npm audit vulnerabilities (partial)** — ran `npm audit fix`
+  in both `backend/` and `frontend/`. Test suites remain green (386 / 133).
+  Backend reduced from 11 → 7 vulnerabilities (fixed transitive `axios`,
+  `brace-expansion`, `follow-redirects`, `path-to-regexp`); frontend reduced
+  from 5 → 4 (fixed transitive `picomatch`). Remaining advisories all need
+  semver-major upgrades (`bcrypt` 5 → 6 and `vitest`/`vite` major bumps) and
+  are deferred to dedicated PRs — see `SECURITY-REVIEW.md` §H4
 
 ## [0.9.6] — 2026-04-17
 

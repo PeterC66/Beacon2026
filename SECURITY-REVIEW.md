@@ -131,11 +131,31 @@ fixes are implemented.
   consequence (revoked roles remain effective until the access token expires).
   Dev/test runs without Redis behave as before.
 
-#### H4 — npm audit vulnerabilities — `OPEN`
+#### H4 — npm audit vulnerabilities — `IN PROGRESS`
 - **Issue:** `npm audit` reports 11 backend vulnerabilities (1 critical, 4 high,
   6 moderate) and 5 frontend vulnerabilities (1 high, 4 moderate).
 - **Fix:** Run `npm audit fix` in both `backend/` and `frontend/`. For remaining
   issues, evaluate `npm audit fix --force` or pin specific package versions.
+- **Resolution (partial):** Ran `npm audit fix` in both packages. All non-breaking
+  transitive fixes applied, test suites still green (backend 386 / frontend 133).
+  Committed `backend/package-lock.json` and `frontend/package-lock.json`.
+  - **Backend** 11 → 7 vulnerabilities (3 high, 4 moderate). Fixed transitively:
+    `axios`, `brace-expansion`, `follow-redirects`, `path-to-regexp`.
+  - **Frontend** 5 → 4 vulnerabilities (0 high, 4 moderate). Fixed transitively:
+    `picomatch`.
+- **Remaining (require semver-major upgrades — operator decision needed):**
+  - **Backend — `bcrypt` 5 → 6** (clears 3 high: `bcrypt`, `@mapbox/node-pre-gyp`,
+    `tar`). All three advisories are in the `tar` extraction path used by
+    `node-pre-gyp` to download prebuilt bcrypt binaries at install time —
+    they do not affect runtime password hashing. Risk in our deployment is low
+    (Render build env only), but the upgrade is safe and recommended.
+    bcrypt 6 drops Node 16 support; we already require Node ≥20.
+  - **Backend + Frontend — `vitest` 1 → 4 and `vite` 5 → 8** (clears 4 moderate
+    backend + 4 moderate frontend: `esbuild`, `vite`, `vite-node`, `vitest`).
+    These are dev-only dependencies (not shipped to production). The esbuild
+    dev-server advisory only applies when running `vite dev`. Upgrading is a
+    larger change — vitest 4 has breaking config changes and the CLI surface
+    shifted. Recommend a separate dedicated upgrade PR once bcrypt is in.
 
 #### H5 — CORS_ORIGIN not validated at startup — `FIXED`
 - **File:** `backend/src/app.js:51`
