@@ -7,6 +7,19 @@ Format: `## [version] — YYYY-MM-DD` with bullet points per change.
 
 ## [0.9.7] — 2026-04-18
 
+### Added
+- **`docs/website-post-types-from-beacon2.md`** — design note extending
+  `docs/website-editing-options.md`. Sets out what would be required for Beacon2
+  to create and modify the four in-scope SiteWorks custom post-types
+  (`u3a_group`, `u3a_event`, `u3a_venue`, `u3a_contact`). Records the design
+  decisions taken (push-only from Beacon2; per-type plus per-post exclusion;
+  Application Passwords + small companion plugin; background queue with
+  "publish now"; trash on WP-side for Beacon2 deletes, reconciliation view
+  for WP-side deletes), covers the backend/frontend work, the companion
+  plugin, field-mapping gotchas (including `u3a_contact` privacy), the
+  comparison utility, a feasibility note on one-off data load from
+  SiteWorks, phased rollout with rough effort estimates, and open risks
+
 ### Fixed
 - **Security C1 — hardcoded default admin credentials removed** — `SEED_ADMIN_EMAIL`
   and `SEED_ADMIN_PASSWORD` are now required by both `backend/src/seed/index.js` and
