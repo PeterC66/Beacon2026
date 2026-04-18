@@ -5,6 +5,16 @@ Format: `## [version] — YYYY-MM-DD` with bullet points per change.
 
 ---
 
+## [0.9.7] — 2026-04-18
+
+### Fixed
+- **Security C1 — hardcoded default admin credentials removed** — `SEED_ADMIN_EMAIL`
+  and `SEED_ADMIN_PASSWORD` are now required by both `backend/src/seed/index.js` and
+  the automatic startup seeder in `backend/src/utils/migrate.js`. The `ChangeMe123!`
+  and `admin@beacon2.local` fallbacks are gone; if no sysadmin exists and either var
+  is missing the process exits with a clear error. The seed password is no longer
+  echoed to stdout — only the email is printed
+
 ## [0.9.6] — 2026-04-17
 
 ### Added
