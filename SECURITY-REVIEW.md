@@ -131,11 +131,29 @@ fixes are implemented.
   consequence (revoked roles remain effective until the access token expires).
   Dev/test runs without Redis behave as before.
 
-#### H4 — npm audit vulnerabilities — `OPEN`
+#### H4 — npm audit vulnerabilities — `IN PROGRESS`
 - **Issue:** `npm audit` reports 11 backend vulnerabilities (1 critical, 4 high,
   6 moderate) and 5 frontend vulnerabilities (1 high, 4 moderate).
 - **Fix:** Run `npm audit fix` in both `backend/` and `frontend/`. For remaining
   issues, evaluate `npm audit fix --force` or pin specific package versions.
+- **Resolution (partial):** Applied in two passes. All backend highs cleared.
+  Test suites remain green (backend 386 / frontend 133).
+  1. Ran `npm audit fix` (non-breaking) in both packages — fixed transitively:
+     `axios`, `brace-expansion`, `follow-redirects`, `path-to-regexp`
+     (backend); `picomatch` (frontend).
+  2. Upgraded `bcrypt` 5 → 6 in `backend/package.json`. Cleared the
+     remaining 3 highs (`bcrypt`, `@mapbox/node-pre-gyp`, `tar`). bcrypt's
+     `hash`/`compare` API is unchanged; `backend/src/utils/password.js`
+     needed no code change. bcrypt 6 drops Node 16 support — we already
+     require Node ≥20.
+  - **Backend** 11 → 4 vulnerabilities (0 critical, 0 high, 4 moderate).
+  - **Frontend** 5 → 4 vulnerabilities (0 high, 4 moderate).
+- **Remaining (dev-only, semver-major — deferred to a dedicated PR):**
+  - **Backend + Frontend — `vitest` 1 → 4 and `vite` 5 → 8** (clears 4 moderate
+    backend + 4 moderate frontend: `esbuild`, `vite`, `vite-node`, `vitest`).
+    All are `devDependencies` — nothing ships to production. The esbuild
+    dev-server advisory only applies when running `vite dev` locally. vitest 4
+    has breaking config/CLI changes; warrants its own PR.
 
 #### H5 — CORS_ORIGIN not validated at startup — `FIXED`
 - **File:** `backend/src/app.js:51`
