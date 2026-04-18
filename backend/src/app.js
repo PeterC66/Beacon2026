@@ -40,6 +40,7 @@ import eventTypeRoutes     from './routes/eventTypes.js';
 import membershipCardRoutes from './routes/membershipCards.js';
 import letterRoutes         from './routes/letters.js';
 import customFieldRoutes    from './routes/customFields.js';
+import reportRoutes         from './routes/reports.js';
 import { errorHandler } from './middleware/errorHandler.js';
 
 // Refuse to start in production without CORS_ORIGIN — otherwise the cors
@@ -98,6 +99,7 @@ app.use('/event-types',     eventTypeRoutes);
 app.use('/membership-cards', membershipCardRoutes);
 app.use('/letters',          letterRoutes);
 app.use('/custom-fields',   customFieldRoutes);
+app.use('/reports',         reportRoutes);
 
 app.get('/health', (_req, res) => res.json({
   status:  'ok',

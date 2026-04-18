@@ -543,6 +543,32 @@ export const eventTypes = {
   remove: (id)       => request(`/event-types/${id}`, { method: 'DELETE' }),
 };
 
+// ─── Reports ──────────────────────────────────────────────────────────────
+
+export const reports = {
+  list:   ()         => request('/reports'),
+  get:    (id)       => request(`/reports/${id}`),
+  create: (data)     => request('/reports', { method: 'POST', body: JSON.stringify(data) }),
+  update: (id, data) => request(`/reports/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
+  remove: (id)       => request(`/reports/${id}`, { method: 'DELETE' }),
+  run:    (id, params = {}) =>
+    request(`/reports/${id}/run`, { method: 'POST', body: JSON.stringify({ params }) }),
+  download: (id, params = {}) =>
+    requestBlob(`/reports/${id}/download`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ params }),
+    }),
+  runSql: (sql) =>
+    request('/reports/sql/run', { method: 'POST', body: JSON.stringify({ sql }) }),
+  downloadSql: (sql) =>
+    requestBlob('/reports/sql/download', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ sql }),
+    }),
+};
+
 // ─── Membership Cards ────────────────────────────────────────────────────
 
 export const membershipCards = {

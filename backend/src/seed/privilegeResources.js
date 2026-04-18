@@ -64,6 +64,7 @@ export const PRIVILEGE_RESOURCES = [
   r('offices',                   'Offices',                         ['view', 'create', 'change', 'delete']),
   r('poll_set_up',               'Poll set up',                     ['view', 'create', 'change', 'delete']),
   r('public_links',              'Public links',                    ['view', 'change']),
+  r('reports',                   'SQL reports',                     ['view', 'run']),
   r('role_record',               'Role record',                     ['view', 'create', 'change', 'delete']),
   r('roles_list',                'Roles list',                      ['view']),
   r('settings',                  'Settings',                        ['view', 'change']),
