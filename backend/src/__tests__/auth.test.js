@@ -129,6 +129,34 @@ describe('POST /auth/refresh', () => {
     expect(res.status).toBe(200);
     expect(res.body.accessToken).toBe('new.acc.tok');
   });
+
+  it('returns 403 when Origin header does not match CORS_ORIGIN (CSRF)', async () => {
+    const res = await request(app)
+      .post('/auth/refresh')
+      .set('Cookie', 'beacon2_refresh=valid-token')
+      .set('x-tenant-slug', TEST_TENANT)
+      .set('Origin', 'https://evil.example.com');
+
+    expect(res.status).toBe(403);
+    expect(res.body.error).toBe('Origin not allowed.');
+    expect(refreshTokens).not.toHaveBeenCalled();
+  });
+
+  it('accepts a refresh whose Origin matches CORS_ORIGIN', async () => {
+    refreshTokens.mockResolvedValueOnce({
+      accessToken:  'new.acc.tok',
+      refreshToken: 'new.ref.tok',
+    });
+
+    const res = await request(app)
+      .post('/auth/refresh')
+      .set('Cookie', 'beacon2_refresh=valid-token')
+      .set('x-tenant-slug', TEST_TENANT)
+      .set('Origin', 'http://localhost:5173');
+
+    expect(res.status).toBe(200);
+    expect(res.body.accessToken).toBe('new.acc.tok');
+  });
 });
 
 // ── POST /auth/system/login ───────────────────────────────────────────────

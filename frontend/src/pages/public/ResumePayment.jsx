@@ -5,6 +5,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { publicApi } from '../../lib/api.js';
+import { isSafePaymentRedirect } from '../../lib/safeRedirect.js';
 import PortalVersion from '../../components/PortalVersion.jsx';
 
 export default function ResumePayment() {
@@ -26,13 +27,16 @@ export default function ResumePayment() {
   }, [slug, token]);
 
   function handlePayNow() {
-    if (data?.redirectUrl) {
-      // Store result for the completion page (same as JoinForm flow)
-      sessionStorage.setItem('joinResult', JSON.stringify({
-        memberId: data.memberId,
-      }));
-      window.location.href = data.redirectUrl;
+    if (!data?.redirectUrl) return;
+    if (!isSafePaymentRedirect(data.redirectUrl)) {
+      setError('The payment provider returned an unexpected redirect. Please contact your u3a.');
+      return;
     }
+    // Store result for the completion page (same as JoinForm flow)
+    sessionStorage.setItem('joinResult', JSON.stringify({
+      memberId: data.memberId,
+    }));
+    window.location.href = data.redirectUrl;
   }
 
   if (loading) {

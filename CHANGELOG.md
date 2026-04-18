@@ -85,6 +85,33 @@ Format: `## [version] — YYYY-MM-DD` with bullet points per change.
   `vite.config.js`, and `vi` mock usage in the test suites are compatible
   with vitest 4 and vite 8 out of the box. All upgraded packages are
   `devDependencies`; nothing ships to production
+- **Security M1 — CSRF protection on `/auth/refresh`** — the refresh
+  endpoint now verifies the `Origin` header against `CORS_ORIGIN` before
+  doing any work, and rejects mismatches with 403 `Origin not allowed.`
+  Because the refresh cookie is `SameSite=none` (required for the
+  Vercel→Render deployment), a cross-origin page could previously trigger
+  a refresh as a side effect — rotating the legitimate cookie and causing
+  a denial of service. The new check is stateless: browsers always set
+  Origin on cross-origin POSTs and it cannot be forged by attacker
+  JavaScript. In dev/test, requests without an Origin header (e.g.
+  supertest) are allowed
+- **Security M4 — payment redirect whitelist** — added
+  `frontend/src/lib/safeRedirect.js` with `isSafePaymentRedirect(url)`.
+  `ResumePayment.jsx` and `PortalRenewal.jsx` now validate the
+  backend-supplied `redirectUrl` before navigating, allowing only
+  same-origin URLs and the `paypal.com` / `sandbox.paypal.com` families
+  (including `www.` hosts). Look-alike domains (`paypal.com.evil.com`,
+  `evilpaypal.com`) and non-http(s) schemes (`javascript:`, `data:`) are
+  blocked. Failed checks surface a user-visible error instead of
+  navigating. Defence-in-depth if the backend is ever compromised or
+  mis-configured
+- **Security M5 — audit logging on bulk password reset** —
+  `POST /system/tenants/:id/set-temp-password`, the sys-admin-only
+  endpoint that resets every user's password in a tenant, now writes an
+  entry to the target tenant's audit log (`action=bulk_password_reset`,
+  `entity_type=tenant`, `user_name="System Admin: <name>"`, detail
+  recording the affected user count). Previously this powerful operation
+  left no trail in the tenant's audit view
 
 ## [0.9.6] — 2026-04-17
 
