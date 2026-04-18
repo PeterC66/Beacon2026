@@ -28,6 +28,29 @@ const cookieOptions = {
   maxAge: 1000 * 60 * 60 * 24 * parseInt(process.env.JWT_REFRESH_EXPIRES_DAYS ?? '30', 10),
 };
 
+// CSRF defence for the refresh cookie. Because the cookie is SameSite=none
+// a cross-origin POST from an attacker's page could otherwise trigger a
+// token refresh (revoking the legitimate one). The browser always sends
+// Origin on cross-origin requests and the attacker cannot spoof it, so we
+// require Origin — when present — to match CORS_ORIGIN. In dev/test
+// CORS_ORIGIN may be unset or Origin may be absent (supertest); we skip
+// the check there.
+function isAllowedOrigin(req) {
+  const allowed = process.env.CORS_ORIGIN;
+  if (!allowed) return true;
+  const origin = req.headers.origin;
+  if (!origin) {
+    // Browsers always send Origin on cross-origin POST. Absence means a
+    // non-browser caller (server-to-server, tests) — no CSRF risk.
+    return process.env.NODE_ENV !== 'production';
+  }
+  try {
+    return new URL(origin).origin === new URL(allowed).origin;
+  } catch {
+    return false;
+  }
+}
+
 // ─── POST /auth/login ─────────────────────────────────────────────────────
 // Log in a u3a user. Tenant is identified by the slug in the request body.
 // In production, tenant could also be determined by subdomain.
@@ -74,6 +97,10 @@ router.post('/logout', requireAuth, async (req, res, next) => {
 
 router.post('/refresh', async (req, res, next) => {
   try {
+    if (!isAllowedOrigin(req)) {
+      return res.status(403).json({ error: 'Origin not allowed.' });
+    }
+
     const refreshToken = req.cookies?.[COOKIE_NAME];
     if (!refreshToken) {
       return res.status(401).json({ error: 'No refresh token.' });

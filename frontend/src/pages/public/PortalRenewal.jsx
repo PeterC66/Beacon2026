@@ -5,6 +5,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { portalApi, hasPortalToken, clearPortalToken } from '../../lib/api.js';
+import { isSafePaymentRedirect } from '../../lib/safeRedirect.js';
 import PortalVersion from '../../components/PortalVersion.jsx';
 
 function fmtDate(d) {
@@ -98,6 +99,11 @@ export default function PortalRenewal() {
         partnerGiftAid,
       });
       if (result.redirectUrl) {
+        if (!isSafePaymentRedirect(result.redirectUrl)) {
+          setError('The payment provider returned an unexpected redirect. Please contact your u3a.');
+          setSubmitting(false);
+          return;
+        }
         window.location.href = result.redirectUrl;
       }
     } catch (err) {

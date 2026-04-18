@@ -173,7 +173,7 @@ fixes are implemented.
 
 ### MEDIUM
 
-#### M1 — SameSite=none on refresh cookie without additional CSRF protection — `OPEN`
+#### M1 — SameSite=none on refresh cookie without additional CSRF protection — `FIXED`
 - **File:** `backend/src/routes/auth.js:20`
 - **Issue:** The refresh token cookie uses `sameSite: 'none'` (required for cross-origin
   Vercel→Render). This means the cookie is sent with all cross-origin requests.
@@ -186,6 +186,17 @@ fixes are implemented.
 - **Fix:** Consider adding a CSRF token or using the Double Submit Cookie pattern for
   the refresh endpoint. Alternatively, document this as an accepted risk given the
   CORS + header requirement.
+- **Resolution:** `/auth/refresh` now enforces an Origin header check before doing
+  any work. `isAllowedOrigin()` in `backend/src/routes/auth.js` rejects (403
+  `Origin not allowed.`) any request whose `Origin` header does not match
+  `CORS_ORIGIN`. This is stateless CSRF protection: the browser always sets Origin
+  on cross-origin POSTs and it cannot be forged from a victim page, so an
+  attacker's site cannot trigger a refresh. Requests with no Origin header are
+  allowed in dev/test only (supertest, server-to-server) — in production, a
+  missing Origin on a cross-origin request is treated as a refusal to participate
+  in CORS and rejected. Covered by two new tests in
+  `backend/src/__tests__/auth.test.js` (mismatched Origin → 403;
+  matching Origin → 200).
 
 #### M2 — Zod validation errors expose field paths — `OPEN`
 - **File:** `backend/src/middleware/errorHandler.js:20-23`
@@ -204,7 +215,7 @@ fixes are implemented.
 - **Fix:** Document this clearly. Consider generating unique random passwords per user
   during migration and emailing them.
 
-#### M4 — Open redirect in payment flows — `OPEN`
+#### M4 — Open redirect in payment flows — `FIXED`
 - **Files:**
   - `frontend/src/pages/public/ResumePayment.jsx:34`
   - `frontend/src/pages/public/PortalRenewal.jsx:101-102`
@@ -214,13 +225,34 @@ fixes are implemented.
 - **Mitigation:** The URL comes from the trusted backend, not from user input.
 - **Fix:** Validate the redirect URL against a whitelist of allowed domains (e.g.,
   `paypal.com`) before redirecting.
+- **Resolution:** Added `frontend/src/lib/safeRedirect.js` exporting
+  `isSafePaymentRedirect(url)`. The helper allows only (1) same-origin URLs
+  (the stub PayPal flow bounces back to our own confirmation pages) and
+  (2) `paypal.com`, `www.paypal.com`, `sandbox.paypal.com`, and
+  `www.sandbox.paypal.com`. All other hosts, `javascript:`/`data:` schemes,
+  and look-alike domains (e.g. `paypal.com.evil.com`, `evilpaypal.com`) are
+  rejected. Both `ResumePayment.jsx` and `PortalRenewal.jsx` now call the
+  helper before `window.location.href = redirectUrl` and surface a
+  user-visible error ("The payment provider returned an unexpected
+  redirect…") if the check fails, instead of navigating. Covered by unit
+  tests in `frontend/src/__tests__/safeRedirect.test.js`.
 
-#### M5 — set-temp-password endpoint sets same password for ALL tenant users — `OPEN`
+#### M5 — set-temp-password endpoint sets same password for ALL tenant users — `FIXED`
 - **File:** `backend/src/routes/system.js:98-113`
 - **Issue:** This endpoint resets every user's password to the same value. While
   protected by `requireSysAdmin`, it's a powerful operation with no audit trail.
 - **Fix:** Add audit logging for this endpoint. Consider whether this is the right
   design (perhaps reset only specific users).
+- **Resolution:** `POST /system/tenants/:id/set-temp-password` now writes an
+  entry to the target tenant's `audit_log` via `logAudit()` after the bulk
+  reset. `user_id` is null (the caller is a sys-admin with no tenant-level
+  user record); `user_name` is `System Admin: <name>` so it cannot be
+  confused with a regular user; `action` is `bulk_password_reset`,
+  `entity_type` is `tenant`, and `detail` records how many users were
+  affected and that `must_change_password=true`. Narrowing the endpoint to
+  specific users was considered but left as-is — it exists for "all admins
+  locked out" situations where the sysadmin does not know any one user by
+  ID. The audit entry provides the accountability the finding called for.
 
 #### M6 — Password reset token in URL parameter — `OPEN`
 - **File:** `frontend/src/pages/public/PortalResetPassword.jsx:11`

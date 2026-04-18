@@ -13,6 +13,7 @@ import { AppError } from '../middleware/errorHandler.js';
 import { createTenantSchema } from '../seed/createTenant.js';
 import { clearTenantData, resetSequences, restoreBeacon2, restoreBeacon, BEACON_DEFAULT_PASSWORD } from './backup.js';
 import { syncDefaultRolePrivileges } from '../utils/migrate.js';
+import { logAudit } from '../utils/audit.js';
 import ExcelJS from 'exceljs';
 
 const router = Router();
@@ -107,6 +108,21 @@ router.post('/tenants/:id/set-temp-password', async (req, res, next) => {
       `UPDATE users SET password_hash = $1, must_change_password = true RETURNING username, name`,
       [hash],
     );
+
+    // Record the bulk reset in the tenant audit log. user_id is null because
+    // the caller is a sys-admin (no tenant-level user record). user_name is
+    // the sys-admin's display name, prefixed so it can't be confused with a
+    // regular tenant user.
+    await logAudit(tenant.slug, {
+      userId:     null,
+      userName:   `System Admin: ${req.sysAdmin?.name ?? 'unknown'}`,
+      action:     'bulk_password_reset',
+      entityType: 'tenant',
+      entityId:   tenant.id,
+      entityName: tenant.name,
+      detail:     `Set temporary password for ${result.length} user(s); must_change_password=true.`,
+    });
+
     res.json({ ok: true, updated: result.length, users: result.map((u) => u.username || u.name) });
   } catch (err) {
     next(err);
