@@ -188,6 +188,10 @@ export const DEFAULT_ROLES = [
       { code: 'public_links',             action: 'view' },
       { code: 'public_links',             action: 'change' },            // ve
 
+      // Reports
+      { code: 'reports',                  action: 'view' },
+      { code: 'reports',                  action: 'run' },               // vo
+
       // Roles
       { code: 'role_record',              action: 'view' },
       { code: 'role_record',              action: 'create' },

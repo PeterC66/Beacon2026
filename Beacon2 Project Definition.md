@@ -211,6 +211,15 @@ Beacon2 is a ground-up rebuild with these goals:
 - **Event financials** — per-event income/costs summary with transaction links;
   "Add transaction" pre-fills event_id; transactions linkable to events via search-as-you-type
 
+### Reports module (Beacon2 extra)
+- **SQL reports** — hybrid of (a) a library of saved parameterised reports
+  that any user with `reports:run` can execute, and (b) an ad-hoc SQL editor
+  for site administrators. All queries run in a read-only Postgres transaction
+  (`SET LOCAL transaction_read_only = on`) with a 15-second statement timeout,
+  a single-statement guard (only `SELECT` / `WITH`), and a 5,000-row result cap.
+  Named `:param` placeholders are substituted with positional `$N` server-side.
+  Results render as a table; Excel download via ExcelJS. Every run is audited.
+
 ### Admin / Misc module
 - **Audit log** — date-filtered view + delete-before-date; clickable When → Audit Record detail; clickable Record → entity view
 - **Gift Aid log** — date-filtered view of Gift Aid consent given/withdrawn; member filter dropdown

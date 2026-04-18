@@ -89,6 +89,10 @@ const ChangePassword     = lazy(() => import('./pages/ChangePassword.jsx'));
 const CustomFields       = lazy(() => import('./pages/settings/CustomFields.jsx'));
 const EventTypeList      = lazy(() => import('./pages/settings/EventTypeList.jsx'));
 const FeatureConfig      = lazy(() => import('./pages/settings/FeatureConfig.jsx'));
+const ReportList         = lazy(() => import('./pages/reports/ReportList.jsx'));
+const ReportRun          = lazy(() => import('./pages/reports/ReportRun.jsx'));
+const ReportEditor       = lazy(() => import('./pages/reports/ReportEditor.jsx'));
+const ReportSql          = lazy(() => import('./pages/reports/ReportSql.jsx'));
 
 function ProtectedRoute({ skipPasswordCheck, children }) {
   const { isLoggedIn, mustChangePassword } = useAuth();
@@ -151,6 +155,13 @@ const router = createBrowserRouter([
       { path: '/backup',              element: <ProtectedRoute><DataBackup /></ProtectedRoute> },
       { path: '/preferences',         element: <ProtectedRoute><PersonalPreferences /></ProtectedRoute> },
       { path: '/public-links',        element: <ProtectedRoute><PublicLinks /></ProtectedRoute> },
+
+      // Reports — gated by reports:view/run privileges; editor and sql pages self-check isSiteAdmin
+      { path: '/reports',             element: <ProtectedRoute><ReportList /></ProtectedRoute> },
+      { path: '/reports/new',         element: <ProtectedRoute><ReportEditor /></ProtectedRoute> },
+      { path: '/reports/sql',         element: <ProtectedRoute><ReportSql /></ProtectedRoute> },
+      { path: '/reports/:id',         element: <ProtectedRoute><ReportRun /></ProtectedRoute> },
+      { path: '/reports/:id/edit',    element: <ProtectedRoute><ReportEditor /></ProtectedRoute> },
 
       // Membership — always available (core), sub-features gated
       { path: '/members',             element: <ProtectedRoute><MemberList /></ProtectedRoute> },

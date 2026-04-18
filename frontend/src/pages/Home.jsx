@@ -78,6 +78,7 @@ export default function Home() {
         { label: 'E-mail unblocker',      tip: 'Remove members from the email block list',     to: can('email_delivery', 'all')  ? '/email/unblocker' : null, f: 'email' },
         { label: 'Personal preferences',  tip: 'Change your password, name display and timeout settings', to: '/preferences' },
         { label: 'Utilities',              tip: 'Administrative utilities',                                to: can('utilities', 'view') ? '/utilities' : null },
+        { label: 'SQL reports',            tip: 'Run saved SQL reports and ad-hoc queries',                to: can('reports', 'view') ? '/reports' : null },
       ],
     },
     {

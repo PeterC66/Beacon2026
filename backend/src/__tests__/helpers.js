@@ -59,6 +59,7 @@ export const ALL_PRIVS = [
   'letters:view', 'letters:download',
   'letters_standard_messages:view', 'letters_standard_messages:create', 'letters_standard_messages:change', 'letters_standard_messages:delete',
   'utilities:view',
+  'reports:view', 'reports:run',
 ];
 
 export const TEST_TENANT = 'test-u3a';

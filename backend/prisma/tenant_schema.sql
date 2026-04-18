@@ -809,4 +809,18 @@ ALTER TABLE :schema.tenant_settings ADD COLUMN IF NOT EXISTS calendar_config  JS
 -- ─── Feature configuration ────────────────────────────────────────────
 -- Per-tenant feature toggles. Missing keys default to true (opt-out model).
 -- See FeatureConfig.jsx for the full toggle inventory.
-ALTER TABLE :schema.tenant_settings ADD COLUMN IF NOT EXISTS feature_config JSONB NOT NULL DEFAULT '{}'
+ALTER TABLE :schema.tenant_settings ADD COLUMN IF NOT EXISTS feature_config JSONB NOT NULL DEFAULT '{}';
+
+-- ─── Saved reports ───────────────────────────────────────────────────
+-- Saved parameterised SQL reports. SQL is SELECT/WITH only; parameters
+-- is a JSONB array of { name, label, type, required, default } objects.
+CREATE TABLE IF NOT EXISTS :schema.saved_reports (
+  id          SERIAL PRIMARY KEY,
+  name        TEXT NOT NULL,
+  description TEXT,
+  sql_text    TEXT NOT NULL,
+  parameters  JSONB NOT NULL DEFAULT '[]',
+  created_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at  TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE UNIQUE INDEX IF NOT EXISTS :schema_idx_saved_reports_name ON :schema.saved_reports (name)

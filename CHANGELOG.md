@@ -5,6 +5,23 @@ Format: `## [version] — YYYY-MM-DD` with bullet points per change.
 
 ---
 
+## [0.10.5] — 2026-04-18
+
+### Added
+- **SQL reports** — new `/reports` page for running saved parameterised SELECT/WITH
+  queries against the tenant schema. Library of saved reports (site admin creates +
+  edits; anyone with `reports:run` can execute) plus an ad-hoc SQL editor gated to
+  site administrators. Safety: queries run in a read-only transaction with
+  `SET LOCAL transaction_read_only = on`, `SET LOCAL statement_timeout = 15000`, a
+  single-statement guard that rejects anything starting with anything other than
+  `SELECT`/`WITH`, and a 5,000-row result cap. Named `:param` placeholders are
+  substituted with positional `$N` parameters server-side so parameter values can
+  never alter the query structure. Results render as a table with row count +
+  duration metadata; Excel download via ExcelJS. Every run is written to the audit
+  log. New `reports` privilege resource with `view` + `run` actions; added to
+  Administration role by default. Home page menu gains a "SQL reports" link under
+  Misc
+
 ## [0.9.7] — 2026-04-18
 
 ### Added
