@@ -53,6 +53,20 @@ Format: `## [version] — YYYY-MM-DD` with bullet points per change.
   credentials caused the failure. Both env vars are tunable. Successful login
   resets the counter. Every failure and lockout is written to the tenant audit
   log via `logAudit`
+- **Security H3 — Redis is now required in production** —
+  `backend/src/utils/redis.js` throws on startup when `NODE_ENV=production` and
+  `REDIS_URL` is missing, unless the operator has explicitly opted out with
+  `USE_REDIS=false` (in which case a loud warning is logged naming the
+  consequence). Without Redis, role/privilege revocation only takes effect
+  after the access token expires
+- **Security H5 — CORS_ORIGIN is now required in production** —
+  `backend/src/app.js` throws at startup when `NODE_ENV=production` and
+  `CORS_ORIGIN` is unset. Previously the cors middleware silently sent no
+  headers, breaking the frontend with no diagnostic
+- **Security L1 — JWT algorithm pinned to HS256** — `backend/src/utils/jwt.js`
+  now passes `{ algorithm: 'HS256' }` to `jwt.sign()` and
+  `{ algorithms: ['HS256'] }` to `jwt.verify()` for both access and refresh
+  tokens, blocking algorithm-confusion attacks (e.g. `alg: none` swaps)
 
 ## [0.9.6] — 2026-04-17
 

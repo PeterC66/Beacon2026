@@ -42,6 +42,16 @@ import letterRoutes         from './routes/letters.js';
 import customFieldRoutes    from './routes/customFields.js';
 import { errorHandler } from './middleware/errorHandler.js';
 
+// Refuse to start in production without CORS_ORIGIN — otherwise the cors
+// middleware silently sends no headers and the frontend breaks with no clue
+// why. In dev/test we allow it to be unset so local runs Just Work.
+if (process.env.NODE_ENV === 'production' && !process.env.CORS_ORIGIN) {
+  throw new Error(
+    'CORS_ORIGIN must be set in production. Configure it to the frontend URL ' +
+    '(e.g. https://beacon2.vercel.app).',
+  );
+}
+
 const app = express();
 
 app.set('trust proxy', 1); // trust Render's load balancer
