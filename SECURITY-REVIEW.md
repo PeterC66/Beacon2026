@@ -78,7 +78,7 @@ fixes are implemented.
 
 ### HIGH
 
-#### H1 — Refresh token tenant slug not validated against JWT payload — `OPEN`
+#### H1 — Refresh token tenant slug not validated against JWT payload — `FIXED`
 - **File:** `backend/src/routes/auth.js:78`, `backend/src/services/authService.js:96-103`
 - **Issue:** The `/auth/refresh` endpoint takes `tenantSlug` from the `x-tenant-slug`
   header (client-controlled). `refreshTokens()` verifies the JWT and gets
@@ -89,8 +89,13 @@ fixes are implemented.
   extremely unlikely.
 - **Fix:** Add `if (payload.tenantSlug !== tenantSlug) throw AppError(...)` after
   line 99 in `authService.js` as defense-in-depth.
+- **Resolution:** `refreshTokens()` now compares `payload.tenantSlug` against the
+  caller-supplied `tenantSlug` immediately after JWT verification and rejects with
+  `401 Invalid refresh token` on mismatch — before any DB lookup. Covered by a unit
+  test in `backend/src/__tests__/authService.test.js` that asserts no
+  `tenantQuery()` call is made when the slugs differ.
 
-#### H2 — No account lockout after failed login attempts — `OPEN`
+#### H2 — No account lockout after failed login attempts — `FIXED`
 - **Files:** `backend/src/services/authService.js:21-49`,
   `backend/src/routes/auth.js:34-48`
 - **Issue:** Failed login attempts are not tracked. The only protection is the rate
@@ -99,6 +104,17 @@ fixes are implemented.
   limiter counts all users together.
 - **Fix:** Track failed attempts per (tenantSlug, username) in Redis or DB. Lock
   account temporarily after N failures (e.g., 5). Log failed attempts to audit log.
+- **Resolution:** Added `failed_login_count` and `locked_until` columns to
+  `:schema.users` (idempotent ALTER, picked up on every startup). `loginUser()` now:
+  (1) refuses to authenticate while `locked_until > now()` — even on a correct
+  password — without leaking which condition failed; (2) increments
+  `failed_login_count` on every wrong password; (3) once the count reaches
+  `MAX_FAILED_LOGINS` (default 5) it sets `locked_until = now() + LOCKOUT_MINUTES`
+  (default 15); (4) resets both columns on a successful login. Each failure and
+  lockout is written to the tenant audit log via `logAudit`. Both env vars are
+  tunable. Non-existent users still incur the dummy bcrypt comparison (timing) but
+  no DB write. Covered by four unit tests in
+  `backend/src/__tests__/authService.test.js`.
 
 #### H3 — Session invalidation silently disabled without Redis — `OPEN`
 - **File:** `backend/src/utils/redis.js:7,14,35-36`

@@ -615,6 +615,11 @@ ALTER TABLE :schema.users ADD COLUMN IF NOT EXISTS security_question TEXT;
 ALTER TABLE :schema.users ADD COLUMN IF NOT EXISTS security_answer_hash TEXT;
 ALTER TABLE :schema.users ADD COLUMN IF NOT EXISTS must_change_password BOOLEAN NOT NULL DEFAULT false;
 
+-- Account lockout (security H2): track consecutive failed logins and the
+-- time at which the account becomes usable again.
+ALTER TABLE :schema.users ADD COLUMN IF NOT EXISTS failed_login_count INTEGER NOT NULL DEFAULT 0;
+ALTER TABLE :schema.users ADD COLUMN IF NOT EXISTS locked_until TIMESTAMPTZ;
+
 -- ─── Email batches + recipients ───────────────────────────────────────────
 
 CREATE TABLE IF NOT EXISTS :schema.email_batches (
