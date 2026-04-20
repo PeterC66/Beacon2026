@@ -464,7 +464,7 @@ function GroupLedger({ groupId }) {
 
   return (
     <div>
-      <h2 className="text-lg font-semibold mb-3">Group Ledger</h2>
+      <h2 className="text-lg font-semibold mb-3">Group Cash</h2>
 
       {error && (
         <p className="rounded-md bg-red-50 border border-red-300 px-4 py-3 text-red-700 text-sm font-medium mb-3">
@@ -610,7 +610,7 @@ function GroupLedger({ groupId }) {
       {/* Add transaction form */}
       {canCreate && (
         <form onSubmit={handleAdd} className="mt-6 border-t border-slate-200 pt-4">
-          <h3 className="text-sm font-semibold text-slate-700 mb-3">Add Transaction</h3>
+          <h3 className="text-sm font-semibold text-slate-700 mb-3">Add Detail</h3>
           {addError && (
             <p className="text-red-600 text-sm mb-2">{addError}</p>
           )}
@@ -702,8 +702,8 @@ export default function GroupRecord() {
   const tabs = [
     { key: 'details',  label: 'Details',  available: true },
     { key: 'members',  label: 'Members',  available: !isNew },
-    { key: 'schedule', label: 'Schedule', available: !isNew && !siteworksActivated && hasFeature('events') },
-    { key: 'ledger',   label: 'Ledger',   available: !isNew && hasFeature('groupLedger') && (can('group_ledger_all', 'view') || can('group_ledger_as_leader', 'view')) },
+    { key: 'schedule', label: 'Events',     available: !isNew && !siteworksActivated && hasFeature('events') },
+    { key: 'ledger',   label: 'Group Cash', available: !isNew && hasFeature('groupLedger') && (can('group_ledger_all', 'view') || can('group_ledger_as_leader', 'view')) },
   ];
 
   return (
