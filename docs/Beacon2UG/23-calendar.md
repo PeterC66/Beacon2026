@@ -1,13 +1,14 @@
-# 23. The Calendar
+# 23. Events
 
-The Calendar gives you a chronological view of all upcoming events across
-your u3a -- group meetings, open meetings, outings, and anything else that
-has been scheduled. It is the go-to page for seeing what is happening and
-when.
+The **Events** page gives you a view of every scheduled event across your u3a
+— group meetings, open meetings, outings, and anything else that has been
+scheduled. It is the go-to page for seeing what is happening and when, and for
+reviewing what has already taken place.
 
-## Opening the Calendar
+## Opening the Events page
 
-From the **Home** page, click **Calendar** in the navigation bar.
+From the **Home** page, click **Events** under *Groups*. (The route is
+`/calendar` for backwards compatibility.)
 
 ![The Calendar page](images/23-calendar.png)
 
@@ -45,6 +46,25 @@ Two date selectors let you set the start and end dates for the calendar view.
 By default these are set to **today** through to **three months ahead**, but
 you can change them to any range you like.
 
+### Show past events
+
+Tick **Show past events** to quickly expand the date range back 12 months. This
+is handy when reviewing attendance or event finances after the fact. Untick it
+to return to today's date.
+
+---
+
+## Calendar / Table toggle
+
+Use the **Calendar** and **Table** buttons to switch between two presentations
+of the same events:
+
+- **Calendar** — the traditional chronological list used by prior releases, with
+  the optional *Show Detail* expansion.
+- **Table** — a sortable, wider table with dedicated columns for Start, End,
+  Group/Type, Topic, Venue, Postcode, Enquiries and Details. Click any column
+  header to sort.
+
 ---
 
 ## Show Detail toggle
@@ -80,11 +100,16 @@ The calendar is full of helpful links:
 
 ---
 
-## Downloading the calendar
+## Downloading events
 
-Click **Download PDF** [M] to generate a printable PDF of the currently
-displayed events. This is useful for printing a calendar for a noticeboard
-or including in a newsletter.
+Two download buttons appear at the bottom of the page once events are listed:
+
+- **Download Excel** — exports the currently filtered events as a spreadsheet
+  with Date, Start, End, Group/Type, Topic, Venue, Postcode, Contact and Details
+  columns. Useful for mail-merge and further analysis.
+- **Download PDF** — generates a printable PDF of the currently displayed
+  events. Useful for printing a calendar for a noticeboard or including in a
+  newsletter.
 
 ---
 

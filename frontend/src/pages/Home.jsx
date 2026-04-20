@@ -4,18 +4,56 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext.jsx';
-import { settings as settingsApi } from '../lib/api.js';
+import { settings as settingsApi, calendar as calendarApi } from '../lib/api.js';
 import PageHeader from '../components/PageHeader.jsx';
+import { getPreferences, savePreferences } from '../hooks/usePreferences.js';
 
 export default function Home() {
   const { user, tenant, logout, can, hasFeature } = useAuth();
   const navigate = useNavigate();
 
   const [homeInfo, setHomeInfo] = useState(null);
+  const [upcomingExpanded, setUpcomingExpanded] = useState(() => getPreferences().upcomingEventsExpanded);
+  const [upcomingEvents, setUpcomingEvents] = useState(null); // null = not loaded
 
   useEffect(() => {
     settingsApi.getHomeInfo().then(setHomeInfo).catch(() => {});
   }, []);
+
+  // Lazy-load upcoming events only when the panel is expanded and user has privilege
+  const showUpcoming = hasFeature('calendar') && can('calendar', 'view');
+  useEffect(() => {
+    if (!showUpcoming || !upcomingExpanded || upcomingEvents !== null) return;
+    const today = new Date().toISOString().slice(0, 10);
+    const end = new Date();
+    end.setDate(end.getDate() + 90);
+    calendarApi.listEvents({ from: today, to: end.toISOString().slice(0, 10) })
+      .then((evs) => setUpcomingEvents((evs || []).slice(0, 5)))
+      .catch(() => setUpcomingEvents([]));
+  }, [showUpcoming, upcomingExpanded, upcomingEvents]);
+
+  function toggleUpcoming() {
+    const next = !upcomingExpanded;
+    setUpcomingExpanded(next);
+    savePreferences({ upcomingEventsExpanded: next });
+  }
+
+  function fmtEvDate(d) {
+    if (!d) return '';
+    const s = String(d).slice(0, 10);
+    const [y, m, day] = s.split('-');
+    const dt = new Date(+y, +m - 1, +day);
+    const dayName = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][dt.getDay()];
+    const monthName = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][dt.getMonth()];
+    return `${dayName} ${+day} ${monthName}`;
+  }
+  function fmtEvTime(t) {
+    if (!t) return '';
+    const s = String(t);
+    const idx = s.indexOf('T');
+    if (idx !== -1) return s.slice(idx + 1, idx + 6);
+    return s.slice(0, 5);
+  }
 
   const handleLogout = async () => {
     await logout();
@@ -45,7 +83,7 @@ export default function Home() {
         { label: 'Groups',    tip: 'View and manage interest groups',              to: can('groups_list',    'view') ? '/groups'    : null },
         { label: 'Venues',    tip: 'Manage venues where groups meet',              to: can('group_venues',   'view') ? '/venues'    : null, f: 'venues' },
         { label: 'Faculties', tip: 'Organise groups into subject categories',      to: can('group_faculties','view') ? '/faculties' : null, f: 'faculties' },
-        { label: 'Calendar',  tip: 'View group meetings in a calendar format',     to: can('calendar', 'view') ? '/calendar' : null, f: 'calendar' },
+        { label: 'Events',    tip: 'View group meetings and other events (calendar or table)', to: can('calendar', 'view') ? '/calendar' : null, f: 'calendar' },
         { label: 'Teams',     tip: 'View and manage teams',                        to: can('groups_list',    'view') ? '/teams'     : null, f: 'teams' },
       ],
     },
@@ -53,9 +91,7 @@ export default function Home() {
       title: 'Finance',
       feature: 'finance',
       items: [
-        { label: 'Ledger (by account)',  tip: 'View transactions listed by bank account',    to: can('finance_ledger', 'view') ? '/finance/ledger?view=account'  : null },
-        { label: 'Ledger (by category)', tip: 'View transactions listed by income/expense category', to: can('finance_ledger', 'view') ? '/finance/ledger?view=category' : null },
-        { label: 'Ledger (by group)',    tip: 'View transactions listed by interest group',  to: can('finance_ledger', 'view') ? '/finance/ledger?view=group'    : null },
+        { label: 'Ledger',               tip: 'View transactions by account, category, group, or event', to: can('finance_ledger', 'view') ? '/finance/ledger' : null },
         { label: 'Add transaction',      tip: 'Record a new payment or receipt',             to: can('finance_transactions', 'create') ? '/finance/transactions/new' : null },
         { label: 'Transfer money',       tip: 'Transfer funds between accounts',             to: can('finance_transfer_money', 'view') ? '/finance/transfers' : null, f: 'transferMoney' },
         { label: 'Credit batches',       tip: 'Process batches of member credits',           to: can('finance_batches', 'view') ? '/finance/batches' : null, f: 'creditBatches' },
@@ -140,6 +176,51 @@ export default function Home() {
       </div>
 
       <div className="max-w-5xl mx-auto px-4 mt-4">
+
+        {/* Upcoming events widget (collapsible, opt-in) */}
+        {showUpcoming && (
+          <div className="mb-3 bg-white/90 border border-slate-200 rounded-lg shadow-sm overflow-hidden">
+            <button
+              type="button"
+              onClick={toggleUpcoming}
+              aria-expanded={upcomingExpanded}
+              className="w-full flex items-center gap-2 px-4 py-2 text-sm text-left hover:bg-slate-50 focus:outline-none"
+            >
+              <span className="text-slate-500 w-4">{upcomingExpanded ? '▾' : '▸'}</span>
+              <span className="font-medium text-slate-700">Upcoming events</span>
+              <Link to="/calendar" className="ml-auto text-blue-700 hover:underline text-xs"
+                onClick={(e) => e.stopPropagation()}>View all →</Link>
+            </button>
+            {upcomingExpanded && (
+              <div className="border-t border-slate-200 px-4 py-2 text-sm">
+                {upcomingEvents === null ? (
+                  <p className="text-slate-500 italic">Loading…</p>
+                ) : upcomingEvents.length === 0 ? (
+                  <p className="text-slate-500 italic">No events in the next 90 days.</p>
+                ) : (
+                  <ul className="divide-y divide-slate-100">
+                    {upcomingEvents.map((ev) => (
+                      <li key={ev.id} className="py-1.5 flex flex-wrap gap-x-3">
+                        <Link to={`/calendar/events/${ev.id}`} className="text-blue-700 hover:underline whitespace-nowrap">
+                          {fmtEvDate(ev.event_date)}{ev.start_time ? ` ${fmtEvTime(ev.start_time)}` : ''}
+                        </Link>
+                        <span className="text-slate-700">
+                          {ev.topic || ev.group_name || ev.event_type_name || 'Event'}
+                        </span>
+                        {ev.group_name && ev.topic && (
+                          <span className="text-slate-500 italic">— {ev.group_name}</span>
+                        )}
+                        {ev.venue_name && (
+                          <span className="text-slate-500">· {ev.venue_name}</span>
+                        )}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Mobile: stacked sections (single column) */}
         <div className="md:hidden space-y-3">

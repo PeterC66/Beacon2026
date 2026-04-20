@@ -310,6 +310,7 @@ export const finance = {
     if (params.categoryId) qs.set('categoryId', params.categoryId);
     if (params.groupId)    qs.set('groupId',    params.groupId);
     if (params.memberId)   qs.set('memberId',   params.memberId);
+    if (params.eventId)    qs.set('eventId',    params.eventId);
     if (params.year)       qs.set('year',       String(params.year));
     const query = qs.toString();
     return request(`/finance/transactions${query ? '?' + query : ''}`);
@@ -498,6 +499,18 @@ export const calendar = {
     if (params.eventTypeId) qs.set('eventTypeId', params.eventTypeId);
     const q = qs.toString();
     return requestBlob(`/calendar/events/pdf${q ? '?' + q : ''}`);
+  },
+  downloadExcel: (params = {}) => {
+    const qs = new URLSearchParams();
+    if (params.from)        qs.set('from',        params.from);
+    if (params.to)          qs.set('to',          params.to);
+    if (params.memberId)    qs.set('memberId',    params.memberId);
+    if (params.venueId)     qs.set('venueId',     params.venueId);
+    if (params.groupId)     qs.set('groupId',     params.groupId);
+    if (params.groupsOnly)  qs.set('groupsOnly',  params.groupsOnly);
+    if (params.eventTypeId) qs.set('eventTypeId', params.eventTypeId);
+    const q = qs.toString();
+    return requestBlob(`/calendar/events/excel${q ? '?' + q : ''}`);
   },
   searchMembers: (q) => request(`/calendar/members/search?q=${encodeURIComponent(q)}`),
 

@@ -8,6 +8,8 @@ import { useAuth } from '../../context/AuthContext.jsx';
 import NavBar from '../../components/NavBar.jsx';
 import PageHeader from '../../components/PageHeader.jsx';
 import RequiredMark from '../../components/RequiredMark.jsx';
+import SortableHeader from '../../components/SortableHeader.jsx';
+import { useSortedData } from '../../hooks/useSortedData.js';
 
 function defaultFrom() {
   return new Date().toISOString().slice(0, 10);
@@ -60,6 +62,8 @@ export default function Calendar() {
   const [venueId,    setVenueId]    = useState('');
   const [groupId,    setGroupId]    = useState('');
   const [eventTypeId, setEventTypeId] = useState('');
+  const [viewMode,   setViewMode]   = useState('calendar'); // 'calendar' | 'table'
+  const [showPast,   setShowPast]   = useState(false);
 
   // Member filter + select
   const [allMembers,    setAllMembers]    = useState([]);
@@ -274,19 +278,45 @@ export default function Calendar() {
     setMemberFilter('');
   }
 
+  function downloadParams() {
+    const params = { from, to };
+    if (filterMode === 'member' && memberId) params.memberId = memberId;
+    if (filterMode === 'venue'  && venueId)  params.venueId  = venueId;
+    if (filterMode === 'group'  && groupId)  params.groupId  = groupId;
+    if (filterMode === 'group'  && !groupId) params.groupsOnly = 'true';
+    if (filterMode === 'other'  && eventTypeId) params.eventTypeId = eventTypeId;
+    return params;
+  }
+
   async function handleDownloadPdf() {
-    try {
-      const params = { from, to };
-      if (filterMode === 'member' && memberId) params.memberId = memberId;
-      if (filterMode === 'venue'  && venueId)  params.venueId  = venueId;
-      if (filterMode === 'group'  && groupId)  params.groupId  = groupId;
-      if (filterMode === 'group'  && !groupId) params.groupsOnly = 'true';
-      if (filterMode === 'other'  && eventTypeId) params.eventTypeId = eventTypeId;
-      await calendarApi.downloadPdf(params);
-    } catch (err) {
-      setError(err.message);
+    try { await calendarApi.downloadPdf(downloadParams()); }
+    catch (err) { setError(err.message); }
+  }
+
+  async function handleDownloadExcel() {
+    try { await calendarApi.downloadExcel(downloadParams()); }
+    catch (err) { setError(err.message); }
+  }
+
+  // Toggle "Show past events": expand 'from' back to 1 year ago on enable; revert to today on disable.
+  function togglePast(checked) {
+    setShowPast(checked);
+    if (checked) {
+      const d = new Date(); d.setFullYear(d.getFullYear() - 1);
+      setFrom(d.toISOString().slice(0, 10));
+    } else {
+      setFrom(defaultFrom());
     }
   }
+
+  // Sortable table data for Table mode
+  const tableEvents = useMemo(() => events.map((ev) => ({
+    ...ev,
+    _dateTime: `${ev.event_date || ''} ${ev.start_time || ''}`,
+    _group_label: ev.group_name || ev.event_type_name || '',
+  })), [events]);
+  const { sorted: sortedTable, sortKey: tblSortKey, sortDir: tblSortDir, onSort: onTblSort } =
+    useSortedData(tableEvents, '_dateTime', 'asc');
 
   const inputCls = 'border border-slate-300 rounded px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500';
   const cbCls    = 'rounded border-slate-300 text-blue-600 focus:ring-blue-500';
@@ -304,7 +334,7 @@ export default function Calendar() {
       <NavBar links={navLinks} />
 
       <div className="max-w-6xl mx-auto px-4 mt-4 space-y-4">
-        <h1 className="text-xl font-bold text-center">Calendar</h1>
+        <h1 className="text-xl font-bold text-center">Events</h1>
 
         {/* Filter controls */}
         <div className="bg-white/90 rounded-lg shadow-sm p-4 space-y-3">
@@ -393,7 +423,7 @@ export default function Calendar() {
             )}
           </div>
 
-          {/* Row 2: Date range + Show Detail */}
+          {/* Row 2: Date range + toggles */}
           <div className="flex flex-wrap gap-4 items-center text-sm">
             <label className="flex items-center gap-1">
               From
@@ -405,11 +435,36 @@ export default function Calendar() {
               <input type="date" name="to" className={inputCls} value={to}
                 onChange={(e) => setTo(e.target.value)} />
             </label>
-            <label className="flex items-center gap-2 cursor-pointer ml-auto">
-              <input type="checkbox" className={cbCls} checked={showDetail}
-                onChange={(e) => setShowDetail(e.target.checked)} />
-              Show Detail
+            <label className="flex items-center gap-2 cursor-pointer" title="Include events from the past 12 months">
+              <input type="checkbox" className={cbCls} checked={showPast}
+                onChange={(e) => togglePast(e.target.checked)} />
+              Show past events
             </label>
+            {filterMode !== 'other' && (
+              <div className="flex gap-1 ml-auto" role="tablist" aria-label="View mode">
+                <button
+                  type="button"
+                  onClick={() => setViewMode('calendar')}
+                  className={`px-3 py-1.5 rounded text-sm font-medium transition-colors ${
+                    viewMode === 'calendar' ? 'bg-blue-600 text-white' : 'border border-slate-300 text-slate-700 hover:bg-slate-50'
+                  }`}
+                >Calendar</button>
+                <button
+                  type="button"
+                  onClick={() => setViewMode('table')}
+                  className={`px-3 py-1.5 rounded text-sm font-medium transition-colors ${
+                    viewMode === 'table' ? 'bg-blue-600 text-white' : 'border border-slate-300 text-slate-700 hover:bg-slate-50'
+                  }`}
+                >Table</button>
+              </div>
+            )}
+            {(filterMode === 'other' || viewMode === 'calendar') && (
+              <label className={`flex items-center gap-2 cursor-pointer ${filterMode === 'other' ? 'ml-auto' : ''}`}>
+                <input type="checkbox" className={cbCls} checked={showDetail}
+                  onChange={(e) => setShowDetail(e.target.checked)} />
+                Show Detail
+              </label>
+            )}
           </div>
         </div>
 
@@ -485,7 +540,7 @@ export default function Calendar() {
         )}
 
         {/* ── Calendar table (all/member/venue/group modes) ────────── */}
-        {filterMode !== 'other' && (loading ? (
+        {filterMode !== 'other' && viewMode === 'calendar' && (loading ? (
           <p className="text-center text-slate-500 py-8">Loading...</p>
         ) : events.length === 0 ? (
           <p className="text-slate-500 text-sm text-center py-4">No events found for the selected period.</p>
@@ -576,14 +631,84 @@ export default function Calendar() {
           </div>
         ))}
 
+        {/* ── Table view (sortable, flat list) ────────────────────────── */}
+        {filterMode !== 'other' && viewMode === 'table' && (loading ? (
+          <p className="text-center text-slate-500 py-8">Loading...</p>
+        ) : events.length === 0 ? (
+          <p className="text-slate-500 text-sm text-center py-4">No events found for the selected period.</p>
+        ) : (
+          <div className="overflow-x-auto rounded-lg shadow-sm">
+            <table className="w-full text-sm bg-white min-w-max">
+              <thead>
+                <tr className="bg-slate-50 border-b border-slate-200 text-left text-slate-600 italic font-normal">
+                  <SortableHeader col="event_date"    label="Date"     sortKey={tblSortKey} sortDir={tblSortDir} onSort={onTblSort} className="px-3 py-2 font-normal" />
+                  <SortableHeader col="start_time"    label="Start"    sortKey={tblSortKey} sortDir={tblSortDir} onSort={onTblSort} className="px-3 py-2 font-normal" />
+                  <SortableHeader col="end_time"      label="End"      sortKey={tblSortKey} sortDir={tblSortDir} onSort={onTblSort} className="px-3 py-2 font-normal" />
+                  <SortableHeader col="_group_label"  label="Group/Type" sortKey={tblSortKey} sortDir={tblSortDir} onSort={onTblSort} className="px-3 py-2 font-normal" />
+                  <SortableHeader col="topic"         label="Topic"    sortKey={tblSortKey} sortDir={tblSortDir} onSort={onTblSort} className="px-3 py-2 font-normal" />
+                  <SortableHeader col="venue_name"    label="Venue"    sortKey={tblSortKey} sortDir={tblSortDir} onSort={onTblSort} className="px-3 py-2 font-normal" />
+                  <SortableHeader col="venue_postcode" label="Postcode" sortKey={tblSortKey} sortDir={tblSortDir} onSort={onTblSort} className="px-3 py-2 font-normal" />
+                  <SortableHeader col="contact"       label="Enquiries" sortKey={tblSortKey} sortDir={tblSortDir} onSort={onTblSort} className="px-3 py-2 font-normal" />
+                  <th className="px-3 py-2 font-normal">Details</th>
+                </tr>
+              </thead>
+              <tbody>
+                {sortedTable.map((ev, i) => {
+                  const rowBg = i % 2 === 0 ? 'bg-yellow-50' : 'bg-white';
+                  return (
+                    <tr key={ev.id} className={`border-b border-slate-100 ${rowBg}`}>
+                      <td className="px-3 py-2 whitespace-nowrap">
+                        <Link to={`/calendar/events/${ev.id}`} className="text-blue-700 hover:underline">
+                          {fmtDate(ev.event_date)}
+                        </Link>
+                      </td>
+                      <td className="px-3 py-2 text-slate-600 whitespace-nowrap">{fmtTime(ev.start_time)}</td>
+                      <td className="px-3 py-2 text-slate-600 whitespace-nowrap">{fmtTime(ev.end_time)}</td>
+                      <td className="px-3 py-2">
+                        {ev.group_id ? (
+                          <Link to={`/groups/${ev.group_id}`} className="text-blue-700 hover:underline">{ev.group_name}</Link>
+                        ) : (
+                          <span className="italic text-slate-500">{ev.event_type_name || 'Open Meeting'}</span>
+                        )}
+                      </td>
+                      <td className="px-3 py-2 text-slate-700">{ev.topic ?? ''}</td>
+                      <td className="px-3 py-2 text-slate-600">
+                        {ev.venue_name && ev.venue_id ? (
+                          <Link to={`/venues/${ev.venue_id}`} className="text-blue-700 hover:underline">{ev.venue_name}</Link>
+                        ) : ev.venue_name || ''}
+                      </td>
+                      <td className="px-3 py-2 text-slate-600 whitespace-nowrap">
+                        {ev.venue_postcode ? (
+                          <a href={googleMapsUrl(ev.venue_postcode)} target="_blank" rel="noopener noreferrer"
+                            className="text-blue-600 hover:underline">{ev.venue_postcode}</a>
+                        ) : ''}
+                      </td>
+                      <td className="px-3 py-2 text-slate-600">{ev.contact ?? ''}</td>
+                      <td className="px-3 py-2 text-slate-500 text-xs italic max-w-[24rem] truncate" title={ev.details || ''}>
+                        {ev.details || ''}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        ))}
+
         {/* Bottom actions */}
         {!loading && ((filterMode !== 'other' && events.length > 0) || (filterMode === 'other' && otherEvents.length > 0)) && (
           <div className="flex justify-center gap-4">
             {can('calendar', 'download') && (
-              <button onClick={handleDownloadPdf}
-                className="bg-blue-600 hover:bg-blue-700 text-white rounded px-5 py-2 text-sm font-medium transition-colors">
-                Download PDF
-              </button>
+              <>
+                <button onClick={handleDownloadExcel}
+                  className="bg-green-600 hover:bg-green-700 text-white rounded px-5 py-2 text-sm font-medium transition-colors">
+                  Download Excel
+                </button>
+                <button onClick={handleDownloadPdf}
+                  className="bg-blue-600 hover:bg-blue-700 text-white rounded px-5 py-2 text-sm font-medium transition-colors">
+                  Download PDF
+                </button>
+              </>
             )}
           </div>
         )}

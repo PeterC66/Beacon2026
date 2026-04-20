@@ -174,6 +174,17 @@ describe('GET /finance/transactions', () => {
     expect(res.status).toBe(200);
     expect(res.body).toEqual([]);
   });
+
+  it('returns transactions for an event when eventId provided', async () => {
+    tenantQuery.mockResolvedValueOnce([SAMPLE_TXN]);
+    const res = await request(app).get('/finance/transactions?eventId=ev1').set('Authorization', AUTH);
+    expect(res.status).toBe(200);
+    expect(Array.isArray(res.body)).toBe(true);
+    expect(res.body).toHaveLength(1);
+    const [sql, params] = tenantQuery.mock.calls[0].slice(1);
+    expect(sql).toMatch(/t\.event_id = \$1/);
+    expect(params).toEqual(['ev1']);
+  });
 });
 
 // ── GET /finance/transactions/:id ──────────────────────────────────────────
