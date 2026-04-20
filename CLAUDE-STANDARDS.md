@@ -99,7 +99,9 @@ Every item below applies to every new feature — no exceptions.
   `::date`, `::time`, `::numeric`.
 
 - [ ] **`tenant_schema.sql` idempotent** — `CREATE ... IF NOT EXISTS`, `ON CONFLICT DO NOTHING`,
-  explicit index names, no semicolons in SQL comments.
+  explicit index names. Semicolons inside `--` comments, `/* */` comments, and
+  `'strings'` are now tolerated by `splitSQL()` (see `CLAUDE-REFERENCE.md` §1),
+  but prefer periods in prose anyway — a bare `;` mid-sentence is just confusing.
 
 - [ ] **All tenant queries** through `tenantQuery()` or `withTenant()`.
 
