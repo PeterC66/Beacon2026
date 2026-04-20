@@ -1350,6 +1350,13 @@ to the default event type.
 - **event_members is independent of group_members** — "Copy from group" is a one-time snapshot, not a live link
 - **Transaction event_id** — mirrors existing `group_id` FK pattern; search-as-you-type in TransactionEditor
 - **Feature toggle** — `eventAttendance` sub-feature under Events section; controls Members tab visibility
+- **Event Record visual distinction** — the page carries a small uppercase
+  "EVENT" eyebrow label above the title so it is not confused with a Group
+  or Team record (which share the same centred-title / tab layout). NavBar
+  uses the standard "Home – Events – {Group}" pattern. The
+  `RecordTimestamp` footer sits under the tab panel and renders on every
+  tab (must be passed `label`, `createdAt`, `updatedAt` — not `created` /
+  `updated`).
 
 ### Deferred items (in KNOWN-ISSUES.md)
 
