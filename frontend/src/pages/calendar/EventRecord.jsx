@@ -52,7 +52,8 @@ export default function EventRecord() {
   }
 
   const navLinks = [
-    { label: 'Calendar', to: '/calendar' },
+    { label: 'Home', to: '/' },
+    { label: 'Events', to: '/calendar' },
     ...(event?.group_id ? [{ label: event.group_name || 'Group', to: `/groups/${event.group_id}` }] : []),
   ];
 
@@ -66,7 +67,7 @@ export default function EventRecord() {
     return (
       <div className="min-h-screen pb-10">
         <PageHeader tenant={tenant} />
-        <NavBar links={[{ label: 'Calendar', to: '/calendar' }]} />
+        <NavBar links={[{ label: 'Home', to: '/' }, { label: 'Events', to: '/calendar' }]} />
         <div className="max-w-4xl mx-auto px-4 py-4">
           <p className="text-slate-500 text-sm">Loading event...</p>
         </div>
@@ -78,7 +79,7 @@ export default function EventRecord() {
     return (
       <div className="min-h-screen pb-10">
         <PageHeader tenant={tenant} />
-        <NavBar links={[{ label: 'Calendar', to: '/calendar' }]} />
+        <NavBar links={[{ label: 'Home', to: '/' }, { label: 'Events', to: '/calendar' }]} />
         <div className="max-w-4xl mx-auto px-4 py-4">
           <p className="text-red-600 text-sm">{error || 'Event not found.'}</p>
         </div>
@@ -94,6 +95,7 @@ export default function EventRecord() {
       <NavBar links={navLinks} />
 
       <div className="max-w-4xl mx-auto px-4 py-4">
+        <p className="text-xs font-semibold tracking-widest text-slate-500 uppercase text-center mb-1">Event</p>
         <h1 className="text-xl font-bold text-center mb-1">{title}</h1>
         <p className="text-sm text-slate-500 text-center mb-3">
           {fmtDate(event.event_date)}
@@ -133,6 +135,8 @@ export default function EventRecord() {
             <EventFinancials eventId={eventId} />
           )}
         </div>
+
+        <RecordTimestamp label="Event record" createdAt={event.created_at} updatedAt={event.updated_at} className="pt-3" />
       </div>
 
       <NavBar links={navLinks} />
@@ -207,7 +211,6 @@ function EventDetails({ event }) {
           <p className={`${fieldCls} whitespace-pre-wrap`}>{e.details}</p>
         </div>
       )}
-      <RecordTimestamp created={e.created_at} updated={e.updated_at} />
     </div>
   );
 }

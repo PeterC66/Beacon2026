@@ -15,6 +15,12 @@ Format: `## [version] — YYYY-MM-DD` with bullet points per change.
 - **Calendar menu entry renamed to Events** — better reflects the page's broader
   scope (group meetings + non-group events + new tabular view). The route
   `/calendar` is unchanged to preserve bookmarks and portal links.
+- **Event Record page nav bar updated** — the top nav link now reads
+  "Home – Events – {Group}" (previously "Calendar – {Group}"), matching the
+  pattern used on Group and Team records.
+- **Event Record page clearly labelled as an Event** — a small uppercase
+  "EVENT" eyebrow label now appears above the title so the page can no longer
+  be mistaken for a Group or Team record, which share a similar layout.
 
 ### Added
 - **Ledger "by Event" view** (`frontend/src/pages/finance/FinanceLedger.jsx`) —
@@ -37,6 +43,11 @@ Format: `## [version] — YYYY-MM-DD` with bullet points per change.
   via a new `upcomingEventsExpanded` preference key (collapsed by default).
 
 ### Fixed
+- **Event Record timestamp now displays** — the "Event record created … ; last
+  changed …" footer on the Event Record page was silently hidden because
+  `RecordTimestamp` was being passed `created`/`updated` props instead of
+  `createdAt`/`updatedAt`, and no `label` prop. The footer now renders beneath
+  the tab content on every tab, mirroring the Group Record footer.
 - **`splitSQL()` hardened to ignore semicolons in comments and strings** —
   the SQL splitter in `backend/src/utils/migrate.js` previously only tracked
   `$$` dollar quoting, which is why a stray `;` in a `--` line comment in
