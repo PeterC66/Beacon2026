@@ -26,7 +26,12 @@ active tenant on every server startup.
 2. `CREATE INDEX` must have explicit names: `:schema_idx_<table>_<col>`
 3. Seed `INSERT`s use `ON CONFLICT DO NOTHING` (or `WHERE NOT EXISTS`)
 4. DDL loop has per-statement try/catch
-5. **No semicolons in SQL comments** — migration splits on `;`
+5. `splitSQL()` in `backend/src/utils/migrate.js` ignores semicolons inside
+   `-- line comments`, `/* block comments */`, `'single-quoted strings'`
+   (including the `''` escape), and `$$ dollar-quoted blocks $$`, so a `;`
+   in any of those is safe. (Before April 2026 only `$$` was tracked and a
+   stray semicolon in a comment silently broke `saved_reports` migration —
+   see `backend/src/__tests__/splitSQL.test.js` for the regression pin.)
 6. `$$` dollar-quoted blocks (e.g. `DO $$ BEGIN ... EXCEPTION ... END $$`) are
    handled correctly — `splitSQL()` tracks `$$` delimiters and only splits on
    semicolons outside dollar-quoted regions

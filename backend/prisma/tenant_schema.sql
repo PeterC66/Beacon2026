@@ -812,8 +812,8 @@ ALTER TABLE :schema.tenant_settings ADD COLUMN IF NOT EXISTS calendar_config  JS
 ALTER TABLE :schema.tenant_settings ADD COLUMN IF NOT EXISTS feature_config JSONB NOT NULL DEFAULT '{}';
 
 -- ─── Saved reports ───────────────────────────────────────────────────
--- Saved parameterised SQL reports. SQL is SELECT/WITH only; parameters
--- is a JSONB array of { name, label, type, required, default } objects.
+-- Saved parameterised SQL reports. SQL is SELECT/WITH only. Parameters
+-- is a JSONB array of name, label, type, required, default objects.
 CREATE TABLE IF NOT EXISTS :schema.saved_reports (
   id          SERIAL PRIMARY KEY,
   name        TEXT NOT NULL,

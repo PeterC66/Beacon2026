@@ -63,29 +63,94 @@ export async function migrateAndSeed() {
 }
 
 /**
- * Split a SQL string on semicolons, respecting $$ dollar-quoted blocks.
- * Semicolons inside `$$ ... $$` are kept as part of the statement.
+ * Split a SQL string on semicolons, skipping characters that Postgres does
+ * not treat as statement terminators:
+ *   - `-- line comments` (to end of line)
+ *   - `/* block comments *\/`
+ *   - `'single-quoted strings'` (with `''` as the escape for a literal quote)
+ *   - `$$ dollar-quoted blocks $$` (tag-less form; this codebase does not use tagged quoting)
+ * Comment markers and the characters inside them are preserved verbatim in
+ * the returned statements so the downstream SQL parser still sees them.
  */
 export function splitSQL(sql) {
   const stmts = [];
   let current = '';
-  let inDollarQuote = false;
+  // States: 'normal', 'lineComment', 'blockComment', 'string', 'dollarQuote'
+  let state = 'normal';
 
   for (let i = 0; i < sql.length; i++) {
-    // Detect $$ delimiter (toggle in/out of dollar-quoted block)
-    if (sql[i] === '$' && sql[i + 1] === '$') {
-      inDollarQuote = !inDollarQuote;
-      current += '$$';
-      i++; // skip second $
+    const c = sql[i];
+    const n = sql[i + 1];
+
+    if (state === 'lineComment') {
+      current += c;
+      if (c === '\n' || c === '\r') state = 'normal';
       continue;
     }
-    if (sql[i] === ';' && !inDollarQuote) {
+    if (state === 'blockComment') {
+      if (c === '*' && n === '/') {
+        current += '*/';
+        i++;
+        state = 'normal';
+        continue;
+      }
+      current += c;
+      continue;
+    }
+    if (state === 'string') {
+      current += c;
+      if (c === "'") {
+        if (n === "'") {
+          current += "'";
+          i++; // escaped single quote — stay in string
+        } else {
+          state = 'normal';
+        }
+      }
+      continue;
+    }
+    if (state === 'dollarQuote') {
+      if (c === '$' && n === '$') {
+        current += '$$';
+        i++;
+        state = 'normal';
+        continue;
+      }
+      current += c;
+      continue;
+    }
+
+    // state === 'normal'
+    if (c === '-' && n === '-') {
+      current += '--';
+      i++;
+      state = 'lineComment';
+      continue;
+    }
+    if (c === '/' && n === '*') {
+      current += '/*';
+      i++;
+      state = 'blockComment';
+      continue;
+    }
+    if (c === "'") {
+      current += "'";
+      state = 'string';
+      continue;
+    }
+    if (c === '$' && n === '$') {
+      current += '$$';
+      i++;
+      state = 'dollarQuote';
+      continue;
+    }
+    if (c === ';') {
       const trimmed = current.trim();
       if (trimmed) stmts.push(trimmed);
       current = '';
       continue;
     }
-    current += sql[i];
+    current += c;
   }
   const last = current.trim();
   if (last) stmts.push(last);
