@@ -150,6 +150,25 @@ Every item below applies to every new feature — no exceptions.
   to access `{ user, tenant, can(resource, action), isSiteAdmin }`. Never roll
   your own privilege checks.
 
+## Feature toggles
+
+- [ ] **New feature → ask the configurability questions before building.**
+  For every new feature, explicitly ask the user:
+  1. Should this feature be toggleable via Feature Configuration (add a key to
+     `ALL_FEATURE_KEYS` in `shared/constants.js` and a toggle in
+     `FeatureConfig.jsx`), or is it always-on core functionality?
+  2. If toggleable, what should its value be in **each** entry of
+     `STANDARD_IMPLEMENTATIONS` — ON or OFF?
+  Record the answers before writing code. If toggleable, the key must be added
+  to every preset's `features` object in the same commit; a preset with a
+  missing key is a bug the tests catch (`restoreBeacon.test.js` asserts every
+  preset covers every key in `ALL_FEATURE_KEYS`).
+
+- [ ] **Never hardcode the feature-key list in a route file** — import
+  `ALL_FEATURE_KEYS` from `shared/constants.js`. The sys-admin PATCH
+  (`backend/src/routes/system.js`) and per-user PATCH
+  (`backend/src/routes/settings.js`) allowlists both use this single source.
+
 ## Backend routes
 
 - [ ] **Middleware chain** — every tenant route follows:
@@ -253,6 +272,8 @@ Every item below applies to every new feature — no exceptions.
 ## Session discipline
 
 - [ ] **Ask questions first** — until 95% certain you can carry out the task.
+  For new features this includes the two Feature-toggles questions above
+  (configurable? default per Standard Implementation?).
 
 - [ ] **Session wrap-up** — review what was built; update `CLAUDE-REFERENCE.md` if anything
   new/non-obvious was learned; commit and tell the user.
