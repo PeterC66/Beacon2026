@@ -1711,8 +1711,28 @@ component manages the `confirmOff` state and renders the modal.
 ### Backup / restore
 
 `feature_config` is included in the "Site Settings 1" sheet of the backup export
-and restored by the Beacon2 restore path. Legacy Beacon restores skip it (no
-equivalent data exists).
+and restored by the Beacon2 restore path. Legacy Beacon restores apply
+`STANDARD_IMPLEMENTATIONS[0]` from `shared/constants.js` ("Beacon Migration
+Default" — all features on except SiteWorks Integration and Custom Fields),
+overriding whatever happened to be on the tenant before the restore.
+
+### Standard Beacon Implementation presets
+
+`shared/constants.js` exports `STANDARD_IMPLEMENTATIONS`, a list of named presets
+(`{ name, description, features }`) for the whole `feature_config` JSON. Each
+`features` object covers every key in `ALL_FEATURE_KEYS` (the canonical 26-key
+inventory, single-sourced for the UI, the sys-admin PATCH, and the per-user
+PATCH allowlists). Add a preset entry here rather than hardcoding defaults in
+a route handler. `restoreBeacon()` applies the first entry on legacy restores.
+
+**Source of truth is the code** (`shared/constants.js`). The table below is a
+human-readable cheat sheet of current presets and only records keys that
+**differ from the "all ON" baseline** — update it in the same commit that
+changes the code, but treat it as a summary, not the authority.
+
+| # | Name | Description | Keys differing from all-ON |
+|---|------|-------------|-----------------------------|
+| 0 | Beacon Migration Default | All features enabled except SiteWorks Integration and Custom Fields — the recommended starting point for a u3a migrating from Beacon. | `siteworks: false`, `customFields: false` |
 
 ---
 

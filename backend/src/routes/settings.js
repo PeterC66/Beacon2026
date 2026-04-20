@@ -6,6 +6,7 @@ import { requireAuth } from '../middleware/auth.js';
 import { requirePrivilege } from '../middleware/requirePrivilege.js';
 import { prisma, tenantQuery } from '../utils/db.js';
 import { logAudit } from '../utils/audit.js';
+import { ALL_FEATURE_KEYS } from '../../../shared/constants.js';
 
 const router = Router();
 router.use(requireAuth);
@@ -213,23 +214,6 @@ router.patch('/', requirePrivilege('settings', 'change'), async (req, res, next)
 // Keys that only a system admin may change (require external service setup)
 const SYS_ADMIN_ONLY_KEYS = ['finance', 'email', 'portal', 'onlineJoining'];
 
-// All valid feature toggle keys
-const VALID_FEATURE_KEYS = [
-  // Master toggles
-  'groups', 'finance', 'email', 'portal', 'onlineJoining', 'events',
-  // Membership sub-features
-  'membershipCards', 'membershipRenewals', 'addressesExport', 'giftAid',
-  'customFields', 'polls', 'statistics',
-  // Event sub-features
-  'eventAttendance',
-  // Groups sub-features
-  'teams', 'venues', 'faculties', 'groupLedger', 'siteworks',
-  // Events sub-features
-  'calendar', 'eventTypes',
-  // Finance sub-features
-  'creditBatches', 'reconciliation', 'financialStatement', 'groupsStatement', 'transferMoney',
-];
-
 // GET /settings/feature-config — returns current feature toggles.
 // No special privilege — any authenticated user needs this to render nav.
 router.get('/feature-config', async (req, res, next) => {
@@ -255,7 +239,7 @@ router.patch('/feature-config', requirePrivilege('feature_config', 'change'), as
     // Validate keys and strip sys-admin-only keys for non-sys-admins
     const updates = {};
     for (const [key, value] of Object.entries(incoming)) {
-      if (!VALID_FEATURE_KEYS.includes(key)) continue;
+      if (!ALL_FEATURE_KEYS.includes(key)) continue;
       if (SYS_ADMIN_ONLY_KEYS.includes(key) && !isSysAdmin) continue;
       updates[key] = value;
     }
