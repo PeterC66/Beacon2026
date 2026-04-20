@@ -7,6 +7,18 @@ Format: `## [version] — YYYY-MM-DD` with bullet points per change.
 
 ## [0.10.6] — 2026-04-20
 
+### Fixed
+- **`saved_reports` tenant migration broken by stray semicolon in comment** —
+  the "Saved reports" comment in `backend/prisma/tenant_schema.sql` contained
+  `SQL is SELECT/WITH only; parameters …`, and `splitSQL()` in
+  `backend/src/utils/migrate.js` splits raw SQL on `;` without stripping line
+  comments. That produced a bogus statement starting with `parameters` —
+  Postgres returned `syntax error at or near "parameters"` during tenant
+  migration on Render, and the follow-up `CREATE UNIQUE INDEX` failed with
+  `relation "saved_reports" does not exist` because the `CREATE TABLE` had
+  never run. Reworded the comment (see the `CLAUDE-REFERENCE.md` §1 rule:
+  no semicolons in SQL comments)
+
 ### Added
 - **Standard Beacon Implementation preset on legacy restore** — introduced a
   `STANDARD_IMPLEMENTATIONS` concept in `shared/constants.js`: a named,
