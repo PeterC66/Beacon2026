@@ -14,6 +14,7 @@ import { createTenantSchema } from '../seed/createTenant.js';
 import { clearTenantData, resetSequences, restoreBeacon2, restoreBeacon, BEACON_DEFAULT_PASSWORD } from './backup.js';
 import { syncDefaultRolePrivileges } from '../utils/migrate.js';
 import { logAudit } from '../utils/audit.js';
+import { ALL_FEATURE_KEYS } from '../../../shared/constants.js';
 import ExcelJS from 'exceljs';
 
 const router = Router();
@@ -269,15 +270,6 @@ router.get('/tenants/:slug/feature-config', async (req, res, next) => {
 // System admin can update any feature toggle for any tenant (including sys-admin-only keys).
 const featureConfigSchema = z.record(z.string(), z.boolean());
 
-const VALID_FEATURE_KEYS = [
-  'groups', 'finance', 'email', 'portal', 'onlineJoining', 'events',
-  'membershipCards', 'membershipRenewals', 'addressesExport', 'giftAid',
-  'customFields', 'polls', 'statistics',
-  'teams', 'venues', 'faculties', 'groupLedger', 'siteworks',
-  'calendar', 'eventTypes',
-  'creditBatches', 'reconciliation', 'financialStatement', 'groupsStatement', 'transferMoney',
-];
-
 router.patch('/tenants/:slug/feature-config', async (req, res, next) => {
   try {
     const { slug } = req.params;
@@ -287,7 +279,7 @@ router.patch('/tenants/:slug/feature-config', async (req, res, next) => {
     const incoming = featureConfigSchema.parse(req.body);
     const updates = {};
     for (const [key, value] of Object.entries(incoming)) {
-      if (VALID_FEATURE_KEYS.includes(key)) updates[key] = value;
+      if (ALL_FEATURE_KEYS.includes(key)) updates[key] = value;
     }
     if (Object.keys(updates).length === 0) {
       const [row] = await tenantQuery(slug, `SELECT feature_config FROM tenant_settings WHERE id = 'singleton'`);

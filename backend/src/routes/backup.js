@@ -9,6 +9,7 @@ import { tenantQuery, prisma } from '../utils/db.js';
 import { hashPassword } from '../utils/password.js';
 import ExcelJS from 'exceljs';
 import { v4 as uuid } from 'uuid';
+import { STANDARD_IMPLEMENTATIONS } from '../../../shared/constants.js';
 
 const router = Router();
 router.use(requireAuth);
@@ -1656,6 +1657,16 @@ export async function restoreBeacon(tx, wb) {
       `UPDATE tenant_settings SET paypal_email = $1 WHERE id = 'singleton'`, ss2Map['paypal_account'],
     );
   }
+
+  // Apply the default Standard Beacon Implementation preset — all features on
+  // except SiteWorks Integration and Custom Fields.  The legacy Beacon export
+  // carries no feature_config, so without this the u3a would inherit whatever
+  // happened to be on the tenant (or, for a fresh tenant, FEATURE_DEFAULTS_OFF
+  // would leave giftAid / groupLedger off).
+  await tx.$executeRawUnsafe(
+    `UPDATE tenant_settings SET feature_config = $1::jsonb WHERE id = 'singleton'`,
+    JSON.stringify(STANDARD_IMPLEMENTATIONS[0].features),
+  );
 
   await resetSequences(tx);
 }

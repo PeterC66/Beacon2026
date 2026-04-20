@@ -709,7 +709,7 @@
 | Aspect | Status | Notes |
 |--------|--------|-------|
 | Set-up module overview | Built | — |
-| Feature configuration | Beacon2 extra | Per-u3a feature toggles (25 toggles, expandable-sections UI) — new in Beacon2 |
+| Feature configuration | Beacon2 extra | Per-u3a feature toggles (26 toggles, expandable-sections UI) — new in Beacon2. Legacy Beacon restores apply the "Beacon Migration Default" Standard Implementation preset (all on except SiteWorks Integration and Custom Fields). Presets live in `shared/constants.js` as `STANDARD_IMPLEMENTATIONS` |
 
 ---
 

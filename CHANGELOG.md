@@ -5,6 +5,30 @@ Format: `## [version] — YYYY-MM-DD` with bullet points per change.
 
 ---
 
+## [0.10.6] — 2026-04-20
+
+### Added
+- **Standard Beacon Implementation preset on legacy restore** — introduced a
+  `STANDARD_IMPLEMENTATIONS` concept in `shared/constants.js`: a named,
+  described preset for the full `feature_config` JSON. Each entry has a
+  `name`, `description`, and a `features` map covering every key in the new
+  `ALL_FEATURE_KEYS` inventory. The first (and only) entry, "Beacon Migration
+  Default", turns every feature ON except **SiteWorks Integration** and
+  **Custom Fields**. `restoreBeacon()` in `backend/src/routes/backup.js` now
+  applies this preset as its final `tenant_settings` write, so a u3a
+  migrating from Beacon lands with the recommended feature set (including
+  Gift Aid and Group Ledger, which previously defaulted OFF). Beacon2-format
+  restores are unchanged — they continue to carry their own `feature_config`
+
+### Fixed
+- **`eventAttendance` accepted by sys-admin feature-config PATCH** — the
+  hardcoded `VALID_FEATURE_KEYS` list in `backend/src/routes/system.js` was
+  missing `eventAttendance` (present in the per-user PATCH list in
+  `backend/src/routes/settings.js` and in the UI). Both routes now import
+  the single `ALL_FEATURE_KEYS` constant from `shared/constants.js`, so a
+  sys admin can toggle Event Attendance for any tenant and the two lists
+  cannot drift again
+
 ## [0.10.5] — 2026-04-18
 
 ### Added
