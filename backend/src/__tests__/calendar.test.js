@@ -145,6 +145,31 @@ describe('GET /calendar/events/pdf', () => {
   });
 });
 
+// ── GET /calendar/events/excel ────────────────────────────────────────────
+
+describe('GET /calendar/events/excel', () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it('returns 200 with xlsx content-type', async () => {
+    tenantQuery.mockResolvedValueOnce([SAMPLE_EVENT]);
+    const res = await request(app)
+      .get('/calendar/events/excel?from=2026-01-01&to=2026-06-01')
+      .set('Authorization', AUTH);
+    expect(res.status).toBe(200);
+    expect(res.headers['content-type']).toContain('spreadsheetml');
+    expect(res.headers['content-disposition']).toContain('events_');
+  });
+
+  it('returns xlsx even with no events', async () => {
+    tenantQuery.mockResolvedValueOnce([]);
+    const res = await request(app)
+      .get('/calendar/events/excel?from=2026-01-01&to=2026-01-02')
+      .set('Authorization', AUTH);
+    expect(res.status).toBe(200);
+    expect(res.headers['content-type']).toContain('spreadsheetml');
+  });
+});
+
 // ── GET /calendar/members/search ──────────────────────────────────────────
 
 describe('GET /calendar/members/search', () => {

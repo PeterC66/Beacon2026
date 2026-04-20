@@ -385,13 +385,17 @@
 
 | Aspect | Status | Notes |
 |--------|--------|-------|
-| Chronological event view | Built | All group events + non-group events within date range; "Other" filter mode for event-type-specific management |
+| Chronological event view | Built | All group events + non-group events within date range; "Other" filter mode for event-type-specific management. Menu entry renamed to **Events** (route `/calendar` kept for compatibility). |
 | Date range (default next 3 months) | Built | — |
 | Filters (all/member/venue/group) | Built | Member search autocomplete |
 | Show Detail toggle | Built | — |
 | Clickable links to group/venue records | Built | — |
 | Google Maps link for venues | Built | For venues with postcode |
 | Download PDF | Built | — |
+| **Beacon2 extra:** Calendar/Table view toggle | Beacon2 extra | Sortable tabular view with Start/End/Group/Topic/Venue/Postcode/Enquiries/Details columns |
+| **Beacon2 extra:** Show past events toggle | Beacon2 extra | Expands `from` date back 12 months in one click |
+| **Beacon2 extra:** Download Excel | Beacon2 extra | `/calendar/events/excel` — same filters as PDF download |
+| **Beacon2 extra:** Upcoming events widget on Home | Beacon2 extra | Collapsible panel showing next 5 events in next 90 days; collapse state stored in personal preferences |
 
 ---
 
@@ -511,7 +515,9 @@
 | Aspect | Status | Notes |
 |--------|--------|-------|
 | Account/category/group views | Built | Group view includes teams; button labelled "Group/Team" |
-| Year selector | Built | Calendar year filtering |
+| **Beacon2 extra:** Event view | Beacon2 extra | Fourth view tab on the ledger — search-as-you-type event picker, shows all transactions linked to the chosen event (year selector hidden) |
+| **Beacon2 extra:** Consolidated ledger menu | Beacon2 extra | The three legacy *Ledger (by …)* menu entries collapsed into a single **Ledger** item; the view toggle handles selection |
+| Year selector | Built | Calendar year filtering (hidden in the Event view) |
 | Running balance | Built | Shown in all views; excludes pending transactions |
 | Group view with per-group B/F rows | Built | When enabled via 7.10.6 setting |
 | Full ledger columns | Built | Account, #, Date, Batch No, Batch Ref, From/To, Group, Mem#, Mem2#, Detail, Category, Payment Ref, Method, In, Out, Refund, Balance, Cleared |

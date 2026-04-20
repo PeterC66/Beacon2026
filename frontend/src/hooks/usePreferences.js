@@ -12,6 +12,7 @@ const DEFAULTS = {
   inactivityTimeout: 20,              // minutes (5–99)
   textSize:          'normal',        // 'small' | 'normal' | 'large' | 'xlarge'
   colorTheme:        'default',       // 'default' | 'high-contrast'
+  upcomingEventsExpanded: false,      // collapsed state of the Home upcoming-events widget
 };
 
 function load() {
@@ -58,6 +59,9 @@ export function savePreferences(updates) {
   if (updates.colorTheme !== undefined) {
     const valid = ['default', 'high-contrast'];
     next.colorTheme = valid.includes(updates.colorTheme) ? updates.colorTheme : DEFAULTS.colorTheme;
+  }
+  if (updates.upcomingEventsExpanded !== undefined) {
+    next.upcomingEventsExpanded = !!updates.upcomingEventsExpanded;
   }
   save(next);
   return next;

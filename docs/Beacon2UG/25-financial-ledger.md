@@ -1,42 +1,48 @@
 # 25. The Financial Ledger
 
 The Financial Ledger is where you see all the money coming in and going out of
-your u3a's accounts. Beacon2 gives you **three different views** of exactly the
+your u3a's accounts. Beacon2 gives you **four different views** of exactly the
 same transaction data, so you can look at your finances from whichever angle is
 most useful.
 
-To open the ledger, click one of the following on the **Home** page:
-
-- **Ledger (by account)**
-- **Ledger (by category)**
-- **Ledger (by group)**
+To open the ledger, click **Ledger** on the **Home** page under *Finance*, then
+pick a view using the toggle buttons at the top of the page.
 
 ![The Financial Ledger — account view](images/25-financial-ledger.png)
 
 ---
 
-## The three views
+## The four views
 
-All three views show the same underlying transactions — they just organise them
-differently.
+All four views show the same underlying transactions — they just organise them
+differently. Switch between views using the **View by** buttons at the top of
+the page.
 
-### Ledger (by account) [A]
+### Account [A]
 
 Select an **Account** from the dropdown to see every transaction in that account.
 This view shows a **running balance** and each transaction's **cleared status**,
 making it ideal for day-to-day bookkeeping and reconciliation.
 
-### Ledger (by category) [B]
+### Category [B]
 
 Select a **Category** from the dropdown to see all transactions allocated to that
 category, regardless of which account they sit in. Use this when you want to
 answer questions like "How much have we spent on room hire this year?"
 
-### Ledger (by group) [C]
+### Group [C]
 
 Select a **Group** from the dropdown to see transactions tagged against that group.
 You can optionally **filter by group** to narrow the display further. This is
 useful for group leaders and treasurers who want to review their group's finances.
+
+### Event
+
+Start typing in the search box to find an event by topic, group name, or date.
+Pick an event from the dropdown to see every transaction linked to it. Unlike
+the other views the event view ignores the **Year** selector — it always shows
+every transaction tied to that event, so it is the quickest way to see whether
+an outing, open meeting or social event has broken even.
 
 ---
 
@@ -94,8 +100,10 @@ enabled (see [Section 34](34-pending-transactions.md)).
 - Click a **batch reference** to open the credit batch.
 - Click a **refund reference** to jump to the linked refund or original
   transaction.
-- Use the **Year** selector to move between financial years.
-- Switch between the three views using the links at the top of the page.
+- Use the **Year** selector to move between financial years (hidden in the
+  Event view, which shows all transactions for the selected event).
+- Switch between the four views using the **View by** buttons at the top of
+  the page.
 
 ---
 

@@ -108,9 +108,12 @@ Beacon2 is a ground-up rebuild with these goals:
   (doc 8.6c) — default payment method and per-type default account; auto-populates
   MemberEditor and MembershipRenewals; auto-switches account on method change
 - **Finance categories** — same pattern
-- **Financial ledger** — account/category/group views; year selector; running balance;
-  group view shows per-group B/F rows when enabled (7.10.6); 18 columns with
-  clickable links; bulk action bar; category names in ledger
+- **Financial ledger** — account/category/group/**event** views; year selector
+  (hidden in event view); running balance; group view shows per-group B/F rows
+  when enabled (7.10.6); 18 columns with clickable links; bulk action bar;
+  category names in ledger; event view picks an event via search-as-you-type
+  and lists every transaction linked to it regardless of year. Menu has a
+  single **Ledger** entry (previous three *by-…* entries consolidated).
 - **Transaction editor** — full form; category splits; cleared lock; Gift Aid eligible
   amounts per member; From/To required; Member 2 requires Member 1 (cannot be same);
   total gift aid cannot exceed transaction amount; category difference display
@@ -194,10 +197,18 @@ Beacon2 is a ground-up rebuild with these goals:
   copyable public URLs, PayPal status indicator
 
 ### Calendar module
-- **Calendar page** — chronological view of all group events + non-group events within date range
-  (default: next 3 months); filters by All / Group-Team / Own / Other;
-  Show Detail toggle; clickable date/time → Group Schedule tab; clickable group/venue → record;
-  Google Maps link for venues with postcode; Download PDF
+- **Events page** (menu entry renamed from "Calendar"; route `/calendar` retained)
+  — chronological view of all group events + non-group events within date range
+  (default: next 3 months, with a one-click *Show past events* toggle that
+  broadens the range 12 months back); filters by All / Group-Team / Own / Other;
+  Show Detail toggle (calendar mode); **Calendar vs Table view toggle** (table
+  mode adds sortable Start/End/Group/Topic/Venue/Postcode/Enquiries/Details
+  columns); clickable date/time → Group Schedule tab; clickable group/venue →
+  record; Google Maps link for venues with postcode; **Download Excel** and
+  **Download PDF**
+- **Upcoming events on Home** — collapsible widget above the main menu showing
+  the next 5 events in the coming 90 days; collapse state stored in personal
+  preferences (`upcomingEventsExpanded`)
 - **Event types** — flexible system for non-group events (replaces single Open Meetings concept);
   configurable event types with name and description; default "Open Meetings" type protected
   from rename/delete; Calendar "Other" mode embeds full event management for selected type;

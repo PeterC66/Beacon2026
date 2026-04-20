@@ -7,6 +7,35 @@ Format: `## [version] — YYYY-MM-DD` with bullet points per change.
 
 ## [0.10.6] — 2026-04-20
 
+### Changed
+- **Finance menu simplified** — the three Ledger entries (*by account / by category
+  / by group*) in the main menu have been consolidated into a single **Ledger**
+  link. View selection (Account / Category / Group / Event) now happens inside
+  the Ledger page using the existing in-page toggle.
+- **Calendar menu entry renamed to Events** — better reflects the page's broader
+  scope (group meetings + non-group events + new tabular view). The route
+  `/calendar` is unchanged to preserve bookmarks and portal links.
+
+### Added
+- **Ledger "by Event" view** (`frontend/src/pages/finance/FinanceLedger.jsx`) —
+  new fourth view tab. Pick an event via search-as-you-type (topic / group name /
+  date). Shows every transaction linked to that event, regardless of year; the
+  year selector is hidden in this view. Backend already supported `?eventId=…`
+  on `GET /finance/transactions`.
+- **Events page — Calendar vs Table view toggle**
+  (`frontend/src/pages/calendar/Calendar.jsx`). Table mode offers sortable
+  columns (Date, Start, End, Group/Type, Topic, Venue, Postcode, Enquiries,
+  Details). Calendar mode preserves the existing chronological list with a
+  *Show Detail* toggle.
+- **Show past events** toggle on the Events page — one-click expansion of the
+  date-range `from` back 12 months for attendance / financial review.
+- **Excel download of filtered events** — new
+  `GET /calendar/events/excel` route (requires `calendar:download`), plus a
+  Download Excel button alongside Download PDF on the Events page.
+- **Upcoming events widget on Home** — collapsible panel above the menu showing
+  the next five events in the coming 90 days. Expand/collapse state persisted
+  via a new `upcomingEventsExpanded` preference key (collapsed by default).
+
 ### Fixed
 - **`splitSQL()` hardened to ignore semicolons in comments and strings** —
   the SQL splitter in `backend/src/utils/migrate.js` previously only tracked

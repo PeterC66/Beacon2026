@@ -4,6 +4,7 @@
 import { Router } from 'express';
 import { z } from 'zod';
 import PDFDocument from 'pdfkit';
+import ExcelJS from 'exceljs';
 import { requireAuth } from '../middleware/auth.js';
 import { requirePrivilege } from '../middleware/requirePrivilege.js';
 import { tenantQuery, escapeLike } from '../utils/db.js';
@@ -221,6 +222,82 @@ router.get('/events/pdf', requirePrivilege('calendar', 'download'), async (req, 
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Disposition', `attachment; filename="${tenantPart}_calendar_${stamp}.pdf"`);
     res.send(pdfBuffer);
+  } catch (err) {
+    next(err);
+  }
+});
+
+// ─── GET /calendar/events/excel ───────────────────────────────────────────────
+// Same filters as GET /events, but returns an Excel (.xlsx) download.
+
+router.get('/events/excel', requirePrivilege('calendar', 'download'), async (req, res, next) => {
+  try {
+    const slug = req.user.tenantSlug;
+    const { from, to, memberId, venueId, groupId, eventTypeId, groupsOnly } = req.query;
+
+    const conditions = [];
+    const params = [];
+    let i = 1;
+
+    if (from)        { conditions.push(`ge.event_date >= $${i++}::date`); params.push(from); }
+    if (to)          { conditions.push(`ge.event_date <= $${i++}::date`); params.push(to); }
+    if (venueId)     { conditions.push(`ge.venue_id = $${i++}`);         params.push(venueId); }
+    if (groupId)     { conditions.push(`ge.group_id = $${i++}`);         params.push(groupId); }
+    else if (groupsOnly === 'true') { conditions.push(`ge.group_id IS NOT NULL`); }
+    if (eventTypeId) { conditions.push(`ge.event_type_id = $${i++}`);    params.push(eventTypeId); }
+    if (memberId) {
+      conditions.push(`(ge.group_id IS NULL OR ge.group_id IN (SELECT group_id FROM group_members WHERE member_id = $${i++}))`);
+      params.push(memberId);
+    }
+
+    const where = conditions.length > 0 ? 'WHERE ' + conditions.join(' AND ') : '';
+
+    const events = await tenantQuery(
+      slug,
+      `SELECT ge.event_date, ge.start_time, ge.end_time,
+              g.name AS group_name, et.name AS event_type_name,
+              v.name AS venue_name, v.postcode AS venue_postcode,
+              ge.topic, ge.contact, ge.details
+       FROM group_events ge
+       LEFT JOIN groups g ON g.id = ge.group_id
+       LEFT JOIN venues v ON v.id = ge.venue_id
+       LEFT JOIN event_types et ON et.id = ge.event_type_id
+       ${where}
+       ORDER BY ge.event_date, ge.start_time, g.name`,
+      params,
+    );
+
+    const wb = new ExcelJS.Workbook();
+    const ws = wb.addWorksheet('Events');
+
+    ws.addRow([`Events ${fmtDateUK(from || '?')} to ${fmtDateUK(to || '?')}`]).font = { bold: true, size: 14 };
+    ws.addRow([]);
+
+    const header = ws.addRow(['Date', 'Start', 'End', 'Group / Type', 'Topic', 'Venue', 'Postcode', 'Contact', 'Details']);
+    header.font = { bold: true };
+
+    for (const ev of events) {
+      ws.addRow([
+        fmtDateUK(ev.event_date),
+        fmtTime(ev.start_time),
+        fmtTime(ev.end_time),
+        ev.group_name || ev.event_type_name || '',
+        ev.topic || '',
+        ev.venue_name || '',
+        ev.venue_postcode || '',
+        ev.contact || '',
+        ev.details || '',
+      ]);
+    }
+
+    ws.columns.forEach((col) => { col.width = Math.max(10, (col.values || []).reduce((m, v) => Math.max(m, String(v ?? '').length + 2), 0)); });
+
+    const tenantPart = slug.replace(/^u3a_/, '');
+    const stamp = new Date().toISOString().slice(0, 10);
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.setHeader('Content-Disposition', `attachment; filename="${tenantPart}_events_${stamp}.xlsx"`);
+    await wb.xlsx.write(res);
+    res.end();
   } catch (err) {
     next(err);
   }
