@@ -5,6 +5,7 @@ import { useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { publicApi, setPortalToken } from '../../lib/api.js';
 import PortalVersion from '../../components/PortalVersion.jsx';
+import PasswordInput from '../../components/PasswordInput.jsx';
 
 export default function PortalLogin() {
   const { slug } = useParams();
@@ -63,8 +64,7 @@ export default function PortalLogin() {
 
           <div className="mb-6">
             <label className="block text-sm font-medium text-slate-700 mb-1">Password</label>
-            <input
-              type="password"
+            <PasswordInput
               name="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}

@@ -8,6 +8,7 @@ import NavBar from '../../components/NavBar.jsx';
 import PageHeader from '../../components/PageHeader.jsx';
 import { getPreferences, savePreferences } from '../../hooks/usePreferences.js';
 import { useUnsavedChanges } from '../../hooks/useUnsavedChanges.js';
+import PasswordInput from '../../components/PasswordInput.jsx';
 
 // ── Helpers ──────────────────────────────────────────────────────────────
 
@@ -249,7 +250,7 @@ export default function PersonalPreferences() {
 
             <div>
               <label htmlFor="pref-current-password" className="block text-sm font-medium text-slate-700 mb-1">Current password</label>
-              <input id="pref-current-password" type="password" name="currentPassword" value={pwForm.current} autoComplete="current-password"
+              <PasswordInput id="pref-current-password" name="currentPassword" value={pwForm.current} autoComplete="current-password"
                 onChange={(e) => { markDirty(); setPwForm((f) => ({ ...f, current: e.target.value })); }}
                 className={pwErr.current ? errInCls : inputCls} />
               {pwErr.current && <p className={errMsgCls}>{pwErr.current}</p>}
@@ -257,7 +258,7 @@ export default function PersonalPreferences() {
 
             <div>
               <label htmlFor="pref-new-password" className="block text-sm font-medium text-slate-700 mb-1">New password</label>
-              <input id="pref-new-password" type="password" name="newPassword" value={pwForm.newPw} autoComplete="new-password"
+              <PasswordInput id="pref-new-password" name="newPassword" value={pwForm.newPw} autoComplete="new-password"
                 onChange={(e) => { markDirty(); setPwForm((f) => ({ ...f, newPw: e.target.value })); }}
                 className={pwErr.newPw ? errInCls : inputCls} />
               {pwForm.newPw && (
@@ -278,7 +279,7 @@ export default function PersonalPreferences() {
 
             <div>
               <label htmlFor="pref-confirm-password" className="block text-sm font-medium text-slate-700 mb-1">Confirm new password</label>
-              <input id="pref-confirm-password" type="password" name="confirmPassword" value={pwForm.confirm} autoComplete="new-password"
+              <PasswordInput id="pref-confirm-password" name="confirmPassword" value={pwForm.confirm} autoComplete="new-password"
                 onChange={(e) => { markDirty(); setPwForm((f) => ({ ...f, confirm: e.target.value })); }}
                 className={pwErr.confirm ? errInCls : inputCls} />
               {pwErr.confirm && <p className={errMsgCls}>{pwErr.confirm}</p>}

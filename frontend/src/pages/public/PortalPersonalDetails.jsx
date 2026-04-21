@@ -5,6 +5,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { portalApi, clearPortalToken } from '../../lib/api.js';
 import PortalVersion from '../../components/PortalVersion.jsx';
+import PasswordInput from '../../components/PasswordInput.jsx';
 
 export default function PortalPersonalDetails() {
   const { slug } = useParams();
@@ -453,26 +454,26 @@ export default function PortalPersonalDetails() {
 
               <div>
                 <label htmlFor="portal-current-password" className={labelCls}>Current Password</label>
-                <input
-                  id="portal-current-password" type="password" name="currentPassword" className={inputCls}
-                  value={pwForm.currentPassword}
+                <PasswordInput
+                  id="portal-current-password" name="currentPassword" className={inputCls}
+                  value={pwForm.currentPassword} autoComplete="current-password"
                   onChange={(e) => setPwForm((p) => ({ ...p, currentPassword: e.target.value }))}
                 />
               </div>
               <div>
                 <label htmlFor="portal-new-password" className={labelCls}>New Password</label>
-                <input
-                  id="portal-new-password" type="password" name="newPassword" className={inputCls}
-                  value={pwForm.newPassword}
+                <PasswordInput
+                  id="portal-new-password" name="newPassword" className={inputCls}
+                  value={pwForm.newPassword} autoComplete="new-password"
                   onChange={(e) => setPwForm((p) => ({ ...p, newPassword: e.target.value }))}
                 />
                 <p className="text-xs text-slate-500 mt-1">10-72 characters, must include uppercase, lowercase, and number</p>
               </div>
               <div>
                 <label htmlFor="portal-confirm-password" className={labelCls}>Confirm New Password</label>
-                <input
-                  id="portal-confirm-password" type="password" name="confirmPassword" className={inputCls}
-                  value={pwForm.confirmPassword}
+                <PasswordInput
+                  id="portal-confirm-password" name="confirmPassword" className={inputCls}
+                  value={pwForm.confirmPassword} autoComplete="new-password"
                   onChange={(e) => setPwForm((p) => ({ ...p, confirmPassword: e.target.value }))}
                 />
               </div>

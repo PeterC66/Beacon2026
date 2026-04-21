@@ -5,6 +5,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { system, getSysToken, clearSysToken } from '../../lib/api.js';
 import SortableHeader from '../../components/SortableHeader.jsx';
+import PasswordInput from '../../components/PasswordInput.jsx';
 import { useSortedData } from '../../hooks/useSortedData.js';
 
 const EMPTY_FORM = { name: '', slug: '', adminEmail: '', adminName: '', adminPassword: '', adminUsername: '' };
@@ -460,8 +461,8 @@ export default function SystemDashboard() {
 
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">Password</label>
-                <input name="adminPassword" type="password" value={form.adminPassword} onChange={handleChange}
-                  required minLength={8}
+                <PasswordInput name="adminPassword" value={form.adminPassword} onChange={handleChange}
+                  required minLength={8} autoComplete="new-password"
                   className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
                 <p className="text-xs text-slate-400 mt-1">At least 8 characters.</p>
               </div>

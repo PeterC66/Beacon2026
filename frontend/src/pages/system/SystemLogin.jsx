@@ -4,6 +4,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { system, setSysToken } from '../../lib/api.js';
+import PasswordInput from '../../components/PasswordInput.jsx';
 
 export default function SystemLogin() {
   const navigate = useNavigate();
@@ -58,12 +59,12 @@ export default function SystemLogin() {
           </div>
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1">Password</label>
-            <input
+            <PasswordInput
               name="password"
-              type="password"
               value={form.password}
               onChange={handleChange}
               required
+              autoComplete="current-password"
               className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>

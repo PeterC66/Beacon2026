@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useParams, useSearchParams, Link } from 'react-router-dom';
 import { publicApi } from '../../lib/api.js';
 import PortalVersion from '../../components/PortalVersion.jsx';
+import PasswordInput from '../../components/PasswordInput.jsx';
 
 export default function PortalResetPassword() {
   const { slug } = useParams();
@@ -66,12 +67,12 @@ export default function PortalResetPassword() {
         <form onSubmit={handleSubmit} noValidate>
           <div className="mb-3">
             <label className="block text-sm font-medium text-slate-700 mb-1">New password</label>
-            <input type="password" name="password" value={password} onChange={(e) => setPassword(e.target.value)}
+            <PasswordInput name="password" value={password} onChange={(e) => setPassword(e.target.value)}
               className="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" autoComplete="new-password" />
           </div>
           <div className="mb-6">
             <label className="block text-sm font-medium text-slate-700 mb-1">Confirm password</label>
-            <input type="password" name="confirm" value={confirm} onChange={(e) => setConfirm(e.target.value)}
+            <PasswordInput name="confirm" value={confirm} onChange={(e) => setConfirm(e.target.value)}
               className="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" autoComplete="new-password" />
           </div>
           <button type="submit" disabled={submitting}
