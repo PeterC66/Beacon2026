@@ -174,6 +174,13 @@ export default function MemberEditor() {
   }, [npForm.joinedOn, form.joinedOn, newPartnerMode, yearConfig]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
+    if (isNew) {
+      setForm(BLANK_FORM);
+      setFieldErrors({});
+      setHasPhoto(false);
+      setError(null);
+    }
+
     Promise.all([statusApi.list(), classApi.list(), pollsApi.list()])
       .then(([s, c, p]) => {
         setStatuses(s);
