@@ -4,6 +4,7 @@
 import { Router } from 'express';
 import ExcelJS from 'exceljs';
 import { requirePrivilege } from '../../middleware/requirePrivilege.js';
+import { requireFeature } from '../../middleware/requireFeature.js';
 import { tenantQuery } from '../../utils/db.js';
 import { AppError } from '../../middleware/errorHandler.js';
 import { computeYearBounds } from './helpers.js';
@@ -102,7 +103,7 @@ async function getStatementData(tenantSlug, accountId, yearNum) {
 }
 
 // GET /finance/statement?accountId=&year= — JSON data for on-screen display
-router.get('/statement', requirePrivilege('finance_statement', 'view'), async (req, res, next) => {
+router.get('/statement', requireFeature('financialStatement'), requirePrivilege('finance_statement', 'view'), async (req, res, next) => {
   try {
     const { accountId, year } = req.query;
     if (!accountId) throw AppError('accountId is required.', 400);
@@ -113,7 +114,7 @@ router.get('/statement', requirePrivilege('finance_statement', 'view'), async (r
 });
 
 // GET /finance/statement/download?accountId=&year=&format=xlsx — download Excel
-router.get('/statement/download', requirePrivilege('finance_statement', 'download'), async (req, res, next) => {
+router.get('/statement/download', requireFeature('financialStatement'), requirePrivilege('finance_statement', 'download'), async (req, res, next) => {
   try {
     const { accountId, year, format } = req.query;
     if (!accountId) throw AppError('accountId is required.', 400);
@@ -207,7 +208,7 @@ async function getGroupsStatementEntries(tenantSlug, from, to) {
 }
 
 // GET /finance/groups-statement?from=&to= — JSON summary
-router.get('/groups-statement', requirePrivilege('group_statement', 'view'), async (req, res, next) => {
+router.get('/groups-statement', requireFeature('groupsStatement'), requirePrivilege('group_statement', 'view'), async (req, res, next) => {
   try {
     const { from, to, showTransactions } = req.query;
     if (!from || !to) throw AppError('from and to dates are required.', 400);
@@ -221,7 +222,7 @@ router.get('/groups-statement', requirePrivilege('group_statement', 'view'), asy
 });
 
 // GET /finance/groups-statement/download?from=&to=&showTransactions= — Excel
-router.get('/groups-statement/download', requirePrivilege('group_statement', 'download'), async (req, res, next) => {
+router.get('/groups-statement/download', requireFeature('groupsStatement'), requirePrivilege('group_statement', 'download'), async (req, res, next) => {
   try {
     const { from, to, showTransactions } = req.query;
     if (!from || !to) throw AppError('from and to dates are required.', 400);

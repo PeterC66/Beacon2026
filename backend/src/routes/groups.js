@@ -6,6 +6,7 @@ import ExcelJS from 'exceljs';
 import PDFDocument from 'pdfkit';
 import { requireAuth } from '../middleware/auth.js';
 import { requirePrivilege } from '../middleware/requirePrivilege.js';
+import { requireFeature } from '../middleware/requireFeature.js';
 import { tenantQuery } from '../utils/db.js';
 import { AppError } from '../middleware/errorHandler.js';
 import { addMemberSchema, bulkAddMembersSchema, bulkMemberIdsSchema, eventSchema, updateEventSchema, bulkDeleteIdsSchema, ledgerEntrySchema } from '../schemas/common.js';
@@ -13,6 +14,7 @@ import { patchGroupMemberSchema, bulkAddToGroupSchema } from '../schemas/groups.
 
 const router = Router();
 router.use(requireAuth);
+router.use(requireFeature('groups'));
 
 // ─── GET /groups ───────────────────────────────────────────────────────────
 // Query params:
@@ -1025,7 +1027,7 @@ async function hasLedgerAccess(req, groupId, action) {
 
 // GET /groups/:id/ledger?from=YYYY-MM-DD&to=YYYY-MM-DD
 // Returns { broughtForward, entries }
-router.get('/:id/ledger', async (req, res, next) => {
+router.get('/:id/ledger', requireFeature('groupLedger'), async (req, res, next) => {
   try {
     const groupId = req.params.id;
     if (!await hasLedgerAccess(req, groupId, 'view')) {
@@ -1064,7 +1066,7 @@ router.get('/:id/ledger', async (req, res, next) => {
 });
 
 // POST /groups/:id/ledger
-router.post('/:id/ledger', async (req, res, next) => {
+router.post('/:id/ledger', requireFeature('groupLedger'), async (req, res, next) => {
   try {
     const groupId = req.params.id;
     if (!await hasLedgerAccess(req, groupId, 'create')) {
@@ -1088,7 +1090,7 @@ router.post('/:id/ledger', async (req, res, next) => {
 });
 
 // PATCH /groups/:id/ledger/:entryId
-router.patch('/:id/ledger/:entryId', async (req, res, next) => {
+router.patch('/:id/ledger/:entryId', requireFeature('groupLedger'), async (req, res, next) => {
   try {
     const { id: groupId, entryId } = req.params;
     if (!await hasLedgerAccess(req, groupId, 'change')) {
@@ -1123,7 +1125,7 @@ router.patch('/:id/ledger/:entryId', async (req, res, next) => {
 });
 
 // GET /groups/:id/ledger/download  – Excel download
-router.get('/:id/ledger/download', async (req, res, next) => {
+router.get('/:id/ledger/download', requireFeature('groupLedger'), async (req, res, next) => {
   try {
     const groupId = req.params.id;
     if (!await hasLedgerAccess(req, groupId, 'download')) {
@@ -1190,7 +1192,7 @@ router.get('/:id/ledger/download', async (req, res, next) => {
 });
 
 // DELETE /groups/:id/ledger/:entryId
-router.delete('/:id/ledger/:entryId', async (req, res, next) => {
+router.delete('/:id/ledger/:entryId', requireFeature('groupLedger'), async (req, res, next) => {
   try {
     const { id: groupId, entryId } = req.params;
     if (!await hasLedgerAccess(req, groupId, 'delete')) {

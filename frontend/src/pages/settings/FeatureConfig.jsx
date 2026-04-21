@@ -22,11 +22,10 @@ const SECTIONS = [
     toggles: [
       { key: 'membershipCards',     label: 'Membership Cards',     defaultValue: true,  tip: 'Generate and download membership cards' },
       { key: 'membershipRenewals',  label: 'Membership Renewals',  defaultValue: true,  tip: 'Process annual renewals and non-renewals' },
-      { key: 'addressesExport',     label: 'Addresses Export',     defaultValue: true,  tip: 'Export member addresses for labels or mail merge' },
       { key: 'giftAid',            label: 'Gift Aid',             defaultValue: false, tip: 'Gift Aid declarations, logging, and transaction fields' },
       { key: 'customFields',       label: 'Custom Fields',        defaultValue: true,  tip: 'Up to 4 free-form fields on member records' },
       { key: 'polls',              label: 'Polls',                defaultValue: true,  tip: 'Member polls for filtering and bulk actions' },
-      { key: 'statistics',         label: 'Membership Statistics', defaultValue: true,  tip: 'Membership counts and trends' },
+      { key: 'memberPhotos',       label: 'Member Photos',        defaultValue: true,  tip: 'Photo upload on member records and portal; shown on cards and group PDFs' },
     ],
   },
   {
@@ -46,7 +45,6 @@ const SECTIONS = [
     description: 'Calendar views and non-group event types.',
     master: { key: 'events', label: 'Events & Calendar module', defaultValue: true, tip: 'Calendar page and event management' },
     toggles: [
-      { key: 'calendar',        label: 'Calendar',          defaultValue: true, dependsOn: 'events', tip: 'Calendar view of group meetings and events' },
       { key: 'eventTypes',      label: 'Event Types',       defaultValue: true, dependsOn: 'events', tip: 'Non-group event types (Open Meetings, etc.)' },
       { key: 'eventAttendance', label: 'Event Attendance',  defaultValue: true, dependsOn: 'events', tip: 'Track members registered for each event' },
     ],
@@ -65,9 +63,11 @@ const SECTIONS = [
   },
   {
     title: 'Email & Letters',
-    description: 'Email sending, delivery tracking, and letter generation. Requires SendGrid configuration.',
-    master: { key: 'email', label: 'Email & Letters module', defaultValue: true, sysAdminOnly: true, tip: 'Requires SendGrid setup by system administrator' },
-    toggles: [],
+    description: 'Email sending (requires SendGrid) and letter generation (PDF, no external service).',
+    master: { key: 'email', label: 'Email module', defaultValue: true, sysAdminOnly: true, tip: 'Requires SendGrid setup by system administrator' },
+    toggles: [
+      { key: 'letters', label: 'Letters', defaultValue: true, tip: 'Compose and download letters as PDF (does not require SendGrid)' },
+    ],
   },
   {
     title: 'Members Portal',
@@ -80,6 +80,15 @@ const SECTIONS = [
     description: 'Public online joining form for new members.',
     master: { key: 'onlineJoining', label: 'Online Joining', defaultValue: true, sysAdminOnly: true, tip: 'Requires PayPal setup by system administrator' },
     toggles: [],
+  },
+  {
+    title: 'Other',
+    description: 'Additional features that do not belong to a specific module.',
+    master: null,
+    toggles: [
+      { key: 'reports',     label: 'SQL Reports',  defaultValue: true, tip: 'Saved parameterised reports and ad-hoc SQL editor (read-only)' },
+      { key: 'publicPages', label: 'Public Pages', defaultValue: true, tip: 'Public Groups and Public Calendar pages visible without login' },
+    ],
   },
 ];
 

@@ -66,8 +66,9 @@ function computeNextRenewal(joinedOnIso, config) {
 export default function MemberEditor() {
   const { id }    = useParams();
   const navigate  = useNavigate();
-  const { can, tenant } = useAuth();
+  const { can, tenant, hasFeature } = useAuth();
   const isNew     = !id || id === 'new';
+  const photosEnabled = hasFeature('memberPhotos');
 
   const [form,           setForm]           = useState(BLANK_FORM);
   const [statuses,       setStatuses]       = useState([]);
@@ -1052,6 +1053,7 @@ export default function MemberEditor() {
             )}
 
             {/* ── Member Photo ───────────────────────────────────────── */}
+            {photosEnabled && (
             <div className="mt-4">
               <label className={labelCls}>Member Photo</label>
               <div className="flex items-start gap-4">
@@ -1099,6 +1101,7 @@ export default function MemberEditor() {
                 </div>
               </div>
             </div>
+            )}
           </div>
 
           {/* ── iii) Address ─────────────────────────────────────────── */}

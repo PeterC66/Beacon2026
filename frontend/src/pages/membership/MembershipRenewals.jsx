@@ -27,7 +27,7 @@ function fmtAmount(n) {
 }
 
 export default function MembershipRenewals() {
-  const { can, tenant } = useAuth();
+  const { can, tenant, hasFeature } = useAuth();
   const navigate = useNavigate();
 
   const [data,      setData]      = useState(null);   // { members, yearStart, prevYearStart, nextYearStart, showNextYear }
@@ -446,8 +446,8 @@ export default function MembershipRenewals() {
                     <label className="block text-sm font-medium text-slate-700 mb-1">Do with {selected.size} selected member{selected.size !== 1 ? 's' : ''}</label>
                     <select name="action" value={action} onChange={(e) => setAction(e.target.value)} className={SELECT}>
                       <option value="renew">Renew selected members</option>
-                      {can('email', 'send') && <option value="send_email">Send email</option>}
-                      {can('letters', 'view') && <option value="send_letter">Send letter</option>}
+                      {can('email', 'send') && hasFeature('email') && <option value="send_email">Send email</option>}
+                      {can('letters', 'view') && hasFeature('letters') && <option value="send_letter">Send letter</option>}
                       {can('poll_set_up', 'view') && <option value="add_to_poll">Add to poll</option>}
                     </select>
                   </div>

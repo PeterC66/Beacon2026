@@ -155,12 +155,12 @@ const router = createBrowserRouter([
       { path: '/preferences',         element: <ProtectedRoute><PersonalPreferences /></ProtectedRoute> },
       { path: '/public-links',        element: <ProtectedRoute><PublicLinks /></ProtectedRoute> },
 
-      // Reports — gated by reports:view/run privileges; editor and sql pages self-check isSiteAdmin
-      { path: '/reports',             element: <ProtectedRoute><ReportList /></ProtectedRoute> },
-      { path: '/reports/new',         element: <ProtectedRoute><ReportEditor /></ProtectedRoute> },
-      { path: '/reports/sql',         element: <ProtectedRoute><ReportSql /></ProtectedRoute> },
-      { path: '/reports/:id',         element: <ProtectedRoute><ReportRun /></ProtectedRoute> },
-      { path: '/reports/:id/edit',    element: <ProtectedRoute><ReportEditor /></ProtectedRoute> },
+      // Reports — gated by 'reports' feature + reports:view/run privileges; editor and sql pages self-check isSiteAdmin
+      { path: '/reports',             element: <ProtectedFeatureRoute feature="reports"><ReportList /></ProtectedFeatureRoute> },
+      { path: '/reports/new',         element: <ProtectedFeatureRoute feature="reports"><ReportEditor /></ProtectedFeatureRoute> },
+      { path: '/reports/sql',         element: <ProtectedFeatureRoute feature="reports"><ReportSql /></ProtectedFeatureRoute> },
+      { path: '/reports/:id',         element: <ProtectedFeatureRoute feature="reports"><ReportRun /></ProtectedFeatureRoute> },
+      { path: '/reports/:id/edit',    element: <ProtectedFeatureRoute feature="reports"><ReportEditor /></ProtectedFeatureRoute> },
 
       // Membership — always available (core), sub-features gated
       { path: '/members',             element: <ProtectedRoute><MemberList /></ProtectedRoute> },
@@ -175,8 +175,8 @@ const router = createBrowserRouter([
       { path: '/membership/renewals',     element: <ProtectedFeatureRoute feature="membershipRenewals"><MembershipRenewals /></ProtectedFeatureRoute> },
       { path: '/membership/non-renewals', element: <ProtectedFeatureRoute feature="membershipRenewals"><NonRenewals /></ProtectedFeatureRoute> },
       { path: '/membership/cards',        element: <ProtectedFeatureRoute feature="membershipCards"><MembershipCards /></ProtectedFeatureRoute> },
-      { path: '/members/statistics',      element: <ProtectedFeatureRoute feature="statistics"><MemberStatistics /></ProtectedFeatureRoute> },
-      { path: '/addresses-export',        element: <ProtectedFeatureRoute feature="addressesExport"><AddressesExport /></ProtectedFeatureRoute> },
+      { path: '/members/statistics',      element: <ProtectedRoute><MemberStatistics /></ProtectedRoute> },
+      { path: '/addresses-export',        element: <ProtectedRoute><AddressesExport /></ProtectedRoute> },
       { path: '/polls',                   element: <ProtectedFeatureRoute feature="polls"><PollList /></ProtectedFeatureRoute> },
       { path: '/custom-fields',           element: <ProtectedFeatureRoute feature="customFields"><CustomFields /></ProtectedFeatureRoute> },
       { path: '/gift-aid-log',            element: <ProtectedFeatureRoute feature="giftAid"><GiftAidLog /></ProtectedFeatureRoute> },
@@ -193,9 +193,9 @@ const router = createBrowserRouter([
       { path: '/venues/new',   element: <ProtectedFeatureRoute feature="venues"><VenueEditor /></ProtectedFeatureRoute> },
       { path: '/venues/:id',   element: <ProtectedFeatureRoute feature="venues"><VenueEditor /></ProtectedFeatureRoute> },
 
-      // Events & Calendar — gated by 'events' / sub-toggles
-      { path: '/calendar',                      element: <ProtectedFeatureRoute feature="calendar"><Calendar /></ProtectedFeatureRoute> },
-      { path: '/calendar/events/:eventId',      element: <ProtectedFeatureRoute feature="calendar"><EventRecord /></ProtectedFeatureRoute> },
+      // Events & Calendar — gated by 'events' master + sub-toggles
+      { path: '/calendar',                      element: <ProtectedFeatureRoute feature="events"><Calendar /></ProtectedFeatureRoute> },
+      { path: '/calendar/events/:eventId',      element: <ProtectedFeatureRoute feature="events"><EventRecord /></ProtectedFeatureRoute> },
       { path: '/calendar/open-meetings',        element: <Navigate to="/calendar?filter=other" replace /> },
       { path: '/event-types',            element: <ProtectedFeatureRoute feature="eventTypes"><EventTypeList /></ProtectedFeatureRoute> },
 
@@ -215,13 +215,14 @@ const router = createBrowserRouter([
       { path: '/finance/gift-aid',                   element: <ProtectedFeatureRoute feature="giftAid"><GiftAidDeclaration /></ProtectedFeatureRoute> },
       { path: '/finance/batches',                    element: <ProtectedFeatureRoute feature="creditBatches"><CreditBatches /></ProtectedFeatureRoute> },
 
-      // Email & Letters — gated by 'email' master toggle
+      // Email — gated by 'email' master toggle
       { path: '/email/compose',        element: <ProtectedFeatureRoute feature="email"><EmailCompose /></ProtectedFeatureRoute> },
       { path: '/email/delivery',       element: <ProtectedFeatureRoute feature="email"><EmailDelivery /></ProtectedFeatureRoute> },
       { path: '/email/delivery/:id',   element: <ProtectedFeatureRoute feature="email"><EmailDeliveryDetail /></ProtectedFeatureRoute> },
       { path: '/email/unblocker',      element: <ProtectedFeatureRoute feature="email"><EmailUnblocker /></ProtectedFeatureRoute> },
       { path: '/system-messages',      element: <ProtectedFeatureRoute feature="email"><SystemMessages /></ProtectedFeatureRoute> },
-      { path: '/letters/compose',      element: <ProtectedFeatureRoute feature="email"><LetterCompose /></ProtectedFeatureRoute> },
+      // Letters — PDF generation, does not require SendGrid
+      { path: '/letters/compose',      element: <ProtectedFeatureRoute feature="letters"><LetterCompose /></ProtectedFeatureRoute> },
 
       // Public pages (no auth required)
       { path: '/public/:slug/join',                     element: <JoinForm /> },

@@ -7,12 +7,14 @@ import PDFDocument from 'pdfkit';
 import ExcelJS from 'exceljs';
 import { requireAuth } from '../middleware/auth.js';
 import { requirePrivilege } from '../middleware/requirePrivilege.js';
+import { requireFeature } from '../middleware/requireFeature.js';
 import { tenantQuery, escapeLike } from '../utils/db.js';
 import { AppError } from '../middleware/errorHandler.js';
 import { logAudit } from '../utils/audit.js';
 
 const router = Router();
 router.use(requireAuth);
+router.use(requireFeature('events'));
 
 // ─── helpers ──────────────────────────────────────────────────────────────────
 
@@ -605,7 +607,7 @@ router.get('/events/:eventId', requirePrivilege('calendar', 'view'), async (req,
 
 // ─── GET /calendar/events/:eventId/members ───────────────────────────────────
 
-router.get('/events/:eventId/members', requirePrivilege('event_attendance', 'view'), async (req, res, next) => {
+router.get('/events/:eventId/members', requireFeature('eventAttendance'), requirePrivilege('event_attendance', 'view'), async (req, res, next) => {
   try {
     const slug = req.user.tenantSlug;
     const rows = await tenantQuery(
@@ -631,7 +633,7 @@ const addEventMembersSchema = z.object({
   isOrganiser: z.boolean().default(false),
 });
 
-router.post('/events/:eventId/members', requirePrivilege('event_attendance', 'change'), async (req, res, next) => {
+router.post('/events/:eventId/members', requireFeature('eventAttendance'), requirePrivilege('event_attendance', 'change'), async (req, res, next) => {
   try {
     const slug = req.user.tenantSlug;
     const { eventId } = req.params;
@@ -665,7 +667,7 @@ router.post('/events/:eventId/members', requirePrivilege('event_attendance', 'ch
 
 // ─── POST /calendar/events/:eventId/members/from-group ───────────────────────
 
-router.post('/events/:eventId/members/from-group', requirePrivilege('event_attendance', 'change'), async (req, res, next) => {
+router.post('/events/:eventId/members/from-group', requireFeature('eventAttendance'), requirePrivilege('event_attendance', 'change'), async (req, res, next) => {
   try {
     const slug = req.user.tenantSlug;
     const { eventId } = req.params;
@@ -704,7 +706,7 @@ const updateEventMemberSchema = z.object({
   notes:       z.string().nullable().optional(),
 });
 
-router.patch('/events/:eventId/members/:memberId', requirePrivilege('event_attendance', 'change'), async (req, res, next) => {
+router.patch('/events/:eventId/members/:memberId', requireFeature('eventAttendance'), requirePrivilege('event_attendance', 'change'), async (req, res, next) => {
   try {
     const slug = req.user.tenantSlug;
     const { eventId, memberId } = req.params;
@@ -742,7 +744,7 @@ router.patch('/events/:eventId/members/:memberId', requirePrivilege('event_atten
 
 // ─── DELETE /calendar/events/:eventId/members ────────────────────────────────
 
-router.delete('/events/:eventId/members', requirePrivilege('event_attendance', 'change'), async (req, res, next) => {
+router.delete('/events/:eventId/members', requireFeature('eventAttendance'), requirePrivilege('event_attendance', 'change'), async (req, res, next) => {
   try {
     const slug = req.user.tenantSlug;
     const { eventId } = req.params;
@@ -768,7 +770,7 @@ router.delete('/events/:eventId/members', requirePrivilege('event_attendance', '
 
 // ─── GET /calendar/events/:eventId/members/download ──────────────────────────
 
-router.get('/events/:eventId/members/download', requirePrivilege('event_attendance', 'download'), async (req, res, next) => {
+router.get('/events/:eventId/members/download', requireFeature('eventAttendance'), requirePrivilege('event_attendance', 'download'), async (req, res, next) => {
   try {
     const slug = req.user.tenantSlug;
     const { eventId } = req.params;

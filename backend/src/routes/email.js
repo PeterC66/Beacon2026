@@ -7,10 +7,12 @@ import sgMail from '@sendgrid/mail';
 import { tenantQuery, prisma } from '../utils/db.js';
 import { requirePrivilege } from '../middleware/requirePrivilege.js';
 import { requireAuth } from '../middleware/auth.js';
+import { requireFeature } from '../middleware/requireFeature.js';
 import { resolveTokens, fmtDate } from '../utils/emailTokens.js';
 
 const router = Router();
 router.use(requireAuth);
+router.use(requireFeature('email'));
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 20 * 1024 * 1024 } });
 
 // Configure SendGrid (noop if no key — unit tests mock before this runs)

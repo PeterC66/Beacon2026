@@ -8,6 +8,7 @@ import { createRequire } from 'module';
 import { tenantQuery } from '../utils/db.js';
 import { requirePrivilege } from '../middleware/requirePrivilege.js';
 import { requireAuth } from '../middleware/auth.js';
+import { requireFeature } from '../middleware/requireFeature.js';
 import { buildTokenMap, applyTokens } from '../utils/emailTokens.js';
 
 const require = createRequire(import.meta.url);
@@ -26,6 +27,7 @@ const printer = new PdfPrinter(fonts);
 
 const router = Router();
 router.use(requireAuth);
+router.use(requireFeature('letters'));
 
 // ─── Helpers ──────────────────────────────────────────────────────────────
 

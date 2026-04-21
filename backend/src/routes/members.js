@@ -9,7 +9,7 @@ import { requireAuth } from '../middleware/auth.js';
 import { requirePrivilege } from '../middleware/requirePrivilege.js';
 import { tenantQuery, escapeLike } from '../utils/db.js';
 import { AppError } from '../middleware/errorHandler.js';
-import { isFeatureEnabled } from '../middleware/requireFeature.js';
+import { isFeatureEnabled, requireFeature } from '../middleware/requireFeature.js';
 import { logAudit } from '../utils/audit.js';
 
 const router = Router();
@@ -370,7 +370,7 @@ router.get('/statistics', requirePrivilege('membership_statistics', 'view'), asy
 // Lists Current and Lapsed members with fee info for the renewals screen.
 // Also returns year boundaries so the client can filter by period.
 
-router.get('/renewals', requirePrivilege('membership_renewals', 'view'), async (req, res, next) => {
+router.get('/renewals', requireFeature('membershipRenewals'), requirePrivilege('membership_renewals', 'view'), async (req, res, next) => {
   try {
     const slug = req.user.tenantSlug;
 
@@ -444,7 +444,7 @@ const renewSchema = z.object({
   yearStart:      z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
 });
 
-router.post('/renew', requirePrivilege('membership_renewals', 'renew'), async (req, res, next) => {
+router.post('/renew', requireFeature('membershipRenewals'), requirePrivilege('membership_renewals', 'renew'), async (req, res, next) => {
   try {
     const slug = req.user.tenantSlug;
     const data = renewSchema.parse(req.body);
@@ -556,7 +556,7 @@ router.post('/renew', requirePrivilege('membership_renewals', 'renew'), async (r
 // mode=this_year  — Current members whose next_renewal < current year start
 // mode=long_term  — All members whose next_renewal is older than deletion_years
 
-router.get('/non-renewals', requirePrivilege('members_non_renewals', 'view'), async (req, res, next) => {
+router.get('/non-renewals', requireFeature('membershipRenewals'), requirePrivilege('members_non_renewals', 'view'), async (req, res, next) => {
   try {
     const slug = req.user.tenantSlug;
     const mode = req.query.mode === 'long_term' ? 'long_term' : 'this_year';
@@ -646,7 +646,7 @@ router.get('/non-renewals', requirePrivilege('members_non_renewals', 'view'), as
 // ─── POST /members/lapse ──────────────────────────────────────────────────
 // Changes status to the "Lapsed" status for the given member IDs.
 
-router.post('/lapse', requirePrivilege('members_non_renewals', 'lapse'), async (req, res, next) => {
+router.post('/lapse', requireFeature('membershipRenewals'), requirePrivilege('members_non_renewals', 'lapse'), async (req, res, next) => {
   try {
     const slug = req.user.tenantSlug;
     const { memberIds } = z.object({ memberIds: z.array(z.string()).min(1) }).parse(req.body);
@@ -1497,7 +1497,7 @@ const photoUploadSchema = z.object({
 
 const MAX_PHOTO_BYTES = 2 * 1024 * 1024; // 2 MB
 
-router.post('/:id/photo', requirePrivilege('member_record', 'change'), async (req, res, next) => {
+router.post('/:id/photo', requireFeature('memberPhotos'), requirePrivilege('member_record', 'change'), async (req, res, next) => {
   try {
     const slug = req.user.tenantSlug;
     const memberId = req.params.id;
@@ -1526,7 +1526,7 @@ router.post('/:id/photo', requirePrivilege('member_record', 'change'), async (re
 // ─── DELETE /members/:id/photo ───────────────────────────────────────────
 // Remove a member's photo.
 
-router.delete('/:id/photo', requirePrivilege('member_record', 'change'), async (req, res, next) => {
+router.delete('/:id/photo', requireFeature('memberPhotos'), requirePrivilege('member_record', 'change'), async (req, res, next) => {
   try {
     const slug = req.user.tenantSlug;
     const memberId = req.params.id;
@@ -1548,7 +1548,7 @@ router.delete('/:id/photo', requirePrivilege('member_record', 'change'), async (
 // ─── GET /members/:id/photo ──────────────────────────────────────────────
 // Get a member's photo as a binary image response.
 
-router.get('/:id/photo', requirePrivilege('member_record', 'view'), async (req, res, next) => {
+router.get('/:id/photo', requireFeature('memberPhotos'), requirePrivilege('member_record', 'view'), async (req, res, next) => {
   try {
     const slug = req.user.tenantSlug;
     const [member] = await tenantQuery(

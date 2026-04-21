@@ -5,12 +5,14 @@ import { Router } from 'express';
 import { z } from 'zod';
 import { requireAuth } from '../middleware/auth.js';
 import { requirePrivilege } from '../middleware/requirePrivilege.js';
+import { requireFeature } from '../middleware/requireFeature.js';
 import { tenantQuery } from '../utils/db.js';
 import { logAudit } from '../utils/audit.js';
 import { AppError } from '../middleware/errorHandler.js';
 
 const router = Router();
 router.use(requireAuth);
+router.use(requireFeature('eventTypes'));
 
 // ─── GET /event-types ────────────────────────────────────────────────────────
 
