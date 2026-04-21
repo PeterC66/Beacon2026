@@ -350,7 +350,11 @@ function TeamLedger({ teamId }) {
 
   return (
     <div>
-      <h2 className="text-lg font-semibold mb-3">Team Cash</h2>
+      <h2 className="text-lg font-semibold mb-1">Team Cash</h2>
+      <p className="text-xs text-slate-600 mb-3">
+        The team's own cash record — not linked to the u3a's central accounts.
+        The Finance Ledger shows different, complementary transactions.
+      </p>
 
       {error && (
         <p className="rounded-md bg-red-50 border border-red-300 px-4 py-3 text-red-700 text-sm font-medium mb-3">
@@ -380,8 +384,9 @@ function TeamLedger({ teamId }) {
             type="button"
             onClick={() => navigate(`/finance/ledger?view=group&groupId=${teamId}`)}
             className="border border-slate-300 text-slate-700 hover:bg-slate-50 rounded px-4 py-1.5 text-sm"
+            title="View this team's other transactions - in the central ledger"
           >
-            View in Finance Ledger
+            Central Ledger
           </button>
         )}
       </div>

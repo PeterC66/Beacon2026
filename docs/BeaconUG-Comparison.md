@@ -332,6 +332,7 @@
 |--------|--------|-------|
 | Per-group in/out transactions | Built | Independent from main finance |
 | Download Excel | Built | — |
+| **Beacon2 extra:** distinction from Finance Ledger made explicit | Beacon2 extra | Tab now shows a description line under the heading and the shortcut button is labelled **"Central Ledger"** (with tooltip) so users don't mistake the two lists for the same data |
 
 ---
 
@@ -352,7 +353,7 @@
 | Team Record: Details tab | Built | Name, status, information, notes, show-addresses toggle |
 | Team Record: Members tab | Built | Add/remove members, mark leaders, bulk actions (email, download, remove, add to another team) |
 | Team Record: Schedule tab | Built | Same features as group schedule — single + recurring events, inline edit, bulk delete; shared `Schedule` component |
-| Team Record: Ledger tab | Built | Same as group ledger — per-team in/out transactions with date range filter |
+| Team Record: Ledger tab | Built | Same as group ledger — per-team in/out transactions with date range filter; same description line and "Central Ledger" shortcut button as Group Cash |
 | Abbreviated name (groups & teams) | Built | Optional short name (max 10 chars) shown everywhere, full name as tooltip |
 | Teams in Member record | Built | "Groups, Teams and Ledger" tab shows both groups and teams |
 | "Add to team" bulk action on Members list | Built | — |
