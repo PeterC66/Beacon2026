@@ -199,6 +199,7 @@ function TeamDetails({ teamId, onSaved, onDeleted }) {
 
 function TeamLedger({ teamId }) {
   const { can } = useAuth();
+  const navigate = useNavigate();
 
   const thisYear = new Date().getFullYear();
   const [fromDate, setFromDate] = useState(`${thisYear}-01-01`);
@@ -372,6 +373,15 @@ function TeamLedger({ teamId }) {
           <button onClick={handleDownload}
             className="border border-slate-300 text-slate-700 hover:bg-slate-50 rounded px-4 py-1.5 text-sm">
             Download Excel
+          </button>
+        )}
+        {can('finance_transactions', 'view') && (
+          <button
+            type="button"
+            onClick={() => navigate(`/finance/ledger?view=group&groupId=${teamId}`)}
+            className="border border-slate-300 text-slate-700 hover:bg-slate-50 rounded px-4 py-1.5 text-sm"
+          >
+            View in Finance Ledger
           </button>
         )}
       </div>
