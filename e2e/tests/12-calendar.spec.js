@@ -6,9 +6,9 @@
 //  ✓ Calendar page loads with heading and filter controls
 //  ✓ Calendar has date range inputs and Download PDF button
 //  ✓ Show Detail checkbox is present (exactly one)
-//  ✓ "Other" filter mode shows event type dropdown
+//  ✓ "Open meetings and other" filter mode shows event type dropdown
 //  ✓ Group/Team filter dropdown is present
-//  ✓ Open Meetings page loads from Calendar nav link
+//  ✓ Legacy /calendar/open-meetings URL redirects to Calendar
 
 import { test, expect } from '../fixtures/admin.js';
 
@@ -103,21 +103,20 @@ test.describe('Calendar', () => {
   });
 });
 
-// ── Open Meetings ────────────────────────────────────────────────────────
+// ── Open Meetings redirect ──────────────────────────────────────────────
+// The standalone /calendar/open-meetings page has been retired.
+// Old bookmarks now redirect to Calendar with the "Open Meetings and Other"
+// filter preselected; add/edit/delete of open meetings happens inline there.
 
-test.describe('Open Meetings', () => {
-  test('page loads from Calendar nav link', async ({ adminPage: page }) => {
-    // Navigate to Calendar first
-    await gotoHomeLink(page, '/calendar', 'Calendar');
+test.describe('Open Meetings redirect', () => {
+  test('legacy /calendar/open-meetings URL redirects to Calendar', async ({ adminPage: page }) => {
+    await page.goto('/calendar/open-meetings');
+    await expect(page).toHaveURL(/\/calendar\?filter=other/, { timeout: 10_000 });
 
-    // Click the Open Meetings link in the Calendar page NavBar
-    const clicked = await page.evaluate(() => {
-      const link = document.querySelector('a[href="/calendar/open-meetings"]');
-      if (link) { link.click(); return true; }
-      return false;
-    });
-    if (!clicked) await page.goto('/calendar/open-meetings');
-
-    await expect(page.getByRole('heading', { name: /open meetings/i })).toBeVisible({ timeout: 10_000 });
+    // The "Other" radio should be preselected
+    const otherRadio = page.locator('input[name="filter"][value="other"]');
+    const otherExists = await otherRadio.isVisible().catch(() => false);
+    if (!otherExists) return; // feature toggled off in test tenant
+    await expect(otherRadio).toBeChecked();
   });
 });

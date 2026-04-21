@@ -900,8 +900,8 @@ Renders `<span className="text-red-500 ml-0.5" aria-hidden="true">*</span>`.
 Usage: `<label>Surname <RequiredMark /></label>`
 
 All existing forms have been migrated to use this component:
-JoinForm, PortalRegister, GroupRecord, OpenMeetings, VenueEditor,
-TransactionEditor, TransferMoney, TransactionRefund, MemberEditor.
+JoinForm, PortalRegister, GroupRecord, Schedule, EventRecord, Calendar,
+VenueEditor, TransactionEditor, TransferMoney, TransactionRefund, MemberEditor.
 
 ### Save success feedback
 

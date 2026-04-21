@@ -15,6 +15,24 @@ Format: `## [version] — YYYY-MM-DD` with bullet points per change.
   Implemented via a shared `PasswordInput` component
   (`frontend/src/components/PasswordInput.jsx`).
 
+### Changed
+- **Event Record is now the single editor for one event** — previously, editing
+  the basic fields of a group/team event happened inline on the Group/Team
+  **Events** tab, while attendance and finance transactions lived separately on
+  `/calendar/events/:id`. The Event Record's **Details** tab is now editable
+  (Edit / Save / Cancel / Delete), routing the PATCH/DELETE to the correct
+  backend endpoint based on the event's context (group, team, or open meeting).
+  Clicking an event's date in the Group/Team Events tab or Calendar list now
+  drills into the Event Record for full editing. Inline-edit forms on the
+  Schedule tab and the Calendar page's "Other" filter are removed. Adding events
+  (with recurrence) and bulk delete remain where they were.
+- **Calendar filter "Other" renamed to "Open Meetings and Other"** — clearer
+  label for the non-group-event management mode.
+- **Standalone `/calendar/open-meetings` page retired** — all open-meeting
+  management happens on the Events page via the **Open Meetings and Other**
+  filter. Legacy URLs redirect to `/calendar?filter=other`. The Open Meetings
+  nav link has been removed from the Events page NavBar.
+
 ### Fixed
 - **Restore from Beacon now imports Open Meetings** — the legacy Beacon backup's
   `Calendar` sheet was previously ignored entirely, so any Open Meetings (Calendar

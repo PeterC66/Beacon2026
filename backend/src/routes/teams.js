@@ -837,6 +837,7 @@ router.get('/:id/events', requirePrivilege('group_records_all', 'view'), async (
     const events = await tenantQuery(
       slug,
       `SELECT ge.id, ge.event_date, ge.start_time, ge.end_time,
+              ge.group_id, 'team'::text AS group_type,
               ge.venue_id, v.name AS venue_name,
               ge.topic, ge.contact, ge.details, ge.is_private,
               ge.created_at, ge.updated_at

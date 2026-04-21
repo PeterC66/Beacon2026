@@ -66,7 +66,6 @@ const SystemMessages     = lazy(() => import('./pages/settings/SystemMessages.js
 const PublicLinks        = lazy(() => import('./pages/settings/PublicLinks.jsx'));
 const Calendar           = lazy(() => import('./pages/calendar/Calendar.jsx'));
 const EventRecord        = lazy(() => import('./pages/calendar/EventRecord.jsx'));
-const OpenMeetings       = lazy(() => import('./pages/calendar/OpenMeetings.jsx'));
 const LetterCompose      = lazy(() => import('./pages/letters/LetterCompose.jsx'));
 const JoinForm           = lazy(() => import('./pages/public/JoinForm.jsx'));
 const JoinPending        = lazy(() => import('./pages/public/JoinPending.jsx'));
@@ -197,7 +196,7 @@ const router = createBrowserRouter([
       // Events & Calendar — gated by 'events' / sub-toggles
       { path: '/calendar',                      element: <ProtectedFeatureRoute feature="calendar"><Calendar /></ProtectedFeatureRoute> },
       { path: '/calendar/events/:eventId',      element: <ProtectedFeatureRoute feature="calendar"><EventRecord /></ProtectedFeatureRoute> },
-      { path: '/calendar/open-meetings',        element: <ProtectedFeatureRoute feature="calendar"><OpenMeetings /></ProtectedFeatureRoute> },
+      { path: '/calendar/open-meetings',        element: <Navigate to="/calendar?filter=other" replace /> },
       { path: '/event-types',            element: <ProtectedFeatureRoute feature="eventTypes"><EventTypeList /></ProtectedFeatureRoute> },
 
       // Finance — gated by 'finance' master toggle + sub-toggles

@@ -2,8 +2,11 @@
 // Shared schedule (events) component used by both GroupRecord and TeamRecord.
 // Props:
 //   entityId  — the group or team ID
-//   api       — the API module (groups or teams), must have listEvents/createEvents/updateEvent/deleteEvents
+//   api       — the API module (groups or teams), must have listEvents/createEvents/deleteEvents
 //   privilege — privilege resource for canManage check (default: 'group_records_all')
+//
+// Editing a single event is done on the Event Record page (/calendar/events/:id),
+// which handles Details / Members / Financials together.
 
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
@@ -46,12 +49,6 @@ export default function Schedule({ entityId, api, privilege = 'group_records_all
   const [addForm,   setAddForm]   = useState(EMPTY_EV);
   const [addError,  setAddError]  = useState(null);
   const [addSaving, setAddSaving] = useState(false);
-
-  // Inline edit
-  const [editId,    setEditId]    = useState(null);
-  const [editForm,  setEditForm]  = useState({});
-  const [editError, setEditError] = useState(null);
-  const [editSaving, setEditSaving] = useState(false);
 
   const canManage = can(privilege, 'change');
 
@@ -106,51 +103,6 @@ export default function Schedule({ entityId, api, privilege = 'group_records_all
       setAddError(err.message);
     } finally {
       setAddSaving(false);
-    }
-  }
-
-  function startEdit(ev) {
-    setEditId(ev.id);
-    setEditForm({
-      eventDate: ev.event_date ? String(ev.event_date).slice(0, 10) : '',
-      startTime: normaliseTime(ev.start_time),
-      endTime:   normaliseTime(ev.end_time),
-      venueId:   ev.venue_id ?? '',
-      topic:     ev.topic ?? '',
-      contact:   ev.contact ?? '',
-      details:   ev.details ?? '',
-      isPrivate: ev.is_private ?? false,
-    });
-    setEditError(null);
-  }
-
-  function cancelEdit() {
-    setEditId(null);
-    setEditForm({});
-    setEditError(null);
-  }
-
-  async function handleSaveEdit(evId) {
-    setEditSaving(true);
-    setEditError(null);
-    try {
-      const payload = {
-        eventDate: editForm.eventDate || undefined,
-        startTime: editForm.startTime || null,
-        endTime:   editForm.endTime || null,
-        venueId:   editForm.venueId || null,
-        topic:     editForm.topic || null,
-        contact:   editForm.contact || null,
-        details:   editForm.details || null,
-        isPrivate: editForm.isPrivate,
-      };
-      const updated = await api.updateEvent(entityId, evId, payload);
-      setEvents((prev) => prev.map((e) => e.id === evId ? { ...e, ...updated } : e));
-      cancelEdit();
-    } catch (err) {
-      setEditError(err.message);
-    } finally {
-      setEditSaving(false);
     }
   }
 
@@ -231,80 +183,12 @@ export default function Schedule({ entityId, api, privilege = 'group_records_all
                 <th className="px-3 py-2 font-normal">Venue</th>
                 <th className="px-3 py-2 font-normal">Topic</th>
                 <th className="px-3 py-2 font-normal">Enquiries</th>
-                {canManage && <th className="px-3 py-2"></th>}
               </tr>
             </thead>
             <tbody>
               {events.map((ev, i) => {
                 const rowBg = i % 2 === 0 ? 'bg-yellow-50' : 'bg-white';
                 const dataColSpan = 5;
-                const totalColSpan = (canManage ? 2 : 0) + dataColSpan;
-
-                if (editId === ev.id) {
-                  return (
-                    <tr key={ev.id} className="border-b border-slate-100 bg-blue-50">
-                      {canManage && <td className="px-3 py-2"></td>}
-                      <td className="px-3 py-2" colSpan={dataColSpan + (canManage ? 1 : 0)}>
-                        <div className="flex flex-wrap gap-2 items-end">
-                          <div>
-                            <label htmlFor="event-edit-date" className={labelCls}>Date <RequiredMark /></label>
-                            <input id="event-edit-date" name="eventDate" type="date" className={inputCls} value={editForm.eventDate}
-                              onChange={(e) => setEditForm((p) => ({ ...p, eventDate: e.target.value }))} />
-                          </div>
-                          <div>
-                            <label htmlFor="event-edit-start-time" className={labelCls}>Start</label>
-                            <input id="event-edit-start-time" name="startTime" type="time" step="900" className={inputCls} value={editForm.startTime}
-                              onChange={(e) => setEditForm((p) => ({ ...p, startTime: e.target.value }))} />
-                          </div>
-                          <div>
-                            <label htmlFor="event-edit-end-time" className={labelCls}>Until</label>
-                            <input id="event-edit-end-time" name="endTime" type="time" step="900" className={inputCls} value={editForm.endTime}
-                              onChange={(e) => setEditForm((p) => ({ ...p, endTime: e.target.value }))} />
-                          </div>
-                          <div>
-                            <label htmlFor="event-edit-venue" className={labelCls}>Venue</label>
-                            <select id="event-edit-venue" name="venueId" className={inputCls} value={editForm.venueId}
-                              onChange={(e) => setEditForm((p) => ({ ...p, venueId: e.target.value }))}>
-                              <option value="">— none —</option>
-                              {venues.map((v) => <option key={v.id} value={v.id}>{v.name}</option>)}
-                            </select>
-                          </div>
-                          <div className="min-w-40">
-                            <label htmlFor="event-edit-topic" className={labelCls}>Topic</label>
-                            <input id="event-edit-topic" name="topic" className={`${inputCls} w-full`} value={editForm.topic}
-                              onChange={(e) => setEditForm((p) => ({ ...p, topic: e.target.value }))} />
-                          </div>
-                          <div>
-                            <label htmlFor="event-edit-contact" className={labelCls}>Enquiries</label>
-                            <input id="event-edit-contact" name="contact" className={inputCls} value={editForm.contact}
-                              onChange={(e) => setEditForm((p) => ({ ...p, contact: e.target.value }))} />
-                          </div>
-                          <div className="flex-1 min-w-48">
-                            <label htmlFor="event-edit-details" className={labelCls}>Details</label>
-                            <input id="event-edit-details" name="details" className={`${inputCls} w-full`} value={editForm.details}
-                              onChange={(e) => setEditForm((p) => ({ ...p, details: e.target.value }))} />
-                          </div>
-                          <label className="flex items-center gap-1 text-xs cursor-pointer mt-4">
-                            <input type="checkbox" className={cbCls} checked={editForm.isPrivate}
-                              onChange={(e) => setEditForm((p) => ({ ...p, isPrivate: e.target.checked }))} />
-                            Private
-                          </label>
-                        </div>
-                        {editError && <p className="text-red-600 text-xs mt-1">{editError}</p>}
-                        <div className="flex gap-2 mt-2">
-                          <button onClick={() => handleSaveEdit(ev.id)} disabled={editSaving}
-                            className="bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white rounded px-3 py-1 text-xs">
-                            {editSaving ? 'Saving…' : 'Update'}
-                          </button>
-                          <button onClick={cancelEdit}
-                            className="border border-slate-300 rounded px-3 py-1 text-xs hover:bg-slate-50">
-                            Cancel
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                }
 
                 return (
                   <>
@@ -317,18 +201,11 @@ export default function Schedule({ entityId, api, privilege = 'group_records_all
                         </td>
                       )}
                       <td className="px-3 py-2">
-                        {canManage ? (
-                          <button onClick={() => startEdit(ev)}
-                            className="text-blue-700 hover:underline text-left whitespace-nowrap">
-                            {fmtDate(ev.event_date)}
-                            {ev.start_time ? ` ${normaliseTime(ev.start_time)}` : ''}
-                          </button>
-                        ) : (
-                          <span className="whitespace-nowrap">
-                            {fmtDate(ev.event_date)}
-                            {ev.start_time ? ` ${normaliseTime(ev.start_time)}` : ''}
-                          </span>
-                        )}
+                        <Link to={`/calendar/events/${ev.id}`}
+                          className="text-blue-700 hover:underline whitespace-nowrap">
+                          {fmtDate(ev.event_date)}
+                          {ev.start_time ? ` ${normaliseTime(ev.start_time)}` : ''}
+                        </Link>
                         {ev.is_private && <span className="ml-2 text-xs text-slate-400">(private)</span>}
                       </td>
                       <td className="px-3 py-2 text-slate-600 whitespace-nowrap">
@@ -337,11 +214,6 @@ export default function Schedule({ entityId, api, privilege = 'group_records_all
                       <td className="px-3 py-2 text-slate-600">{ev.venue_name ?? ''}</td>
                       <td className="px-3 py-2 text-slate-700">{ev.topic ?? ''}</td>
                       <td className="px-3 py-2 text-slate-600">{ev.contact ?? ''}</td>
-                      {canManage && (
-                        <td className="px-3 py-2">
-                          <Link to={`/calendar/events/${ev.id}`} className="text-blue-700 hover:underline text-xs">View</Link>
-                        </td>
-                      )}
                     </tr>
                     {showDetail && ev.details && (
                       <tr key={`${ev.id}-detail`} className={rowBg}>
@@ -349,7 +221,6 @@ export default function Schedule({ entityId, api, privilege = 'group_records_all
                         <td colSpan={dataColSpan} className="px-3 pb-2 pt-0 text-xs text-slate-500 italic">
                           {ev.details}
                         </td>
-                        {canManage && <td></td>}
                       </tr>
                     )}
                   </>
