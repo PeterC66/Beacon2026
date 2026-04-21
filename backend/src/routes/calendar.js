@@ -79,7 +79,7 @@ router.get('/events', requirePrivilege('calendar', 'view'), async (req, res, nex
     const events = await tenantQuery(
       slug,
       `SELECT ge.id, ge.event_date, ge.start_time, ge.end_time,
-              ge.group_id, g.name AS group_name,
+              ge.group_id, g.name AS group_name, g.type AS group_type,
               ge.event_type_id, et.name AS event_type_name,
               ge.venue_id, v.name AS venue_name, v.postcode AS venue_postcode,
               ge.topic, ge.contact, ge.details, ge.is_private
@@ -579,7 +579,7 @@ router.get('/events/:eventId', requirePrivilege('calendar', 'view'), async (req,
     const [ev] = await tenantQuery(
       slug,
       `SELECT ge.id, ge.event_date, ge.start_time, ge.end_time,
-              ge.group_id, g.name AS group_name,
+              ge.group_id, g.name AS group_name, g.type AS group_type,
               ge.event_type_id, et.name AS event_type_name,
               ge.venue_id, v.name AS venue_name, v.postcode AS venue_postcode,
               ge.topic, ge.contact, ge.details, ge.is_private,

@@ -200,23 +200,32 @@ Beacon2 is a ground-up rebuild with these goals:
 - **Events page** (menu entry renamed from "Calendar"; route `/calendar` retained)
   — chronological view of all group events + non-group events within date range
   (default: next 3 months, with a one-click *Show past events* toggle that
-  broadens the range 12 months back); filters by All / Group-Team / Own / Other;
-  Show Detail toggle (calendar mode); **Calendar vs Table view toggle** (table
-  mode adds sortable Start/End/Group/Topic/Venue/Postcode/Enquiries/Details
-  columns); clickable date/time → Group Schedule tab; clickable group/venue →
-  record; Google Maps link for venues with postcode; **Download Excel** and
-  **Download PDF**
+  broadens the range 12 months back); filters by All / For Member / By Venue /
+  By Group-Team / **Open Meetings and Other**; Show Detail toggle (calendar mode);
+  **Calendar vs Table view toggle** (table mode adds sortable Start/End/Group/
+  Topic/Venue/Postcode/Enquiries/Details columns); clickable date/time → Event
+  Record; clickable group/venue → record; Google Maps link for venues with
+  postcode; **Download Excel** and **Download PDF**. The Open Meetings and Other
+  filter keeps inline **Add Events** (with recurrence) and bulk-delete; per-event
+  editing is done on the Event Record. Legacy `/calendar/open-meetings` redirects
+  here with the filter preselected.
 - **Upcoming events on Home** — collapsible widget above the main menu showing
   the next 5 events in the coming 90 days; collapse state stored in personal
   preferences (`upcomingEventsExpanded`)
 - **Event types** — flexible system for non-group events (replaces single Open Meetings concept);
   configurable event types with name and description; default "Open Meetings" type protected
-  from rename/delete; Calendar "Other" mode embeds full event management for selected type;
-  Portal Calendar also has "Other" filter with event type dropdown
+  from rename/delete; Events page "Open Meetings and Other" filter embeds full event
+  management for the selected type; Portal Calendar also has an Other filter with event type dropdown
 - **Event Types settings page** — CRUD page under Set up for managing event types;
   controlled by `event_types` privilege resource
-- **Event Record page** — `/calendar/events/:eventId` with Details, Members, and Financials
-  tabs; clickable from Calendar and Schedule; `event_attendance` and `event_finance` privileges
+- **Event Record page** — `/calendar/events/:eventId` is the single editor for any
+  one event (group, team or open meeting): **Details** tab (editable — Edit/Save/
+  Cancel/Delete; routes PATCH/DELETE to `/groups/:gid/events/:id`, `/teams/:gid/events/:id`
+  or `/calendar/open-events/:id` based on the event's context and `group_type`),
+  **Members** tab and **Financials** tab. Clickable from Group/Team Events tab,
+  Calendar list, and upcoming-events widget. Privileges: `group_records_all:change`
+  for group/team events, `meetings:change` for open meetings; `event_attendance` and
+  `event_finance` gate the Members and Financials tabs
 - **Event members** — per-event member tracking; add by name/number; copy from group;
   organiser toggle; download PDF; `eventAttendance` feature toggle
 - **Event financials** — per-event income/costs summary with transaction links;

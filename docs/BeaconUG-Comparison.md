@@ -385,7 +385,7 @@
 
 | Aspect | Status | Notes |
 |--------|--------|-------|
-| Chronological event view | Built | All group events + non-group events within date range; "Other" filter mode for event-type-specific management. Menu entry renamed to **Events** (route `/calendar` kept for compatibility). |
+| Chronological event view | Built | All group events + non-group events within date range; **Open Meetings and Other** filter mode for event-type-specific management (replaces the retired standalone Open Meetings page). Menu entry renamed to **Events** (route `/calendar` kept for compatibility). Clicking a row opens the Event Record, where the Details tab is editable and Members / Financials tabs are managed. |
 | Date range (default next 3 months) | Built | — |
 | Filters (all/member/venue/group) | Built | Member search autocomplete |
 | Show Detail toggle | Built | — |
@@ -412,7 +412,7 @@
 | Aspect | Status | Notes |
 |--------|--------|-------|
 | One-off event groups | Built | Can create groups for single events |
-| **Beacon2 extra:** Event Types | Beacon2 extra | Non-group events with flexible event types (e.g. Open Meetings, Social Events); managed via Calendar "Other" mode with recurrence support; configurable event types in Set up |
+| **Beacon2 extra:** Event Types | Beacon2 extra | Non-group events with flexible event types (e.g. Open Meetings, Social Events); managed via the Calendar **Open Meetings and Other** filter with recurrence support; configurable event types in Set up |
 | **Beacon2 extra:** Event Members | Beacon2 extra | Track members registered for any event (group or standalone); add by name/number; "Copy from group" for one-time snapshot; organiser toggle; download PDF |
 | **Beacon2 extra:** Event Financials | Beacon2 extra | Per-event financial summary (income/costs/net); transactions linkable to events via TransactionEditor; Event Record page with Details/Members/Financials tabs |
 
@@ -1068,7 +1068,7 @@ These are features or architectural aspects of Beacon2 that have no counterpart 
 | **Auto-migration** | `migrateTenantSchemas()` re-runs idempotent DDL on every startup; no manual schema management |
 | **JWT + refresh token auth** | Access token (15 min, in-memory only) + refresh token (30 days, httpOnly cookie); bcrypt 12 rounds (replaces Beacon's session-based auth) |
 | **SiteWorks integration** | Tenant-wide toggle hides group scheduling/venue fields when SiteWorks manages events |
-| **Event Types** | Non-group events with flexible, configurable event types (replaces single Open Meetings concept); managed via Calendar "Other" mode; Event Types settings page for CRUD |
+| **Event Types** | Non-group events with flexible, configurable event types (replaces single Open Meetings concept); managed via the Calendar **Open Meetings and Other** filter; Event Types settings page for CRUD |
 | **Membership Payment Method Defaults** | Per-type default account and payment method; auto-populates member editor and renewals |
 | **Refund system** | Per-account enable; dedicated refund form; reciprocal linking; statement netting; ledger column |
 | **Credit batches** | Group incoming transactions into batches; appear as single rows in reconciliation |

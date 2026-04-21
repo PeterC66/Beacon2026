@@ -73,9 +73,11 @@ Click **Save** to add the event (or series of events) to the schedule.
 
 ## Editing an existing event
 
-Click on an event row in the table to open it for inline editing. Change any
-of the fields and click **Save** to apply your changes, or **Cancel** to
-discard them.
+Click the **date** of an event in the table to open its **Event Record**
+page, where you can edit the details, manage attendance (Members tab) and
+view the event's finance transactions (Financials tab). Change any of the
+fields and click **Save** to apply your changes, or **Cancel** to discard
+them.
 
 ---
 
@@ -83,7 +85,7 @@ discard them.
 
 ### Single event
 
-Open an event for editing and click **Delete** to remove it.
+Open the event's Event Record and click **Delete** to remove it.
 
 ### Bulk delete
 

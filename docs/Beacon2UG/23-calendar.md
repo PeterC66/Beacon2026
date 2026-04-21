@@ -28,7 +28,8 @@ Choose one of the following views:
 | **All** | Every event from all groups and open meetings |
 | **For Member** | Events for groups that a specific member belongs to |
 | **By Venue** | Events at a specific venue |
-| **By Group** | Events for a specific group |
+| **By Group/Team** | Events for a specific group or team |
+| **Open Meetings and Other** | Non-group events, grouped by event type |
 
 When you select **For Member**, an autocomplete search box [B] appears --
 start typing a member's name and select the person you want. The calendar
@@ -37,8 +38,14 @@ then shows only events for groups that member belongs to.
 When you select **By Venue**, a dropdown [C] appears listing all venues.
 Choose one to see only events at that location.
 
-When you select **By Group**, a dropdown [D] appears listing all groups.
-Choose one to see only that group's events.
+When you select **By Group/Team**, a dropdown [D] appears listing all groups
+and teams. Choose one to see only that entity's events.
+
+When you select **Open Meetings and Other**, an event-type dropdown appears.
+This mode is where non-group events are managed: use the **Add Events** form
+below the list to add one event (or a series, with recurrence), and tick the
+checkboxes to bulk-delete. To edit an existing open meeting, click the date
+of its row to open its Event Record (see below).
 
 ### Date range [E]
 
@@ -81,7 +88,7 @@ The table lists events in date order, with the following columns:
 
 | Column | Description |
 |--------|-------------|
-| **Date & Time** [G] | The date and start time of the event (click to go to the group's Schedule tab) |
+| **Date & Time** [G] | The date and start time of the event (click to open the Event Record) |
 | **End Time** [H] | When the event finishes |
 | **Group** [I] | The name of the group (click to open the group record) |
 | **Venue** [J] | Where the event takes place (click to open in Google Maps if a postcode is available) |
@@ -92,9 +99,10 @@ The table lists events in date order, with the following columns:
 
 The calendar is full of helpful links:
 
-- Click the **date** in any row to jump directly to that group's
-  [Schedule tab](19-group-record-schedule.md), where you can edit the event.
-- Click the **group name** to open the group record.
+- Click the **date** in any row to open the event's **Event Record**, where
+  you can edit the details, manage attendance (Members tab) and view its
+  finance transactions (Financials tab).
+- Click the **group name** to open the group or team record.
 - Click the **venue name** to see the venue's location on Google Maps (when
   a postcode is available).
 
@@ -113,12 +121,4 @@ Two download buttons appear at the bottom of the page once events are listed:
 
 ---
 
-## Open Meetings
-
-From the Calendar page, you can navigate to the **Open Meetings** page to
-manage events that are not tied to any specific group. See
-[Section 24: Open Meetings](24-open-meetings.md) for details.
-
----
-
-[Contents](index.md) | [Previous: Faculties](22-faculties.md) | [Next: Open Meetings](24-open-meetings.md)
+[Contents](index.md) | [Previous: Faculties](22-faculties.md) | [Next: Financial Ledger](25-financial-ledger.md)
