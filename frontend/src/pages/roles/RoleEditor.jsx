@@ -34,6 +34,13 @@ export default function RoleEditor() {
   const { markDirty, markClean } = useUnsavedChanges();
 
   useEffect(() => {
+    if (isNew) {
+      setName('');
+      setIsCommittee(false);
+      setNotes('');
+      setGranted({});
+      setError(null);
+    }
     async function load() {
       try {
         const [resourceList, role] = await Promise.all([
