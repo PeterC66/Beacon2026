@@ -49,6 +49,27 @@ export function parseBool(val) {
   return val === true || val === 1 || val === '1' || val === 'true';
 }
 
+/** Parse a Beacon-format combined "date/time" cell into { date, time }.
+ *  Accepts Excel Date objects, strings like "2024-01-15 19:00" or "15/01/2024 19:00",
+ *  or date-only values.  Returns ISO date (YYYY-MM-DD) and time (HH:MM) or nulls. */
+export function parseBeaconDateTime(val) {
+  if (val == null || val === '') return { date: null, time: null };
+  if (val instanceof Date) {
+    if (isNaN(val.getTime())) return { date: null, time: null };
+    return {
+      date: val.toISOString().slice(0, 10),
+      time: val.toISOString().slice(11, 16),
+    };
+  }
+  const s = String(val).trim();
+  if (!s) return { date: null, time: null };
+  const parts = s.split(/[ T]+/);
+  return {
+    date: parseDate(parts[0]),
+    time: parts[1] ? parts[1].slice(0, 5) : null,
+  };
+}
+
 export function parseDec(val) {
   if (val == null || val === '') return null;
   const n = parseFloat(String(val));
@@ -1429,6 +1450,42 @@ export async function restoreBeacon(tx, wb) {
       `INSERT INTO group_ledger_entries (id, group_id, entry_date, payee, detail, money_in, money_out)
        VALUES (gen_random_uuid()::text,$1,$2::date,$3,$4,$5::numeric,$6::numeric)`,
       groupId, parseDate(r.date), str(r.payee), str(r.detail), moneyIn, moneyOut,
+    );
+  }
+
+  // 9c. Open Meetings (Calendar entries with no gkey)
+  // clearTenantData() removed the seeded "Open Meetings" event type, so re-create it.
+  // Then process the Calendar sheet — rows without a gkey are u3a-wide Open Meetings.
+  // Group-tied calendar entries (gkey set) are not restored here; that would require
+  // resolving their group and is tracked separately in KNOWN-ISSUES.
+  const openMeetingsEventTypeId = uuid();
+  await tx.$executeRawUnsafe(
+    `INSERT INTO event_types (id, name, description, is_default)
+     VALUES ($1, 'Open Meetings', 'u3a-wide events not tied to any group', true)`,
+    openMeetingsEventTypeId,
+  );
+
+  for (const r of get('Calendar')) {
+    const gkey = String(r.gkey || '').trim();
+    if (gkey) continue;
+    const dt = parseBeaconDateTime(r['date/time']);
+    if (!dt.date) continue;
+    const gvkey   = String(r.gvkey || '').trim();
+    const venueId = gvkey ? (venueMap[gvkey] || null) : null;
+    const endTimeRaw = r.end_time;
+    const endTime = endTimeRaw
+      ? (endTimeRaw instanceof Date
+          ? endTimeRaw.toISOString().slice(11, 16)
+          : String(endTimeRaw).slice(0, 5))
+      : null;
+    await tx.$executeRawUnsafe(
+      `INSERT INTO group_events
+         (id, group_id, event_date, start_time, end_time, venue_id,
+          contact, details, topic, is_private, event_type_id)
+       VALUES ($1, NULL, $2::date, $3::time, $4::time, $5, $6, $7, $8, $9, $10)`,
+      uuid(), dt.date, dt.time, endTime, venueId,
+      str(r.enquiries), str(r.detail), str(r.topic),
+      parseBool(r.exclude_public), openMeetingsEventTypeId,
     );
   }
 

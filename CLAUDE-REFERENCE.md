@@ -720,6 +720,16 @@ group_info_config (JSON), calendar_config (JSON).
 shared `akey`. Month `0` → month_index 13 (Renewals). Positive amounts = in,
 negative = out.
 
+**Beacon restore — Open Meetings**: `clearTenantData()` deletes the
+`event_types` rows seeded by `tenant_schema.sql`, so `restoreBeacon()` re-creates
+the default `Open Meetings` event type (`is_default = true`) before processing
+the legacy `Calendar` sheet. Calendar rows with empty `gkey` become
+`group_events` records with `group_id = NULL` and `event_type_id =`
+the new Open Meetings id. The combined `date/time` cell is split via
+`parseBeaconDateTime()` (handles Excel Date objects, `YYYY-MM-DD HH:MM`, and
+`D/M/YYYY HH:MM`). Group-tied calendar rows (gkey set) are intentionally not
+restored — see KNOWN-ISSUES.md.
+
 Both use `prisma.$transaction` with 5-minute timeout. User accounts/roles included.
 
 ### Critical: restore helpers need transaction client
