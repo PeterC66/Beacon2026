@@ -7,6 +7,7 @@ import { publicApi } from '../../lib/api.js';
 import RequiredMark from '../../components/RequiredMark.jsx';
 import { scrollToFirstFieldError } from '../../lib/scrollToError.js';
 import PortalVersion from '../../components/PortalVersion.jsx';
+import PasswordInput from '../../components/PasswordInput.jsx';
 
 export default function PortalRegister() {
   const { slug } = useParams();
@@ -144,13 +145,13 @@ export default function PortalRegister() {
             <div className="space-y-3">
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">Password <RequiredMark /></label>
-                <input type="password" name="password" value={form.password}
+                <PasswordInput name="password" value={form.password}
                   onChange={(e) => handleChange('password', e.target.value)} className={fieldCss} autoComplete="new-password" />
                 {fieldErrors.password && <p className="text-sm text-red-600 mt-1 font-medium">{fieldErrors.password}</p>}
               </div>
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">Confirm password <RequiredMark /></label>
-                <input type="password" name="confirmPassword" value={form.confirmPassword}
+                <PasswordInput name="confirmPassword" value={form.confirmPassword}
                   onChange={(e) => handleChange('confirmPassword', e.target.value)} className={fieldCss} autoComplete="new-password" />
                 {fieldErrors.confirmPassword && <p className="text-sm text-red-600 mt-1 font-medium">{fieldErrors.confirmPassword}</p>}
               </div>

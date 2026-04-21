@@ -5,6 +5,18 @@ Format: `## [version] — YYYY-MM-DD` with bullet points per change.
 
 ---
 
+## [0.10.7] — 2026-04-21
+
+### Added
+- **Show/hide toggle on all password fields** — every password input now has an
+  eye-icon button that temporarily reveals the typed characters. Covered screens:
+  System Login, Portal Login, Portal Register, Portal Reset Password, Portal
+  Personal Details, Personal Preferences, and System Dashboard (create tenant).
+  Implemented via a shared `PasswordInput` component
+  (`frontend/src/components/PasswordInput.jsx`).
+
+---
+
 ## [0.10.6] — 2026-04-20
 
 ### Changed
