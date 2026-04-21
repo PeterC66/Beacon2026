@@ -153,9 +153,13 @@ Beacon2 is a ground-up rebuild with these goals:
   token substitution, print/download PDF
 
 ### Set-up module
-- **Feature configuration** — per-u3a feature toggles (25 toggles across 6 master
-  modules + sub-features); expandable-sections UI; system-admin-only toggles for
-  features requiring external service setup; opt-out model (everything on by default)
+- **Feature configuration** — per-u3a feature toggles (25 toggles across 7
+  sections — 6 master modules plus the Membership and Other sub-feature groups);
+  expandable-sections UI; system-admin-only toggles for features requiring
+  external service setup; opt-out model (everything on by default).
+  **All toggles are backend-enforced**: turning one off returns 403 from every
+  matching API route (via `requireFeature()` / `isFeatureEnabled()`), not just
+  hiding the nav item.
 - **System settings** — all fields from Beacon doc 8.3
 - **Roles and privileges** — full privilege matrix
 - **System users** — CRUD, role assignment, username-based login

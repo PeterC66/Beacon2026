@@ -8,6 +8,7 @@ import ExcelJS from 'exceljs';
 import PDFDocument from 'pdfkit';
 import { requireAuth } from '../middleware/auth.js';
 import { requirePrivilege } from '../middleware/requirePrivilege.js';
+import { requireFeature } from '../middleware/requireFeature.js';
 import { tenantQuery } from '../utils/db.js';
 import { AppError } from '../middleware/errorHandler.js';
 import { addMemberSchema, bulkAddMembersSchema, bulkMemberIdsSchema, patchMemberSchema, eventSchema, updateEventSchema, bulkDeleteIdsSchema, ledgerEntrySchema } from '../schemas/common.js';
@@ -15,6 +16,7 @@ import { bulkAddToTeamSchema } from '../schemas/teams.js';
 
 const router = Router();
 router.use(requireAuth);
+router.use(requireFeature('teams'));
 
 // ─── GET /teams ───────────────────────────────────────────────────────────
 router.get('/', requirePrivilege('groups_list', 'view'), async (req, res, next) => {
@@ -652,7 +654,7 @@ async function hasLedgerAccess(req, teamId, action) {
 }
 
 // GET /teams/:id/ledger
-router.get('/:id/ledger', async (req, res, next) => {
+router.get('/:id/ledger', requireFeature('groupLedger'), async (req, res, next) => {
   try {
     const teamId = req.params.id;
     if (!await hasLedgerAccess(req, teamId, 'view')) {
@@ -685,7 +687,7 @@ router.get('/:id/ledger', async (req, res, next) => {
 });
 
 // POST /teams/:id/ledger
-router.post('/:id/ledger', async (req, res, next) => {
+router.post('/:id/ledger', requireFeature('groupLedger'), async (req, res, next) => {
   try {
     const teamId = req.params.id;
     if (!await hasLedgerAccess(req, teamId, 'create')) {
@@ -707,7 +709,7 @@ router.post('/:id/ledger', async (req, res, next) => {
 });
 
 // PATCH /teams/:id/ledger/:entryId
-router.patch('/:id/ledger/:entryId', async (req, res, next) => {
+router.patch('/:id/ledger/:entryId', requireFeature('groupLedger'), async (req, res, next) => {
   try {
     const { id: teamId, entryId } = req.params;
     if (!await hasLedgerAccess(req, teamId, 'change')) {
@@ -740,7 +742,7 @@ router.patch('/:id/ledger/:entryId', async (req, res, next) => {
 });
 
 // GET /teams/:id/ledger/download
-router.get('/:id/ledger/download', async (req, res, next) => {
+router.get('/:id/ledger/download', requireFeature('groupLedger'), async (req, res, next) => {
   try {
     const teamId = req.params.id;
     if (!await hasLedgerAccess(req, teamId, 'download')) {
@@ -806,7 +808,7 @@ router.get('/:id/ledger/download', async (req, res, next) => {
 });
 
 // DELETE /teams/:id/ledger/:entryId
-router.delete('/:id/ledger/:entryId', async (req, res, next) => {
+router.delete('/:id/ledger/:entryId', requireFeature('groupLedger'), async (req, res, next) => {
   try {
     const { id: teamId, entryId } = req.params;
     if (!await hasLedgerAccess(req, teamId, 'delete')) {

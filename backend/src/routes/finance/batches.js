@@ -4,11 +4,13 @@
 import { Router } from 'express';
 import { z } from 'zod';
 import { requirePrivilege } from '../../middleware/requirePrivilege.js';
+import { requireFeature } from '../../middleware/requireFeature.js';
 import { tenantQuery } from '../../utils/db.js';
 import { AppError } from '../../middleware/errorHandler.js';
 import { logAudit } from '../../utils/audit.js';
 
 const router = Router();
+router.use(requireFeature('creditBatches'));
 
 // ─── CREDIT BATCHES (doc 7.4) ─────────────────────────────────────────────
 

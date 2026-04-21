@@ -7,11 +7,13 @@ import { Router } from 'express';
 import { z } from 'zod';
 import { requireAuth } from '../middleware/auth.js';
 import { requirePrivilege } from '../middleware/requirePrivilege.js';
+import { requireFeature } from '../middleware/requireFeature.js';
 import { tenantQuery } from '../utils/db.js';
 import { logAudit } from '../utils/audit.js';
 
 const router = Router();
 router.use(requireAuth);
+router.use(requireFeature('email'));
 
 // ─── GET /system-messages ──────────────────────────────────────────────────
 router.get('/', requirePrivilege('system_messages', 'view'), async (req, res, next) => {

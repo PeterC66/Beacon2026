@@ -48,7 +48,7 @@ function fmtDate(d) {
 }
 
 export default function RecentMembers() {
-  const { can, tenant } = useAuth();
+  const { can, tenant, hasFeature } = useAuth();
   const navigate = useNavigate();
   const [list,       setList]       = useState([]);
   const [loading,    setLoading]    = useState(true);
@@ -357,8 +357,8 @@ export default function RecentMembers() {
                     >
                       <option value="">— choose action —</option>
                       <option value="download_names">Download names as txt file</option>
-                      {can('email', 'send') && <option value="send_email">Send E-mail</option>}
-                      {can('letters', 'view') && <option value="send_letter">Send Letter</option>}
+                      {can('email', 'send') && hasFeature('email') && <option value="send_email">Send E-mail</option>}
+                      {can('letters', 'view') && hasFeature('letters') && <option value="send_letter">Send Letter</option>}
                       {hasBulkPolls && <option value="add_to_poll">Add to poll</option>}
                       {hasBulkGroups && <option value="add_to_group">Add to group</option>}
                       <option value="download_excel">Download Excel</option>

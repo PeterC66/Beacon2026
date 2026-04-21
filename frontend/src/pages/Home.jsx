@@ -21,7 +21,7 @@ export default function Home() {
   }, []);
 
   // Lazy-load upcoming events only when the panel is expanded and user has privilege
-  const showUpcoming = hasFeature('calendar') && can('calendar', 'view');
+  const showUpcoming = hasFeature('events') && can('calendar', 'view');
   useEffect(() => {
     if (!showUpcoming || !upcomingExpanded || upcomingEvents !== null) return;
     const today = new Date().toISOString().slice(0, 10);
@@ -72,8 +72,8 @@ export default function Home() {
         { label: 'Recent members',      tip: 'View recently added or changed members', to: can('members_recent', 'view') ? '/members/recent' : null },
         { label: 'Non-renewals',        tip: 'View and lapse members who have not renewed', to: can('members_non_renewals', 'view') ? '/membership/non-renewals' : null, f: 'membershipRenewals' },
         { label: 'Membership cards',    tip: 'Generate and download membership cards', to: can('membership_cards', 'view') ? '/membership/cards' : null, f: 'membershipCards' },
-        { label: 'Addresses export',    tip: 'Export member addresses for labels or mail merge', to: can('addresses_export', 'view') ? '/addresses-export' : null, f: 'addressesExport' },
-        { label: 'Statistics',          tip: 'Membership counts and trends',        to: can('membership_statistics', 'view') ? '/members/statistics' : null, f: 'statistics' },
+        { label: 'Addresses export',    tip: 'Export member addresses for labels or mail merge', to: can('addresses_export', 'view') ? '/addresses-export' : null },
+        { label: 'Statistics',          tip: 'Membership counts and trends',        to: can('membership_statistics', 'view') ? '/members/statistics' : null },
       ],
     },
     {
@@ -83,7 +83,7 @@ export default function Home() {
         { label: 'Groups',    tip: 'View and manage interest groups',              to: can('groups_list',    'view') ? '/groups'    : null },
         { label: 'Venues',    tip: 'Manage venues where groups meet',              to: can('group_venues',   'view') ? '/venues'    : null, f: 'venues' },
         { label: 'Faculties', tip: 'Organise groups into subject categories',      to: can('group_faculties','view') ? '/faculties' : null, f: 'faculties' },
-        { label: 'Events',    tip: 'View group meetings and other events (calendar or table)', to: can('calendar', 'view') ? '/calendar' : null, f: 'calendar' },
+        { label: 'Events',    tip: 'View group meetings and other events (calendar or table)', to: can('calendar', 'view') ? '/calendar' : null, f: 'events' },
         { label: 'Teams',     tip: 'View and manage teams',                        to: can('groups_list',    'view') ? '/teams'     : null, f: 'teams' },
       ],
     },
@@ -114,7 +114,7 @@ export default function Home() {
         { label: 'E-mail unblocker',      tip: 'Remove members from the email block list',     to: can('email_delivery', 'all')  ? '/email/unblocker' : null, f: 'email' },
         { label: 'Personal preferences',  tip: 'Change your password, name display and timeout settings', to: '/preferences' },
         { label: 'Utilities',              tip: 'Administrative utilities',                                to: can('utilities', 'view') ? '/utilities' : null },
-        { label: 'SQL reports',            tip: 'Run saved SQL reports and ad-hoc queries',                to: can('reports', 'view') ? '/reports' : null },
+        { label: 'SQL reports',            tip: 'Run saved SQL reports and ad-hoc queries',                to: can('reports', 'view') ? '/reports' : null, f: 'reports' },
       ],
     },
     {
@@ -150,10 +150,10 @@ export default function Home() {
 
   // Public website links use the tenant slug — filtered by feature toggles
   const publicLinks = [
-    hasFeature('onlineJoining') && { label: `Join ${tenantName || 'us'} now!`, to: `/public/${tenant}/join` },
-    hasFeature('portal')        && { label: 'Members Portal', to: `/public/${tenant}/portal` },
-    hasFeature('groups')        && { label: 'Public groups list', to: `/public/${tenant}/groups` },
-    hasFeature('calendar')      && { label: 'Public calendar', to: `/public/${tenant}/calendar` },
+    hasFeature('onlineJoining')                              && { label: `Join ${tenantName || 'us'} now!`, to: `/public/${tenant}/join` },
+    hasFeature('portal')                                      && { label: 'Members Portal', to: `/public/${tenant}/portal` },
+    hasFeature('publicPages') && hasFeature('groups')         && { label: 'Public groups list', to: `/public/${tenant}/groups` },
+    hasFeature('publicPages') && hasFeature('events')         && { label: 'Public calendar', to: `/public/${tenant}/calendar` },
   ].filter(Boolean);
 
   return (

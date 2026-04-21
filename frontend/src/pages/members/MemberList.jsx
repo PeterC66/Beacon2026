@@ -41,7 +41,7 @@ import { ALL_PAYMENT_METHODS as PAYMENT_METHODS } from '../../lib/constants.js';
 const ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
 
 export default function MemberList() {
-  const { can, tenant } = useAuth();
+  const { can, tenant, hasFeature } = useAuth();
   const navigate = useNavigate();
 
   const [memberList,  setMemberList]  = useState([]);
@@ -566,8 +566,8 @@ export default function MemberList() {
                         className="border border-slate-300 rounded px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                       >
                         <option value="">— choose action —</option>
-                        {can('email', 'send') && <option value="send_email">Send email</option>}
-                        {can('letters', 'view') && <option value="send_letter">Send letter</option>}
+                        {can('email', 'send') && hasFeature('email') && <option value="send_email">Send email</option>}
+                        {can('letters', 'view') && hasFeature('letters') && <option value="send_letter">Send letter</option>}
                         {hasBulkPolls && <option value="add_to_poll">Add to poll</option>}
                         {hasBulkGroups && <option value="add_to_group">Add to group</option>}
                         {hasBulkTeams && <option value="add_to_team">Add to team</option>}

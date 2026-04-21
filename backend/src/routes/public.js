@@ -1020,6 +1020,10 @@ router.get('/:slug/groups', async (req, res, next) => {
   try {
     const slug = req.tenantSlug;
 
+    if (!await isFeatureEnabled(slug, 'publicPages') || !await isFeatureEnabled(slug, 'groups')) {
+      return res.status(403).json({ error: 'This feature is not enabled for this u3a.', feature: 'publicPages' });
+    }
+
     const [[settings], groups] = await Promise.all([
       tenantQuery(slug,
         `SELECT group_info_config
@@ -1084,6 +1088,10 @@ router.get('/:slug/calendar', async (req, res, next) => {
   try {
     const slug = req.tenantSlug;
     const { from, to } = req.query;
+
+    if (!await isFeatureEnabled(slug, 'publicPages') || !await isFeatureEnabled(slug, 'events')) {
+      return res.status(403).json({ error: 'This feature is not enabled for this u3a.', feature: 'publicPages' });
+    }
 
     const [settings] = await tenantQuery(slug,
       `SELECT calendar_config

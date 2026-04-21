@@ -5,6 +5,7 @@
 import { Router } from 'express';
 import { requireAuth } from '../middleware/auth.js';
 import { requirePrivilege } from '../middleware/requirePrivilege.js';
+import { requireFeature } from '../middleware/requireFeature.js';
 import { tenantQuery, prisma } from '../utils/db.js';
 import ExcelJS from 'exceljs';
 import PDFDocument from 'pdfkit';
@@ -12,6 +13,7 @@ import bwipjs from 'bwip-js';
 
 const router = Router();
 router.use(requireAuth);
+router.use(requireFeature('membershipCards'));
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 

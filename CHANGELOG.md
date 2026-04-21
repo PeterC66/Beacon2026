@@ -7,7 +7,29 @@ Format: `## [version] — YYYY-MM-DD` with bullet points per change.
 
 ## [0.10.8] — 2026-04-21
 
+### Added
+- **Four new feature toggles** in Feature Configuration:
+  - **Letters** — split out from the Email master so u3as without SendGrid can
+    still compose and print PDF letters.
+  - **SQL Reports** — gates the `/reports` module. Some u3as may prefer to hide
+    the ad-hoc query tool.
+  - **Member Photos** — gates photo upload/view on member records and the
+    members portal. u3as that don't want to store member photos (GDPR-minded)
+    can turn this off.
+  - **Public Pages** — gates the public Groups and Calendar pages. u3as that
+    publish only via their own website can disable these routes.
+- **Backend enforcement for every feature toggle** — `requireFeature()`
+  middleware (or `isFeatureEnabled()` for pre-auth public routes) now guards
+  every route that belongs to a toggled feature. Previously most toggles were
+  nav-only; turning one off now returns 403 at the API as well.
+
 ### Changed
+- **Dropped three low-value toggles** (`statistics`, `addressesExport`,
+  `calendar`): these are all universally useful and only added noise to the
+  configuration page. Addresses export and statistics are now always visible;
+  the calendar is controlled by the `events` master toggle.
+- **Final toggle count: 25** (was 24). `Beacon2 Project Definition.md` already
+  quoted 25 and is now accurate.
 - **Group Cash / Team Cash tabs clarified** — added a short description under the
   heading explaining that these entries are the group's/team's own cash record,
   not linked to the u3a's central accounts, and that the Finance Ledger shows

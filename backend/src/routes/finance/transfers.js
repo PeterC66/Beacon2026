@@ -5,10 +5,12 @@ import { Router } from 'express';
 import { z } from 'zod';
 import { v4 as uuidv4 } from 'uuid';
 import { requirePrivilege } from '../../middleware/requirePrivilege.js';
+import { requireFeature } from '../../middleware/requireFeature.js';
 import { tenantQuery } from '../../utils/db.js';
 import { AppError } from '../../middleware/errorHandler.js';
 
 const router = Router();
+router.use(requireFeature('transferMoney'));
 
 // ─── TRANSFER MONEY ───────────────────────────────────────────────────────
 

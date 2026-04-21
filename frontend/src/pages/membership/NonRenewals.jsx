@@ -21,7 +21,7 @@ function fmtDate(d) {
 }
 
 export default function NonRenewals() {
-  const { can } = useAuth();
+  const { can, hasFeature } = useAuth();
   const navigate = useNavigate();
 
   const [mode,         setMode]         = useState('this_year');
@@ -330,8 +330,8 @@ export default function NonRenewals() {
                     >
                       {mode === 'this_year' && canLapse && <option value="lapse">Lapse</option>}
                       {mode === 'long_term' && canLapse && <option value="delete">Delete</option>}
-                      {can('email', 'send') && <option value="send_email">Send email</option>}
-                      {can('letters', 'view') && <option value="send_letter">Send letter</option>}
+                      {can('email', 'send') && hasFeature('email') && <option value="send_email">Send email</option>}
+                      {can('letters', 'view') && hasFeature('letters') && <option value="send_letter">Send letter</option>}
                     </select>
                   </div>
                   <button

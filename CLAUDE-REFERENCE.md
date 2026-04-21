@@ -1643,16 +1643,26 @@ to `false` (off) when never set: `giftAid`, `groupLedger`, `siteworks`. See
 
 **Master toggles (6):** `groups`, `finance`, `email`, `portal`, `onlineJoining`, `events`
 
-**Membership sub-features (7):** `membershipCards`, `membershipRenewals`, `addressesExport`,
-`giftAid` (default off), `customFields`, `polls`, `statistics`
+**Membership sub-features (6):** `membershipCards`, `membershipRenewals`,
+`giftAid` (default off), `customFields`, `polls`, `memberPhotos`
 
 **Groups sub-features (5):** `teams`, `venues`, `faculties`, `groupLedger` (default off),
 `siteworks` (default off)
 
-**Events sub-features (3):** `calendar`, `eventTypes`, `eventAttendance`
+**Events sub-features (2):** `eventTypes`, `eventAttendance`
 
 **Finance sub-features (5):** `creditBatches`, `reconciliation`, `financialStatement`,
 `groupsStatement`, `transferMoney`
+
+**Communications:** `letters` (compose/print PDF — no SendGrid dependency)
+
+**Other (2):** `reports` (SQL Reports), `publicPages` (Public Groups/Calendar)
+
+All toggles are backend-enforced. Route files call `requireFeature(key)` (after
+`requireAuth`) or `isFeatureEnabled(slug, key)` for pre-auth public routes. A
+dedicated unit test lives at `backend/src/__tests__/requireFeature.test.js`;
+individual route tests get a pass-through mock of this middleware from
+`setup.js`.
 
 ### System-admin-only toggles
 
@@ -1742,7 +1752,7 @@ overriding whatever happened to be on the tenant before the restore.
 
 `shared/constants.js` exports `STANDARD_IMPLEMENTATIONS`, a list of named presets
 (`{ name, description, features }`) for the whole `feature_config` JSON. Each
-`features` object covers every key in `ALL_FEATURE_KEYS` (the canonical 26-key
+`features` object covers every key in `ALL_FEATURE_KEYS` (the canonical 25-key
 inventory, single-sourced for the UI, the sys-admin PATCH, and the per-user
 PATCH allowlists). Add a preset entry here rather than hardcoding defaults in
 a route handler. `restoreBeacon()` applies the first entry on legacy restores.

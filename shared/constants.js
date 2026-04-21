@@ -9,7 +9,7 @@
 export const FEATURE_DEPS = {
   teams: 'groups', venues: 'groups', faculties: 'groups',
   groupLedger: 'groups', siteworks: 'groups',
-  calendar: 'events', eventTypes: 'events',
+  eventTypes: 'events', eventAttendance: 'events',
   creditBatches: 'finance', reconciliation: 'finance',
   financialStatement: 'finance', groupsStatement: 'finance',
   transferMoney: 'finance',
@@ -33,15 +33,19 @@ export const ALL_FEATURE_KEYS = Object.freeze([
   // Masters
   'groups', 'finance', 'email', 'portal', 'onlineJoining', 'events',
   // Membership sub-features
-  'membershipCards', 'membershipRenewals', 'addressesExport',
-  'giftAid', 'customFields', 'polls', 'statistics',
+  'membershipCards', 'membershipRenewals',
+  'giftAid', 'customFields', 'polls', 'memberPhotos',
   // Groups sub-features
   'teams', 'venues', 'faculties', 'groupLedger', 'siteworks',
   // Events sub-features
-  'calendar', 'eventTypes', 'eventAttendance',
+  'eventTypes', 'eventAttendance',
   // Finance sub-features
   'creditBatches', 'reconciliation', 'financialStatement',
   'groupsStatement', 'transferMoney',
+  // Communications
+  'letters',
+  // Other
+  'reports', 'publicPages',
 ]);
 
 // ── Standard Beacon Implementations ─────────────────────────────────────

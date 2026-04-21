@@ -3,6 +3,7 @@
 
 import { Router } from 'express';
 import { requireAuth } from '../../middleware/auth.js';
+import { requireFeature } from '../../middleware/requireFeature.js';
 import accountsRouter from './accounts.js';
 import categoriesRouter from './categories.js';
 import transactionsRouter from './transactions.js';
@@ -13,6 +14,7 @@ import batchesRouter from './batches.js';
 
 const router = Router();
 router.use(requireAuth);
+router.use(requireFeature('finance'));
 router.use('/', accountsRouter);
 router.use('/', categoriesRouter);
 router.use('/', transactionsRouter);
