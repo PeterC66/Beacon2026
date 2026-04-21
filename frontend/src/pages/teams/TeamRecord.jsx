@@ -349,7 +349,7 @@ function TeamLedger({ teamId }) {
 
   return (
     <div>
-      <h2 className="text-lg font-semibold mb-3">Group Cash</h2>
+      <h2 className="text-lg font-semibold mb-3">Team Cash</h2>
 
       {error && (
         <p className="rounded-md bg-red-50 border border-red-300 px-4 py-3 text-red-700 text-sm font-medium mb-3">
@@ -566,7 +566,7 @@ export default function TeamRecord() {
     { key: 'details',  label: 'Details',  available: true },
     { key: 'members',  label: 'Members',  available: !isNew },
     { key: 'schedule', label: 'Events',     available: !isNew && hasFeature('events') },
-    { key: 'ledger',   label: 'Group Cash', available: !isNew && hasFeature('groupLedger') && (can('group_ledger_all', 'view') || can('group_ledger_as_leader', 'view')) },
+    { key: 'ledger',   label: 'Team Cash',  available: !isNew && hasFeature('groupLedger') && (can('group_ledger_all', 'view') || can('group_ledger_as_leader', 'view')) },
   ];
 
   return (
