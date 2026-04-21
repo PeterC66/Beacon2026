@@ -4,6 +4,19 @@ Items noted during development that need addressing in future sessions.
 
 ---
 
+## UI Terminology
+
+1. **Group/Team Cash — "Central Ledger" vs "Finance Ledger" wording** — The
+   shortcut button on the Group Cash and Team Cash tabs now says
+   **"Central Ledger"** (tooltip: *"View this group's/team's other transactions -
+   in the central ledger"*), while the description line above it and the
+   destination page's title still use **"Finance Ledger"**. The two refer to the
+   same thing but the inconsistency may confuse some users. Revisit if feedback
+   warrants — options: align the description to "central ledger", or rename the
+   button back to "Finance Ledger" (giving up the shorter label).
+
+---
+
 ## Online Joining / Members Portal
 
 1. **Duplicate application detection limited by shared emails** — Some members

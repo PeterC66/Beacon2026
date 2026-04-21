@@ -5,6 +5,19 @@ Format: `## [version] — YYYY-MM-DD` with bullet points per change.
 
 ---
 
+## [0.10.8] — 2026-04-21
+
+### Changed
+- **Group Cash / Team Cash tabs clarified** — added a short description under the
+  heading explaining that these entries are the group's/team's own cash record,
+  not linked to the u3a's central accounts, and that the Finance Ledger shows
+  different, complementary transactions. The shortcut button previously labelled
+  *"View in Finance Ledger"* is renamed to **"Central Ledger"** with a tooltip
+  explaining that it opens this group's/team's *other* transactions in the
+  central ledger.
+
+---
+
 ## [0.10.7] — 2026-04-21
 
 ### Added
