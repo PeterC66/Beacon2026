@@ -904,7 +904,7 @@
 | Aspect | Status | Notes |
 |--------|--------|-------|
 | 7 export types + full backup (Excel) | Built | Members, Finance (with credit batches), Groups & teams (with events/ledgers), System users, Officers, Settings (with templates/payment defaults) |
-| Full restore (Beacon2 + Beacon format) | Built | Beacon2 restore preserves all exported data including teams, custom fields, gift aid, refund links, credit batches, events, templates, payment defaults |
+| Full restore (Beacon2 + Beacon format) | Built | Beacon2 restore preserves all exported data including teams, custom fields, gift aid, refund links, credit batches, events, templates, payment defaults. Beacon restore now also re-creates the default "Open Meetings" event type and migrates Open Meetings from the legacy `Calendar` sheet (group-tied calendar rows are still skipped — see KNOWN-ISSUES.md) |
 | Member photos in export | Deferred | Base64 data too large for Excel; needs separate mechanism (see KNOWN-ISSUES.md) |
 | Email delivery history in export | Skipped | Transient SendGrid data; not meaningful to restore |
 

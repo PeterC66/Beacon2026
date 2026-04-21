@@ -143,6 +143,12 @@ Items noted during development that need addressing in future sessions.
    Calendar export option entirely, or having it produce the same Group Events sheet
    independently.
 
+4. **Beacon restore — group-tied calendar events not migrated** — `restoreBeacon()`
+   now imports Open Meetings (Calendar rows with `gkey` empty) but skips group-tied
+   Calendar rows. Restoring those would require resolving the `gkey` to its
+   `groupMap` entry and confirming the per-group event semantics carry over. Defer
+   until needed; for now the group schedule has to be re-entered post-restore.
+
 ---
 
 ## Feature Toggles — deferred phases

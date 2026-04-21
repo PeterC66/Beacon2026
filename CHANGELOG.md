@@ -15,6 +15,16 @@ Format: `## [version] — YYYY-MM-DD` with bullet points per change.
   Implemented via a shared `PasswordInput` component
   (`frontend/src/components/PasswordInput.jsx`).
 
+### Fixed
+- **Restore from Beacon now imports Open Meetings** — the legacy Beacon backup's
+  `Calendar` sheet was previously ignored entirely, so any Open Meetings (Calendar
+  rows with no `gkey`) were silently dropped, and the seeded "Open Meetings"
+  event type — wiped by `clearTenantData` — was not re-created. `restoreBeacon()`
+  now re-creates the default "Open Meetings" event type and inserts each non-group
+  Calendar row as a `group_events` record (`group_id NULL`) linked to that event
+  type, with date/time, end time, venue, topic, details, contact and
+  exclude-from-public-calendar all preserved.
+
 ---
 
 ## [0.10.6] — 2026-04-20
