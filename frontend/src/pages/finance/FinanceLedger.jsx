@@ -78,8 +78,11 @@ export default function FinanceLedger() {
     loadLists();
   }, []);
 
-  // Reset selection when view changes
+  // Reset selection when the user changes view. Skipped on initial mount
+  // so that a pre-selected eventId/groupId from the URL survives.
+  const skipViewReset = useRef(true);
   useEffect(() => {
+    if (skipViewReset.current) { skipViewReset.current = false; return; }
     setSelId(''); setTxns([]); setOpeningBal(0); setGroupBf([]);
     setGroupFilter(''); setEventSearch(''); setEventResults([]); setEventLabel('');
     setSelected(new Set());
