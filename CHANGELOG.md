@@ -41,6 +41,11 @@ Format: `## [version] — YYYY-MM-DD` with bullet points per change.
   nav link has been removed from the Events page NavBar.
 
 ### Fixed
+- **"View in Finance Ledger" from an event now pre-filters to that event** —
+  arriving at `/finance/ledger?view=event&eventId=…` was landing on an empty
+  ledger because the reset-on-view-change effect was firing on initial mount and
+  clearing the event ID read from the URL. The reset effect now skips the first
+  run so a URL-seeded `eventId` (or `groupId`) survives.
 - **Restore from Beacon now imports Open Meetings** — the legacy Beacon backup's
   `Calendar` sheet was previously ignored entirely, so any Open Meetings (Calendar
   rows with no `gkey`) were silently dropped, and the seeded "Open Meetings"

@@ -152,6 +152,13 @@ Every item below applies to every new feature — no exceptions.
   to access `{ user, tenant, can(resource, action), isSiteAdmin }`. Never roll
   your own privilege checks.
 
+- [ ] **Reset effects and URL-seeded state** — when a page initialises state
+  from `searchParams` and also has a `useEffect` that clears that state on a
+  dependency change (e.g. "reset selection when view changes"), the reset will
+  fire on the first mount and clobber the URL-seeded values. Gate the reset
+  with a `useRef(true)` that flips to `false` after the first run, so the
+  effect only resets on *subsequent* changes.
+
 ## Feature toggles
 
 - [ ] **New feature → ask the configurability questions before building.**
