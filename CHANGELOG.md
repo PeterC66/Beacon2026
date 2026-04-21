@@ -8,6 +8,13 @@ Format: `## [version] — YYYY-MM-DD` with bullet points per change.
 ## [0.10.7] — 2026-04-21
 
 ### Added
+- **"View in Finance Ledger" button on event Financials tab** — users with
+  `finance_transactions:view` permission see a small button that jumps directly
+  to the Finance Ledger pre-filtered to that event's transactions.
+- **"View in Finance Ledger" button on group/team Group Cash tab** — the same
+  button appears on the Group Cash (group ledger) tab, pre-filtering the Finance
+  Ledger to that group or team. This makes clear the distinction between the
+  group's internal cash book and the organisation's main finance transactions.
 - **Show/hide toggle on all password fields** — every password input now has an
   eye-icon button that temporarily reveals the typed characters. Covered screens:
   System Login, Portal Login, Portal Register, Portal Reset Password, Portal

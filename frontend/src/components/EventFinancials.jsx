@@ -2,8 +2,9 @@
 // Event Financials tab — summary cards + transaction lists for an event.
 
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { calendar } from '../lib/api.js';
+import { useAuth } from '../context/AuthContext.jsx';
 
 function fmtMoney(n) {
   if (n == null) return '—';
@@ -18,6 +19,8 @@ function fmtDate(d) {
 }
 
 export default function EventFinancials({ eventId }) {
+  const { can } = useAuth();
+  const navigate = useNavigate();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -47,6 +50,19 @@ export default function EventFinancials({ eventId }) {
 
   return (
     <div className="space-y-6">
+      {/* Header row with ledger button */}
+      {can('finance_transactions', 'view') && (
+        <div className="flex justify-end">
+          <button
+            type="button"
+            onClick={() => navigate(`/finance/ledger?view=event&eventId=${eventId}`)}
+            className="border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 hover:border-slate-400 rounded px-3 py-1.5 text-sm"
+          >
+            View in Finance Ledger
+          </button>
+        </div>
+      )}
+
       {/* Summary cards */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         <div className={cardCls}>

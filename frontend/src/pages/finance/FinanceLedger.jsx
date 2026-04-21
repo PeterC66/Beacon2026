@@ -25,13 +25,16 @@ export default function FinanceLedger() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
 
-  const initView = VIEWS.includes(searchParams.get('view')) ? searchParams.get('view') : 'account';
+  const initView    = VIEWS.includes(searchParams.get('view')) ? searchParams.get('view') : 'account';
+  const initEventId = initView === 'event' ? (searchParams.get('eventId') || '') : '';
+  const initGroupId = initView === 'group' ? (searchParams.get('groupId') || '') : '';
+
   const [view,       setView]       = useState(initView);
   const [year,       setYear]       = useState(thisYear);
   const [accounts,   setAccounts]   = useState([]);
   const [categories, setCategories] = useState([]);
   const [groups,     setGroups]     = useState([]);
-  const [selId,       setSelId]       = useState('');
+  const [selId,       setSelId]       = useState(initEventId || initGroupId);
   const [groupFilter, setGroupFilter] = useState('');
   const [eventSearch,  setEventSearch]  = useState('');
   const [eventResults, setEventResults] = useState([]);
@@ -81,6 +84,16 @@ export default function FinanceLedger() {
     setGroupFilter(''); setEventSearch(''); setEventResults([]); setEventLabel('');
     setSelected(new Set());
   }, [view]);
+
+  // When arriving with a pre-selected event ID, fetch its label
+  useEffect(() => {
+    if (!initEventId) return;
+    calendarApi.getEvent(initEventId).then((ev) => {
+      const lbl = ev.topic || ev.group_name || ev.event_type_name || 'Event';
+      const d = ev.event_date ? String(ev.event_date).slice(0, 10) : '';
+      setEventLabel(`${lbl}${d ? ` — ${d}` : ''}`);
+    }).catch(() => setEventLabel('Selected event'));
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Event search-as-you-type (matches TransactionEditor pattern)
   useEffect(() => {
