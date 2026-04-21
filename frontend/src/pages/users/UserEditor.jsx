@@ -39,6 +39,19 @@ export default function UserEditor() {
   const [userName, setUserName] = useState('');
 
   useEffect(() => {
+    if (isNew) {
+      setUserName('');
+      setUsername('');
+      setEmail('');
+      setActive(true);
+      setIsSiteAdmin(false);
+      setMemberId('');
+      setMemberName('');
+      setAssignedIds(new Set());
+      setOrigRoleIds(new Set());
+      setError(null);
+      setTempPwMsg(null);
+    }
     async function load() {
       try {
         const promises = [rolesApi.list()];
