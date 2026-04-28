@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "beacon/member-statuses.schema.json",
+  "title": "Member Statuses sheet row",
+  "description": "One row from the `Member Statuses` sheet of a Beacon backup xlsx.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["stakey", "status", "locked"],
+  "properties": {
+    "stakey":  { "type": "string", "minLength": 1, "description": "Primary key of this sheet." },
+    "status":  { "type": "string", "minLength": 1, "description": "Display name (e.g. 'Active'). Referenced by Members.status by name." },
+    "locked":  { "type": "boolean", "description": "If true, members in this status are not eligible / not paying." }
+  }
+}

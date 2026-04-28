@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "beacon/membership-fees.schema.json",
+  "title": "Membership Fees sheet row",
+  "description": "Per-month fee schedule. Joins to Membership Classes via mckey.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["mckey", "month", "fee"],
+  "properties": {
+    "mckey": { "type": "string", "minLength": 1, "description": "FK to Membership Classes.mckey." },
+    "class": { "type": ["string", "null"], "description": "Denormalised class name (for human reading)." },
+    "month": { "type": "integer", "minimum": 0, "maximum": 13, "description": "1-12 = calendar month, 0 or 13 = annual default." },
+    "fee":   { "type": "number", "description": "Fee for that month." }
+  }
+}

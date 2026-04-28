@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "beacon/group-members.schema.json",
+  "title": "Group members sheet row",
+  "description": "Membership of each group. Composite key (gkey, mem_no).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["gkey", "group_name", "mem_no", "forename", "surname", "leader"],
+  "properties": {
+    "gkey":          { "type": "string", "minLength": 1, "description": "FK to Groups.gkey." },
+    "group_name":    { "type": "string", "description": "Denormalised group name." },
+    "mem_no":        { "type": "integer", "description": "FK to Members.mem_no." },
+    "forename":      { "type": "string", "description": "Denormalised member forename." },
+    "surname":       { "type": "string", "description": "Denormalised member surname." },
+    "added":         { "type": ["string", "null"], "format": "date", "description": "When this person joined this group." },
+    "waiting":       { "type": ["string", "null"], "description": "Date string or '0'. If non-null & non-'0', this row is on the waiting list." },
+    "leader":        { "type": "boolean", "description": "True if this person is a leader of the group." },
+    "member_status": { "type": ["string", "null"], "description": "Denormalised Members.status at time of export." }
+  }
+}

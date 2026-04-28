@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "beacon/venues.schema.json",
+  "title": "Venues sheet row",
+  "description": "Locations where groups meet.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["gvkey", "venue", "private", "accessible"],
+  "properties": {
+    "gvkey":      { "type": "string", "minLength": 1, "description": "Primary key of this sheet." },
+    "venue":      { "type": "string", "minLength": 1, "description": "Display name." },
+    "address":    { "type": ["string", "null"], "description": "Multi-line address as a single text field." },
+    "postcode":   { "type": ["string", "null"] },
+    "telephone":  { "type": ["string", "null"] },
+    "contact":    { "type": ["string", "null"], "description": "Name of contact at venue." },
+    "email":      { "type": ["string", "null"] },
+    "website":    { "type": ["string", "null"] },
+    "private":    { "type": "boolean", "description": "If true, address is private (member's home)." },
+    "accessible": { "type": "boolean", "description": "Wheelchair / mobility accessible." },
+    "notes":      { "type": ["string", "null"] }
+  }
+}

@@ -5,6 +5,25 @@ Format: `## [version] — YYYY-MM-DD` with bullet points per change.
 
 ---
 
+## [Unreleased] — 2026-04-28
+
+### Added
+- **`analyse-u3a-artifacts/`** — a self-contained primer kit destined for a
+  separate, local-only **Analyse u3a** repo (a new desktop analysis app that
+  consumes the same Beacon backup `.xlsx` format Beacon2 imports). Folder is
+  not used by Beacon2 at runtime; it exists here so it can be reviewed and
+  copied wholesale into the new repo.
+  - `BEACON-DATA-STRUCTURE.md` (top-level reference, Mermaid ER diagram) plus
+    four per-module references (`MEMBERS`, `GROUPS`, `FINANCE`, `CONTACTS`)
+  - `schemas/json/` — JSON Schema (Draft 2020-12) per sheet
+  - `schemas/zod/` — Zod schemas + inferred TS types per sheet, with
+    `_coerce.ts` shared helpers and an `index.ts` exporting `SHEET_SCHEMAS`,
+    `parseSheet`, and a `BeaconBackup` aggregate type
+  - `CLAUDE.md` — primer for the AI agent that will work on the new repo
+  - `README.md` — explains how to copy the kit into the new repo
+
+---
+
 ## [0.10.8] — 2026-04-21
 
 ### Added
