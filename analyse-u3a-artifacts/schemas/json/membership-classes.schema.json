@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "beacon/membership-classes.schema.json",
+  "title": "Membership Classes sheet row",
+  "description": "One row from the `Membership Classes` sheet of a Beacon backup xlsx.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["mckey", "class", "status", "family", "associate", "locked"],
+  "properties": {
+    "mckey":     { "type": "string", "minLength": 1, "description": "Primary key of this sheet." },
+    "class":     { "type": "string", "minLength": 1, "description": "Display name (e.g. 'Single')." },
+    "status":    { "type": "boolean", "description": "Whether this class is currently offered." },
+    "fee":       { "type": ["number", "null"], "description": "Default annual fee." },
+    "family":    { "type": "boolean", "description": "Joint/family membership (covers >1 person)." },
+    "associate": { "type": "boolean", "description": "Associate of another u3a (typically reduced fee)." },
+    "info":      { "type": ["string", "null"], "description": "Public description shown to applicants." },
+    "notes":     { "type": ["string", "null"], "description": "Internal notes." },
+    "locked":    { "type": "boolean", "description": "Locked classes can't be edited." }
+  }
+}

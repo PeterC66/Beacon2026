@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "beacon/group-ledgers.schema.json",
+  "title": "Group Ledgers sheet row",
+  "description": "Group-level financial transactions, distinct from main u3a Ledger.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["gtkey", "gkey", "date", "amount"],
+  "properties": {
+    "gtkey":  { "type": "string", "minLength": 1, "description": "Primary key of this sheet." },
+    "gkey":   { "type": "string", "minLength": 1, "description": "FK to Groups.gkey." },
+    "group":  { "type": ["string", "null"], "description": "Denormalised group name." },
+    "date":   { "type": "string", "format": "date" },
+    "payee":  { "type": ["string", "null"] },
+    "amount": { "type": "number", "description": "SIGNED: positive = money in, negative = money out." },
+    "detail": { "type": ["string", "null"] }
+  }
+}

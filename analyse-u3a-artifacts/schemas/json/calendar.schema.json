@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "beacon/calendar.schema.json",
+  "title": "Calendar sheet row",
+  "description": "u3a-wide events. Per-event attendance is NOT recorded in legacy Beacon.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["ckey", "date/time", "exclude_public"],
+  "properties": {
+    "ckey":           { "type": "string", "minLength": 1, "description": "Primary key of this sheet." },
+    "date/time":      { "type": "string", "description": "Combined date+time. Note the slash; access as row['date/time']." },
+    "end_time":       { "type": ["string", "null"], "pattern": "^([01][0-9]|2[0-3]):[0-5][0-9](:[0-5][0-9])?$" },
+    "gkey":           { "type": ["string", "null"], "description": "FK to Groups.gkey if this is a group meeting; null/empty for u3a-wide events." },
+    "group":          { "type": ["string", "null"], "description": "Denormalised group name." },
+    "gvkey":          { "type": ["string", "null"], "description": "FK to Venues.gvkey." },
+    "venue":          { "type": ["string", "null"], "description": "Denormalised venue name." },
+    "topic":          { "type": ["string", "null"] },
+    "detail":         { "type": ["string", "null"] },
+    "enquiries":      { "type": ["string", "null"] },
+    "exclude_public": { "type": "boolean", "description": "If true, hide from public listings." }
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "beacon/faculties.schema.json",
+  "title": "Faculties sheet row",
+  "description": "Categories that group interest groups (e.g. 'Languages', 'Arts').",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["gfkey", "faculty"],
+  "properties": {
+    "gfkey":   { "type": "string", "minLength": 1, "description": "Primary key of this sheet." },
+    "faculty": { "type": "string", "minLength": 1, "description": "Display name. Referenced by Groups.faculty by name." }
+  }
+}

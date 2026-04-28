@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "beacon/finance-accounts.schema.json",
+  "title": "Finance Accounts sheet row",
+  "description": "Bank accounts, cash floats, etc.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["acckey", "name", "status", "locked"],
+  "properties": {
+    "acckey": { "type": "string", "minLength": 1, "description": "Primary key of this sheet." },
+    "name":   { "type": "string", "minLength": 1, "description": "Display name. Referenced by Ledger.account by name." },
+    "status": { "type": "boolean", "description": "Active flag." },
+    "locked": { "type": "boolean" }
+  }
+}

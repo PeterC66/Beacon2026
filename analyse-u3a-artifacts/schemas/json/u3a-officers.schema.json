@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "beacon/u3a-officers.schema.json",
+  "title": "u3a Officers sheet row",
+  "description": "Committee/officer roster.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["ofkey", "office"],
+  "properties": {
+    "ofkey":    { "type": "string", "minLength": 1, "description": "Primary key of this sheet." },
+    "office":   { "type": "string", "minLength": 1, "description": "Title of the office (e.g. 'Chair')." },
+    "mkey":     { "type": ["string", "null"], "description": "FK to Members.mkey." },
+    "forename": { "type": ["string", "null"], "description": "Denormalised member forename." },
+    "surname":  { "type": ["string", "null"], "description": "Denormalised member surname." },
+    "e-mail":   { "type": ["string", "null"], "description": "Note the hyphen; may be a public office email." },
+    "notes":    { "type": ["string", "null"] }
+  }
+}

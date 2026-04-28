@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "beacon/ledger.schema.json",
+  "title": "Ledger sheet row",
+  "description": "Main financial transaction log. amount is SIGNED: + = in, - = out.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["tkey", "trans_no", "date", "account", "amount"],
+  "properties": {
+    "tkey":           { "type": "string", "minLength": 1, "description": "Primary key. Joined to Detail.tkey." },
+    "trans_no":       { "type": "integer", "description": "Human-readable transaction number." },
+    "date":           { "type": "string", "format": "date" },
+    "account":        { "type": "string", "minLength": 1, "description": "FK to Finance Accounts.name by name." },
+    "amount":         { "type": "number", "description": "SIGNED: + = money in, - = money out." },
+    "payee":          { "type": ["string", "null"] },
+    "detail":         { "type": ["string", "null"] },
+    "payment_method": { "type": ["string", "null"], "description": "'Cash', 'Cheque', 'BACS', 'Card', 'PayPal', etc." },
+    "cheque":         { "type": ["string", "null"], "description": "Cheque number / payment reference." },
+    "notes":          { "type": ["string", "null"] },
+    "cleared":        { "type": ["string", "null"], "format": "date", "description": "Bank-cleared date; null = uncleared." },
+    "gift_aid":       { "type": ["string", "null"] },
+    "claimed":        { "type": ["string", "null"] },
+    "member_1":       { "type": ["integer", "null"], "description": "FK to Members.mem_no." },
+    "member_2":       { "type": ["integer", "null"], "description": "FK to Members.mem_no (joint)." },
+    "group":          { "type": ["string", "null"], "description": "FK to Groups.group_name by name." },
+    "c_name":         { "type": ["string", "null"], "description": "Cardholder/payer name when different from member." }
+  }
+}

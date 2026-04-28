@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "beacon/detail.schema.json",
+  "title": "Detail sheet row",
+  "description": "Splits of a Ledger transaction across categories. Composite key (tkey, category).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["tkey", "category", "amount"],
+  "properties": {
+    "tkey":     { "type": "string", "minLength": 1, "description": "FK to Ledger.tkey." },
+    "category": { "type": "string", "minLength": 1, "description": "FK to Finance Categories.name by name." },
+    "amount":   { "type": "number", "description": "Portion of parent transaction. Sign convention follows parent." }
+  }
+}

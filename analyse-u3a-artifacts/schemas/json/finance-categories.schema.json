@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "beacon/finance-categories.schema.json",
+  "title": "Finance Categories sheet row",
+  "description": "Income/expense categories. Renewal payments are identified by category name (typically 'Subscriptions' or similar).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["catkey", "name", "status", "locked"],
+  "properties": {
+    "catkey": { "type": "string", "minLength": 1, "description": "Primary key of this sheet." },
+    "name":   { "type": "string", "minLength": 1, "description": "Display name. Referenced by Detail.category by name." },
+    "status": { "type": "boolean" },
+    "locked": { "type": "boolean" }
+  }
+}
