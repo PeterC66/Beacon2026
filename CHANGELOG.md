@@ -5,6 +5,14 @@ Format: `## [version] — YYYY-MM-DD` with bullet points per change.
 
 ---
 
+## [Unreleased] — 2026-06-09
+
+### Added
+- **Automated security review workflow** — `.github/workflows/security-review.yml`
+  runs `anthropics/claude-code-security-review` on every PR targeting `main`,
+  posting findings as inline PR comments. Requires the `ANTHROPIC_API_KEY`
+  repository secret.
+
 ## [Unreleased] — 2026-04-28
 
 ### Added
