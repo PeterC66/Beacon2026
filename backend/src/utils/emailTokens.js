@@ -79,10 +79,33 @@ function buildTokenMap(member, u3aName) {
 }
 
 /**
+ * HTML-escape a string for safe inclusion as text inside an HTML body.
+ * Used when substituting member-supplied token values into an email's
+ * html field — the surrounding body is admin-authored, but #FORENAME et
+ * al. come from member data and could contain markup.
+ */
+function escapeHtml(s) {
+  return String(s)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+/**
  * Replace all tokens in `text` using the token map.
  * Tokens are case-insensitive.
+ *
+ * @param {object} [opts]
+ * @param {boolean} [opts.valueEscapeHtml] - HTML-escape each substituted
+ *   value before inserting. Use for the html field of an email so that a
+ *   member with forenames like `<script>` can't inject markup into
+ *   templated broadcasts (particularly via partner / custom-field tokens
+ *   that reach other recipients). The surrounding text is NOT escaped —
+ *   admins routinely include `<a>` etc. in templates by design.
  */
-function applyTokens(text, tokenMap) {
+function applyTokens(text, tokenMap, opts = {}) {
   if (!text) return '';
   // Build a regex that matches any token key (case-insensitive)
   const keys = Object.keys(tokenMap);
@@ -94,20 +117,26 @@ function applyTokens(text, tokenMap) {
     .join('|');
   return text.replace(new RegExp(pattern, 'gi'), (match) => {
     const key = match.toUpperCase();
-    return tokenMap[key] ?? match;
+    const raw = tokenMap[key];
+    if (raw == null) return match;
+    return opts.valueEscapeHtml ? escapeHtml(raw) : raw;
   });
 }
 
 /**
  * Resolve all tokens in subject and body for a single member.
- * Returns { subject, body } with tokens replaced.
+ * Returns { subject, body, bodyHtml } with tokens replaced.
+ *   - subject / body — raw token values (use for the email text/ field).
+ *   - bodyHtml      — token values HTML-escaped so member-supplied data
+ *     can't smuggle markup into the html/ field of templated broadcasts.
  * @param {object} [extraTokens] - optional extra token map (e.g. Gift Aid tokens)
  */
 export function resolveTokens(subject, body, member, u3aName, extraTokens) {
   const map = { ...buildTokenMap(member, u3aName), ...extraTokens };
   return {
-    subject: applyTokens(subject, map),
-    body:    applyTokens(body,    map),
+    subject:  applyTokens(subject, map),
+    body:     applyTokens(body,    map),
+    bodyHtml: applyTokens(body,    map, { valueEscapeHtml: true }),
   };
 }
 

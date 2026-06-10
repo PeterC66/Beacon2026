@@ -5,6 +5,7 @@ import { Router } from 'express';
 import { z } from 'zod';
 import ExcelJS from 'exceljs';
 import { tenantQuery } from '../utils/db.js';
+import { sanitizeCell } from '../utils/spreadsheet.js';
 import { requireAuth } from '../middleware/auth.js';
 import { requirePrivilege } from '../middleware/requirePrivilege.js';
 import { requireFeature } from '../middleware/requireFeature.js';
@@ -173,11 +174,11 @@ router.post('/download', requirePrivilege('gift_aid_declaration', 'download_and_
       // Format date as DD/MM/YYYY
       const dateStr = r.date ? fmtDate(r.date) : '';
       ws.addRow({
-        title:     r.title || '',
-        firstName: (r.forenames || '').split(' ')[0] || '',
-        lastName:  r.surname || '',
-        houseNo:   r.house_no || '',
-        postcode:  r.postcode || '',
+        title:     sanitizeCell(r.title || ''),
+        firstName: sanitizeCell((r.forenames || '').split(' ')[0] || ''),
+        lastName:  sanitizeCell(r.surname || ''),
+        houseNo:   sanitizeCell(r.house_no || ''),
+        postcode:  sanitizeCell(r.postcode || ''),
         date:      dateStr,
         amount:    Number(r.gift_aid_amount).toFixed(2),
       });

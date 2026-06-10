@@ -8,6 +8,8 @@ import PDFDocument from 'pdfkit';
 import { requireAuth } from '../middleware/auth.js';
 import { requirePrivilege } from '../middleware/requirePrivilege.js';
 import { tenantQuery, escapeLike } from '../utils/db.js';
+import { hashOpaqueToken } from '../utils/password.js';
+import { sanitizeCell } from '../utils/spreadsheet.js';
 import { AppError } from '../middleware/errorHandler.js';
 import { isFeatureEnabled, requireFeature } from '../middleware/requireFeature.js';
 import { logAudit } from '../utils/audit.js';
@@ -803,7 +805,7 @@ router.get('/download', requirePrivilege('members_list', 'view'), async (req, re
       const ws = wb.addWorksheet('Members');
       ws.columns = cols.map((f) => ({ header: MEMBER_FIELD_DEFS[f].label, width: 20 }));
       ws.getRow(1).font = { bold: true };
-      for (const m of rows) ws.addRow(cols.map((f) => MEMBER_FIELD_DEFS[f].get(m)));
+      for (const m of rows) ws.addRow(cols.map((f) => sanitizeCell(MEMBER_FIELD_DEFS[f].get(m))));
       res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
       res.setHeader('Content-Disposition', `attachment; filename="${tenantPart}_members_${stamp}.xlsx"`);
       await wb.xlsx.write(res);
@@ -1205,10 +1207,12 @@ router.post('/', requirePrivilege('member_record', 'create'), async (req, res, n
           );
         }
         paymentToken = randomBytes(24).toString('hex');
+        // Store only the hash — the plaintext is returned to the caller so it
+        // can be embedded in a "complete your payment" link.
         await tenantQuery(
           slug,
           `UPDATE members SET status_id = $1, payment_token = $2, updated_at = now() WHERE id = $3`,
-          [applicantStatus.id, paymentToken, member.id],
+          [applicantStatus.id, hashOpaqueToken(paymentToken), member.id],
         );
         member.status_id = applicantStatus.id;
       }

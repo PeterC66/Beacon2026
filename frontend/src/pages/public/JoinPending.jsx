@@ -8,6 +8,7 @@
 import { useState } from 'react';
 import { useParams, useLocation, Link } from 'react-router-dom';
 import { publicApi } from '../../lib/api.js';
+import { isSafePaymentRedirect } from '../../lib/safeRedirect.js';
 import PortalVersion from '../../components/PortalVersion.jsx';
 
 export default function JoinPending() {
@@ -18,6 +19,7 @@ export default function JoinPending() {
   const [emailSending, setEmailSending] = useState(false);
   const [emailSent, setEmailSent] = useState(false);
   const [emailError, setEmailError] = useState('');
+  const [redirectError, setRedirectError] = useState('');
 
   // If user navigated here without state (e.g. typed URL), show fallback
   if (!data) {
@@ -49,9 +51,15 @@ export default function JoinPending() {
   const resumeUrl = `${window.location.origin}/public/${slug}/resume-payment/${paymentToken}`;
 
   function handlePayNow() {
-    if (redirectUrl) {
-      window.location.href = redirectUrl;
+    if (!redirectUrl) return;
+    // Defence-in-depth: match ResumePayment / PortalRenewal — never follow a
+    // redirect to anywhere other than same-origin or the PayPal allow-list,
+    // even if the backend has been compromised.
+    if (!isSafePaymentRedirect(redirectUrl)) {
+      setRedirectError('The payment provider returned an unexpected redirect. Please contact your u3a.');
+      return;
     }
+    window.location.href = redirectUrl;
   }
 
   async function handleEmailLink() {
@@ -112,6 +120,10 @@ export default function JoinPending() {
           >
             Pay Now{amount > 0 ? ` — \u00A3${Number(amount).toFixed(2)}` : ''}
           </button>
+
+          {redirectError && (
+            <p className="text-sm text-red-600 text-center -mt-2 mb-4">{redirectError}</p>
+          )}
 
           {/* Pay later section */}
           <div className="border-t border-slate-200 pt-4 mt-2">

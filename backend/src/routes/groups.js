@@ -8,6 +8,7 @@ import { requireAuth } from '../middleware/auth.js';
 import { requirePrivilege } from '../middleware/requirePrivilege.js';
 import { requireFeature } from '../middleware/requireFeature.js';
 import { tenantQuery } from '../utils/db.js';
+import { sanitizeCell } from '../utils/spreadsheet.js';
 import { AppError } from '../middleware/errorHandler.js';
 import { addMemberSchema, bulkAddMembersSchema, bulkMemberIdsSchema, eventSchema, updateEventSchema, bulkDeleteIdsSchema, ledgerEntrySchema } from '../schemas/common.js';
 import { patchGroupMemberSchema, bulkAddToGroupSchema } from '../schemas/groups.js';
@@ -132,7 +133,7 @@ router.get('/download', requirePrivilege('groups_list', 'download'), async (req,
       const ws = wb.addWorksheet('Groups');
       ws.columns = cols.map((f) => ({ header: GROUP_LIST_FIELD_DEFS[f].label, width: 22 }));
       ws.getRow(1).font = { bold: true };
-      for (const g of rows) ws.addRow(cols.map((f) => GROUP_LIST_FIELD_DEFS[f].get(g)));
+      for (const g of rows) ws.addRow(cols.map((f) => sanitizeCell(GROUP_LIST_FIELD_DEFS[f].get(g))));
       res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
       res.setHeader('Content-Disposition', `attachment; filename="${tenantPart}_groups_${stamp}.xlsx"`);
       await wb.xlsx.write(res);
@@ -467,7 +468,7 @@ router.get('/:id/members/download', requirePrivilege('group_records_all', 'view'
       const ws = wb.addWorksheet('Group Members');
       ws.columns = cols.map((f) => ({ header: GROUP_MEMBER_FIELD_DEFS[f].label, width: 20 }));
       ws.getRow(1).font = { bold: true };
-      for (const m of rows) ws.addRow(cols.map((f) => GROUP_MEMBER_FIELD_DEFS[f].get(m)));
+      for (const m of rows) ws.addRow(cols.map((f) => sanitizeCell(GROUP_MEMBER_FIELD_DEFS[f].get(m))));
       res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
       res.setHeader('Content-Disposition', `attachment; filename="${tenantPart}_${safeName}_members_${stamp}.xlsx"`);
       await wb.xlsx.write(res);
@@ -1169,8 +1170,8 @@ router.get('/:id/ledger/download', requireFeature('groupLedger'), async (req, re
       balance += inn - out;
       ws.addRow({
         date:      e.entry_date ? String(e.entry_date).slice(0, 10) : '',
-        payee:     e.payee     ?? '',
-        detail:    e.detail    ?? '',
+        payee:     sanitizeCell(e.payee     ?? ''),
+        detail:    sanitizeCell(e.detail    ?? ''),
         money_in:  e.money_in  != null ? parseFloat(e.money_in)  : null,
         money_out: e.money_out != null ? parseFloat(e.money_out) : null,
         balance:   parseFloat(balance.toFixed(2)),

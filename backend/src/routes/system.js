@@ -244,7 +244,7 @@ router.post('/restore/:tenantSlug', upload.single('backup'), async (req, res, ne
 
     const msg = format === 'beacon'
       ? `Restore complete (migrated from Beacon).\nImported users have been given the temporary password: ${BEACON_DEFAULT_PASSWORD}\nPlease ask each user to change their password after first login.`
-      : 'Restore complete (Beacon2 format).';
+      : 'Restore complete (Beacon2 format).\nImported users have no password set — use "Set temporary password for all users" on the tenant before they can log in.';
     res.json({ ok: true, format, message: msg });
   } catch (err) {
     next(err);

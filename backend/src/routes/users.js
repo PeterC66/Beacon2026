@@ -141,8 +141,10 @@ router.post('/', requirePrivilege('user_record', 'create'), async (req, res, nex
       [email.toLowerCase(), data.username, name, passwordHash, data.active, data.memberId],
     );
 
-    // Assign roles if provided
+    // Assign roles if provided — apply the same no-escalation check as the
+    // /:id/roles endpoint so a user can't grant a role they don't hold.
     for (const roleId of data.roleIds) {
+      await assertActorHoldsRolePrivileges(req.user.tenantSlug, req.user.privileges ?? [], roleId);
       await tenantQuery(
         req.user.tenantSlug,
         `INSERT INTO user_roles (user_id, role_id) VALUES ($1, $2) ON CONFLICT DO NOTHING`,
@@ -275,10 +277,34 @@ router.delete('/:id', requirePrivilege('user_record', 'delete'), async (req, res
   }
 });
 
+// Refuses role assignment/removal if the role grants any privilege the actor
+// does not themselves hold — without this, a user with `user_record:change`
+// could escalate themselves (or anyone) to Administration. Site admins hold
+// every privilege via computeAllPrivileges, so they pass trivially.
+async function assertActorHoldsRolePrivileges(slug, actorPrivileges, roleId) {
+  const rows = await tenantQuery(
+    slug,
+    `SELECT pr.code, rp.action
+     FROM role_privileges rp
+     JOIN privilege_resources pr ON pr.id = rp.resource_id
+     WHERE rp.role_id = $1`,
+    [roleId],
+  );
+  const have = new Set(actorPrivileges);
+  const missing = rows
+    .map((r) => `${r.code}:${r.action}`)
+    .filter((p) => !have.has(p));
+  if (missing.length) {
+    const sample = missing.slice(0, 3).join(', ') + (missing.length > 3 ? '…' : '');
+    throw AppError(`Cannot grant or revoke this role: it includes privileges you do not hold (${sample}).`, 403);
+  }
+}
+
 // ─── POST /users/:id/roles ────────────────────────────────────────────────
 router.post('/:id/roles', requirePrivilege('user_record', 'change'), async (req, res, next) => {
   try {
     const { roleId } = z.object({ roleId: z.string() }).parse(req.body);
+    await assertActorHoldsRolePrivileges(req.user.tenantSlug, req.user.privileges ?? [], roleId);
     await tenantQuery(
       req.user.tenantSlug,
       `INSERT INTO user_roles (user_id, role_id) VALUES ($1, $2) ON CONFLICT DO NOTHING`,
@@ -294,6 +320,7 @@ router.post('/:id/roles', requirePrivilege('user_record', 'change'), async (req,
 // ─── DELETE /users/:id/roles/:roleId ─────────────────────────────────────
 router.delete('/:id/roles/:roleId', requirePrivilege('user_record', 'change'), async (req, res, next) => {
   try {
+    await assertActorHoldsRolePrivileges(req.user.tenantSlug, req.user.privileges ?? [], req.params.roleId);
     await tenantQuery(
       req.user.tenantSlug,
       `DELETE FROM user_roles WHERE user_id = $1 AND role_id = $2`,
