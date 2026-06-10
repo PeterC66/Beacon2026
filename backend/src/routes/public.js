@@ -764,9 +764,16 @@ router.post('/:slug/portal/register', async (req, res, next) => {
       return res.status(400).json({ error: 'Details do not match our records. Please check and try again.' });
     }
 
-    // Verify each field matches (case-insensitive)
-    const forenameMatch = member.forenames?.toLowerCase().startsWith(data.forename.toLowerCase()) ||
-                          data.forename.toLowerCase() === member.forenames?.split(' ')[0]?.toLowerCase();
+    // Verify each field matches (case-insensitive). Match the full forename
+    // string OR the first whitespace-delimited token exactly — never a
+    // prefix, so a one-letter `data.forename` cannot match every member
+    // whose forename starts with that letter.
+    const submittedForename = data.forename.toLowerCase().trim();
+    const memberForenameFull  = member.forenames?.toLowerCase() ?? '';
+    const memberForenameFirst = memberForenameFull.split(/\s+/)[0] ?? '';
+    const forenameMatch =
+      submittedForename === memberForenameFull ||
+      submittedForename === memberForenameFirst;
     const surnameMatch  = member.surname?.toLowerCase() === data.surname.toLowerCase();
     const postcodeMatch = member.postcode?.replace(/\s+/g, '').toLowerCase() ===
                           data.postcode.replace(/\s+/g, '').toLowerCase();
@@ -795,7 +802,7 @@ router.post('/:slug/portal/register', async (req, res, next) => {
          portal_verification_expires = $4,
          updated_at = now()
        WHERE id = $5`,
-      [data.email.toLowerCase(), passwordHash, verificationToken, verificationExpires, member.id],
+      [data.email.toLowerCase(), passwordHash, hashOpaqueToken(verificationToken), verificationExpires, member.id],
     );
 
     // In production, send verification email with link
@@ -831,7 +838,7 @@ router.post('/:slug/portal/verify-email', async (req, res, next) => {
       `SELECT id, forenames, surname, portal_verification_expires
        FROM members
        WHERE portal_verification_token = $1`,
-      [token],
+      [hashOpaqueToken(token)],
     );
 
     if (!member) {

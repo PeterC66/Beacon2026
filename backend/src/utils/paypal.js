@@ -42,8 +42,17 @@ export async function initiatePayment({ amount, description, memberRef, returnUr
  * @returns {Promise<{ verified: boolean, grossAmount: number, fee: number, payerEmail: string, status: string }>}
  */
 export async function verifyPaymentNotification({ paymentId, rawBody }) {
-  // STUB: Always verify as successful.
-  // In production, this would validate the IPN with PayPal.
+  // STUB: always-verify is unsafe to leave reachable in production — the
+  // public /payment-confirm endpoint would otherwise let anyone flip an
+  // Applicant to Current without paying. Until real IPN verification is
+  // wired up, refuse in production unless the operator has explicitly
+  // opted in with PAYPAL_STUB_ALLOW=true.
+  const stubAllowed =
+    process.env.NODE_ENV !== 'production' ||
+    process.env.PAYPAL_STUB_ALLOW === 'true';
+  if (!stubAllowed) {
+    return { verified: false, grossAmount: 0, fee: 0, payerEmail: '', status: 'rejected_stub_in_production' };
+  }
   return {
     verified: true,
     grossAmount: rawBody?.gross ?? 0,
