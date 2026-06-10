@@ -35,6 +35,65 @@ Every item below applies to every new feature — no exceptions.
   `disabled: !can(resource, action)` so unprivileged users see the link greyed out rather
   than missing. Home link never needs a gate.
 
+## Security patterns (from 2026-06-10 review)
+
+- [ ] **Excel/CSV exports go through `sanitizeCell`** from
+  `backend/src/utils/spreadsheet.js`. Any new `ws.addRow(...)`, CSV
+  `.join(',')`, or `addSheet` call site that emits a user-controlled
+  string must wrap the value with `sanitizeCell(...)`. The helper
+  prefixes a literal `'` to values starting with `= + - @ \t \r` so
+  Excel/Calc/Sheets render them as text rather than formulas. A
+  regression test lives at `backend/src/__tests__/spreadsheet.test.js`.
+
+- [ ] **Opaque lookup tokens (reset, verification, payment) are
+  SHA-256 hashed at rest** via `hashOpaqueToken()` from
+  `backend/src/utils/password.js`. Store the hash, send the plaintext
+  to the user in the email link, and hash the input again at the
+  lookup site (`WHERE token_column = hashOpaqueToken(input)`). The
+  `payment_token` column doubles as a metadata store
+  (`<hash>|<base64-meta>`), so lookups there are
+  `WHERE col = $1 OR substr(col, 1, 64) = $1`. JWTs and bcrypt hashes
+  follow their own rules; this rule is specifically for
+  random-bytes-hex tokens looked up by equality.
+
+- [ ] **Role grant/revoke routes call `assertActorHoldsRolePrivileges`**
+  in `backend/src/routes/users.js`. Any new endpoint that mutates
+  `user_roles` (assign, remove, bulk-update) must run the
+  no-privilege-escalation check first — the actor must possess every
+  privilege the affected role grants. Without this, a user with
+  `user_record:change` can promote themselves to Administration.
+
+- [ ] **External-integration stubs gate "success" on
+  `NODE_ENV !== 'production' || EXPLICIT_OPT_IN`.** PayPal stubs
+  (`backend/src/utils/paypal.js`) refuse unless
+  `PAYPAL_STUB_ALLOW=true`. Apply the same pattern to any future stub
+  (Stripe, GoCardless, etc.) so a production deploy without the real
+  integration wired up doesn't silently succeed and pollute finance
+  records.
+
+- [ ] **HTML field of any new email path uses `bodyHtml`** from
+  `resolveTokens()` (not `body`), so member-controlled token values
+  can't smuggle markup into broadcasts. `text` field continues to use
+  `body`. Currently only `routes/email.js` actually sends via
+  SendGrid; the placeholder paths in `routes/public.js` and
+  `routes/portal.js` should also use `bodyHtml` when wired up.
+
+- [ ] **No `dangerouslySetInnerHTML`, `innerHTML`, or `eval(...)` in
+  the frontend.** The whole frontend was clean as of 2026-06-10 —
+  keep it that way. The CSP in `vercel.json` is shipped in report-only
+  mode and will block these once enforced; using them now would create
+  a deploy-day surprise.
+
+- [ ] **Auth tokens (tenant access token, sys-admin token, portal
+  token) live in memory only.** No `localStorage` / `sessionStorage`
+  for token bytes. `sessionStorage` for non-secret cross-page hints
+  (member-id lists, return-to slugs) is fine.
+
+- [ ] **Payment redirects pass through `isSafePaymentRedirect`** from
+  `frontend/src/lib/safeRedirect.js` before `window.location.href`.
+  The three current call sites (`JoinPending`, `ResumePayment`,
+  `PortalRenewal`) all do this; any new one must.
+
 ## Form inputs
 
 - [ ] **Every `<input>`, `<textarea>`, and `<select>` must have a `name` attribute.**
