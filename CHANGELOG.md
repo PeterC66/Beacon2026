@@ -8,6 +8,20 @@ Format: `## [version] — YYYY-MM-DD` with bullet points per change.
 ## [Unreleased] — 2026-06-10
 
 ### Security
+- **HTML injection via email tokens** — `resolveTokens()` now returns a
+  `bodyHtml` variant in addition to `body`. Token values (member
+  forenames, surnames, partner fields, etc.) are HTML-escaped in
+  `bodyHtml` so a member whose forename contains markup can't smuggle
+  links or scripts into templated broadcasts that resolve their token
+  for *other* recipients (partner / shared-template paths). The
+  surrounding admin-authored body is left unescaped. `routes/email.js`
+  now uses `bodyHtml` for the html field of outgoing SendGrid messages.
+- **PayPal `initiatePayment()` refuses in production** —
+  `utils/paypal.js`, matching the chunk 4 hardening of
+  `verifyPaymentNotification()`. Throws unless `NODE_ENV !== 'production'`
+  or `PAYPAL_STUB_ALLOW=true`. Prevents the stub from issuing fake
+  payment IDs and "success" redirects in production, which would orphan
+  Applicants and mislead operators.
 - **CSV / spreadsheet formula injection defence** — new helper
   `utils/spreadsheet.js` (`sanitizeCell`, `sanitizeRowForExport`) prefixes
   any string starting with `=`, `+`, `-`, `@`, tab or CR with a single

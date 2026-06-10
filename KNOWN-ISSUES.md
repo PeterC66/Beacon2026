@@ -87,6 +87,23 @@ fixed in the same session. See CHANGELOG 2026-06-10 for what was fixed.
 22. **Multer accepts any MIME type on `/system/restore` and `/email/send`**
     (`routes/system.js:201`, `routes/email.js:16`). FileSize caps the
     only bound; per-request /email/send worst case ≈ 400 MB in memory.
+23. **`/email/send` `fromEmail` field is declared but ignored** —
+    `routes/email.js:205,293`. The SendGrid message hard-codes
+    `FROM_ADDRESS`. Either wire it up with an allow-list, or drop the
+    field from the schema.
+24. **`/email/send` `replyTo` is unconstrained** — anyone with
+    `email:send` can set it to any address (e.g. impersonating an
+    officer). Limit to the user's own member-email + offices they hold
+    (the same source as `/email/from-addresses`).
+25. **`/email/delivery/:batchId/refresh` issues one SendGrid API call
+    per recipient** — `routes/email.js:433`. Cap the per-click amplification.
+26. **Hard-coded `FROM_ADDRESS = 'noreply@u3abeacon.org.uk'`** —
+    `routes/email.js:23`. Make env-configurable so deployments under
+    other domains don't fail SPF/DKIM silently.
+27. **`routes/public.js` and `routes/portal.js` `resolveTokens` callers
+    still use `body` for templated emails** — currently only `console.log`'d
+    so latent, but when SendGrid is wired they should also use the new
+    `bodyHtml` for the html field.
 
 ---
 
