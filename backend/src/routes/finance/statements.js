@@ -6,6 +6,7 @@ import ExcelJS from 'exceljs';
 import { requirePrivilege } from '../../middleware/requirePrivilege.js';
 import { requireFeature } from '../../middleware/requireFeature.js';
 import { tenantQuery } from '../../utils/db.js';
+import { sanitizeCell } from '../../utils/spreadsheet.js';
 import { AppError } from '../../middleware/errorHandler.js';
 import { computeYearBounds } from './helpers.js';
 
@@ -137,7 +138,7 @@ router.get('/statement/download', requireFeature('financialStatement'), requireP
     ws.addRow(['Receipts (income)', 'Amount (£)']).font = { bold: true };
     const inRows = d.categoryRows.filter((r) => r.type === 'in');
     for (const row of inRows) {
-      ws.addRow([row.category, Number(row.total).toFixed(2)]);
+      ws.addRow([sanitizeCell(row.category), Number(row.total).toFixed(2)]);
     }
     ws.addRow(['Total Receipts', Number(d.totalIn).toFixed(2)]).font = { bold: true };
     ws.addRow([]);
@@ -146,7 +147,7 @@ router.get('/statement/download', requireFeature('financialStatement'), requireP
     ws.addRow(['Payments (expenditure)', 'Amount (£)']).font = { bold: true };
     const outRows = d.categoryRows.filter((r) => r.type === 'out');
     for (const row of outRows) {
-      ws.addRow([row.category, Number(row.total).toFixed(2)]);
+      ws.addRow([sanitizeCell(row.category), Number(row.total).toFixed(2)]);
     }
     ws.addRow(['Total Payments', Number(d.totalOut).toFixed(2)]).font = { bold: true };
     ws.addRow([]);
@@ -252,19 +253,19 @@ router.get('/groups-statement/download', requireFeature('groupsStatement'), requ
 
     for (const g of groups) {
       const gRow = ws.addRow([
-        g.name,
+        sanitizeCell(g.name),
         g.bf !== 0 ? Number(g.bf).toFixed(2) : '',
         Number(g.total_in).toFixed(2),
         Number(g.total_out).toFixed(2),
         Number(g.balance).toFixed(2),
-        g.status,
+        sanitizeCell(g.status),
       ]);
       gRow.font = { bold: true };
 
       if (entries && entriesByGroup[g.id]) {
         for (const e of entriesByGroup[g.id]) {
           ws.addRow([
-            `  ${String(e.entry_date).slice(0, 10)} — ${e.payee ?? ''}${e.detail ? ': ' + e.detail : ''}`,
+            sanitizeCell(`  ${String(e.entry_date).slice(0, 10)} — ${e.payee ?? ''}${e.detail ? ': ' + e.detail : ''}`),
             '',
             e.money_in  > 0 ? Number(e.money_in).toFixed(2)  : '',
             e.money_out > 0 ? Number(e.money_out).toFixed(2) : '',

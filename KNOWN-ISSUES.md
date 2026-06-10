@@ -73,6 +73,20 @@ fixed in the same session. See CHANGELOG 2026-06-10 for what was fixed.
 18. **`/portal/forgot-password` timing enumeration** —
     `routes/public.js:922`. Bcrypt + DB write happen only on hit;
     response time leaks account existence.
+19. **No magic-byte validation on photo uploads**
+    (`routes/members.js:1494`, `routes/portal.js:726`). Mime-type is
+    whitelisted; nosniff blocks browser XSS. But mislabelled payloads
+    silently succeed and break PDF rendering downstream — DoS vector.
+20. **Email-attachment `originalname` passed through unsanitised**
+    (`routes/email.js:267`). Recipients can be sent files with
+    attacker-crafted names (`Invoice.pdf .exe`, control-char headers).
+    Sanitise to a basename, strip control chars, cap length.
+21. **`clearTenantData()` doesn't purge Redis invalidation marks**
+    (`routes/backup.js:658`). After restore, stale `invalidated:slug:userId`
+    keys (31-day TTL) may make fresh sessions appear pre-revoked.
+22. **Multer accepts any MIME type on `/system/restore` and `/email/send`**
+    (`routes/system.js:201`, `routes/email.js:16`). FileSize caps the
+    only bound; per-request /email/send worst case ≈ 400 MB in memory.
 
 ---
 

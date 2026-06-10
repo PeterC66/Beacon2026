@@ -10,6 +10,7 @@ import { tenantQuery, prisma } from '../utils/db.js';
 import ExcelJS from 'exceljs';
 import PDFDocument from 'pdfkit';
 import bwipjs from 'bwip-js';
+import { sanitizeCell } from '../utils/spreadsheet.js';
 
 const router = Router();
 router.use(requireAuth);
@@ -487,11 +488,11 @@ router.get('/excel', requirePrivilege('membership_cards', 'download_and_mark'), 
       const expiry = cardExpiryDate(m, settings, advance);
       ws.addRow([
         m.membership_number,
-        m.known_as || m.forenames,
-        m.surname,
+        sanitizeCell(m.known_as || m.forenames),
+        sanitizeCell(m.surname),
         formatCardDate(expiry),
-        m.class_name || '',
-        m.email || '',
+        sanitizeCell(m.class_name || ''),
+        sanitizeCell(m.email || ''),
       ]);
     }
 
