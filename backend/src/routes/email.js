@@ -286,8 +286,12 @@ router.post('/send',
               : '';
             extraTokens = { '#GIFTAID': gaDate, '#GIFTAIDLIST': gaList };
           }
-          const { subject: resolvedSubject, body: resolvedBody } = resolveTokens(subject, body, member, u3aName, extraTokens);
-          const htmlBody = resolvedBody.replace(/\n/g, '<br>');
+          const { subject: resolvedSubject, body: resolvedBody, bodyHtml: resolvedBodyHtml } = resolveTokens(subject, body, member, u3aName, extraTokens);
+          // text/ field keeps raw values; html/ field uses the value-escaped
+          // variant so a member with `<a href="...">` in their name can't
+          // inject markup into a templated broadcast that resolves their
+          // forename token for partners or other recipients.
+          const htmlBody = resolvedBodyHtml.replace(/\n/g, '<br>');
           const msg = {
             to:         { email: member.email, name: `${member.forenames} ${member.surname}`.trim() },
             from:       { email: FROM_ADDRESS, name: u3aName },

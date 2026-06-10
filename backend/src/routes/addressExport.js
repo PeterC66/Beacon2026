@@ -7,6 +7,7 @@ import { Router } from 'express';
 import { requireAuth } from '../middleware/auth.js';
 import { requirePrivilege } from '../middleware/requirePrivilege.js';
 import { tenantQuery } from '../utils/db.js';
+import { sanitizeCell } from '../utils/spreadsheet.js';
 import ExcelJS from 'exceljs';
 import PDFDocument from 'pdfkit';
 
@@ -190,7 +191,8 @@ router.get('/download', requirePrivilege('addresses_export', 'download'), async 
         const name = combinedName(g.members);
         const addrLine1 = [g.house_no, g.street].filter(Boolean).join(' ');
         return [name, addrLine1, g.add_line1 ?? '', g.add_line2 ?? '', g.town ?? '', g.county ?? '', g.postcode ?? '']
-          .map((v) => (sep === ',' ? `"${String(v ?? '').replace(/"/g, '""')}"` : String(v ?? '')))
+          .map((v) => sanitizeCell(String(v ?? '')))
+          .map((v) => (sep === ',' ? `"${v.replace(/"/g, '""')}"` : v))
           .join(sep);
       });
       const content = [headers.map((h) => (sep === ',' ? `"${h}"` : h)).join(sep), ...rows].join('\r\n');
@@ -221,15 +223,15 @@ router.get('/download', requirePrivilege('addresses_export', 'download'), async 
         const primary = g.members[0];
         const addrLine1 = [g.house_no, g.street].filter(Boolean).join(' ');
         ws.addRow({
-          title:    primary.title ?? '',
-          initials: (primary.known_as || primary.forenames || '').split(/\s+/).map((n) => n[0]).join(''),
-          surname:  primary.surname ?? '',
-          addr1:    addrLine1,
-          addr2:    g.add_line1 ?? '',
-          addr3:    g.add_line2 ?? '',
-          town:     g.town ?? '',
-          county:   g.county ?? '',
-          postcode: g.postcode ?? '',
+          title:    sanitizeCell(primary.title ?? ''),
+          initials: sanitizeCell((primary.known_as || primary.forenames || '').split(/\s+/).map((n) => n[0]).join('')),
+          surname:  sanitizeCell(primary.surname ?? ''),
+          addr1:    sanitizeCell(addrLine1),
+          addr2:    sanitizeCell(g.add_line1 ?? ''),
+          addr3:    sanitizeCell(g.add_line2 ?? ''),
+          town:     sanitizeCell(g.town ?? ''),
+          county:   sanitizeCell(g.county ?? ''),
+          postcode: sanitizeCell(g.postcode ?? ''),
         });
       }
       res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
@@ -261,14 +263,14 @@ router.get('/download', requirePrivilege('addresses_export', 'download'), async 
       const addrLine1 = [g.house_no, g.street].filter(Boolean).join(' ');
       const tel = g.telephone || '';
       ws.addRow({
-        name,
-        addr1:    addrLine1,
-        addr2:    g.add_line1 ?? '',
-        addr3:    g.add_line2 ?? '',
-        town:     g.town ?? '',
-        county:   g.county ?? '',
-        postcode: g.postcode ?? '',
-        telephone: tel ?? '',
+        name:      sanitizeCell(name),
+        addr1:     sanitizeCell(addrLine1),
+        addr2:     sanitizeCell(g.add_line1 ?? ''),
+        addr3:     sanitizeCell(g.add_line2 ?? ''),
+        town:      sanitizeCell(g.town ?? ''),
+        county:    sanitizeCell(g.county ?? ''),
+        postcode:  sanitizeCell(g.postcode ?? ''),
+        telephone: sanitizeCell(tel ?? ''),
       });
     }
     res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');

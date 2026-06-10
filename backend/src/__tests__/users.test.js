@@ -274,6 +274,21 @@ describe('POST /users/:id/roles', () => {
     expect(res.status).toBe(200);
     expect(res.body.message).toBe('Role assigned.');
   });
+
+  it('returns 403 when role grants a privilege the actor lacks', async () => {
+    // Privilege lookup returns a privilege not in the limited actor's set
+    tenantQuery.mockResolvedValueOnce([{ code: 'finance_accounts', action: 'delete' }]);
+
+    const limitedAuth = makeAuthHeader({ privileges: ['user_record:change'] });
+
+    const res = await request(app)
+      .post('/users/u1/roles')
+      .set('Authorization', limitedAuth)
+      .send({ roleId: 'role-admin' });
+
+    expect(res.status).toBe(403);
+    expect(res.body.error).toMatch(/finance_accounts:delete/);
+  });
 });
 
 // ── DELETE /users/:id/roles/:roleId ──────────────────────────────────────
@@ -290,5 +305,17 @@ describe('DELETE /users/:id/roles/:roleId', () => {
 
     expect(res.status).toBe(200);
     expect(res.body.message).toBe('Role removed.');
+  });
+
+  it('returns 403 when role grants a privilege the actor lacks', async () => {
+    tenantQuery.mockResolvedValueOnce([{ code: 'finance_accounts', action: 'delete' }]);
+
+    const limitedAuth = makeAuthHeader({ privileges: ['user_record:change'] });
+
+    const res = await request(app)
+      .delete('/users/u1/roles/role-admin')
+      .set('Authorization', limitedAuth);
+
+    expect(res.status).toBe(403);
   });
 });

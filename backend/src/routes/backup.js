@@ -10,6 +10,7 @@ import { hashPassword } from '../utils/password.js';
 import ExcelJS from 'exceljs';
 import { v4 as uuid } from 'uuid';
 import { STANDARD_IMPLEMENTATIONS } from '../../../shared/constants.js';
+import { sanitizeCell } from '../utils/spreadsheet.js';
 
 const router = Router();
 router.use(requireAuth);
@@ -104,7 +105,7 @@ export function addSheet(wb, name, columns, rows) {
   };
   rows.forEach((r) => {
     const rowData = {};
-    columns.forEach((c) => { rowData[c] = r[c] ?? null; });
+    columns.forEach((c) => { rowData[c] = sanitizeCell(r[c] ?? null); });
     ws.addRow(rowData);
   });
   return ws;
@@ -987,14 +988,20 @@ export async function restoreBeacon2(tx, wb) {
     );
   }
 
-  // 19. Users (must_change_password forced true so restored users must reset)
+  // 19. Users — password_hash from the backup is NEVER imported. A malicious
+  // backup author could otherwise plant a known-password account and bind it
+  // to the Administration role via the User roles sheet, then log in once and
+  // take over the tenant. password_hash is left NULL (the schema allows it);
+  // the sys-admin must use POST /system/tenants/:id/set-temp-password after
+  // the restore so users can log in. must_change_password = true is kept so
+  // that whatever password the sys-admin sets must be replaced on first use.
   for (const r of get('System Users')) {
     if (!r.id) continue;
     await tx.$executeRawUnsafe(
       `INSERT INTO users (id, username, name, email, password_hash, active, member_id, must_change_password)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,true) ON CONFLICT (id) DO NOTHING`,
+       VALUES ($1,$2,$3,$4,NULL,$5,$6,true) ON CONFLICT (id) DO NOTHING`,
       r.id, str(r.username), String(r.name || ''), String(r.email || ''),
-      str(r.password_hash), parseBool(r.active !== undefined ? r.active : 1), str(r.member_id),
+      parseBool(r.active !== undefined ? r.active : 1), str(r.member_id),
     );
   }
 

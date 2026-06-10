@@ -9,7 +9,7 @@ import PDFDocument from 'pdfkit';
 import { tenantQuery, prisma } from '../utils/db.js';
 import { verifyAccessToken } from '../utils/jwt.js';
 import { hashPassword, verifyPassword } from '../utils/password.js';
-import { generateToken } from '../utils/password.js';
+import { generateToken, hashOpaqueToken } from '../utils/password.js';
 import { resolveTokens } from '../utils/emailTokens.js';
 import { isFeatureEnabled } from '../middleware/requireFeature.js';
 import { logAudit } from '../utils/audit.js';
@@ -693,7 +693,7 @@ router.patch('/personal-details', async (req, res, next) => {
            portal_verification_expires = $3,
            updated_at = now()
          WHERE id = $4`,
-        [data.email.toLowerCase(), verificationToken, verificationExpires, memberId]);
+        [data.email.toLowerCase(), hashOpaqueToken(verificationToken), verificationExpires, memberId]);
 
       const frontendBase = process.env.CORS_ORIGIN || 'http://localhost:5173';
       const verifyLink = `${frontendBase}/public/${slug}/portal/verify?token=${verificationToken}`;
@@ -1156,25 +1156,20 @@ router.post('/renew', async (req, res, next) => {
     const partnerFee = partnerMember?.fee ?? 0;
     const totalAmount = member.is_joint ? memberFee + partnerFee : memberFee;
 
-    // Store renewal intent: save Gift Aid choices and generate payment token
+    // Store renewal intent: save Gift Aid choices and generate payment token.
+    // The DB stores sha256(token)|<base64-meta>. The plaintext token is not
+    // needed externally for the renewal flow (the user returns via PayPal and
+    // is re-identified by memberId), but is hashed for consistency with the
+    // joining flow's resume-payment path which does look up by token.
     const { randomBytes } = await import('crypto');
     const paymentToken = randomBytes(24).toString('hex');
 
-    // Store the payment token and renewal metadata on the member
-    await tenantQuery(slug,
-      `UPDATE members SET payment_token = $1, updated_at = now() WHERE id = $2`,
-      [paymentToken, memberId]);
-
-    // Store Gift Aid choices in the token for later (use a simple JSON string in payment_token note)
-    // We'll re-read these on confirmation. For now, store in a temporary way.
-    // Use a combined token: paymentToken|giftAidJson
     const renewalMeta = JSON.stringify({
       giftAid: data.giftAid,
       partnerGiftAid: data.partnerGiftAid,
       partnerMemberId: partnerMember?.id ?? null,
     });
-    // Store meta alongside token using a separator
-    const combinedToken = `${paymentToken}|${Buffer.from(renewalMeta).toString('base64')}`;
+    const combinedToken = `${hashOpaqueToken(paymentToken)}|${Buffer.from(renewalMeta).toString('base64')}`;
     await tenantQuery(slug,
       `UPDATE members SET payment_token = $1, updated_at = now() WHERE id = $2`,
       [combinedToken, memberId]);

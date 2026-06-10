@@ -4,6 +4,123 @@ Items noted during development that need addressing in future sessions.
 
 ---
 
+## Security — open findings from 2026-06-10 review
+
+Items identified during the chunk 1 + chunk 2 security sweep that were not
+fixed in the same session. See CHANGELOG 2026-06-10 for what was fixed.
+
+1. **`force-change-password` does not verify `must_change_password`**
+   (`backend/src/routes/auth.js:316`). Any authenticated user can change their
+   password without supplying the current one and overwrite their security
+   Q&A. Fix: gate on `must_change_password = true` and clear the flag in the
+   same UPDATE.
+2. **Password change does not revoke other sessions**
+   (`routes/auth.js` `/change-password`, `/force-change-password`). Compromised
+   sessions outlive a password change. Fix: revoke refresh tokens + call
+   `invalidateUserSessions()`.
+3. **Portal login has no per-account lockout** (`routes/public.js:859`).
+   Admin login has lockout; portal login does not. Add the same
+   `failed_login_count` + `locked_until` pattern to the `members` portal-
+   credential path.
+4. **Portal forgot-password emits the reset link to `console.log`**
+   (`routes/public.js:955`). Either the feature is incomplete or it's leaking
+   tokens via logs in production. Wire SendGrid or refuse when email is not
+   configured.
+5. **Account-enumeration via response timing on `/auth/recover`**
+   (`routes/auth.js:248`). Send the email asynchronously or add a constant-
+   time delay.
+6. **Inconsistent password policy** — `PATCH /users/:id` accepts `min(8)` with
+   no complexity rules, while `/force-change-password` and portal reset
+   require `min(10)` + complexity. Centralise into a single helper.
+7. **Refresh-token reuse detection silently no-ops without Redis**
+   (`utils/redis.js:48`). Document this more prominently or persist
+   invalidation marks in Postgres as a fallback.
+8. **`requireSysAdmin` skips invalidation / `active` check**
+   (`middleware/auth.js:47`). Sysadmin tokens stay valid for the full access-
+   token lifetime regardless of account state.
+9. **Temp-password generator has modulo bias** (`routes/users.js:312`,
+   `routes/auth.js:346`). `b % 58` over 256-byte values is biased. Use
+   rejection sampling or `crypto.randomInt`.
+10. **Origin check bypass when `NODE_ENV !== 'production'`**
+    (`routes/auth.js:38`). Mis-set `NODE_ENV` in staging would silently lose
+    CSRF protection on `/refresh`.
+11. **Privilege-string format collisions** — `${resource}:${action}` with
+    resources that may contain `:` (`finance:transactions:create`). Works
+    today, fragile if a future resource code includes `:create`.
+12. **No targeted rate limit on portal endpoints** (`app.js:69-71`). Only
+    the global 300/15min/IP `generalLimiter` covers `/public/:slug/portal/*`;
+    `/auth/*` has a tighter `authLimiter`. Add a 20/15min/IP limiter per
+    portal-register/login/forgot/reset/verify-email route.
+13. **Portal JWT skips Redis session-invalidation check**
+    (`routes/portal.js:22`). Disabling a member's portal credentials does
+    not take effect until the 15-min access token expires.
+14. **Verification & reset tokens logged via `console.log`**
+    (`routes/public.js:804`, `:955`; `routes/portal.js:699`). Either wire
+    SendGrid or refuse the request when email is not configured — don't
+    persist the token and emit it to stdout.
+15. **Slug regex inconsistency** — `routes/public.js:24` allows
+    `[a-z0-9_-]` but `utils/db.js:27` only allows `[a-z0-9_]`. A slug
+    containing `-` 500s inside `tenantQuery` rather than 400-ing at the
+    edge. Unify both regexes.
+16. **Photo upload doesn't validate magic bytes** —
+    `routes/portal.js:726`. Mime-type is whitelisted to jpeg/png/gif and
+    Helmet's nosniff blocks browser sniffing, so no XSS — but mislabelled
+    payloads silently succeed and may break PDF rendering downstream.
+17. **Portal login email-enumeration via differentiated responses** —
+    `routes/public.js:887,891`. 401 for unknown/wrong-password but 403
+    "Please verify your email" for known-unverified accounts reveals
+    which emails have a portal account.
+18. **`/portal/forgot-password` timing enumeration** —
+    `routes/public.js:922`. Bcrypt + DB write happen only on hit;
+    response time leaks account existence.
+19. **No magic-byte validation on photo uploads**
+    (`routes/members.js:1494`, `routes/portal.js:726`). Mime-type is
+    whitelisted; nosniff blocks browser XSS. But mislabelled payloads
+    silently succeed and break PDF rendering downstream — DoS vector.
+20. **Email-attachment `originalname` passed through unsanitised**
+    (`routes/email.js:267`). Recipients can be sent files with
+    attacker-crafted names (`Invoice.pdf .exe`, control-char headers).
+    Sanitise to a basename, strip control chars, cap length.
+21. **`clearTenantData()` doesn't purge Redis invalidation marks**
+    (`routes/backup.js:658`). After restore, stale `invalidated:slug:userId`
+    keys (31-day TTL) may make fresh sessions appear pre-revoked.
+22. **Multer accepts any MIME type on `/system/restore` and `/email/send`**
+    (`routes/system.js:201`, `routes/email.js:16`). FileSize caps the
+    only bound; per-request /email/send worst case ≈ 400 MB in memory.
+23. **`/email/send` `fromEmail` field is declared but ignored** —
+    `routes/email.js:205,293`. The SendGrid message hard-codes
+    `FROM_ADDRESS`. Either wire it up with an allow-list, or drop the
+    field from the schema.
+24. **`/email/send` `replyTo` is unconstrained** — anyone with
+    `email:send` can set it to any address (e.g. impersonating an
+    officer). Limit to the user's own member-email + offices they hold
+    (the same source as `/email/from-addresses`).
+25. **`/email/delivery/:batchId/refresh` issues one SendGrid API call
+    per recipient** — `routes/email.js:433`. Cap the per-click amplification.
+26. **Hard-coded `FROM_ADDRESS = 'noreply@u3abeacon.org.uk'`** —
+    `routes/email.js:23`. Make env-configurable so deployments under
+    other domains don't fail SPF/DKIM silently.
+27. **`routes/public.js` and `routes/portal.js` `resolveTokens` callers
+    still use `body` for templated emails** — currently only `console.log`'d
+    so latent, but when SendGrid is wired they should also use the new
+    `bodyHtml` for the html field.
+28. **`uuid<11.1.1` buffer-bounds advisory remains** — backend `npm audit`
+    shows 2 moderate findings against the `uuid` package (direct +
+    transitive via `exceljs`). The advisory only affects v3/v5/v6 when a
+    `buf` argument is passed. Beacon2 imports only `v4` and never passes
+    a buffer, so the runtime is unaffected. Major bump (`uuid@14`) is a
+    breaking change for `exceljs` and should wait for an upstream release.
+29. **Frontend CSP shipped in report-only mode** — after a deploy window
+    of clean reports, change `Content-Security-Policy-Report-Only` to
+    `Content-Security-Policy` in `frontend/vercel.json` to enforce.
+    Consider tightening `connect-src 'self' https:` to the concrete
+    backend host once known.
+30. **Stale comment in `App.jsx:132`** — "auth handled inside pages via
+    sessionStorage" no longer reflects the in-memory sys-token model.
+    Tidy when next touching the file.
+
+---
+
 ## UI Terminology
 
 1. **Group/Team Cash — "Central Ledger" vs "Finance Ledger" wording** — The
