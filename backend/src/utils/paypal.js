@@ -21,13 +21,23 @@ import { randomBytes } from 'crypto';
  * @returns {Promise<{ paymentId: string, redirectUrl: string }>}
  */
 export async function initiatePayment({ amount, description, memberRef, returnUrl, cancelUrl, paypalEmail }) {
-  // STUB: Generate a fake payment ID and return a simulated redirect URL.
-  // In production, this would call PayPal's Create Order API.
-  const paymentId = `PAY-STUB-${randomBytes(12).toString('hex')}`;
+  // STUB: handing out fake payment IDs in production would orphan Applicants
+  // and mislead operators into thinking PayPal is wired up. Refuse unless
+  // we're outside production or the operator has explicitly opted in. The
+  // companion verifyPaymentNotification() in this file is gated the same way.
+  const stubAllowed =
+    process.env.NODE_ENV !== 'production' ||
+    process.env.PAYPAL_STUB_ALLOW === 'true';
+  if (!stubAllowed) {
+    throw new Error(
+      'PayPal integration is not configured. Set PAYPAL_STUB_ALLOW=true to ' +
+      'enable the development stub, or wire the real PayPal REST API.',
+    );
+  }
 
+  const paymentId = `PAY-STUB-${randomBytes(12).toString('hex')}`;
   // In the stub, we redirect to our own confirmation endpoint to simulate success
   const redirectUrl = `${returnUrl}?paymentId=${paymentId}&status=success`;
-
   return { paymentId, redirectUrl };
 }
 
