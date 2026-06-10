@@ -9,6 +9,7 @@ import { requireAuth } from '../middleware/auth.js';
 import { requirePrivilege } from '../middleware/requirePrivilege.js';
 import { requireFeature } from '../middleware/requireFeature.js';
 import { tenantQuery, escapeLike } from '../utils/db.js';
+import { sanitizeCell } from '../utils/spreadsheet.js';
 import { AppError } from '../middleware/errorHandler.js';
 import { logAudit } from '../utils/audit.js';
 
@@ -283,12 +284,12 @@ router.get('/events/excel', requirePrivilege('calendar', 'download'), async (req
         fmtDateUK(ev.event_date),
         fmtTime(ev.start_time),
         fmtTime(ev.end_time),
-        ev.group_name || ev.event_type_name || '',
-        ev.topic || '',
-        ev.venue_name || '',
-        ev.venue_postcode || '',
-        ev.contact || '',
-        ev.details || '',
+        sanitizeCell(ev.group_name || ev.event_type_name || ''),
+        sanitizeCell(ev.topic || ''),
+        sanitizeCell(ev.venue_name || ''),
+        sanitizeCell(ev.venue_postcode || ''),
+        sanitizeCell(ev.contact || ''),
+        sanitizeCell(ev.details || ''),
       ]);
     }
 

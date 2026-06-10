@@ -25,6 +25,7 @@ import {
   runReadOnly,
   sanitizeRow,
 } from '../utils/sqlSafety.js';
+import { sanitizeRowForExport } from '../utils/spreadsheet.js';
 
 const router = Router();
 router.use(requireAuth);
@@ -87,7 +88,10 @@ async function buildExcelBuffer(name, result) {
   const cols = result.columns.length ? result.columns : ['(no rows)'];
   ws.columns = cols.map((c) => ({ header: c, key: c, width: 18 }));
   ws.getRow(1).font = { bold: true };
-  for (const row of result.rows) ws.addRow(sanitizeRow(row));
+  // sanitizeRow is for JSON shape (BigInt/Date); sanitizeRowForExport
+  // additionally prefixes formula-like strings to defeat CSV injection
+  // when an admin opens the .xlsx in Excel/Calc/Sheets.
+  for (const row of result.rows) ws.addRow(sanitizeRowForExport(sanitizeRow(row)));
   return wb.xlsx.writeBuffer();
 }
 
