@@ -8,6 +8,29 @@ Format: `## [version] — YYYY-MM-DD` with bullet points per change.
 ## [Unreleased] — 2026-06-10
 
 ### Security
+- **JoinPending open-redirect closed** — `pages/public/JoinPending.jsx`
+  now gates `window.location.href = redirectUrl` with
+  `isSafePaymentRedirect()`, matching the existing guards on
+  `ResumePayment` and `PortalRenewal`. Defence-in-depth against a
+  compromised or mis-configured backend returning a URL outside
+  same-origin / paypal.com.
+- **CSP + HSTS headers** — `frontend/vercel.json` now ships a
+  Content-Security-Policy in report-only mode and a 2-year HSTS header
+  with `includeSubDomains; preload`. The CSP defaults are tight
+  (`script-src 'self'; object-src 'none'; frame-ancestors 'none'; …`)
+  but `connect-src 'self' https:` and `style-src` allow `'unsafe-inline'`
+  so the report-only deploy doesn't break Vite/Tailwind output. After a
+  deploy window of clean reports, switch the header key from
+  `Content-Security-Policy-Report-Only` to `Content-Security-Policy`
+  and consider tightening `connect-src` to the actual backend host.
+- **npm audit clean-up** — `npm audit fix` applied in both `backend/`
+  and `frontend/`. Backend: 7 vulnerabilities (2 high, 5 moderate) →
+  2 moderate; remaining two are `uuid<11.1.1`'s missing buffer-bounds
+  check on the v3/v5/v6 `buf` argument, which doesn't affect Beacon2's
+  v4-only usage. Frontend: 4 moderate → 0 (postcss XSS-via-CSS,
+  react-router protocol-relative open redirect, ws memory disclosure,
+  axios prototype-pollution chain). No `package.json` changes were
+  needed — patches landed via lock-file updates.
 - **HTML injection via email tokens** — `resolveTokens()` now returns a
   `bodyHtml` variant in addition to `body`. Token values (member
   forenames, surnames, partner fields, etc.) are HTML-escaped in

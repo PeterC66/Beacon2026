@@ -104,6 +104,20 @@ fixed in the same session. See CHANGELOG 2026-06-10 for what was fixed.
     still use `body` for templated emails** — currently only `console.log`'d
     so latent, but when SendGrid is wired they should also use the new
     `bodyHtml` for the html field.
+28. **`uuid<11.1.1` buffer-bounds advisory remains** — backend `npm audit`
+    shows 2 moderate findings against the `uuid` package (direct +
+    transitive via `exceljs`). The advisory only affects v3/v5/v6 when a
+    `buf` argument is passed. Beacon2 imports only `v4` and never passes
+    a buffer, so the runtime is unaffected. Major bump (`uuid@14`) is a
+    breaking change for `exceljs` and should wait for an upstream release.
+29. **Frontend CSP shipped in report-only mode** — after a deploy window
+    of clean reports, change `Content-Security-Policy-Report-Only` to
+    `Content-Security-Policy` in `frontend/vercel.json` to enforce.
+    Consider tightening `connect-src 'self' https:` to the concrete
+    backend host once known.
+30. **Stale comment in `App.jsx:132`** — "auth handled inside pages via
+    sessionStorage" no longer reflects the in-memory sys-token model.
+    Tidy when next touching the file.
 
 ---
 
