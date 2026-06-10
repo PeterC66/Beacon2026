@@ -6,7 +6,7 @@ import { Router } from 'express';
 import { randomBytes } from 'crypto';
 import { z } from 'zod';
 import { prisma, tenantQuery, withTenant } from '../utils/db.js';
-import { hashPassword, verifyPassword, generateToken } from '../utils/password.js';
+import { hashPassword, verifyPassword, generateToken, hashOpaqueToken } from '../utils/password.js';
 import { signAccessToken } from '../utils/jwt.js';
 import { resolveTokens } from '../utils/emailTokens.js';
 import { generateSingleCardPdf } from './membershipCards.js';
@@ -189,8 +189,11 @@ router.post('/:slug/join', async (req, res, next) => {
     const giftAidEnabled = await isFeatureEnabled(slug, 'giftAid');
     const giftAidFrom = (data.giftAid && giftAidEnabled) ? joinedOn : null;
 
-    // Generate a payment token so the applicant can resume payment later
+    // Generate a payment token so the applicant can resume payment later.
+    // Only the hash is persisted; the plaintext is returned below to embed
+    // in the resume-payment link emailed to the applicant.
     const paymentToken = randomBytes(24).toString('hex');
+    const paymentTokenHash = hashOpaqueToken(paymentToken);
 
     // Create member with Applicant status
     const [member] = await tenantQuery(
@@ -206,7 +209,7 @@ router.post('/:slug/join', async (req, res, next) => {
         data.email.toLowerCase(), data.mobile ?? null,
         newAddr.id, applicantStatus.id, data.classId,
         joinedOn, nextRenewal, giftAidFrom,
-        paymentToken,
+        paymentTokenHash,
       ],
     );
 
@@ -238,7 +241,7 @@ router.post('/:slug/join', async (req, res, next) => {
           p2Email, p2.mobile ?? null,
           newAddr.id, applicantStatus.id, data.classId,
           joinedOn, nextRenewal, p2GiftAidFrom,
-          paymentToken, member.id,
+          paymentTokenHash, member.id,
         ],
       );
 
@@ -465,7 +468,10 @@ router.get('/:slug/resume-payment/:token', async (req, res, next) => {
       return res.status(400).json({ error: 'Invalid payment link.' });
     }
 
-    // Find the Applicant member by payment token (either primary or partner may hold it)
+    // Find the Applicant member by payment token (either primary or partner may hold it).
+    // payment_token is stored as either sha256(token) or sha256(token)|<base64-meta>
+    // for portal renewals; match either form.
+    const tokenHash = hashOpaqueToken(token);
     const [member] = await tenantQuery(
       slug,
       `SELECT m.id, m.membership_number, m.forenames, m.surname, m.email,
@@ -474,8 +480,9 @@ router.get('/:slug/resume-payment/:token', async (req, res, next) => {
        FROM members m
        LEFT JOIN member_statuses ms ON m.status_id = ms.id
        LEFT JOIN member_classes mc ON m.class_id = mc.id
-       WHERE m.payment_token = $1`,
-      [token],
+       WHERE m.payment_token = $1
+          OR substr(m.payment_token, 1, 64) = $1`,
+      [tokenHash],
     );
 
     if (!member) {
@@ -560,7 +567,9 @@ router.post('/:slug/email-payment-link', async (req, res, next) => {
     const slug = req.tenantSlug;
     const { paymentToken } = emailPaymentLinkSchema.parse(req.body);
 
-    // Find the Applicant member
+    // Find the Applicant member (match against hashed payment_token, with or
+    // without the portal-renewal metadata suffix).
+    const paymentTokenHash = hashOpaqueToken(paymentToken);
     const [member] = await tenantQuery(
       slug,
       `SELECT m.id, m.membership_number, m.forenames, m.surname, m.email,
@@ -569,8 +578,9 @@ router.post('/:slug/email-payment-link', async (req, res, next) => {
        FROM members m
        LEFT JOIN member_statuses ms ON m.status_id = ms.id
        LEFT JOIN member_classes mc ON m.class_id = mc.id
-       WHERE m.payment_token = $1`,
-      [paymentToken],
+       WHERE m.payment_token = $1
+          OR substr(m.payment_token, 1, 64) = $1`,
+      [paymentTokenHash],
     );
 
     if (!member || member.status_name !== 'Applicant') {
@@ -940,6 +950,8 @@ router.post('/:slug/portal/forgot-password', async (req, res, next) => {
     const resetToken = generateToken();
     const resetExpires = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
 
+    // Store only the hash — the plaintext token is delivered to the user via
+    // the email link. A DB leak then can't be used to take over portal accounts.
     await tenantQuery(
       slug,
       `UPDATE members SET
@@ -947,7 +959,7 @@ router.post('/:slug/portal/forgot-password', async (req, res, next) => {
          portal_reset_expires = $2,
          updated_at = now()
        WHERE id = $3`,
-      [resetToken, resetExpires, member.id],
+      [hashOpaqueToken(resetToken), resetExpires, member.id],
     );
 
     const frontendBase = process.env.CORS_ORIGIN || 'http://localhost:5173';
@@ -980,7 +992,7 @@ router.post('/:slug/portal/reset-password', async (req, res, next) => {
       `SELECT id, portal_reset_expires
        FROM members
        WHERE portal_reset_token = $1`,
-      [token],
+      [hashOpaqueToken(token)],
     );
 
     if (!member) {

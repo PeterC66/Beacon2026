@@ -4,6 +4,52 @@ Items noted during development that need addressing in future sessions.
 
 ---
 
+## Security — open findings from 2026-06-10 review
+
+Items identified during the chunk 1 + chunk 2 security sweep that were not
+fixed in the same session. See CHANGELOG 2026-06-10 for what was fixed.
+
+1. **`force-change-password` does not verify `must_change_password`**
+   (`backend/src/routes/auth.js:316`). Any authenticated user can change their
+   password without supplying the current one and overwrite their security
+   Q&A. Fix: gate on `must_change_password = true` and clear the flag in the
+   same UPDATE.
+2. **Password change does not revoke other sessions**
+   (`routes/auth.js` `/change-password`, `/force-change-password`). Compromised
+   sessions outlive a password change. Fix: revoke refresh tokens + call
+   `invalidateUserSessions()`.
+3. **Portal login has no per-account lockout** (`routes/public.js:859`).
+   Admin login has lockout; portal login does not. Add the same
+   `failed_login_count` + `locked_until` pattern to the `members` portal-
+   credential path.
+4. **Portal forgot-password emits the reset link to `console.log`**
+   (`routes/public.js:955`). Either the feature is incomplete or it's leaking
+   tokens via logs in production. Wire SendGrid or refuse when email is not
+   configured.
+5. **Account-enumeration via response timing on `/auth/recover`**
+   (`routes/auth.js:248`). Send the email asynchronously or add a constant-
+   time delay.
+6. **Inconsistent password policy** — `PATCH /users/:id` accepts `min(8)` with
+   no complexity rules, while `/force-change-password` and portal reset
+   require `min(10)` + complexity. Centralise into a single helper.
+7. **Refresh-token reuse detection silently no-ops without Redis**
+   (`utils/redis.js:48`). Document this more prominently or persist
+   invalidation marks in Postgres as a fallback.
+8. **`requireSysAdmin` skips invalidation / `active` check**
+   (`middleware/auth.js:47`). Sysadmin tokens stay valid for the full access-
+   token lifetime regardless of account state.
+9. **Temp-password generator has modulo bias** (`routes/users.js:312`,
+   `routes/auth.js:346`). `b % 58` over 256-byte values is biased. Use
+   rejection sampling or `crypto.randomInt`.
+10. **Origin check bypass when `NODE_ENV !== 'production'`**
+    (`routes/auth.js:38`). Mis-set `NODE_ENV` in staging would silently lose
+    CSRF protection on `/refresh`.
+11. **Privilege-string format collisions** — `${resource}:${action}` with
+    resources that may contain `:` (`finance:transactions:create`). Works
+    today, fragile if a future resource code includes `:create`.
+
+---
+
 ## UI Terminology
 
 1. **Group/Team Cash — "Central Ledger" vs "Finance Ledger" wording** — The
