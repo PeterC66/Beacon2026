@@ -8,6 +8,31 @@ Format: `## [version] — YYYY-MM-DD` with bullet points per change.
 ## [Unreleased] — 2026-06-10
 
 ### Security
+- **`force-change-password` now requires `must_change_password`** —
+  `routes/auth.js` re-reads the flag before allowing the password +
+  security Q&A overwrite. Previously any authenticated user could
+  POST `/auth/force-change-password` and rewrite their own recovery
+  Q&A without supplying the current password. (KNOWN-ISSUES #1)
+- **Password changes now revoke other sessions** — both
+  `/auth/change-password` and `/auth/force-change-password` flip
+  `refresh_tokens.revoked = true` for the user and call
+  `invalidateUserSessions()`. Stolen refresh tokens can no longer
+  outlive the password change. The user's own access token continues
+  to work until it expires (matches admin password-change). Also
+  added an audit-log entry for `/change-password` (it had none).
+  (KNOWN-ISSUES #2)
+- **Portal login now locks accounts after repeated failures** —
+  `routes/public.js` mirrors the admin-login pattern using two new
+  columns on `members` (`portal_failed_login_count`,
+  `portal_locked_until`) and the existing `MAX_FAILED_LOGINS` /
+  `LOCKOUT_MINUTES` env vars (default 5 attempts / 15 min). Failures
+  and lockouts are written to the audit log. (KNOWN-ISSUES #3)
+- **Portal forgot-password email wired up** — `/portal/forgot-password`
+  now sends the reset link via SendGrid (mirroring the recovery-email
+  pattern in `auth.js`). When `SENDGRID_API_KEY` is unset it logs a
+  warning instead of the previous `console.log` of the plaintext
+  token, and still returns the generic "If an account exists…"
+  response so enumeration protection is preserved. (KNOWN-ISSUES #4)
 - **JoinPending open-redirect closed** — `pages/public/JoinPending.jsx`
   now gates `window.location.href = redirectUrl` with
   `isSafePaymentRedirect()`, matching the existing guards on

@@ -9,6 +9,7 @@ import { loginUser, logoutUser, refreshTokens, loginSysAdmin } from '../services
 import { requireAuth } from '../middleware/auth.js';
 import { tenantQuery, prisma } from '../utils/db.js';
 import { verifyPassword, hashPassword } from '../utils/password.js';
+import { invalidateUserSessions } from '../utils/redis.js';
 import { AppError } from '../middleware/errorHandler.js';
 import { logAudit } from '../utils/audit.js';
 
@@ -161,6 +162,15 @@ router.post('/change-password', requireAuth, async (req, res, next) => {
 
     const newHash = await hashPassword(newPassword);
     await tenantQuery(slug, `UPDATE users SET password_hash = $1, updated_at = now() WHERE id = $2`, [newHash, user.id]);
+
+    // Revoke all other refresh tokens for this user and mark sessions
+    // invalidated in Redis so any access tokens still in flight stop working
+    // at their next request. The caller's current access token continues to
+    // work until it expires (matches admin password-change behaviour).
+    await tenantQuery(slug, `UPDATE refresh_tokens SET revoked = true WHERE user_id = $1`, [user.id]);
+    await invalidateUserSessions(slug, user.id);
+
+    logAudit(slug, { userId: req.user.userId, userName: req.user.name, action: 'change_password', entityType: 'user', entityId: user.id, entityName: req.user.name });
     res.json({ message: 'Password changed.' });
   } catch (err) { next(err); }
 });
@@ -324,6 +334,20 @@ router.post('/force-change-password', requireAuth, async (req, res, next) => {
     if (!/[0-9]/.test(newPassword)) throw AppError('Password must include at least one number.', 400);
 
     const slug = req.user.tenantSlug;
+
+    // Gate: this route bypasses the current-password check and overwrites
+    // the security Q&A, so only allow it when the flag is actually set.
+    // Without this guard any authenticated user can rewrite their own
+    // recovery question + answer at will.
+    const [current] = await tenantQuery(
+      slug,
+      `SELECT must_change_password FROM users WHERE id = $1`,
+      [req.user.userId],
+    );
+    if (!current || !current.must_change_password) {
+      throw AppError('Password change not required.', 403);
+    }
+
     const newHash = await hashPassword(newPassword);
     const answerHash = await hashPassword(answer);
 
@@ -334,6 +358,9 @@ router.post('/force-change-password', requireAuth, async (req, res, next) => {
        WHERE id = $4`,
       [newHash, question, answerHash, req.user.userId],
     );
+
+    await tenantQuery(slug, `UPDATE refresh_tokens SET revoked = true WHERE user_id = $1`, [req.user.userId]);
+    await invalidateUserSessions(slug, req.user.userId);
 
     logAudit(slug, { userId: req.user.userId, userName: req.user.name, action: 'force_change_password', entityType: 'user', entityId: req.user.userId, entityName: req.user.name });
     res.json({ message: 'Password changed successfully.' });

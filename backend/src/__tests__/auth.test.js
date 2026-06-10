@@ -3,7 +3,7 @@
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import request from 'supertest';
-import { makeAuthHeader, TEST_TENANT } from './helpers.js';
+import { makeAuthHeader, TEST_TENANT, TEST_USER_ID } from './helpers.js';
 
 // ── Module mocks (hoisted before imports by vitest) ───────────────────────
 
@@ -18,6 +18,13 @@ vi.mock('../utils/redis.js', () => ({
   invalidateUserSessions: vi.fn().mockResolvedValue(undefined),
 }));
 
+vi.mock('../utils/password.js', () => ({
+  hashPassword:   vi.fn().mockResolvedValue('$hashed$'),
+  verifyPassword: vi.fn().mockResolvedValue(true),
+  generateToken:  vi.fn(() => 'opaque-token'),
+  hashOpaqueToken: vi.fn((t) => `hashed:${t}`),
+}));
+
 vi.mock('../services/authService.js', () => ({
   loginUser:     vi.fn(),
   logoutUser:    vi.fn().mockResolvedValue(undefined),
@@ -28,6 +35,8 @@ vi.mock('../services/authService.js', () => ({
 const { default: app } = await import('../app.js');
 const { loginUser, logoutUser, refreshTokens, loginSysAdmin } =
   await import('../services/authService.js');
+const { tenantQuery } = await import('../utils/db.js');
+const { invalidateUserSessions } = await import('../utils/redis.js');
 
 // ── POST /auth/login ──────────────────────────────────────────────────────
 
@@ -185,5 +194,107 @@ describe('POST /auth/system/login', () => {
       .send({ email: 'admin@beacon2.local' });
 
     expect(res.status).toBe(422);
+  });
+});
+
+// ── POST /auth/change-password ────────────────────────────────────────────
+
+describe('POST /auth/change-password', () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  const validBody = { currentPassword: 'oldpass', newPassword: 'NewPass99X!' };
+
+  it('revokes refresh tokens and invalidates sessions on success', async () => {
+    // 1: SELECT user → returns the user row
+    tenantQuery.mockResolvedValueOnce([{ id: TEST_USER_ID, password_hash: '$old$' }]);
+    // 2: UPDATE password — no rows needed
+    tenantQuery.mockResolvedValueOnce([]);
+    // 3: UPDATE refresh_tokens
+    tenantQuery.mockResolvedValueOnce([]);
+    // 4: audit log INSERT (best-effort)
+    tenantQuery.mockResolvedValueOnce([]);
+
+    const res = await request(app)
+      .post('/auth/change-password')
+      .set('Authorization', makeAuthHeader())
+      .send(validBody);
+
+    expect(res.status).toBe(200);
+
+    const sqlCalls = tenantQuery.mock.calls.map((c) => c[1]);
+    expect(sqlCalls.some((s) => /UPDATE refresh_tokens SET revoked = true/.test(s))).toBe(true);
+    expect(invalidateUserSessions).toHaveBeenCalledWith(TEST_TENANT, TEST_USER_ID);
+  });
+
+  it('returns 400 when the current password is wrong', async () => {
+    const { verifyPassword } = await import('../utils/password.js');
+    verifyPassword.mockResolvedValueOnce(false);
+    tenantQuery.mockResolvedValueOnce([{ id: TEST_USER_ID, password_hash: '$old$' }]);
+
+    const res = await request(app)
+      .post('/auth/change-password')
+      .set('Authorization', makeAuthHeader())
+      .send(validBody);
+
+    expect(res.status).toBe(400);
+    expect(invalidateUserSessions).not.toHaveBeenCalled();
+  });
+});
+
+// ── POST /auth/force-change-password ──────────────────────────────────────
+
+describe('POST /auth/force-change-password', () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  const validBody = {
+    newPassword: 'NewPass99X!',
+    question:    'Favourite colour?',
+    answer:      'Blue',
+  };
+
+  it('returns 403 when must_change_password is false', async () => {
+    tenantQuery.mockResolvedValueOnce([{ must_change_password: false }]);
+
+    const res = await request(app)
+      .post('/auth/force-change-password')
+      .set('Authorization', makeAuthHeader())
+      .send(validBody);
+
+    expect(res.status).toBe(403);
+    expect(res.body.error).toBe('Password change not required.');
+    expect(invalidateUserSessions).not.toHaveBeenCalled();
+  });
+
+  it('returns 403 when the user row is missing', async () => {
+    tenantQuery.mockResolvedValueOnce([]);
+
+    const res = await request(app)
+      .post('/auth/force-change-password')
+      .set('Authorization', makeAuthHeader())
+      .send(validBody);
+
+    expect(res.status).toBe(403);
+  });
+
+  it('updates password and revokes sessions when must_change_password is true', async () => {
+    // 1: SELECT must_change_password
+    tenantQuery.mockResolvedValueOnce([{ must_change_password: true }]);
+    // 2: UPDATE users
+    tenantQuery.mockResolvedValueOnce([]);
+    // 3: UPDATE refresh_tokens
+    tenantQuery.mockResolvedValueOnce([]);
+    // 4: audit
+    tenantQuery.mockResolvedValueOnce([]);
+
+    const res = await request(app)
+      .post('/auth/force-change-password')
+      .set('Authorization', makeAuthHeader())
+      .send(validBody);
+
+    expect(res.status).toBe(200);
+    const sqlCalls = tenantQuery.mock.calls.map((c) => c[1]);
+    expect(sqlCalls.some((s) => /UPDATE users SET password_hash = \$1, must_change_password = false/.test(s))).toBe(true);
+    expect(sqlCalls.some((s) => /UPDATE refresh_tokens SET revoked = true/.test(s))).toBe(true);
+    expect(invalidateUserSessions).toHaveBeenCalledWith(TEST_TENANT, TEST_USER_ID);
   });
 });

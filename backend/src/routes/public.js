@@ -5,6 +5,7 @@
 import { Router } from 'express';
 import { randomBytes } from 'crypto';
 import { z } from 'zod';
+import sgMail from '@sendgrid/mail';
 import { prisma, tenantQuery, withTenant } from '../utils/db.js';
 import { hashPassword, verifyPassword, generateToken, hashOpaqueToken } from '../utils/password.js';
 import { signAccessToken } from '../utils/jwt.js';
@@ -16,6 +17,45 @@ import { logAudit } from '../utils/audit.js';
 import portalRoutes from './portal.js';
 
 const router = Router();
+
+if (process.env.SENDGRID_API_KEY) {
+  sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+}
+
+const PORTAL_FROM = process.env.RECOVERY_FROM_ADDRESS ?? 'noreply@u3abeacon.org.uk';
+
+// Portal-login lockout — reuses the admin login env vars so operators have a
+// single knob. Mirrors registerFailedLogin() in services/authService.js.
+const MAX_FAILED_LOGINS = parseInt(process.env.MAX_FAILED_LOGINS ?? '5', 10);
+const LOCKOUT_MINUTES   = parseInt(process.env.LOCKOUT_MINUTES   ?? '15', 10);
+
+async function registerPortalFailedLogin(slug, members, attemptedEmail) {
+  for (const m of members) {
+    const newCount = (m.portal_failed_login_count ?? 0) + 1;
+    const willLock = newCount >= MAX_FAILED_LOGINS;
+    const lockedUntil = willLock
+      ? new Date(Date.now() + LOCKOUT_MINUTES * 60_000)
+      : null;
+
+    await tenantQuery(
+      slug,
+      `UPDATE members SET portal_failed_login_count = $1, portal_locked_until = $2 WHERE id = $3`,
+      [willLock ? 0 : newCount, lockedUntil, m.id],
+    );
+
+    await logAudit(slug, {
+      userId:     null,
+      userName:   `${m.forenames} ${m.surname}`,
+      action:     willLock ? 'portal_login_locked' : 'portal_login_failed',
+      entityType: 'member',
+      entityId:   m.id,
+      entityName: `${m.forenames} ${m.surname}`,
+      detail:     willLock
+        ? `Portal account locked for ${LOCKOUT_MINUTES} min after ${MAX_FAILED_LOGINS} failed attempts (email ${attemptedEmail})`
+        : `Failed portal attempt ${newCount}/${MAX_FAILED_LOGINS} (email ${attemptedEmail})`,
+    });
+  }
+}
 
 // ─── Middleware: resolve tenant from slug ────────────────────────────────
 
@@ -881,13 +921,26 @@ router.post('/:slug/portal/login', async (req, res, next) => {
     const members = await tenantQuery(
       slug,
       `SELECT m.id, m.membership_number, m.forenames, m.surname, m.email,
-              m.portal_password_hash, m.portal_email_verified
+              m.portal_password_hash, m.portal_email_verified,
+              m.portal_failed_login_count, m.portal_locked_until
        FROM members m
        WHERE m.portal_email = $1 AND m.portal_password_hash IS NOT NULL`,
       [data.email.toLowerCase()],
     );
 
     if (members.length === 0) {
+      return res.status(401).json({ error: 'Invalid email or password.' });
+    }
+
+    // If any member behind this email is currently locked, refuse the
+    // attempt without recording another failure (otherwise hammering during
+    // a lock window would extend it indefinitely). Same generic message as
+    // a wrong-password response — never reveal the lock to the attacker.
+    const now = new Date();
+    const anyLocked = members.some(
+      (m) => m.portal_locked_until && new Date(m.portal_locked_until) > now,
+    );
+    if (anyLocked) {
       return res.status(401).json({ error: 'Invalid email or password.' });
     }
 
@@ -902,11 +955,22 @@ router.post('/:slug/portal/login', async (req, res, next) => {
     }
 
     if (!authenticatedMember) {
+      await registerPortalFailedLogin(slug, members, data.email.toLowerCase());
       return res.status(401).json({ error: 'Invalid email or password.' });
     }
 
     if (!authenticatedMember.portal_email_verified) {
       return res.status(403).json({ error: 'Please verify your email address before signing in.' });
+    }
+
+    // Successful login — clear any failure counter / lockout window on the
+    // winning member row.
+    if (authenticatedMember.portal_failed_login_count > 0 || authenticatedMember.portal_locked_until) {
+      await tenantQuery(
+        slug,
+        `UPDATE members SET portal_failed_login_count = 0, portal_locked_until = NULL WHERE id = $1`,
+        [authenticatedMember.id],
+      );
     }
 
     // Issue a portal JWT (different from admin JWT)
@@ -971,13 +1035,50 @@ router.post('/:slug/portal/forgot-password', async (req, res, next) => {
 
     const frontendBase = process.env.CORS_ORIGIN || 'http://localhost:5173';
     const resetLink = `${frontendBase}/public/${slug}/portal/reset-password?token=${resetToken}`;
-    console.log(`[Portal] Would send password reset email to ${email}: ${resetLink}`);
+
+    await sendPortalResetEmail(email.toLowerCase(), resetLink);
 
     res.json({ message: 'If an account exists with that email, a reset link has been sent.' });
   } catch (err) {
     next(err);
   }
 });
+
+/** Send the portal password-reset email. Mirrors sendRecoveryEmail() in
+ *  auth.js — if SendGrid is not configured we log a warning (without the
+ *  token) and return silently so the caller still gets the generic
+ *  "If an account exists…" response. A SendGrid failure is logged but
+ *  also swallowed to keep enumeration protection intact. */
+async function sendPortalResetEmail(toEmail, resetLink) {
+  const subject = 'Reset your Members Portal password';
+  const body = `A password reset was requested for your Members Portal account.
+
+Use the link below to choose a new password. The link expires in one hour.
+
+${resetLink}
+
+If you did not request this, you can ignore this email.`;
+
+  if (!process.env.SENDGRID_API_KEY) {
+    console.warn(
+      `[Portal] SendGrid not configured — cannot deliver password reset email to ${toEmail}. ` +
+      `Set SENDGRID_API_KEY to enable portal reset emails.`,
+    );
+    return;
+  }
+
+  try {
+    await sgMail.send({
+      to: toEmail,
+      from: PORTAL_FROM,
+      subject,
+      text: body,
+    });
+  } catch (err) {
+    // Never include the reset link in the error log.
+    console.error(`[Portal] Failed to send password reset email to ${toEmail}:`, err.message);
+  }
+}
 
 // ─── POST /:slug/portal/reset-password ──────────────────────────────────
 
