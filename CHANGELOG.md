@@ -5,6 +5,25 @@ Format: `## [version] — YYYY-MM-DD` with bullet points per change.
 
 ---
 
+## [Unreleased] — 2026-06-10
+
+### Security
+- **Role-assignment privilege-escalation guard** — `POST /users`,
+  `POST /users/:id/roles`, and `DELETE /users/:id/roles/:roleId` now refuse to
+  grant or revoke a role whose privilege set includes anything the actor does
+  not themselves hold. Previously, anyone with `user_record:change` could
+  grant Administration to any user (including themselves).
+- **Hashed opaque tokens at rest** — `portal_reset_token` and `payment_token`
+  are now stored as SHA-256 hashes (via the new `hashOpaqueToken()` helper in
+  `utils/password.js`). A database leak no longer leaks usable password-reset
+  or in-flight payment-continuation tokens. Plaintext tokens are still
+  delivered to the user via the email link / API response. The portal renewal
+  metadata suffix (`hash|<base64-meta>`) is preserved unchanged.
+- **Note:** any portal password-reset link issued before deployment, and any
+  in-flight "Applicant" payment-resume link, will stop working at deploy
+  time — affected users should request a fresh link or restart the joining
+  flow.
+
 ## [Unreleased] — 2026-06-09
 
 ### Added

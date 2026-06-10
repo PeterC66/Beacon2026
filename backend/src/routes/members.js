@@ -8,6 +8,7 @@ import PDFDocument from 'pdfkit';
 import { requireAuth } from '../middleware/auth.js';
 import { requirePrivilege } from '../middleware/requirePrivilege.js';
 import { tenantQuery, escapeLike } from '../utils/db.js';
+import { hashOpaqueToken } from '../utils/password.js';
 import { AppError } from '../middleware/errorHandler.js';
 import { isFeatureEnabled, requireFeature } from '../middleware/requireFeature.js';
 import { logAudit } from '../utils/audit.js';
@@ -1205,10 +1206,12 @@ router.post('/', requirePrivilege('member_record', 'create'), async (req, res, n
           );
         }
         paymentToken = randomBytes(24).toString('hex');
+        // Store only the hash — the plaintext is returned to the caller so it
+        // can be embedded in a "complete your payment" link.
         await tenantQuery(
           slug,
           `UPDATE members SET status_id = $1, payment_token = $2, updated_at = now() WHERE id = $3`,
-          [applicantStatus.id, paymentToken, member.id],
+          [applicantStatus.id, hashOpaqueToken(paymentToken), member.id],
         );
         member.status_id = applicantStatus.id;
       }
