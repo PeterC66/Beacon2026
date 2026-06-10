@@ -693,7 +693,7 @@ router.patch('/personal-details', async (req, res, next) => {
            portal_verification_expires = $3,
            updated_at = now()
          WHERE id = $4`,
-        [data.email.toLowerCase(), verificationToken, verificationExpires, memberId]);
+        [data.email.toLowerCase(), hashOpaqueToken(verificationToken), verificationExpires, memberId]);
 
       const frontendBase = process.env.CORS_ORIGIN || 'http://localhost:5173';
       const verifyLink = `${frontendBase}/public/${slug}/portal/verify?token=${verificationToken}`;

@@ -47,6 +47,32 @@ fixed in the same session. See CHANGELOG 2026-06-10 for what was fixed.
 11. **Privilege-string format collisions** — `${resource}:${action}` with
     resources that may contain `:` (`finance:transactions:create`). Works
     today, fragile if a future resource code includes `:create`.
+12. **No targeted rate limit on portal endpoints** (`app.js:69-71`). Only
+    the global 300/15min/IP `generalLimiter` covers `/public/:slug/portal/*`;
+    `/auth/*` has a tighter `authLimiter`. Add a 20/15min/IP limiter per
+    portal-register/login/forgot/reset/verify-email route.
+13. **Portal JWT skips Redis session-invalidation check**
+    (`routes/portal.js:22`). Disabling a member's portal credentials does
+    not take effect until the 15-min access token expires.
+14. **Verification & reset tokens logged via `console.log`**
+    (`routes/public.js:804`, `:955`; `routes/portal.js:699`). Either wire
+    SendGrid or refuse the request when email is not configured — don't
+    persist the token and emit it to stdout.
+15. **Slug regex inconsistency** — `routes/public.js:24` allows
+    `[a-z0-9_-]` but `utils/db.js:27` only allows `[a-z0-9_]`. A slug
+    containing `-` 500s inside `tenantQuery` rather than 400-ing at the
+    edge. Unify both regexes.
+16. **Photo upload doesn't validate magic bytes** —
+    `routes/portal.js:726`. Mime-type is whitelisted to jpeg/png/gif and
+    Helmet's nosniff blocks browser sniffing, so no XSS — but mislabelled
+    payloads silently succeed and may break PDF rendering downstream.
+17. **Portal login email-enumeration via differentiated responses** —
+    `routes/public.js:887,891`. 401 for unknown/wrong-password but 403
+    "Please verify your email" for known-unverified accounts reveals
+    which emails have a portal account.
+18. **`/portal/forgot-password` timing enumeration** —
+    `routes/public.js:922`. Bcrypt + DB write happen only on hit;
+    response time leaks account existence.
 
 ---
 

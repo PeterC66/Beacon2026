@@ -8,6 +8,23 @@ Format: `## [version] — YYYY-MM-DD` with bullet points per change.
 ## [Unreleased] — 2026-06-10
 
 ### Security
+- **PayPal stub refuses to verify in production** — `utils/paypal.js`
+  `verifyPaymentNotification()` now returns `verified: false` when
+  `NODE_ENV === 'production'` unless `PAYPAL_STUB_ALLOW=true` is explicitly
+  set. Closes the path where any unauthenticated caller could complete the
+  `/public/:slug/payment-confirm` flow (flipping an Applicant to Current
+  and recording a fake finance transaction) until real IPN verification is
+  wired up. Existing dev/test behaviour is unchanged.
+- **Portal registration forename match tightened** —
+  `routes/public.js` `/portal/register` no longer accepts a prefix match
+  for `forename`. Submitting `"J"` previously matched every member whose
+  forename began with "J"; now the full forename or the first whitespace-
+  delimited token must match exactly (case-insensitive).
+- **`portal_verification_token` now hashed at rest** — same SHA-256
+  treatment as `portal_reset_token` and `payment_token`. Covers both the
+  registration flow and the email-change re-verification path in
+  `routes/portal.js`. In-flight verification links become invalid on
+  deploy.
 - **Role-assignment privilege-escalation guard** — `POST /users`,
   `POST /users/:id/roles`, and `DELETE /users/:id/roles/:roleId` now refuse to
   grant or revoke a role whose privilege set includes anything the actor does
