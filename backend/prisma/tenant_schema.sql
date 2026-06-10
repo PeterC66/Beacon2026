@@ -738,6 +738,8 @@ ALTER TABLE :schema.members ADD COLUMN IF NOT EXISTS portal_verification_token T
 ALTER TABLE :schema.members ADD COLUMN IF NOT EXISTS portal_verification_expires TIMESTAMPTZ;
 ALTER TABLE :schema.members ADD COLUMN IF NOT EXISTS portal_reset_token TEXT;
 ALTER TABLE :schema.members ADD COLUMN IF NOT EXISTS portal_reset_expires TIMESTAMPTZ;
+ALTER TABLE :schema.members ADD COLUMN IF NOT EXISTS portal_failed_login_count INTEGER NOT NULL DEFAULT 0;
+ALTER TABLE :schema.members ADD COLUMN IF NOT EXISTS portal_locked_until TIMESTAMPTZ;
 
 CREATE INDEX IF NOT EXISTS :schema_idx_members_portal_email ON :schema.members (portal_email) WHERE portal_email IS NOT NULL;
 
