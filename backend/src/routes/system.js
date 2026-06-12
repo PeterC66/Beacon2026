@@ -9,6 +9,7 @@ import multer from 'multer';
 import { requireSysAdmin } from '../middleware/auth.js';
 import { prisma, tenantQuery } from '../utils/db.js';
 import { hashPassword } from '../utils/password.js';
+import { passwordSchema } from '../utils/passwordPolicy.js';
 import { AppError } from '../middleware/errorHandler.js';
 import { createTenantSchema } from '../seed/createTenant.js';
 import {
@@ -45,7 +46,7 @@ const newTenantSchema = z.object({
   slug: z.string().regex(/^[a-z0-9_]+$/, 'Slug must be lowercase alphanumeric with underscores'),
   adminEmail: z.string().email(),
   adminName: z.string().min(1),
-  adminPassword: z.string().min(8),
+  adminPassword: passwordSchema,
   adminUsername: z
     .string()
     .regex(/^[a-z0-9]+$/, 'Username must be lowercase letters and numbers only'),

@@ -17,6 +17,7 @@ vi.mock('../utils/db.js', () => ({
   prisma: {
     $disconnect: vi.fn(),
     sysTenant: { findUnique: vi.fn() },
+    sysAdmin: { findUnique: vi.fn() },
     $queryRawUnsafe: vi.fn(),
     $transaction: vi.fn(),
   },
@@ -232,6 +233,7 @@ describe('PATCH /system/tenants/:slug/feature-config (sys admin)', () => {
   beforeEach(() => vi.clearAllMocks());
 
   it('accepts eventAttendance and persists it', async () => {
+    prisma.sysAdmin.findUnique.mockResolvedValueOnce({ id: 'admin-1', active: true });
     prisma.sysTenant.findUnique.mockResolvedValueOnce({ slug: 'demo' });
     tenantQuery.mockResolvedValueOnce([{ feature_config: { eventAttendance: false } }]);
 
@@ -249,5 +251,18 @@ describe('PATCH /system/tenants/:slug/feature-config (sys admin)', () => {
     );
     expect(updateCall).toBeTruthy();
     expect(JSON.parse(updateCall[2][0])).toEqual({ eventAttendance: false });
+  });
+
+  it('rejects a sys-admin whose account is no longer active', async () => {
+    prisma.sysAdmin.findUnique.mockResolvedValueOnce({ id: 'admin-1', active: false });
+
+    const res = await request(app)
+      .patch('/system/tenants/demo/feature-config')
+      .set('Authorization', makeSysAdminHeader())
+      .send({ eventAttendance: false });
+
+    expect(res.status).toBe(401);
+    // Must short-circuit before touching tenant data
+    expect(tenantQuery).not.toHaveBeenCalled();
   });
 });

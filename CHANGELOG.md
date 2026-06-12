@@ -8,6 +8,17 @@ Format: `## [version] — YYYY-MM-DD` with bullet points per change.
 ## [Unreleased] — 2026-06-12
 
 ### Added
+- **Shared password policy & temp-password generator (ImprovementPlan Chunk 4)** —
+  new `backend/src/utils/passwordPolicy.js` exports `passwordSchema` (10–72
+  chars, at least one upper, lower, and digit) and a `crypto.randomInt`-based
+  `generateTempPassword()`. The schema is now the single source of truth for
+  `PATCH /users`, `POST /system/tenants`, `/auth/change-password`,
+  `/auth/force-change-password`, and all portal register/reset/change flows.
+- **Targeted portal-auth rate limiter (ImprovementPlan Chunk 4, finding S11)** —
+  a dedicated 20/15 min/IP limiter (env `PORTAL_AUTH_RATE_LIMIT_MAX`) now guards
+  the portal register, login, forgot-password, reset-password, and verify-email
+  endpoints, in addition to the global limiter.
+
 - **Linting & formatting baseline (ImprovementPlan Chunk 3, findings T1/T2)** —
   added ESLint 9 (flat config) and Prettier to both `backend/` and
   `frontend/`. The frontend config uses `eslint-plugin-react` plus the
@@ -37,6 +48,30 @@ Format: `## [version] — YYYY-MM-DD` with bullet points per change.
   tooling/lint-fix changes. No logic changes.
 
 ### Fixed
+- **Security: auth & enumeration hardening (ImprovementPlan Chunk 4,
+  findings S2–S8, S11, S12)** —
+  - **Temp-password modulo bias (S2)** — replaced biased `byte % length`
+    selection with `crypto.randomInt` in the shared generator.
+  - **Inconsistent password policy (S4)** — unified behind `passwordSchema`
+    (see Added); `PATCH /users` no longer accepts weak 8-char passwords.
+  - **Sys-admin state check (S7)** — `requireSysAdmin` now re-loads the
+    sys-admin each request and rejects (401) if the account is missing or
+    inactive, instead of trusting the token for its full lifetime.
+  - **Portal session invalidation (S3)** — `requirePortalAuth` honours the
+    Redis invalidation marker; portal password change/reset now set it.
+  - **Account-enumeration (S5)** — `/auth/recover` and
+    `/portal/forgot-password` send their emails fire-and-forget so response
+    time no longer leaks account existence; portal login runs a throwaway
+    bcrypt comparison for unknown emails to equalise timing.
+  - **Verification tokens no longer logged (S6)** — portal register and
+    email-change email the verification link via SendGrid (or log a token-free
+    warning when SendGrid is unset) rather than printing it to stdout.
+  - **Slug regex unified (S8)** — the public `resolveTenant` guard now matches
+    `utils/db.js` (`[a-z0-9_]+`), so a hyphenated slug returns 400 at the edge
+    instead of 500 inside `tenantQuery`.
+  - **CSRF origin check (S12)** — `/auth/refresh` gates the Origin check on
+    `CORS_ORIGIN` being set rather than on `NODE_ENV`, so a mis-set `NODE_ENV`
+    can no longer silently disable it.
 - **ESLint violations cleared (ImprovementPlan Chunk 3)** — removed unused
   imports and variables and dropped dead destructured bindings across 27
   backend and ~25 frontend files (e.g. unused `useNavigate`/`Link` imports,
