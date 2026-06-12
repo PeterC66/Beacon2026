@@ -261,6 +261,23 @@ Every item below applies to every new feature — no exceptions.
   from `backend/src/utils/audit.js` for create/update/delete operations. `logAudit`
   never throws, so no try/catch needed around it.
 
+- [ ] **Response shape and status codes** — adopt one convention consistently:
+
+  | Outcome | Status | Body |
+  |---------|--------|------|
+  | Resource created | **201** | the created resource object (e.g. `res.status(201).json(group)`) |
+  | Resource fetched / updated | **200** | the resource object (or an array for a list) |
+  | Action with no resource to return (delete, bulk op) | **200** | `{ message: '…' }` |
+  | Client error (validation, not found, forbidden) | 4xx | `{ error: '…' }` — always via `throw AppError(msg, status)` so the central `errorHandler` formats it |
+  | Zod body/query validation failure | 422 | `{ error: 'Validation error', issues: [...] }` (handled centrally) |
+
+  Use `{ error }` (singular) for **all** error bodies — never `{ message }` for an
+  error, and never a bare string. Reserve `{ message }` for *successful*
+  action-only responses. Never hand-roll an error status with `res.status(4xx)`
+  when `AppError` will do; the existing inline `res.status(400).json({ error })`
+  guards (e.g. "Nothing to update.") are acceptable but `AppError` is preferred
+  for new code.
+
 ## List pages
 
 - [ ] **Sortable columns** — use `useSortedData` hook + `SortableHeader` component.

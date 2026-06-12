@@ -12,10 +12,15 @@ import { tenantQuery, escapeLike } from '../utils/db.js';
 import { sanitizeCell } from '../utils/spreadsheet.js';
 import { AppError } from '../middleware/errorHandler.js';
 import { logAudit } from '../utils/audit.js';
+import { buildCalendarEventFilters } from '../utils/eventFilters.js';
 
 const router = Router();
 router.use(requireAuth);
 router.use(requireFeature('events'));
+
+// Event-search (TransactionEditor event selector) result paging.
+const EVENT_SEARCH_DEFAULT_LIMIT = 20;
+const EVENT_SEARCH_MAX_LIMIT = 50;
 
 // ─── helpers ──────────────────────────────────────────────────────────────────
 
@@ -42,42 +47,7 @@ function fmtTime(t) {
 router.get('/events', requirePrivilege('calendar', 'view'), async (req, res, next) => {
   try {
     const slug = req.user.tenantSlug;
-    const { from, to, memberId, venueId, groupId, eventTypeId, groupsOnly } = req.query;
-
-    const conditions = [];
-    const params = [];
-    let i = 1;
-
-    if (from) {
-      conditions.push(`ge.event_date >= $${i++}::date`);
-      params.push(from);
-    }
-    if (to) {
-      conditions.push(`ge.event_date <= $${i++}::date`);
-      params.push(to);
-    }
-    if (venueId) {
-      conditions.push(`ge.venue_id = $${i++}`);
-      params.push(venueId);
-    }
-    if (groupId) {
-      conditions.push(`ge.group_id = $${i++}`);
-      params.push(groupId);
-    } else if (groupsOnly === 'true') {
-      conditions.push(`ge.group_id IS NOT NULL`);
-    }
-    if (eventTypeId) {
-      conditions.push(`ge.event_type_id = $${i++}`);
-      params.push(eventTypeId);
-    }
-    if (memberId) {
-      conditions.push(
-        `(ge.group_id IS NULL OR ge.group_id IN (SELECT group_id FROM group_members WHERE member_id = $${i++}))`,
-      );
-      params.push(memberId);
-    }
-
-    const where = conditions.length > 0 ? 'WHERE ' + conditions.join(' AND ') : '';
+    const { where, params } = buildCalendarEventFilters(req.query);
 
     const events = await tenantQuery(
       slug,
@@ -106,42 +76,8 @@ router.get('/events', requirePrivilege('calendar', 'view'), async (req, res, nex
 router.get('/events/pdf', requirePrivilege('calendar', 'download'), async (req, res, next) => {
   try {
     const slug = req.user.tenantSlug;
-    const { from, to, memberId, venueId, groupId, eventTypeId, groupsOnly } = req.query;
-
-    const conditions = [];
-    const params = [];
-    let i = 1;
-
-    if (from) {
-      conditions.push(`ge.event_date >= $${i++}::date`);
-      params.push(from);
-    }
-    if (to) {
-      conditions.push(`ge.event_date <= $${i++}::date`);
-      params.push(to);
-    }
-    if (venueId) {
-      conditions.push(`ge.venue_id = $${i++}`);
-      params.push(venueId);
-    }
-    if (groupId) {
-      conditions.push(`ge.group_id = $${i++}`);
-      params.push(groupId);
-    } else if (groupsOnly === 'true') {
-      conditions.push(`ge.group_id IS NOT NULL`);
-    }
-    if (eventTypeId) {
-      conditions.push(`ge.event_type_id = $${i++}`);
-      params.push(eventTypeId);
-    }
-    if (memberId) {
-      conditions.push(
-        `(ge.group_id IS NULL OR ge.group_id IN (SELECT group_id FROM group_members WHERE member_id = $${i++}))`,
-      );
-      params.push(memberId);
-    }
-
-    const where = conditions.length > 0 ? 'WHERE ' + conditions.join(' AND ') : '';
+    const { from, to } = req.query; // retained for the PDF title label
+    const { where, params } = buildCalendarEventFilters(req.query);
 
     const events = await tenantQuery(
       slug,
@@ -251,42 +187,8 @@ router.get('/events/pdf', requirePrivilege('calendar', 'download'), async (req, 
 router.get('/events/excel', requirePrivilege('calendar', 'download'), async (req, res, next) => {
   try {
     const slug = req.user.tenantSlug;
-    const { from, to, memberId, venueId, groupId, eventTypeId, groupsOnly } = req.query;
-
-    const conditions = [];
-    const params = [];
-    let i = 1;
-
-    if (from) {
-      conditions.push(`ge.event_date >= $${i++}::date`);
-      params.push(from);
-    }
-    if (to) {
-      conditions.push(`ge.event_date <= $${i++}::date`);
-      params.push(to);
-    }
-    if (venueId) {
-      conditions.push(`ge.venue_id = $${i++}`);
-      params.push(venueId);
-    }
-    if (groupId) {
-      conditions.push(`ge.group_id = $${i++}`);
-      params.push(groupId);
-    } else if (groupsOnly === 'true') {
-      conditions.push(`ge.group_id IS NOT NULL`);
-    }
-    if (eventTypeId) {
-      conditions.push(`ge.event_type_id = $${i++}`);
-      params.push(eventTypeId);
-    }
-    if (memberId) {
-      conditions.push(
-        `(ge.group_id IS NULL OR ge.group_id IN (SELECT group_id FROM group_members WHERE member_id = $${i++}))`,
-      );
-      params.push(memberId);
-    }
-
-    const where = conditions.length > 0 ? 'WHERE ' + conditions.join(' AND ') : '';
+    const { from, to } = req.query; // retained for the worksheet title label
+    const { where, params } = buildCalendarEventFilters(req.query);
 
     const events = await tenantQuery(
       slug,
@@ -615,7 +517,10 @@ router.get('/events/search', requirePrivilege('calendar', 'view'), async (req, r
   try {
     const slug = req.user.tenantSlug;
     const q = String(req.query.q || '').trim();
-    const limit = Math.min(parseInt(req.query.limit, 10) || 20, 50);
+    const limit = Math.min(
+      parseInt(req.query.limit, 10) || EVENT_SEARCH_DEFAULT_LIMIT,
+      EVENT_SEARCH_MAX_LIMIT,
+    );
     if (q.length < 2) return res.json([]);
 
     const rows = await tenantQuery(

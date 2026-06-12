@@ -222,14 +222,15 @@ Implemented in v0.9.3 for the 6 low-risk routes (69 new tests):
 
 ## Other observations (not recommendations, informational)
 
-- **Audit logging inconsistency** — `groups.js` and `teams.js` don't call `logAudit()`
-  on create/update/delete, while `members.js` and `finance.js` do. Consider adding
-  audit logging to groups/teams operations.
-- **settings.js uses Prisma directly** while all other routes use raw SQL via
-  `tenantQuery`. Minor inconsistency but not urgent.
+- **Audit logging inconsistency** — ✅ Resolved (ImprovementPlan Chunk 6, 2026-06-12).
+  `groups.js` and `teams.js` now call `logAudit()` on entity create/update/delete,
+  matching `members.js` / `finance.js`.
+- **settings.js uses Prisma directly** — ✅ Reviewed, no change needed (Chunk 6).
+  The Prisma calls read the **public** schema (`sys_tenants.name`, `sys_settings`),
+  which `tenantQuery()` (tenant-schema only) cannot reach. The remaining settings
+  queries already use `tenantQuery`. Not an inconsistency to fix.
 - **Home.jsx** (16K), **Login.jsx** (11K), **ChangePassword.jsx** sit at the pages
   root rather than in a subdirectory. Could move to `pages/auth/` but low priority.
-- **`eventAttendance` missing from `FEATURE_DEPS`** — `FeatureConfig.jsx` shows it
-  depends on `events`, but it's not in the shared `FEATURE_DEPS` map. The backend
-  `requireFeature` middleware won't check the parent. May be intentional (if the
-  middleware is never called with `eventAttendance`) or a bug worth investigating.
+- **`eventAttendance` missing from `FEATURE_DEPS`** — ✅ Resolved. `eventAttendance: 'events'`
+  is present in `shared/constants.js` `FEATURE_DEPS` (verified Chunk 6, 2026-06-12);
+  the dependency is enforced by `requireFeature`.
