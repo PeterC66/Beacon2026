@@ -2,13 +2,13 @@
 // Authentication endpoints: login, logout, token refresh
 
 import { Router } from 'express';
-import crypto from 'crypto';
 import { z } from 'zod';
 import sgMail from '@sendgrid/mail';
 import { loginUser, logoutUser, refreshTokens, loginSysAdmin } from '../services/authService.js';
 import { requireAuth } from '../middleware/auth.js';
 import { tenantQuery, prisma } from '../utils/db.js';
 import { verifyPassword, hashPassword } from '../utils/password.js';
+import { passwordSchema, generateTempPassword } from '../utils/passwordPolicy.js';
 import { invalidateUserSessions } from '../utils/redis.js';
 import { AppError } from '../middleware/errorHandler.js';
 import { logAudit } from '../utils/audit.js';
@@ -42,8 +42,10 @@ function isAllowedOrigin(req) {
   const origin = req.headers.origin;
   if (!origin) {
     // Browsers always send Origin on cross-origin POST. Absence means a
-    // non-browser caller (server-to-server, tests) — no CSRF risk.
-    return process.env.NODE_ENV !== 'production';
+    // non-browser caller (server-to-server, tests) — no CSRF risk. Whether to
+    // enforce is gated on CORS_ORIGIN being set (above), never on NODE_ENV, so
+    // a mis-set NODE_ENV in staging cannot silently drop this protection.
+    return true;
   }
   try {
     return new URL(origin).origin === new URL(allowed).origin;
@@ -151,7 +153,7 @@ router.post('/system/login', async (req, res, next) => {
 
 const changePwSchema = z.object({
   currentPassword: z.string().min(1),
-  newPassword: z.string().min(10).max(72),
+  newPassword: passwordSchema,
 });
 
 router.post('/change-password', requireAuth, async (req, res, next) => {
@@ -293,8 +295,13 @@ router.post('/recover', async (req, res, next) => {
       return res.json({ securityQuestion: user.security_question, userId: user.id });
     }
 
-    // No security question set — send recovery email directly
-    await sendRecoveryEmail(data.tenantSlug, user);
+    // No security question set — send recovery email. Fire-and-forget so the
+    // response time does not depend on the bcrypt hash + DB write inside
+    // sendRecoveryEmail (which would otherwise leak account existence by
+    // timing — a matched account responds noticeably slower than a miss).
+    void sendRecoveryEmail(data.tenantSlug, user).catch((err) =>
+      console.error('[Recovery] Background recovery email failed:', err.message),
+    );
     res.json({ message: RECOVER_GENERIC });
   } catch (err) {
     next(err);
@@ -337,7 +344,9 @@ router.post('/recover/verify', async (req, res, next) => {
       });
     }
 
-    await sendRecoveryEmail(data.tenantSlug, user);
+    void sendRecoveryEmail(data.tenantSlug, user).catch((err) =>
+      console.error('[Recovery] Background recovery email failed:', err.message),
+    );
     res.json({ message: RECOVER_GENERIC });
   } catch (err) {
     next(err);
@@ -349,7 +358,7 @@ router.post('/recover/verify', async (req, res, next) => {
 // Sets new password + security Q&A. Does NOT require current password.
 
 const forceChangePwSchema = z.object({
-  newPassword: z.string().min(10).max(72),
+  newPassword: passwordSchema,
   question: z.string().min(1).max(200),
   answer: z.string().min(1).max(200),
 });
@@ -357,15 +366,6 @@ const forceChangePwSchema = z.object({
 router.post('/force-change-password', requireAuth, async (req, res, next) => {
   try {
     const { newPassword, question, answer } = forceChangePwSchema.parse(req.body);
-
-    // Validate password rules: no spaces, upper+lower+number
-    if (/\s/.test(newPassword)) throw AppError('Password must not contain spaces.', 400);
-    if (!/[A-Z]/.test(newPassword))
-      throw AppError('Password must include at least one uppercase letter.', 400);
-    if (!/[a-z]/.test(newPassword))
-      throw AppError('Password must include at least one lowercase letter.', 400);
-    if (!/[0-9]/.test(newPassword))
-      throw AppError('Password must include at least one number.', 400);
 
     const slug = req.user.tenantSlug;
 
@@ -413,15 +413,6 @@ router.post('/force-change-password', requireAuth, async (req, res, next) => {
 });
 
 // ─── Helpers ─────────────────────────────────────────────────────────────
-
-/** Generate a random temporary password like "!xZ#8kP2" */
-function generateTempPassword() {
-  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789!@#$%';
-  const bytes = crypto.randomBytes(8);
-  return Array.from(bytes)
-    .map((b) => chars[b % chars.length])
-    .join('');
-}
 
 /** Generate temp password, update user, and send recovery email.
  *  The temp password is never logged. If SendGrid is not configured the
