@@ -95,37 +95,44 @@ async function fetchDeclarationRows(tenantSlug, from, to, excludeClaimed) {
 // ─── LIST ──────────────────────────────────────────────────────────────────
 
 // GET /gift-aid?year=&excludeClaimed=
-router.get('/', requirePrivilege('gift_aid_declaration', 'view'), requireFeature('giftAid'), async (req, res, next) => {
-  try {
-    const slug = req.user.tenantSlug;
-    const [settings] = await tenantQuery(
-      slug,
-      `SELECT year_start_month, year_start_day
+router.get(
+  '/',
+  requirePrivilege('gift_aid_declaration', 'view'),
+  requireFeature('giftAid'),
+  async (req, res, next) => {
+    try {
+      const slug = req.user.tenantSlug;
+      const [settings] = await tenantQuery(
+        slug,
+        `SELECT year_start_month, year_start_day
        FROM tenant_settings WHERE id = 'singleton'`,
-    );
+      );
 
-    const startMonth = settings.year_start_month;
-    const startDay   = settings.year_start_day;
-    const yearNum    = req.query.year
-      ? parseInt(req.query.year, 10)
-      : currentFinancialYear(startMonth, startDay);
+      const startMonth = settings.year_start_month;
+      const startDay = settings.year_start_day;
+      const yearNum = req.query.year
+        ? parseInt(req.query.year, 10)
+        : currentFinancialYear(startMonth, startDay);
 
-    const { yearStart, yearEnd } = computeYearBounds(yearNum, startMonth, startDay);
-    const excludeClaimed = req.query.excludeClaimed !== '0';
+      const { yearStart, yearEnd } = computeYearBounds(yearNum, startMonth, startDay);
+      const excludeClaimed = req.query.excludeClaimed !== '0';
 
-    const rows = await fetchDeclarationRows(slug, yearStart, yearEnd, excludeClaimed);
+      const rows = await fetchDeclarationRows(slug, yearStart, yearEnd, excludeClaimed);
 
-    res.json({
-      enabled: true,
-      rows,
-      yearNum,
-      yearStart,
-      yearEnd,
-      startMonth,
-      startDay,
-    });
-  } catch (err) { next(err); }
-});
+      res.json({
+        enabled: true,
+        rows,
+        yearNum,
+        yearStart,
+        yearEnd,
+        startMonth,
+        startDay,
+      });
+    } catch (err) {
+      next(err);
+    }
+  },
+);
 
 // ─── DOWNLOAD EXCEL ─────────────────────────────────────────────────────
 
@@ -136,69 +143,78 @@ const downloadSchema = z.object({
 });
 
 // POST /gift-aid/download  body: { ids, from, to }
-router.post('/download', requirePrivilege('gift_aid_declaration', 'download_and_mark'), requireFeature('giftAid'), async (req, res, next) => {
-  try {
-    const data = downloadSchema.parse(req.body);
-    const slug = req.user.tenantSlug;
+router.post(
+  '/download',
+  requirePrivilege('gift_aid_declaration', 'download_and_mark'),
+  requireFeature('giftAid'),
+  async (req, res, next) => {
+    try {
+      const data = downloadSchema.parse(req.body);
+      const slug = req.user.tenantSlug;
 
-    // Fetch all rows in the date range, then filter to selected IDs
-    const allRows = await fetchDeclarationRows(slug, data.from, data.to, false);
-    const idSet = new Set(data.ids);
-    const rows = allRows.filter((r) => idSet.has(r.id));
+      // Fetch all rows in the date range, then filter to selected IDs
+      const allRows = await fetchDeclarationRows(slug, data.from, data.to, false);
+      const idSet = new Set(data.ids);
+      const rows = allRows.filter((r) => idSet.has(r.id));
 
-    if (rows.length === 0) {
-      return res.status(400).json({ error: 'No matching transactions found.' });
+      if (rows.length === 0) {
+        return res.status(400).json({ error: 'No matching transactions found.' });
+      }
+
+      // Build Excel workbook matching HMRC column format
+      const wb = new ExcelJS.Workbook();
+      const ws = wb.addWorksheet('Gift Aid');
+
+      ws.columns = [
+        { header: 'Title', key: 'title', width: 10 },
+        { header: 'First Name', key: 'firstName', width: 20 },
+        { header: 'Last Name', key: 'lastName', width: 20 },
+        { header: 'House Name or No', key: 'houseNo', width: 20 },
+        { header: 'Postcode', key: 'postcode', width: 12 },
+        { header: 'Date', key: 'date', width: 14 },
+        { header: 'Amount', key: 'amount', width: 12 },
+      ];
+
+      ws.getRow(1).font = { bold: true };
+      ws.getRow(1).fill = {
+        type: 'pattern',
+        pattern: 'solid',
+        fgColor: { argb: 'FFE2EFDA' },
+      };
+
+      for (const r of rows) {
+        // Format date as DD/MM/YYYY
+        const dateStr = r.date ? fmtDate(r.date) : '';
+        ws.addRow({
+          title: sanitizeCell(r.title || ''),
+          firstName: sanitizeCell((r.forenames || '').split(' ')[0] || ''),
+          lastName: sanitizeCell(r.surname || ''),
+          houseNo: sanitizeCell(r.house_no || ''),
+          postcode: sanitizeCell(r.postcode || ''),
+          date: dateStr,
+          amount: Number(r.gift_aid_amount).toFixed(2),
+        });
+      }
+
+      const tenantPart = slug.replace(/^u3a_/, '');
+      const stamp = new Date().toISOString().slice(0, 10);
+      const filename = `${tenantPart}_gift_aid_declaration_${stamp}.xlsx`;
+
+      res.setHeader(
+        'Content-Type',
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      );
+      res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+      const buffer = await wb.xlsx.writeBuffer();
+      res.send(buffer);
+    } catch (err) {
+      if (err.name === 'ZodError') {
+        return res.status(422).json({ error: 'Validation failed.', issues: err.issues });
+      }
+      next(err);
     }
-
-    // Build Excel workbook matching HMRC column format
-    const wb = new ExcelJS.Workbook();
-    const ws = wb.addWorksheet('Gift Aid');
-
-    ws.columns = [
-      { header: 'Title',              key: 'title',     width: 10 },
-      { header: 'First Name',         key: 'firstName', width: 20 },
-      { header: 'Last Name',          key: 'lastName',  width: 20 },
-      { header: 'House Name or No',   key: 'houseNo',   width: 20 },
-      { header: 'Postcode',           key: 'postcode',  width: 12 },
-      { header: 'Date',               key: 'date',      width: 14 },
-      { header: 'Amount',             key: 'amount',    width: 12 },
-    ];
-
-    ws.getRow(1).font = { bold: true };
-    ws.getRow(1).fill = {
-      type: 'pattern', pattern: 'solid',
-      fgColor: { argb: 'FFE2EFDA' },
-    };
-
-    for (const r of rows) {
-      // Format date as DD/MM/YYYY
-      const dateStr = r.date ? fmtDate(r.date) : '';
-      ws.addRow({
-        title:     sanitizeCell(r.title || ''),
-        firstName: sanitizeCell((r.forenames || '').split(' ')[0] || ''),
-        lastName:  sanitizeCell(r.surname || ''),
-        houseNo:   sanitizeCell(r.house_no || ''),
-        postcode:  sanitizeCell(r.postcode || ''),
-        date:      dateStr,
-        amount:    Number(r.gift_aid_amount).toFixed(2),
-      });
-    }
-
-    const tenantPart = slug.replace(/^u3a_/, '');
-    const stamp = new Date().toISOString().slice(0, 10);
-    const filename = `${tenantPart}_gift_aid_declaration_${stamp}.xlsx`;
-
-    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
-    const buffer = await wb.xlsx.writeBuffer();
-    res.send(buffer);
-  } catch (err) {
-    if (err.name === 'ZodError') {
-      return res.status(422).json({ error: 'Validation failed.', issues: err.issues });
-    }
-    next(err);
-  }
-});
+  },
+);
 
 // ─── MARK AS CLAIMED ────────────────────────────────────────────────────
 
@@ -210,107 +226,119 @@ const markSchema = z.object({
 // POST /gift-aid/mark  body: { ids, ids_2 }
 // ids = transaction IDs to mark member_slot 1 as claimed
 // ids_2 = transaction IDs to mark member_slot 2 as claimed
-router.post('/mark', requirePrivilege('gift_aid_declaration', 'download_and_mark'), requireFeature('giftAid'), async (req, res, next) => {
-  try {
-    const data = markSchema.parse(req.body);
-    const slug = req.user.tenantSlug;
-    const todayStr = new Date().toISOString().slice(0, 10);
-    let totalMarked = 0;
+router.post(
+  '/mark',
+  requirePrivilege('gift_aid_declaration', 'download_and_mark'),
+  requireFeature('giftAid'),
+  async (req, res, next) => {
+    try {
+      const data = markSchema.parse(req.body);
+      const slug = req.user.tenantSlug;
+      const todayStr = new Date().toISOString().slice(0, 10);
+      let totalMarked = 0;
 
-    // Mark member slot 1
-    if (data.ids.length > 0) {
-      const result = await tenantQuery(
-        slug,
-        `UPDATE transactions
+      // Mark member slot 1
+      if (data.ids.length > 0) {
+        const result = await tenantQuery(
+          slug,
+          `UPDATE transactions
          SET gift_aid_claimed_at = $1::date, updated_at = now()
          WHERE id = ANY($2::text[])
            AND gift_aid_amount IS NOT NULL
            AND gift_aid_amount > 0
            AND gift_aid_claimed_at IS NULL
          RETURNING id`,
-        [todayStr, data.ids],
-      );
-      totalMarked += result.length;
-    }
+          [todayStr, data.ids],
+        );
+        totalMarked += result.length;
+      }
 
-    // Mark member slot 2
-    if (data.ids_2 && data.ids_2.length > 0) {
-      const result2 = await tenantQuery(
-        slug,
-        `UPDATE transactions
+      // Mark member slot 2
+      if (data.ids_2 && data.ids_2.length > 0) {
+        const result2 = await tenantQuery(
+          slug,
+          `UPDATE transactions
          SET gift_aid_claimed_at_2 = $1::date, updated_at = now()
          WHERE id = ANY($2::text[])
            AND gift_aid_amount_2 IS NOT NULL
            AND gift_aid_amount_2 > 0
            AND gift_aid_claimed_at_2 IS NULL
          RETURNING id`,
-        [todayStr, data.ids_2],
-      );
-      totalMarked += result2.length;
-    }
+          [todayStr, data.ids_2],
+        );
+        totalMarked += result2.length;
+      }
 
-    logAudit(slug, {
-      userId: req.user.userId,
-      userName: req.user.name,
-      action: 'gift_aid_mark',
-      entityType: 'transactions',
-      detail: JSON.stringify({ count: totalMarked, date: todayStr }),
-    });
+      logAudit(slug, {
+        userId: req.user.userId,
+        userName: req.user.name,
+        action: 'gift_aid_mark',
+        entityType: 'transactions',
+        detail: JSON.stringify({ count: totalMarked, date: todayStr }),
+      });
 
-    res.json({ marked: totalMarked });
-  } catch (err) {
-    if (err.name === 'ZodError') {
-      return res.status(422).json({ error: 'Validation failed.', issues: err.issues });
+      res.json({ marked: totalMarked });
+    } catch (err) {
+      if (err.name === 'ZodError') {
+        return res.status(422).json({ error: 'Validation failed.', issues: err.issues });
+      }
+      next(err);
     }
-    next(err);
-  }
-});
+  },
+);
 
 // ─── GIFT AID LOG — doc 9.2(b) ─────────────────────────────────────────
 // GET /gift-aid/log?from=&to=&memberId=
 // Returns audit entries for gift_aid_consent and gift_aid_withdrawn actions.
 
-router.get('/log', requirePrivilege('gift_aid_declaration', 'view'), requireFeature('giftAid'), async (req, res, next) => {
-  try {
-    const slug = req.user.tenantSlug;
+router.get(
+  '/log',
+  requirePrivilege('gift_aid_declaration', 'view'),
+  requireFeature('giftAid'),
+  async (req, res, next) => {
+    try {
+      const slug = req.user.tenantSlug;
 
-    // Default window: 3 months ago → today
-    const now   = new Date();
-    const dfrom = new Date(now);
-    dfrom.setMonth(dfrom.getMonth() - 3);
+      // Default window: 3 months ago → today
+      const now = new Date();
+      const dfrom = new Date(now);
+      dfrom.setMonth(dfrom.getMonth() - 3);
 
-    const fromStr = req.query.from || dfrom.toISOString().slice(0, 10);
-    const toStr   = req.query.to   || now.toISOString().slice(0, 10);
+      const fromStr = req.query.from || dfrom.toISOString().slice(0, 10);
+      const toStr = req.query.to || now.toISOString().slice(0, 10);
 
-    let sql = `
+      let sql = `
       SELECT id, user_name, action, entity_id, entity_name, detail, created_at
       FROM audit_log
       WHERE action IN ('gift_aid_consent', 'gift_aid_withdrawn')
         AND created_at >= $1::date
         AND created_at <  $2::date + INTERVAL '1 day'`;
-    const params = [fromStr, toStr];
+      const params = [fromStr, toStr];
 
-    if (req.query.memberId) {
-      sql += `\n        AND entity_id = $3`;
-      params.push(req.query.memberId);
-    }
+      if (req.query.memberId) {
+        sql += `\n        AND entity_id = $3`;
+        params.push(req.query.memberId);
+      }
 
-    sql += `\n      ORDER BY created_at DESC LIMIT 500`;
+      sql += `\n      ORDER BY created_at DESC LIMIT 500`;
 
-    const rows = await tenantQuery(slug, sql, params);
+      const rows = await tenantQuery(slug, sql, params);
 
-    // Also return a list of members who have entries, for the member filter dropdown
-    const members = await tenantQuery(
-      slug,
-      `SELECT DISTINCT entity_id AS id, entity_name AS name
+      // Also return a list of members who have entries, for the member filter dropdown
+      const members = await tenantQuery(
+        slug,
+        `SELECT DISTINCT entity_id AS id, entity_name AS name
        FROM audit_log
        WHERE action IN ('gift_aid_consent', 'gift_aid_withdrawn')
        ORDER BY entity_name`,
-    );
+      );
 
-    res.json({ rows, members });
-  } catch (err) { next(err); }
-});
+      res.json({ rows, members });
+    } catch (err) {
+      next(err);
+    }
+  },
+);
 
 // ─── Helpers ────────────────────────────────────────────────────────────
 

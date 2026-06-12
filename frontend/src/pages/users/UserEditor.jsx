@@ -9,34 +9,35 @@ import NavBar from '../../components/NavBar.jsx';
 import PageHeader from '../../components/PageHeader.jsx';
 import { useUnsavedChanges } from '../../hooks/useUnsavedChanges.js';
 
-const inputCls = 'w-full border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-slate-50 disabled:text-slate-500';
+const inputCls =
+  'w-full border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-slate-50 disabled:text-slate-500';
 
 export default function UserEditor() {
-  const { id }   = useParams();
-  const isNew    = !id || id === 'new';
+  const { id } = useParams();
+  const isNew = !id || id === 'new';
   const navigate = useNavigate();
   const { can, tenant } = useAuth();
 
-  const [memberId,       setMemberId]       = useState('');
+  const [memberId, setMemberId] = useState('');
   const [availableMembers, setAvailableMembers] = useState([]);
-  const [username,       setUsername]       = useState('');
-  const [email,          setEmail]          = useState('');
-  const [active,         setActive]         = useState(true);
-  const [isSiteAdmin,    setIsSiteAdmin]    = useState(false);
-  const [memberName,     setMemberName]     = useState('');
-  const [allRoles,       setAllRoles]       = useState([]);
-  const [assignedIds,    setAssignedIds]    = useState(new Set());
-  const [origRoleIds,    setOrigRoleIds]    = useState(new Set());
-  const [loading,        setLoading]        = useState(true);
-  const [saving,         setSaving]         = useState(false);
-  const [saved,          setSaved]          = useState(false);
-  const [error,          setError]          = useState(null);
-  const [tempPwMsg,      setTempPwMsg]      = useState(null);
+  const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
+  const [active, setActive] = useState(true);
+  const [isSiteAdmin, setIsSiteAdmin] = useState(false);
+  const [memberName, setMemberName] = useState('');
+  const [allRoles, setAllRoles] = useState([]);
+  const [assignedIds, setAssignedIds] = useState(new Set());
+  const [origRoleIds, setOrigRoleIds] = useState(new Set());
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+  const [error, setError] = useState(null);
+  const [tempPwMsg, setTempPwMsg] = useState(null);
   const savedTimer = useRef(null);
   const { markDirty, markClean } = useUnsavedChanges();
 
   // Existing user fields (for edit mode display)
-  const [userName, setUserName] = useState('');
+  const [, setUserName] = useState('');
 
   useEffect(() => {
     if (isNew) {
@@ -109,8 +110,14 @@ export default function UserEditor() {
 
   const handleSave = async () => {
     if (isNew) {
-      if (!memberId)       { setError('Please select a member.'); return; }
-      if (!username.trim()) { setError('Username is required.');   return; }
+      if (!memberId) {
+        setError('Please select a member.');
+        return;
+      }
+      if (!username.trim()) {
+        setError('Username is required.');
+        return;
+      }
     }
     if (username.trim() && !/^[a-z0-9]+$/.test(username.trim())) {
       setError('Username must be lowercase letters and numbers only (no spaces).');
@@ -130,7 +137,7 @@ export default function UserEditor() {
         markClean();
         // Show temp password notice
         setTempPwMsg(
-          `The new user has been set the temporary password of ${created.tempPassword}\nwhich they will need to change at first login.\nNow please establish the user's roles.`
+          `The new user has been set the temporary password of ${created.tempPassword}\nwhich they will need to change at first login.\nNow please establish the user's roles.`,
         );
         setSaved(true);
         window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -141,10 +148,10 @@ export default function UserEditor() {
         if (email.trim()) patch.email = email.trim();
         await usersApi.update(id, patch);
 
-        const toAdd    = [...assignedIds].filter((rid) => !origRoleIds.has(rid));
+        const toAdd = [...assignedIds].filter((rid) => !origRoleIds.has(rid));
         const toRemove = [...origRoleIds].filter((rid) => !assignedIds.has(rid));
         await Promise.all([
-          ...toAdd.map((rid)    => usersApi.assignRole(id, rid)),
+          ...toAdd.map((rid) => usersApi.assignRole(id, rid)),
           ...toRemove.map((rid) => usersApi.removeRole(id, rid)),
         ]);
 
@@ -162,10 +169,17 @@ export default function UserEditor() {
   };
 
   const handleSetTempPassword = async () => {
-    if (!confirm('Set a new temporary password for this user? They will need to change it on next login.')) return;
+    if (
+      !confirm(
+        'Set a new temporary password for this user? They will need to change it on next login.',
+      )
+    )
+      return;
     try {
       const result = await usersApi.setTempPassword(id);
-      setTempPwMsg(`Temporary password set: ${result.tempPassword}\nPlease notify the user of their new password.`);
+      setTempPwMsg(
+        `Temporary password set: ${result.tempPassword}\nPlease notify the user of their new password.`,
+      );
     } catch (err) {
       alert(err.message);
     }
@@ -176,7 +190,9 @@ export default function UserEditor() {
   const navLinks = [
     { label: 'Home', to: '/' },
     { label: 'Users List', to: '/users' },
-    ...(!isNew && can('user_record', 'create') ? [{ label: 'Add New User', to: '/users/new' }] : []),
+    ...(!isNew && can('user_record', 'create')
+      ? [{ label: 'Add New User', to: '/users/new' }]
+      : []),
   ];
 
   if (loading) {
@@ -191,12 +207,10 @@ export default function UserEditor() {
 
   return (
     <div className="min-h-screen pb-10">
-
       <PageHeader tenant={tenant} />
       <NavBar links={navLinks} />
 
       <div className="max-w-2xl mx-auto px-4 py-5">
-
         <h1 className="text-xl font-bold text-center mb-4">
           {isNew ? 'Add New User' : 'System User Record'}
         </h1>
@@ -222,11 +236,15 @@ export default function UserEditor() {
 
         {/* User details card */}
         <div className="bg-white/90 rounded-lg shadow-sm p-4 sm:p-6 mb-6 space-y-4">
-
           {/* Member selection (new) or display (edit) */}
           {isNew ? (
             <div>
-              <label htmlFor="user-member" className="block text-sm font-medium text-slate-700 mb-1">Member</label>
+              <label
+                htmlFor="user-member"
+                className="block text-sm font-medium text-slate-700 mb-1"
+              >
+                Member
+              </label>
               <select
                 id="user-member"
                 name="memberId"
@@ -238,7 +256,8 @@ export default function UserEditor() {
                 <option value="">-- Select a member --</option>
                 {availableMembers.map((m) => (
                   <option key={m.id} value={m.id}>
-                    {m.surname}, {m.forenames}{m.email ? ` (${m.email})` : ''}
+                    {m.surname}, {m.forenames}
+                    {m.email ? ` (${m.email})` : ''}
                   </option>
                 ))}
               </select>
@@ -273,7 +292,10 @@ export default function UserEditor() {
           )}
 
           <div>
-            <label htmlFor="user-username" className="block text-sm font-medium text-slate-700 mb-1">
+            <label
+              htmlFor="user-username"
+              className="block text-sm font-medium text-slate-700 mb-1"
+            >
               Login name <span className="text-slate-400 font-normal">(username)</span>
             </label>
             <input
@@ -281,27 +303,49 @@ export default function UserEditor() {
               type="text"
               name="username"
               value={username}
-              onChange={(e) => { markDirty(); setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9]/g, '')); }}
+              onChange={(e) => {
+                markDirty();
+                setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9]/g, ''));
+              }}
               disabled={!canEdit}
               placeholder="e.g. jbloggs"
               className={`${inputCls} font-mono`}
             />
-            <p className="text-xs text-slate-400 mt-1">Lowercase letters and numbers only. Personal to the user, not a role name.</p>
+            <p className="text-xs text-slate-400 mt-1">
+              Lowercase letters and numbers only. Personal to the user, not a role name.
+            </p>
           </div>
 
           <div>
-            <label htmlFor="user-email" className="block text-sm font-medium text-slate-700 mb-1">User's E-mail</label>
-            <input id="user-email" type="email" name="email" value={email} onChange={(e) => { markDirty(); setEmail(e.target.value); }}
-              disabled={!canEdit} className={inputCls} />
+            <label htmlFor="user-email" className="block text-sm font-medium text-slate-700 mb-1">
+              User's E-mail
+            </label>
+            <input
+              id="user-email"
+              type="email"
+              name="email"
+              value={email}
+              onChange={(e) => {
+                markDirty();
+                setEmail(e.target.value);
+              }}
+              disabled={!canEdit}
+              className={inputCls}
+            />
           </div>
 
           <div className="flex items-center gap-3">
-            <label htmlFor="user-active" className="text-sm font-medium text-slate-700">Active</label>
+            <label htmlFor="user-active" className="text-sm font-medium text-slate-700">
+              Active
+            </label>
             <input
               id="user-active"
               type="checkbox"
               checked={active}
-              onChange={(e) => { markDirty(); setActive(e.target.checked); }}
+              onChange={(e) => {
+                markDirty();
+                setActive(e.target.checked);
+              }}
               disabled={!canEdit}
               className="w-5 h-5 rounded border-slate-300 accent-blue-600"
             />
@@ -325,7 +369,10 @@ export default function UserEditor() {
                 </button>
               )}
               <button
-                onClick={() => { markClean(); navigate('/users'); }}
+                onClick={() => {
+                  markClean();
+                  navigate('/users');
+                }}
                 className="px-5 py-2 border border-slate-300 rounded text-sm text-slate-700 hover:bg-slate-50 transition-colors"
               >
                 Cancel
@@ -349,7 +396,10 @@ export default function UserEditor() {
                 </thead>
                 <tbody>
                   {allRoles.map((role, i) => (
-                    <tr key={role.id} className={`border-b border-slate-100 ${i % 2 === 0 ? 'bg-yellow-50' : 'bg-white'}`}>
+                    <tr
+                      key={role.id}
+                      className={`border-b border-slate-100 ${i % 2 === 0 ? 'bg-yellow-50' : 'bg-white'}`}
+                    >
                       <td className="px-4 py-2.5">{role.name}</td>
                       <td className="px-4 py-2.5 text-center">{role.is_committee ? 'Y' : ''}</td>
                       <td className="px-4 py-2.5 text-center">
@@ -387,7 +437,6 @@ export default function UserEditor() {
             The Site Administrator has all privileges regardless of role assignments.
           </div>
         )}
-
       </div>
 
       <NavBar links={navLinks} />

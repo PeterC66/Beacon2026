@@ -3,6 +3,11 @@
 // This module defines the interface for PayPal payments.
 // Currently uses stub implementations for development/testing.
 // Replace the stub functions with real PayPal API calls when ready.
+//
+// The exported functions destructure their full documented parameter set even
+// though the stub bodies ignore most of them — keeping the real API shape
+// visible for whoever wires PayPal up. Disable the unused-args rule for the file.
+/* eslint-disable no-unused-vars */
 
 import { randomBytes } from 'crypto';
 
@@ -20,18 +25,24 @@ import { randomBytes } from 'crypto';
  * @param {string} params.paypalEmail - The u3a's PayPal account email
  * @returns {Promise<{ paymentId: string, redirectUrl: string }>}
  */
-export async function initiatePayment({ amount, description, memberRef, returnUrl, cancelUrl, paypalEmail }) {
+export async function initiatePayment({
+  amount,
+  description,
+  memberRef,
+  returnUrl,
+  cancelUrl,
+  paypalEmail,
+}) {
   // STUB: handing out fake payment IDs in production would orphan Applicants
   // and mislead operators into thinking PayPal is wired up. Refuse unless
   // we're outside production or the operator has explicitly opted in. The
   // companion verifyPaymentNotification() in this file is gated the same way.
   const stubAllowed =
-    process.env.NODE_ENV !== 'production' ||
-    process.env.PAYPAL_STUB_ALLOW === 'true';
+    process.env.NODE_ENV !== 'production' || process.env.PAYPAL_STUB_ALLOW === 'true';
   if (!stubAllowed) {
     throw new Error(
       'PayPal integration is not configured. Set PAYPAL_STUB_ALLOW=true to ' +
-      'enable the development stub, or wire the real PayPal REST API.',
+        'enable the development stub, or wire the real PayPal REST API.',
     );
   }
 
@@ -58,10 +69,15 @@ export async function verifyPaymentNotification({ paymentId, rawBody }) {
   // wired up, refuse in production unless the operator has explicitly
   // opted in with PAYPAL_STUB_ALLOW=true.
   const stubAllowed =
-    process.env.NODE_ENV !== 'production' ||
-    process.env.PAYPAL_STUB_ALLOW === 'true';
+    process.env.NODE_ENV !== 'production' || process.env.PAYPAL_STUB_ALLOW === 'true';
   if (!stubAllowed) {
-    return { verified: false, grossAmount: 0, fee: 0, payerEmail: '', status: 'rejected_stub_in_production' };
+    return {
+      verified: false,
+      grossAmount: 0,
+      fee: 0,
+      payerEmail: '',
+      status: 'rejected_stub_in_production',
+    };
   }
   return {
     verified: true,

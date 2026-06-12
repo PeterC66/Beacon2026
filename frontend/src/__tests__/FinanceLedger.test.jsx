@@ -7,14 +7,14 @@ import FinanceLedger from '../pages/finance/FinanceLedger.jsx';
 vi.mock('../context/AuthContext.jsx', () => ({
   useAuth: () => ({
     tenant: 'test-u3a',
-    can:    vi.fn().mockReturnValue(true),
+    can: vi.fn().mockReturnValue(true),
   }),
 }));
 
 vi.mock('../lib/api.js', () => ({
   finance: {
-    listAccounts:     vi.fn().mockResolvedValue([]),
-    listCategories:   vi.fn().mockResolvedValue([]),
+    listAccounts: vi.fn().mockResolvedValue([]),
+    listCategories: vi.fn().mockResolvedValue([]),
     listTransactions: vi.fn().mockResolvedValue([]),
   },
   groups: {
@@ -32,12 +32,20 @@ vi.mock('react-router-dom', async (importOriginal) => {
 
 describe('FinanceLedger page', () => {
   it('renders without crashing', () => {
-    const { container } = render(<MemoryRouter><FinanceLedger /></MemoryRouter>);
+    const { container } = render(
+      <MemoryRouter>
+        <FinanceLedger />
+      </MemoryRouter>,
+    );
     expect(container).toBeTruthy();
   });
 
   it('shows the Financial Ledger heading', () => {
-    render(<MemoryRouter><FinanceLedger /></MemoryRouter>);
+    render(
+      <MemoryRouter>
+        <FinanceLedger />
+      </MemoryRouter>,
+    );
     expect(screen.getByText('Financial Ledger')).toBeTruthy();
   });
 });

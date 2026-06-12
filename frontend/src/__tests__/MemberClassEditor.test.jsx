@@ -12,18 +12,18 @@ vi.mock('react-router-dom', async (importActual) => {
 vi.mock('../context/AuthContext.jsx', () => ({
   useAuth: () => ({
     tenant: 'test-u3a',
-    can:        vi.fn().mockReturnValue(true),
+    can: vi.fn().mockReturnValue(true),
     hasFeature: vi.fn().mockReturnValue(true),
   }),
 }));
 
 vi.mock('../lib/api.js', () => ({
   memberClasses: {
-    get:             vi.fn().mockResolvedValue({}),
-    create:          vi.fn().mockResolvedValue({}),
-    update:          vi.fn().mockResolvedValue({}),
-    delete:          vi.fn().mockResolvedValue({}),
-    getMonthlyFees:  vi.fn().mockResolvedValue([]),
+    get: vi.fn().mockResolvedValue({}),
+    create: vi.fn().mockResolvedValue({}),
+    update: vi.fn().mockResolvedValue({}),
+    delete: vi.fn().mockResolvedValue({}),
+    getMonthlyFees: vi.fn().mockResolvedValue([]),
     saveMonthlyFees: vi.fn().mockResolvedValue({}),
   },
   settings: {
@@ -33,12 +33,20 @@ vi.mock('../lib/api.js', () => ({
 
 describe('MemberClassEditor page (new class)', () => {
   it('renders without crashing', () => {
-    const { container } = render(<MemoryRouter><MemberClassEditor /></MemoryRouter>);
+    const { container } = render(
+      <MemoryRouter>
+        <MemberClassEditor />
+      </MemoryRouter>,
+    );
     expect(container).toBeTruthy();
   });
 
   it('shows the Add Membership Class heading', () => {
-    const { getByText } = render(<MemoryRouter><MemberClassEditor /></MemoryRouter>);
+    const { getByText } = render(
+      <MemoryRouter>
+        <MemberClassEditor />
+      </MemoryRouter>,
+    );
     expect(getByText('Add Membership Class')).toBeInTheDocument();
   });
 });

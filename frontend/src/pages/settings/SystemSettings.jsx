@@ -1,7 +1,6 @@
 // beacon2/frontend/src/pages/settings/SystemSettings.jsx
 
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext.jsx';
 import PageHeader from '../../components/PageHeader.jsx';
 import NavBar from '../../components/NavBar.jsx';
@@ -12,108 +11,135 @@ import { SETTINGS_PAYMENT_METHODS as PAYMENT_METHODS } from '../../lib/constants
 function fmtTimestamp(ts) {
   if (!ts) return '';
   const d = new Date(ts);
-  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const months = [
+    'Jan',
+    'Feb',
+    'Mar',
+    'Apr',
+    'May',
+    'Jun',
+    'Jul',
+    'Aug',
+    'Sep',
+    'Oct',
+    'Nov',
+    'Dec',
+  ];
   const day = d.getDate();
   const mon = months[d.getMonth()];
-  const yr  = d.getFullYear();
-  const hh  = String(d.getHours()).padStart(2, '0');
-  const mm  = String(d.getMinutes()).padStart(2, '0');
+  const yr = d.getFullYear();
+  const hh = String(d.getHours()).padStart(2, '0');
+  const mm = String(d.getMinutes()).padStart(2, '0');
   return `${day} ${mon} ${yr} ${hh}:${mm}`;
 }
 
 const MONTHS = [
-  'January', 'February', 'March', 'April', 'May', 'June',
-  'July', 'August', 'September', 'October', 'November', 'December',
+  'January',
+  'February',
+  'March',
+  'April',
+  'May',
+  'June',
+  'July',
+  'August',
+  'September',
+  'October',
+  'November',
+  'December',
 ];
 
 const DEFAULTS = {
-  card_colour:               '#0066cc',
-  email_cards:               false,
-  public_phone:              '',
-  public_email:              '',
-  home_page:                 '',
-  online_join_email:         '',
-  online_renew_email:        '',
-  fee_variation:             'same_all_year',
+  card_colour: '#0066cc',
+  email_cards: false,
+  public_phone: '',
+  public_email: '',
+  home_page: '',
+  online_join_email: '',
+  online_renew_email: '',
+  fee_variation: 'same_all_year',
   extended_membership_month: '',
-  advance_renewals_weeks:    4,
-  grace_lapse_weeks:         4,
-  deletion_years:            7,
-  default_payment_method:    'Cheque',
-  gift_aid_online_renewals:  false,
-  default_town:              '',
-  default_county:            '',
-  default_std_code:          '',
-  paypal_email:              '',
-  paypal_cancel_url:         '',
-  shared_address_warning:    false,
-  year_start_month:          1,
-  year_start_day:            1,
+  advance_renewals_weeks: 4,
+  grace_lapse_weeks: 4,
+  deletion_years: 7,
+  default_payment_method: 'Cheque',
+  gift_aid_online_renewals: false,
+  default_town: '',
+  default_county: '',
+  default_std_code: '',
+  paypal_email: '',
+  paypal_cancel_url: '',
+  shared_address_warning: false,
+  year_start_month: 1,
+  year_start_day: 1,
 };
 
 function toForm(s) {
   return {
-    card_colour:               s.card_colour               ?? DEFAULTS.card_colour,
-    email_cards:               s.email_cards               ?? DEFAULTS.email_cards,
-    public_phone:              s.public_phone              ?? '',
-    public_email:              s.public_email              ?? '',
-    home_page:                 s.home_page                 ?? '',
-    online_join_email:         s.online_join_email         ?? '',
-    online_renew_email:        s.online_renew_email        ?? '',
-    fee_variation:             s.fee_variation             ?? DEFAULTS.fee_variation,
+    card_colour: s.card_colour ?? DEFAULTS.card_colour,
+    email_cards: s.email_cards ?? DEFAULTS.email_cards,
+    public_phone: s.public_phone ?? '',
+    public_email: s.public_email ?? '',
+    home_page: s.home_page ?? '',
+    online_join_email: s.online_join_email ?? '',
+    online_renew_email: s.online_renew_email ?? '',
+    fee_variation: s.fee_variation ?? DEFAULTS.fee_variation,
     extended_membership_month: s.extended_membership_month ?? '',
-    advance_renewals_weeks:    s.advance_renewals_weeks    ?? DEFAULTS.advance_renewals_weeks,
-    grace_lapse_weeks:         s.grace_lapse_weeks         ?? DEFAULTS.grace_lapse_weeks,
-    deletion_years:            s.deletion_years            ?? DEFAULTS.deletion_years,
-    default_payment_method:    s.default_payment_method    ?? DEFAULTS.default_payment_method,
-    gift_aid_online_renewals:  s.gift_aid_online_renewals  ?? DEFAULTS.gift_aid_online_renewals,
-    default_town:              s.default_town              ?? '',
-    default_county:            s.default_county            ?? '',
-    default_std_code:          s.default_std_code          ?? '',
-    paypal_email:              s.paypal_email              ?? '',
-    paypal_cancel_url:         s.paypal_cancel_url         ?? '',
-    shared_address_warning:    s.shared_address_warning    ?? DEFAULTS.shared_address_warning,
-    year_start_month:          s.year_start_month          ?? DEFAULTS.year_start_month,
-    year_start_day:            s.year_start_day            ?? DEFAULTS.year_start_day,
+    advance_renewals_weeks: s.advance_renewals_weeks ?? DEFAULTS.advance_renewals_weeks,
+    grace_lapse_weeks: s.grace_lapse_weeks ?? DEFAULTS.grace_lapse_weeks,
+    deletion_years: s.deletion_years ?? DEFAULTS.deletion_years,
+    default_payment_method: s.default_payment_method ?? DEFAULTS.default_payment_method,
+    gift_aid_online_renewals: s.gift_aid_online_renewals ?? DEFAULTS.gift_aid_online_renewals,
+    default_town: s.default_town ?? '',
+    default_county: s.default_county ?? '',
+    default_std_code: s.default_std_code ?? '',
+    paypal_email: s.paypal_email ?? '',
+    paypal_cancel_url: s.paypal_cancel_url ?? '',
+    shared_address_warning: s.shared_address_warning ?? DEFAULTS.shared_address_warning,
+    year_start_month: s.year_start_month ?? DEFAULTS.year_start_month,
+    year_start_day: s.year_start_day ?? DEFAULTS.year_start_day,
   };
 }
 
 function toPayload(f) {
   return {
-    cardColour:               f.card_colour,
-    emailCards:               f.email_cards,
-    publicPhone:              f.public_phone   || null,
-    publicEmail:              f.public_email   || null,
-    homePage:                 f.home_page      || null,
-    onlineJoinEmail:          f.online_join_email  || null,
-    onlineRenewEmail:         f.online_renew_email || null,
-    feeVariation:             f.fee_variation,
-    extendedMembershipMonth:  f.extended_membership_month !== '' ? Number(f.extended_membership_month) : null,
-    advanceRenewalsWeeks:     Number(f.advance_renewals_weeks),
-    graceLapseWeeks:          Number(f.grace_lapse_weeks),
-    deletionYears:            Number(f.deletion_years),
-    defaultPaymentMethod:     f.default_payment_method,
-    giftAidOnlineRenewals:    f.gift_aid_online_renewals,
-    defaultTown:              f.default_town    || null,
-    defaultCounty:            f.default_county  || null,
-    defaultStdCode:           f.default_std_code || null,
-    paypalEmail:              f.paypal_email    || null,
-    paypalCancelUrl:          f.paypal_cancel_url || null,
-    sharedAddressWarning:     f.shared_address_warning,
-    yearStartMonth:           Number(f.year_start_month),
-    yearStartDay:             Number(f.year_start_day),
+    cardColour: f.card_colour,
+    emailCards: f.email_cards,
+    publicPhone: f.public_phone || null,
+    publicEmail: f.public_email || null,
+    homePage: f.home_page || null,
+    onlineJoinEmail: f.online_join_email || null,
+    onlineRenewEmail: f.online_renew_email || null,
+    feeVariation: f.fee_variation,
+    extendedMembershipMonth:
+      f.extended_membership_month !== '' ? Number(f.extended_membership_month) : null,
+    advanceRenewalsWeeks: Number(f.advance_renewals_weeks),
+    graceLapseWeeks: Number(f.grace_lapse_weeks),
+    deletionYears: Number(f.deletion_years),
+    defaultPaymentMethod: f.default_payment_method,
+    giftAidOnlineRenewals: f.gift_aid_online_renewals,
+    defaultTown: f.default_town || null,
+    defaultCounty: f.default_county || null,
+    defaultStdCode: f.default_std_code || null,
+    paypalEmail: f.paypal_email || null,
+    paypalCancelUrl: f.paypal_cancel_url || null,
+    sharedAddressWarning: f.shared_address_warning,
+    yearStartMonth: Number(f.year_start_month),
+    yearStartDay: Number(f.year_start_day),
   };
 }
 
 // ─── Shared input styles ──────────────────────────────────────────────────
-const INPUT  = 'border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 w-full';
+const INPUT =
+  'border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 w-full';
 const SELECT = INPUT;
-const LABEL  = 'block text-sm font-medium text-slate-700 mb-1';
+const LABEL = 'block text-sm font-medium text-slate-700 mb-1';
 
 function Field({ label, htmlFor, children }) {
   return (
     <div>
-      <label htmlFor={htmlFor} className={LABEL}>{label}</label>
+      <label htmlFor={htmlFor} className={LABEL}>
+        {label}
+      </label>
       {children}
     </div>
   );
@@ -147,16 +173,20 @@ export default function SystemSettings() {
   const { tenant, can } = useAuth();
   const { markDirty, markClean } = useUnsavedChanges();
 
-  const [form,      setForm]      = useState(toForm({}));
+  const [form, setForm] = useState(toForm({}));
   const [updatedAt, setUpdatedAt] = useState(null);
-  const [loading,   setLoading]   = useState(true);
-  const [saving,    setSaving]    = useState(false);
-  const [error,     setError]     = useState(null);
-  const [success,   setSuccess]   = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState(null);
+  const [success, setSuccess] = useState(false);
 
   useEffect(() => {
-    settingsApi.get()
-      .then((s) => { setForm(toForm(s)); setUpdatedAt(s.updated_at ?? null); })
+    settingsApi
+      .get()
+      .then((s) => {
+        setForm(toForm(s));
+        setUpdatedAt(s.updated_at ?? null);
+      })
       .catch((e) => setError(e.message))
       .finally(() => setLoading(false));
   }, []);
@@ -205,7 +235,6 @@ export default function SystemSettings() {
 
         {!loading && (
           <form onSubmit={handleSave} noValidate className="space-y-8">
-
             {/* ── Membership Cards ── */}
             <section className="bg-white/90 rounded-lg shadow-sm p-4 sm:p-6 space-y-4">
               <SectionHeading>Membership Cards</SectionHeading>
@@ -282,7 +311,10 @@ export default function SystemSettings() {
                 />
               </Field>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <Field label="Online new member enquiries email" htmlFor="settings-online-join-email">
+                <Field
+                  label="Online new member enquiries email"
+                  htmlFor="settings-online-join-email"
+                >
                   <input
                     id="settings-online-join-email"
                     type="email"
@@ -323,7 +355,9 @@ export default function SystemSettings() {
                     className={SELECT}
                   >
                     {MONTHS.map((m, idx) => (
-                      <option key={m} value={idx + 1}>{m}</option>
+                      <option key={m} value={idx + 1}>
+                        {m}
+                      </option>
                     ))}
                   </select>
                 </Field>
@@ -354,7 +388,10 @@ export default function SystemSettings() {
                   <option value="varies_by_month">Fees vary by month of joining</option>
                 </select>
               </Field>
-              <Field label="Extended membership — month from which new memberships include the following year" htmlFor="settings-extended-membership-month">
+              <Field
+                label="Extended membership — month from which new memberships include the following year"
+                htmlFor="settings-extended-membership-month"
+              >
                 <select
                   id="settings-extended-membership-month"
                   name="extended_membership_month"
@@ -365,12 +402,17 @@ export default function SystemSettings() {
                 >
                   <option value="">Not enabled</option>
                   {MONTHS.map((m, idx) => (
-                    <option key={m} value={idx + 1}>{m}</option>
+                    <option key={m} value={idx + 1}>
+                      {m}
+                    </option>
                   ))}
                 </select>
               </Field>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <Field label="Advance renewals period (weeks)" htmlFor="settings-advance-renewals-weeks">
+                <Field
+                  label="Advance renewals period (weeks)"
+                  htmlFor="settings-advance-renewals-weeks"
+                >
                   <input
                     id="settings-advance-renewals-weeks"
                     type="number"
@@ -396,7 +438,10 @@ export default function SystemSettings() {
                     className={INPUT}
                   />
                 </Field>
-                <Field label="Non-renewal deletion period (years, 2–7)" htmlFor="settings-deletion-years">
+                <Field
+                  label="Non-renewal deletion period (years, 2–7)"
+                  htmlFor="settings-deletion-years"
+                >
                   <input
                     id="settings-deletion-years"
                     type="number"
@@ -420,7 +465,9 @@ export default function SystemSettings() {
                   className={SELECT}
                 >
                   {PAYMENT_METHODS.map((m) => (
-                    <option key={m} value={m}>{m}</option>
+                    <option key={m} value={m}>
+                      {m}
+                    </option>
                   ))}
                 </select>
               </Field>
@@ -441,7 +488,8 @@ export default function SystemSettings() {
             <section className="bg-white/90 rounded-lg shadow-sm p-4 sm:p-6 space-y-4">
               <SectionHeading>Defaults for New Members</SectionHeading>
               <p className="text-xs text-slate-500">
-                These values are pre-filled when creating a new member record and can be overridden at that point.
+                These values are pre-filled when creating a new member record and can be overridden
+                at that point.
               </p>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <Field label="Default town" htmlFor="settings-default-town">

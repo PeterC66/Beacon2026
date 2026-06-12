@@ -52,29 +52,29 @@ function buildTokenMap(member, u3aName) {
   const pAddr = partner?.address || {};
 
   return {
-    '#FAM':         famName(m),
-    '#FORENAME':    m.forenames || '',
-    '#SURNAME':     m.surname   || '',
-    '#TITLE':       m.title     || '',
-    '#MEMNO':       m.membership_number != null ? String(m.membership_number) : '',
-    '#U3ANAME':     u3aName || '',
-    '#EMAIL':       m.email     || '',
-    '#TELEPHONE':   addr.telephone || '',
-    '#MOBILE':      m.mobile    || '',
-    '#ADDRESSV':    buildAddressV(addr),
-    '#RENEW':       fmtDate(m.next_renewal),
-    '#MEMCLASS':    m.class_name || '',
-    '#AFFILIATION': m.home_u3a  || '',
-    '#EMERGENCY':   '',   // not yet in Beacon2 schema
+    '#FAM': famName(m),
+    '#FORENAME': m.forenames || '',
+    '#SURNAME': m.surname || '',
+    '#TITLE': m.title || '',
+    '#MEMNO': m.membership_number != null ? String(m.membership_number) : '',
+    '#U3ANAME': u3aName || '',
+    '#EMAIL': m.email || '',
+    '#TELEPHONE': addr.telephone || '',
+    '#MOBILE': m.mobile || '',
+    '#ADDRESSV': buildAddressV(addr),
+    '#RENEW': fmtDate(m.next_renewal),
+    '#MEMCLASS': m.class_name || '',
+    '#AFFILIATION': m.home_u3a || '',
+    '#EMERGENCY': '', // not yet in Beacon2 schema
 
     // Partner tokens
-    '#PFAM':        famName(partner),
-    '#PFORENAME':   partner?.forenames || '',
-    '#PSURNAME':    partner?.surname   || '',
-    '#PTITLE':      partner?.title     || '',
-    '#PEMAIL':      partner?.email     || '',
-    '#PTELEPHONE':  pAddr.telephone    || '',
-    '#PMOBILE':     partner?.mobile    || '',
+    '#PFAM': famName(partner),
+    '#PFORENAME': partner?.forenames || '',
+    '#PSURNAME': partner?.surname || '',
+    '#PTITLE': partner?.title || '',
+    '#PEMAIL': partner?.email || '',
+    '#PTELEPHONE': pAddr.telephone || '',
+    '#PMOBILE': partner?.mobile || '',
   };
 }
 
@@ -134,9 +134,9 @@ function applyTokens(text, tokenMap, opts = {}) {
 export function resolveTokens(subject, body, member, u3aName, extraTokens) {
   const map = { ...buildTokenMap(member, u3aName), ...extraTokens };
   return {
-    subject:  applyTokens(subject, map),
-    body:     applyTokens(body,    map),
-    bodyHtml: applyTokens(body,    map, { valueEscapeHtml: true }),
+    subject: applyTokens(subject, map),
+    body: applyTokens(body, map),
+    bodyHtml: applyTokens(body, map, { valueEscapeHtml: true }),
   };
 }
 

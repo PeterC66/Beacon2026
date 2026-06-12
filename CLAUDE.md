@@ -130,6 +130,23 @@ running the test suites.
 
 ---
 
+## Linting & formatting — run before committing code
+
+```bash
+cd backend  && npm run lint && npm run format:check
+cd frontend && npm run lint && npm run format:check
+```
+
+ESLint 9 (flat config, `eslint.config.js`) and Prettier (root `.prettierrc.json`)
+are configured in both packages. CI (`ci.yml`) runs `lint` and `format:check` for
+each, so both must pass. Use `npm run lint:fix` and `npm run format` to auto-fix.
+Lint must be **error-free**; `react-hooks/exhaustive-deps` is a warning only.
+The frontend deliberately stays on `eslint-plugin-react-hooks` **v5** — do not
+upgrade to v7 without budgeting for the refactors its new rules require (see
+`KNOWN-ISSUES.md` → Linting & tooling).
+
+---
+
 ## Deferred items
 
 Any time work is deferred or descoped, add it to `KNOWN-ISSUES.md` with enough context

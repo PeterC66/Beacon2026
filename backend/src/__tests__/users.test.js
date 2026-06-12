@@ -3,24 +3,24 @@
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import request from 'supertest';
-import { makeAuthHeader, TEST_TENANT, TEST_USER_ID } from './helpers.js';
+import { makeAuthHeader, TEST_USER_ID } from './helpers.js';
 
 // ── Module mocks ──────────────────────────────────────────────────────────
 
 vi.mock('../utils/redis.js', () => ({
-  isSessionInvalidated:   vi.fn().mockResolvedValue(false),
+  isSessionInvalidated: vi.fn().mockResolvedValue(false),
   invalidateUserSessions: vi.fn().mockResolvedValue(undefined),
 }));
 
 vi.mock('../utils/db.js', () => ({
-  prisma:      { $disconnect: vi.fn() },
+  prisma: { $disconnect: vi.fn() },
   tenantQuery: vi.fn(),
-  withTenant:  vi.fn(),
+  withTenant: vi.fn(),
 }));
 
 // Mock bcrypt to avoid expensive hashing in tests
 vi.mock('../utils/password.js', () => ({
-  hashPassword:   vi.fn().mockResolvedValue('$hashed$'),
+  hashPassword: vi.fn().mockResolvedValue('$hashed$'),
   verifyPassword: vi.fn().mockResolvedValue(true),
 }));
 
@@ -32,8 +32,13 @@ const AUTH = makeAuthHeader();
 // ── Fixtures ──────────────────────────────────────────────────────────────
 
 const SAMPLE_USER = {
-  id: 'u1', name: 'Alice', email: 'alice@example.com', active: true,
-  is_site_admin: false, member_id: 'm1', member_name: 'Alice Smith',
+  id: 'u1',
+  name: 'Alice',
+  email: 'alice@example.com',
+  active: true,
+  is_site_admin: false,
+  member_id: 'm1',
+  member_name: 'Alice Smith',
   roles: [],
 };
 
@@ -95,11 +100,28 @@ describe('POST /users', () => {
 
   it('returns 201 with the created user', async () => {
     // 1. member lookup
-    tenantQuery.mockResolvedValueOnce([{ id: 'm1', forenames: 'Bob', surname: 'Smith', email: 'bob@example.com', status_name: 'Current' }]);
+    tenantQuery.mockResolvedValueOnce([
+      {
+        id: 'm1',
+        forenames: 'Bob',
+        surname: 'Smith',
+        email: 'bob@example.com',
+        status_name: 'Current',
+      },
+    ]);
     // 2. check not already a user
     tenantQuery.mockResolvedValueOnce([]);
     // 3. insert user
-    tenantQuery.mockResolvedValueOnce([{ id: 'u2', email: 'bob@example.com', username: 'bsmith', name: 'Bob Smith', active: true, member_id: 'm1' }]);
+    tenantQuery.mockResolvedValueOnce([
+      {
+        id: 'u2',
+        email: 'bob@example.com',
+        username: 'bsmith',
+        name: 'Bob Smith',
+        active: true,
+        member_id: 'm1',
+      },
+    ]);
 
     const res = await request(app)
       .post('/users')
@@ -112,10 +134,7 @@ describe('POST /users', () => {
   });
 
   it('returns 422 on invalid body', async () => {
-    const res = await request(app)
-      .post('/users')
-      .set('Authorization', AUTH)
-      .send({ name: 'Bad' }); // missing memberId and username
+    const res = await request(app).post('/users').set('Authorization', AUTH).send({ name: 'Bad' }); // missing memberId and username
 
     expect(res.status).toBe(422);
   });
@@ -127,7 +146,16 @@ describe('PATCH /users/:id', () => {
   beforeEach(() => vi.clearAllMocks());
 
   it('returns 200 with updated user', async () => {
-    tenantQuery.mockResolvedValueOnce([{ id: 'u1', email: 'alice@example.com', username: 'asmith', name: 'Alice', active: false, member_id: 'm1' }]);
+    tenantQuery.mockResolvedValueOnce([
+      {
+        id: 'u1',
+        email: 'alice@example.com',
+        username: 'asmith',
+        name: 'Alice',
+        active: false,
+        member_id: 'm1',
+      },
+    ]);
 
     const res = await request(app)
       .patch('/users/u1')
@@ -139,10 +167,7 @@ describe('PATCH /users/:id', () => {
   });
 
   it('returns 400 when body has nothing to update', async () => {
-    const res = await request(app)
-      .patch('/users/u1')
-      .set('Authorization', AUTH)
-      .send({});
+    const res = await request(app).patch('/users/u1').set('Authorization', AUTH).send({});
 
     expect(res.status).toBe(400);
   });
@@ -172,18 +197,14 @@ describe('DELETE /users/:id', () => {
     // 3. delete
     tenantQuery.mockResolvedValueOnce([{ id: 'u2', name: 'Bob' }]);
 
-    const res = await request(app)
-      .delete('/users/u2')
-      .set('Authorization', AUTH);
+    const res = await request(app).delete('/users/u2').set('Authorization', AUTH);
 
     expect(res.status).toBe(200);
     expect(res.body.message).toBe('User deleted.');
   });
 
   it('returns 400 when trying to self-delete', async () => {
-    const res = await request(app)
-      .delete(`/users/${TEST_USER_ID}`)
-      .set('Authorization', AUTH);
+    const res = await request(app).delete(`/users/${TEST_USER_ID}`).set('Authorization', AUTH);
 
     expect(res.status).toBe(400);
   });
@@ -192,9 +213,7 @@ describe('DELETE /users/:id', () => {
     // site admin check returns true
     tenantQuery.mockResolvedValueOnce([{ is_site_admin: true }]);
 
-    const res = await request(app)
-      .delete('/users/u-admin')
-      .set('Authorization', AUTH);
+    const res = await request(app).delete('/users/u-admin').set('Authorization', AUTH);
 
     expect(res.status).toBe(400);
     expect(res.body.error).toMatch(/Site Administrator/i);
@@ -206,9 +225,7 @@ describe('DELETE /users/:id', () => {
     // 2. admin check: user is the only admin
     tenantQuery.mockResolvedValueOnce([{ total_admins: '1', is_admin: '1' }]);
 
-    const res = await request(app)
-      .delete('/users/u-admin2')
-      .set('Authorization', AUTH);
+    const res = await request(app).delete('/users/u-admin2').set('Authorization', AUTH);
 
     expect(res.status).toBe(400);
     expect(res.body.error).toMatch(/last user/i);
@@ -222,9 +239,7 @@ describe('DELETE /users/:id', () => {
     // 3. delete returns nothing
     tenantQuery.mockResolvedValueOnce([]);
 
-    const res = await request(app)
-      .delete('/users/ghost')
-      .set('Authorization', AUTH);
+    const res = await request(app).delete('/users/ghost').set('Authorization', AUTH);
 
     expect(res.status).toBe(404);
   });
@@ -238,9 +253,7 @@ describe('POST /users/:id/set-temp-password', () => {
   it('returns 200 with a temporary password', async () => {
     tenantQuery.mockResolvedValueOnce([{ id: 'u1', name: 'Alice' }]);
 
-    const res = await request(app)
-      .post('/users/u1/set-temp-password')
-      .set('Authorization', AUTH);
+    const res = await request(app).post('/users/u1/set-temp-password').set('Authorization', AUTH);
 
     expect(res.status).toBe(200);
     expect(res.body.tempPassword).toBeTruthy();
@@ -299,9 +312,7 @@ describe('DELETE /users/:id/roles/:roleId', () => {
   it('returns 200 when role removed', async () => {
     tenantQuery.mockResolvedValueOnce([]);
 
-    const res = await request(app)
-      .delete('/users/u1/roles/role-1')
-      .set('Authorization', AUTH);
+    const res = await request(app).delete('/users/u1/roles/role-1').set('Authorization', AUTH);
 
     expect(res.status).toBe(200);
     expect(res.body.message).toBe('Role removed.');

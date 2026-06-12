@@ -6,20 +6,20 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import request from 'supertest';
 
 vi.mock('../utils/db.js', () => ({
-  prisma:      { sysTenant: { findUnique: vi.fn() } },
+  prisma: { sysTenant: { findUnique: vi.fn() } },
   tenantQuery: vi.fn(),
-  withTenant:  vi.fn(),
+  withTenant: vi.fn(),
 }));
 
 vi.mock('../utils/redis.js', () => ({
-  isSessionInvalidated:   vi.fn().mockResolvedValue(false),
+  isSessionInvalidated: vi.fn().mockResolvedValue(false),
   invalidateUserSessions: vi.fn().mockResolvedValue(undefined),
 }));
 
 vi.mock('../utils/password.js', () => ({
-  hashPassword:    vi.fn().mockResolvedValue('$hashed$'),
-  verifyPassword:  vi.fn(),
-  generateToken:   vi.fn(() => 'opaque-reset-token'),
+  hashPassword: vi.fn().mockResolvedValue('$hashed$'),
+  verifyPassword: vi.fn(),
+  generateToken: vi.fn(() => 'opaque-reset-token'),
   hashOpaqueToken: vi.fn((t) => `hashed:${t}`),
 }));
 
@@ -48,11 +48,19 @@ describe('POST /public/:slug/portal/login lockout', () => {
 
   it('returns 401 generic error when account is currently locked', async () => {
     const future = new Date(Date.now() + 5 * 60_000);
-    tenantQuery.mockResolvedValueOnce([{
-      id: 'm1', membership_number: '101', forenames: 'A', surname: 'B', email: 'a@b.com',
-      portal_password_hash: '$hash$', portal_email_verified: true,
-      portal_failed_login_count: 0, portal_locked_until: future,
-    }]);
+    tenantQuery.mockResolvedValueOnce([
+      {
+        id: 'm1',
+        membership_number: '101',
+        forenames: 'A',
+        surname: 'B',
+        email: 'a@b.com',
+        portal_password_hash: '$hash$',
+        portal_email_verified: true,
+        portal_failed_login_count: 0,
+        portal_locked_until: future,
+      },
+    ]);
 
     const res = await request(app)
       .post(`/public/${TENANT}/portal/login`)
@@ -65,11 +73,19 @@ describe('POST /public/:slug/portal/login lockout', () => {
   });
 
   it('increments portal_failed_login_count on a bad password', async () => {
-    tenantQuery.mockResolvedValueOnce([{
-      id: 'm1', membership_number: '101', forenames: 'A', surname: 'B', email: 'a@b.com',
-      portal_password_hash: '$hash$', portal_email_verified: true,
-      portal_failed_login_count: 1, portal_locked_until: null,
-    }]);
+    tenantQuery.mockResolvedValueOnce([
+      {
+        id: 'm1',
+        membership_number: '101',
+        forenames: 'A',
+        surname: 'B',
+        email: 'a@b.com',
+        portal_password_hash: '$hash$',
+        portal_email_verified: true,
+        portal_failed_login_count: 1,
+        portal_locked_until: null,
+      },
+    ]);
     verifyPassword.mockResolvedValueOnce(false);
     // UPDATE for failure bookkeeping
     tenantQuery.mockResolvedValueOnce([]);
@@ -81,8 +97,8 @@ describe('POST /public/:slug/portal/login lockout', () => {
       .send({ email: 'a@b.com', password: 'wrong' });
 
     expect(res.status).toBe(401);
-    const update = tenantQuery.mock.calls.find(
-      (c) => /UPDATE members SET portal_failed_login_count/.test(c[1]),
+    const update = tenantQuery.mock.calls.find((c) =>
+      /UPDATE members SET portal_failed_login_count/.test(c[1]),
     );
     expect(update).toBeDefined();
     // count of 1 → 2, not locked
@@ -90,11 +106,19 @@ describe('POST /public/:slug/portal/login lockout', () => {
   });
 
   it('locks the account on the Nth failed attempt', async () => {
-    tenantQuery.mockResolvedValueOnce([{
-      id: 'm1', membership_number: '101', forenames: 'A', surname: 'B', email: 'a@b.com',
-      portal_password_hash: '$hash$', portal_email_verified: true,
-      portal_failed_login_count: 4, portal_locked_until: null,
-    }]);
+    tenantQuery.mockResolvedValueOnce([
+      {
+        id: 'm1',
+        membership_number: '101',
+        forenames: 'A',
+        surname: 'B',
+        email: 'a@b.com',
+        portal_password_hash: '$hash$',
+        portal_email_verified: true,
+        portal_failed_login_count: 4,
+        portal_locked_until: null,
+      },
+    ]);
     verifyPassword.mockResolvedValueOnce(false);
     tenantQuery.mockResolvedValueOnce([]);
     tenantQuery.mockResolvedValueOnce([]);
@@ -104,20 +128,28 @@ describe('POST /public/:slug/portal/login lockout', () => {
       .send({ email: 'a@b.com', password: 'wrong' });
 
     expect(res.status).toBe(401);
-    const update = tenantQuery.mock.calls.find(
-      (c) => /UPDATE members SET portal_failed_login_count/.test(c[1]),
+    const update = tenantQuery.mock.calls.find((c) =>
+      /UPDATE members SET portal_failed_login_count/.test(c[1]),
     );
-    expect(update[2][0]).toBe(0);          // count reset on lock
-    expect(update[2][1]).toBeInstanceOf(Date);  // locked_until set
+    expect(update[2][0]).toBe(0); // count reset on lock
+    expect(update[2][1]).toBeInstanceOf(Date); // locked_until set
     expect(update[2][1].getTime()).toBeGreaterThan(Date.now());
   });
 
   it('resets counter on successful login', async () => {
-    tenantQuery.mockResolvedValueOnce([{
-      id: 'm1', membership_number: '101', forenames: 'A', surname: 'B', email: 'a@b.com',
-      portal_password_hash: '$hash$', portal_email_verified: true,
-      portal_failed_login_count: 3, portal_locked_until: null,
-    }]);
+    tenantQuery.mockResolvedValueOnce([
+      {
+        id: 'm1',
+        membership_number: '101',
+        forenames: 'A',
+        surname: 'B',
+        email: 'a@b.com',
+        portal_password_hash: '$hash$',
+        portal_email_verified: true,
+        portal_failed_login_count: 3,
+        portal_locked_until: null,
+      },
+    ]);
     verifyPassword.mockResolvedValueOnce(true);
     // UPDATE counter reset
     tenantQuery.mockResolvedValueOnce([]);
@@ -128,8 +160,8 @@ describe('POST /public/:slug/portal/login lockout', () => {
 
     expect(res.status).toBe(200);
     expect(res.body.token).toBeDefined();
-    const reset = tenantQuery.mock.calls.find(
-      (c) => /portal_failed_login_count = 0, portal_locked_until = NULL/.test(c[1]),
+    const reset = tenantQuery.mock.calls.find((c) =>
+      /portal_failed_login_count = 0, portal_locked_until = NULL/.test(c[1]),
     );
     expect(reset).toBeDefined();
     expect(reset[2]).toEqual(['m1']);
@@ -150,9 +182,7 @@ describe('POST /public/:slug/portal/forgot-password', () => {
     tenantQuery.mockResolvedValueOnce([]);
     const logSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
 
-    await request(app)
-      .post(`/public/${TENANT}/portal/forgot-password`)
-      .send({ email: 'a@b.com' });
+    await request(app).post(`/public/${TENANT}/portal/forgot-password`).send({ email: 'a@b.com' });
 
     for (const call of logSpy.mock.calls) {
       const line = call.join(' ');

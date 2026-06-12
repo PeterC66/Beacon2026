@@ -36,7 +36,10 @@ export default function PortalRequestCard() {
       <PortalVersion />
       <div className="bg-white rounded-lg shadow-md p-8 max-w-md w-full">
         <div className="mb-4">
-          <Link to={`/public/${slug}/portal/home`} className="text-sm text-blue-700 hover:underline">
+          <Link
+            to={`/public/${slug}/portal/home`}
+            className="text-sm text-blue-700 hover:underline"
+          >
             &larr; Members Portal
           </Link>
         </div>
@@ -60,8 +63,8 @@ export default function PortalRequestCard() {
         {!message && (
           <>
             <p className="text-sm text-slate-600 text-center mb-6">
-              Click the button below to receive a replacement membership card
-              by email as a PDF attachment.
+              Click the button below to receive a replacement membership card by email as a PDF
+              attachment.
             </p>
             <p className="text-xs text-slate-500 text-center mb-6">
               Your membership must be current and within the standard renewal period.

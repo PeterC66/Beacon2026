@@ -2,7 +2,11 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { groups as groupsApi, faculties as facultiesApi, polls as pollsApi } from '../../lib/api.js';
+import {
+  groups as groupsApi,
+  faculties as facultiesApi,
+  polls as pollsApi,
+} from '../../lib/api.js';
 import { useAuth } from '../../context/AuthContext.jsx';
 import NavBar from '../../components/NavBar.jsx';
 import PageHeader from '../../components/PageHeader.jsx';
@@ -13,50 +17,60 @@ import { useSortedData } from '../../hooks/useSortedData.js';
 const ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
 
 const DOWNLOAD_FIELDS = [
-  { key: 'name',         label: 'Group',       default: true },
-  { key: 'when_text',    label: 'When',        default: true },
-  { key: 'leaders',      label: 'Leader(s)',   default: true },
-  { key: 'member_count', label: 'Members',     default: true },
-  { key: 'status',       label: 'Status',      default: false },
-  { key: 'faculty_name', label: 'Faculty',     default: true },
-  { key: 'enquiries',    label: 'Enquiries',   default: false },
-  { key: 'information',  label: 'Information', default: false },
+  { key: 'name', label: 'Group', default: true },
+  { key: 'when_text', label: 'When', default: true },
+  { key: 'leaders', label: 'Leader(s)', default: true },
+  { key: 'member_count', label: 'Members', default: true },
+  { key: 'status', label: 'Status', default: false },
+  { key: 'faculty_name', label: 'Faculty', default: true },
+  { key: 'enquiries', label: 'Enquiries', default: false },
+  { key: 'information', label: 'Information', default: false },
 ];
 
 export default function GroupList() {
   const { can, tenant } = useAuth();
   const navigate = useNavigate();
-  const [groupList,   setGroupList]   = useState([]);
+  const [groupList, setGroupList] = useState([]);
   const { sorted, sortKey, sortDir, onSort } = useSortedData(groupList);
-  const [faculties,   setFaculties]   = useState([]);
-  const [polls,       setPolls]       = useState([]);
-  const [loading,     setLoading]     = useState(true);
-  const [error,       setError]       = useState(null);
+  const [faculties, setFaculties] = useState([]);
+  const [polls, setPolls] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   const tableRef = useRef(null);
 
-  const [activeOnly,   setActiveOnly]  = useState(true);
-  const [facultyId,    setFacultyId]   = useState('');
-  const [letter,       setLetter]      = useState('');
+  const [activeOnly, setActiveOnly] = useState(true);
+  const [facultyId, setFacultyId] = useState('');
+  const [letter, setLetter] = useState('');
 
   // Selection + bulk actions
-  const [selected,      setSelected]      = useState(new Set());
-  const [bulkAction,    setBulkAction]    = useState('');
-  const [addToPollId,   setAddToPollId]   = useState('');
-  const [bulkWorking,   setBulkWorking]   = useState(false);
-  const [bulkResult,    setBulkResult]    = useState(null);
+  const [selected, setSelected] = useState(new Set());
+  const [bulkAction, setBulkAction] = useState('');
+  const [addToPollId, setAddToPollId] = useState('');
+  const [bulkWorking, setBulkWorking] = useState(false);
+  const [bulkResult, setBulkResult] = useState(null);
 
   // Downloads
-  const [dlFields,      setDlFields]      = useState(new Set(DOWNLOAD_FIELDS.filter((f) => f.default).map((f) => f.key)));
-  const [downloading,   setDownloading]   = useState(false);
-  const [dlError,       setDlError]       = useState(null);
+  const [dlFields, setDlFields] = useState(
+    new Set(DOWNLOAD_FIELDS.filter((f) => f.default).map((f) => f.key)),
+  );
+  const [downloading, setDownloading] = useState(false);
+  const [dlError, setDlError] = useState(null);
 
   useEffect(() => {
-    facultiesApi.list().then(setFaculties).catch(() => {});
-    pollsApi.list().then(setPolls).catch(() => {});
+    facultiesApi
+      .list()
+      .then(setFaculties)
+      .catch(() => {});
+    pollsApi
+      .list()
+      .then(setPolls)
+      .catch(() => {});
   }, []);
 
-  useEffect(() => { load(); }, [activeOnly, facultyId, letter]);
+  useEffect(() => {
+    load();
+  }, [activeOnly, facultyId, letter]);
 
   async function load() {
     setLoading(true);
@@ -86,8 +100,12 @@ export default function GroupList() {
     });
   }
 
-  function selectAll()   { setSelected(new Set(sorted.map((g) => g.id))); }
-  function clearAll()    { setSelected(new Set()); }
+  function selectAll() {
+    setSelected(new Set(sorted.map((g) => g.id)));
+  }
+  function clearAll() {
+    setSelected(new Set());
+  }
 
   async function handleBulkDo() {
     if (selected.size === 0) return;
@@ -127,7 +145,10 @@ export default function GroupList() {
         }
         const result = await pollsApi.addMembers(addToPollId, [...memberIds]);
         const pollName = polls.find((p) => p.id === addToPollId)?.name ?? 'poll';
-        setBulkResult({ type: 'success', msg: `${result.added} member${result.added !== 1 ? 's' : ''} added to "${pollName}".` });
+        setBulkResult({
+          type: 'success',
+          msg: `${result.added} member${result.added !== 1 ? 's' : ''} added to "${pollName}".`,
+        });
       } catch (err) {
         setBulkResult({ type: 'error', msg: err.message });
       } finally {
@@ -139,7 +160,8 @@ export default function GroupList() {
   function toggleDlField(key) {
     setDlFields((prev) => {
       const next = new Set(prev);
-      if (next.has(key)) next.delete(key); else next.add(key);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
       return next;
     });
   }
@@ -197,7 +219,9 @@ export default function GroupList() {
               >
                 <option value="">All faculties</option>
                 {faculties.map((f) => (
-                  <option key={f.id} value={f.id}>{f.name}</option>
+                  <option key={f.id} value={f.id}>
+                    {f.name}
+                  </option>
                 ))}
               </select>
             </div>
@@ -224,23 +248,32 @@ export default function GroupList() {
         </div>
 
         {/* ── Results ───────────────────────────────────────────────── */}
-        {error   && <p className="text-center text-red-600 mb-3">Error: {error}</p>}
+        {error && <p className="text-center text-red-600 mb-3">Error: {error}</p>}
         {loading && <p className="text-center text-slate-500">Loading…</p>}
 
-        {!loading && !error && (
-          groupList.length === 0 ? (
+        {!loading &&
+          !error &&
+          (groupList.length === 0 ? (
             <p className="text-center text-slate-500 py-6">No groups found.</p>
           ) : (
             <>
               {/* Select controls */}
               <div className="flex flex-wrap gap-2 items-center mb-2">
-                <span className="text-sm text-slate-500">{groupList.length} group{groupList.length !== 1 ? 's' : ''}</span>
+                <span className="text-sm text-slate-500">
+                  {groupList.length} group{groupList.length !== 1 ? 's' : ''}
+                </span>
                 <span className="text-slate-300">|</span>
                 <span className="text-sm font-medium text-slate-600">Select:</span>
-                <button onClick={selectAll} className="text-sm text-blue-700 hover:underline">All</button>
-                <button onClick={clearAll}  className="text-sm text-blue-700 hover:underline">Clear All</button>
+                <button onClick={selectAll} className="text-sm text-blue-700 hover:underline">
+                  All
+                </button>
+                <button onClick={clearAll} className="text-sm text-blue-700 hover:underline">
+                  Clear All
+                </button>
                 {selected.size > 0 && (
-                  <span className="text-sm font-medium text-blue-700 ml-2">{selected.size} selected</span>
+                  <span className="text-sm font-medium text-blue-700 ml-2">
+                    {selected.size} selected
+                  </span>
                 )}
               </div>
 
@@ -249,12 +282,51 @@ export default function GroupList() {
                   <thead>
                     <tr className="bg-slate-50 border-b border-slate-200 text-left text-slate-600 italic font-normal">
                       <th className="px-2 py-2"></th>
-                      <SortableHeader col="name"         label="Group"   sortKey={sortKey} sortDir={sortDir} onSort={onSort} className="px-3 py-2 font-normal" />
-                      <SortableHeader col="when_text"    label="When"    sortKey={sortKey} sortDir={sortDir} onSort={onSort} className="px-3 py-2 font-normal" />
+                      <SortableHeader
+                        col="name"
+                        label="Group"
+                        sortKey={sortKey}
+                        sortDir={sortDir}
+                        onSort={onSort}
+                        className="px-3 py-2 font-normal"
+                      />
+                      <SortableHeader
+                        col="when_text"
+                        label="When"
+                        sortKey={sortKey}
+                        sortDir={sortDir}
+                        onSort={onSort}
+                        className="px-3 py-2 font-normal"
+                      />
                       <th className="px-3 py-2 font-normal">Leader(s)</th>
-                      <SortableHeader col="member_count" label="Members" sortKey={sortKey} sortDir={sortDir} onSort={onSort} className="px-3 py-2 font-normal" />
-                      {!activeOnly && <SortableHeader col="status"       label="Status"  sortKey={sortKey} sortDir={sortDir} onSort={onSort} className="px-3 py-2 font-normal" />}
-                      {faculties.length > 0 && <SortableHeader col="faculty_name" label="Faculty" sortKey={sortKey} sortDir={sortDir} onSort={onSort} className="px-3 py-2 font-normal" />}
+                      <SortableHeader
+                        col="member_count"
+                        label="Members"
+                        sortKey={sortKey}
+                        sortDir={sortDir}
+                        onSort={onSort}
+                        className="px-3 py-2 font-normal"
+                      />
+                      {!activeOnly && (
+                        <SortableHeader
+                          col="status"
+                          label="Status"
+                          sortKey={sortKey}
+                          sortDir={sortDir}
+                          onSort={onSort}
+                          className="px-3 py-2 font-normal"
+                        />
+                      )}
+                      {faculties.length > 0 && (
+                        <SortableHeader
+                          col="faculty_name"
+                          label="Faculty"
+                          sortKey={sortKey}
+                          sortDir={sortDir}
+                          onSort={onSort}
+                          className="px-3 py-2 font-normal"
+                        />
+                      )}
                       <th className="px-3 py-2"></th>
                     </tr>
                   </thead>
@@ -281,7 +353,11 @@ export default function GroupList() {
                             >
                               {g.short_name || g.name}
                             </Link>
-                          ) : <span title={g.short_name ? g.name : undefined}>{g.short_name || g.name}</span>}
+                          ) : (
+                            <span title={g.short_name ? g.name : undefined}>
+                              {g.short_name || g.name}
+                            </span>
+                          )}
                           {g.status === 'inactive' && (
                             <span className="ml-2 text-xs text-red-500">(inactive)</span>
                           )}
@@ -293,7 +369,9 @@ export default function GroupList() {
                         <td className="px-3 py-2 tabular-nums">{g.member_count ?? 0}</td>
                         {!activeOnly && (
                           <td className="px-3 py-2">
-                            <span className={g.status === 'active' ? 'text-green-700' : 'text-red-600'}>
+                            <span
+                              className={g.status === 'active' ? 'text-green-700' : 'text-red-600'}
+                            >
                               {g.status}
                             </span>
                           </td>
@@ -322,24 +400,36 @@ export default function GroupList() {
                 <div className="bg-white/90 rounded-lg shadow-sm p-3 space-y-3">
                   <div className="flex flex-wrap gap-3 items-end">
                     <div>
-                      <label className="block text-sm font-medium text-slate-700 mb-1">Do with {selected.size} selected group{selected.size !== 1 ? 's' : ''}</label>
+                      <label className="block text-sm font-medium text-slate-700 mb-1">
+                        Do with {selected.size} selected group{selected.size !== 1 ? 's' : ''}
+                      </label>
                       <select
                         name="bulkAction"
                         value={bulkAction}
-                        onChange={(e) => { setBulkAction(e.target.value); setBulkResult(null); setDlError(null); }}
+                        onChange={(e) => {
+                          setBulkAction(e.target.value);
+                          setBulkResult(null);
+                          setDlError(null);
+                        }}
                         className="border border-slate-300 rounded px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                       >
                         <option value="">— choose action —</option>
-                        {can('email', 'send') && <option value="send_email_leaders">Send email to leaders</option>}
+                        {can('email', 'send') && (
+                          <option value="send_email_leaders">Send email to leaders</option>
+                        )}
                         <option value="download_excel">Download Excel</option>
                         <option value="download_pdf">Download PDF</option>
-                        {hasBulkPolls && <option value="add_members_to_poll">Add members to poll</option>}
+                        {hasBulkPolls && (
+                          <option value="add_members_to_poll">Add members to poll</option>
+                        )}
                       </select>
                     </div>
 
                     {bulkAction === 'add_members_to_poll' && (
                       <div>
-                        <label className="block text-sm font-medium text-slate-700 mb-1">Poll</label>
+                        <label className="block text-sm font-medium text-slate-700 mb-1">
+                          Poll
+                        </label>
                         <select
                           name="addToPollId"
                           value={addToPollId}
@@ -347,15 +437,22 @@ export default function GroupList() {
                           className="border border-slate-300 rounded px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                         >
                           <option value="">— select poll —</option>
-                          {polls.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
+                          {polls.map((p) => (
+                            <option key={p.id} value={p.id}>
+                              {p.name}
+                            </option>
+                          ))}
                         </select>
                       </div>
                     )}
 
-                    {(bulkAction === 'send_email_leaders' || bulkAction === 'add_members_to_poll') && (
+                    {(bulkAction === 'send_email_leaders' ||
+                      bulkAction === 'add_members_to_poll') && (
                       <button
                         onClick={handleBulkDo}
-                        disabled={bulkWorking || (bulkAction === 'add_members_to_poll' && !addToPollId)}
+                        disabled={
+                          bulkWorking || (bulkAction === 'add_members_to_poll' && !addToPollId)
+                        }
                         className="bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white rounded px-4 py-1.5 text-sm font-medium transition-colors"
                       >
                         {bulkWorking ? 'Working…' : 'Do with selected'}
@@ -363,7 +460,9 @@ export default function GroupList() {
                     )}
 
                     {bulkResult && (
-                      <p className={`text-sm font-medium ${bulkResult.type === 'success' ? 'text-green-700' : 'text-red-600'}`}>
+                      <p
+                        className={`text-sm font-medium ${bulkResult.type === 'success' ? 'text-green-700' : 'text-red-600'}`}
+                      >
                         {bulkResult.msg}
                       </p>
                     )}
@@ -376,26 +475,37 @@ export default function GroupList() {
                       <p className="text-sm font-medium text-slate-700 mb-2">Fields to include:</p>
                       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-x-4 gap-y-1 mb-3">
                         {DOWNLOAD_FIELDS.map((f) => (
-                          <label key={f.key} className="flex items-center gap-1.5 text-sm cursor-pointer">
-                            <input type="checkbox" checked={dlFields.has(f.key)}
+                          <label
+                            key={f.key}
+                            className="flex items-center gap-1.5 text-sm cursor-pointer"
+                          >
+                            <input
+                              type="checkbox"
+                              checked={dlFields.has(f.key)}
                               onChange={() => toggleDlField(f.key)}
-                              className="rounded border-slate-300 text-blue-600 focus:ring-blue-500" />
+                              className="rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                            />
                             {f.label}
                           </label>
                         ))}
                       </div>
-                      <button onClick={() => handleDownload(bulkAction === 'download_excel' ? 'excel' : 'pdf')}
+                      <button
+                        onClick={() =>
+                          handleDownload(bulkAction === 'download_excel' ? 'excel' : 'pdf')
+                        }
                         disabled={downloading || dlFields.size === 0}
-                        className="bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white rounded px-4 py-1.5 text-sm font-medium transition-colors">
-                        {downloading ? 'Downloading…' : `Download ${bulkAction === 'download_excel' ? 'Excel' : 'PDF'}`}
+                        className="bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white rounded px-4 py-1.5 text-sm font-medium transition-colors"
+                      >
+                        {downloading
+                          ? 'Downloading…'
+                          : `Download ${bulkAction === 'download_excel' ? 'Excel' : 'PDF'}`}
                       </button>
                     </div>
                   )}
                 </div>
               )}
             </>
-          )
-        )}
+          ))}
       </div>
 
       <NavBar links={navLinks} />

@@ -5,21 +5,27 @@ import request from 'supertest';
 import { makeAuthHeader } from './helpers.js';
 
 vi.mock('../utils/redis.js', () => ({
-  isSessionInvalidated:   vi.fn().mockResolvedValue(false),
+  isSessionInvalidated: vi.fn().mockResolvedValue(false),
   invalidateUserSessions: vi.fn().mockResolvedValue(undefined),
 }));
 
 vi.mock('../utils/db.js', () => ({
-  prisma:      { $disconnect: vi.fn() },
+  prisma: { $disconnect: vi.fn() },
   tenantQuery: vi.fn(),
-  withTenant:  vi.fn(),
+  withTenant: vi.fn(),
 }));
 
-const { default: app }    = await import('../app.js');
-const { tenantQuery }      = await import('../utils/db.js');
+const { default: app } = await import('../app.js');
+const { tenantQuery } = await import('../utils/db.js');
 
 const AUTH = makeAuthHeader();
-const SAMPLE_POLL = { id: 'p1', name: 'No TAM', description: 'Does not want TAM', member_can_set: false, member_count: 3 };
+const SAMPLE_POLL = {
+  id: 'p1',
+  name: 'No TAM',
+  description: 'Does not want TAM',
+  member_can_set: false,
+  member_count: 3,
+};
 
 // ── GET /polls ──────────────────────────────────────────────────────────────
 
@@ -34,7 +40,9 @@ describe('GET /polls', () => {
   });
 
   it('returns 403 without privilege', async () => {
-    const res = await request(app).get('/polls').set('Authorization', makeAuthHeader({ privileges: [] }));
+    const res = await request(app)
+      .get('/polls')
+      .set('Authorization', makeAuthHeader({ privileges: [] }));
     expect(res.status).toBe(403);
   });
 });
@@ -104,7 +112,7 @@ describe('DELETE /polls/:id', () => {
 
   it('deletes a poll', async () => {
     tenantQuery.mockResolvedValueOnce([{ id: 'p1' }]); // exists
-    tenantQuery.mockResolvedValueOnce([]);              // delete
+    tenantQuery.mockResolvedValueOnce([]); // delete
     const res = await request(app).delete('/polls/p1').set('Authorization', AUTH);
     expect(res.status).toBe(200);
   });
@@ -137,8 +145,8 @@ describe('POST /polls/:id/members', () => {
 
   it('adds members to a poll', async () => {
     tenantQuery.mockResolvedValueOnce([{ id: 'p1' }]); // exists
-    tenantQuery.mockResolvedValueOnce([]);              // insert m1
-    tenantQuery.mockResolvedValueOnce([]);              // insert m2
+    tenantQuery.mockResolvedValueOnce([]); // insert m1
+    tenantQuery.mockResolvedValueOnce([]); // insert m2
     const res = await request(app)
       .post('/polls/p1/members')
       .set('Authorization', AUTH)

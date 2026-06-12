@@ -20,9 +20,16 @@ export default function PortalVerifyEmail() {
       return;
     }
 
-    publicApi.portalVerifyEmail(slug, token)
-      .then((r) => { setStatus('success'); setMessage(r.message); })
-      .catch((e) => { setStatus('error'); setMessage(e.message); });
+    publicApi
+      .portalVerifyEmail(slug, token)
+      .then((r) => {
+        setStatus('success');
+        setMessage(r.message);
+      })
+      .catch((e) => {
+        setStatus('error');
+        setMessage(e.message);
+      });
   }, [slug, searchParams]);
 
   return (
@@ -39,8 +46,10 @@ export default function PortalVerifyEmail() {
           <>
             <h1 className="text-xl font-bold text-green-700 mb-2">Email Verified</h1>
             <p className="text-sm text-slate-600 mb-4">{message}</p>
-            <Link to={`/public/${slug}/portal`}
-              className="inline-block bg-blue-600 hover:bg-blue-700 text-white rounded px-5 py-2 text-sm font-medium transition-colors">
+            <Link
+              to={`/public/${slug}/portal`}
+              className="inline-block bg-blue-600 hover:bg-blue-700 text-white rounded px-5 py-2 text-sm font-medium transition-colors"
+            >
               Sign in
             </Link>
           </>

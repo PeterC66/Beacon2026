@@ -20,7 +20,9 @@ const { default: app } = await import('../app.js');
 const request = supertest(app);
 const auth = makeAuthHeader();
 
-beforeEach(() => { vi.clearAllMocks(); });
+beforeEach(() => {
+  vi.clearAllMocks();
+});
 
 describe('GET /email/standard-messages', () => {
   it('returns the list of standard messages', async () => {

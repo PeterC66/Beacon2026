@@ -28,7 +28,9 @@ export function sheetRows(ws) {
       headers = vals.map((v) => String(v ?? '').trim());
     } else {
       const obj = {};
-      headers.forEach((h, i) => { obj[h] = vals[i] ?? null; });
+      headers.forEach((h, i) => {
+        obj[h] = vals[i] ?? null;
+      });
       rows.push(obj);
     }
   });
@@ -89,7 +91,9 @@ export function dateToStr(v) {
   return String(v).slice(0, 10) || null;
 }
 
-export function boolInt(v) { return v ? 1 : 0; }
+export function boolInt(v) {
+  return v ? 1 : 0;
+}
 
 /** Add a styled worksheet with given column keys and data rows */
 export function addSheet(wb, name, columns, rows) {
@@ -101,11 +105,15 @@ export function addSheet(wb, name, columns, rows) {
   }));
   ws.getRow(1).font = { bold: true };
   ws.getRow(1).fill = {
-    type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFD9E1F2' },
+    type: 'pattern',
+    pattern: 'solid',
+    fgColor: { argb: 'FFD9E1F2' },
   };
   rows.forEach((r) => {
     const rowData = {};
-    columns.forEach((c) => { rowData[c] = sanitizeCell(r[c] ?? null); });
+    columns.forEach((c) => {
+      rowData[c] = sanitizeCell(r[c] ?? null);
+    });
     ws.addRow(rowData);
   });
   return ws;
@@ -114,7 +122,9 @@ export function addSheet(wb, name, columns, rows) {
 // ── Export: sheet builders ─────────────────────────────────────────────────────
 
 export async function buildMembersSheet(wb, slug) {
-  const rows = await tenantQuery(slug, `
+  const rows = await tenantQuery(
+    slug,
+    `
     SELECT m.id, m.membership_number, m.title, m.forenames, m.surname, m.suffix,
            m.known_as, m.initials, m.mobile, m.email, m.home_u3a,
            m.joined_on, m.next_renewal, m.gift_aid_from, m.notes, m.hide_contact,
@@ -130,29 +140,64 @@ export async function buildMembersSheet(wb, slug) {
     LEFT JOIN member_classes  c ON m.class_id  = c.id
     LEFT JOIN addresses       a ON m.address_id = a.id
     ORDER BY m.surname, m.forenames
-  `);
+  `,
+  );
 
-  addSheet(wb, 'Members', [
-    'id', 'membership_number', 'title', 'forenames', 'surname', 'suffix',
-    'known_as', 'initials', 'mobile', 'email', 'home_u3a',
-    'joined_on', 'next_renewal', 'gift_aid_from', 'notes', 'hide_contact',
-    'emergency_contact',
-    'custom_field_1', 'custom_field_2', 'custom_field_3', 'custom_field_4',
-    'status_id', 'status_name', 'class_id', 'class_name', 'partner_id',
-    'address_id', 'house_no', 'street', 'add_line1', 'add_line2',
-    'town', 'county', 'postcode', 'telephone',
-  ], rows.map((r) => ({
-    ...r,
-    joined_on:    dateToStr(r.joined_on),
-    next_renewal: dateToStr(r.next_renewal),
-    gift_aid_from: dateToStr(r.gift_aid_from),
-    hide_contact: boolInt(r.hide_contact),
-  })));
+  addSheet(
+    wb,
+    'Members',
+    [
+      'id',
+      'membership_number',
+      'title',
+      'forenames',
+      'surname',
+      'suffix',
+      'known_as',
+      'initials',
+      'mobile',
+      'email',
+      'home_u3a',
+      'joined_on',
+      'next_renewal',
+      'gift_aid_from',
+      'notes',
+      'hide_contact',
+      'emergency_contact',
+      'custom_field_1',
+      'custom_field_2',
+      'custom_field_3',
+      'custom_field_4',
+      'status_id',
+      'status_name',
+      'class_id',
+      'class_name',
+      'partner_id',
+      'address_id',
+      'house_no',
+      'street',
+      'add_line1',
+      'add_line2',
+      'town',
+      'county',
+      'postcode',
+      'telephone',
+    ],
+    rows.map((r) => ({
+      ...r,
+      joined_on: dateToStr(r.joined_on),
+      next_renewal: dateToStr(r.next_renewal),
+      gift_aid_from: dateToStr(r.gift_aid_from),
+      hide_contact: boolInt(r.hide_contact),
+    })),
+  );
 }
 
 export async function buildFinanceSheets(wb, slug) {
   const [txns, cats, batches] = await Promise.all([
-    tenantQuery(slug, `
+    tenantQuery(
+      slug,
+      `
       SELECT t.id, t.transaction_number, t.date, t.type, t.from_to, t.amount,
              t.payment_method, t.payment_ref, t.detail, t.remarks, t.cleared_at,
              t.account_id, a.name AS account_name,
@@ -164,54 +209,93 @@ export async function buildFinanceSheets(wb, slug) {
       FROM transactions t
       LEFT JOIN finance_accounts a ON t.account_id = a.id
       ORDER BY t.date, t.transaction_number
-    `),
-    tenantQuery(slug, `
+    `,
+    ),
+    tenantQuery(
+      slug,
+      `
       SELECT tc.transaction_id, tc.category_id, c.name AS category_name, tc.amount
       FROM transaction_categories tc
       LEFT JOIN finance_categories c ON tc.category_id = c.id
       ORDER BY tc.transaction_id
-    `),
-    tenantQuery(slug, `
+    `,
+    ),
+    tenantQuery(
+      slug,
+      `
       SELECT cb.id, cb.batch_ref, cb.account_id, a.name AS account_name,
              cb.description, cb.batch_date
       FROM credit_batches cb
       LEFT JOIN finance_accounts a ON cb.account_id = a.id
       ORDER BY cb.batch_ref
-    `),
+    `,
+    ),
   ]);
 
-  addSheet(wb, 'Ledger', [
-    'id', 'transaction_number', 'date', 'type', 'from_to', 'amount',
-    'payment_method', 'payment_ref', 'detail', 'remarks', 'cleared_at',
-    'account_id', 'account_name', 'member_id_1', 'member_id_2', 'group_id', 'event_id',
-    'transfer_id', 'pending', 'batch_id',
-    'gift_aid_amount', 'gift_aid_claimed_at',
-    'gift_aid_amount_2', 'gift_aid_claimed_at_2',
-    'refund_of_id', 'refunded_by_id',
-  ], txns.map((r) => ({
-    ...r,
-    date:                dateToStr(r.date),
-    cleared_at:          dateToStr(r.cleared_at),
-    amount:              r.amount != null ? Number(r.amount) : null,
-    pending:             boolInt(r.pending),
-    gift_aid_amount:     r.gift_aid_amount != null ? Number(r.gift_aid_amount) : null,
-    gift_aid_claimed_at: dateToStr(r.gift_aid_claimed_at),
-    gift_aid_amount_2:   r.gift_aid_amount_2 != null ? Number(r.gift_aid_amount_2) : null,
-    gift_aid_claimed_at_2: dateToStr(r.gift_aid_claimed_at_2),
-  })));
+  addSheet(
+    wb,
+    'Ledger',
+    [
+      'id',
+      'transaction_number',
+      'date',
+      'type',
+      'from_to',
+      'amount',
+      'payment_method',
+      'payment_ref',
+      'detail',
+      'remarks',
+      'cleared_at',
+      'account_id',
+      'account_name',
+      'member_id_1',
+      'member_id_2',
+      'group_id',
+      'event_id',
+      'transfer_id',
+      'pending',
+      'batch_id',
+      'gift_aid_amount',
+      'gift_aid_claimed_at',
+      'gift_aid_amount_2',
+      'gift_aid_claimed_at_2',
+      'refund_of_id',
+      'refunded_by_id',
+    ],
+    txns.map((r) => ({
+      ...r,
+      date: dateToStr(r.date),
+      cleared_at: dateToStr(r.cleared_at),
+      amount: r.amount != null ? Number(r.amount) : null,
+      pending: boolInt(r.pending),
+      gift_aid_amount: r.gift_aid_amount != null ? Number(r.gift_aid_amount) : null,
+      gift_aid_claimed_at: dateToStr(r.gift_aid_claimed_at),
+      gift_aid_amount_2: r.gift_aid_amount_2 != null ? Number(r.gift_aid_amount_2) : null,
+      gift_aid_claimed_at_2: dateToStr(r.gift_aid_claimed_at_2),
+    })),
+  );
 
-  addSheet(wb, 'Detail', [
-    'transaction_id', 'category_id', 'category_name', 'amount',
-  ], cats.map((r) => ({ ...r, amount: r.amount != null ? Number(r.amount) : null })));
+  addSheet(
+    wb,
+    'Detail',
+    ['transaction_id', 'category_id', 'category_name', 'amount'],
+    cats.map((r) => ({ ...r, amount: r.amount != null ? Number(r.amount) : null })),
+  );
 
-  addSheet(wb, 'Credit Batches', [
-    'id', 'batch_ref', 'account_id', 'account_name', 'description', 'batch_date',
-  ], batches.map((r) => ({ ...r, batch_date: dateToStr(r.batch_date) })));
+  addSheet(
+    wb,
+    'Credit Batches',
+    ['id', 'batch_ref', 'account_id', 'account_name', 'description', 'batch_date'],
+    batches.map((r) => ({ ...r, batch_date: dateToStr(r.batch_date) })),
+  );
 }
 
 export async function buildGroupsSheets(wb, slug) {
   const [groups, gm, faculties, venues, gle, events, eventTypes, eventMembers] = await Promise.all([
-    tenantQuery(slug, `
+    tenantQuery(
+      slug,
+      `
       SELECT g.id, g.name, g.short_name, g.type, g.faculty_id, f.name AS faculty_name, g.status,
              g.when_text,
              g.start_time::text AS start_time, g.end_time::text AS end_time,
@@ -221,8 +305,11 @@ export async function buildGroupsSheets(wb, slug) {
       FROM groups g
       LEFT JOIN faculties f ON g.faculty_id = f.id
       ORDER BY g.name
-    `),
-    tenantQuery(slug, `
+    `,
+    ),
+    tenantQuery(
+      slug,
+      `
       SELECT gm.id, gm.group_id, g.name AS group_name,
              gm.member_id, m.membership_number, m.forenames, m.surname,
              gm.is_leader, gm.waiting_since
@@ -230,21 +317,30 @@ export async function buildGroupsSheets(wb, slug) {
       JOIN groups  g ON gm.group_id  = g.id
       JOIN members m ON gm.member_id = m.id
       ORDER BY g.name, m.surname, m.forenames
-    `),
+    `,
+    ),
     tenantQuery(slug, `SELECT id, name FROM faculties ORDER BY name`),
-    tenantQuery(slug, `
+    tenantQuery(
+      slug,
+      `
       SELECT id, name, address, postcode, telephone, contact, email, website,
              notes, private_address, accessible
       FROM venues ORDER BY name
-    `),
-    tenantQuery(slug, `
+    `,
+    ),
+    tenantQuery(
+      slug,
+      `
       SELECT gle.id, gle.group_id, g.name AS group_name,
              gle.entry_date, gle.payee, gle.detail, gle.money_in, gle.money_out
       FROM group_ledger_entries gle
       JOIN groups g ON gle.group_id = g.id
       ORDER BY g.name, gle.entry_date
-    `),
-    tenantQuery(slug, `
+    `,
+    ),
+    tenantQuery(
+      slug,
+      `
       SELECT ge.id, ge.group_id, g.name AS group_name,
              ge.event_date, ge.start_time::text AS start_time,
              ge.end_time::text AS end_time,
@@ -256,87 +352,175 @@ export async function buildGroupsSheets(wb, slug) {
       LEFT JOIN venues v ON ge.venue_id = v.id
       LEFT JOIN event_types et ON ge.event_type_id = et.id
       ORDER BY ge.event_date, ge.start_time
-    `),
-    tenantQuery(slug, `
+    `,
+    ),
+    tenantQuery(
+      slug,
+      `
       SELECT id, name, description, is_default FROM event_types ORDER BY is_default DESC, name
-    `),
-    tenantQuery(slug, `
+    `,
+    ),
+    tenantQuery(
+      slug,
+      `
       SELECT em.id, em.event_id, em.member_id,
              m.membership_number, m.forenames, m.surname,
              em.is_organiser, em.notes
       FROM event_members em
       JOIN members m ON em.member_id = m.id
       ORDER BY em.event_id, m.surname, m.forenames
-    `),
+    `,
+    ),
   ]);
 
-  addSheet(wb, 'Groups', [
-    'id', 'name', 'short_name', 'type', 'faculty_id', 'faculty_name', 'status',
-    'when_text', 'start_time', 'end_time', 'venue', 'venue_id', 'enquiries', 'max_members',
-    'allow_online_join', 'enable_waiting_list', 'notify_leader',
-    'display_waiting_list', 'information', 'notes', 'show_addresses',
-  ], groups.map((r) => ({
-    ...r,
-    allow_online_join:    boolInt(r.allow_online_join),
-    enable_waiting_list:  boolInt(r.enable_waiting_list),
-    notify_leader:        boolInt(r.notify_leader),
-    display_waiting_list: boolInt(r.display_waiting_list),
-    show_addresses:       boolInt(r.show_addresses),
-  })));
+  addSheet(
+    wb,
+    'Groups',
+    [
+      'id',
+      'name',
+      'short_name',
+      'type',
+      'faculty_id',
+      'faculty_name',
+      'status',
+      'when_text',
+      'start_time',
+      'end_time',
+      'venue',
+      'venue_id',
+      'enquiries',
+      'max_members',
+      'allow_online_join',
+      'enable_waiting_list',
+      'notify_leader',
+      'display_waiting_list',
+      'information',
+      'notes',
+      'show_addresses',
+    ],
+    groups.map((r) => ({
+      ...r,
+      allow_online_join: boolInt(r.allow_online_join),
+      enable_waiting_list: boolInt(r.enable_waiting_list),
+      notify_leader: boolInt(r.notify_leader),
+      display_waiting_list: boolInt(r.display_waiting_list),
+      show_addresses: boolInt(r.show_addresses),
+    })),
+  );
 
-  addSheet(wb, 'Group members', [
-    'id', 'group_id', 'group_name', 'member_id', 'membership_number',
-    'forenames', 'surname', 'is_leader', 'waiting_since',
-  ], gm.map((r) => ({
-    ...r,
-    is_leader:     boolInt(r.is_leader),
-    waiting_since: dateToStr(r.waiting_since),
-  })));
+  addSheet(
+    wb,
+    'Group members',
+    [
+      'id',
+      'group_id',
+      'group_name',
+      'member_id',
+      'membership_number',
+      'forenames',
+      'surname',
+      'is_leader',
+      'waiting_since',
+    ],
+    gm.map((r) => ({
+      ...r,
+      is_leader: boolInt(r.is_leader),
+      waiting_since: dateToStr(r.waiting_since),
+    })),
+  );
 
-  addSheet(wb, 'Venues', [
-    'id', 'name', 'address', 'postcode', 'telephone', 'contact',
-    'email', 'website', 'notes', 'private_address', 'accessible',
-  ], venues.map((r) => ({
-    ...r,
-    private_address: boolInt(r.private_address),
-    accessible:      boolInt(r.accessible),
-  })));
+  addSheet(
+    wb,
+    'Venues',
+    [
+      'id',
+      'name',
+      'address',
+      'postcode',
+      'telephone',
+      'contact',
+      'email',
+      'website',
+      'notes',
+      'private_address',
+      'accessible',
+    ],
+    venues.map((r) => ({
+      ...r,
+      private_address: boolInt(r.private_address),
+      accessible: boolInt(r.accessible),
+    })),
+  );
 
-  addSheet(wb, 'Group Ledgers', [
-    'id', 'group_id', 'group_name', 'entry_date', 'payee', 'detail', 'money_in', 'money_out',
-  ], gle.map((r) => ({
-    ...r,
-    entry_date: dateToStr(r.entry_date),
-    money_in:   r.money_in != null ? Number(r.money_in) : null,
-    money_out:  r.money_out != null ? Number(r.money_out) : null,
-  })));
+  addSheet(
+    wb,
+    'Group Ledgers',
+    ['id', 'group_id', 'group_name', 'entry_date', 'payee', 'detail', 'money_in', 'money_out'],
+    gle.map((r) => ({
+      ...r,
+      entry_date: dateToStr(r.entry_date),
+      money_in: r.money_in != null ? Number(r.money_in) : null,
+      money_out: r.money_out != null ? Number(r.money_out) : null,
+    })),
+  );
 
   addSheet(wb, 'Faculties', ['id', 'name'], faculties);
 
-  addSheet(wb, 'Event Types', [
-    'id', 'name', 'description', 'is_default',
-  ], eventTypes.map((r) => ({
-    ...r,
-    is_default: boolInt(r.is_default),
-  })));
+  addSheet(
+    wb,
+    'Event Types',
+    ['id', 'name', 'description', 'is_default'],
+    eventTypes.map((r) => ({
+      ...r,
+      is_default: boolInt(r.is_default),
+    })),
+  );
 
-  addSheet(wb, 'Group Events', [
-    'id', 'group_id', 'group_name', 'event_date', 'start_time', 'end_time',
-    'venue_id', 'venue_name', 'event_type_id', 'event_type_name',
-    'contact', 'details', 'topic', 'is_private',
-  ], events.map((r) => ({
-    ...r,
-    event_date: dateToStr(r.event_date),
-    is_private: boolInt(r.is_private),
-  })));
+  addSheet(
+    wb,
+    'Group Events',
+    [
+      'id',
+      'group_id',
+      'group_name',
+      'event_date',
+      'start_time',
+      'end_time',
+      'venue_id',
+      'venue_name',
+      'event_type_id',
+      'event_type_name',
+      'contact',
+      'details',
+      'topic',
+      'is_private',
+    ],
+    events.map((r) => ({
+      ...r,
+      event_date: dateToStr(r.event_date),
+      is_private: boolInt(r.is_private),
+    })),
+  );
 
-  addSheet(wb, 'Event Members', [
-    'id', 'event_id', 'member_id', 'membership_number',
-    'forenames', 'surname', 'is_organiser', 'notes',
-  ], eventMembers.map((r) => ({
-    ...r,
-    is_organiser: boolInt(r.is_organiser),
-  })));
+  addSheet(
+    wb,
+    'Event Members',
+    [
+      'id',
+      'event_id',
+      'member_id',
+      'membership_number',
+      'forenames',
+      'surname',
+      'is_organiser',
+      'notes',
+    ],
+    eventMembers.map((r) => ({
+      ...r,
+      is_organiser: boolInt(r.is_organiser),
+    })),
+  );
 }
 
 export async function buildCalendarSheet(wb) {
@@ -348,63 +532,90 @@ export async function buildCalendarSheet(wb) {
 export async function buildSystemSheets(wb, slug) {
   const [users, userRoles, roles, privs] = await Promise.all([
     // Include password_hash so it can be fully restored
-    tenantQuery(slug, `
+    tenantQuery(
+      slug,
+      `
       SELECT id, username, name, email, password_hash, active, member_id
       FROM users ORDER BY name
-    `),
-    tenantQuery(slug, `
+    `,
+    ),
+    tenantQuery(
+      slug,
+      `
       SELECT ur.user_id, u.name AS user_name, ur.role_id, r.name AS role_name
       FROM user_roles ur
       JOIN users u ON ur.user_id = u.id
       JOIN roles r ON ur.role_id = r.id
       ORDER BY u.name, r.name
-    `),
+    `,
+    ),
     tenantQuery(slug, `SELECT id, name, is_committee, notes FROM roles ORDER BY name`),
     // Join privilege_resources to get resource code (resource_id is the FK)
-    tenantQuery(slug, `
+    tenantQuery(
+      slug,
+      `
       SELECT rp.role_id, r.name AS role_name, pr.code AS resource_code, rp.action
       FROM role_privileges rp
       JOIN roles r ON rp.role_id = r.id
       JOIN privilege_resources pr ON rp.resource_id = pr.id
       ORDER BY r.name, pr.code, rp.action
-    `),
+    `,
+    ),
   ]);
 
-  addSheet(wb, 'System Users', [
-    'id', 'username', 'name', 'email', 'password_hash', 'active', 'member_id',
-  ], users.map((r) => ({ ...r, active: boolInt(r.active) })));
+  addSheet(
+    wb,
+    'System Users',
+    ['id', 'username', 'name', 'email', 'password_hash', 'active', 'member_id'],
+    users.map((r) => ({ ...r, active: boolInt(r.active) })),
+  );
 
-  addSheet(wb, 'User roles', [
-    'user_id', 'user_name', 'role_id', 'role_name',
-  ], userRoles);
+  addSheet(wb, 'User roles', ['user_id', 'user_name', 'role_id', 'role_name'], userRoles);
 
-  addSheet(wb, 'Roles', ['id', 'name', 'is_committee', 'notes'],
-    roles.map((r) => ({ ...r, is_committee: boolInt(r.is_committee) })));
+  addSheet(
+    wb,
+    'Roles',
+    ['id', 'name', 'is_committee', 'notes'],
+    roles.map((r) => ({ ...r, is_committee: boolInt(r.is_committee) })),
+  );
 
   addSheet(wb, 'Privileges', ['role_id', 'role_name', 'resource_code', 'action'], privs);
 }
 
 export async function buildOfficersSheet(wb, slug) {
-  const rows = await tenantQuery(slug, `
+  const rows = await tenantQuery(
+    slug,
+    `
     SELECT o.id, o.name, o.member_id, m.forenames AS member_forenames,
            m.surname AS member_surname, o.office_email, o.notify_online_join
     FROM offices o
     LEFT JOIN members m ON o.member_id = m.id
     ORDER BY o.name
-  `);
+  `,
+  );
 
-  addSheet(wb, 'u3a Officers', [
-    'id', 'name', 'member_id', 'member_forenames', 'member_surname',
-    'office_email', 'notify_online_join',
-  ], rows.map((r) => ({ ...r, notify_online_join: boolInt(r.notify_online_join) })));
+  addSheet(
+    wb,
+    'u3a Officers',
+    [
+      'id',
+      'name',
+      'member_id',
+      'member_forenames',
+      'member_surname',
+      'office_email',
+      'notify_online_join',
+    ],
+    rows.map((r) => ({ ...r, notify_online_join: boolInt(r.notify_online_join) })),
+  );
 }
 
 export async function buildSettingsSheets(wb, slug) {
-  const [
-    settings, accounts, categories, classes, fees,
-    statuses, polls, pollMembers,
-  ] = await Promise.all([
-    tenantQuery(slug, `
+  const [settings, accounts, categories, classes, fees, statuses, polls, pollMembers] =
+    await Promise.all([
+      tenantQuery(
+        slug,
+        `
       SELECT card_colour, email_cards, public_phone, public_email, home_page,
              online_join_email, online_renew_email, fee_variation,
              extended_membership_month, advance_renewals_weeks, grace_lapse_weeks,
@@ -419,75 +630,91 @@ export async function buildSettingsSheets(wb, slug) {
              portal_config, group_info_config, calendar_config,
              feature_config
       FROM tenant_settings
-    `),
-    tenantQuery(slug, `
+    `,
+      ),
+      tenantQuery(
+        slug,
+        `
       SELECT id, name, active, locked, sort_order, pending_config, pending_types,
              enable_refunds, balance_brought_forward
       FROM finance_accounts ORDER BY sort_order, name
-    `),
-    tenantQuery(slug, `
+    `,
+      ),
+      tenantQuery(
+        slug,
+        `
       SELECT id, name, active, locked, sort_order
       FROM finance_categories ORDER BY sort_order, name
-    `),
-    tenantQuery(slug, `
+    `,
+      ),
+      tenantQuery(
+        slug,
+        `
       SELECT id, name, current, explanation, is_joint, is_associate, show_online,
              fee, gift_aid_fee, locked
       FROM member_classes ORDER BY name
-    `),
-    tenantQuery(slug, `
+    `,
+      ),
+      tenantQuery(
+        slug,
+        `
       SELECT cmf.class_id, mc.name AS class_name, cmf.month_index, cmf.fee, cmf.gift_aid_fee
       FROM class_monthly_fees cmf
       JOIN member_classes mc ON cmf.class_id = mc.id
       ORDER BY mc.name, cmf.month_index
-    `),
-    tenantQuery(slug, `SELECT id, name, locked FROM member_statuses ORDER BY name`),
-    tenantQuery(slug, `SELECT id, name, description, member_can_set FROM polls ORDER BY name`),
-    tenantQuery(slug, `
+    `,
+      ),
+      tenantQuery(slug, `SELECT id, name, locked FROM member_statuses ORDER BY name`),
+      tenantQuery(slug, `SELECT id, name, description, member_can_set FROM polls ORDER BY name`),
+      tenantQuery(
+        slug,
+        `
       SELECT pm.poll_id, p.name AS poll_name, pm.member_id, m.membership_number
       FROM poll_members pm
       JOIN polls   p ON pm.poll_id   = p.id
       JOIN members m ON pm.member_id = m.id
       ORDER BY p.name
-    `),
-  ]);
+    `,
+      ),
+    ]);
 
   const s = settings[0] || {};
   const settingsRows = [
-    { setting: 'card_colour',               value: str(s.card_colour) },
-    { setting: 'email_cards',               value: boolInt(s.email_cards) },
-    { setting: 'public_phone',              value: str(s.public_phone) },
-    { setting: 'public_email',              value: str(s.public_email) },
-    { setting: 'home_page',                 value: str(s.home_page) },
-    { setting: 'online_join_email',         value: str(s.online_join_email) },
-    { setting: 'online_renew_email',        value: str(s.online_renew_email) },
-    { setting: 'fee_variation',             value: str(s.fee_variation) },
+    { setting: 'card_colour', value: str(s.card_colour) },
+    { setting: 'email_cards', value: boolInt(s.email_cards) },
+    { setting: 'public_phone', value: str(s.public_phone) },
+    { setting: 'public_email', value: str(s.public_email) },
+    { setting: 'home_page', value: str(s.home_page) },
+    { setting: 'online_join_email', value: str(s.online_join_email) },
+    { setting: 'online_renew_email', value: str(s.online_renew_email) },
+    { setting: 'fee_variation', value: str(s.fee_variation) },
     { setting: 'extended_membership_month', value: s.extended_membership_month ?? '' },
-    { setting: 'advance_renewals_weeks',    value: s.advance_renewals_weeks ?? '' },
-    { setting: 'grace_lapse_weeks',         value: s.grace_lapse_weeks ?? '' },
-    { setting: 'deletion_years',            value: s.deletion_years ?? '' },
-    { setting: 'default_payment_method',    value: str(s.default_payment_method) },
-    { setting: 'gift_aid_enabled',          value: boolInt(s.gift_aid_enabled) },
-    { setting: 'gift_aid_online_renewals',  value: boolInt(s.gift_aid_online_renewals) },
-    { setting: 'default_town',              value: str(s.default_town) },
-    { setting: 'default_county',            value: str(s.default_county) },
-    { setting: 'default_std_code',          value: str(s.default_std_code) },
-    { setting: 'paypal_email',              value: str(s.paypal_email) },
-    { setting: 'paypal_cancel_url',         value: str(s.paypal_cancel_url) },
-    { setting: 'shared_address_warning',    value: boolInt(s.shared_address_warning) },
-    { setting: 'year_start_month',          value: s.year_start_month ?? 1 },
-    { setting: 'year_start_day',            value: s.year_start_day ?? 1 },
-    { setting: 'online_joining_enabled',    value: boolInt(s.online_joining_enabled) },
-    { setting: 'privacy_policy_url',        value: str(s.privacy_policy_url) },
-    { setting: 'group_bf_enabled',          value: boolInt(s.group_bf_enabled) },
-    { setting: 'siteworks_activated',       value: boolInt(s.siteworks_activated) },
-    { setting: 'custom_field_label_1',      value: str(s.custom_field_label_1) },
-    { setting: 'custom_field_label_2',      value: str(s.custom_field_label_2) },
-    { setting: 'custom_field_label_3',      value: str(s.custom_field_label_3) },
-    { setting: 'custom_field_label_4',      value: str(s.custom_field_label_4) },
-    { setting: 'portal_config',             value: JSON.stringify(s.portal_config || {}) },
-    { setting: 'group_info_config',         value: JSON.stringify(s.group_info_config || {}) },
-    { setting: 'calendar_config',           value: JSON.stringify(s.calendar_config || {}) },
-    { setting: 'feature_config',            value: JSON.stringify(s.feature_config || {}) },
+    { setting: 'advance_renewals_weeks', value: s.advance_renewals_weeks ?? '' },
+    { setting: 'grace_lapse_weeks', value: s.grace_lapse_weeks ?? '' },
+    { setting: 'deletion_years', value: s.deletion_years ?? '' },
+    { setting: 'default_payment_method', value: str(s.default_payment_method) },
+    { setting: 'gift_aid_enabled', value: boolInt(s.gift_aid_enabled) },
+    { setting: 'gift_aid_online_renewals', value: boolInt(s.gift_aid_online_renewals) },
+    { setting: 'default_town', value: str(s.default_town) },
+    { setting: 'default_county', value: str(s.default_county) },
+    { setting: 'default_std_code', value: str(s.default_std_code) },
+    { setting: 'paypal_email', value: str(s.paypal_email) },
+    { setting: 'paypal_cancel_url', value: str(s.paypal_cancel_url) },
+    { setting: 'shared_address_warning', value: boolInt(s.shared_address_warning) },
+    { setting: 'year_start_month', value: s.year_start_month ?? 1 },
+    { setting: 'year_start_day', value: s.year_start_day ?? 1 },
+    { setting: 'online_joining_enabled', value: boolInt(s.online_joining_enabled) },
+    { setting: 'privacy_policy_url', value: str(s.privacy_policy_url) },
+    { setting: 'group_bf_enabled', value: boolInt(s.group_bf_enabled) },
+    { setting: 'siteworks_activated', value: boolInt(s.siteworks_activated) },
+    { setting: 'custom_field_label_1', value: str(s.custom_field_label_1) },
+    { setting: 'custom_field_label_2', value: str(s.custom_field_label_2) },
+    { setting: 'custom_field_label_3', value: str(s.custom_field_label_3) },
+    { setting: 'custom_field_label_4', value: str(s.custom_field_label_4) },
+    { setting: 'portal_config', value: JSON.stringify(s.portal_config || {}) },
+    { setting: 'group_info_config', value: JSON.stringify(s.group_info_config || {}) },
+    { setting: 'calendar_config', value: JSON.stringify(s.calendar_config || {}) },
+    { setting: 'feature_config', value: JSON.stringify(s.feature_config || {}) },
   ];
   addSheet(wb, 'Site Settings 1', ['setting', 'value'], settingsRows);
 
@@ -495,134 +722,193 @@ export async function buildSettingsSheets(wb, slug) {
   ws2.addRow(['note']);
   ws2.addRow(['Beacon2 stores all settings in Site Settings 1.']);
 
-  addSheet(wb, 'Finance Accounts', [
-    'id', 'name', 'active', 'locked', 'sort_order',
-    'pending_config', 'pending_types', 'enable_refunds', 'balance_brought_forward',
-  ], accounts.map((r) => ({
-    ...r,
-    active: boolInt(r.active),
-    locked: boolInt(r.locked),
-    enable_refunds: boolInt(r.enable_refunds),
-    pending_types: JSON.stringify(r.pending_types || []),
-    balance_brought_forward: r.balance_brought_forward != null ? Number(r.balance_brought_forward) : 0,
-  })));
+  addSheet(
+    wb,
+    'Finance Accounts',
+    [
+      'id',
+      'name',
+      'active',
+      'locked',
+      'sort_order',
+      'pending_config',
+      'pending_types',
+      'enable_refunds',
+      'balance_brought_forward',
+    ],
+    accounts.map((r) => ({
+      ...r,
+      active: boolInt(r.active),
+      locked: boolInt(r.locked),
+      enable_refunds: boolInt(r.enable_refunds),
+      pending_types: JSON.stringify(r.pending_types || []),
+      balance_brought_forward:
+        r.balance_brought_forward != null ? Number(r.balance_brought_forward) : 0,
+    })),
+  );
 
-  addSheet(wb, 'Finance Categories', [
-    'id', 'name', 'active', 'locked', 'sort_order',
-  ], categories.map((r) => ({ ...r, active: boolInt(r.active), locked: boolInt(r.locked) })));
+  addSheet(
+    wb,
+    'Finance Categories',
+    ['id', 'name', 'active', 'locked', 'sort_order'],
+    categories.map((r) => ({ ...r, active: boolInt(r.active), locked: boolInt(r.locked) })),
+  );
 
-  addSheet(wb, 'Membership Classes', [
-    'id', 'name', 'current', 'explanation', 'is_joint', 'is_associate', 'show_online',
-    'fee', 'gift_aid_fee', 'locked',
-  ], classes.map((r) => ({
-    ...r,
-    current:      boolInt(r.current),
-    is_joint:     boolInt(r.is_joint),
-    is_associate: boolInt(r.is_associate),
-    show_online:  boolInt(r.show_online),
-    locked:       boolInt(r.locked),
-    fee:          r.fee != null ? Number(r.fee) : null,
-    gift_aid_fee: r.gift_aid_fee != null ? Number(r.gift_aid_fee) : null,
-  })));
+  addSheet(
+    wb,
+    'Membership Classes',
+    [
+      'id',
+      'name',
+      'current',
+      'explanation',
+      'is_joint',
+      'is_associate',
+      'show_online',
+      'fee',
+      'gift_aid_fee',
+      'locked',
+    ],
+    classes.map((r) => ({
+      ...r,
+      current: boolInt(r.current),
+      is_joint: boolInt(r.is_joint),
+      is_associate: boolInt(r.is_associate),
+      show_online: boolInt(r.show_online),
+      locked: boolInt(r.locked),
+      fee: r.fee != null ? Number(r.fee) : null,
+      gift_aid_fee: r.gift_aid_fee != null ? Number(r.gift_aid_fee) : null,
+    })),
+  );
 
-  addSheet(wb, 'Membership Fees', [
-    'class_id', 'class_name', 'month_index', 'fee', 'gift_aid_fee',
-  ], fees.map((r) => ({
-    ...r,
-    fee:          r.fee != null ? Number(r.fee) : null,
-    gift_aid_fee: r.gift_aid_fee != null ? Number(r.gift_aid_fee) : null,
-  })));
+  addSheet(
+    wb,
+    'Membership Fees',
+    ['class_id', 'class_name', 'month_index', 'fee', 'gift_aid_fee'],
+    fees.map((r) => ({
+      ...r,
+      fee: r.fee != null ? Number(r.fee) : null,
+      gift_aid_fee: r.gift_aid_fee != null ? Number(r.gift_aid_fee) : null,
+    })),
+  );
 
-  addSheet(wb, 'Member Statuses', ['id', 'name', 'locked'],
-    statuses.map((r) => ({ ...r, locked: boolInt(r.locked) })));
+  addSheet(
+    wb,
+    'Member Statuses',
+    ['id', 'name', 'locked'],
+    statuses.map((r) => ({ ...r, locked: boolInt(r.locked) })),
+  );
 
-  addSheet(wb, 'Polls', ['id', 'name', 'description', 'member_can_set'],
-    polls.map((r) => ({ ...r, member_can_set: boolInt(r.member_can_set) })));
+  addSheet(
+    wb,
+    'Polls',
+    ['id', 'name', 'description', 'member_can_set'],
+    polls.map((r) => ({ ...r, member_can_set: boolInt(r.member_can_set) })),
+  );
 
-  addSheet(wb, 'Poll assignments', [
-    'poll_id', 'poll_name', 'member_id', 'membership_number',
-  ], pollMembers);
+  addSheet(
+    wb,
+    'Poll assignments',
+    ['poll_id', 'poll_name', 'member_id', 'membership_number'],
+    pollMembers,
+  );
 
   const [sysMsgs, stdMsgs, stdLetters, pmDefaults] = await Promise.all([
     tenantQuery(slug, `SELECT id, name, subject, body FROM system_messages ORDER BY name`),
     tenantQuery(slug, `SELECT id, name, subject, body FROM standard_messages ORDER BY name`),
     tenantQuery(slug, `SELECT id, name, body FROM standard_letters ORDER BY name`),
-    tenantQuery(slug, `
+    tenantQuery(
+      slug,
+      `
       SELECT pmd.payment_method, pmd.account_id, fa.name AS account_name
       FROM payment_method_defaults pmd
       LEFT JOIN finance_accounts fa ON pmd.account_id = fa.id
       ORDER BY pmd.payment_method
-    `),
+    `,
+    ),
   ]);
 
   addSheet(wb, 'System Messages', ['id', 'name', 'subject', 'body'], sysMsgs);
   addSheet(wb, 'Standard Messages', ['id', 'name', 'subject', 'body'], stdMsgs);
   addSheet(wb, 'Standard Letters', ['id', 'name', 'body'], stdLetters);
-  addSheet(wb, 'Payment Method Defaults', [
-    'payment_method', 'account_id', 'account_name',
-  ], pmDefaults);
+  addSheet(
+    wb,
+    'Payment Method Defaults',
+    ['payment_method', 'account_id', 'account_name'],
+    pmDefaults,
+  );
 }
 
 // ── Export route ───────────────────────────────────────────────────────────────
 
 export const EXPORT_TYPES = {
-  members:  'members_and_addresses',
-  finance:  'finance_ledger_with_detail',
-  groups:   'groups_members_venues_faculties',
+  members: 'members_and_addresses',
+  finance: 'finance_ledger_with_detail',
+  groups: 'groups_members_venues_faculties',
   calendar: 'calendar',
-  system:   'system_users_roles_privileges',
+  system: 'system_users_roles_privileges',
   officers: 'u3a_officers',
   settings: 'site_settings_and_setup',
-  all:      'backup_all_data',
+  all: 'backup_all_data',
 };
 
-router.get('/export', requirePrivilege('data_export_backup', 'download'), async (req, res, next) => {
-  const { type = 'all' } = req.query;
-  if (!EXPORT_TYPES[type]) return res.status(400).json({ error: 'Invalid export type' });
+router.get(
+  '/export',
+  requirePrivilege('data_export_backup', 'download'),
+  async (req, res, next) => {
+    const { type = 'all' } = req.query;
+    if (!EXPORT_TYPES[type]) return res.status(400).json({ error: 'Invalid export type' });
 
-  const slug = req.user.tenantSlug;
+    const slug = req.user.tenantSlug;
 
-  try {
-    // Look up tenant display name for filename
-    const tenant = await prisma.sysTenant.findUnique({ where: { slug } });
-    const tenantName = tenant?.name
-      ? tenant.name.replace(/[^a-z0-9_]/gi, '_').replace(/__+/g, '_').toLowerCase()
-      : slug;
+    try {
+      // Look up tenant display name for filename
+      const tenant = await prisma.sysTenant.findUnique({ where: { slug } });
+      const tenantName = tenant?.name
+        ? tenant.name
+            .replace(/[^a-z0-9_]/gi, '_')
+            .replace(/__+/g, '_')
+            .toLowerCase()
+        : slug;
 
-    const wb = new ExcelJS.Workbook();
-    wb.creator = 'Beacon2';
-    wb.created = new Date();
+      const wb = new ExcelJS.Workbook();
+      wb.creator = 'Beacon2';
+      wb.created = new Date();
 
-    const builders = {
-      members:  () => buildMembersSheet(wb, slug),
-      finance:  () => buildFinanceSheets(wb, slug),
-      groups:   () => buildGroupsSheets(wb, slug),
-      calendar: () => buildCalendarSheet(wb),
-      system:   () => buildSystemSheets(wb, slug),
-      officers: () => buildOfficersSheet(wb, slug),
-      settings: () => buildSettingsSheets(wb, slug),
-    };
+      const builders = {
+        members: () => buildMembersSheet(wb, slug),
+        finance: () => buildFinanceSheets(wb, slug),
+        groups: () => buildGroupsSheets(wb, slug),
+        calendar: () => buildCalendarSheet(wb),
+        system: () => buildSystemSheets(wb, slug),
+        officers: () => buildOfficersSheet(wb, slug),
+        settings: () => buildSettingsSheets(wb, slug),
+      };
 
-    if (type === 'all') {
-      for (const fn of Object.values(builders)) await fn();
-    } else {
-      await builders[type]();
+      if (type === 'all') {
+        for (const fn of Object.values(builders)) await fn();
+      } else {
+        await builders[type]();
+      }
+
+      // Filename: {tenantname}_{type}_{YYYY-MM-DD_HH-MM}.xlsx
+      const now = new Date();
+      const datePart = now.toISOString().slice(0, 10);
+      const timePart = now.toISOString().slice(11, 16).replace(':', '-');
+      const filename = `${tenantName}_${EXPORT_TYPES[type]}_${datePart}_${timePart}.xlsx`;
+
+      res.setHeader(
+        'Content-Type',
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      );
+      res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+      await wb.xlsx.write(res);
+      res.end();
+    } catch (err) {
+      next(err);
     }
-
-    // Filename: {tenantname}_{type}_{YYYY-MM-DD_HH-MM}.xlsx
-    const now = new Date();
-    const datePart = now.toISOString().slice(0, 10);
-    const timePart = now.toISOString().slice(11, 16).replace(':', '-');
-    const filename = `${tenantName}_${EXPORT_TYPES[type]}_${datePart}_${timePart}.xlsx`;
-
-    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
-    await wb.xlsx.write(res);
-    res.end();
-  } catch (err) {
-    next(err);
-  }
-});
+  },
+);
 
 // ── Restore helpers (exported for system.js) ───────────────────────────────────
 
@@ -684,7 +970,9 @@ export async function restoreBeacon2(tx, wb) {
     if (!r.id) continue;
     await tx.$executeRawUnsafe(
       `INSERT INTO member_statuses (id, name, locked) VALUES ($1,$2,$3) ON CONFLICT (id) DO NOTHING`,
-      r.id, String(r.name || ''), parseBool(r.locked),
+      r.id,
+      String(r.name || ''),
+      parseBool(r.locked),
     );
   }
 
@@ -695,9 +983,16 @@ export async function restoreBeacon2(tx, wb) {
       `INSERT INTO member_classes
          (id, name, current, explanation, is_joint, is_associate, show_online, fee, gift_aid_fee, locked)
        VALUES ($1,$2,$3,$4,$5,$6,$7,$8::numeric,$9::numeric,$10) ON CONFLICT (id) DO NOTHING`,
-      r.id, String(r.name || ''), parseBool(r.current), str(r.explanation),
-      parseBool(r.is_joint), parseBool(r.is_associate), parseBool(r.show_online),
-      parseDec(r.fee), parseDec(r.gift_aid_fee), parseBool(r.locked),
+      r.id,
+      String(r.name || ''),
+      parseBool(r.current),
+      str(r.explanation),
+      parseBool(r.is_joint),
+      parseBool(r.is_associate),
+      parseBool(r.show_online),
+      parseDec(r.fee),
+      parseDec(r.gift_aid_fee),
+      parseBool(r.locked),
     );
   }
 
@@ -708,7 +1003,10 @@ export async function restoreBeacon2(tx, wb) {
       `INSERT INTO class_monthly_fees (id, class_id, month_index, fee, gift_aid_fee)
        VALUES (gen_random_uuid()::text,$1,$2,$3::numeric,$4::numeric)
        ON CONFLICT (class_id, month_index) DO NOTHING`,
-      r.class_id, parseInt(r.month_index), parseDec(r.fee), parseDec(r.gift_aid_fee),
+      r.class_id,
+      parseInt(r.month_index),
+      parseDec(r.fee),
+      parseDec(r.gift_aid_fee),
     );
   }
 
@@ -721,8 +1019,15 @@ export async function restoreBeacon2(tx, wb) {
     await tx.$executeRawUnsafe(
       `INSERT INTO addresses (id, house_no, street, add_line1, add_line2, town, county, postcode, telephone)
        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) ON CONFLICT (id) DO NOTHING`,
-      r.address_id, str(r.house_no), str(r.street), str(r.add_line1), str(r.add_line2),
-      str(r.town), str(r.county), str(r.postcode), str(r.telephone),
+      r.address_id,
+      str(r.house_no),
+      str(r.street),
+      str(r.add_line1),
+      str(r.add_line2),
+      str(r.town),
+      str(r.county),
+      str(r.postcode),
+      str(r.telephone),
     );
   }
 
@@ -738,15 +1043,30 @@ export async function restoreBeacon2(tx, wb) {
        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12::date,$13::date,$14::date,$15,$16,
                $17,$18,$19,$20,$21,$22,$23,$24)
        ON CONFLICT (id) DO NOTHING`,
-      r.id, parseInt(r.membership_number), str(r.title),
-      String(r.forenames || ''), String(r.surname || ''),
-      str(r.suffix), str(r.known_as), str(r.initials),
-      str(r.mobile), str(r.email), str(r.home_u3a),
-      parseDate(r.joined_on), parseDate(r.next_renewal), parseDate(r.gift_aid_from),
-      str(r.notes), parseBool(r.hide_contact),
-      str(r.emergency_contact), str(r.custom_field_1), str(r.custom_field_2),
-      str(r.custom_field_3), str(r.custom_field_4),
-      str(r.status_id), str(r.class_id), str(r.address_id),
+      r.id,
+      parseInt(r.membership_number),
+      str(r.title),
+      String(r.forenames || ''),
+      String(r.surname || ''),
+      str(r.suffix),
+      str(r.known_as),
+      str(r.initials),
+      str(r.mobile),
+      str(r.email),
+      str(r.home_u3a),
+      parseDate(r.joined_on),
+      parseDate(r.next_renewal),
+      parseDate(r.gift_aid_from),
+      str(r.notes),
+      parseBool(r.hide_contact),
+      str(r.emergency_contact),
+      str(r.custom_field_1),
+      str(r.custom_field_2),
+      str(r.custom_field_3),
+      str(r.custom_field_4),
+      str(r.status_id),
+      str(r.class_id),
+      str(r.address_id),
     );
   }
 
@@ -754,7 +1074,9 @@ export async function restoreBeacon2(tx, wb) {
   for (const r of membersData) {
     if (!r.id || !r.partner_id) continue;
     await tx.$executeRawUnsafe(
-      `UPDATE members SET partner_id = $1 WHERE id = $2`, r.partner_id, r.id,
+      `UPDATE members SET partner_id = $1 WHERE id = $2`,
+      r.partner_id,
+      r.id,
     );
   }
 
@@ -763,7 +1085,8 @@ export async function restoreBeacon2(tx, wb) {
     if (!r.id) continue;
     await tx.$executeRawUnsafe(
       `INSERT INTO faculties (id, name) VALUES ($1,$2) ON CONFLICT (id) DO NOTHING`,
-      r.id, String(r.name || ''),
+      r.id,
+      String(r.name || ''),
     );
   }
 
@@ -774,9 +1097,17 @@ export async function restoreBeacon2(tx, wb) {
       `INSERT INTO venues
          (id, name, address, postcode, telephone, contact, email, website, notes, private_address, accessible)
        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11) ON CONFLICT (id) DO NOTHING`,
-      r.id, String(r.name || ''), str(r.address), str(r.postcode),
-      str(r.telephone), str(r.contact), str(r.email), str(r.website),
-      str(r.notes), parseBool(r.private_address), parseBool(r.accessible),
+      r.id,
+      String(r.name || ''),
+      str(r.address),
+      str(r.postcode),
+      str(r.telephone),
+      str(r.contact),
+      str(r.email),
+      str(r.website),
+      str(r.notes),
+      parseBool(r.private_address),
+      parseBool(r.accessible),
     );
   }
 
@@ -790,16 +1121,26 @@ export async function restoreBeacon2(tx, wb) {
           display_waiting_list, information, notes, show_addresses)
        VALUES ($1,$2,$3,$4,$5,$6,$7,$8::time,$9::time,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20)
        ON CONFLICT (id) DO NOTHING`,
-      r.id, String(r.name || ''), str(r.short_name) || null,
-      String(r.type || 'group'), str(r.faculty_id),
-      String(r.status || 'active'), str(r.when_text),
-      str(r.start_time) || null, str(r.end_time) || null,
-      str(r.venue), str(r.venue_id),
+      r.id,
+      String(r.name || ''),
+      str(r.short_name) || null,
+      String(r.type || 'group'),
+      str(r.faculty_id),
+      String(r.status || 'active'),
+      str(r.when_text),
+      str(r.start_time) || null,
+      str(r.end_time) || null,
+      str(r.venue),
+      str(r.venue_id),
       str(r.enquiries),
       r.max_members ? parseInt(r.max_members) : null,
-      parseBool(r.allow_online_join), parseBool(r.enable_waiting_list),
-      parseBool(r.notify_leader), parseBool(r.display_waiting_list),
-      str(r.information), str(r.notes), parseBool(r.show_addresses),
+      parseBool(r.allow_online_join),
+      parseBool(r.enable_waiting_list),
+      parseBool(r.notify_leader),
+      parseBool(r.display_waiting_list),
+      str(r.information),
+      str(r.notes),
+      parseBool(r.show_addresses),
     );
   }
 
@@ -809,7 +1150,11 @@ export async function restoreBeacon2(tx, wb) {
     await tx.$executeRawUnsafe(
       `INSERT INTO group_members (id, group_id, member_id, is_leader, waiting_since)
        VALUES ($1,$2,$3,$4,$5::date) ON CONFLICT (id) DO NOTHING`,
-      r.id, r.group_id, r.member_id, parseBool(r.is_leader), parseDate(r.waiting_since),
+      r.id,
+      r.group_id,
+      r.member_id,
+      parseBool(r.is_leader),
+      parseDate(r.waiting_since),
     );
   }
 
@@ -819,8 +1164,13 @@ export async function restoreBeacon2(tx, wb) {
     await tx.$executeRawUnsafe(
       `INSERT INTO group_ledger_entries (id, group_id, entry_date, payee, detail, money_in, money_out)
        VALUES ($1,$2,$3::date,$4,$5,$6::numeric,$7::numeric) ON CONFLICT (id) DO NOTHING`,
-      r.id, r.group_id, parseDate(r.entry_date), str(r.payee), str(r.detail),
-      parseDec(r.money_in), parseDec(r.money_out),
+      r.id,
+      r.group_id,
+      parseDate(r.entry_date),
+      str(r.payee),
+      str(r.detail),
+      parseDec(r.money_in),
+      parseDec(r.money_out),
     );
   }
 
@@ -830,7 +1180,10 @@ export async function restoreBeacon2(tx, wb) {
     await tx.$executeRawUnsafe(
       `INSERT INTO event_types (id, name, description, is_default)
        VALUES ($1,$2,$3,$4) ON CONFLICT (id) DO NOTHING`,
-      r.id, String(r.name || ''), str(r.description), parseBool(r.is_default),
+      r.id,
+      String(r.name || ''),
+      str(r.description),
+      parseBool(r.is_default),
     );
   }
 
@@ -841,10 +1194,17 @@ export async function restoreBeacon2(tx, wb) {
       `INSERT INTO group_events
          (id, group_id, event_date, start_time, end_time, venue_id, contact, details, topic, is_private, event_type_id)
        VALUES ($1,$2,$3::date,$4::time,$5::time,$6,$7,$8,$9,$10,$11) ON CONFLICT (id) DO NOTHING`,
-      r.id, str(r.group_id), parseDate(r.event_date),
-      str(r.start_time) || null, str(r.end_time) || null,
-      str(r.venue_id), str(r.contact), str(r.details), str(r.topic),
-      parseBool(r.is_private), str(r.event_type_id),
+      r.id,
+      str(r.group_id),
+      parseDate(r.event_date),
+      str(r.start_time) || null,
+      str(r.end_time) || null,
+      str(r.venue_id),
+      str(r.contact),
+      str(r.details),
+      str(r.topic),
+      parseBool(r.is_private),
+      str(r.event_type_id),
     );
   }
 
@@ -854,7 +1214,11 @@ export async function restoreBeacon2(tx, wb) {
     await tx.$executeRawUnsafe(
       `INSERT INTO event_members (id, event_id, member_id, is_organiser, notes)
        VALUES ($1,$2,$3,$4,$5) ON CONFLICT (id) DO NOTHING`,
-      r.id, r.event_id, r.member_id, parseBool(r.is_organiser), str(r.notes),
+      r.id,
+      r.event_id,
+      r.member_id,
+      parseBool(r.is_organiser),
+      str(r.notes),
     );
   }
 
@@ -862,17 +1226,31 @@ export async function restoreBeacon2(tx, wb) {
   for (const r of get('Finance Accounts')) {
     if (!r.id) continue;
     let pendingTypes;
-    try { pendingTypes = JSON.parse(r.pending_types || '[]'); } catch { pendingTypes = []; }
+    try {
+      pendingTypes = JSON.parse(r.pending_types || '[]');
+    } catch {
+      pendingTypes = [];
+    }
     const ptArr = Array.isArray(pendingTypes) ? pendingTypes : [];
-    const ptStr = '{' + ptArr.map((s) => '"' + String(s).replace(/\\/g, '\\\\').replace(/"/g, '\\"') + '"').join(',') + '}';
+    const ptStr =
+      '{' +
+      ptArr
+        .map((s) => '"' + String(s).replace(/\\/g, '\\\\').replace(/"/g, '\\"') + '"')
+        .join(',') +
+      '}';
     await tx.$executeRawUnsafe(
       `INSERT INTO finance_accounts
          (id, name, active, locked, sort_order, pending_config, pending_types,
           enable_refunds, balance_brought_forward)
        VALUES ($1,$2,$3,$4,$5,$6,$7::text[],$8,$9::numeric) ON CONFLICT (id) DO NOTHING`,
-      r.id, String(r.name || ''), parseBool(r.active), parseBool(r.locked),
+      r.id,
+      String(r.name || ''),
+      parseBool(r.active),
+      parseBool(r.locked),
       r.sort_order ? parseInt(r.sort_order) : 0,
-      String(r.pending_config || 'disabled'), ptStr, parseBool(r.enable_refunds),
+      String(r.pending_config || 'disabled'),
+      ptStr,
+      parseBool(r.enable_refunds),
       parseDec(r.balance_brought_forward) ?? 0,
     );
   }
@@ -883,7 +1261,10 @@ export async function restoreBeacon2(tx, wb) {
     await tx.$executeRawUnsafe(
       `INSERT INTO finance_categories (id, name, active, locked, sort_order)
        VALUES ($1,$2,$3,$4,$5) ON CONFLICT (id) DO NOTHING`,
-      r.id, String(r.name || ''), parseBool(r.active), parseBool(r.locked),
+      r.id,
+      String(r.name || ''),
+      parseBool(r.active),
+      parseBool(r.locked),
       r.sort_order ? parseInt(r.sort_order) : 0,
     );
   }
@@ -894,8 +1275,11 @@ export async function restoreBeacon2(tx, wb) {
     await tx.$executeRawUnsafe(
       `INSERT INTO credit_batches (id, batch_ref, account_id, description, batch_date)
        VALUES ($1,$2,$3,$4,$5::date) ON CONFLICT (id) DO NOTHING`,
-      r.id, String(r.batch_ref || ''), r.account_id,
-      str(r.description), parseDate(r.batch_date),
+      r.id,
+      String(r.batch_ref || ''),
+      r.account_id,
+      str(r.description),
+      parseDate(r.batch_date),
     );
   }
 
@@ -914,14 +1298,31 @@ export async function restoreBeacon2(tx, wb) {
        VALUES ($1,$2,$3,$4::date,$5,$6,$7::numeric,$8,$9,$10,$11,$12,$13,$14,$15,$16::date,
                $17,$18,$19,$20::numeric,$21::date,$22::numeric,$23::date,$24,$25)
        ON CONFLICT (id) DO NOTHING`,
-      r.id, parseInt(r.transaction_number), r.account_id, parseDate(r.date),
-      String(r.type || 'in'), str(r.from_to), parseDec(r.amount),
-      str(r.payment_method), str(r.payment_ref), str(r.detail), str(r.remarks),
-      str(r.member_id_1), str(r.member_id_2), str(r.group_id), str(r.event_id), parseDate(r.cleared_at),
-      str(r.transfer_id), parseBool(r.pending), str(r.batch_id),
-      parseDec(r.gift_aid_amount), parseDate(r.gift_aid_claimed_at),
-      parseDec(r.gift_aid_amount_2), parseDate(r.gift_aid_claimed_at_2),
-      str(r.refund_of_id), str(r.refunded_by_id),
+      r.id,
+      parseInt(r.transaction_number),
+      r.account_id,
+      parseDate(r.date),
+      String(r.type || 'in'),
+      str(r.from_to),
+      parseDec(r.amount),
+      str(r.payment_method),
+      str(r.payment_ref),
+      str(r.detail),
+      str(r.remarks),
+      str(r.member_id_1),
+      str(r.member_id_2),
+      str(r.group_id),
+      str(r.event_id),
+      parseDate(r.cleared_at),
+      str(r.transfer_id),
+      parseBool(r.pending),
+      str(r.batch_id),
+      parseDec(r.gift_aid_amount),
+      parseDate(r.gift_aid_claimed_at),
+      parseDec(r.gift_aid_amount_2),
+      parseDate(r.gift_aid_claimed_at_2),
+      str(r.refund_of_id),
+      str(r.refunded_by_id),
     );
   }
 
@@ -932,7 +1333,9 @@ export async function restoreBeacon2(tx, wb) {
       `INSERT INTO transaction_categories (id, transaction_id, category_id, amount)
        VALUES (gen_random_uuid()::text,$1,$2,$3::numeric)
        ON CONFLICT (transaction_id, category_id) DO NOTHING`,
-      r.transaction_id, r.category_id, parseDec(r.amount),
+      r.transaction_id,
+      r.category_id,
+      parseDec(r.amount),
     );
   }
 
@@ -942,7 +1345,10 @@ export async function restoreBeacon2(tx, wb) {
     await tx.$executeRawUnsafe(
       `INSERT INTO offices (id, name, member_id, office_email, notify_online_join)
        VALUES ($1,$2,$3,$4,$5) ON CONFLICT (id) DO NOTHING`,
-      r.id, String(r.name || ''), str(r.member_id), str(r.office_email),
+      r.id,
+      String(r.name || ''),
+      str(r.member_id),
+      str(r.office_email),
       parseBool(r.notify_online_join),
     );
   }
@@ -953,7 +1359,10 @@ export async function restoreBeacon2(tx, wb) {
     await tx.$executeRawUnsafe(
       `INSERT INTO polls (id, name, description, member_can_set)
        VALUES ($1,$2,$3,$4) ON CONFLICT (id) DO NOTHING`,
-      r.id, String(r.name || ''), String(r.description || ''), parseBool(r.member_can_set),
+      r.id,
+      String(r.name || ''),
+      String(r.description || ''),
+      parseBool(r.member_can_set),
     );
   }
 
@@ -962,7 +1371,8 @@ export async function restoreBeacon2(tx, wb) {
     if (!r.poll_id || !r.member_id) continue;
     await tx.$executeRawUnsafe(
       `INSERT INTO poll_members (poll_id, member_id) VALUES ($1,$2) ON CONFLICT DO NOTHING`,
-      r.poll_id, r.member_id,
+      r.poll_id,
+      r.member_id,
     );
   }
 
@@ -972,7 +1382,10 @@ export async function restoreBeacon2(tx, wb) {
     await tx.$executeRawUnsafe(
       `INSERT INTO roles (id, name, is_committee, notes)
        VALUES ($1,$2,$3,$4) ON CONFLICT (id) DO NOTHING`,
-      r.id, String(r.name || ''), parseBool(r.is_committee), str(r.notes),
+      r.id,
+      String(r.name || ''),
+      parseBool(r.is_committee),
+      str(r.notes),
     );
   }
 
@@ -984,7 +1397,9 @@ export async function restoreBeacon2(tx, wb) {
        SELECT gen_random_uuid()::text, $1, pr.id, $2
        FROM privilege_resources pr WHERE pr.code = $3
        ON CONFLICT (role_id, resource_id, action) DO NOTHING`,
-      r.role_id, String(r.action), String(r.resource_code),
+      r.role_id,
+      String(r.action),
+      String(r.resource_code),
     );
   }
 
@@ -1000,8 +1415,12 @@ export async function restoreBeacon2(tx, wb) {
     await tx.$executeRawUnsafe(
       `INSERT INTO users (id, username, name, email, password_hash, active, member_id, must_change_password)
        VALUES ($1,$2,$3,$4,NULL,$5,$6,true) ON CONFLICT (id) DO NOTHING`,
-      r.id, str(r.username), String(r.name || ''), String(r.email || ''),
-      parseBool(r.active !== undefined ? r.active : 1), str(r.member_id),
+      r.id,
+      str(r.username),
+      String(r.name || ''),
+      String(r.email || ''),
+      parseBool(r.active !== undefined ? r.active : 1),
+      str(r.member_id),
     );
   }
 
@@ -1011,7 +1430,8 @@ export async function restoreBeacon2(tx, wb) {
     await tx.$executeRawUnsafe(
       `INSERT INTO user_roles (user_id, role_id)
        VALUES ($1,$2) ON CONFLICT DO NOTHING`,
-      r.user_id, r.role_id,
+      r.user_id,
+      r.role_id,
     );
   }
 
@@ -1019,16 +1439,30 @@ export async function restoreBeacon2(tx, wb) {
   const settingsData = get('Site Settings 1');
   if (settingsData.length > 0) {
     const sm = Object.fromEntries(settingsData.map((r) => [String(r.setting || ''), r.value]));
-    const v    = (key) => { const val = sm[key]; return (val == null || val === '') ? null : val; };
-    const vBool = (key) => { const val = sm[key]; return val == null ? null : parseBool(val); };
-    const vInt  = (key) => { const val = sm[key]; return (val != null && val !== '') ? parseInt(val) : null; };
+    const v = (key) => {
+      const val = sm[key];
+      return val == null || val === '' ? null : val;
+    };
+    const vBool = (key) => {
+      const val = sm[key];
+      return val == null ? null : parseBool(val);
+    };
+    const vInt = (key) => {
+      const val = sm[key];
+      return val != null && val !== '' ? parseInt(val) : null;
+    };
     const vJson = (key) => {
       const val = sm[key];
       if (val == null || val === '') return null;
-      try { return typeof val === 'string' ? JSON.parse(val) : val; } catch { return null; }
+      try {
+        return typeof val === 'string' ? JSON.parse(val) : val;
+      } catch {
+        return null;
+      }
     };
 
-    await tx.$executeRawUnsafe(`
+    await tx.$executeRawUnsafe(
+      `
       UPDATE tenant_settings SET
         card_colour               = COALESCE($1, card_colour),
         email_cards               = COALESCE($2, email_cards),
@@ -1066,20 +1500,37 @@ export async function restoreBeacon2(tx, wb) {
         calendar_config           = COALESCE($34::jsonb, calendar_config),
         feature_config            = COALESCE($35::jsonb, feature_config)
       WHERE id = 'singleton'`,
-      v('card_colour'), vBool('email_cards'),
-      v('public_phone'), v('public_email'), v('home_page'),
-      v('online_join_email'), v('online_renew_email'),
-      v('fee_variation'), vInt('extended_membership_month'),
-      vInt('advance_renewals_weeks'), vInt('grace_lapse_weeks'), vInt('deletion_years'),
+      v('card_colour'),
+      vBool('email_cards'),
+      v('public_phone'),
+      v('public_email'),
+      v('home_page'),
+      v('online_join_email'),
+      v('online_renew_email'),
+      v('fee_variation'),
+      vInt('extended_membership_month'),
+      vInt('advance_renewals_weeks'),
+      vInt('grace_lapse_weeks'),
+      vInt('deletion_years'),
       v('default_payment_method'),
-      vBool('gift_aid_enabled'), vBool('gift_aid_online_renewals'),
-      v('default_town'), v('default_county'), v('default_std_code'),
-      v('paypal_email'), v('paypal_cancel_url'), vBool('shared_address_warning'),
-      vInt('year_start_month'), vInt('year_start_day'),
-      vBool('online_joining_enabled'), v('privacy_policy_url'),
-      vBool('group_bf_enabled'), vBool('siteworks_activated'),
-      v('custom_field_label_1'), v('custom_field_label_2'),
-      v('custom_field_label_3'), v('custom_field_label_4'),
+      vBool('gift_aid_enabled'),
+      vBool('gift_aid_online_renewals'),
+      v('default_town'),
+      v('default_county'),
+      v('default_std_code'),
+      v('paypal_email'),
+      v('paypal_cancel_url'),
+      vBool('shared_address_warning'),
+      vInt('year_start_month'),
+      vInt('year_start_day'),
+      vBool('online_joining_enabled'),
+      v('privacy_policy_url'),
+      vBool('group_bf_enabled'),
+      vBool('siteworks_activated'),
+      v('custom_field_label_1'),
+      v('custom_field_label_2'),
+      v('custom_field_label_3'),
+      v('custom_field_label_4'),
       vJson('portal_config') ? JSON.stringify(vJson('portal_config')) : null,
       vJson('group_info_config') ? JSON.stringify(vJson('group_info_config')) : null,
       vJson('calendar_config') ? JSON.stringify(vJson('calendar_config')) : null,
@@ -1092,7 +1543,10 @@ export async function restoreBeacon2(tx, wb) {
     if (!r.id) continue;
     await tx.$executeRawUnsafe(
       `UPDATE system_messages SET name = $1, subject = $2, body = $3 WHERE id = $4`,
-      String(r.name || ''), String(r.subject || ''), String(r.body || ''), r.id,
+      String(r.name || ''),
+      String(r.subject || ''),
+      String(r.body || ''),
+      r.id,
     );
   }
 
@@ -1102,7 +1556,10 @@ export async function restoreBeacon2(tx, wb) {
     await tx.$executeRawUnsafe(
       `INSERT INTO standard_messages (id, name, subject, body)
        VALUES ($1,$2,$3,$4) ON CONFLICT (id) DO NOTHING`,
-      r.id, String(r.name || ''), String(r.subject || ''), String(r.body || ''),
+      r.id,
+      String(r.name || ''),
+      String(r.subject || ''),
+      String(r.body || ''),
     );
   }
 
@@ -1112,7 +1569,9 @@ export async function restoreBeacon2(tx, wb) {
     await tx.$executeRawUnsafe(
       `INSERT INTO standard_letters (id, name, body)
        VALUES ($1,$2,$3) ON CONFLICT (id) DO NOTHING`,
-      r.id, String(r.name || ''), String(r.body || ''),
+      r.id,
+      String(r.name || ''),
+      String(r.body || ''),
     );
   }
 
@@ -1122,7 +1581,8 @@ export async function restoreBeacon2(tx, wb) {
     await tx.$executeRawUnsafe(
       `INSERT INTO payment_method_defaults (payment_method, account_id)
        VALUES ($1,$2) ON CONFLICT (payment_method) DO UPDATE SET account_id = $2`,
-      String(r.payment_method), str(r.account_id),
+      String(r.payment_method),
+      str(r.account_id),
     );
   }
 
@@ -1132,8 +1592,12 @@ export async function restoreBeacon2(tx, wb) {
 // ── Restore: Beacon (legacy) format ───────────────────────────────────────────
 
 const BEACON_PAYMENT = {
-  '1': 'Cash', '2': 'Cheque', '3': 'Standing Order',
-  '4': 'Direct Debit', '5': 'Online', '6': 'Other',
+  1: 'Cash',
+  2: 'Cheque',
+  3: 'Standing Order',
+  4: 'Direct Debit',
+  5: 'Online',
+  6: 'Other',
 };
 
 export const BEACON_DEFAULT_PASSWORD = 'Beacon2!';
@@ -1143,51 +1607,51 @@ export const BEACON_DEFAULT_PASSWORD = 'Beacon2!';
 // where digit: 1=view 2=create 3=change 4=delete 5=extra(download/send/etc.)
 // Source: docs/FromBeacon/privileges.php
 const BEACON_PRIV_BASE = {
-  1010: { code: 'members_list',              extra: 'download' },
+  1010: { code: 'members_list', extra: 'download' },
   1020: { code: 'member_record' },
   1030: { code: 'groups_list' },
-  1040: { code: 'group_records_all',         extra: 'download_members' },
-  1050: { code: 'group_records_as_leader',   extra: 'download_members' },
+  1040: { code: 'group_records_all', extra: 'download_members' },
+  1050: { code: 'group_records_as_leader', extra: 'download_members' },
   1060: { code: 'group_records_as_member' },
   1110: { code: 'users_list' },
   1120: { code: 'user_record' },
   // 1130/1140 were obsolete PHP variable names later reassigned to 1340/1350
-  1140: { code: 'role_record' },             // old $pROLERECORD (safety net)
+  1140: { code: 'role_record' }, // old $pROLERECORD (safety net)
   1150: { code: 'audit_trail' },
   1160: { code: 'audit_detail' },
-  1170: { code: 'members_non_renewals',      extra: 'lapse' },
+  1170: { code: 'members_non_renewals', extra: 'lapse' },
   1180: { code: 'members_delete_expired' },
-  1190: { code: 'members_recent',            extra: 'download' },
-  1200: { code: 'membership_cards',          extra: 'download_and_mark' },
+  1190: { code: 'members_recent', extra: 'download' },
+  1200: { code: 'membership_cards', extra: 'download_and_mark' },
   1230: { code: 'settings' },
-  1240: { code: 'address_labels',            extra: 'download' },
+  1240: { code: 'address_labels', extra: 'download' },
   1250: { code: 'poll_set_up' },
   1255: { code: 'custom_fields' },
-  1260: { code: 'gift_aid_declaration',      extra: 'download_and_mark' },
-  1270: { code: 'membership_renewals',       extra: 'renew' },
-  1310: { code: 'group_leaders',             extra: 'email_labels' },
-  1320: { code: 'email',                     extra: 'send' },
+  1260: { code: 'gift_aid_declaration', extra: 'download_and_mark' },
+  1270: { code: 'membership_renewals', extra: 'renew' },
+  1310: { code: 'group_leaders', extra: 'email_labels' },
+  1320: { code: 'email', extra: 'send' },
   1340: { code: 'roles_list' },
   1350: { code: 'role_record' },
-  1360: { code: 'finance_ledger',            extra: 'download' },
+  1360: { code: 'finance_ledger', extra: 'download' },
   1370: { code: 'finance_transfer_money' },
   1380: { code: 'finance_batches' },
-  1390: { code: 'finance_reconcile',         extra: 'reconcile' },
-  1400: { code: 'finance_statement',         extra: 'download' },
+  1390: { code: 'finance_reconcile', extra: 'reconcile' },
+  1400: { code: 'finance_statement', extra: 'download' },
   1410: { code: 'finance_transactions' },
-  1420: { code: 'addresses_export',          extra: 'download' },
-  1430: { code: 'membership_statistics',     extra: 'download' },
+  1420: { code: 'addresses_export', extra: 'download' },
+  1430: { code: 'membership_statistics', extra: 'download' },
   1440: { code: 'finance_accounts' },
   1450: { code: 'finance_categories' },
   1460: { code: 'group_faculties' },
   1470: { code: 'group_venues' },
   1480: { code: 'member_classes' },
-  1490: { code: 'letters',                   extra: 'download' },
+  1490: { code: 'letters', extra: 'download' },
   1500: { code: 'member_statuses' },
-  1510: { code: 'group_ledger_all',          extra: 'download' },
-  1520: { code: 'group_ledger_as_leader',    extra: 'download' },
+  1510: { code: 'group_ledger_all', extra: 'download' },
+  1520: { code: 'group_ledger_as_leader', extra: 'download' },
   1530: { code: 'meetings' },
-  1540: { code: 'calendar',                  extra: 'download' },
+  1540: { code: 'calendar', extra: 'download' },
   1550: { code: 'email_standard_messages' },
   1560: { code: 'system_messages' },
   1570: { code: 'public_links' },
@@ -1195,20 +1659,20 @@ const BEACON_PRIV_BASE = {
   1590: { code: 'groups_add_by_name_leader' },
   1600: { code: 'groups_add_by_no' },
   1610: { code: 'groups_add_by_no_leader' },
-  1620: { code: 'email_addresses',           extra: 'download' },
+  1620: { code: 'email_addresses', extra: 'download' },
   1630: { code: 'offices' },
-  1640: { code: 'data_export_backup',        extra: 'download' },
+  1640: { code: 'data_export_backup', extra: 'download' },
   1650: { code: 'letters_standard_messages' },
-  1660: { code: 'email_delivery',            extra: 'all' },
-  1670: { code: 'group_statement',           extra: 'download' },
+  1660: { code: 'email_delivery', extra: 'all' },
+  1670: { code: 'group_statement', extra: 'download' },
   // 1680 ($pMEMNEWNOTIFY) has no Beacon2 equivalent
 };
 
 function beaconPrivkeyToBeacon2(privkey) {
-  const digit = privkey % 10;     // 1–5
-  const base  = privkey - digit;  // e.g. 1411 → base 1410
+  const digit = privkey % 10; // 1–5
+  const base = privkey - digit; // e.g. 1411 → base 1410
   const entry = BEACON_PRIV_BASE[base];
-  if (!entry) return null;        // unknown / obsolete base — skip silently
+  if (!entry) return null; // unknown / obsolete base — skip silently
   const { code, extra } = entry;
   if (digit === 1) return { code, action: 'view' };
   if (digit === 2) return { code, action: 'create' };
@@ -1224,18 +1688,18 @@ export async function restoreBeacon(tx, wb) {
   // Pre-hash the default password once (bcrypt is slow by design)
   const defaultPasswordHash = await hashPassword(BEACON_DEFAULT_PASSWORD);
 
-  const statusMap  = {};
-  const classMap   = {};
+  const statusMap = {};
+  const classMap = {};
   const addressMap = {};
-  const memberMap  = {};
+  const memberMap = {};
   const memberByNo = {};
   const facultyMap = {};
-  const groupMap   = {};
+  const groupMap = {};
   const accountMap = {};
-  const catMap     = {};
-  const transMap   = {};
-  const pollMap    = {};
-  const roleMap    = {};   // rkey → new UUID
+  const catMap = {};
+  const transMap = {};
+  const pollMap = {};
+  const roleMap = {}; // rkey → new UUID
 
   // 1. Member statuses
   for (const r of get('Member Statuses')) {
@@ -1245,7 +1709,9 @@ export async function restoreBeacon(tx, wb) {
     statusMap[stakey] = { id: newId, name: String(r.status || '') };
     await tx.$executeRawUnsafe(
       `INSERT INTO member_statuses (id, name, locked) VALUES ($1,$2,$3)`,
-      newId, String(r.status || ''), parseBool(r.locked),
+      newId,
+      String(r.status || ''),
+      parseBool(r.locked),
     );
   }
 
@@ -1259,9 +1725,13 @@ export async function restoreBeacon(tx, wb) {
       `INSERT INTO member_classes
          (id, name, current, is_joint, is_associate, fee, locked)
        VALUES ($1,$2,$3,$4,$5,$6::numeric,$7)`,
-      newId, String(r.class || ''), parseBool(r.status),
-      parseBool(r.family), parseBool(r.associate),
-      parseDec(r.fee), parseBool(r.locked),
+      newId,
+      String(r.class || ''),
+      parseBool(r.status),
+      parseBool(r.family),
+      parseBool(r.associate),
+      parseDec(r.fee),
+      parseBool(r.locked),
     );
   }
 
@@ -1277,7 +1747,9 @@ export async function restoreBeacon(tx, wb) {
       `INSERT INTO class_monthly_fees (id, class_id, month_index, fee)
        VALUES (gen_random_uuid()::text,$1,$2,$3::numeric)
        ON CONFLICT (class_id, month_index) DO NOTHING`,
-      cm.id, monthIdx, parseDec(r.fee),
+      cm.id,
+      monthIdx,
+      parseDec(r.fee),
     );
   }
 
@@ -1288,10 +1760,14 @@ export async function restoreBeacon(tx, wb) {
     const akey = String(r.akey || '').trim();
     if (!akey || addrData[akey]) continue;
     addrData[akey] = {
-      house_no: str(r.house), street: str(r.address1),
-      add_line1: str(r.address2), add_line2: str(r.address3),
-      town: str(r.town), county: str(r.county),
-      postcode: str(r.postcode), telephone: str(r.telephone),
+      house_no: str(r.house),
+      street: str(r.address1),
+      add_line1: str(r.address2),
+      add_line2: str(r.address3),
+      town: str(r.town),
+      county: str(r.county),
+      postcode: str(r.postcode),
+      telephone: str(r.telephone),
     };
   }
   for (const [akey, data] of Object.entries(addrData)) {
@@ -1300,8 +1776,15 @@ export async function restoreBeacon(tx, wb) {
     await tx.$executeRawUnsafe(
       `INSERT INTO addresses (id, house_no, street, add_line1, add_line2, town, county, postcode, telephone)
        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)`,
-      newId, data.house_no, data.street, data.add_line1, data.add_line2,
-      data.town, data.county, data.postcode, data.telephone,
+      newId,
+      data.house_no,
+      data.street,
+      data.add_line1,
+      data.add_line2,
+      data.town,
+      data.county,
+      data.postcode,
+      data.telephone,
     );
   }
 
@@ -1331,7 +1814,7 @@ export async function restoreBeacon(tx, wb) {
 
     const akey = String(r.akey || '').trim();
     const statusId = statusByName[String(r.status || '').toLowerCase()] || null;
-    const classId  = classByName[String(r.class || '').toLowerCase()]  || null;
+    const classId = classByName[String(r.class || '').toLowerCase()] || null;
 
     await tx.$executeRawUnsafe(
       `INSERT INTO members
@@ -1341,13 +1824,25 @@ export async function restoreBeacon(tx, wb) {
        VALUES ($1,
          CASE WHEN $2::integer IS NULL THEN nextval('membership_number_seq') ELSE $2::integer END,
          $3,$4,$5,$6,$7,$8,$9,$10,$11,$12::date,$13::date,$14::date,$15,$16,$17,$18,$19)`,
-      newId, isNaN(memNo) ? null : memNo, str(r.title),
-      String(r.forename || ''), String(r.surname || ''),
-      str(r.suffix), str(r.known_as), str(r.initials),
-      str(r.mobile), str(r['e-mail']), str(r.affiliation),
-      parseDate(r.joined), parseDate(r.renew), parseDate(r.gift_aid),
-      str(r.mem_notes), parseBool(r.enhanced_privacy),
-      statusId, classId, akey ? (addressMap[akey] || null) : null,
+      newId,
+      isNaN(memNo) ? null : memNo,
+      str(r.title),
+      String(r.forename || ''),
+      String(r.surname || ''),
+      str(r.suffix),
+      str(r.known_as),
+      str(r.initials),
+      str(r.mobile),
+      str(r['e-mail']),
+      str(r.affiliation),
+      parseDate(r.joined),
+      parseDate(r.renew),
+      parseDate(r.gift_aid),
+      str(r.mem_notes),
+      parseBool(r.enhanced_privacy),
+      statusId,
+      classId,
+      akey ? addressMap[akey] || null : null,
     );
   }
 
@@ -1367,10 +1862,19 @@ export async function restoreBeacon(tx, wb) {
     if (!gfkey) continue;
     const newId = uuid();
     facultyMap[gfkey] = newId;
-    await tx.$executeRawUnsafe(`INSERT INTO faculties (id, name) VALUES ($1,$2)`, newId, String(r.faculty || ''));
+    await tx.$executeRawUnsafe(
+      `INSERT INTO faculties (id, name) VALUES ($1,$2)`,
+      newId,
+      String(r.faculty || ''),
+    );
   }
   const facultyByName = Object.fromEntries(
-    facRows.map((r) => [String(r.faculty || '').trim().toLowerCase(), facultyMap[String(r.gfkey || '').trim()]]),
+    facRows.map((r) => [
+      String(r.faculty || '')
+        .trim()
+        .toLowerCase(),
+      facultyMap[String(r.gfkey || '').trim()],
+    ]),
   );
 
   // 7b. Venues
@@ -1384,9 +1888,17 @@ export async function restoreBeacon(tx, wb) {
       `INSERT INTO venues
          (id, name, address, postcode, telephone, contact, email, website, notes, private_address, accessible)
        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)`,
-      newId, String(r.venue || ''), str(r.address), str(r.postcode),
-      str(r.telephone), str(r.contact), str(r.email), str(r.website),
-      str(r.notes), parseBool(r.private), parseBool(r.accessible),
+      newId,
+      String(r.venue || ''),
+      str(r.address),
+      str(r.postcode),
+      str(r.telephone),
+      str(r.contact),
+      str(r.email),
+      str(r.website),
+      str(r.notes),
+      parseBool(r.private),
+      parseBool(r.accessible),
     );
   }
 
@@ -1400,63 +1912,88 @@ export async function restoreBeacon(tx, wb) {
     seenGroups.add(gkey);
     const newId = uuid();
     groupMap[gkey] = newId;
-    groupByName[String(r.group_name || '').trim().toLowerCase()] = newId;
+    groupByName[
+      String(r.group_name || '')
+        .trim()
+        .toLowerCase()
+    ] = newId;
 
-    const facId    = facultyByName[String(r.faculty || '').trim().toLowerCase()] || null;
+    const facId =
+      facultyByName[
+        String(r.faculty || '')
+          .trim()
+          .toLowerCase()
+      ] || null;
     const isActive = String(r.status || '').toLowerCase() !== 'inactive';
-    const gvkey    = String(r.gvkey || '').trim();
-    const venueId  = gvkey ? (venueMap[gvkey] || null) : null;
+    const gvkey = String(r.gvkey || '').trim();
+    const venueId = gvkey ? venueMap[gvkey] || null : null;
 
     await tx.$executeRawUnsafe(
       `INSERT INTO groups
          (id, name, faculty_id, status, when_text, start_time, end_time, venue, venue_id, enquiries,
           max_members, allow_online_join, enable_waiting_list, notify_leader)
        VALUES ($1,$2,$3,$4,$5,$6::time,$7::time,$8,$9,$10,$11,$12,$13,$14)`,
-      newId, String(r.group_name || ''), facId,
+      newId,
+      String(r.group_name || ''),
+      facId,
       isActive ? 'active' : 'inactive',
-      str(r.meets_when), str(r.start_time) || null, str(r.end_time) || null,
-      str(r.venue), venueId, str(r.contact),
+      str(r.meets_when),
+      str(r.start_time) || null,
+      str(r.end_time) || null,
+      str(r.venue),
+      venueId,
+      str(r.contact),
       r.max_members ? parseInt(r.max_members) : null,
-      parseBool(r.join_online), parseBool(r.waiting_list), parseBool(r.notify_leader),
+      parseBool(r.join_online),
+      parseBool(r.waiting_list),
+      parseBool(r.notify_leader),
     );
   }
 
   // 9. Group members
   const seenGm = new Set();
   for (const r of get('Group members')) {
-    const gkey  = String(r.gkey || '').trim();
+    const gkey = String(r.gkey || '').trim();
     const memNo = parseInt(r.mem_no);
-    const groupId  = groupMap[gkey];
+    const groupId = groupMap[gkey];
     const memberId = isNaN(memNo) ? null : memberByNo[memNo];
     if (!groupId || !memberId) continue;
     const gmKey = `${groupId}:${memberId}`;
     if (seenGm.has(gmKey)) continue;
     seenGm.add(gmKey);
 
-    const waitingRaw  = str(r.waiting);
-    const waitingDate = (waitingRaw && waitingRaw !== '0') ? parseDate(waitingRaw) : null;
+    const waitingRaw = str(r.waiting);
+    const waitingDate = waitingRaw && waitingRaw !== '0' ? parseDate(waitingRaw) : null;
 
     await tx.$executeRawUnsafe(
       `INSERT INTO group_members (id, group_id, member_id, is_leader, waiting_since)
        VALUES (gen_random_uuid()::text,$1,$2,$3,$4::date)
        ON CONFLICT (group_id, member_id) DO NOTHING`,
-      groupId, memberId, parseBool(r.leader), waitingDate,
+      groupId,
+      memberId,
+      parseBool(r.leader),
+      waitingDate,
     );
   }
 
   // 9b. Group ledger entries
   for (const r of get('Group Ledgers')) {
     const gtkey = String(r.gtkey || '').trim();
-    const gkey  = String(r.gkey || '').trim();
+    const gkey = String(r.gkey || '').trim();
     const groupId = groupMap[gkey];
     if (!gtkey || !groupId) continue;
     const rawAmount = parseDec(r.amount);
-    const moneyIn  = rawAmount != null && rawAmount >= 0 ? rawAmount : null;
+    const moneyIn = rawAmount != null && rawAmount >= 0 ? rawAmount : null;
     const moneyOut = rawAmount != null && rawAmount < 0 ? Math.abs(rawAmount) : null;
     await tx.$executeRawUnsafe(
       `INSERT INTO group_ledger_entries (id, group_id, entry_date, payee, detail, money_in, money_out)
        VALUES (gen_random_uuid()::text,$1,$2::date,$3,$4,$5::numeric,$6::numeric)`,
-      groupId, parseDate(r.date), str(r.payee), str(r.detail), moneyIn, moneyOut,
+      groupId,
+      parseDate(r.date),
+      str(r.payee),
+      str(r.detail),
+      moneyIn,
+      moneyOut,
     );
   }
 
@@ -1477,22 +2014,29 @@ export async function restoreBeacon(tx, wb) {
     if (gkey) continue;
     const dt = parseBeaconDateTime(r['date/time']);
     if (!dt.date) continue;
-    const gvkey   = String(r.gvkey || '').trim();
-    const venueId = gvkey ? (venueMap[gvkey] || null) : null;
+    const gvkey = String(r.gvkey || '').trim();
+    const venueId = gvkey ? venueMap[gvkey] || null : null;
     const endTimeRaw = r.end_time;
     const endTime = endTimeRaw
-      ? (endTimeRaw instanceof Date
-          ? endTimeRaw.toISOString().slice(11, 16)
-          : String(endTimeRaw).slice(0, 5))
+      ? endTimeRaw instanceof Date
+        ? endTimeRaw.toISOString().slice(11, 16)
+        : String(endTimeRaw).slice(0, 5)
       : null;
     await tx.$executeRawUnsafe(
       `INSERT INTO group_events
          (id, group_id, event_date, start_time, end_time, venue_id,
           contact, details, topic, is_private, event_type_id)
        VALUES ($1, NULL, $2::date, $3::time, $4::time, $5, $6, $7, $8, $9, $10)`,
-      uuid(), dt.date, dt.time, endTime, venueId,
-      str(r.enquiries), str(r.detail), str(r.topic),
-      parseBool(r.exclude_public), openMeetingsEventTypeId,
+      uuid(),
+      dt.date,
+      dt.time,
+      endTime,
+      venueId,
+      str(r.enquiries),
+      str(r.detail),
+      str(r.topic),
+      parseBool(r.exclude_public),
+      openMeetingsEventTypeId,
     );
   }
 
@@ -1505,13 +2049,21 @@ export async function restoreBeacon(tx, wb) {
     accountMap[acckey] = newId;
     await tx.$executeRawUnsafe(
       `INSERT INTO finance_accounts (id, name, active, locked) VALUES ($1,$2,$3,$4)`,
-      newId, String(r.name || ''), parseBool(r.status), parseBool(r.locked),
+      newId,
+      String(r.name || ''),
+      parseBool(r.status),
+      parseBool(r.locked),
     );
   }
   const accountByName = Object.fromEntries(
     accRows
       .filter((r) => String(r.acckey || '').trim())
-      .map((r) => [String(r.name || '').trim().toLowerCase(), accountMap[String(r.acckey || '').trim()]]),
+      .map((r) => [
+        String(r.name || '')
+          .trim()
+          .toLowerCase(),
+        accountMap[String(r.acckey || '').trim()],
+      ]),
   );
 
   // 11. Finance Categories
@@ -1523,13 +2075,21 @@ export async function restoreBeacon(tx, wb) {
     catMap[catkey] = newId;
     await tx.$executeRawUnsafe(
       `INSERT INTO finance_categories (id, name, active, locked) VALUES ($1,$2,$3,$4)`,
-      newId, String(r.name || ''), parseBool(r.status), parseBool(r.locked),
+      newId,
+      String(r.name || ''),
+      parseBool(r.status),
+      parseBool(r.locked),
     );
   }
   const catByName = Object.fromEntries(
     catRows
       .filter((r) => String(r.catkey || '').trim())
-      .map((r) => [String(r.name || '').trim().toLowerCase(), catMap[String(r.catkey || '').trim()]]),
+      .map((r) => [
+        String(r.name || '')
+          .trim()
+          .toLowerCase(),
+        catMap[String(r.catkey || '').trim()],
+      ]),
   );
 
   // 12. Transactions
@@ -1538,17 +2098,28 @@ export async function restoreBeacon(tx, wb) {
     if (!tkey) continue;
     const rawAmount = parseDec(r.amount);
     if (rawAmount == null) continue;
-    const type   = rawAmount >= 0 ? 'in' : 'out';
+    const type = rawAmount >= 0 ? 'in' : 'out';
     const amount = Math.abs(rawAmount);
-    const acctId = accountByName[String(r.account || '').trim().toLowerCase()] || null;
+    const acctId =
+      accountByName[
+        String(r.account || '')
+          .trim()
+          .toLowerCase()
+      ] || null;
     if (!acctId) continue;
 
-    const newId  = uuid();
+    const newId = uuid();
     transMap[tkey] = newId;
 
-    const groupId  = r.group ? (groupByName[String(r.group || '').trim().toLowerCase()] || null) : null;
-    const mem1Id   = r.member_1 ? (memberByNo[parseInt(r.member_1)] || null) : null;
-    const mem2Id   = r.member_2 ? (memberByNo[parseInt(r.member_2)] || null) : null;
+    const groupId = r.group
+      ? groupByName[
+          String(r.group || '')
+            .trim()
+            .toLowerCase()
+        ] || null
+      : null;
+    const mem1Id = r.member_1 ? memberByNo[parseInt(r.member_1)] || null : null;
+    const mem2Id = r.member_2 ? memberByNo[parseInt(r.member_2)] || null : null;
     const clearedAt = r.cleared ? parseDate(r.cleared) : null;
 
     await tx.$executeRawUnsafe(
@@ -1557,19 +2128,35 @@ export async function restoreBeacon(tx, wb) {
           payment_method, payment_ref, detail, remarks,
           member_id_1, member_id_2, group_id, cleared_at)
        VALUES ($1,$2,$3,$4::date,$5,$6,$7::numeric,$8,$9,$10,$11,$12,$13,$14,$15::date)`,
-      newId, parseInt(r.trans_no), acctId, parseDate(r.date),
-      type, str(r.payee), amount,
-      str(r.payment_method), str(r.cheque), str(r.detail), str(r.notes),
-      mem1Id, mem2Id, groupId, clearedAt,
+      newId,
+      parseInt(r.trans_no),
+      acctId,
+      parseDate(r.date),
+      type,
+      str(r.payee),
+      amount,
+      str(r.payment_method),
+      str(r.cheque),
+      str(r.detail),
+      str(r.notes),
+      mem1Id,
+      mem2Id,
+      groupId,
+      clearedAt,
     );
   }
 
   // 13. Transaction categories
   for (const r of get('Detail')) {
-    const tkey  = String(r.tkey || '').trim();
+    const tkey = String(r.tkey || '').trim();
     const txnId = transMap[tkey];
     if (!txnId) continue;
-    const catId   = catByName[String(r.category || '').trim().toLowerCase()] || null;
+    const catId =
+      catByName[
+        String(r.category || '')
+          .trim()
+          .toLowerCase()
+      ] || null;
     if (!catId) continue;
     const rawAmt = parseDec(r.amount);
     if (rawAmt == null) continue;
@@ -1577,7 +2164,9 @@ export async function restoreBeacon(tx, wb) {
       `INSERT INTO transaction_categories (id, transaction_id, category_id, amount)
        VALUES (gen_random_uuid()::text,$1,$2,$3::numeric)
        ON CONFLICT (transaction_id, category_id) DO NOTHING`,
-      txnId, catId, Math.abs(rawAmt),
+      txnId,
+      catId,
+      Math.abs(rawAmt),
     );
   }
 
@@ -1585,11 +2174,14 @@ export async function restoreBeacon(tx, wb) {
   for (const r of get('u3a Officers')) {
     const ofkey = String(r.ofkey || '').trim();
     if (!ofkey) continue;
-    const mkey    = String(r.mkey || '').trim();
-    const memberId = mkey ? (memberMap[mkey] || null) : null;
+    const mkey = String(r.mkey || '').trim();
+    const memberId = mkey ? memberMap[mkey] || null : null;
     await tx.$executeRawUnsafe(
       `INSERT INTO offices (id, name, member_id, office_email) VALUES ($1,$2,$3,$4)`,
-      uuid(), String(r.office || ''), memberId, str(r['e-mail']),
+      uuid(),
+      String(r.office || ''),
+      memberId,
+      str(r['e-mail']),
     );
   }
 
@@ -1601,7 +2193,10 @@ export async function restoreBeacon(tx, wb) {
     pollMap[pkey] = newId;
     await tx.$executeRawUnsafe(
       `INSERT INTO polls (id, name, description, member_can_set) VALUES ($1,$2,$3,$4)`,
-      newId, String(r.poll || ''), '', false,
+      newId,
+      String(r.poll || ''),
+      '',
+      false,
     );
   }
 
@@ -1609,12 +2204,13 @@ export async function restoreBeacon(tx, wb) {
   for (const r of get('Poll assignments')) {
     const pkey = String(r.pkey || '').trim();
     const mkey = String(r.mkey || '').trim();
-    const pollId   = pollMap[pkey];
+    const pollId = pollMap[pkey];
     const memberId = memberMap[mkey];
     if (!pollId || !memberId) continue;
     await tx.$executeRawUnsafe(
       `INSERT INTO poll_members (poll_id, member_id) VALUES ($1,$2) ON CONFLICT DO NOTHING`,
-      pollId, memberId,
+      pollId,
+      memberId,
     );
   }
 
@@ -1627,27 +2223,35 @@ export async function restoreBeacon(tx, wb) {
     roleMap[rkey] = newId;
     await tx.$executeRawUnsafe(
       `INSERT INTO roles (id, name, is_committee, notes) VALUES ($1,$2,$3,$4)`,
-      newId, String(r.r_name || ''), parseBool(r.committee_role), str(r.notes),
+      newId,
+      String(r.r_name || ''),
+      parseBool(r.committee_role),
+      str(r.notes),
     );
   }
 
   // 18. Users (from Beacon System Users — no passwords; accounts exist but can't log in until reset)
-  const userMap = {};  // ukey → newId
+  const userMap = {}; // ukey → newId
   for (const r of get('System Users')) {
     const ukey = String(r.ukey || '').trim();
     if (!ukey) continue;
     const newId = uuid();
     userMap[ukey] = newId;
-    const mkey    = String(r.mkey || '').trim();
-    const memberId = mkey ? (memberMap[mkey] || null) : null;
+    const mkey = String(r.mkey || '').trim();
+    const memberId = mkey ? memberMap[mkey] || null : null;
     // email is unknown from Beacon export; use a unique placeholder so NOT NULL UNIQUE is satisfied
     const placeholderEmail = `${newId}@beacon-migrated.invalid`;
 
     await tx.$executeRawUnsafe(
       `INSERT INTO users (id, name, email, username, password_hash, active, member_id, must_change_password)
        VALUES ($1,$2,$3,$4,$5,$6,$7,true)`,
-      newId, String(r.fullname || ''), placeholderEmail,
-      str(r.username) || null, defaultPasswordHash, true, memberId,
+      newId,
+      String(r.fullname || ''),
+      placeholderEmail,
+      str(r.username) || null,
+      defaultPasswordHash,
+      true,
+      memberId,
     );
   }
 
@@ -1660,7 +2264,8 @@ export async function restoreBeacon(tx, wb) {
     if (!userId || !roleId) continue;
     await tx.$executeRawUnsafe(
       `INSERT INTO user_roles (user_id, role_id) VALUES ($1,$2) ON CONFLICT DO NOTHING`,
-      userId, roleId,
+      userId,
+      roleId,
     );
   }
 
@@ -1668,9 +2273,9 @@ export async function restoreBeacon(tx, wb) {
   // Each privkey is decoded to a Beacon2 (resource_code, action) pair via BEACON_PRIV_BASE.
   // The resource_id is resolved inline from privilege_resources; unknown privkeys are skipped.
   for (const r of get('Privileges')) {
-    const rkey    = String(r.rkey    || '').trim();
+    const rkey = String(r.rkey || '').trim();
     const privkey = parseInt(r.privkey) || 0;
-    const roleId  = roleMap[rkey];
+    const roleId = roleMap[rkey];
     if (!roleId || !privkey) continue;
     const mapped = beaconPrivkeyToBeacon2(privkey);
     if (!mapped) continue;
@@ -1679,7 +2284,9 @@ export async function restoreBeacon(tx, wb) {
        SELECT gen_random_uuid()::text, $1, pr.id, $2
        FROM privilege_resources pr WHERE pr.code = $3
        ON CONFLICT (role_id, resource_id, action) DO NOTHING`,
-      roleId, mapped.action, mapped.code,
+      roleId,
+      mapped.action,
+      mapped.code,
     );
   }
 
@@ -1688,37 +2295,45 @@ export async function restoreBeacon(tx, wb) {
   const ss1Map = Object.fromEntries(ss1.map((r) => [String(r.name || ''), String(r.value ?? '')]));
 
   const updates = {
-    advance_renewals_weeks:   ss1Map['AdvRenewals']       ? parseInt(ss1Map['AdvRenewals'])       : null,
-    grace_lapse_weeks:        ss1Map['GraceLapse']        ? parseInt(ss1Map['GraceLapse'])        : null,
-    gift_aid_enabled:         ss1Map['GiftAidEnable']    != null ? ss1Map['GiftAidEnable']    === '1' : null,
-    gift_aid_online_renewals: ss1Map['GiftAidOnlineRenew'] != null ? ss1Map['GiftAidOnlineRenew'] === '1' : null,
-    default_town:             ss1Map['DefaultTown']  || null,
-    default_county:           ss1Map['DefaultCounty'] || null,
-    default_std_code:         ss1Map['DefaultSTD']   || null,
-    default_payment_method:   BEACON_PAYMENT[ss1Map['defaultPaymentMethod']] || null,
-    public_phone:             ss1Map['EnqTelephone'] || null,
-    public_email:             ss1Map['EnqEmail']     || null,
-    online_join_email:        ss1Map['EnqNewMem']    || null,
-    online_renew_email:       ss1Map['EnqRenew']     || null,
+    advance_renewals_weeks: ss1Map['AdvRenewals'] ? parseInt(ss1Map['AdvRenewals']) : null,
+    grace_lapse_weeks: ss1Map['GraceLapse'] ? parseInt(ss1Map['GraceLapse']) : null,
+    gift_aid_enabled: ss1Map['GiftAidEnable'] != null ? ss1Map['GiftAidEnable'] === '1' : null,
+    gift_aid_online_renewals:
+      ss1Map['GiftAidOnlineRenew'] != null ? ss1Map['GiftAidOnlineRenew'] === '1' : null,
+    default_town: ss1Map['DefaultTown'] || null,
+    default_county: ss1Map['DefaultCounty'] || null,
+    default_std_code: ss1Map['DefaultSTD'] || null,
+    default_payment_method: BEACON_PAYMENT[ss1Map['defaultPaymentMethod']] || null,
+    public_phone: ss1Map['EnqTelephone'] || null,
+    public_email: ss1Map['EnqEmail'] || null,
+    online_join_email: ss1Map['EnqNewMem'] || null,
+    online_renew_email: ss1Map['EnqRenew'] || null,
   };
 
   const setClauses = [];
   const params = [];
   let pi = 1;
   for (const [col, val] of Object.entries(updates)) {
-    if (val !== null) { setClauses.push(`${col} = $${pi++}`); params.push(val); }
+    if (val !== null) {
+      setClauses.push(`${col} = $${pi++}`);
+      params.push(val);
+    }
   }
   if (setClauses.length > 0) {
     await tx.$executeRawUnsafe(
-      `UPDATE tenant_settings SET ${setClauses.join(', ')} WHERE id = 'singleton'`, ...params,
+      `UPDATE tenant_settings SET ${setClauses.join(', ')} WHERE id = 'singleton'`,
+      ...params,
     );
   }
 
   const ss2 = get('Site Settings 2');
-  const ss2Map = Object.fromEntries(ss2.map((r) => [String(r.setting || ''), String(r.value ?? '')]));
+  const ss2Map = Object.fromEntries(
+    ss2.map((r) => [String(r.setting || ''), String(r.value ?? '')]),
+  );
   if (ss2Map['paypal_account']) {
     await tx.$executeRawUnsafe(
-      `UPDATE tenant_settings SET paypal_email = $1 WHERE id = 'singleton'`, ss2Map['paypal_account'],
+      `UPDATE tenant_settings SET paypal_email = $1 WHERE id = 'singleton'`,
+      ss2Map['paypal_account'],
     );
   }
 

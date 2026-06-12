@@ -6,7 +6,7 @@ import { sanitizeCell, sanitizeRowForExport } from '../utils/spreadsheet.js';
 
 describe('sanitizeCell', () => {
   it('prefixes formula-leading characters with a single quote', () => {
-    expect(sanitizeCell('=HYPERLINK("http://evil")')).toBe("'=HYPERLINK(\"http://evil\")");
+    expect(sanitizeCell('=HYPERLINK("http://evil")')).toBe('\'=HYPERLINK("http://evil")');
     expect(sanitizeCell('+evil')).toBe("'+evil");
     expect(sanitizeCell('-evil')).toBe("'-evil");
     expect(sanitizeCell('@evil')).toBe("'@evil");
@@ -31,7 +31,7 @@ describe('sanitizeCell', () => {
 describe('sanitizeRowForExport', () => {
   it('sanitises each string value in an object row', () => {
     const out = sanitizeRowForExport({ name: '=cmd|"/c calc"!A0', age: 30 });
-    expect(out.name).toBe("'=cmd|\"/c calc\"!A0");
+    expect(out.name).toBe('\'=cmd|"/c calc"!A0');
     expect(out.age).toBe(30);
   });
 

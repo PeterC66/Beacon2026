@@ -8,12 +8,11 @@ import PasswordInput from '../../components/PasswordInput.jsx';
 
 export default function SystemLogin() {
   const navigate = useNavigate();
-  const [form, setForm]     = useState({ email: '', password: '' });
-  const [error, setError]   = useState(null);
+  const [form, setForm] = useState({ email: '', password: '' });
+  const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
 
-  const handleChange = (e) =>
-    setForm((f) => ({ ...f, [e.target.name]: e.target.value }));
+  const handleChange = (e) => setForm((f) => ({ ...f, [e.target.name]: e.target.value }));
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -34,7 +33,9 @@ export default function SystemLogin() {
     <div className="min-h-screen bg-slate-100 flex items-center justify-center">
       <div className="bg-white rounded-xl shadow-md w-full max-w-md p-8">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-slate-800">Beacon<span className="text-blue-600">2</span></h1>
+          <h1 className="text-3xl font-bold text-slate-800">
+            Beacon<span className="text-blue-600">2</span>
+          </h1>
           <p className="text-slate-500 text-sm mt-1">System administration</p>
           <p className="text-slate-400 text-xs mt-0.5">v{__APP_VERSION__}</p>
         </div>
@@ -78,7 +79,9 @@ export default function SystemLogin() {
         </form>
 
         <p className="text-center text-xs text-slate-400 mt-6">
-          <a href="/login" className="hover:underline">← Back to tenant login</a>
+          <a href="/login" className="hover:underline">
+            ← Back to tenant login
+          </a>
         </p>
       </div>
     </div>

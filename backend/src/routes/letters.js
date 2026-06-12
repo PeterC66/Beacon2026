@@ -17,9 +17,9 @@ const vfsFonts = require('pdfmake/build/vfs_fonts');
 
 const fonts = {
   Roboto: {
-    normal:      Buffer.from(vfsFonts['Roboto-Regular.ttf'], 'base64'),
-    bold:        Buffer.from(vfsFonts['Roboto-Medium.ttf'], 'base64'),
-    italics:     Buffer.from(vfsFonts['Roboto-Italic.ttf'], 'base64'),
+    normal: Buffer.from(vfsFonts['Roboto-Regular.ttf'], 'base64'),
+    bold: Buffer.from(vfsFonts['Roboto-Medium.ttf'], 'base64'),
+    italics: Buffer.from(vfsFonts['Roboto-Italic.ttf'], 'base64'),
     bolditalics: Buffer.from(vfsFonts['Roboto-MediumItalic.ttf'], 'base64'),
   },
 };
@@ -36,7 +36,9 @@ router.use(requireFeature('letters'));
  * Same query as email.js fetchMembersForEmail.
  */
 async function fetchMembersForLetters(tenantSlug, memberIds) {
-  const rows = await tenantQuery(tenantSlug, `
+  const rows = await tenantQuery(
+    tenantSlug,
+    `
     SELECT
       m.id, m.membership_number, m.title, m.forenames, m.surname, m.known_as,
       m.email, m.mobile, m.next_renewal, m.home_u3a,
@@ -56,45 +58,53 @@ async function fetchMembersForLetters(tenantSlug, memberIds) {
     LEFT JOIN members p          ON p.id  = m.partner_id
     LEFT JOIN addresses pa       ON pa.id = p.address_id
     WHERE m.id = ANY($1::text[])
-  `, [memberIds]);
+  `,
+    [memberIds],
+  );
 
   return rows.map((r) => ({
-    id:               r.id,
+    id: r.id,
     membership_number: r.membership_number,
-    title:            r.title,
-    forenames:        r.forenames,
-    surname:          r.surname,
-    known_as:         r.known_as,
-    email:            r.email,
-    mobile:           r.mobile,
-    next_renewal:     r.next_renewal,
-    home_u3a:         r.home_u3a,
-    class_name:       r.class_name,
+    title: r.title,
+    forenames: r.forenames,
+    surname: r.surname,
+    known_as: r.known_as,
+    email: r.email,
+    mobile: r.mobile,
+    next_renewal: r.next_renewal,
+    home_u3a: r.home_u3a,
+    class_name: r.class_name,
     address: {
-      house_no:  r.house_no,
-      street:    r.street,
+      house_no: r.house_no,
+      street: r.street,
       add_line1: r.add_line1,
       add_line2: r.add_line2,
-      town:      r.town,
-      county:    r.county,
-      postcode:  r.postcode,
+      town: r.town,
+      county: r.county,
+      postcode: r.postcode,
       telephone: r.telephone,
     },
-    partner: r.p_id ? {
-      id:        r.p_id,
-      title:     r.p_title,
-      forenames: r.p_forenames,
-      surname:   r.p_surname,
-      known_as:  r.p_known_as,
-      email:     r.p_email,
-      mobile:    r.p_mobile,
-      address: { telephone: r.p_telephone },
-    } : null,
+    partner: r.p_id
+      ? {
+          id: r.p_id,
+          title: r.p_title,
+          forenames: r.p_forenames,
+          surname: r.p_surname,
+          known_as: r.p_known_as,
+          email: r.p_email,
+          mobile: r.p_mobile,
+          address: { telephone: r.p_telephone },
+        }
+      : null,
   }));
 }
 
 async function getTenantDisplayName(tenantSlug) {
-  const rows = await tenantQuery(tenantSlug, `SELECT display_name FROM tenant_settings WHERE id = 'singleton'`, []);
+  const rows = await tenantQuery(
+    tenantSlug,
+    `SELECT display_name FROM tenant_settings WHERE id = 'singleton'`,
+    [],
+  );
   return rows[0]?.display_name || tenantSlug;
 }
 
@@ -156,42 +166,74 @@ function tiptapToPdfContent(doc, tokenMap) {
 // ─── Standard Letters CRUD ────────────────────────────────────────────────
 
 // GET /letters/standard-letters
-router.get('/standard-letters', requirePrivilege('letters_standard_messages', 'view'), async (req, res, next) => {
-  try {
-    const rows = await tenantQuery(req.user.tenantSlug, `
+router.get(
+  '/standard-letters',
+  requirePrivilege('letters_standard_messages', 'view'),
+  async (req, res, next) => {
+    try {
+      const rows = await tenantQuery(
+        req.user.tenantSlug,
+        `
       SELECT id, name, body FROM standard_letters ORDER BY name
-    `, []);
-    res.json(rows);
-  } catch (err) { next(err); }
-});
+    `,
+        [],
+      );
+      res.json(rows);
+    } catch (err) {
+      next(err);
+    }
+  },
+);
 
 // POST /letters/standard-letters
-router.post('/standard-letters', requirePrivilege('letters_standard_messages', 'create'), async (req, res, next) => {
-  const schema = z.object({
-    name: z.string().min(1).max(200),
-    body: z.string().default(''),
-  });
-  const parsed = schema.safeParse(req.body);
-  if (!parsed.success) return res.status(422).json({ error: 'Validation error', issues: parsed.error.issues.map((i) => ({ path: i.path.join('.'), message: i.message })) });
-  const { name, body } = parsed.data;
-  try {
-    const rows = await tenantQuery(req.user.tenantSlug, `
+router.post(
+  '/standard-letters',
+  requirePrivilege('letters_standard_messages', 'create'),
+  async (req, res, next) => {
+    const schema = z.object({
+      name: z.string().min(1).max(200),
+      body: z.string().default(''),
+    });
+    const parsed = schema.safeParse(req.body);
+    if (!parsed.success)
+      return res.status(422).json({
+        error: 'Validation error',
+        issues: parsed.error.issues.map((i) => ({ path: i.path.join('.'), message: i.message })),
+      });
+    const { name, body } = parsed.data;
+    try {
+      const rows = await tenantQuery(
+        req.user.tenantSlug,
+        `
       INSERT INTO standard_letters (name, body)
       VALUES ($1, $2)
       ON CONFLICT (name) DO UPDATE SET body = $2, updated_at = NOW()
       RETURNING id, name, body
-    `, [name, body]);
-    res.status(201).json(rows[0]);
-  } catch (err) { next(err); }
-});
+    `,
+        [name, body],
+      );
+      res.status(201).json(rows[0]);
+    } catch (err) {
+      next(err);
+    }
+  },
+);
 
 // DELETE /letters/standard-letters/:id
-router.delete('/standard-letters/:id', requirePrivilege('letters_standard_messages', 'delete'), async (req, res, next) => {
-  try {
-    await tenantQuery(req.user.tenantSlug, `DELETE FROM standard_letters WHERE id = $1`, [req.params.id]);
-    res.status(204).end();
-  } catch (err) { next(err); }
-});
+router.delete(
+  '/standard-letters/:id',
+  requirePrivilege('letters_standard_messages', 'delete'),
+  async (req, res, next) => {
+    try {
+      await tenantQuery(req.user.tenantSlug, `DELETE FROM standard_letters WHERE id = $1`, [
+        req.params.id,
+      ]);
+      res.status(204).end();
+    } catch (err) {
+      next(err);
+    }
+  },
+);
 
 // ─── PDF Download ─────────────────────────────────────────────────────────
 
@@ -199,13 +241,17 @@ router.delete('/standard-letters/:id', requirePrivilege('letters_standard_messag
 router.post('/download', requirePrivilege('letters', 'download'), async (req, res, next) => {
   const schema = z.object({
     memberIds: z.array(z.string()).min(1),
-    body:      z.object({
-      type:    z.literal('doc'),
+    body: z.object({
+      type: z.literal('doc'),
       content: z.array(z.any()),
     }),
   });
   const parsed = schema.safeParse(req.body);
-  if (!parsed.success) return res.status(422).json({ error: 'Validation error', issues: parsed.error.issues.map((i) => ({ path: i.path.join('.'), message: i.message })) });
+  if (!parsed.success)
+    return res.status(422).json({
+      error: 'Validation error',
+      issues: parsed.error.issues.map((i) => ({ path: i.path.join('.'), message: i.message })),
+    });
   const { memberIds, body } = parsed.data;
 
   try {
@@ -249,7 +295,9 @@ router.post('/download', requirePrivilege('letters', 'download'), async (req, re
       res.send(buffer);
     });
     pdfDoc.end();
-  } catch (err) { next(err); }
+  } catch (err) {
+    next(err);
+  }
 });
 
 export default router;

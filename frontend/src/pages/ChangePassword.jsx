@@ -8,8 +8,10 @@ import { useAuth } from '../context/AuthContext.jsx';
 import { auth as authApi } from '../lib/api.js';
 import BeaconLogo from '../components/BeaconLogo.jsx';
 
-const inputCls = 'w-full border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500';
-const errInCls = 'w-full border border-red-400 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-400';
+const inputCls =
+  'w-full border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500';
+const errInCls =
+  'w-full border border-red-400 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-400';
 
 const VALID_SPECIALS = '! @ # $ % ^ & *';
 
@@ -29,8 +31,10 @@ export default function ChangePassword() {
   const navigate = useNavigate();
 
   const [form, setForm] = useState({
-    newPassword: '', confirm: '',
-    question: 'Your first school', answer: '',
+    newPassword: '',
+    confirm: '',
+    question: 'Your first school',
+    answer: '',
   });
   const [showPw, setShowPw] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
@@ -50,7 +54,10 @@ export default function ChangePassword() {
     if (!passwordValid) errs.newPassword = pwErrors.join('. ');
     if (!passwordsMatch) errs.confirm = 'Passwords do not match.';
     if (!answerFilled) errs.answer = 'Please provide an answer.';
-    if (Object.keys(errs).length) { setErrors(errs); return; }
+    if (Object.keys(errs).length) {
+      setErrors(errs);
+      return;
+    }
 
     setBusy(true);
     setApiError(null);
@@ -76,12 +83,12 @@ export default function ChangePassword() {
         </h1>
 
         <p className="text-sm text-amber-800 mb-1">
-          Passwords should comprise minimum 10 characters with no spaces,
-          including at least one upper case, lower case and numeric character.
+          Passwords should comprise minimum 10 characters with no spaces, including at least one
+          upper case, lower case and numeric character.
         </p>
         <p className="text-sm text-amber-800 mb-4">
-          Do not use common words. You may optionally consider using the following
-          special characters: {VALID_SPECIALS}
+          Do not use common words. You may optionally consider using the following special
+          characters: {VALID_SPECIALS}
         </p>
 
         {apiError && (
@@ -103,9 +110,12 @@ export default function ChangePassword() {
                 autoComplete="new-password"
                 className={`${errors.newPassword ? errInCls : inputCls} pr-10`}
               />
-              <button type="button" onClick={() => setShowPw((v) => !v)}
+              <button
+                type="button"
+                onClick={() => setShowPw((v) => !v)}
                 className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-800 p-1"
-                title={showPw ? 'Hide' : 'Show'}>
+                title={showPw ? 'Hide' : 'Show'}
+              >
                 {showPw ? '\u{1F648}' : '\u{1F441}'}
               </button>
             </div>
@@ -115,7 +125,9 @@ export default function ChangePassword() {
             {form.newPassword && passwordValid && (
               <p className="text-xs text-green-700 mt-1">Password meets requirements</p>
             )}
-            {errors.newPassword && <p className="text-xs text-red-600 mt-1">{errors.newPassword}</p>}
+            {errors.newPassword && (
+              <p className="text-xs text-red-600 mt-1">{errors.newPassword}</p>
+            )}
           </div>
 
           {/* Confirm */}
@@ -130,9 +142,12 @@ export default function ChangePassword() {
                 autoComplete="new-password"
                 className={`${errors.confirm ? errInCls : inputCls} pr-10`}
               />
-              <button type="button" onClick={() => setShowConfirm((v) => !v)}
+              <button
+                type="button"
+                onClick={() => setShowConfirm((v) => !v)}
                 className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-800 p-1"
-                title={showConfirm ? 'Hide' : 'Show'}>
+                title={showConfirm ? 'Hide' : 'Show'}
+              >
                 {showConfirm ? '\u{1F648}' : '\u{1F441}'}
               </button>
             </div>
@@ -148,8 +163,8 @@ export default function ChangePassword() {
             Please also enter a personal question and answer
           </p>
           <p className="text-xs text-amber-800">
-            You may answer the question given or change it to something else.
-            The answer should be unknown by most other people.
+            You may answer the question given or change it to something else. The answer should be
+            unknown by most other people.
           </p>
 
           {/* Question */}

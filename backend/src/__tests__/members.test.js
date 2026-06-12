@@ -5,15 +5,15 @@ import request from 'supertest';
 import { makeAuthHeader } from './helpers.js';
 
 vi.mock('../utils/redis.js', () => ({
-  isSessionInvalidated:   vi.fn().mockResolvedValue(false),
+  isSessionInvalidated: vi.fn().mockResolvedValue(false),
   invalidateUserSessions: vi.fn().mockResolvedValue(undefined),
 }));
 
 vi.mock('../utils/db.js', () => ({
-  prisma:      { $disconnect: vi.fn() },
+  prisma: { $disconnect: vi.fn() },
   tenantQuery: vi.fn(),
-  withTenant:  vi.fn(),
-  escapeLike:  (s) => String(s).replace(/[\\%_]/g, (ch) => `\\${ch}`),
+  withTenant: vi.fn(),
+  escapeLike: (s) => String(s).replace(/[\\%_]/g, (ch) => `\\${ch}`),
 }));
 
 const { default: app } = await import('../app.js');
@@ -22,11 +22,27 @@ const { tenantQuery } = await import('../utils/db.js');
 const AUTH = makeAuthHeader();
 
 const SAMPLE_MEMBER = {
-  id: 'm1', membership_number: 1, title: 'Mr', forenames: 'John', surname: 'Smith',
-  known_as: null, initials: 'J', suffix: null, email: 'john@example.com', mobile: null,
-  status_id: 'st1', status: 'Current', class_id: 'mc1', class: 'Individual',
-  house_no: '10', street: 'High St', town: 'Anytown', postcode: 'AB1 2CD',
-  joined_on: '2024-01-01', next_renewal: '2025-01-01', partner_id: null,
+  id: 'm1',
+  membership_number: 1,
+  title: 'Mr',
+  forenames: 'John',
+  surname: 'Smith',
+  known_as: null,
+  initials: 'J',
+  suffix: null,
+  email: 'john@example.com',
+  mobile: null,
+  status_id: 'st1',
+  status: 'Current',
+  class_id: 'mc1',
+  class: 'Individual',
+  house_no: '10',
+  street: 'High St',
+  town: 'Anytown',
+  postcode: 'AB1 2CD',
+  joined_on: '2024-01-01',
+  next_renewal: '2025-01-01',
+  partner_id: null,
 };
 
 // ── GET /members ──────────────────────────────────────────────────────────
@@ -64,7 +80,7 @@ describe('GET /members/:id', () => {
 
   it('returns 200 with full member record', async () => {
     tenantQuery.mockResolvedValueOnce([{ ...SAMPLE_MEMBER, add_line1: null, county: null }]);
-    tenantQuery.mockResolvedValueOnce([]);  // poll_ids query
+    tenantQuery.mockResolvedValueOnce([]); // poll_ids query
 
     const res = await request(app).get('/members/m1').set('Authorization', AUTH);
 
@@ -85,8 +101,12 @@ describe('GET /members/:id', () => {
 // ── POST /members ─────────────────────────────────────────────────────────
 
 const VALID_BODY = {
-  forenames: 'Jane', surname: 'Doe', statusId: 'st1', classId: 'mc1',
-  joinedOn: '2026-01-01', nextRenewal: '2027-01-01',
+  forenames: 'Jane',
+  surname: 'Doe',
+  statusId: 'st1',
+  classId: 'mc1',
+  joinedOn: '2026-01-01',
+  nextRenewal: '2027-01-01',
   address: { houseNo: '5', street: 'Low St', town: 'Somewhere', postcode: 'XY9 0AB' },
 };
 
@@ -99,7 +119,9 @@ describe('POST /members', () => {
     // address insert
     tenantQuery.mockResolvedValueOnce([{ id: 'addr1' }]);
     // member insert
-    tenantQuery.mockResolvedValueOnce([{ ...SAMPLE_MEMBER, id: 'm2', forenames: 'Jane', surname: 'Doe', email: 'jane@example.com' }]);
+    tenantQuery.mockResolvedValueOnce([
+      { ...SAMPLE_MEMBER, id: 'm2', forenames: 'Jane', surname: 'Doe', email: 'jane@example.com' },
+    ]);
     // no payment → look up Current status
     tenantQuery.mockResolvedValueOnce([{ id: 'st1' }]);
     // look up Applicant status
@@ -107,10 +129,7 @@ describe('POST /members', () => {
     // update member to Applicant + payment_token
     tenantQuery.mockResolvedValueOnce([]);
 
-    const res = await request(app)
-      .post('/members')
-      .set('Authorization', AUTH)
-      .send(VALID_BODY);
+    const res = await request(app).post('/members').set('Authorization', AUTH).send(VALID_BODY);
 
     expect(res.status).toBe(201);
     expect(res.body.surname).toBe('Doe');
@@ -118,12 +137,9 @@ describe('POST /members', () => {
   });
 
   it('returns 409 when name is a duplicate (without ?confirmed=1)', async () => {
-    tenantQuery.mockResolvedValueOnce([{ id: 'm1' }]);   // duplicate found
+    tenantQuery.mockResolvedValueOnce([{ id: 'm1' }]); // duplicate found
 
-    const res = await request(app)
-      .post('/members')
-      .set('Authorization', AUTH)
-      .send(VALID_BODY);
+    const res = await request(app).post('/members').set('Authorization', AUTH).send(VALID_BODY);
 
     expect(res.status).toBe(409);
     expect(res.body.code).toBe('DUPLICATE_NAME');
@@ -132,7 +148,9 @@ describe('POST /members', () => {
   it('proceeds past duplicate check when ?confirmed=1', async () => {
     // no dup check called — goes straight to address insert
     tenantQuery.mockResolvedValueOnce([{ id: 'addr1' }]);
-    tenantQuery.mockResolvedValueOnce([{ ...SAMPLE_MEMBER, id: 'm3', forenames: 'Jane', surname: 'Doe' }]);
+    tenantQuery.mockResolvedValueOnce([
+      { ...SAMPLE_MEMBER, id: 'm3', forenames: 'Jane', surname: 'Doe' },
+    ]);
     // no payment → look up Current status
     tenantQuery.mockResolvedValueOnce([{ id: 'st1' }]);
     // look up Applicant status
@@ -153,7 +171,7 @@ describe('POST /members', () => {
     const res = await request(app)
       .post('/members')
       .set('Authorization', AUTH)
-      .send({ forenames: 'Jane' });   // missing surname + statusId + classId
+      .send({ forenames: 'Jane' }); // missing surname + statusId + classId
 
     expect(res.status).toBe(422);
   });
@@ -179,10 +197,7 @@ describe('PATCH /members/:id', () => {
   });
 
   it('returns 400 when body is empty', async () => {
-    const res = await request(app)
-      .patch('/members/m1')
-      .set('Authorization', AUTH)
-      .send({});
+    const res = await request(app).patch('/members/m1').set('Authorization', AUTH).send({});
 
     expect(res.status).toBe(400);
   });
@@ -203,9 +218,7 @@ describe('DELETE /members/:id', () => {
     // delete address
     tenantQuery.mockResolvedValueOnce([]);
 
-    const res = await request(app)
-      .delete('/members/m1')
-      .set('Authorization', AUTH);
+    const res = await request(app).delete('/members/m1').set('Authorization', AUTH);
 
     expect(res.status).toBe(200);
     expect(res.body.message).toBe('Member deleted.');
@@ -214,9 +227,7 @@ describe('DELETE /members/:id', () => {
   it('returns 404 when not found', async () => {
     tenantQuery.mockResolvedValueOnce([]);
 
-    const res = await request(app)
-      .delete('/members/unknown')
-      .set('Authorization', AUTH);
+    const res = await request(app).delete('/members/unknown').set('Authorization', AUTH);
 
     expect(res.status).toBe(404);
   });
@@ -229,7 +240,14 @@ describe('GET /members/recent', () => {
 
   it('returns 200 with recent members', async () => {
     tenantQuery.mockResolvedValueOnce([
-      { id: 'm1', forenames: 'John', surname: 'Smith', joined_on: '2026-03-01', class_name: 'Individual', status_name: 'Current' },
+      {
+        id: 'm1',
+        forenames: 'John',
+        surname: 'Smith',
+        joined_on: '2026-03-01',
+        class_name: 'Individual',
+        status_name: 'Current',
+      },
     ]);
     const res = await request(app)
       .get('/members/recent?from=2026-03-01&to=2026-03-19')
@@ -254,9 +272,20 @@ describe('GET /members/statistics', () => {
 
   it('returns 200 with statistics', async () => {
     // settings
-    tenantQuery.mockResolvedValueOnce([{ year_start_month: 1, year_start_day: 1, advance_renewals_weeks: 4, grace_lapse_weeks: 4 }]);
+    tenantQuery.mockResolvedValueOnce([
+      { year_start_month: 1, year_start_day: 1, advance_renewals_weeks: 4, grace_lapse_weeks: 4 },
+    ]);
     // classStats
-    tenantQuery.mockResolvedValueOnce([{ id: 'mc1', name: 'Individual', total: 5, with_email: 4, first_year: 2, second_year_plus: 3 }]);
+    tenantQuery.mockResolvedValueOnce([
+      {
+        id: 'mc1',
+        name: 'Individual',
+        total: 5,
+        with_email: 4,
+        first_year: 2,
+        second_year_plus: 3,
+      },
+    ]);
     // statusCounts
     tenantQuery.mockResolvedValueOnce([{ current_not_renewed: 1, lapsed_count: 2 }]);
     // groupStats
@@ -264,11 +293,11 @@ describe('GET /members/statistics', () => {
     // notInGroup
     tenantQuery.mockResolvedValueOnce([{ count: 2 }]);
     // renewStats
-    tenantQuery.mockResolvedValueOnce([{ id: 'mc1', name: 'Individual', not_renewed: 1, new_members: 2 }]);
+    tenantQuery.mockResolvedValueOnce([
+      { id: 'mc1', name: 'Individual', not_renewed: 1, new_members: 2 },
+    ]);
 
-    const res = await request(app)
-      .get('/members/statistics')
-      .set('Authorization', AUTH);
+    const res = await request(app).get('/members/statistics').set('Authorization', AUTH);
     expect(res.status).toBe(200);
     expect(res.body.activeGroups).toBe(3);
     expect(res.body.totalCurrent).toBe(5);
@@ -288,9 +317,22 @@ describe('GET /members/renewals', () => {
   beforeEach(() => vi.clearAllMocks());
 
   it('returns 200 with renewal list and year boundaries', async () => {
-    tenantQuery.mockResolvedValueOnce([{ year_start_month: 1, year_start_day: 1, advance_renewals_weeks: 4 }]);
     tenantQuery.mockResolvedValueOnce([
-      { id: 'm1', forenames: 'John', surname: 'Smith', class_name: 'Individual', status_name: 'Current', next_renewal: '2026-01-01', fee: '25.00', gift_aid_fee: '20.00', gift_aid_from: null, partner_id: null },
+      { year_start_month: 1, year_start_day: 1, advance_renewals_weeks: 4 },
+    ]);
+    tenantQuery.mockResolvedValueOnce([
+      {
+        id: 'm1',
+        forenames: 'John',
+        surname: 'Smith',
+        class_name: 'Individual',
+        status_name: 'Current',
+        next_renewal: '2026-01-01',
+        fee: '25.00',
+        gift_aid_fee: '20.00',
+        gift_aid_from: null,
+        partner_id: null,
+      },
     ]);
     const res = await request(app).get('/members/renewals').set('Authorization', AUTH);
     expect(res.status).toBe(200);
@@ -299,7 +341,9 @@ describe('GET /members/renewals', () => {
   });
 
   it('returns 403 when privilege missing', async () => {
-    const res = await request(app).get('/members/renewals').set('Authorization', makeAuthHeader({ privileges: [] }));
+    const res = await request(app)
+      .get('/members/renewals')
+      .set('Authorization', makeAuthHeader({ privileges: [] }));
     expect(res.status).toBe(403);
   });
 });
@@ -313,7 +357,17 @@ describe('POST /members/renew', () => {
     // current status query
     tenantQuery.mockResolvedValueOnce([{ id: 'st_current' }]);
     // fetch member
-    tenantQuery.mockResolvedValueOnce([{ id: 'm1', forenames: 'John', surname: 'Smith', next_renewal: '2026-01-01', status_id: 'st_current', status_name: 'Current', gift_aid_from: null }]);
+    tenantQuery.mockResolvedValueOnce([
+      {
+        id: 'm1',
+        forenames: 'John',
+        surname: 'Smith',
+        next_renewal: '2026-01-01',
+        status_id: 'st_current',
+        status_name: 'Current',
+        gift_aid_from: null,
+      },
+    ]);
     // update member
     tenantQuery.mockResolvedValueOnce([]);
     // create transaction
@@ -322,7 +376,13 @@ describe('POST /members/renew', () => {
     const res = await request(app)
       .post('/members/renew')
       .set('Authorization', AUTH)
-      .send({ memberIds: ['m1'], accountId: 'acc1', paymentMethod: 'Cash', amounts: { m1: 25 }, yearStart: '2026-01-01' });
+      .send({
+        memberIds: ['m1'],
+        accountId: 'acc1',
+        paymentMethod: 'Cash',
+        amounts: { m1: 25 },
+        yearStart: '2026-01-01',
+      });
     expect(res.status).toBe(200);
     expect(res.body.renewed).toHaveLength(1);
     expect(res.body.renewed[0].transactionNumber).toBe(42);
@@ -332,7 +392,13 @@ describe('POST /members/renew', () => {
     const res = await request(app)
       .post('/members/renew')
       .set('Authorization', makeAuthHeader({ privileges: [] }))
-      .send({ memberIds: ['m1'], accountId: 'acc1', paymentMethod: 'Cash', amounts: { m1: 25 }, yearStart: '2026-01-01' });
+      .send({
+        memberIds: ['m1'],
+        accountId: 'acc1',
+        paymentMethod: 'Cash',
+        amounts: { m1: 25 },
+        yearStart: '2026-01-01',
+      });
     expect(res.status).toBe(403);
   });
 });
@@ -343,18 +409,30 @@ describe('GET /members/non-renewals', () => {
   beforeEach(() => vi.clearAllMocks());
 
   it('returns 200 with this_year mode', async () => {
-    tenantQuery.mockResolvedValueOnce([{ year_start_month: 1, year_start_day: 1, grace_lapse_weeks: 4, deletion_years: 7 }]);
     tenantQuery.mockResolvedValueOnce([
-      { id: 'm1', forenames: 'Alice', surname: 'Jones', status_name: 'Current', next_renewal: '2025-01-01' },
+      { year_start_month: 1, year_start_day: 1, grace_lapse_weeks: 4, deletion_years: 7 },
     ]);
-    const res = await request(app).get('/members/non-renewals?mode=this_year').set('Authorization', AUTH);
+    tenantQuery.mockResolvedValueOnce([
+      {
+        id: 'm1',
+        forenames: 'Alice',
+        surname: 'Jones',
+        status_name: 'Current',
+        next_renewal: '2025-01-01',
+      },
+    ]);
+    const res = await request(app)
+      .get('/members/non-renewals?mode=this_year')
+      .set('Authorization', AUTH);
     expect(res.status).toBe(200);
     expect(res.body.members).toHaveLength(1);
     expect(res.body.mode).toBe('this_year');
   });
 
   it('returns 403 when privilege missing', async () => {
-    const res = await request(app).get('/members/non-renewals').set('Authorization', makeAuthHeader({ privileges: [] }));
+    const res = await request(app)
+      .get('/members/non-renewals')
+      .set('Authorization', makeAuthHeader({ privileges: [] }));
     expect(res.status).toBe(403);
   });
 });
@@ -387,7 +465,8 @@ describe('POST /members/lapse', () => {
 // ── POST /members/:id/photo ──────────────────────────────────────────────
 
 // Small 1x1 red PNG as base64
-const TINY_PNG = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg==';
+const TINY_PNG =
+  'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg==';
 
 describe('POST /members/:id/photo', () => {
   beforeEach(() => vi.clearAllMocks());
@@ -443,9 +522,7 @@ describe('DELETE /members/:id/photo', () => {
     tenantQuery.mockResolvedValueOnce([{ id: 'm1' }]); // member exists
     tenantQuery.mockResolvedValueOnce([]); // UPDATE
 
-    const res = await request(app)
-      .delete('/members/m1/photo')
-      .set('Authorization', AUTH);
+    const res = await request(app).delete('/members/m1/photo').set('Authorization', AUTH);
 
     expect(res.status).toBe(200);
     expect(res.body.message).toBe('Photo removed.');
@@ -454,9 +531,7 @@ describe('DELETE /members/:id/photo', () => {
   it('returns 404 when member not found', async () => {
     tenantQuery.mockResolvedValueOnce([]); // member not found
 
-    const res = await request(app)
-      .delete('/members/m1/photo')
-      .set('Authorization', AUTH);
+    const res = await request(app).delete('/members/m1/photo').set('Authorization', AUTH);
 
     expect(res.status).toBe(404);
   });
@@ -470,9 +545,7 @@ describe('GET /members/:id/photo', () => {
   it('returns photo binary with correct content type', async () => {
     tenantQuery.mockResolvedValueOnce([{ photo_data: TINY_PNG, photo_mime_type: 'image/png' }]);
 
-    const res = await request(app)
-      .get('/members/m1/photo')
-      .set('Authorization', AUTH);
+    const res = await request(app).get('/members/m1/photo').set('Authorization', AUTH);
 
     expect(res.status).toBe(200);
     expect(res.headers['content-type']).toContain('image/png');
@@ -481,9 +554,7 @@ describe('GET /members/:id/photo', () => {
   it('returns 404 when no photo exists', async () => {
     tenantQuery.mockResolvedValueOnce([{ photo_data: null, photo_mime_type: null }]);
 
-    const res = await request(app)
-      .get('/members/m1/photo')
-      .set('Authorization', AUTH);
+    const res = await request(app).get('/members/m1/photo').set('Authorization', AUTH);
 
     expect(res.status).toBe(404);
   });

@@ -5,13 +5,15 @@ import { BASE } from './core.js';
 
 function publicFetch(url, options = {}) {
   return fetch(url, options).then((r) =>
-    r.json().then((b) => { if (!r.ok) throw new Error(b.error ?? `HTTP ${r.status}`); return b; }),
+    r.json().then((b) => {
+      if (!r.ok) throw new Error(b.error ?? `HTTP ${r.status}`);
+      return b;
+    }),
   );
 }
 
 export const publicApi = {
-  getJoinConfig: (slug) =>
-    publicFetch(`${BASE}/public/${slug}/join-config`),
+  getJoinConfig: (slug) => publicFetch(`${BASE}/public/${slug}/join-config`),
 
   submitJoin: (slug, data) =>
     publicFetch(`${BASE}/public/${slug}/join`, {
@@ -27,8 +29,7 @@ export const publicApi = {
       body: JSON.stringify(data),
     }),
 
-  resumePayment: (slug, token) =>
-    publicFetch(`${BASE}/public/${slug}/resume-payment/${token}`),
+  resumePayment: (slug, token) => publicFetch(`${BASE}/public/${slug}/resume-payment/${token}`),
 
   emailPaymentLink: (slug, paymentToken) =>
     publicFetch(`${BASE}/public/${slug}/email-payment-link`, {
@@ -73,13 +74,12 @@ export const publicApi = {
     }),
 
   // Public information pages (unauthenticated)
-  getPublicGroups: (slug) =>
-    publicFetch(`${BASE}/public/${slug}/groups`),
+  getPublicGroups: (slug) => publicFetch(`${BASE}/public/${slug}/groups`),
 
   getPublicCalendar: (slug, params = {}) => {
     const qs = new URLSearchParams();
     if (params.from) qs.set('from', params.from);
-    if (params.to)   qs.set('to', params.to);
+    if (params.to) qs.set('to', params.to);
     const q = qs.toString();
     return publicFetch(`${BASE}/public/${slug}/calendar${q ? '?' + q : ''}`);
   },

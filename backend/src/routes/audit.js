@@ -22,20 +22,20 @@ router.get('/', requirePrivilege('audit_trail', 'view'), async (req, res, next) 
     const slug = req.user.tenantSlug;
 
     // Default window: 3 months ago → today
-    const now   = new Date();
+    const now = new Date();
     const dfrom = new Date(now);
     dfrom.setMonth(dfrom.getMonth() - 3);
 
     const fromStr = req.query.from || dfrom.toISOString().slice(0, 10);
-    const toStr   = req.query.to   || now.toISOString().slice(0, 10);
+    const toStr = req.query.to || now.toISOString().slice(0, 10);
 
     // Validate date strings
     const fromDate = new Date(fromStr);
-    const toDate   = new Date(toStr);
+    const toDate = new Date(toStr);
     if (isNaN(fromDate) || isNaN(toDate)) throw AppError('Invalid date range.', 400);
 
     // Cap to 3-month window
-    const diffMs   = toDate - fromDate;
+    const diffMs = toDate - fromDate;
     const diffDays = diffMs / (1000 * 60 * 60 * 24);
     if (diffDays > 93) throw AppError('Date range cannot exceed 3 months.', 400);
 
@@ -50,7 +50,9 @@ router.get('/', requirePrivilege('audit_trail', 'view'), async (req, res, next) 
       [fromStr, toStr],
     );
     res.json(rows);
-  } catch (err) { next(err); }
+  } catch (err) {
+    next(err);
+  }
 });
 
 // ─── GET /audit/:id ───────────────────────────────────────────────────────
@@ -68,7 +70,9 @@ router.get('/:id', requirePrivilege('audit_trail', 'view'), async (req, res, nex
     );
     if (!rows.length) throw AppError('Audit entry not found.', 404);
     res.json(rows[0]);
-  } catch (err) { next(err); }
+  } catch (err) {
+    next(err);
+  }
 });
 
 // ─── DELETE /audit ────────────────────────────────────────────────────────
@@ -77,7 +81,9 @@ router.get('/:id', requirePrivilege('audit_trail', 'view'), async (req, res, nex
 
 router.delete('/', requirePrivilege('audit_trail', 'delete'), async (req, res, next) => {
   try {
-    const { before } = z.object({ before: z.string().regex(/^\d{4}-\d{2}-\d{2}$/) }).parse(req.body);
+    const { before } = z
+      .object({ before: z.string().regex(/^\d{4}-\d{2}-\d{2}$/) })
+      .parse(req.body);
     const slug = req.user.tenantSlug;
     const result = await tenantQuery(
       slug,
@@ -87,7 +93,9 @@ router.delete('/', requirePrivilege('audit_trail', 'delete'), async (req, res, n
     );
     const count = parseInt(result[0]?.count ?? 0, 10);
     res.json({ deleted: count });
-  } catch (err) { next(err); }
+  } catch (err) {
+    next(err);
+  }
 });
 
 export default router;

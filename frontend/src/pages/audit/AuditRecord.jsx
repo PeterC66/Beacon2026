@@ -2,7 +2,7 @@
 // Audit record detail view — doc 9.2(a)
 
 import { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import { audit as auditApi } from '../../lib/api.js';
 import { useAuth } from '../../context/AuthContext.jsx';
 import NavBar from '../../components/NavBar.jsx';
@@ -10,7 +10,6 @@ import PageHeader from '../../components/PageHeader.jsx';
 
 export default function AuditRecord() {
   const { id } = useParams();
-  const navigate = useNavigate();
   const { tenant } = useAuth();
   const [entry, setEntry] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -28,13 +27,22 @@ export default function AuditRecord() {
         if (!cancelled) setLoading(false);
       }
     })();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [id]);
 
   function formatDate(iso) {
     if (!iso) return '';
     const d = new Date(iso);
-    return d.toLocaleString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    return d.toLocaleString('en-GB', {
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+    });
   }
 
   function formatTarget(entry) {
@@ -48,15 +56,17 @@ export default function AuditRecord() {
     { label: 'Audit Log', to: '/audit' },
   ];
 
-  const fields = entry ? [
-    { label: 'Audit No',   value: entry.id },
-    { label: 'Audit Date', value: formatDate(entry.created_at) },
-    { label: 'User',       value: entry.user_name },
-    { label: 'Action',     value: entry.action },
-    { label: 'Target',     value: formatTarget(entry) },
-    { label: 'Data',       value: entry.detail ?? '' },
-    { label: 'Entity',     value: entry.entity_type },
-  ] : [];
+  const fields = entry
+    ? [
+        { label: 'Audit No', value: entry.id },
+        { label: 'Audit Date', value: formatDate(entry.created_at) },
+        { label: 'User', value: entry.user_name },
+        { label: 'Action', value: entry.action },
+        { label: 'Target', value: formatTarget(entry) },
+        { label: 'Data', value: entry.detail ?? '' },
+        { label: 'Entity', value: entry.entity_type },
+      ]
+    : [];
 
   return (
     <div className="min-h-screen pb-10">
@@ -67,7 +77,11 @@ export default function AuditRecord() {
         <h1 className="text-xl font-bold text-center mb-4">Audit Record</h1>
 
         {loading && <p className="text-center text-slate-500 py-6">Loading…</p>}
-        {error && <p className="rounded-md bg-red-50 border border-red-300 px-4 py-3 text-red-700 text-sm text-center mb-4">{error}</p>}
+        {error && (
+          <p className="rounded-md bg-red-50 border border-red-300 px-4 py-3 text-red-700 text-sm text-center mb-4">
+            {error}
+          </p>
+        )}
 
         {entry && (
           <div className="bg-amber-100/80 rounded-lg shadow-sm overflow-hidden">

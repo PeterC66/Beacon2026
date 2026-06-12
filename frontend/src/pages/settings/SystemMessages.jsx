@@ -2,7 +2,6 @@
 // Admin page for viewing and editing system message templates.
 
 import { useState, useEffect, useRef } from 'react';
-import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { systemMessages as api } from '../../lib/api.js';
 import PageHeader from '../../components/PageHeader.jsx';
@@ -18,7 +17,10 @@ export default function SystemMessages() {
   const savedTimer = useRef(null);
 
   useEffect(() => {
-    api.list().then(setMessages).catch((e) => setError(e.message));
+    api
+      .list()
+      .then(setMessages)
+      .catch((e) => setError(e.message));
   }, []);
 
   function startEdit(msg) {
@@ -57,8 +59,9 @@ export default function SystemMessages() {
       <div className="max-w-4xl mx-auto px-4 mt-4">
         <h1 className="text-xl font-bold mb-4">System Messages</h1>
         <p className="text-sm text-slate-600 mb-4">
-          These templates are used for emails sent automatically by the system (e.g. online joining confirmation).
-          You can use tokens like #FORENAME, #SURNAME, #MEMNO, #MEMCLASS, #U3ANAME, #EMAIL in the subject and body.
+          These templates are used for emails sent automatically by the system (e.g. online joining
+          confirmation). You can use tokens like #FORENAME, #SURNAME, #MEMNO, #MEMCLASS, #U3ANAME,
+          #EMAIL in the subject and body.
         </p>
 
         {error && (
@@ -139,7 +142,9 @@ export default function SystemMessages() {
           ))}
 
           {messages.length === 0 && (
-            <p className="text-sm text-slate-500 text-center py-8">No system messages configured.</p>
+            <p className="text-sm text-slate-500 text-center py-8">
+              No system messages configured.
+            </p>
           )}
         </div>
       </div>

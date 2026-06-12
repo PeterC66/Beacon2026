@@ -31,10 +31,10 @@ function fmtDate(d) {
 
 export default function Schedule({ entityId, api, privilege = 'group_records_all' }) {
   const { can } = useAuth();
-  const [events,    setEvents]    = useState([]);
-  const [venues,    setVenues]    = useState([]);
-  const [loading,   setLoading]   = useState(true);
-  const [error,     setError]     = useState(null);
+  const [events, setEvents] = useState([]);
+  const [venues, setVenues] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [showDetail, setShowDetail] = useState(false);
 
   // Bulk selection
@@ -42,19 +42,30 @@ export default function Schedule({ entityId, api, privilege = 'group_records_all
 
   // Add-event form
   const EMPTY_EV = {
-    eventDate: '', startTime: '', endTime: '', venueId: '',
-    topic: '', contact: '', details: '', isPrivate: false,
-    repeatEvery: '', repeatUnit: 'weeks', repeatUntil: '',
+    eventDate: '',
+    startTime: '',
+    endTime: '',
+    venueId: '',
+    topic: '',
+    contact: '',
+    details: '',
+    isPrivate: false,
+    repeatEvery: '',
+    repeatUnit: 'weeks',
+    repeatUntil: '',
   };
-  const [addForm,   setAddForm]   = useState(EMPTY_EV);
-  const [addError,  setAddError]  = useState(null);
+  const [addForm, setAddForm] = useState(EMPTY_EV);
+  const [addError, setAddError] = useState(null);
   const [addSaving, setAddSaving] = useState(false);
 
   const canManage = can(privilege, 'change');
 
   useEffect(() => {
     load();
-    venuesApi.list().then(setVenues).catch(() => {});
+    venuesApi
+      .list()
+      .then(setVenues)
+      .catch(() => {});
   }, [entityId]);
 
   async function load() {
@@ -82,18 +93,18 @@ export default function Schedule({ entityId, api, privilege = 'group_records_all
     setAddError(null);
     try {
       const payload = {
-        eventDate:   addForm.eventDate,
-        startTime:   addForm.startTime || null,
-        endTime:     addForm.endTime || null,
-        venueId:     addForm.venueId || null,
-        topic:       addForm.topic || null,
-        contact:     addForm.contact || null,
-        details:     addForm.details || null,
-        isPrivate:   addForm.isPrivate,
+        eventDate: addForm.eventDate,
+        startTime: addForm.startTime || null,
+        endTime: addForm.endTime || null,
+        venueId: addForm.venueId || null,
+        topic: addForm.topic || null,
+        contact: addForm.contact || null,
+        details: addForm.details || null,
+        isPrivate: addForm.isPrivate,
       };
       if (addForm.repeatEvery && addForm.repeatUntil) {
         payload.repeatEvery = parseInt(addForm.repeatEvery, 10);
-        payload.repeatUnit  = addForm.repeatUnit;
+        payload.repeatUnit = addForm.repeatUnit;
         payload.repeatUntil = addForm.repeatUntil;
       }
       await api.createEvents(entityId, payload);
@@ -109,7 +120,8 @@ export default function Schedule({ entityId, api, privilege = 'group_records_all
   function toggleSelect(id) {
     setSelected((prev) => {
       const next = new Set(prev);
-      if (next.has(id)) next.delete(id); else next.add(id);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
       return next;
     });
   }
@@ -133,9 +145,10 @@ export default function Schedule({ entityId, api, privilege = 'group_records_all
     }
   }
 
-  const inputCls = 'border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500';
+  const inputCls =
+    'border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500';
   const labelCls = 'block text-sm font-medium text-slate-700 mb-1';
-  const cbCls    = 'rounded border-slate-300 text-blue-600 focus:ring-blue-500';
+  const cbCls = 'rounded border-slate-300 text-blue-600 focus:ring-blue-500';
 
   if (loading) return <p className="text-center text-slate-500 py-8">Loading…</p>;
 
@@ -149,8 +162,12 @@ export default function Schedule({ entityId, api, privilege = 'group_records_all
           {events.length} event{events.length !== 1 ? 's' : ''}
         </h2>
         <label className="flex items-center gap-2 text-sm cursor-pointer">
-          <input type="checkbox" className={cbCls} checked={showDetail}
-            onChange={(e) => setShowDetail(e.target.checked)} />
+          <input
+            type="checkbox"
+            className={cbCls}
+            checked={showDetail}
+            onChange={(e) => setShowDetail(e.target.checked)}
+          />
           Show Detail
         </label>
       </div>
@@ -158,11 +175,17 @@ export default function Schedule({ entityId, api, privilege = 'group_records_all
       {/* Bulk actions */}
       {canManage && events.length > 0 && (
         <div className="flex gap-3 items-center text-sm">
-          <button onClick={selectAll}   className="text-blue-600 hover:underline text-xs">Select all</button>
-          <button onClick={deselectAll} className="text-slate-500 hover:underline text-xs">Deselect all</button>
+          <button onClick={selectAll} className="text-blue-600 hover:underline text-xs">
+            Select all
+          </button>
+          <button onClick={deselectAll} className="text-slate-500 hover:underline text-xs">
+            Deselect all
+          </button>
           {selected.size > 0 && (
-            <button onClick={handleDeleteSelected}
-              className="border border-red-300 text-red-600 hover:bg-red-50 rounded px-3 py-1 text-xs">
+            <button
+              onClick={handleDeleteSelected}
+              className="border border-red-300 text-red-600 hover:bg-red-50 rounded px-3 py-1 text-xs"
+            >
               Delete selected ({selected.size})
             </button>
           )}
@@ -195,18 +218,25 @@ export default function Schedule({ entityId, api, privilege = 'group_records_all
                     <tr key={ev.id} className={`border-b border-slate-100 ${rowBg}`}>
                       {canManage && (
                         <td className="px-3 py-2">
-                          <input type="checkbox" className={cbCls}
+                          <input
+                            type="checkbox"
+                            className={cbCls}
                             checked={selected.has(ev.id)}
-                            onChange={() => toggleSelect(ev.id)} />
+                            onChange={() => toggleSelect(ev.id)}
+                          />
                         </td>
                       )}
                       <td className="px-3 py-2">
-                        <Link to={`/calendar/events/${ev.id}`}
-                          className="text-blue-700 hover:underline whitespace-nowrap">
+                        <Link
+                          to={`/calendar/events/${ev.id}`}
+                          className="text-blue-700 hover:underline whitespace-nowrap"
+                        >
                           {fmtDate(ev.event_date)}
                           {ev.start_time ? ` ${normaliseTime(ev.start_time)}` : ''}
                         </Link>
-                        {ev.is_private && <span className="ml-2 text-xs text-slate-400">(private)</span>}
+                        {ev.is_private && (
+                          <span className="ml-2 text-xs text-slate-400">(private)</span>
+                        )}
                       </td>
                       <td className="px-3 py-2 text-slate-600 whitespace-nowrap">
                         {normaliseTime(ev.end_time)}
@@ -218,7 +248,10 @@ export default function Schedule({ entityId, api, privilege = 'group_records_all
                     {showDetail && ev.details && (
                       <tr key={`${ev.id}-detail`} className={rowBg}>
                         {canManage && <td></td>}
-                        <td colSpan={dataColSpan} className="px-3 pb-2 pt-0 text-xs text-slate-500 italic">
+                        <td
+                          colSpan={dataColSpan}
+                          className="px-3 pb-2 pt-0 text-xs text-slate-500 italic"
+                        >
                           {ev.details}
                         </td>
                       </tr>
@@ -240,49 +273,112 @@ export default function Schedule({ entityId, api, privilege = 'group_records_all
           <form onSubmit={handleAdd} noValidate className="space-y-3">
             <div className="flex flex-wrap gap-3 items-end">
               <div>
-                <label htmlFor="event-add-date" className={labelCls}>First date <RequiredMark /></label>
-                <input id="event-add-date" name="eventDate" type="date" className={inputCls} required value={addForm.eventDate}
-                  onChange={(e) => setAdd('eventDate', e.target.value)} />
+                <label htmlFor="event-add-date" className={labelCls}>
+                  First date <RequiredMark />
+                </label>
+                <input
+                  id="event-add-date"
+                  name="eventDate"
+                  type="date"
+                  className={inputCls}
+                  required
+                  value={addForm.eventDate}
+                  onChange={(e) => setAdd('eventDate', e.target.value)}
+                />
               </div>
               <div>
-                <label htmlFor="event-add-start-time" className={labelCls}>Start time</label>
-                <input id="event-add-start-time" name="startTime" type="time" step="900" className={inputCls} value={addForm.startTime}
-                  onChange={(e) => setAdd('startTime', e.target.value)} />
+                <label htmlFor="event-add-start-time" className={labelCls}>
+                  Start time
+                </label>
+                <input
+                  id="event-add-start-time"
+                  name="startTime"
+                  type="time"
+                  step="900"
+                  className={inputCls}
+                  value={addForm.startTime}
+                  onChange={(e) => setAdd('startTime', e.target.value)}
+                />
               </div>
               <div>
-                <label htmlFor="event-add-end-time" className={labelCls}>Until</label>
-                <input id="event-add-end-time" name="endTime" type="time" step="900" className={inputCls} value={addForm.endTime}
-                  onChange={(e) => setAdd('endTime', e.target.value)} />
+                <label htmlFor="event-add-end-time" className={labelCls}>
+                  Until
+                </label>
+                <input
+                  id="event-add-end-time"
+                  name="endTime"
+                  type="time"
+                  step="900"
+                  className={inputCls}
+                  value={addForm.endTime}
+                  onChange={(e) => setAdd('endTime', e.target.value)}
+                />
               </div>
               <div>
-                <label htmlFor="event-add-venue" className={labelCls}>Venue</label>
-                <select id="event-add-venue" name="venueId" className={inputCls} value={addForm.venueId}
-                  onChange={(e) => setAdd('venueId', e.target.value)}>
+                <label htmlFor="event-add-venue" className={labelCls}>
+                  Venue
+                </label>
+                <select
+                  id="event-add-venue"
+                  name="venueId"
+                  className={inputCls}
+                  value={addForm.venueId}
+                  onChange={(e) => setAdd('venueId', e.target.value)}
+                >
                   <option value="">— none —</option>
-                  {venues.map((v) => <option key={v.id} value={v.id}>{v.name}</option>)}
+                  {venues.map((v) => (
+                    <option key={v.id} value={v.id}>
+                      {v.name}
+                    </option>
+                  ))}
                 </select>
               </div>
             </div>
 
             <div className="flex flex-wrap gap-3 items-end">
               <div className="min-w-40 flex-1">
-                <label htmlFor="event-add-topic" className={labelCls}>Topic</label>
-                <input id="event-add-topic" name="topic" className={`${inputCls} w-full`} value={addForm.topic}
-                  onChange={(e) => setAdd('topic', e.target.value)} />
+                <label htmlFor="event-add-topic" className={labelCls}>
+                  Topic
+                </label>
+                <input
+                  id="event-add-topic"
+                  name="topic"
+                  className={`${inputCls} w-full`}
+                  value={addForm.topic}
+                  onChange={(e) => setAdd('topic', e.target.value)}
+                />
               </div>
               <div>
-                <label htmlFor="event-add-contact" className={labelCls}>Enquiries</label>
-                <input id="event-add-contact" name="contact" className={inputCls} value={addForm.contact}
-                  onChange={(e) => setAdd('contact', e.target.value)} />
+                <label htmlFor="event-add-contact" className={labelCls}>
+                  Enquiries
+                </label>
+                <input
+                  id="event-add-contact"
+                  name="contact"
+                  className={inputCls}
+                  value={addForm.contact}
+                  onChange={(e) => setAdd('contact', e.target.value)}
+                />
               </div>
               <div className="flex-1 min-w-48">
-                <label htmlFor="event-add-details" className={labelCls}>Details</label>
-                <input id="event-add-details" name="details" className={`${inputCls} w-full`} value={addForm.details}
-                  onChange={(e) => setAdd('details', e.target.value)} />
+                <label htmlFor="event-add-details" className={labelCls}>
+                  Details
+                </label>
+                <input
+                  id="event-add-details"
+                  name="details"
+                  className={`${inputCls} w-full`}
+                  value={addForm.details}
+                  onChange={(e) => setAdd('details', e.target.value)}
+                />
               </div>
               <label className="flex items-center gap-1 text-xs cursor-pointer mt-4">
-                <input type="checkbox" className={cbCls} checked={addForm.isPrivate}
-                  onChange={(e) => setAdd('isPrivate', e.target.checked)} />
+                <input
+                  type="checkbox"
+                  className={cbCls}
+                  checked={addForm.isPrivate}
+                  onChange={(e) => setAdd('isPrivate', e.target.checked)}
+                />
                 Exclude from public calendar
               </label>
             </div>
@@ -291,30 +387,57 @@ export default function Schedule({ entityId, api, privilege = 'group_records_all
             <div className="flex flex-wrap gap-3 items-end border-t border-slate-200 pt-3">
               <span className="text-sm text-slate-600 self-end pb-2">then every</span>
               <div>
-                <label htmlFor="event-add-repeat-count" className={labelCls}>Count</label>
-                <input id="event-add-repeat-count" name="repeatEvery" type="number" min="1" className={`${inputCls} w-20`} value={addForm.repeatEvery}
+                <label htmlFor="event-add-repeat-count" className={labelCls}>
+                  Count
+                </label>
+                <input
+                  id="event-add-repeat-count"
+                  name="repeatEvery"
+                  type="number"
+                  min="1"
+                  className={`${inputCls} w-20`}
+                  value={addForm.repeatEvery}
                   placeholder="—"
-                  onChange={(e) => setAdd('repeatEvery', e.target.value)} />
+                  onChange={(e) => setAdd('repeatEvery', e.target.value)}
+                />
               </div>
               <div>
-                <label htmlFor="event-add-repeat-unit" className={labelCls}>Unit</label>
-                <select id="event-add-repeat-unit" name="repeatUnit" className={inputCls} value={addForm.repeatUnit}
-                  onChange={(e) => setAdd('repeatUnit', e.target.value)}>
+                <label htmlFor="event-add-repeat-unit" className={labelCls}>
+                  Unit
+                </label>
+                <select
+                  id="event-add-repeat-unit"
+                  name="repeatUnit"
+                  className={inputCls}
+                  value={addForm.repeatUnit}
+                  onChange={(e) => setAdd('repeatUnit', e.target.value)}
+                >
                   <option value="days">days</option>
                   <option value="weeks">weeks</option>
                   <option value="months">months</option>
                 </select>
               </div>
               <div>
-                <label htmlFor="event-add-repeat-until" className={labelCls}>Until</label>
-                <input id="event-add-repeat-until" name="repeatUntil" type="date" className={inputCls} value={addForm.repeatUntil}
-                  onChange={(e) => setAdd('repeatUntil', e.target.value)} />
+                <label htmlFor="event-add-repeat-until" className={labelCls}>
+                  Until
+                </label>
+                <input
+                  id="event-add-repeat-until"
+                  name="repeatUntil"
+                  type="date"
+                  className={inputCls}
+                  value={addForm.repeatUntil}
+                  onChange={(e) => setAdd('repeatUntil', e.target.value)}
+                />
               </div>
             </div>
 
             <div className="pt-1">
-              <button type="submit" disabled={addSaving || !addForm.eventDate}
-                className="bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white rounded px-5 py-2 text-sm font-medium transition-colors">
+              <button
+                type="submit"
+                disabled={addSaving || !addForm.eventDate}
+                className="bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white rounded px-5 py-2 text-sm font-medium transition-colors"
+              >
                 {addSaving ? 'Adding…' : 'Add Events'}
               </button>
             </div>

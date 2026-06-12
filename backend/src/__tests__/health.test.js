@@ -6,9 +6,9 @@ import request from 'supertest';
 
 // Prevent the Prisma client from trying to connect during tests
 vi.mock('../utils/db.js', () => ({
-  prisma:      { $disconnect: vi.fn() },
+  prisma: { $disconnect: vi.fn() },
   tenantQuery: vi.fn(),
-  withTenant:  vi.fn(),
+  withTenant: vi.fn(),
 }));
 
 vi.mock('../utils/redis.js', () => ({
@@ -23,10 +23,10 @@ describe('GET /health', () => {
     const res = await request(app).get('/health');
     expect(res.status).toBe(200);
     expect(res.body).toMatchObject({
-      status:  'ok',
+      status: 'ok',
       version: expect.stringMatching(/^\d+\.\d+\.\d+$/),
-      env:     expect.any(String),
-      uptime:  expect.any(Number),
+      env: expect.any(String),
+      uptime: expect.any(Number),
     });
   });
 });

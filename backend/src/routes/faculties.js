@@ -51,7 +51,9 @@ const updateSchema = z.object({ name: z.string().min(1).max(100) });
 router.patch('/:id', requirePrivilege('group_faculties', 'change'), async (req, res, next) => {
   try {
     const slug = req.user.tenantSlug;
-    const [existing] = await tenantQuery(slug, `SELECT id FROM faculties WHERE id = $1`, [req.params.id]);
+    const [existing] = await tenantQuery(slug, `SELECT id FROM faculties WHERE id = $1`, [
+      req.params.id,
+    ]);
     if (!existing) throw AppError('Faculty not found.', 404);
 
     const { name } = updateSchema.parse(req.body);
@@ -73,7 +75,9 @@ router.patch('/:id', requirePrivilege('group_faculties', 'change'), async (req, 
 router.delete('/:id', requirePrivilege('group_faculties', 'delete'), async (req, res, next) => {
   try {
     const slug = req.user.tenantSlug;
-    const [existing] = await tenantQuery(slug, `SELECT id FROM faculties WHERE id = $1`, [req.params.id]);
+    const [existing] = await tenantQuery(slug, `SELECT id FROM faculties WHERE id = $1`, [
+      req.params.id,
+    ]);
     if (!existing) throw AppError('Faculty not found.', 404);
 
     await tenantQuery(slug, `DELETE FROM faculties WHERE id = $1`, [req.params.id]);

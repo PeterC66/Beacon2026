@@ -30,31 +30,33 @@ export default function MembershipRenewals() {
   const { can, tenant, hasFeature } = useAuth();
   const navigate = useNavigate();
 
-  const [data,      setData]      = useState(null);   // { members, yearStart, prevYearStart, nextYearStart, showNextYear }
-  const [accounts,  setAccounts]  = useState([]);
-  const [polls,     setPolls]     = useState([]);
-  const payDefaults               = useRef({ defaultMethod: '', mappings: {} });
-  const [loading,   setLoading]   = useState(true);
-  const [error,     setError]     = useState(null);
+  const [data, setData] = useState(null); // { members, yearStart, prevYearStart, nextYearStart, showNextYear }
+  const [accounts, setAccounts] = useState([]);
+  const [polls, setPolls] = useState([]);
+  const payDefaults = useRef({ defaultMethod: '', mappings: {} });
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const tableRef = useRef(null);
 
   // Renewal form state
-  const [period,        setPeriod]        = useState('current_year');
-  const [accountId,     setAccountId]     = useState('');
+  const [period, setPeriod] = useState('current_year');
+  const [accountId, setAccountId] = useState('');
   const [paymentMethod, setPaymentMethod] = useState('Cheque');
-  const [received,      setReceived]      = useState({});   // memberId → amount string
-  const [giftAid,       setGiftAid]       = useState({});   // memberId → bool
-  const [selected,      setSelected]      = useState(new Set());
-  const [action,        setAction]        = useState('renew');
-  const [chosenPoll,    setChosenPoll]    = useState('');
+  const [received, setReceived] = useState({}); // memberId → amount string
+  const [giftAid, setGiftAid] = useState({}); // memberId → bool
+  const [selected, setSelected] = useState(new Set());
+  const [action, setAction] = useState('renew');
+  const [chosenPoll, setChosenPoll] = useState('');
 
   // Status
   const [confirming, setConfirming] = useState(false);
   const [processing, setProcessing] = useState(false);
-  const [result,     setResult]     = useState(null);  // { renewed, errors }
-  const [actionMsg,  setActionMsg]  = useState(null);
+  const [result, setResult] = useState(null); // { renewed, errors }
+  const [actionMsg, setActionMsg] = useState(null);
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => {
+    load();
+  }, []);
 
   async function load() {
     setLoading(true);
@@ -85,11 +87,11 @@ export default function MembershipRenewals() {
 
       // Initialise received amounts + gift aid from member data
       const rcv = {};
-      const ga  = {};
+      const ga = {};
       for (const m of renewalData.members) {
         const fee = m.fee ?? 0;
         rcv[m.id] = String(Number(fee).toFixed(2));
-        ga[m.id]  = Boolean(m.gift_aid_from);
+        ga[m.id] = Boolean(m.gift_aid_from);
       }
       setReceived(rcv);
       setGiftAid(ga);
@@ -103,14 +105,16 @@ export default function MembershipRenewals() {
   // Filter members by period
   const filtered = useMemo(() => {
     if (!data) return [];
-    const { members: mems, yearStart, prevYearStart, nextYearStart } = data;
+    const { members: mems, prevYearStart, nextYearStart } = data;
     return mems.filter((m) => {
       const nr = m.next_renewal ? String(m.next_renewal).slice(0, 10) : null;
       if (period === 'next_year') {
         // Already renewed for current year but not next → next_renewal in [nextYearStart, nextNextYearStart)
-        const nextNext = nextYearStart ? nextYearStart.slice(0, 4)
-          ? (Number(nextYearStart.slice(0, 4)) + 1) + nextYearStart.slice(4)
-          : null : null;
+        const nextNext = nextYearStart
+          ? nextYearStart.slice(0, 4)
+            ? Number(nextYearStart.slice(0, 4)) + 1 + nextYearStart.slice(4)
+            : null
+          : null;
         return nr && nr >= nextYearStart && (!nextNext || nr < nextNext);
       }
       if (period === 'current_year') {
@@ -126,22 +130,40 @@ export default function MembershipRenewals() {
 
   function toggleAll(checked) {
     if (checked) setSelected(new Set(filtered.map((m) => m.id)));
-    else         setSelected(new Set());
+    else setSelected(new Set());
   }
-  function selectEmail()               { setSelected(new Set(filtered.filter((m) => m.email).map((m) => m.id))); }
-  function selectNoEmail()             { setSelected(new Set(filtered.filter((m) => !m.email).map((m) => m.id))); }
-  function selectPortalPassword()      { setSelected(new Set(filtered.filter((m) => m.has_portal_password).map((m) => m.id))); }
-  function selectNoPortalPassword()    { setSelected(new Set(filtered.filter((m) => !m.has_portal_password).map((m) => m.id))); }
-  function selectEmailNotConfirmed()   { setSelected(new Set(filtered.filter((m) => m.has_portal_password && !m.portal_email_verified).map((m) => m.id))); }
+  function selectEmail() {
+    setSelected(new Set(filtered.filter((m) => m.email).map((m) => m.id)));
+  }
+  function selectNoEmail() {
+    setSelected(new Set(filtered.filter((m) => !m.email).map((m) => m.id)));
+  }
+  function selectPortalPassword() {
+    setSelected(new Set(filtered.filter((m) => m.has_portal_password).map((m) => m.id)));
+  }
+  function selectNoPortalPassword() {
+    setSelected(new Set(filtered.filter((m) => !m.has_portal_password).map((m) => m.id)));
+  }
+  function selectEmailNotConfirmed() {
+    setSelected(
+      new Set(
+        filtered.filter((m) => m.has_portal_password && !m.portal_email_verified).map((m) => m.id),
+      ),
+    );
+  }
   function toggleOne(id, checked) {
     const s = new Set(selected);
-    if (checked) s.add(id); else s.delete(id);
+    if (checked) s.add(id);
+    else s.delete(id);
     setSelected(s);
   }
 
   async function handleDoWithSelected(e) {
     e.preventDefault();
-    if (selected.size === 0) { setActionMsg({ type: 'error', text: 'No members selected.' }); return; }
+    if (selected.size === 0) {
+      setActionMsg({ type: 'error', text: 'No members selected.' });
+      return;
+    }
     if (action === 'send_email') {
       sessionStorage.setItem('emailComposeMemberIds', JSON.stringify([...selected]));
       navigate('/email/compose');
@@ -153,12 +175,18 @@ export default function MembershipRenewals() {
       return;
     }
     if (action === 'add_to_poll') {
-      if (!chosenPoll) { setActionMsg({ type: 'error', text: 'Select a poll first.' }); return; }
+      if (!chosenPoll) {
+        setActionMsg({ type: 'error', text: 'Select a poll first.' });
+        return;
+      }
       setProcessing(true);
       setActionMsg(null);
       try {
         await pollsApi.addMembers(chosenPoll, [...selected]);
-        setActionMsg({ type: 'success', text: `${selected.size} member${selected.size !== 1 ? 's' : ''} added to poll.` });
+        setActionMsg({
+          type: 'success',
+          text: `${selected.size} member${selected.size !== 1 ? 's' : ''} added to poll.`,
+        });
       } catch (err) {
         setActionMsg({ type: 'error', text: err.message });
       } finally {
@@ -167,7 +195,10 @@ export default function MembershipRenewals() {
       return;
     }
     // renew
-    if (!accountId) { setActionMsg({ type: 'error', text: 'Select a finance account.' }); return; }
+    if (!accountId) {
+      setActionMsg({ type: 'error', text: 'Select a finance account.' });
+      return;
+    }
     setConfirming(true);
   }
 
@@ -188,7 +219,7 @@ export default function MembershipRenewals() {
       }
 
       const res = await membersApi.renew({
-        memberIds:      [...selected],
+        memberIds: [...selected],
         accountId,
         paymentMethod,
         amounts,
@@ -208,11 +239,14 @@ export default function MembershipRenewals() {
 
   const allChecked = filtered.length > 0 && filtered.every((m) => selected.has(m.id));
 
-  const INPUT  = 'border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500';
+  const INPUT =
+    'border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500';
   const SELECT = INPUT;
   const PERIOD_TAB = (active) =>
     `px-4 py-2 text-sm font-medium rounded-t border-b-2 transition-colors ${
-      active ? 'border-blue-600 text-blue-700 bg-white' : 'border-transparent text-slate-500 hover:text-slate-700 bg-slate-50'
+      active
+        ? 'border-blue-600 text-blue-700 bg-white'
+        : 'border-transparent text-slate-500 hover:text-slate-700 bg-slate-50'
     }`;
 
   return (
@@ -225,264 +259,448 @@ export default function MembershipRenewals() {
 
         {/* Guidance note */}
         <div className="bg-amber-50 border border-amber-200 rounded-lg px-4 py-3 text-sm text-amber-800">
-          <strong>Important:</strong> Members should only be renewed via this page or online. If a member is changing
-          membership class, update their class on their record <em>before</em> processing renewal here.
-          If a member is newly eligible for Gift Aid, tick their Gift Aid box below before renewing.
+          <strong>Important:</strong> Members should only be renewed via this page or online. If a
+          member is changing membership class, update their class on their record <em>before</em>{' '}
+          processing renewal here. If a member is newly eligible for Gift Aid, tick their Gift Aid
+          box below before renewing.
         </div>
 
         {loading ? (
           <p className="text-slate-500 text-sm">Loading…</p>
         ) : error ? (
           <p className="text-red-600 text-sm">{error}</p>
-        ) : data && (
-          <>
-            {/* Period tabs */}
-            <div className="flex gap-1 border-b border-slate-200">
-              <button onClick={() => { setPeriod('current_year'); setSelected(new Set()); }} className={PERIOD_TAB(period === 'current_year')}>
-                Current year
-              </button>
-              <button onClick={() => { setPeriod('previous_years'); setSelected(new Set()); }} className={PERIOD_TAB(period === 'previous_years')}>
-                Previous years
-              </button>
-              {data.showNextYear && (
-                <button onClick={() => { setPeriod('next_year'); setSelected(new Set()); }} className={PERIOD_TAB(period === 'next_year')}>
-                  Next year
+        ) : (
+          data && (
+            <>
+              {/* Period tabs */}
+              <div className="flex gap-1 border-b border-slate-200">
+                <button
+                  onClick={() => {
+                    setPeriod('current_year');
+                    setSelected(new Set());
+                  }}
+                  className={PERIOD_TAB(period === 'current_year')}
+                >
+                  Current year
                 </button>
-              )}
-            </div>
-
-            {/* Account + payment method selectors */}
-            <div className="bg-white/90 rounded-lg shadow-sm p-4 flex flex-wrap gap-4 items-end">
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Finance account</label>
-                <select name="accountId" value={accountId} onChange={(e) => setAccountId(e.target.value)} className={SELECT + ' w-56'}>
-                  {accounts.length === 0 && <option value="">— no active accounts —</option>}
-                  {accounts.map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Payment method</label>
-                <select name="paymentMethod" value={paymentMethod} onChange={(e) => {
-                  const method = e.target.value;
-                  setPaymentMethod(method);
-                  const mappedAccId = payDefaults.current.mappings[method];
-                  if (mappedAccId && accounts.some((a) => a.id === mappedAccId)) {
-                    setAccountId(mappedAccId);
-                  }
-                }} className={SELECT + ' w-44'}>
-                  {PAYMENT_METHODS.map((m) => <option key={m} value={m}>{m}</option>)}
-                </select>
-              </div>
-            </div>
-
-            {/* Status / result banners */}
-            {actionMsg && (
-              <p className={`text-sm font-medium px-4 py-2 rounded border ${
-                actionMsg.type === 'success' ? 'text-green-700 bg-green-50 border-green-200' : 'text-red-700 bg-red-50 border-red-300'
-              }`}>{actionMsg.text}</p>
-            )}
-            {result && (
-              <div className="bg-green-50 border border-green-200 rounded-lg px-4 py-3 text-sm text-green-800">
-                <strong>{result.renewed.length} member{result.renewed.length !== 1 ? 's' : ''} renewed.</strong>
-                {result.errors.length > 0 && (
-                  <ul className="mt-1 text-red-700">
-                    {result.errors.map((e) => <li key={e.memberId}>• {e.memberId}: {e.error}</li>)}
-                  </ul>
+                <button
+                  onClick={() => {
+                    setPeriod('previous_years');
+                    setSelected(new Set());
+                  }}
+                  className={PERIOD_TAB(period === 'previous_years')}
+                >
+                  Previous years
+                </button>
+                {data.showNextYear && (
+                  <button
+                    onClick={() => {
+                      setPeriod('next_year');
+                      setSelected(new Set());
+                    }}
+                    className={PERIOD_TAB(period === 'next_year')}
+                  >
+                    Next year
+                  </button>
                 )}
               </div>
-            )}
 
-            {/* Confirmation dialog */}
-            {confirming && (
-              <div className="bg-white border border-slate-200 rounded-lg shadow-sm px-4 py-4 space-y-3">
-                <p className="text-sm font-medium text-slate-800">
-                  Renew <strong>{selected.size}</strong> member{selected.size !== 1 ? 's' : ''} via <strong>{accounts.find((a) => a.id === accountId)?.name}</strong> ({paymentMethod})?
-                  This cannot be undone easily.
-                </p>
-                <div className="flex gap-2">
-                  <button
-                    onClick={handleConfirmRenew}
-                    className="bg-blue-600 hover:bg-blue-700 text-white rounded px-5 py-2 text-sm font-medium transition-colors"
+              {/* Account + payment method selectors */}
+              <div className="bg-white/90 rounded-lg shadow-sm p-4 flex flex-wrap gap-4 items-end">
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">
+                    Finance account
+                  </label>
+                  <select
+                    name="accountId"
+                    value={accountId}
+                    onChange={(e) => setAccountId(e.target.value)}
+                    className={SELECT + ' w-56'}
                   >
-                    Continue
-                  </button>
-                  <button onClick={() => setConfirming(false)} className="border border-slate-300 text-slate-600 hover:bg-slate-50 rounded px-5 py-2 text-sm transition-colors">
-                    Cancel
-                  </button>
+                    {accounts.length === 0 && <option value="">— no active accounts —</option>}
+                    {accounts.map((a) => (
+                      <option key={a.id} value={a.id}>
+                        {a.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">
+                    Payment method
+                  </label>
+                  <select
+                    name="paymentMethod"
+                    value={paymentMethod}
+                    onChange={(e) => {
+                      const method = e.target.value;
+                      setPaymentMethod(method);
+                      const mappedAccId = payDefaults.current.mappings[method];
+                      if (mappedAccId && accounts.some((a) => a.id === mappedAccId)) {
+                        setAccountId(mappedAccId);
+                      }
+                    }}
+                    className={SELECT + ' w-44'}
+                  >
+                    {PAYMENT_METHODS.map((m) => (
+                      <option key={m} value={m}>
+                        {m}
+                      </option>
+                    ))}
+                  </select>
                 </div>
               </div>
-            )}
 
-            {/* Select controls — above the table */}
-            {filtered.length > 0 && (
-              <div className="flex flex-wrap gap-2 items-center mb-2">
-                <span className="text-sm text-slate-500">
+              {/* Status / result banners */}
+              {actionMsg && (
+                <p
+                  className={`text-sm font-medium px-4 py-2 rounded border ${
+                    actionMsg.type === 'success'
+                      ? 'text-green-700 bg-green-50 border-green-200'
+                      : 'text-red-700 bg-red-50 border-red-300'
+                  }`}
+                >
+                  {actionMsg.text}
+                </p>
+              )}
+              {result && (
+                <div className="bg-green-50 border border-green-200 rounded-lg px-4 py-3 text-sm text-green-800">
+                  <strong>
+                    {result.renewed.length} member{result.renewed.length !== 1 ? 's' : ''} renewed.
+                  </strong>
+                  {result.errors.length > 0 && (
+                    <ul className="mt-1 text-red-700">
+                      {result.errors.map((e) => (
+                        <li key={e.memberId}>
+                          • {e.memberId}: {e.error}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              )}
+
+              {/* Confirmation dialog */}
+              {confirming && (
+                <div className="bg-white border border-slate-200 rounded-lg shadow-sm px-4 py-4 space-y-3">
+                  <p className="text-sm font-medium text-slate-800">
+                    Renew <strong>{selected.size}</strong> member{selected.size !== 1 ? 's' : ''}{' '}
+                    via <strong>{accounts.find((a) => a.id === accountId)?.name}</strong> (
+                    {paymentMethod})? This cannot be undone easily.
+                  </p>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={handleConfirmRenew}
+                      className="bg-blue-600 hover:bg-blue-700 text-white rounded px-5 py-2 text-sm font-medium transition-colors"
+                    >
+                      Continue
+                    </button>
+                    <button
+                      onClick={() => setConfirming(false)}
+                      className="border border-slate-300 text-slate-600 hover:bg-slate-50 rounded px-5 py-2 text-sm transition-colors"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Select controls — above the table */}
+              {filtered.length > 0 && (
+                <div className="flex flex-wrap gap-2 items-center mb-2">
+                  <span className="text-sm text-slate-500">
+                    {filtered.length} member{filtered.length !== 1 ? 's' : ''} shown.
+                    {data.yearStart && ` Year start: ${fmtDate(data.yearStart)}.`}
+                  </span>
+                  <span className="text-slate-300">|</span>
+                  <span className="text-sm font-medium text-slate-600">Select:</span>
+                  <button
+                    onClick={() => toggleAll(true)}
+                    className="text-sm text-blue-700 hover:underline"
+                  >
+                    All
+                  </button>
+                  <button
+                    onClick={() => toggleAll(false)}
+                    className="text-sm text-blue-700 hover:underline"
+                  >
+                    Clear All
+                  </button>
+                  <button onClick={selectEmail} className="text-sm text-blue-700 hover:underline">
+                    Email only
+                  </button>
+                  <button onClick={selectNoEmail} className="text-sm text-blue-700 hover:underline">
+                    Without email
+                  </button>
+                  <button
+                    onClick={selectPortalPassword}
+                    className="text-sm text-blue-700 hover:underline"
+                  >
+                    Portal password set
+                  </button>
+                  <button
+                    onClick={selectNoPortalPassword}
+                    className="text-sm text-blue-700 hover:underline"
+                  >
+                    Without portal password
+                  </button>
+                  <button
+                    onClick={selectEmailNotConfirmed}
+                    className="text-sm text-blue-700 hover:underline"
+                  >
+                    Email not confirmed
+                  </button>
+                  {selected.size > 0 && (
+                    <span className="text-sm font-medium text-blue-700 ml-2">
+                      {selected.size} selected
+                    </span>
+                  )}
+                </div>
+              )}
+              {filtered.length === 0 && (
+                <p className="text-sm text-slate-600">
                   {filtered.length} member{filtered.length !== 1 ? 's' : ''} shown.
                   {data.yearStart && ` Year start: ${fmtDate(data.yearStart)}.`}
-                </span>
-                <span className="text-slate-300">|</span>
-                <span className="text-sm font-medium text-slate-600">Select:</span>
-                <button onClick={() => toggleAll(true)} className="text-sm text-blue-700 hover:underline">All</button>
-                <button onClick={() => toggleAll(false)} className="text-sm text-blue-700 hover:underline">Clear All</button>
-                <button onClick={selectEmail} className="text-sm text-blue-700 hover:underline">Email only</button>
-                <button onClick={selectNoEmail} className="text-sm text-blue-700 hover:underline">Without email</button>
-                <button onClick={selectPortalPassword} className="text-sm text-blue-700 hover:underline">Portal password set</button>
-                <button onClick={selectNoPortalPassword} className="text-sm text-blue-700 hover:underline">Without portal password</button>
-                <button onClick={selectEmailNotConfirmed} className="text-sm text-blue-700 hover:underline">Email not confirmed</button>
-                {selected.size > 0 && (
-                  <span className="text-sm font-medium text-blue-700 ml-2">{selected.size} selected</span>
-                )}
-              </div>
-            )}
-            {filtered.length === 0 && (
-              <p className="text-sm text-slate-600">
-                {filtered.length} member{filtered.length !== 1 ? 's' : ''} shown.
-                {data.yearStart && ` Year start: ${fmtDate(data.yearStart)}.`}
-              </p>
-            )}
+                </p>
+              )}
 
-            <div className="overflow-x-auto" ref={tableRef}>
-              <table className="min-w-max w-full text-sm">
-                <thead className="bg-slate-50 text-slate-600 text-left">
-                  <tr>
-                    <th className="px-3 py-2.5">
-                      <input type="checkbox" checked={allChecked} onChange={(e) => toggleAll(e.target.checked)} aria-label="Select all" />
-                    </th>
-                    <SortableHeader col="membership_number" label="#" sortKey={sortKey} sortDir={sortDir} onSort={onSort} className="px-4 py-2.5 font-normal" />
-                    <th className="px-4 py-2.5 font-normal">
-                      <span className="cursor-pointer select-none" onClick={() => onSort('forenames')}>
-                        Name
-                        <span className={`ml-1 text-xs ${sortKey === 'forenames' ? 'text-blue-600' : 'text-slate-300'}`}>
-                          {sortKey === 'forenames' ? (sortDir === 'asc' ? '▲' : '▼') : '⇅'}
+              <div className="overflow-x-auto" ref={tableRef}>
+                <table className="min-w-max w-full text-sm">
+                  <thead className="bg-slate-50 text-slate-600 text-left">
+                    <tr>
+                      <th className="px-3 py-2.5">
+                        <input
+                          type="checkbox"
+                          checked={allChecked}
+                          onChange={(e) => toggleAll(e.target.checked)}
+                          aria-label="Select all"
+                        />
+                      </th>
+                      <SortableHeader
+                        col="membership_number"
+                        label="#"
+                        sortKey={sortKey}
+                        sortDir={sortDir}
+                        onSort={onSort}
+                        className="px-4 py-2.5 font-normal"
+                      />
+                      <th className="px-4 py-2.5 font-normal">
+                        <span
+                          className="cursor-pointer select-none"
+                          onClick={() => onSort('forenames')}
+                        >
+                          Name
+                          <span
+                            className={`ml-1 text-xs ${sortKey === 'forenames' ? 'text-blue-600' : 'text-slate-300'}`}
+                          >
+                            {sortKey === 'forenames' ? (sortDir === 'asc' ? '▲' : '▼') : '⇅'}
+                          </span>
                         </span>
-                      </span>
-                      <span className="text-slate-300 mx-1">|</span>
-                      <span className="cursor-pointer select-none text-xs" onClick={() => onSort(SORT_SURNAME)}>
-                        by surname
-                        <span className={`ml-1 text-xs ${Array.isArray(sortKey) && sortKey[0] === 'surname' ? 'text-blue-600' : 'text-slate-300'}`}>
-                          {Array.isArray(sortKey) && sortKey[0] === 'surname' ? (sortDir === 'asc' ? '▲' : '▼') : '⇅'}
+                        <span className="text-slate-300 mx-1">|</span>
+                        <span
+                          className="cursor-pointer select-none text-xs"
+                          onClick={() => onSort(SORT_SURNAME)}
+                        >
+                          by surname
+                          <span
+                            className={`ml-1 text-xs ${Array.isArray(sortKey) && sortKey[0] === 'surname' ? 'text-blue-600' : 'text-slate-300'}`}
+                          >
+                            {Array.isArray(sortKey) && sortKey[0] === 'surname'
+                              ? sortDir === 'asc'
+                                ? '▲'
+                                : '▼'
+                              : '⇅'}
+                          </span>
                         </span>
-                      </span>
-                    </th>
-                    <SortableHeader col="class_name" label="Class" sortKey={sortKey} sortDir={sortDir} onSort={onSort} className="px-4 py-2.5 font-normal" />
-                    <th className="px-4 py-2.5 font-normal">Partner</th>
-                    <SortableHeader col="next_renewal" label="Next renewal" sortKey={sortKey} sortDir={sortDir} onSort={onSort} className="px-4 py-2.5 font-normal" />
-                    <th className="px-4 py-2.5 font-normal text-right">Fee due</th>
-                    <th className="px-4 py-2.5 font-normal text-center">Gift Aid</th>
-                    <th className="px-4 py-2.5 font-normal text-right">Amount received</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {sorted.map((m, i) => {
-                    const feeLabel = giftAid[m.id] && m.gift_aid_fee != null
-                      ? fmtAmount(m.gift_aid_fee)
-                      : fmtAmount(m.fee);
-                    return (
-                      <tr key={m.id} className={i % 2 === 0 ? 'bg-yellow-50' : 'bg-white'}>
-                        <td className="px-3 py-2">
-                          <input
-                            type="checkbox"
-                            checked={selected.has(m.id)}
-                            onChange={(e) => toggleOne(m.id, e.target.checked)}
-                            aria-label={`Select ${m.forenames} ${m.surname}`}
-                          />
-                          {!m.email && <NoEmailIcon className="ml-1" />}
-                        </td>
-                        <td className={`px-4 py-2 ${isSubscriptionOverdue(m) ? 'text-red-600' : ''}`}>
-                          <Link to={`/members/${m.id}`} className={`hover:underline ${isSubscriptionOverdue(m) ? 'text-red-600' : 'text-blue-600'}`}>
-                            {m.membership_number}
-                          </Link>
-                        </td>
-                        <td className={`px-4 py-2 font-medium ${isSubscriptionOverdue(m) ? 'text-red-600' : ''}`}>
-                          <Link to={`/members/${m.id}`} className={`hover:underline ${isSubscriptionOverdue(m) ? 'text-red-600' : 'text-blue-600'}`}>
-                            {formatMemberName(m)}
-                          </Link>
-                          <span className="ml-2 text-xs text-slate-400">{m.status_name}</span>
-                        </td>
-                        <td className="px-4 py-2">{m.class_name ?? '—'}</td>
-                        <td className="px-4 py-2 text-slate-500 text-xs">
-                          {m.partner_id ? `${m.partner_forenames} ${m.partner_surname}` : ''}
-                        </td>
-                        <td className="px-4 py-2">{fmtDate(m.next_renewal)}</td>
-                        <td className="px-4 py-2 text-right">{feeLabel}</td>
-                        <td className="px-4 py-2 text-center">
-                          <input
-                            type="checkbox"
-                            checked={giftAid[m.id] ?? false}
-                            onChange={(e) => setGiftAid((prev) => ({ ...prev, [m.id]: e.target.checked }))}
-                            aria-label={`Gift Aid for ${m.surname}`}
-                          />
-                        </td>
-                        <td className="px-4 py-2 text-right">
-                          <input
-                            type="number"
-                            min="0"
-                            step="0.01"
-                            name="received"
-                            value={received[m.id] ?? ''}
-                            onChange={(e) => setReceived((prev) => ({ ...prev, [m.id]: e.target.value }))}
-                            className="border border-slate-300 rounded px-2 py-1 text-sm text-right w-24 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                          />
+                      </th>
+                      <SortableHeader
+                        col="class_name"
+                        label="Class"
+                        sortKey={sortKey}
+                        sortDir={sortDir}
+                        onSort={onSort}
+                        className="px-4 py-2.5 font-normal"
+                      />
+                      <th className="px-4 py-2.5 font-normal">Partner</th>
+                      <SortableHeader
+                        col="next_renewal"
+                        label="Next renewal"
+                        sortKey={sortKey}
+                        sortDir={sortDir}
+                        onSort={onSort}
+                        className="px-4 py-2.5 font-normal"
+                      />
+                      <th className="px-4 py-2.5 font-normal text-right">Fee due</th>
+                      <th className="px-4 py-2.5 font-normal text-center">Gift Aid</th>
+                      <th className="px-4 py-2.5 font-normal text-right">Amount received</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {sorted.map((m, i) => {
+                      const feeLabel =
+                        giftAid[m.id] && m.gift_aid_fee != null
+                          ? fmtAmount(m.gift_aid_fee)
+                          : fmtAmount(m.fee);
+                      return (
+                        <tr key={m.id} className={i % 2 === 0 ? 'bg-yellow-50' : 'bg-white'}>
+                          <td className="px-3 py-2">
+                            <input
+                              type="checkbox"
+                              checked={selected.has(m.id)}
+                              onChange={(e) => toggleOne(m.id, e.target.checked)}
+                              aria-label={`Select ${m.forenames} ${m.surname}`}
+                            />
+                            {!m.email && <NoEmailIcon className="ml-1" />}
+                          </td>
+                          <td
+                            className={`px-4 py-2 ${isSubscriptionOverdue(m) ? 'text-red-600' : ''}`}
+                          >
+                            <Link
+                              to={`/members/${m.id}`}
+                              className={`hover:underline ${isSubscriptionOverdue(m) ? 'text-red-600' : 'text-blue-600'}`}
+                            >
+                              {m.membership_number}
+                            </Link>
+                          </td>
+                          <td
+                            className={`px-4 py-2 font-medium ${isSubscriptionOverdue(m) ? 'text-red-600' : ''}`}
+                          >
+                            <Link
+                              to={`/members/${m.id}`}
+                              className={`hover:underline ${isSubscriptionOverdue(m) ? 'text-red-600' : 'text-blue-600'}`}
+                            >
+                              {formatMemberName(m)}
+                            </Link>
+                            <span className="ml-2 text-xs text-slate-400">{m.status_name}</span>
+                          </td>
+                          <td className="px-4 py-2">{m.class_name ?? '—'}</td>
+                          <td className="px-4 py-2 text-slate-500 text-xs">
+                            {m.partner_id ? `${m.partner_forenames} ${m.partner_surname}` : ''}
+                          </td>
+                          <td className="px-4 py-2">{fmtDate(m.next_renewal)}</td>
+                          <td className="px-4 py-2 text-right">{feeLabel}</td>
+                          <td className="px-4 py-2 text-center">
+                            <input
+                              type="checkbox"
+                              checked={giftAid[m.id] ?? false}
+                              onChange={(e) =>
+                                setGiftAid((prev) => ({ ...prev, [m.id]: e.target.checked }))
+                              }
+                              aria-label={`Gift Aid for ${m.surname}`}
+                            />
+                          </td>
+                          <td className="px-4 py-2 text-right">
+                            <input
+                              type="number"
+                              min="0"
+                              step="0.01"
+                              name="received"
+                              value={received[m.id] ?? ''}
+                              onChange={(e) =>
+                                setReceived((prev) => ({ ...prev, [m.id]: e.target.value }))
+                              }
+                              className="border border-slate-300 rounded px-2 py-1 text-sm text-right w-24 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            />
+                          </td>
+                        </tr>
+                      );
+                    })}
+                    {sorted.length === 0 && (
+                      <tr>
+                        <td colSpan={9} className="px-4 py-6 text-center text-slate-500">
+                          No members to renew for this period.
                         </td>
                       </tr>
-                    );
-                  })}
-                  {sorted.length === 0 && (
-                    <tr>
-                      <td colSpan={9} className="px-4 py-6 text-center text-slate-500">
-                        No members to renew for this period.
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
+                    )}
+                  </tbody>
+                </table>
+              </div>
 
-            {/* Bulk actions — below the table */}
-            {filtered.length > 0 && selected.size > 0 && (
-              <div className="bg-white/90 rounded-lg shadow-sm p-3">
-                <form onSubmit={handleDoWithSelected} className="flex flex-wrap gap-3 items-end">
-                  <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">Do with {selected.size} selected member{selected.size !== 1 ? 's' : ''}</label>
-                    <select name="action" value={action} onChange={(e) => setAction(e.target.value)} className={SELECT}>
-                      <option value="renew">Renew selected members</option>
-                      {can('email', 'send') && hasFeature('email') && <option value="send_email">Send email</option>}
-                      {can('letters', 'view') && hasFeature('letters') && <option value="send_letter">Send letter</option>}
-                      {can('poll_set_up', 'view') && <option value="add_to_poll">Add to poll</option>}
-                    </select>
-                  </div>
-                  {action === 'add_to_poll' && (
+              {/* Bulk actions — below the table */}
+              {filtered.length > 0 && selected.size > 0 && (
+                <div className="bg-white/90 rounded-lg shadow-sm p-3">
+                  <form onSubmit={handleDoWithSelected} className="flex flex-wrap gap-3 items-end">
                     <div>
-                      <label className="block text-sm font-medium text-slate-700 mb-1">Poll</label>
-                      <select name="chosenPoll" value={chosenPoll} onChange={(e) => setChosenPoll(e.target.value)} className={SELECT + ' w-48'}>
-                        {polls.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
+                      <label className="block text-sm font-medium text-slate-700 mb-1">
+                        Do with {selected.size} selected member{selected.size !== 1 ? 's' : ''}
+                      </label>
+                      <select
+                        name="action"
+                        value={action}
+                        onChange={(e) => setAction(e.target.value)}
+                        className={SELECT}
+                      >
+                        <option value="renew">Renew selected members</option>
+                        {can('email', 'send') && hasFeature('email') && (
+                          <option value="send_email">Send email</option>
+                        )}
+                        {can('letters', 'view') && hasFeature('letters') && (
+                          <option value="send_letter">Send letter</option>
+                        )}
+                        {can('poll_set_up', 'view') && (
+                          <option value="add_to_poll">Add to poll</option>
+                        )}
                       </select>
                     </div>
-                  )}
-                  <button
-                    type="submit"
-                    disabled={processing || confirming}
-                    className="bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white rounded px-4 py-1.5 text-sm font-medium transition-colors"
-                  >
-                    Do with selected
-                  </button>
-                  {actionMsg && (
-                    <p className={`text-sm font-medium ${actionMsg.type === 'success' ? 'text-green-700' : 'text-red-600'}`}>
-                      {actionMsg.text}
-                    </p>
-                  )}
-                </form>
-              </div>
-            )}
+                    {action === 'add_to_poll' && (
+                      <div>
+                        <label className="block text-sm font-medium text-slate-700 mb-1">
+                          Poll
+                        </label>
+                        <select
+                          name="chosenPoll"
+                          value={chosenPoll}
+                          onChange={(e) => setChosenPoll(e.target.value)}
+                          className={SELECT + ' w-48'}
+                        >
+                          {polls.map((p) => (
+                            <option key={p.id} value={p.id}>
+                              {p.name}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    )}
+                    <button
+                      type="submit"
+                      disabled={processing || confirming}
+                      className="bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white rounded px-4 py-1.5 text-sm font-medium transition-colors"
+                    >
+                      Do with selected
+                    </button>
+                    {actionMsg && (
+                      <p
+                        className={`text-sm font-medium ${actionMsg.type === 'success' ? 'text-green-700' : 'text-red-600'}`}
+                      >
+                        {actionMsg.text}
+                      </p>
+                    )}
+                  </form>
+                </div>
+              )}
 
-            {/* Doc 4.5.1 / 4.5.2 / 4.5.3 guidance links */}
-            <div className="bg-slate-50 rounded-lg p-4 text-sm text-slate-600 space-y-1">
-              <p><strong>Notes:</strong></p>
-              <p>• To change a member's class at renewal: update their class on their member record first, then renew here (doc 4.5.1).</p>
-              <p>• To reverse a renewal by mistake: go to Finance Ledger, delete the transaction, then edit the member record and set the next renewal date back one year (doc 4.5.2).</p>
-              <p>• To generate a list of members who <em>have</em> renewed: use the Polls feature — add non-renewed members to a poll, then use "Negate poll" in the Members list (doc 4.5.3).</p>
-            </div>
-          </>
+              {/* Doc 4.5.1 / 4.5.2 / 4.5.3 guidance links */}
+              <div className="bg-slate-50 rounded-lg p-4 text-sm text-slate-600 space-y-1">
+                <p>
+                  <strong>Notes:</strong>
+                </p>
+                <p>
+                  • To change a member's class at renewal: update their class on their member record
+                  first, then renew here (doc 4.5.1).
+                </p>
+                <p>
+                  • To reverse a renewal by mistake: go to Finance Ledger, delete the transaction,
+                  then edit the member record and set the next renewal date back one year (doc
+                  4.5.2).
+                </p>
+                <p>
+                  • To generate a list of members who <em>have</em> renewed: use the Polls feature —
+                  add non-renewed members to a poll, then use "Negate poll" in the Members list (doc
+                  4.5.3).
+                </p>
+              </div>
+            </>
+          )
         )}
       </div>
       <ScrollButtons containerRef={tableRef} />

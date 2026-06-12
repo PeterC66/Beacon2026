@@ -63,9 +63,9 @@ router.get('/:id', requirePrivilege('role_record', 'view'), async (req, res, nex
 
 // ─── POST /roles ──────────────────────────────────────────────────────────
 const createRoleSchema = z.object({
-  name:        z.string().min(1).max(100),
+  name: z.string().min(1).max(100),
   isCommittee: z.boolean().default(false),
-  notes:       z.string().optional(),
+  notes: z.string().optional(),
 });
 
 router.post('/', requirePrivilege('role_record', 'create'), async (req, res, next) => {
@@ -78,7 +78,14 @@ router.post('/', requirePrivilege('role_record', 'create'), async (req, res, nex
        RETURNING id, name, is_committee, notes, created_at`,
       [data.name, data.isCommittee, data.notes ?? null],
     );
-    logAudit(req.user.tenantSlug, { userId: req.user.userId, userName: req.user.name, action: 'create', entityType: 'role', entityId: role.id, entityName: role.name });
+    logAudit(req.user.tenantSlug, {
+      userId: req.user.userId,
+      userName: req.user.name,
+      action: 'create',
+      entityType: 'role',
+      entityId: role.id,
+      entityName: role.name,
+    });
     res.status(201).json(role);
   } catch (err) {
     next(err);
@@ -87,9 +94,9 @@ router.post('/', requirePrivilege('role_record', 'create'), async (req, res, nex
 
 // ─── PATCH /roles/:id ────────────────────────────────────────────────────
 const updateRoleSchema = z.object({
-  name:        z.string().min(1).max(100).optional(),
+  name: z.string().min(1).max(100).optional(),
   isCommittee: z.boolean().optional(),
-  notes:       z.string().optional(),
+  notes: z.string().optional(),
 });
 
 router.patch('/:id', requirePrivilege('role_record', 'change'), async (req, res, next) => {
@@ -99,9 +106,18 @@ router.patch('/:id', requirePrivilege('role_record', 'change'), async (req, res,
     const values = [];
     let i = 1;
 
-    if (data.name !== undefined)        { fields.push(`name = $${i++}`);         values.push(data.name); }
-    if (data.isCommittee !== undefined) { fields.push(`is_committee = $${i++}`); values.push(data.isCommittee); }
-    if (data.notes !== undefined)       { fields.push(`notes = $${i++}`);        values.push(data.notes); }
+    if (data.name !== undefined) {
+      fields.push(`name = $${i++}`);
+      values.push(data.name);
+    }
+    if (data.isCommittee !== undefined) {
+      fields.push(`is_committee = $${i++}`);
+      values.push(data.isCommittee);
+    }
+    if (data.notes !== undefined) {
+      fields.push(`notes = $${i++}`);
+      values.push(data.notes);
+    }
 
     if (fields.length === 0) return res.status(400).json({ error: 'Nothing to update.' });
 
@@ -114,7 +130,14 @@ router.patch('/:id', requirePrivilege('role_record', 'change'), async (req, res,
       values,
     );
     if (!role) throw AppError('Role not found.', 404);
-    logAudit(req.user.tenantSlug, { userId: req.user.userId, userName: req.user.name, action: 'update', entityType: 'role', entityId: role.id, entityName: role.name });
+    logAudit(req.user.tenantSlug, {
+      userId: req.user.userId,
+      userName: req.user.name,
+      action: 'update',
+      entityType: 'role',
+      entityId: role.id,
+      entityName: role.name,
+    });
     res.json(role);
   } catch (err) {
     next(err);
@@ -130,7 +153,14 @@ router.delete('/:id', requirePrivilege('role_record', 'delete'), async (req, res
       [req.params.id],
     );
     if (!role) throw AppError('Role not found.', 404);
-    logAudit(req.user.tenantSlug, { userId: req.user.userId, userName: req.user.name, action: 'delete', entityType: 'role', entityId: role.id, entityName: role.name });
+    logAudit(req.user.tenantSlug, {
+      userId: req.user.userId,
+      userName: req.user.name,
+      action: 'delete',
+      entityType: 'role',
+      entityId: role.id,
+      entityName: role.name,
+    });
     res.json({ message: 'Role deleted.' });
   } catch (err) {
     next(err);
@@ -143,10 +173,12 @@ router.delete('/:id', requirePrivilege('role_record', 'delete'), async (req, res
 // Also invalidates sessions for all users who hold this role.
 
 const setPrivilegesSchema = z.object({
-  privileges: z.array(z.object({
-    resourceId: z.string(),
-    action:     z.string(),
-  })),
+  privileges: z.array(
+    z.object({
+      resourceId: z.string(),
+      action: z.string(),
+    }),
+  ),
 });
 
 router.put('/:id/privileges', requirePrivilege('role_record', 'change'), async (req, res, next) => {
@@ -178,7 +210,14 @@ router.put('/:id/privileges', requirePrivilege('role_record', 'change'), async (
     );
     await Promise.all(affectedUsers.map((u) => invalidateUserSessions(slug, u.user_id)));
 
-    logAudit(slug, { userId: req.user.userId, userName: req.user.name, action: 'update', entityType: 'role', entityId: role.id, entityName: role.name });
+    logAudit(slug, {
+      userId: req.user.userId,
+      userName: req.user.name,
+      action: 'update',
+      entityType: 'role',
+      entityId: role.id,
+      entityName: role.name,
+    });
     res.json({ message: 'Privileges updated.', count: privileges.length });
   } catch (err) {
     next(err);

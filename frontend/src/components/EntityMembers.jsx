@@ -18,18 +18,18 @@ import { formatMemberName } from '../hooks/usePreferences.js';
 
 const BASE_DL_FIELDS = [
   { key: 'membership_number', label: 'Membership No', default: true },
-  { key: 'title',             label: 'Title',         default: false },
-  { key: 'forenames',         label: 'Forenames',     default: true },
-  { key: 'known_as',          label: 'Known As',      default: false },
-  { key: 'surname',           label: 'Surname',       default: true },
-  { key: 'email',             label: 'Email',         default: true },
-  { key: 'mobile',            label: 'Mobile',        default: true },
-  { key: 'telephone',         label: 'Telephone',     default: false },
-  { key: 'address',           label: 'Address',       default: false },
-  { key: 'town',              label: 'Town',          default: true },
-  { key: 'postcode',          label: 'Postcode',      default: true },
-  { key: 'status',            label: 'Status',        default: true },
-  { key: 'is_leader',         label: 'Leader',        default: false },
+  { key: 'title', label: 'Title', default: false },
+  { key: 'forenames', label: 'Forenames', default: true },
+  { key: 'known_as', label: 'Known As', default: false },
+  { key: 'surname', label: 'Surname', default: true },
+  { key: 'email', label: 'Email', default: true },
+  { key: 'mobile', label: 'Mobile', default: true },
+  { key: 'telephone', label: 'Telephone', default: false },
+  { key: 'address', label: 'Address', default: false },
+  { key: 'town', label: 'Town', default: true },
+  { key: 'postcode', label: 'Postcode', default: true },
+  { key: 'status', label: 'Status', default: true },
+  { key: 'is_leader', label: 'Leader', default: false },
 ];
 
 const WAITING_DL_FIELD = { key: 'waiting_since', label: 'Waiting Since', default: false };
@@ -42,40 +42,53 @@ export default function EntityMembers({ entityId, api, entityType = 'group' }) {
   const { can } = useAuth();
   const navigate = useNavigate();
   const [entityMembers, setEntityMembers] = useState([]);
-  const [allMembers,    setAllMembers]    = useState([]);
-  const [loading,       setLoading]       = useState(true);
-  const [error,         setError]         = useState(null);
+  const [allMembers, setAllMembers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   const tableRef = useRef(null);
-  const [addByName,   setAddByName]   = useState('');
+  const [addByName, setAddByName] = useState('');
   const [addByNumber, setAddByNumber] = useState('');
-  const [addError,    setAddError]    = useState(null);
-  const [addLoading,  setAddLoading]  = useState(false);
+  const [addError, setAddError] = useState(null);
+  const [addLoading, setAddLoading] = useState(false);
 
   // Filter checkboxes (groups only — waiting list)
-  const [showJoined,  setShowJoined]  = useState(true);
+  const [showJoined, setShowJoined] = useState(true);
   const [showWaiting, setShowWaiting] = useState(true);
 
   // Selection
   const [selected, setSelected] = useState(new Set());
 
   // Bulk actions
-  const [bulkAction,     setBulkAction]     = useState('');
-  const [bulkWorking,    setBulkWorking]    = useState(false);
-  const [bulkResult,     setBulkResult]     = useState(null);
-  const [dlFields,       setDlFields]       = useState(new Set(DL_FIELDS.filter((f) => f.default).map((f) => f.key)));
-  const [allEntities,    setAllEntities]    = useState([]);
+  const [bulkAction, setBulkAction] = useState('');
+  const [bulkWorking, setBulkWorking] = useState(false);
+  const [bulkResult, setBulkResult] = useState(null);
+  const [dlFields, setDlFields] = useState(
+    new Set(DL_FIELDS.filter((f) => f.default).map((f) => f.key)),
+  );
+  const [allEntities, setAllEntities] = useState([]);
   const [targetEntityId, setTargetEntityId] = useState('');
 
   const canManage = can('group_records_all', 'change');
   const SORT_SURNAME = ['surname', 'forenames'];
-  const { sorted: sortedMembers, sortKey, sortDir, onSort } = useSortedData(entityMembers, SORT_SURNAME, 'asc');
+  const {
+    sorted: sortedMembers,
+    sortKey,
+    sortDir,
+    onSort,
+  } = useSortedData(entityMembers, SORT_SURNAME, 'asc');
 
   useEffect(() => {
     load();
     if (canManage) {
-      membersApi.list({}).then(setAllMembers).catch(() => {});
-      api.list({ activeOnly: true }).then(setAllEntities).catch(() => {});
+      membersApi
+        .list({})
+        .then(setAllMembers)
+        .catch(() => {});
+      api
+        .list({ activeOnly: true })
+        .then(setAllEntities)
+        .catch(() => {});
     }
   }, [entityId]);
 
@@ -137,7 +150,9 @@ export default function EntityMembers({ entityId, api, entityType = 'group' }) {
     try {
       const updated = await api.updateMember(entityId, memberId, { isLeader: !currentIsLeader });
       setEntityMembers((prev) =>
-        prev.map((m) => m.member_id === updated.member_id ? { ...m, is_leader: updated.is_leader } : m),
+        prev.map((m) =>
+          m.member_id === updated.member_id ? { ...m, is_leader: updated.is_leader } : m,
+        ),
       );
     } catch (err) {
       setError(err.message);
@@ -148,7 +163,7 @@ export default function EntityMembers({ entityId, api, entityType = 'group' }) {
     try {
       const updated = await api.updateMember(entityId, memberId, { waitingSince: null });
       setEntityMembers((prev) =>
-        prev.map((m) => m.member_id === updated.member_id ? { ...m, waiting_since: null } : m),
+        prev.map((m) => (m.member_id === updated.member_id ? { ...m, waiting_since: null } : m)),
       );
     } catch (err) {
       setError(err.message);
@@ -156,11 +171,19 @@ export default function EntityMembers({ entityId, api, entityType = 'group' }) {
   }
 
   function toggleSelect(memberId) {
-    setSelected((prev) => { const n = new Set(prev); n.has(memberId) ? n.delete(memberId) : n.add(memberId); return n; });
+    setSelected((prev) => {
+      const n = new Set(prev);
+      n.has(memberId) ? n.delete(memberId) : n.add(memberId);
+      return n;
+    });
   }
 
   function toggleDlField(key) {
-    setDlFields((prev) => { const n = new Set(prev); n.has(key) ? n.delete(key) : n.add(key); return n; });
+    setDlFields((prev) => {
+      const n = new Set(prev);
+      n.has(key) ? n.delete(key) : n.add(key);
+      return n;
+    });
   }
 
   async function handleBulkDo() {
@@ -171,12 +194,20 @@ export default function EntityMembers({ entityId, api, entityType = 'group' }) {
       return;
     }
     if (bulkAction === 'remove_members') {
-      if (!window.confirm(`Remove ${selected.size} member${selected.size !== 1 ? 's' : ''} from this ${entityType}?`)) return;
+      if (
+        !window.confirm(
+          `Remove ${selected.size} member${selected.size !== 1 ? 's' : ''} from this ${entityType}?`,
+        )
+      )
+        return;
       setBulkWorking(true);
       setBulkResult(null);
       try {
         const result = await api.bulkRemoveMembers(entityId, [...selected]);
-        setBulkResult({ type: 'success', msg: `${result.removed} member${result.removed !== 1 ? 's' : ''} removed from ${entityType}.` });
+        setBulkResult({
+          type: 'success',
+          msg: `${result.removed} member${result.removed !== 1 ? 's' : ''} removed from ${entityType}.`,
+        });
         setSelected(new Set());
         await load();
       } catch (err) {
@@ -234,13 +265,10 @@ export default function EntityMembers({ entityId, api, entityType = 'group' }) {
   let hasWaiting = false;
   let joinedMembers, waitingMembers;
   if (hasWaitingList) {
-    joinedMembers  = sortedMembers.filter((m) => !m.waiting_since);
+    joinedMembers = sortedMembers.filter((m) => !m.waiting_since);
     waitingMembers = sortedMembers.filter((m) => m.waiting_since);
     hasWaiting = waitingMembers.length > 0;
-    visibleMembers = [
-      ...(showJoined  ? joinedMembers  : []),
-      ...(showWaiting ? waitingMembers : []),
-    ];
+    visibleMembers = [...(showJoined ? joinedMembers : []), ...(showWaiting ? waitingMembers : [])];
   }
 
   const memberIdsInEntity = new Set(entityMembers.map((m) => m.member_id));
@@ -256,13 +284,21 @@ export default function EntityMembers({ entityId, api, entityType = 'group' }) {
       {hasWaitingList && hasWaiting && (
         <div className="flex gap-4 text-sm">
           <label className="flex items-center gap-2 cursor-pointer">
-            <input type="checkbox" className={cbCls} checked={showJoined}
-              onChange={(e) => setShowJoined(e.target.checked)} />
+            <input
+              type="checkbox"
+              className={cbCls}
+              checked={showJoined}
+              onChange={(e) => setShowJoined(e.target.checked)}
+            />
             Joined members ({joinedMembers.length})
           </label>
           <label className="flex items-center gap-2 cursor-pointer">
-            <input type="checkbox" className={cbCls} checked={showWaiting}
-              onChange={(e) => setShowWaiting(e.target.checked)} />
+            <input
+              type="checkbox"
+              className={cbCls}
+              checked={showWaiting}
+              onChange={(e) => setShowWaiting(e.target.checked)}
+            />
             Waiting list ({waitingMembers.length})
           </label>
         </div>
@@ -271,17 +307,39 @@ export default function EntityMembers({ entityId, api, entityType = 'group' }) {
       {/* ── Select controls ─────────────────────────────────────────── */}
       {visibleMembers.length > 0 && (
         <div className="flex flex-wrap gap-2 items-center text-sm">
-          <span className="text-slate-500">{visibleMembers.length} member{visibleMembers.length !== 1 ? 's' : ''}</span>
+          <span className="text-slate-500">
+            {visibleMembers.length} member{visibleMembers.length !== 1 ? 's' : ''}
+          </span>
           <span className="text-slate-300">|</span>
           <span className="font-medium text-slate-600">Select:</span>
-          <button onClick={() => setSelected(new Set(visibleMembers.map((m) => m.member_id)))}
-            className="text-blue-700 hover:underline">All</button>
-          <button onClick={() => setSelected(new Set())} className="text-blue-700 hover:underline">Clear</button>
-          <button onClick={() => setSelected(new Set(visibleMembers.filter((m) => m.email).map((m) => m.member_id)))}
-            className="text-blue-700 hover:underline">Email only</button>
-          <button onClick={() => setSelected(new Set(visibleMembers.filter((m) => !m.email).map((m) => m.member_id)))}
-            className="text-blue-700 hover:underline">Without email</button>
-          {selected.size > 0 && <span className="font-medium text-blue-700">{selected.size} selected</span>}
+          <button
+            onClick={() => setSelected(new Set(visibleMembers.map((m) => m.member_id)))}
+            className="text-blue-700 hover:underline"
+          >
+            All
+          </button>
+          <button onClick={() => setSelected(new Set())} className="text-blue-700 hover:underline">
+            Clear
+          </button>
+          <button
+            onClick={() =>
+              setSelected(new Set(visibleMembers.filter((m) => m.email).map((m) => m.member_id)))
+            }
+            className="text-blue-700 hover:underline"
+          >
+            Email only
+          </button>
+          <button
+            onClick={() =>
+              setSelected(new Set(visibleMembers.filter((m) => !m.email).map((m) => m.member_id)))
+            }
+            className="text-blue-700 hover:underline"
+          >
+            Without email
+          </button>
+          {selected.size > 0 && (
+            <span className="font-medium text-blue-700">{selected.size} selected</span>
+          )}
         </div>
       )}
 
@@ -294,11 +352,20 @@ export default function EntityMembers({ entityId, api, entityType = 'group' }) {
             <thead>
               <tr className="bg-slate-50 border-b border-slate-200 text-left text-slate-600 italic font-normal">
                 <th className="px-2 py-2"></th>
-                <SortableHeader col="membership_number" label="No"      sortKey={sortKey} sortDir={sortDir} onSort={onSort} className="px-3 py-2 font-normal" />
+                <SortableHeader
+                  col="membership_number"
+                  label="No"
+                  sortKey={sortKey}
+                  sortDir={sortDir}
+                  onSort={onSort}
+                  className="px-3 py-2 font-normal"
+                />
                 <th className="px-3 py-2 font-normal">
                   <span className="cursor-pointer select-none" onClick={() => onSort('forenames')}>
                     Name
-                    <span className={`ml-1 text-xs ${sortKey === 'forenames' ? 'text-blue-600' : 'text-slate-300'}`}>
+                    <span
+                      className={`ml-1 text-xs ${sortKey === 'forenames' ? 'text-blue-600' : 'text-slate-300'}`}
+                    >
                       {sortKey === 'forenames' ? (sortDir === 'asc' ? '▲' : '▼') : '⇅'}
                     </span>
                   </span>
@@ -308,46 +375,121 @@ export default function EntityMembers({ entityId, api, entityType = 'group' }) {
                     onClick={() => onSort(SORT_SURNAME)}
                   >
                     by surname
-                    <span className={`ml-1 text-xs ${Array.isArray(sortKey) && sortKey[0] === 'surname' ? 'text-blue-600' : 'text-slate-300'}`}>
-                      {Array.isArray(sortKey) && sortKey[0] === 'surname' ? (sortDir === 'asc' ? '▲' : '▼') : '⇅'}
+                    <span
+                      className={`ml-1 text-xs ${Array.isArray(sortKey) && sortKey[0] === 'surname' ? 'text-blue-600' : 'text-slate-300'}`}
+                    >
+                      {Array.isArray(sortKey) && sortKey[0] === 'surname'
+                        ? sortDir === 'asc'
+                          ? '▲'
+                          : '▼'
+                        : '⇅'}
                     </span>
                   </span>
                 </th>
-                <SortableHeader col="house_no"           label="Address"    sortKey={sortKey} sortDir={sortDir} onSort={onSort} className="px-3 py-2 font-normal" />
-                <SortableHeader col="telephone"          label="Telephone"  sortKey={sortKey} sortDir={sortDir} onSort={onSort} className="px-3 py-2 font-normal" />
-                <SortableHeader col="mobile"             label="Mobile"     sortKey={sortKey} sortDir={sortDir} onSort={onSort} className="px-3 py-2 font-normal" />
-                <SortableHeader col="status"             label="Status"     sortKey={sortKey} sortDir={sortDir} onSort={onSort} className="px-3 py-2 font-normal" />
-                <SortableHeader col="is_leader"         label="Leader"  sortKey={sortKey} sortDir={sortDir} onSort={onSort} className="px-3 py-2 font-normal" />
+                <SortableHeader
+                  col="house_no"
+                  label="Address"
+                  sortKey={sortKey}
+                  sortDir={sortDir}
+                  onSort={onSort}
+                  className="px-3 py-2 font-normal"
+                />
+                <SortableHeader
+                  col="telephone"
+                  label="Telephone"
+                  sortKey={sortKey}
+                  sortDir={sortDir}
+                  onSort={onSort}
+                  className="px-3 py-2 font-normal"
+                />
+                <SortableHeader
+                  col="mobile"
+                  label="Mobile"
+                  sortKey={sortKey}
+                  sortDir={sortDir}
+                  onSort={onSort}
+                  className="px-3 py-2 font-normal"
+                />
+                <SortableHeader
+                  col="status"
+                  label="Status"
+                  sortKey={sortKey}
+                  sortDir={sortDir}
+                  onSort={onSort}
+                  className="px-3 py-2 font-normal"
+                />
+                <SortableHeader
+                  col="is_leader"
+                  label="Leader"
+                  sortKey={sortKey}
+                  sortDir={sortDir}
+                  onSort={onSort}
+                  className="px-3 py-2 font-normal"
+                />
                 {hasWaiting && (
-                  <SortableHeader col="waiting_since" label="Waiting" sortKey={sortKey} sortDir={sortDir} onSort={onSort} className="px-3 py-2 font-normal" />
+                  <SortableHeader
+                    col="waiting_since"
+                    label="Waiting"
+                    sortKey={sortKey}
+                    sortDir={sortDir}
+                    onSort={onSort}
+                    className="px-3 py-2 font-normal"
+                  />
                 )}
                 {canManage && <th className="px-3 py-2"></th>}
               </tr>
             </thead>
             <tbody>
               {visibleMembers.map((m, i) => (
-                <tr key={m.member_id} className={`border-b border-slate-100 ${selected.has(m.member_id) ? 'outline outline-2 outline-blue-400' : i % 2 === 0 ? 'bg-yellow-50' : 'bg-white'}`}>
+                <tr
+                  key={m.member_id}
+                  className={`border-b border-slate-100 ${selected.has(m.member_id) ? 'outline outline-2 outline-blue-400' : i % 2 === 0 ? 'bg-yellow-50' : 'bg-white'}`}
+                >
                   <td className="px-2 py-2">
-                    <input type="checkbox" checked={selected.has(m.member_id)} onChange={() => toggleSelect(m.member_id)}
-                      className="rounded border-slate-300 text-blue-600 focus:ring-blue-500" />
+                    <input
+                      type="checkbox"
+                      checked={selected.has(m.member_id)}
+                      onChange={() => toggleSelect(m.member_id)}
+                      className="rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                    />
                     {!m.email && <NoEmailIcon className="ml-1" />}
                   </td>
-                  <td className={`px-3 py-2 tabular-nums ${isSubscriptionOverdue(m) ? 'text-red-600' : ''}`}>
+                  <td
+                    className={`px-3 py-2 tabular-nums ${isSubscriptionOverdue(m) ? 'text-red-600' : ''}`}
+                  >
                     {can('member_record', 'view') ? (
-                      <a href="#view" onClick={(e) => { e.preventDefault(); navigate(`/members/${m.member_id}`); }}
-                        className={`hover:underline ${isSubscriptionOverdue(m) ? 'text-red-600' : 'text-blue-700'}`}>
+                      <a
+                        href="#view"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          navigate(`/members/${m.member_id}`);
+                        }}
+                        className={`hover:underline ${isSubscriptionOverdue(m) ? 'text-red-600' : 'text-blue-700'}`}
+                      >
                         {m.membership_number}
                       </a>
-                    ) : m.membership_number}
+                    ) : (
+                      m.membership_number
+                    )}
                   </td>
-                  <td className={`px-3 py-2 font-medium ${rowStyle(m)} ${isSubscriptionOverdue(m) ? 'text-red-600' : ''}`}>
+                  <td
+                    className={`px-3 py-2 font-medium ${rowStyle(m)} ${isSubscriptionOverdue(m) ? 'text-red-600' : ''}`}
+                  >
                     {m.is_leader && <span className="text-blue-600 font-medium mr-1">★</span>}
                     {can('member_record', 'view') ? (
-                      <a href="#view" onClick={(e) => { e.preventDefault(); navigate(`/members/${m.member_id}`); }}
-                        className={`hover:underline ${isSubscriptionOverdue(m) ? 'text-red-600' : 'text-blue-700'}`}>
+                      <a
+                        href="#view"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          navigate(`/members/${m.member_id}`);
+                        }}
+                        className={`hover:underline ${isSubscriptionOverdue(m) ? 'text-red-600' : 'text-blue-700'}`}
+                      >
                         {formatMemberName(m)}
                       </a>
-                    ) : formatMemberName(m)}
+                    ) : (
+                      formatMemberName(m)
+                    )}
                   </td>
                   <td className="px-3 py-2">{formatShortAddress(m)}</td>
                   <td className="px-3 py-2">{m.telephone ?? ''}</td>
@@ -355,9 +497,7 @@ export default function EntityMembers({ entityId, api, entityType = 'group' }) {
                   <td className="px-3 py-2">{m.status ?? ''}</td>
                   <td className="px-3 py-2">{m.is_leader ? 'Yes' : ''}</td>
                   {hasWaiting && (
-                    <td className="px-3 py-2 text-xs text-slate-500">
-                      {m.waiting_since ?? ''}
-                    </td>
+                    <td className="px-3 py-2 text-xs text-slate-500">{m.waiting_since ?? ''}</td>
                   )}
                   {canManage && (
                     <td className="px-3 py-2 text-right space-x-3 whitespace-nowrap">
@@ -397,12 +537,21 @@ export default function EntityMembers({ entityId, api, entityType = 'group' }) {
         <div className="bg-white/90 rounded-lg shadow-sm p-3 space-y-3">
           <div className="flex flex-wrap gap-3 items-end">
             <div>
-              <label htmlFor={`${entityType}-bulk-action`} className="block text-sm font-medium text-slate-700 mb-1">Do with {selected.size} selected member{selected.size !== 1 ? 's' : ''}</label>
+              <label
+                htmlFor={`${entityType}-bulk-action`}
+                className="block text-sm font-medium text-slate-700 mb-1"
+              >
+                Do with {selected.size} selected member{selected.size !== 1 ? 's' : ''}
+              </label>
               <select
                 id={`${entityType}-bulk-action`}
                 name="bulkAction"
                 value={bulkAction}
-                onChange={(e) => { setBulkAction(e.target.value); setBulkResult(null); setTargetEntityId(''); }}
+                onChange={(e) => {
+                  setBulkAction(e.target.value);
+                  setBulkResult(null);
+                  setTargetEntityId('');
+                }}
                 className="border border-slate-300 rounded px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 <option value="">— choose action —</option>
@@ -416,7 +565,12 @@ export default function EntityMembers({ entityId, api, entityType = 'group' }) {
 
             {bulkAction === addToAction && (
               <div>
-                <label htmlFor={`${entityType}-target-entity`} className="block text-sm font-medium text-slate-700 mb-1">Target {entityType}</label>
+                <label
+                  htmlFor={`${entityType}-target-entity`}
+                  className="block text-sm font-medium text-slate-700 mb-1"
+                >
+                  Target {entityType}
+                </label>
                 <select
                   id={`${entityType}-target-entity`}
                   name="targetEntityId"
@@ -425,14 +579,20 @@ export default function EntityMembers({ entityId, api, entityType = 'group' }) {
                   className="border border-slate-300 rounded px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                   <option value="">— select {entityType} —</option>
-                  {allEntities.filter((e) => e.id !== entityId).map((e) => (
-                    <option key={e.id} value={e.id}>{e.name}</option>
-                  ))}
+                  {allEntities
+                    .filter((e) => e.id !== entityId)
+                    .map((e) => (
+                      <option key={e.id} value={e.id}>
+                        {e.name}
+                      </option>
+                    ))}
                 </select>
               </div>
             )}
 
-            {(bulkAction === 'send_email' || bulkAction === 'remove_members' || bulkAction === addToAction) && (
+            {(bulkAction === 'send_email' ||
+              bulkAction === 'remove_members' ||
+              bulkAction === addToAction) && (
               <button
                 onClick={handleBulkDo}
                 disabled={bulkWorking || (bulkAction === addToAction && !targetEntityId)}
@@ -443,7 +603,9 @@ export default function EntityMembers({ entityId, api, entityType = 'group' }) {
             )}
 
             {bulkResult && (
-              <p className={`text-sm font-medium ${bulkResult.type === 'success' ? 'text-green-700' : 'text-red-600'}`}>
+              <p
+                className={`text-sm font-medium ${bulkResult.type === 'success' ? 'text-green-700' : 'text-red-600'}`}
+              >
                 {bulkResult.msg}
               </p>
             )}
@@ -456,16 +618,24 @@ export default function EntityMembers({ entityId, api, entityType = 'group' }) {
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-x-4 gap-y-1 mb-3">
                 {DL_FIELDS.map((f) => (
                   <label key={f.key} className="flex items-center gap-1.5 text-sm cursor-pointer">
-                    <input type="checkbox" checked={dlFields.has(f.key)} onChange={() => toggleDlField(f.key)}
-                      className="rounded border-slate-300 text-blue-600 focus:ring-blue-500" />
+                    <input
+                      type="checkbox"
+                      checked={dlFields.has(f.key)}
+                      onChange={() => toggleDlField(f.key)}
+                      className="rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                    />
                     {f.label}
                   </label>
                 ))}
               </div>
-              <button onClick={() => handleDownload(bulkAction === 'download_excel' ? 'excel' : 'pdf')}
+              <button
+                onClick={() => handleDownload(bulkAction === 'download_excel' ? 'excel' : 'pdf')}
                 disabled={bulkWorking || dlFields.size === 0}
-                className="bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white rounded px-4 py-1.5 text-sm font-medium transition-colors">
-                {bulkWorking ? 'Downloading…' : `Download ${bulkAction === 'download_excel' ? 'Excel' : 'PDF'}`}
+                className="bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white rounded px-4 py-1.5 text-sm font-medium transition-colors"
+              >
+                {bulkWorking
+                  ? 'Downloading…'
+                  : `Download ${bulkAction === 'download_excel' ? 'Excel' : 'PDF'}`}
               </button>
             </div>
           )}
@@ -482,7 +652,12 @@ export default function EntityMembers({ entityId, api, entityType = 'group' }) {
           {/* By name */}
           <div className="flex gap-2 items-end">
             <div className="flex-1">
-              <label htmlFor={`${entityType}-add-by-name`} className="block text-sm font-medium text-slate-700 mb-1">Add member by name</label>
+              <label
+                htmlFor={`${entityType}-add-by-name`}
+                className="block text-sm font-medium text-slate-700 mb-1"
+              >
+                Add member by name
+              </label>
               <select
                 id={`${entityType}-add-by-name`}
                 name="addByName"
@@ -493,7 +668,8 @@ export default function EntityMembers({ entityId, api, entityType = 'group' }) {
                 <option value="">— select member —</option>
                 {availableToAdd.map((m) => (
                   <option key={m.id} value={m.id}>
-                    {m.surname}, {m.forenames}{m.known_as ? ` (${m.known_as})` : ''} — #{m.membership_number}
+                    {m.surname}, {m.forenames}
+                    {m.known_as ? ` (${m.known_as})` : ''} — #{m.membership_number}
                   </option>
                 ))}
               </select>
@@ -510,7 +686,12 @@ export default function EntityMembers({ entityId, api, entityType = 'group' }) {
           {/* By membership number */}
           <div className="flex gap-2 items-end">
             <div>
-              <label htmlFor={`${entityType}-add-by-number`} className="block text-sm font-medium text-slate-700 mb-1">Add member by membership number</label>
+              <label
+                htmlFor={`${entityType}-add-by-number`}
+                className="block text-sm font-medium text-slate-700 mb-1"
+              >
+                Add member by membership number
+              </label>
               <input
                 id={`${entityType}-add-by-number`}
                 type="number"

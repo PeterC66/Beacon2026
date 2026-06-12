@@ -17,7 +17,18 @@ import { tenantQuery } from './db.js';
  * @param {string|null} opts.entityName - Human-readable name of the record
  * @param {string|null} opts.detail     - Extra context (stringified JSON or plain text)
  */
-export async function logAudit(slug, { userId = null, userName, action, entityType, entityId = null, entityName = null, detail = null }) {
+export async function logAudit(
+  slug,
+  {
+    userId = null,
+    userName,
+    action,
+    entityType,
+    entityId = null,
+    entityName = null,
+    detail = null,
+  },
+) {
   try {
     await tenantQuery(
       slug,

@@ -56,7 +56,10 @@ export function useUnsavedChanges() {
   // Browser-level navigation (refresh, close tab, browser back to external site)
   useEffect(() => {
     if (!isDirty) return;
-    const handler = (e) => { e.preventDefault(); e.returnValue = ''; };
+    const handler = (e) => {
+      e.preventDefault();
+      e.returnValue = '';
+    };
     window.addEventListener('beforeunload', handler);
     return () => window.removeEventListener('beforeunload', handler);
   }, [isDirty]);

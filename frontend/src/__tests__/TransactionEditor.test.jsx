@@ -7,15 +7,15 @@ import TransactionEditor from '../pages/finance/TransactionEditor.jsx';
 vi.mock('../context/AuthContext.jsx', () => ({
   useAuth: () => ({
     tenant: 'test-u3a',
-    can:    vi.fn().mockReturnValue(true),
+    can: vi.fn().mockReturnValue(true),
   }),
 }));
 
 vi.mock('../lib/api.js', () => ({
   finance: {
-    listAccounts:      vi.fn().mockResolvedValue([]),
-    listCategories:    vi.fn().mockResolvedValue([]),
-    getTransaction:    vi.fn().mockResolvedValue(null),
+    listAccounts: vi.fn().mockResolvedValue([]),
+    listCategories: vi.fn().mockResolvedValue([]),
+    getTransaction: vi.fn().mockResolvedValue(null),
     createTransaction: vi.fn(),
     updateTransaction: vi.fn(),
     deleteTransaction: vi.fn(),
@@ -32,20 +32,28 @@ vi.mock('react-router-dom', async (importOriginal) => {
   const actual = await importOriginal();
   return {
     ...actual,
-    useParams:       () => ({ id: 'new' }),
+    useParams: () => ({ id: 'new' }),
     useSearchParams: () => [new URLSearchParams(), vi.fn()],
-    useNavigate:     () => vi.fn(),
+    useNavigate: () => vi.fn(),
   };
 });
 
 describe('TransactionEditor page', () => {
   it('renders without crashing', () => {
-    const { container } = render(<MemoryRouter><TransactionEditor /></MemoryRouter>);
+    const { container } = render(
+      <MemoryRouter>
+        <TransactionEditor />
+      </MemoryRouter>,
+    );
     expect(container).toBeTruthy();
   });
 
   it('shows the Add Transaction heading', () => {
-    render(<MemoryRouter><TransactionEditor /></MemoryRouter>);
+    render(
+      <MemoryRouter>
+        <TransactionEditor />
+      </MemoryRouter>,
+    );
     expect(screen.getByText('Add Transaction')).toBeTruthy();
   });
 });

@@ -10,9 +10,9 @@ import 'dotenv/config';
 import { prisma } from '../utils/db.js';
 import { hashPassword } from '../utils/password.js';
 
-const email    = process.env.SEED_ADMIN_EMAIL;
+const email = process.env.SEED_ADMIN_EMAIL;
 const password = process.env.SEED_ADMIN_PASSWORD;
-const name     = process.env.SEED_ADMIN_NAME ?? 'System Administrator';
+const name = process.env.SEED_ADMIN_NAME ?? 'System Administrator';
 
 async function seed() {
   if (!email || !password) {

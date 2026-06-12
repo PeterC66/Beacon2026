@@ -6,14 +6,14 @@ import request from 'supertest';
 import { makeAuthHeader } from './helpers.js';
 
 vi.mock('../utils/redis.js', () => ({
-  isSessionInvalidated:   vi.fn().mockResolvedValue(false),
+  isSessionInvalidated: vi.fn().mockResolvedValue(false),
   invalidateUserSessions: vi.fn().mockResolvedValue(undefined),
 }));
 
 vi.mock('../utils/db.js', () => ({
-  prisma:      { $disconnect: vi.fn() },
+  prisma: { $disconnect: vi.fn() },
   tenantQuery: vi.fn(),
-  withTenant:  vi.fn(),
+  withTenant: vi.fn(),
 }));
 
 const { default: app } = await import('../app.js');
@@ -22,9 +22,15 @@ const { tenantQuery } = await import('../utils/db.js');
 const AUTH = makeAuthHeader();
 
 const SAMPLE_ENTRY = {
-  id: 'a1', user_id: 'u1', user_name: 'Alice', action: 'create',
-  entity_type: 'member', entity_id: 'm1', entity_name: 'Smith, John',
-  detail: null, created_at: '2026-03-01T10:00:00Z',
+  id: 'a1',
+  user_id: 'u1',
+  user_name: 'Alice',
+  action: 'create',
+  entity_type: 'member',
+  entity_id: 'm1',
+  entity_name: 'Smith, John',
+  detail: null,
+  created_at: '2026-03-01T10:00:00Z',
 };
 
 // ── GET /audit ─────────────────────────────────────────────────────────────

@@ -53,16 +53,16 @@ router.get('/:id', requirePrivilege('group_venues', 'view'), async (req, res, ne
 // ─── POST /venues ─────────────────────────────────────────────────────────
 
 const venueSchema = z.object({
-  name:           z.string().min(1).max(200),
-  contact:        z.string().nullable().optional(),
-  address:        z.string().nullable().optional(),
-  postcode:       z.string().nullable().optional(),
-  telephone:      z.string().nullable().optional(),
-  email:          z.string().email().nullable().optional().or(z.literal('')),
-  website:        z.string().nullable().optional(),
-  notes:          z.string().nullable().optional(),
+  name: z.string().min(1).max(200),
+  contact: z.string().nullable().optional(),
+  address: z.string().nullable().optional(),
+  postcode: z.string().nullable().optional(),
+  telephone: z.string().nullable().optional(),
+  email: z.string().email().nullable().optional().or(z.literal('')),
+  website: z.string().nullable().optional(),
+  notes: z.string().nullable().optional(),
   privateAddress: z.boolean().default(false),
-  accessible:     z.boolean().default(false),
+  accessible: z.boolean().default(false),
 });
 
 router.post('/', requirePrivilege('group_venues', 'create'), async (req, res, next) => {
@@ -77,13 +77,13 @@ router.post('/', requirePrivilege('group_venues', 'create'), async (req, res, ne
        RETURNING *`,
       [
         data.name,
-        data.contact     ?? null,
-        data.address     ?? null,
-        data.postcode    ?? null,
-        data.telephone   ?? null,
-        data.email       || null,
-        data.website     ?? null,
-        data.notes       ?? null,
+        data.contact ?? null,
+        data.address ?? null,
+        data.postcode ?? null,
+        data.telephone ?? null,
+        data.email || null,
+        data.website ?? null,
+        data.notes ?? null,
         data.privateAddress,
         data.accessible,
       ],
@@ -97,29 +97,29 @@ router.post('/', requirePrivilege('group_venues', 'create'), async (req, res, ne
 // ─── PATCH /venues/:id ────────────────────────────────────────────────────
 
 const updateVenueSchema = z.object({
-  name:           z.string().min(1).max(200).optional(),
-  contact:        z.string().nullable().optional(),
-  address:        z.string().nullable().optional(),
-  postcode:       z.string().nullable().optional(),
-  telephone:      z.string().nullable().optional(),
-  email:          z.string().email().nullable().optional().or(z.literal('')),
-  website:        z.string().nullable().optional(),
-  notes:          z.string().nullable().optional(),
+  name: z.string().min(1).max(200).optional(),
+  contact: z.string().nullable().optional(),
+  address: z.string().nullable().optional(),
+  postcode: z.string().nullable().optional(),
+  telephone: z.string().nullable().optional(),
+  email: z.string().email().nullable().optional().or(z.literal('')),
+  website: z.string().nullable().optional(),
+  notes: z.string().nullable().optional(),
   privateAddress: z.boolean().optional(),
-  accessible:     z.boolean().optional(),
+  accessible: z.boolean().optional(),
 });
 
 const VENUE_FIELDS = [
-  ['name',           'name'],
-  ['contact',        'contact'],
-  ['address',        'address'],
-  ['postcode',       'postcode'],
-  ['telephone',      'telephone'],
-  ['email',          'email'],
-  ['website',        'website'],
-  ['notes',          'notes'],
+  ['name', 'name'],
+  ['contact', 'contact'],
+  ['address', 'address'],
+  ['postcode', 'postcode'],
+  ['telephone', 'telephone'],
+  ['email', 'email'],
+  ['website', 'website'],
+  ['notes', 'notes'],
   ['privateAddress', 'private_address'],
-  ['accessible',     'accessible'],
+  ['accessible', 'accessible'],
 ];
 
 router.patch('/:id', requirePrivilege('group_venues', 'change'), async (req, res, next) => {
@@ -131,7 +131,7 @@ router.patch('/:id', requirePrivilege('group_venues', 'change'), async (req, res
     for (const [jsKey, col] of VENUE_FIELDS) {
       if (data[jsKey] !== undefined) {
         setClauses.push(`${col} = $${i++}`);
-        values.push(jsKey === 'email' ? (data[jsKey] || null) : data[jsKey]);
+        values.push(jsKey === 'email' ? data[jsKey] || null : data[jsKey]);
       }
     }
     if (setClauses.length === 0) {
@@ -156,7 +156,9 @@ router.patch('/:id', requirePrivilege('group_venues', 'change'), async (req, res
 router.delete('/:id', requirePrivilege('group_venues', 'delete'), async (req, res, next) => {
   try {
     const slug = req.user.tenantSlug;
-    const [existing] = await tenantQuery(slug, `SELECT id FROM venues WHERE id = $1`, [req.params.id]);
+    const [existing] = await tenantQuery(slug, `SELECT id FROM venues WHERE id = $1`, [
+      req.params.id,
+    ]);
     if (!existing) throw AppError('Venue not found.', 404);
     await tenantQuery(slug, `DELETE FROM venues WHERE id = $1`, [req.params.id]);
     res.json({ message: 'Venue deleted.' });

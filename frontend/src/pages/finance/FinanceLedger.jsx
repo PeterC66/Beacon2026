@@ -4,7 +4,12 @@
 
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
-import { finance as financeApi, groups as groupsApi, teams as teamsApi, calendar as calendarApi } from '../../lib/api.js';
+import {
+  finance as financeApi,
+  groups as groupsApi,
+  teams as teamsApi,
+  calendar as calendarApi,
+} from '../../lib/api.js';
 import { useAuth } from '../../context/AuthContext.jsx';
 import NavBar from '../../components/NavBar.jsx';
 import PageHeader from '../../components/PageHeader.jsx';
@@ -13,50 +18,64 @@ import ScrollButtons from '../../components/ScrollButtons.jsx';
 import { useSortedData } from '../../hooks/useSortedData.js';
 
 const VIEWS = ['account', 'category', 'group', 'event'];
-const VIEW_LABELS = { account: 'Account', category: 'Category', group: 'Group/Team', event: 'Event' };
+const VIEW_LABELS = {
+  account: 'Account',
+  category: 'Category',
+  group: 'Group/Team',
+  event: 'Event',
+};
 const thisYear = new Date().getFullYear();
 const YEARS = Array.from({ length: 6 }, (_, i) => thisYear - i);
 
-const fmtDate   = (d) => d ? new Date(d).toLocaleDateString('en-GB') : '';
-const fmtAmount = (n) => n != null ? `£${Number(n).toFixed(2)}` : '';
+const fmtDate = (d) => (d ? new Date(d).toLocaleDateString('en-GB') : '');
+const fmtAmount = (n) => (n != null ? `£${Number(n).toFixed(2)}` : '');
 
 export default function FinanceLedger() {
   const { can, tenant } = useAuth();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
 
-  const initView    = VIEWS.includes(searchParams.get('view')) ? searchParams.get('view') : 'account';
-  const initEventId = initView === 'event' ? (searchParams.get('eventId') || '') : '';
-  const initGroupId = initView === 'group' ? (searchParams.get('groupId') || '') : '';
+  const initView = VIEWS.includes(searchParams.get('view')) ? searchParams.get('view') : 'account';
+  const initEventId = initView === 'event' ? searchParams.get('eventId') || '' : '';
+  const initGroupId = initView === 'group' ? searchParams.get('groupId') || '' : '';
 
-  const [view,       setView]       = useState(initView);
-  const [year,       setYear]       = useState(thisYear);
-  const [accounts,   setAccounts]   = useState([]);
+  const [view, setView] = useState(initView);
+  const [year, setYear] = useState(thisYear);
+  const [accounts, setAccounts] = useState([]);
   const [categories, setCategories] = useState([]);
-  const [groups,     setGroups]     = useState([]);
-  const [selId,       setSelId]       = useState(initEventId || initGroupId);
+  const [groups, setGroups] = useState([]);
+  const [selId, setSelId] = useState(initEventId || initGroupId);
   const [groupFilter, setGroupFilter] = useState('');
-  const [eventSearch,  setEventSearch]  = useState('');
+  const [eventSearch, setEventSearch] = useState('');
   const [eventResults, setEventResults] = useState([]);
-  const [eventLabel,   setEventLabel]   = useState('');
-  const [txns,        setTxns]        = useState([]);
-  const [openingBal,  setOpeningBal]  = useState(0);
-  const [groupBf,     setGroupBf]     = useState([]);   // per-group B/F rows
-  const [loading,     setLoading]     = useState(false);
-  const [error,       setError]       = useState(null);
+  const [eventLabel, setEventLabel] = useState('');
+  const [txns, setTxns] = useState([]);
+  const [openingBal, setOpeningBal] = useState(0);
+  const [groupBf, setGroupBf] = useState([]); // per-group B/F rows
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
   // Bulk action state
-  const [selected,   setSelected]   = useState(new Set());
+  const [selected, setSelected] = useState(new Set());
   const [bulkAction, setBulkAction] = useState('');
-  const [bulkBusy,   setBulkBusy]   = useState(false);
+  const [bulkBusy, setBulkBusy] = useState(false);
 
   const tableRef = useRef(null);
 
   // Enrich transactions with a derived category_list string for sorting
-  const enrichedTxns = useMemo(() => txns.map((t) => ({
-    ...t,
-    category_list: Array.isArray(t.categories) ? t.categories.map((c) => c.name).filter(Boolean).join(', ') : '',
-  })), [txns]);
+  const enrichedTxns = useMemo(
+    () =>
+      txns.map((t) => ({
+        ...t,
+        category_list: Array.isArray(t.categories)
+          ? t.categories
+              .map((c) => c.name)
+              .filter(Boolean)
+              .join(', ')
+          : '',
+      })),
+    [txns],
+  );
 
   const { sorted, sortKey, sortDir, onSort } = useSortedData(enrichedTxns, 'date', 'asc');
 
@@ -73,7 +92,9 @@ export default function FinanceLedger() {
         setAccounts(acc.filter((a) => a.active));
         setCategories(cat.filter((c) => c.active));
         setGroups([...grp, ...tm]);
-      } catch (err) { setError(err.message); }
+      } catch (err) {
+        setError(err.message);
+      }
     }
     loadLists();
   }, []);
@@ -82,27 +103,45 @@ export default function FinanceLedger() {
   // so that a pre-selected eventId/groupId from the URL survives.
   const skipViewReset = useRef(true);
   useEffect(() => {
-    if (skipViewReset.current) { skipViewReset.current = false; return; }
-    setSelId(''); setTxns([]); setOpeningBal(0); setGroupBf([]);
-    setGroupFilter(''); setEventSearch(''); setEventResults([]); setEventLabel('');
+    if (skipViewReset.current) {
+      skipViewReset.current = false;
+      return;
+    }
+    setSelId('');
+    setTxns([]);
+    setOpeningBal(0);
+    setGroupBf([]);
+    setGroupFilter('');
+    setEventSearch('');
+    setEventResults([]);
+    setEventLabel('');
     setSelected(new Set());
   }, [view]);
 
   // When arriving with a pre-selected event ID, fetch its label
   useEffect(() => {
     if (!initEventId) return;
-    calendarApi.getEvent(initEventId).then((ev) => {
-      const lbl = ev.topic || ev.group_name || ev.event_type_name || 'Event';
-      const d = ev.event_date ? String(ev.event_date).slice(0, 10) : '';
-      setEventLabel(`${lbl}${d ? ` — ${d}` : ''}`);
-    }).catch(() => setEventLabel('Selected event'));
+    calendarApi
+      .getEvent(initEventId)
+      .then((ev) => {
+        const lbl = ev.topic || ev.group_name || ev.event_type_name || 'Event';
+        const d = ev.event_date ? String(ev.event_date).slice(0, 10) : '';
+        setEventLabel(`${lbl}${d ? ` — ${d}` : ''}`);
+      })
+      .catch(() => setEventLabel('Selected event'));
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Event search-as-you-type (matches TransactionEditor pattern)
   useEffect(() => {
-    if (view !== 'event' || eventSearch.length < 2) { setEventResults([]); return; }
+    if (view !== 'event' || eventSearch.length < 2) {
+      setEventResults([]);
+      return;
+    }
     const timer = setTimeout(() => {
-      calendarApi.searchEvents(eventSearch).then(setEventResults).catch(() => setEventResults([]));
+      calendarApi
+        .searchEvents(eventSearch)
+        .then(setEventResults)
+        .catch(() => setEventResults([]));
     }, 300);
     return () => clearTimeout(timer);
   }, [eventSearch, view]);
@@ -110,22 +149,29 @@ export default function FinanceLedger() {
   const filteredGroups = useMemo(() => {
     const q = groupFilter.trim().toLowerCase();
     if (!q) return groups;
-    return groups.filter((g) => g.name.toLowerCase().includes(q) || (g.short_name && g.short_name.toLowerCase().includes(q)));
+    return groups.filter(
+      (g) =>
+        g.name.toLowerCase().includes(q) ||
+        (g.short_name && g.short_name.toLowerCase().includes(q)),
+    );
   }, [groups, groupFilter]);
 
   // Fetch transactions when selId or year changes
   const loadTransactions = useCallback(async () => {
-    if (!selId) { setTxns([]); return; }
+    if (!selId) {
+      setTxns([]);
+      return;
+    }
     setLoading(true);
     setError(null);
     setSelected(new Set());
     try {
       const params = {};
       if (view !== 'event') params.year = year;
-      if (view === 'account')  params.accountId  = selId;
+      if (view === 'account') params.accountId = selId;
       if (view === 'category') params.categoryId = selId;
-      if (view === 'group')    params.groupId    = selId;
-      if (view === 'event')    params.eventId    = selId;
+      if (view === 'group') params.groupId = selId;
+      if (view === 'event') params.eventId = selId;
       const result = await financeApi.listTransactions(params);
       // Account view returns { transactions, openingBalance };
       // Group view may return { transactions, groupBf }; others return array
@@ -138,11 +184,16 @@ export default function FinanceLedger() {
         setOpeningBal(0);
         setGroupBf([]);
       }
-    } catch (err) { setError(err.message); }
-    finally { setLoading(false); }
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
   }, [selId, year, view]);
 
-  useEffect(() => { loadTransactions(); }, [loadTransactions]);
+  useEffect(() => {
+    loadTransactions();
+  }, [loadTransactions]);
 
   // Running balance — computed for all views.
   // Account view uses the opening balance; other views start from 0.
@@ -152,7 +203,7 @@ export default function FinanceLedger() {
     return sorted.map((t) => {
       if (!t.pending) {
         const amt = Number(view === 'category' ? (t.category_amount ?? t.amount) : t.amount);
-        if (t.type === 'in')  balance += amt;
+        if (t.type === 'in') balance += amt;
         if (t.type === 'out') balance -= amt;
       }
       return { ...t, _balance: t.pending ? null : balance };
@@ -161,8 +212,9 @@ export default function FinanceLedger() {
 
   // Totals — in category view use the split category_amount, not the full transaction amount
   const totals = useMemo(() => {
-    const amt = (t) => view === 'category' ? Number(t.category_amount ?? t.amount) : Number(t.amount);
-    const inTotal  = txns.filter((t) => t.type === 'in').reduce((s, t) => s + amt(t), 0);
+    const amt = (t) =>
+      view === 'category' ? Number(t.category_amount ?? t.amount) : Number(t.amount);
+    const inTotal = txns.filter((t) => t.type === 'in').reduce((s, t) => s + amt(t), 0);
     const outTotal = txns.filter((t) => t.type === 'out').reduce((s, t) => s + amt(t), 0);
     return { in: inTotal, out: outTotal };
   }, [txns, view]);
@@ -177,7 +229,8 @@ export default function FinanceLedger() {
   const toggleSelect = (id) => {
     setSelected((prev) => {
       const next = new Set(prev);
-      if (next.has(id)) next.delete(id); else next.add(id);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
       return next;
     });
   };
@@ -203,16 +256,23 @@ export default function FinanceLedger() {
       }
       await loadTransactions();
       setBulkAction('');
-    } catch (err) { setError(err.message); }
-    finally { setBulkBusy(false); }
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setBulkBusy(false);
+    }
   }
 
   const showBulk = view === 'account' && can('finance_transactions', 'change');
 
   const navLinks = [
     { label: 'Home', to: '/' },
-    ...(can('finance_transactions', 'create') ? [{ label: 'Add transaction', to: '/finance/transactions/new' }] : []),
-    ...(can('finance_batches', 'view') ? [{ label: 'Credit batches', to: '/finance/batches' }] : []),
+    ...(can('finance_transactions', 'create')
+      ? [{ label: 'Add transaction', to: '/finance/transactions/new' }]
+      : []),
+    ...(can('finance_batches', 'view')
+      ? [{ label: 'Credit batches', to: '/finance/batches' }]
+      : []),
   ];
 
   const TH = 'px-2 py-2.5 font-normal';
@@ -236,9 +296,14 @@ export default function FinanceLedger() {
               {VIEWS.map((v) => (
                 <button
                   key={v}
-                  onClick={() => { setView(v); setSearchParams({ view: v }); }}
+                  onClick={() => {
+                    setView(v);
+                    setSearchParams({ view: v });
+                  }}
                   className={`px-3 py-1.5 rounded text-sm font-medium transition-colors ${
-                    view === v ? 'bg-blue-600 text-white' : 'border border-slate-300 text-slate-700 hover:bg-slate-50'
+                    view === v
+                      ? 'bg-blue-600 text-white'
+                      : 'border border-slate-300 text-slate-700 hover:bg-slate-50'
                   }`}
                 >
                   {VIEW_LABELS[v]}
@@ -249,7 +314,9 @@ export default function FinanceLedger() {
 
           {/* Selector */}
           <div className="flex-1 min-w-[180px]">
-            <label className="block text-xs font-medium text-slate-600 mb-1">{VIEW_LABELS[view]}</label>
+            <label className="block text-xs font-medium text-slate-600 mb-1">
+              {VIEW_LABELS[view]}
+            </label>
             {view === 'group' && (
               <input
                 type="text"
@@ -266,9 +333,16 @@ export default function FinanceLedger() {
                   <span className="flex-1 text-slate-700">{eventLabel || 'Selected event'}</span>
                   <button
                     type="button"
-                    onClick={() => { setSelId(''); setEventLabel(''); setEventSearch(''); setEventResults([]); }}
+                    onClick={() => {
+                      setSelId('');
+                      setEventLabel('');
+                      setEventSearch('');
+                      setEventResults([]);
+                    }}
                     className="text-red-600 hover:underline text-xs"
-                  >Clear</button>
+                  >
+                    Clear
+                  </button>
                 </div>
               ) : (
                 <>
@@ -297,7 +371,8 @@ export default function FinanceLedger() {
                               }}
                               className="block w-full text-left px-2 py-1 hover:bg-blue-50"
                             >
-                              {lbl}{d ? ` — ${d}` : ''}
+                              {lbl}
+                              {d ? ` — ${d}` : ''}
                             </button>
                           </li>
                         );
@@ -314,14 +389,29 @@ export default function FinanceLedger() {
                 className="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 <option value="">— select —</option>
-                {view === 'account'  && accounts.map((a)  => <option key={a.id}  value={a.id}>{a.name}</option>)}
-                {view === 'category' && categories.map((c) => <option key={c.id}  value={c.id}>{c.name}</option>)}
-                {view === 'group'    && (
+                {view === 'account' &&
+                  accounts.map((a) => (
+                    <option key={a.id} value={a.id}>
+                      {a.name}
+                    </option>
+                  ))}
+                {view === 'category' &&
+                  categories.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.name}
+                    </option>
+                  ))}
+                {view === 'group' && (
                   <>
                     <option value="all">All groups &amp; teams</option>
                     {filteredGroups.map((g) => (
-                      <option key={g.id} value={g.id} style={g.status === 'inactive' ? { color: '#dc2626' } : {}}>
-                        {g.short_name || g.name}{g.status === 'inactive' ? ' (inactive)' : ''}
+                      <option
+                        key={g.id}
+                        value={g.id}
+                        style={g.status === 'inactive' ? { color: '#dc2626' } : {}}
+                      >
+                        {g.short_name || g.name}
+                        {g.status === 'inactive' ? ' (inactive)' : ''}
                       </option>
                     ))}
                   </>
@@ -340,23 +430,34 @@ export default function FinanceLedger() {
                 onChange={(e) => setYear(Number(e.target.value))}
                 className="border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
-                {YEARS.map((y) => <option key={y} value={y}>{y}</option>)}
+                {YEARS.map((y) => (
+                  <option key={y} value={y}>
+                    {y}
+                  </option>
+                ))}
               </select>
             </div>
           )}
         </div>
 
         {loading && <p className="text-center text-slate-500 py-8">Loading…</p>}
-        {error   && <p className="text-center text-red-600 py-4">Error: {error}</p>}
+        {error && <p className="text-center text-red-600 py-4">Error: {error}</p>}
 
         {!loading && selId && !error && (
           <>
             {txns.length === 0 && view === 'event' ? (
-              <p className="text-center text-slate-400 py-8">No transactions linked to this event.</p>
+              <p className="text-center text-slate-400 py-8">
+                No transactions linked to this event.
+              </p>
             ) : txns.length === 0 && view !== 'account' ? (
-              <p className="text-center text-slate-400 py-8">No transactions found for this {view} in {year}.</p>
+              <p className="text-center text-slate-400 py-8">
+                No transactions found for this {view} in {year}.
+              </p>
             ) : txns.length === 0 && view === 'account' ? (
-              <p className="text-center text-slate-400 py-8">No transactions found for this {view} in {year}. Opening balance: {fmtAmount(openingBal)}</p>
+              <p className="text-center text-slate-400 py-8">
+                No transactions found for this {view} in {year}. Opening balance:{' '}
+                {fmtAmount(openingBal)}
+              </p>
             ) : (
               <>
                 <div className="overflow-x-auto rounded-lg shadow-sm" ref={tableRef}>
@@ -374,17 +475,96 @@ export default function FinanceLedger() {
                             />
                           </th>
                         )}
-                        {view !== 'account' && <SortableHeader col="account_name" label="Account" sortKey={sortKey} sortDir={sortDir} onSort={onSort} className={TH} />}
-                        <SortableHeader col="transaction_number" label="#"            sortKey={sortKey} sortDir={sortDir} onSort={onSort} className={TH} />
-                        <SortableHeader col="date"               label="Date"         sortKey={sortKey} sortDir={sortDir} onSort={onSort} className={TH} />
-                        <SortableHeader col="batch_no"           label="Batch"        sortKey={sortKey} sortDir={sortDir} onSort={onSort} className={TH} />
-                        <SortableHeader col="from_to"            label="From/To"      sortKey={sortKey} sortDir={sortDir} onSort={onSort} className={TH} />
-                        <SortableHeader col="group_name"         label="Group/Team"   sortKey={sortKey} sortDir={sortDir} onSort={onSort} className={TH} />
-                        <SortableHeader col="member_1_no"        label="Mem#"         sortKey={sortKey} sortDir={sortDir} onSort={onSort} className={TH} />
-                        <SortableHeader col="detail"             label="Detail"       sortKey={sortKey} sortDir={sortDir} onSort={onSort} className={TH} />
-                        <SortableHeader col="category_list"      label="Category"     sortKey={sortKey} sortDir={sortDir} onSort={onSort} className={TH} />
-                        <SortableHeader col="payment_ref"        label="Payment Ref"  sortKey={sortKey} sortDir={sortDir} onSort={onSort} className={TH} />
-                        <SortableHeader col="payment_method"     label="Method"       sortKey={sortKey} sortDir={sortDir} onSort={onSort} className={TH} />
+                        {view !== 'account' && (
+                          <SortableHeader
+                            col="account_name"
+                            label="Account"
+                            sortKey={sortKey}
+                            sortDir={sortDir}
+                            onSort={onSort}
+                            className={TH}
+                          />
+                        )}
+                        <SortableHeader
+                          col="transaction_number"
+                          label="#"
+                          sortKey={sortKey}
+                          sortDir={sortDir}
+                          onSort={onSort}
+                          className={TH}
+                        />
+                        <SortableHeader
+                          col="date"
+                          label="Date"
+                          sortKey={sortKey}
+                          sortDir={sortDir}
+                          onSort={onSort}
+                          className={TH}
+                        />
+                        <SortableHeader
+                          col="batch_no"
+                          label="Batch"
+                          sortKey={sortKey}
+                          sortDir={sortDir}
+                          onSort={onSort}
+                          className={TH}
+                        />
+                        <SortableHeader
+                          col="from_to"
+                          label="From/To"
+                          sortKey={sortKey}
+                          sortDir={sortDir}
+                          onSort={onSort}
+                          className={TH}
+                        />
+                        <SortableHeader
+                          col="group_name"
+                          label="Group/Team"
+                          sortKey={sortKey}
+                          sortDir={sortDir}
+                          onSort={onSort}
+                          className={TH}
+                        />
+                        <SortableHeader
+                          col="member_1_no"
+                          label="Mem#"
+                          sortKey={sortKey}
+                          sortDir={sortDir}
+                          onSort={onSort}
+                          className={TH}
+                        />
+                        <SortableHeader
+                          col="detail"
+                          label="Detail"
+                          sortKey={sortKey}
+                          sortDir={sortDir}
+                          onSort={onSort}
+                          className={TH}
+                        />
+                        <SortableHeader
+                          col="category_list"
+                          label="Category"
+                          sortKey={sortKey}
+                          sortDir={sortDir}
+                          onSort={onSort}
+                          className={TH}
+                        />
+                        <SortableHeader
+                          col="payment_ref"
+                          label="Payment Ref"
+                          sortKey={sortKey}
+                          sortDir={sortDir}
+                          onSort={onSort}
+                          className={TH}
+                        />
+                        <SortableHeader
+                          col="payment_method"
+                          label="Method"
+                          sortKey={sortKey}
+                          sortDir={sortDir}
+                          onSort={onSort}
+                          className={TH}
+                        />
                         <th className={`${TH} text-right`}>In</th>
                         <th className={`${TH} text-right`}>Out</th>
                         <th className={`${TH} text-right`}>Balance</th>
@@ -395,38 +575,63 @@ export default function FinanceLedger() {
                       {view === 'account' && (
                         <tr className="bg-slate-100 border-b border-slate-200 italic text-slate-600">
                           {showBulk && <td className="px-2 py-2"></td>}
-                          <td className="px-2 py-2" colSpan={dataLeadingCols}>Balance brought forward</td>
+                          <td className="px-2 py-2" colSpan={dataLeadingCols}>
+                            Balance brought forward
+                          </td>
                           <td className="px-2 py-2"></td>
                           <td className="px-2 py-2"></td>
-                          <td className="px-2 py-2 text-right font-medium text-slate-700">{fmtAmount(openingBal)}</td>
+                          <td className="px-2 py-2 text-right font-medium text-slate-700">
+                            {fmtAmount(openingBal)}
+                          </td>
                           <td className="px-2 py-2"></td>
                         </tr>
                       )}
-                      {view === 'group' && groupBf.length > 0 && groupBf.map((bf) => (
-                        <tr key={`bf-${bf.group_id}`} className="bg-slate-100 border-b border-slate-200 italic text-slate-600">
-                          <td className="px-2 py-2" colSpan={dataLeadingCols}>
-                            Balance b/f{bf.group_name ? ` — ${bf.group_short_name || bf.group_name}` : ''}
-                          </td>
-                          <td className="px-2 py-2 text-right text-green-700">{bf.balance >= 0 ? fmtAmount(bf.balance) : ''}</td>
-                          <td className="px-2 py-2 text-right text-red-700">{bf.balance < 0 ? fmtAmount(Math.abs(bf.balance)) : ''}</td>
-                          <td className="px-2 py-2"></td>
-                          <td className="px-2 py-2"></td>
-                        </tr>
-                      ))}
-                      {view === 'group' && groupBf.length > 0 && (() => {
-                        const totalBf = groupBf.reduce((s, bf) => s + bf.balance, 0);
-                        return (
-                          <tr className="bg-slate-200 border-b border-slate-300 font-bold text-slate-700">
-                            <td className="px-2 py-2" colSpan={dataLeadingCols}>Total Brought Forward</td>
-                            <td className="px-2 py-2 text-right text-green-700">{totalBf >= 0 ? fmtAmount(totalBf) : ''}</td>
-                            <td className="px-2 py-2 text-right text-red-700">{totalBf < 0 ? fmtAmount(Math.abs(totalBf)) : ''}</td>
+                      {view === 'group' &&
+                        groupBf.length > 0 &&
+                        groupBf.map((bf) => (
+                          <tr
+                            key={`bf-${bf.group_id}`}
+                            className="bg-slate-100 border-b border-slate-200 italic text-slate-600"
+                          >
+                            <td className="px-2 py-2" colSpan={dataLeadingCols}>
+                              Balance b/f
+                              {bf.group_name ? ` — ${bf.group_short_name || bf.group_name}` : ''}
+                            </td>
+                            <td className="px-2 py-2 text-right text-green-700">
+                              {bf.balance >= 0 ? fmtAmount(bf.balance) : ''}
+                            </td>
+                            <td className="px-2 py-2 text-right text-red-700">
+                              {bf.balance < 0 ? fmtAmount(Math.abs(bf.balance)) : ''}
+                            </td>
                             <td className="px-2 py-2"></td>
                             <td className="px-2 py-2"></td>
                           </tr>
-                        );
-                      })()}
+                        ))}
+                      {view === 'group' &&
+                        groupBf.length > 0 &&
+                        (() => {
+                          const totalBf = groupBf.reduce((s, bf) => s + bf.balance, 0);
+                          return (
+                            <tr className="bg-slate-200 border-b border-slate-300 font-bold text-slate-700">
+                              <td className="px-2 py-2" colSpan={dataLeadingCols}>
+                                Total Brought Forward
+                              </td>
+                              <td className="px-2 py-2 text-right text-green-700">
+                                {totalBf >= 0 ? fmtAmount(totalBf) : ''}
+                              </td>
+                              <td className="px-2 py-2 text-right text-red-700">
+                                {totalBf < 0 ? fmtAmount(Math.abs(totalBf)) : ''}
+                              </td>
+                              <td className="px-2 py-2"></td>
+                              <td className="px-2 py-2"></td>
+                            </tr>
+                          );
+                        })()}
                       {withBalance.map((t, i) => (
-                        <tr key={t.id} className={`border-b border-slate-100 ${t.refund_of_id ? 'bg-red-50 text-red-700' : i % 2 === 0 ? 'bg-yellow-50' : 'bg-white'}`}>
+                        <tr
+                          key={t.id}
+                          className={`border-b border-slate-100 ${t.refund_of_id ? 'bg-red-50 text-red-700' : i % 2 === 0 ? 'bg-yellow-50' : 'bg-white'}`}
+                        >
                           {showBulk && (
                             <td className="px-2 py-2">
                               {isEligible(t) && (
@@ -458,17 +663,25 @@ export default function FinanceLedger() {
                               )}
                               {t.refund_of_id && (
                                 <button
-                                  onClick={() => navigate(`/finance/transactions/${t.refund_of_id}`)}
+                                  onClick={() =>
+                                    navigate(`/finance/transactions/${t.refund_of_id}`)
+                                  }
                                   className="text-red-500 hover:text-red-700 text-xs leading-none"
                                   title={`Refund of #${t.refund_of_txn_number}`}
-                                >↩</button>
+                                >
+                                  ↩
+                                </button>
                               )}
                               {t.refunded_by_id && (
                                 <button
-                                  onClick={() => navigate(`/finance/transactions/${t.refunded_by_id}`)}
+                                  onClick={() =>
+                                    navigate(`/finance/transactions/${t.refunded_by_id}`)
+                                  }
                                   className="text-blue-500 hover:text-blue-700 text-xs leading-none"
                                   title={`Refunded by #${t.refunded_by_txn_number}`}
-                                >↪</button>
+                                >
+                                  ↪
+                                </button>
                               )}
                             </div>
                           </td>
@@ -480,7 +693,11 @@ export default function FinanceLedger() {
                               <button
                                 onClick={() => navigate(`/finance/batches?batchId=${t.batch_id}`)}
                                 className="text-blue-700 hover:underline"
-                                title={t.batch_description ? `${t.batch_no}: ${t.batch_description}` : t.batch_no}
+                                title={
+                                  t.batch_description
+                                    ? `${t.batch_no}: ${t.batch_description}`
+                                    : t.batch_no
+                                }
                               >
                                 {t.batch_no}
                               </button>
@@ -489,17 +706,30 @@ export default function FinanceLedger() {
                             )}
                           </td>
                           {/* From/To */}
-                          <td className="px-2 py-2 max-w-[140px] truncate" title={t.from_to}>{t.from_to}</td>
+                          <td className="px-2 py-2 max-w-[140px] truncate" title={t.from_to}>
+                            {t.from_to}
+                          </td>
                           {/* Group / Event */}
-                          <td className="px-2 py-2 max-w-[120px] truncate" title={t.group_name ?? ''}>
+                          <td
+                            className="px-2 py-2 max-w-[120px] truncate"
+                            title={t.group_name ?? ''}
+                          >
                             {t.group_name && t.group_id ? (
-                              <Link to={`/${t.group_type === 'team' ? 'teams' : 'groups'}/${t.group_id}`} className="text-blue-700 hover:underline">{t.group_short_name || t.group_name}</Link>
+                              <Link
+                                to={`/${t.group_type === 'team' ? 'teams' : 'groups'}/${t.group_id}`}
+                                className="text-blue-700 hover:underline"
+                              >
+                                {t.group_short_name || t.group_name}
+                              </Link>
                             ) : (
                               t.group_short_name || t.group_name || ''
                             )}
                             {t.event_id && (
                               <div className="text-xs">
-                                <Link to={`/calendar/events/${t.event_id}`} className="text-blue-600 hover:underline">
+                                <Link
+                                  to={`/calendar/events/${t.event_id}`}
+                                  className="text-blue-600 hover:underline"
+                                >
                                   {t.event_label || t.event_topic || 'Event'}
                                 </Link>
                               </div>
@@ -508,35 +738,69 @@ export default function FinanceLedger() {
                           {/* Mem# — 2nd member shown below when present */}
                           <td className="px-2 py-2">
                             {t.member_1_no && t.member_id_1 && (
-                              <Link to={`/members/${t.member_id_1}`} className="text-blue-700 hover:underline font-mono block" title={t.member_1_name}>{t.member_1_no}</Link>
+                              <Link
+                                to={`/members/${t.member_id_1}`}
+                                className="text-blue-700 hover:underline font-mono block"
+                                title={t.member_1_name}
+                              >
+                                {t.member_1_no}
+                              </Link>
                             )}
                             {t.member_2_no && t.member_id_2 && (
-                              <Link to={`/members/${t.member_id_2}`} className="text-blue-700 hover:underline font-mono text-xs block" title={t.member_2_name}>{t.member_2_no}</Link>
+                              <Link
+                                to={`/members/${t.member_id_2}`}
+                                className="text-blue-700 hover:underline font-mono text-xs block"
+                                title={t.member_2_name}
+                              >
+                                {t.member_2_no}
+                              </Link>
                             )}
                           </td>
                           {/* Detail */}
-                          <td className="px-2 py-2 max-w-[180px] truncate" title={t.detail}>{t.detail}</td>
+                          <td className="px-2 py-2 max-w-[180px] truncate" title={t.detail}>
+                            {t.detail}
+                          </td>
                           {/* Category */}
-                          <td className="px-2 py-2 max-w-[140px] truncate" title={t.category_list}>{t.category_list}</td>
+                          <td className="px-2 py-2 max-w-[140px] truncate" title={t.category_list}>
+                            {t.category_list}
+                          </td>
                           {/* Payment Ref */}
                           <td className="px-2 py-2">{t.payment_ref ?? ''}</td>
                           {/* Method */}
                           <td className="px-2 py-2">{t.payment_method}</td>
                           {/* In */}
-                          <td className="px-2 py-2 text-right text-green-700">{t.type === 'in'  ? fmtAmount(view === 'category' ? t.category_amount : t.amount) : ''}</td>
+                          <td className="px-2 py-2 text-right text-green-700">
+                            {t.type === 'in'
+                              ? fmtAmount(view === 'category' ? t.category_amount : t.amount)
+                              : ''}
+                          </td>
                           {/* Out */}
-                          <td className="px-2 py-2 text-right text-red-700">{t.type === 'out' ? fmtAmount(view === 'category' ? t.category_amount : t.amount) : ''}</td>
+                          <td className="px-2 py-2 text-right text-red-700">
+                            {t.type === 'out'
+                              ? fmtAmount(view === 'category' ? t.category_amount : t.amount)
+                              : ''}
+                          </td>
                           {/* Balance */}
-                          <td className={`px-2 py-2 text-right font-medium ${
-                            t.pending ? 'text-slate-400 italic' : (t._balance >= 0 ? 'text-slate-700' : 'text-red-600')
-                          }`}>
+                          <td
+                            className={`px-2 py-2 text-right font-medium ${
+                              t.pending
+                                ? 'text-slate-400 italic'
+                                : t._balance >= 0
+                                  ? 'text-slate-700'
+                                  : 'text-red-600'
+                            }`}
+                          >
                             {t.pending ? '' : fmtAmount(t._balance)}
                           </td>
                           {/* Cleared */}
                           <td className="px-2 py-2 text-center text-xs text-slate-500">
-                            {t.pending
-                              ? <span className="text-amber-600 font-medium">Pending</span>
-                              : t.cleared_at ? fmtDate(t.cleared_at) : ''}
+                            {t.pending ? (
+                              <span className="text-amber-600 font-medium">Pending</span>
+                            ) : t.cleared_at ? (
+                              fmtDate(t.cleared_at)
+                            ) : (
+                              ''
+                            )}
                           </td>
                         </tr>
                       ))}
@@ -544,9 +808,18 @@ export default function FinanceLedger() {
                     <tfoot>
                       <tr className="bg-slate-100 border-t-2 border-slate-300 font-medium text-sm">
                         {showBulk && <td></td>}
-                        <td colSpan={dataLeadingCols} className="px-2 py-2 text-right text-slate-600">Totals:</td>
-                        <td className="px-2 py-2 text-right text-green-700">{fmtAmount(totals.in)}</td>
-                        <td className="px-2 py-2 text-right text-red-700">{fmtAmount(totals.out)}</td>
+                        <td
+                          colSpan={dataLeadingCols}
+                          className="px-2 py-2 text-right text-slate-600"
+                        >
+                          Totals:
+                        </td>
+                        <td className="px-2 py-2 text-right text-green-700">
+                          {fmtAmount(totals.in)}
+                        </td>
+                        <td className="px-2 py-2 text-right text-red-700">
+                          {fmtAmount(totals.out)}
+                        </td>
                         <td></td>
                         <td></td>
                       </tr>
@@ -581,7 +854,11 @@ export default function FinanceLedger() {
                 <div className="mt-4 flex justify-center gap-3">
                   {can('finance_transactions', 'create') && (
                     <button
-                      onClick={() => navigate(`/finance/transactions/new${selId && view === 'account' ? `?accountId=${selId}` : ''}`)}
+                      onClick={() =>
+                        navigate(
+                          `/finance/transactions/new${selId && view === 'account' ? `?accountId=${selId}` : ''}`,
+                        )
+                      }
                       className="bg-blue-600 hover:bg-blue-700 text-white rounded px-5 py-2 text-sm font-medium transition-colors"
                     >
                       Add transaction
@@ -602,7 +879,9 @@ export default function FinanceLedger() {
         )}
 
         {!loading && !selId && !error && (
-          <p className="text-center text-slate-400 py-12">Select a {view} above to view transactions.</p>
+          <p className="text-center text-slate-400 py-12">
+            Select a {view} above to view transactions.
+          </p>
         )}
       </div>
 
