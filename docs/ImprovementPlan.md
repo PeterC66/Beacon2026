@@ -158,7 +158,7 @@ still open where marked open, and added one new finding:
 Each chunk is sized for one session. Recommended order below; chunks 4+ are
 largely independent of each other unless noted.
 
-### Chunk 1 — Fix the tenant-context bug (S1) ⚠️ do first
+### Chunk 1 — Fix the tenant-context bug (S1) ✅ Done (2026-06-12)
 - Replace `req.tenantSlug` with `req.user.tenantSlug` throughout
   `routes/email.js` and `routes/letters.js`.
 - Harden `withTenant()`/`tenantQuery()` in `utils/db.js` to reject non-string

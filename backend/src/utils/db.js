@@ -21,6 +21,13 @@ export const prisma = new PrismaClient({
  * @param {(db: PrismaClient) => Promise<T>} callback
  */
 export async function withTenant(tenantSlug, callback) {
+  // Reject non-string slugs before the regex — `.test(undefined)` coerces to
+  // the string "undefined", which passes the alphanumeric check and silently
+  // targets a non-existent u3a_undefined schema. Fail loudly instead.
+  if (typeof tenantSlug !== 'string') {
+    throw new Error(`Invalid tenant slug: expected string, got ${typeof tenantSlug}`);
+  }
+
   const schema = `u3a_${tenantSlug}`;
 
   // Validate slug to prevent SQL injection (slugs must be alphanumeric + underscores)
@@ -44,6 +51,12 @@ export async function withTenant(tenantSlug, callback) {
  * @param {any[]} params
  */
 export async function tenantQuery(tenantSlug, sql, params = []) {
+  // See withTenant() — guard against a non-string (e.g. undefined) slug that
+  // would otherwise coerce to "undefined" and pass the regex below.
+  if (typeof tenantSlug !== 'string') {
+    throw new Error(`Invalid tenant slug: expected string, got ${typeof tenantSlug}`);
+  }
+
   const schema = `u3a_${tenantSlug}`;
   if (!/^[a-z0-9_]+$/.test(tenantSlug)) {
     throw new Error(`Invalid tenant slug: ${tenantSlug}`);
