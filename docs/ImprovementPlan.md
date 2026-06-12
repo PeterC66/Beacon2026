@@ -185,13 +185,22 @@ KNOWN-ISSUES; neutralise placeholder credentials in `render.yaml` and
 `e2e/.env.example`; add a short note at the top of CLAUDE.md that it is
 AI-session tooling, with README as the human entry point.
 
-### Chunk 3 — Linting & formatting baseline (T1, T2 part)
+### Chunk 3 — Linting & formatting baseline (T1, T2 part) ✅ Done (2026-06-12)
 - Add ESLint (flat config) + Prettier to backend and frontend with
   `react`/`react-hooks` plugins; add `lint` scripts and run them in `ci.yml`.
 - Fix or explicitly disable the violations the first run surfaces (expect a
   large but mechanical diff — keep it a separate commit from any logic change).
 - Add `.editorconfig`; align Node 20 vs 22 across workflows.
 - This chunk before the refactor chunks, so later diffs stay clean.
+
+**Notes:** `eslint-plugin-react-hooks` pinned to v5 (the stable
+`rules-of-hooks` + `exhaustive-deps` pair). The v7 experimental rules
+(`set-state-in-effect`, `immutability`) flagged 50+ sites that would need
+real refactors — deferred, logged in `KNOWN-ISSUES.md`. `react/no-unescaped-entities`
+disabled (noise). `exhaustive-deps` left as a warning (30 sites). Backend
+27 errors and frontend 32 errors all fixed; Prettier reformat committed
+separately. Node bumped 20 → 22 in `ci.yml`; `lint` + `format:check` now
+gate CI.
 
 ### Chunk 4 — Security: auth & enumeration (S2–S8, S11, S12)
 - Centralise password policy into one shared Zod schema; apply to
