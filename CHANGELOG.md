@@ -19,6 +19,27 @@ Format: `## [version] — YYYY-MM-DD` with bullet points per change.
   `tenantQuery()` accepts the coerced string `"undefined"` as a slug —
   see Chunk 1. No code changes this session.
 
+### Fixed
+- **Tenant-context bug in email & letters routes (ImprovementPlan Chunk 1,
+  finding S1)** — `routes/email.js` (19 sites) and `routes/letters.js`
+  (5 sites) read `req.tenantSlug`, which is only set by the public-routes
+  middleware and is `undefined` on these authenticated routes. The slug
+  regex in `tenantQuery()` coerced `undefined` to the string `"undefined"`,
+  which *passed* validation and targeted a non-existent `u3a_undefined`
+  schema, so every query on the Email and Letters screens failed at
+  runtime against a real database. Mocked unit tests could not catch this.
+  Both files now use `req.user.tenantSlug` (the authenticated user's
+  tenant, matching `members.js` and every other authenticated route).
+
+### Security
+- **`tenantQuery()` / `withTenant()` reject non-string slugs** —
+  `utils/db.js` now throws `Invalid tenant slug: expected string…` before
+  the regex check, so a missing/undefined slug fails loudly instead of
+  silently coercing to `"undefined"` and querying the wrong schema.
+  Regression tests added: `db.test.js` (guard rejects undefined/null/bad
+  slugs), plus tenant-scope assertions in `letters.test.js` and a new
+  `email.test.js` confirming queries are scoped to the caller's tenant.
+
 ## [Unreleased] — 2026-06-10
 
 ### Security
