@@ -10,20 +10,26 @@ import PageHeader from '../../components/PageHeader.jsx';
 
 export default function ReportList() {
   const { can, isSiteAdmin, tenant } = useAuth();
-  const [list, setList]       = useState([]);
+  const [list, setList] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError]     = useState(null);
+  const [error, setError] = useState(null);
 
   const canRun = can('reports', 'run');
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => {
+    load();
+  }, []);
 
   async function load() {
     setLoading(true);
     setError(null);
-    try { setList(await reportsApi.list()); }
-    catch (err) { setError(err.message); }
-    finally    { setLoading(false); }
+    try {
+      setList(await reportsApi.list());
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
   }
 
   async function handleDelete(id, name) {
@@ -38,10 +44,12 @@ export default function ReportList() {
 
   const navLinks = [
     { label: 'Home', to: '/' },
-    ...(isSiteAdmin ? [
-      { label: 'New report',   to: '/reports/new' },
-      { label: 'Ad-hoc SQL',   to: '/reports/sql' },
-    ] : []),
+    ...(isSiteAdmin
+      ? [
+          { label: 'New report', to: '/reports/new' },
+          { label: 'Ad-hoc SQL', to: '/reports/sql' },
+        ]
+      : []),
   ];
 
   return (
@@ -72,19 +80,35 @@ export default function ReportList() {
               </thead>
               <tbody>
                 {list.map((r, i) => (
-                  <tr key={r.id} className={`border-b border-slate-100 ${i % 2 === 0 ? 'bg-yellow-50' : 'bg-white'}`}>
+                  <tr
+                    key={r.id}
+                    className={`border-b border-slate-100 ${i % 2 === 0 ? 'bg-yellow-50' : 'bg-white'}`}
+                  >
                     <td className="px-4 py-2">
-                      {canRun
-                        ? <Link to={`/reports/${r.id}`} className="text-blue-700 hover:underline">{r.name}</Link>
-                        : r.name}
+                      {canRun ? (
+                        <Link to={`/reports/${r.id}`} className="text-blue-700 hover:underline">
+                          {r.name}
+                        </Link>
+                      ) : (
+                        r.name
+                      )}
                     </td>
                     <td className="px-4 py-2 text-slate-600">{r.description ?? ''}</td>
                     <td className="px-4 py-2 text-right whitespace-nowrap space-x-3">
                       {isSiteAdmin && (
                         <>
-                          <Link to={`/reports/${r.id}/edit`} className="text-blue-600 hover:underline text-xs">Edit</Link>
-                          <button onClick={() => handleDelete(r.id, r.name)}
-                            className="text-red-600 hover:underline text-xs">Delete</button>
+                          <Link
+                            to={`/reports/${r.id}/edit`}
+                            className="text-blue-600 hover:underline text-xs"
+                          >
+                            Edit
+                          </Link>
+                          <button
+                            onClick={() => handleDelete(r.id, r.name)}
+                            className="text-red-600 hover:underline text-xs"
+                          >
+                            Delete
+                          </button>
                         </>
                       )}
                     </td>

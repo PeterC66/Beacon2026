@@ -20,12 +20,20 @@ vi.mock('../lib/api.js', () => ({
 
 describe('AuditLog page', () => {
   it('renders without crashing', () => {
-    const { container } = render(<MemoryRouter><AuditLog /></MemoryRouter>);
+    const { container } = render(
+      <MemoryRouter>
+        <AuditLog />
+      </MemoryRouter>,
+    );
     expect(container).toBeTruthy();
   });
 
   it('shows the Audit Log heading', () => {
-    const { getByText } = render(<MemoryRouter><AuditLog /></MemoryRouter>);
+    const { getByText } = render(
+      <MemoryRouter>
+        <AuditLog />
+      </MemoryRouter>,
+    );
     expect(getByText('Audit Log')).toBeInTheDocument();
   });
 });

@@ -6,14 +6,14 @@ import request from 'supertest';
 import { makeAuthHeader } from './helpers.js';
 
 vi.mock('../utils/redis.js', () => ({
-  isSessionInvalidated:   vi.fn().mockResolvedValue(false),
+  isSessionInvalidated: vi.fn().mockResolvedValue(false),
   invalidateUserSessions: vi.fn().mockResolvedValue(undefined),
 }));
 
 vi.mock('../utils/db.js', () => ({
-  prisma:      { $disconnect: vi.fn() },
+  prisma: { $disconnect: vi.fn() },
   tenantQuery: vi.fn(),
-  withTenant:  vi.fn(),
+  withTenant: vi.fn(),
 }));
 
 const { default: app } = await import('../app.js');
@@ -22,8 +22,13 @@ const { tenantQuery } = await import('../utils/db.js');
 const AUTH = makeAuthHeader();
 
 const SAMPLE_OFFICE = {
-  id: 'o1', name: 'Chairman', member_id: 'm1', office_email: null,
-  notify_online_join: false, member_forenames: 'John', member_surname: 'Smith',
+  id: 'o1',
+  name: 'Chairman',
+  member_id: 'm1',
+  office_email: null,
+  notify_online_join: false,
+  member_forenames: 'John',
+  member_surname: 'Smith',
   member_status: 'Current',
 };
 
@@ -61,7 +66,9 @@ describe('GET /offices/members', () => {
   beforeEach(() => vi.clearAllMocks());
 
   it('returns 200 with member list', async () => {
-    tenantQuery.mockResolvedValueOnce([{ id: 'm1', forenames: 'John', surname: 'Smith', status: 'Current' }]);
+    tenantQuery.mockResolvedValueOnce([
+      { id: 'm1', forenames: 'John', surname: 'Smith', status: 'Current' },
+    ]);
 
     const res = await request(app).get('/offices/members').set('Authorization', AUTH);
 
@@ -76,7 +83,13 @@ describe('POST /offices', () => {
   beforeEach(() => vi.clearAllMocks());
 
   it('creates office and returns 201', async () => {
-    const created = { id: 'o2', name: 'Secretary', member_id: null, office_email: null, notify_online_join: false };
+    const created = {
+      id: 'o2',
+      name: 'Secretary',
+      member_id: null,
+      office_email: null,
+      notify_online_join: false,
+    };
     tenantQuery.mockResolvedValueOnce([created]);
 
     const res = await request(app)
@@ -113,9 +126,15 @@ describe('PATCH /offices/:id', () => {
   beforeEach(() => vi.clearAllMocks());
 
   it('updates office and returns 200', async () => {
-    const updated = { id: 'o1', name: 'Vice Chairman', member_id: null, office_email: null, notify_online_join: false };
+    const updated = {
+      id: 'o1',
+      name: 'Vice Chairman',
+      member_id: null,
+      office_email: null,
+      notify_online_join: false,
+    };
     tenantQuery.mockResolvedValueOnce([{ id: 'o1' }]); // exists check
-    tenantQuery.mockResolvedValueOnce([updated]);       // update
+    tenantQuery.mockResolvedValueOnce([updated]); // update
 
     const res = await request(app)
       .patch('/offices/o1')
@@ -145,11 +164,9 @@ describe('DELETE /offices/:id', () => {
 
   it('deletes office and returns 200', async () => {
     tenantQuery.mockResolvedValueOnce([{ id: 'o1' }]); // exists check
-    tenantQuery.mockResolvedValueOnce([]);              // delete
+    tenantQuery.mockResolvedValueOnce([]); // delete
 
-    const res = await request(app)
-      .delete('/offices/o1')
-      .set('Authorization', AUTH);
+    const res = await request(app).delete('/offices/o1').set('Authorization', AUTH);
 
     expect(res.status).toBe(200);
     expect(res.body.message).toMatch(/deleted/i);
@@ -158,9 +175,7 @@ describe('DELETE /offices/:id', () => {
   it('returns 404 when office not found', async () => {
     tenantQuery.mockResolvedValueOnce([]); // not found
 
-    const res = await request(app)
-      .delete('/offices/missing')
-      .set('Authorization', AUTH);
+    const res = await request(app).delete('/offices/missing').set('Authorization', AUTH);
 
     expect(res.status).toBe(404);
   });

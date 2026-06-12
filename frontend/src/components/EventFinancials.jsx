@@ -75,7 +75,9 @@ export default function EventFinancials({ eventId }) {
         </div>
         <div className={cardCls}>
           <p className="text-xs text-slate-500 uppercase tracking-wider">Net balance</p>
-          <p className={`text-lg font-bold ${data.netBalance >= 0 ? 'text-green-700' : 'text-red-700'}`}>
+          <p
+            className={`text-lg font-bold ${data.netBalance >= 0 ? 'text-green-700' : 'text-red-700'}`}
+          >
             {fmtMoney(data.netBalance)}
           </p>
         </div>
@@ -86,18 +88,10 @@ export default function EventFinancials({ eventId }) {
       </div>
 
       {/* Income transactions */}
-      <TransactionSection
-        title="Income"
-        transactions={data.income}
-        eventId={eventId}
-      />
+      <TransactionSection title="Income" transactions={data.income} eventId={eventId} />
 
       {/* Cost transactions */}
-      <TransactionSection
-        title="Costs"
-        transactions={data.costs}
-        eventId={eventId}
-      />
+      <TransactionSection title="Costs" transactions={data.costs} eventId={eventId} />
 
       {/* Add transaction link */}
       <div>
@@ -122,7 +116,8 @@ function TransactionSection({ title, transactions }) {
     );
   }
 
-  const thCls = 'px-3 py-2 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider whitespace-nowrap';
+  const thCls =
+    'px-3 py-2 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider whitespace-nowrap';
   const tdCls = 'px-3 py-2 text-sm text-slate-900 whitespace-nowrap';
 
   return (
@@ -146,7 +141,10 @@ function TransactionSection({ title, transactions }) {
             {transactions.map((t) => (
               <tr key={t.id} className="hover:bg-slate-50">
                 <td className={tdCls}>
-                  <Link to={`/finance/transactions/${t.id}`} className="text-blue-700 hover:underline">
+                  <Link
+                    to={`/finance/transactions/${t.id}`}
+                    className="text-blue-700 hover:underline"
+                  >
                     {t.transaction_number}
                   </Link>
                 </td>

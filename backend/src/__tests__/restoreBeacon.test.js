@@ -9,19 +9,19 @@ import request from 'supertest';
 import { makeSysAdminHeader } from './helpers.js';
 
 vi.mock('../utils/redis.js', () => ({
-  isSessionInvalidated:   vi.fn().mockResolvedValue(false),
+  isSessionInvalidated: vi.fn().mockResolvedValue(false),
   invalidateUserSessions: vi.fn().mockResolvedValue(undefined),
 }));
 
 vi.mock('../utils/db.js', () => ({
   prisma: {
-    $disconnect:     vi.fn(),
-    sysTenant:       { findUnique: vi.fn() },
+    $disconnect: vi.fn(),
+    sysTenant: { findUnique: vi.fn() },
     $queryRawUnsafe: vi.fn(),
-    $transaction:    vi.fn(),
+    $transaction: vi.fn(),
   },
   tenantQuery: vi.fn(),
-  withTenant:  vi.fn(),
+  withTenant: vi.fn(),
 }));
 
 vi.mock('../utils/audit.js', () => ({
@@ -76,13 +76,16 @@ describe('restoreBeacon()', () => {
     const wb = new ExcelJS.Workbook();
     const calls = [];
     const tx = {
-      $executeRawUnsafe: vi.fn(async (...args) => { calls.push(args); }),
+      $executeRawUnsafe: vi.fn(async (...args) => {
+        calls.push(args);
+      }),
     };
 
     await restoreBeacon(tx, wb);
 
-    const featureCall = calls.find((c) =>
-      typeof c[0] === 'string' && c[0].includes('feature_config = $1::jsonb'));
+    const featureCall = calls.find(
+      (c) => typeof c[0] === 'string' && c[0].includes('feature_config = $1::jsonb'),
+    );
     expect(featureCall).toBeTruthy();
 
     const writtenJson = JSON.parse(featureCall[1]);
@@ -93,16 +96,20 @@ describe('restoreBeacon()', () => {
     const wb = new ExcelJS.Workbook();
     const calls = [];
     const tx = {
-      $executeRawUnsafe: vi.fn(async (...args) => { calls.push(args); }),
+      $executeRawUnsafe: vi.fn(async (...args) => {
+        calls.push(args);
+      }),
     };
 
     await restoreBeacon(tx, wb);
 
-    const omCall = calls.find((c) =>
-      typeof c[0] === 'string' &&
-      c[0].includes('INSERT INTO event_types') &&
-      c[0].includes("'Open Meetings'") &&
-      c[0].includes('true'));
+    const omCall = calls.find(
+      (c) =>
+        typeof c[0] === 'string' &&
+        c[0].includes('INSERT INTO event_types') &&
+        c[0].includes("'Open Meetings'") &&
+        c[0].includes('true'),
+    );
     expect(omCall).toBeTruthy();
     // Second arg should be the generated UUID for the event type
     expect(typeof omCall[1]).toBe('string');
@@ -112,26 +119,72 @@ describe('restoreBeacon()', () => {
   it('restores Calendar rows without a gkey as open meetings linked to the Open Meetings event type', async () => {
     const wb = new ExcelJS.Workbook();
     const cal = wb.addWorksheet('Calendar');
-    cal.addRow(['ckey', 'date/time', 'end_time', 'gkey', 'group', 'gvkey',
-                'venue', 'topic', 'detail', 'enquiries', 'exclude_public']);
+    cal.addRow([
+      'ckey',
+      'date/time',
+      'end_time',
+      'gkey',
+      'group',
+      'gvkey',
+      'venue',
+      'topic',
+      'detail',
+      'enquiries',
+      'exclude_public',
+    ]);
     // Open meeting (gkey empty)
-    cal.addRow(['c1', '2024-06-15 19:00', '21:00', '', '', '',
-                '', 'AGM', 'Annual General Meeting', 'chair@example.com', '']);
+    cal.addRow([
+      'c1',
+      '2024-06-15 19:00',
+      '21:00',
+      '',
+      '',
+      '',
+      '',
+      'AGM',
+      'Annual General Meeting',
+      'chair@example.com',
+      '',
+    ]);
     // Group event (gkey set) — should NOT be restored here
-    cal.addRow(['c2', '2024-06-20 10:00', '12:00', 'g1', 'Walking', '',
-                '', 'Walk', 'Weekly walk', 'leader@example.com', '']);
+    cal.addRow([
+      'c2',
+      '2024-06-20 10:00',
+      '12:00',
+      'g1',
+      'Walking',
+      '',
+      '',
+      'Walk',
+      'Weekly walk',
+      'leader@example.com',
+      '',
+    ]);
     // Private open meeting
-    cal.addRow(['c3', '2024-07-01 14:00', '16:00', '', '', '',
-                '', 'Private planning', '', '', '1']);
+    cal.addRow([
+      'c3',
+      '2024-07-01 14:00',
+      '16:00',
+      '',
+      '',
+      '',
+      '',
+      'Private planning',
+      '',
+      '',
+      '1',
+    ]);
 
     const calls = [];
     let omEventTypeId = null;
     const tx = {
       $executeRawUnsafe: vi.fn(async (sql, ...params) => {
         calls.push([sql, ...params]);
-        if (typeof sql === 'string' &&
-            sql.includes('INSERT INTO event_types') &&
-            sql.includes("'Open Meetings'")) {
+        if (
+          typeof sql === 'string' &&
+          sql.includes('INSERT INTO event_types') &&
+          sql.includes("'Open Meetings'")
+        ) {
           omEventTypeId = params[0];
         }
       }),
@@ -141,10 +194,12 @@ describe('restoreBeacon()', () => {
 
     expect(omEventTypeId).toBeTruthy();
 
-    const openMeetingInserts = calls.filter((c) =>
-      typeof c[0] === 'string' &&
-      c[0].includes('INSERT INTO group_events') &&
-      c[0].includes('NULL'));
+    const openMeetingInserts = calls.filter(
+      (c) =>
+        typeof c[0] === 'string' &&
+        c[0].includes('INSERT INTO group_events') &&
+        c[0].includes('NULL'),
+    );
     expect(openMeetingInserts).toHaveLength(2);
 
     // Event type id parameter is the last one — confirm both link to Open Meetings
@@ -189,8 +244,9 @@ describe('PATCH /system/tenants/:slug/feature-config (sys admin)', () => {
     expect(res.body.eventAttendance).toBe(false);
 
     // Confirm the UPDATE SQL carried eventAttendance through (not stripped)
-    const updateCall = tenantQuery.mock.calls.find((c) =>
-      typeof c[1] === 'string' && c[1].includes('UPDATE tenant_settings SET feature_config'));
+    const updateCall = tenantQuery.mock.calls.find(
+      (c) => typeof c[1] === 'string' && c[1].includes('UPDATE tenant_settings SET feature_config'),
+    );
     expect(updateCall).toBeTruthy();
     expect(JSON.parse(updateCall[2][0])).toEqual({ eventAttendance: false });
   });

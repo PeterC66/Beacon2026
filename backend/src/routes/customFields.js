@@ -29,7 +29,9 @@ router.get('/', requirePrivilege('custom_fields', 'view'), async (req, res, next
       label3: row?.custom_field_label_3 ?? '',
       label4: row?.custom_field_label_4 ?? '',
     });
-  } catch (err) { next(err); }
+  } catch (err) {
+    next(err);
+  }
 });
 
 // ─── PATCH /custom-fields ───────────────────────────────────────────────
@@ -48,10 +50,22 @@ router.patch('/', requirePrivilege('custom_fields', 'change'), async (req, res, 
     const values = [];
     let i = 1;
 
-    if (data.label1 !== undefined) { fields.push(`custom_field_label_1 = $${i++}`); values.push(data.label1 || null); }
-    if (data.label2 !== undefined) { fields.push(`custom_field_label_2 = $${i++}`); values.push(data.label2 || null); }
-    if (data.label3 !== undefined) { fields.push(`custom_field_label_3 = $${i++}`); values.push(data.label3 || null); }
-    if (data.label4 !== undefined) { fields.push(`custom_field_label_4 = $${i++}`); values.push(data.label4 || null); }
+    if (data.label1 !== undefined) {
+      fields.push(`custom_field_label_1 = $${i++}`);
+      values.push(data.label1 || null);
+    }
+    if (data.label2 !== undefined) {
+      fields.push(`custom_field_label_2 = $${i++}`);
+      values.push(data.label2 || null);
+    }
+    if (data.label3 !== undefined) {
+      fields.push(`custom_field_label_3 = $${i++}`);
+      values.push(data.label3 || null);
+    }
+    if (data.label4 !== undefined) {
+      fields.push(`custom_field_label_4 = $${i++}`);
+      values.push(data.label4 || null);
+    }
 
     if (fields.length === 0) return res.status(400).json({ error: 'Nothing to update.' });
 
@@ -66,8 +80,11 @@ router.patch('/', requirePrivilege('custom_fields', 'change'), async (req, res, 
     );
 
     logAudit(req.user.tenantSlug, {
-      userId: req.user.userId, userName: req.user.name,
-      action: 'update', entityType: 'setting', entityId: 'singleton',
+      userId: req.user.userId,
+      userName: req.user.name,
+      action: 'update',
+      entityType: 'setting',
+      entityId: 'singleton',
       entityName: 'Custom field labels',
     });
 
@@ -77,7 +94,9 @@ router.patch('/', requirePrivilege('custom_fields', 'change'), async (req, res, 
       label3: row.custom_field_label_3 ?? '',
       label4: row.custom_field_label_4 ?? '',
     });
-  } catch (err) { next(err); }
+  } catch (err) {
+    next(err);
+  }
 });
 
 export default router;

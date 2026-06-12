@@ -24,16 +24,16 @@ export default function NonRenewals() {
   const { can, hasFeature } = useAuth();
   const navigate = useNavigate();
 
-  const [mode,         setMode]         = useState('this_year');
-  const [action,       setAction]       = useState('lapse');
-  const [data,         setData]         = useState(null);   // { members, yearStart, graceLapse, deletionYears }
-  const [loading,      setLoading]      = useState(true);
-  const [error,        setError]        = useState(null);
+  const [mode, setMode] = useState('this_year');
+  const [action, setAction] = useState('lapse');
+  const [data, setData] = useState(null); // { members, yearStart, graceLapse, deletionYears }
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  const [selected,     setSelected]     = useState(new Set());
-  const [confirming,   setConfirming]   = useState(false);  // 'lapse' | 'delete' | false
-  const [processing,   setProcessing]   = useState(false);
-  const [result,       setResult]       = useState(null);   // { lapsed?, deleted?, errors? }
+  const [selected, setSelected] = useState(new Set());
+  const [confirming, setConfirming] = useState(false); // 'lapse' | 'delete' | false
+  const [processing, setProcessing] = useState(false);
+  const [result, setResult] = useState(null); // { lapsed?, deleted?, errors? }
 
   const SORT_SURNAME = ['surname', 'forenames'];
   const { sorted, sortKey, sortDir, onSort } = useSortedData(
@@ -79,13 +79,31 @@ export default function NonRenewals() {
     });
   }
 
-  function selectAll()               { setSelected(new Set(sorted.map((m) => m.id))); }
-  function clearAll()                { setSelected(new Set()); }
-  function selectEmail()             { setSelected(new Set(sorted.filter((m) => m.email).map((m) => m.id))); }
-  function selectNoEmail()           { setSelected(new Set(sorted.filter((m) => !m.email).map((m) => m.id))); }
-  function selectPortalPassword()    { setSelected(new Set(sorted.filter((m) => m.has_portal_password).map((m) => m.id))); }
-  function selectNoPortalPassword()  { setSelected(new Set(sorted.filter((m) => !m.has_portal_password).map((m) => m.id))); }
-  function selectEmailNotConfirmed() { setSelected(new Set(sorted.filter((m) => m.has_portal_password && !m.portal_email_verified).map((m) => m.id))); }
+  function selectAll() {
+    setSelected(new Set(sorted.map((m) => m.id)));
+  }
+  function clearAll() {
+    setSelected(new Set());
+  }
+  function selectEmail() {
+    setSelected(new Set(sorted.filter((m) => m.email).map((m) => m.id)));
+  }
+  function selectNoEmail() {
+    setSelected(new Set(sorted.filter((m) => !m.email).map((m) => m.id)));
+  }
+  function selectPortalPassword() {
+    setSelected(new Set(sorted.filter((m) => m.has_portal_password).map((m) => m.id)));
+  }
+  function selectNoPortalPassword() {
+    setSelected(new Set(sorted.filter((m) => !m.has_portal_password).map((m) => m.id)));
+  }
+  function selectEmailNotConfirmed() {
+    setSelected(
+      new Set(
+        sorted.filter((m) => m.has_portal_password && !m.portal_email_verified).map((m) => m.id),
+      ),
+    );
+  }
 
   function handleDoWithSelected() {
     if (selected.size === 0) return;
@@ -145,7 +163,7 @@ export default function NonRenewals() {
   }
 
   const allSelected = sorted.length > 0 && selected.size === sorted.length;
-  const canLapse  = can('members_non_renewals', 'lapse');
+  const canLapse = can('members_non_renewals', 'lapse');
 
   const thCls = 'px-3 py-2.5 text-left font-normal text-slate-600';
 
@@ -187,51 +205,85 @@ export default function NonRenewals() {
         {/* Info banners */}
         {data && mode === 'this_year' && (
           <p className="text-sm text-slate-600 bg-blue-50 border border-blue-200 rounded px-3 py-2">
-            Showing Current members with a renewal date before the membership year start
-            ({fmtDate(data.yearStart)}).
-            Grace period: {data.graceLapse} week{data.graceLapse !== 1 ? 's' : ''}.
+            Showing Current members with a renewal date before the membership year start (
+            {fmtDate(data.yearStart)}). Grace period: {data.graceLapse} week
+            {data.graceLapse !== 1 ? 's' : ''}.
           </p>
         )}
         {data && mode === 'long_term' && (
           <p className="text-sm text-slate-600 bg-blue-50 border border-blue-200 rounded px-3 py-2">
-            Showing all members who have not renewed in the last {data.deletionYears} year{data.deletionYears !== 1 ? 's' : ''}.
-            Care should be taken not to delete members who have given Gift Aid consent within 7 years.
+            Showing all members who have not renewed in the last {data.deletionYears} year
+            {data.deletionYears !== 1 ? 's' : ''}. Care should be taken not to delete members who
+            have given Gift Aid consent within 7 years.
           </p>
         )}
 
         {/* Result banner */}
         {result && (
-          <div className={`rounded-md border px-4 py-3 text-sm font-medium ${
-            result.errors?.length
-              ? 'bg-red-50 border-red-300 text-red-700'
-              : 'bg-green-50 border-green-200 text-green-700'
-          }`}>
-            {result.lapsed != null && `✓ ${result.lapsed} member${result.lapsed !== 1 ? 's' : ''} lapsed.`}
-            {result.deleted != null && `✓ ${result.deleted} member${result.deleted !== 1 ? 's' : ''} deleted.`}
-            {result.errors?.map((e, i) => <div key={i}>{e}</div>)}
+          <div
+            className={`rounded-md border px-4 py-3 text-sm font-medium ${
+              result.errors?.length
+                ? 'bg-red-50 border-red-300 text-red-700'
+                : 'bg-green-50 border-green-200 text-green-700'
+            }`}
+          >
+            {result.lapsed != null &&
+              `✓ ${result.lapsed} member${result.lapsed !== 1 ? 's' : ''} lapsed.`}
+            {result.deleted != null &&
+              `✓ ${result.deleted} member${result.deleted !== 1 ? 's' : ''} deleted.`}
+            {result.errors?.map((e, i) => (
+              <div key={i}>{e}</div>
+            ))}
           </div>
         )}
 
         {loading && <p className="text-slate-500 text-sm">Loading…</p>}
-        {error   && <p className="text-red-600 text-sm">{error}</p>}
+        {error && <p className="text-red-600 text-sm">{error}</p>}
 
         {!loading && data && (
           <>
             {/* Select controls — above the table */}
             {sorted.length > 0 && (
               <div className="flex flex-wrap gap-2 items-center mb-2">
-                <span className="text-sm text-slate-500">{sorted.length} member{sorted.length !== 1 ? 's' : ''}</span>
+                <span className="text-sm text-slate-500">
+                  {sorted.length} member{sorted.length !== 1 ? 's' : ''}
+                </span>
                 <span className="text-slate-300">|</span>
                 <span className="text-sm font-medium text-slate-600">Select:</span>
-                <button onClick={selectAll} className="text-sm text-blue-700 hover:underline">All</button>
-                <button onClick={clearAll} className="text-sm text-blue-700 hover:underline">Clear All</button>
-                <button onClick={selectEmail} className="text-sm text-blue-700 hover:underline">Email only</button>
-                <button onClick={selectNoEmail} className="text-sm text-blue-700 hover:underline">Without email</button>
-                <button onClick={selectPortalPassword} className="text-sm text-blue-700 hover:underline">Portal password set</button>
-                <button onClick={selectNoPortalPassword} className="text-sm text-blue-700 hover:underline">Without portal password</button>
-                <button onClick={selectEmailNotConfirmed} className="text-sm text-blue-700 hover:underline">Email not confirmed</button>
+                <button onClick={selectAll} className="text-sm text-blue-700 hover:underline">
+                  All
+                </button>
+                <button onClick={clearAll} className="text-sm text-blue-700 hover:underline">
+                  Clear All
+                </button>
+                <button onClick={selectEmail} className="text-sm text-blue-700 hover:underline">
+                  Email only
+                </button>
+                <button onClick={selectNoEmail} className="text-sm text-blue-700 hover:underline">
+                  Without email
+                </button>
+                <button
+                  onClick={selectPortalPassword}
+                  className="text-sm text-blue-700 hover:underline"
+                >
+                  Portal password set
+                </button>
+                <button
+                  onClick={selectNoPortalPassword}
+                  className="text-sm text-blue-700 hover:underline"
+                >
+                  Without portal password
+                </button>
+                <button
+                  onClick={selectEmailNotConfirmed}
+                  className="text-sm text-blue-700 hover:underline"
+                >
+                  Email not confirmed
+                </button>
                 {selected.size > 0 && (
-                  <span className="text-sm font-medium text-blue-700 ml-2">{selected.size} selected</span>
+                  <span className="text-sm font-medium text-blue-700 ml-2">
+                    {selected.size} selected
+                  </span>
                 )}
               </div>
             )}
@@ -249,28 +301,84 @@ export default function NonRenewals() {
                         className="accent-blue-600"
                       />
                     </th>
-                    <SortableHeader col="membership_number" label="No."      sortKey={sortKey} sortDir={sortDir} onSort={onSort} className={thCls} />
+                    <SortableHeader
+                      col="membership_number"
+                      label="No."
+                      sortKey={sortKey}
+                      sortDir={sortDir}
+                      onSort={onSort}
+                      className={thCls}
+                    />
                     <th className={thCls}>
-                      <span className="cursor-pointer select-none" onClick={() => onSort('forenames')}>
+                      <span
+                        className="cursor-pointer select-none"
+                        onClick={() => onSort('forenames')}
+                      >
                         Name
-                        <span className={`ml-1 text-xs ${sortKey === 'forenames' ? 'text-blue-600' : 'text-slate-300'}`}>
+                        <span
+                          className={`ml-1 text-xs ${sortKey === 'forenames' ? 'text-blue-600' : 'text-slate-300'}`}
+                        >
                           {sortKey === 'forenames' ? (sortDir === 'asc' ? '▲' : '▼') : '⇅'}
                         </span>
                       </span>
                       <span className="text-slate-300 mx-1">|</span>
-                      <span className="cursor-pointer select-none text-xs" onClick={() => onSort(SORT_SURNAME)}>
+                      <span
+                        className="cursor-pointer select-none text-xs"
+                        onClick={() => onSort(SORT_SURNAME)}
+                      >
                         by surname
-                        <span className={`ml-1 text-xs ${Array.isArray(sortKey) && sortKey[0] === 'surname' ? 'text-blue-600' : 'text-slate-300'}`}>
-                          {Array.isArray(sortKey) && sortKey[0] === 'surname' ? (sortDir === 'asc' ? '▲' : '▼') : '⇅'}
+                        <span
+                          className={`ml-1 text-xs ${Array.isArray(sortKey) && sortKey[0] === 'surname' ? 'text-blue-600' : 'text-slate-300'}`}
+                        >
+                          {Array.isArray(sortKey) && sortKey[0] === 'surname'
+                            ? sortDir === 'asc'
+                              ? '▲'
+                              : '▼'
+                            : '⇅'}
                         </span>
                       </span>
                     </th>
-                    <SortableHeader col="house_no"           label="Address"      sortKey={sortKey} sortDir={sortDir} onSort={onSort} className={thCls} />
+                    <SortableHeader
+                      col="house_no"
+                      label="Address"
+                      sortKey={sortKey}
+                      sortDir={sortDir}
+                      onSort={onSort}
+                      className={thCls}
+                    />
                     <th className={thCls}>Phone</th>
-                    <SortableHeader col="class_name"         label="Class"        sortKey={sortKey} sortDir={sortDir} onSort={onSort} className={thCls} />
-                    <SortableHeader col="status_name"        label="Status"       sortKey={sortKey} sortDir={sortDir} onSort={onSort} className={thCls} />
-                    <SortableHeader col="next_renewal"       label="Next Renewal" sortKey={sortKey} sortDir={sortDir} onSort={onSort} className={thCls} />
-                    <SortableHeader col="last_renewal_year"  label="Last Renewal" sortKey={sortKey} sortDir={sortDir} onSort={onSort} className={thCls} />
+                    <SortableHeader
+                      col="class_name"
+                      label="Class"
+                      sortKey={sortKey}
+                      sortDir={sortDir}
+                      onSort={onSort}
+                      className={thCls}
+                    />
+                    <SortableHeader
+                      col="status_name"
+                      label="Status"
+                      sortKey={sortKey}
+                      sortDir={sortDir}
+                      onSort={onSort}
+                      className={thCls}
+                    />
+                    <SortableHeader
+                      col="next_renewal"
+                      label="Next Renewal"
+                      sortKey={sortKey}
+                      sortDir={sortDir}
+                      onSort={onSort}
+                      className={thCls}
+                    />
+                    <SortableHeader
+                      col="last_renewal_year"
+                      label="Last Renewal"
+                      sortKey={sortKey}
+                      sortDir={sortDir}
+                      onSort={onSort}
+                      className={thCls}
+                    />
                   </tr>
                 </thead>
                 <tbody>
@@ -321,7 +429,9 @@ export default function NonRenewals() {
               <div className="bg-white/90 rounded-lg shadow-sm p-3">
                 <div className="flex flex-wrap gap-3 items-end">
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">Do with {selected.size} selected member{selected.size !== 1 ? 's' : ''}</label>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">
+                      Do with {selected.size} selected member{selected.size !== 1 ? 's' : ''}
+                    </label>
                     <select
                       name="action"
                       value={action}
@@ -330,8 +440,12 @@ export default function NonRenewals() {
                     >
                       {mode === 'this_year' && canLapse && <option value="lapse">Lapse</option>}
                       {mode === 'long_term' && canLapse && <option value="delete">Delete</option>}
-                      {can('email', 'send') && hasFeature('email') && <option value="send_email">Send email</option>}
-                      {can('letters', 'view') && hasFeature('letters') && <option value="send_letter">Send letter</option>}
+                      {can('email', 'send') && hasFeature('email') && (
+                        <option value="send_email">Send email</option>
+                      )}
+                      {can('letters', 'view') && hasFeature('letters') && (
+                        <option value="send_letter">Send letter</option>
+                      )}
                     </select>
                   </div>
                   <button
@@ -364,8 +478,8 @@ export default function NonRenewals() {
             &lt;no-one&gt;.
           </p>
           <p>
-            It is important to lapse non-renewals promptly — otherwise the u3a Beacon licence,
-            TAT subscription and TAM magazine costs will still be included in invoices.
+            It is important to lapse non-renewals promptly — otherwise the u3a Beacon licence, TAT
+            subscription and TAM magazine costs will still be included in invoices.
           </p>
         </div>
       </div>
@@ -377,8 +491,8 @@ export default function NonRenewals() {
             <h2 className="text-lg font-semibold text-slate-800">Confirm Lapse</h2>
             <p className="text-sm text-slate-600">
               Change the status of <strong>{selected.size}</strong> member
-              {selected.size !== 1 ? 's' : ''} from Current to Lapsed?
-              This cannot be undone automatically.
+              {selected.size !== 1 ? 's' : ''} from Current to Lapsed? This cannot be undone
+              automatically.
             </p>
             <div className="flex gap-3 justify-end">
               <button
@@ -405,9 +519,8 @@ export default function NonRenewals() {
             <h2 className="text-lg font-semibold text-slate-800">Confirm Delete</h2>
             <p className="text-sm text-slate-600">
               Permanently delete <strong>{selected.size}</strong> member record
-              {selected.size !== 1 ? 's' : ''}?
-              This action cannot be undone. Ensure members with Gift Aid consent within
-              7 years are not deleted.
+              {selected.size !== 1 ? 's' : ''}? This action cannot be undone. Ensure members with
+              Gift Aid consent within 7 years are not deleted.
             </p>
             <div className="flex gap-3 justify-end">
               <button

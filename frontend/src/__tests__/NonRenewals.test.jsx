@@ -28,12 +28,20 @@ vi.mock('../lib/api.js', () => ({
 
 describe('NonRenewals page', () => {
   it('renders without crashing', () => {
-    const { container } = render(<MemoryRouter><NonRenewals /></MemoryRouter>);
+    const { container } = render(
+      <MemoryRouter>
+        <NonRenewals />
+      </MemoryRouter>,
+    );
     expect(container).toBeTruthy();
   });
 
   it('shows the Non-renewals heading', () => {
-    const { getAllByText } = render(<MemoryRouter><NonRenewals /></MemoryRouter>);
+    const { getAllByText } = render(
+      <MemoryRouter>
+        <NonRenewals />
+      </MemoryRouter>,
+    );
     expect(getAllByText('Non-renewals').length).toBeGreaterThan(0);
   });
 });

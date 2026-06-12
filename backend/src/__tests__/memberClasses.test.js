@@ -5,14 +5,14 @@ import request from 'supertest';
 import { makeAuthHeader } from './helpers.js';
 
 vi.mock('../utils/redis.js', () => ({
-  isSessionInvalidated:   vi.fn().mockResolvedValue(false),
+  isSessionInvalidated: vi.fn().mockResolvedValue(false),
   invalidateUserSessions: vi.fn().mockResolvedValue(undefined),
 }));
 
 vi.mock('../utils/db.js', () => ({
-  prisma:      { $disconnect: vi.fn() },
+  prisma: { $disconnect: vi.fn() },
   tenantQuery: vi.fn(),
-  withTenant:  vi.fn(),
+  withTenant: vi.fn(),
 }));
 
 const { default: app } = await import('../app.js');
@@ -21,9 +21,16 @@ const { tenantQuery } = await import('../utils/db.js');
 const AUTH = makeAuthHeader();
 
 const SAMPLE_CLASS = {
-  id: 'mc1', name: 'Individual', current: true, explanation: null,
-  is_joint: false, is_associate: false, show_online: false,
-  fee: '10.00', gift_aid_fee: null, locked: true,
+  id: 'mc1',
+  name: 'Individual',
+  current: true,
+  explanation: null,
+  is_joint: false,
+  is_associate: false,
+  show_online: false,
+  fee: '10.00',
+  gift_aid_fee: null,
+  locked: true,
 };
 
 // ── GET /member-classes ───────────────────────────────────────────────────
@@ -124,10 +131,7 @@ describe('PATCH /member-classes/:id', () => {
   });
 
   it('returns 400 when body is empty', async () => {
-    const res = await request(app)
-      .patch('/member-classes/mc1')
-      .set('Authorization', AUTH)
-      .send({});
+    const res = await request(app).patch('/member-classes/mc1').set('Authorization', AUTH).send({});
 
     expect(res.status).toBe(400);
   });
@@ -140,12 +144,10 @@ describe('DELETE /member-classes/:id', () => {
 
   it('returns 200 when deleted successfully', async () => {
     tenantQuery.mockResolvedValueOnce([{ id: 'mc2', locked: false }]);
-    tenantQuery.mockResolvedValueOnce([{ n: 0 }]);   // member count check
+    tenantQuery.mockResolvedValueOnce([{ n: 0 }]); // member count check
     tenantQuery.mockResolvedValueOnce([]);
 
-    const res = await request(app)
-      .delete('/member-classes/mc2')
-      .set('Authorization', AUTH);
+    const res = await request(app).delete('/member-classes/mc2').set('Authorization', AUTH);
 
     expect(res.status).toBe(200);
     expect(res.body.message).toBe('Membership class deleted.');
@@ -153,11 +155,9 @@ describe('DELETE /member-classes/:id', () => {
 
   it('returns 409 when class has members assigned', async () => {
     tenantQuery.mockResolvedValueOnce([{ id: 'mc2', locked: false }]);
-    tenantQuery.mockResolvedValueOnce([{ n: 3 }]);  // 3 members assigned
+    tenantQuery.mockResolvedValueOnce([{ n: 3 }]); // 3 members assigned
 
-    const res = await request(app)
-      .delete('/member-classes/mc2')
-      .set('Authorization', AUTH);
+    const res = await request(app).delete('/member-classes/mc2').set('Authorization', AUTH);
 
     expect(res.status).toBe(409);
     expect(res.body.error).toMatch(/3 members are assigned/);
@@ -166,9 +166,7 @@ describe('DELETE /member-classes/:id', () => {
   it('returns 409 when class is locked', async () => {
     tenantQuery.mockResolvedValueOnce([{ id: 'mc1', locked: true }]);
 
-    const res = await request(app)
-      .delete('/member-classes/mc1')
-      .set('Authorization', AUTH);
+    const res = await request(app).delete('/member-classes/mc1').set('Authorization', AUTH);
 
     expect(res.status).toBe(409);
   });
@@ -176,9 +174,7 @@ describe('DELETE /member-classes/:id', () => {
   it('returns 404 when not found', async () => {
     tenantQuery.mockResolvedValueOnce([]);
 
-    const res = await request(app)
-      .delete('/member-classes/unknown')
-      .set('Authorization', AUTH);
+    const res = await request(app).delete('/member-classes/unknown').set('Authorization', AUTH);
 
     expect(res.status).toBe(404);
   });

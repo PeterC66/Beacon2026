@@ -7,7 +7,7 @@ import GroupsStatement from '../pages/finance/GroupsStatement.jsx';
 vi.mock('../context/AuthContext.jsx', () => ({
   useAuth: () => ({
     tenant: 'test-u3a',
-    can:    vi.fn().mockReturnValue(true),
+    can: vi.fn().mockReturnValue(true),
   }),
 }));
 
@@ -20,12 +20,20 @@ vi.mock('../lib/api.js', () => ({
 
 describe('GroupsStatement page', () => {
   it('renders without crashing', () => {
-    const { container } = render(<MemoryRouter><GroupsStatement /></MemoryRouter>);
+    const { container } = render(
+      <MemoryRouter>
+        <GroupsStatement />
+      </MemoryRouter>,
+    );
     expect(container).toBeTruthy();
   });
 
   it('shows the Groups Statement heading', () => {
-    render(<MemoryRouter><GroupsStatement /></MemoryRouter>);
+    render(
+      <MemoryRouter>
+        <GroupsStatement />
+      </MemoryRouter>,
+    );
     expect(screen.getByText('Groups Statement')).toBeTruthy();
   });
 });

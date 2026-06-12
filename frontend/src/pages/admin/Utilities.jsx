@@ -34,9 +34,15 @@ export default function Utilities() {
               const allowed = can(item.privilege.resource, item.privilege.action);
               return (
                 <li key={item.label} className="px-4 py-3 text-sm">
-                  {allowed
-                    ? <Link to={item.to} title={item.tip} className="text-blue-700 hover:underline">{item.label}</Link>
-                    : <span title={item.tip} className="text-slate-400">{item.label}</span>}
+                  {allowed ? (
+                    <Link to={item.to} title={item.tip} className="text-blue-700 hover:underline">
+                      {item.label}
+                    </Link>
+                  ) : (
+                    <span title={item.tip} className="text-slate-400">
+                      {item.label}
+                    </span>
+                  )}
                 </li>
               );
             })}

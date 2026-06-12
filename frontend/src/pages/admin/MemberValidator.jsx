@@ -18,13 +18,13 @@ function checkPostcode(v) {
 }
 
 function checkEmail(v) {
-  if (!v || !v.trim()) return null;   // email is optional
+  if (!v || !v.trim()) return null; // email is optional
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v.trim())) return 'Invalid email address';
   return null;
 }
 
 function checkPhone(v, label) {
-  if (!v || !v.trim()) return null;   // phone is optional
+  if (!v || !v.trim()) return null; // phone is optional
   try {
     if (!isValidPhoneNumber(v, 'GB')) return `Invalid UK ${label}`;
   } catch {
@@ -38,42 +38,78 @@ function getIssues(m) {
   const issues = [];
 
   // Missing mandatory fields
-  if (!m.status_id) issues.push({ type: 'missing', field: 'status_id',  label: 'Status missing',      inline: false });
-  if (!m.class_id)  issues.push({ type: 'missing', field: 'class_id',   label: 'Class missing',       inline: false });
-  if (!m.joined_on) issues.push({ type: 'missing', field: 'joined_on',  label: 'Joined date missing',  inline: false });
+  if (!m.status_id)
+    issues.push({ type: 'missing', field: 'status_id', label: 'Status missing', inline: false });
+  if (!m.class_id)
+    issues.push({ type: 'missing', field: 'class_id', label: 'Class missing', inline: false });
+  if (!m.joined_on)
+    issues.push({
+      type: 'missing',
+      field: 'joined_on',
+      label: 'Joined date missing',
+      inline: false,
+    });
 
   // Address / postcode
   const pcErr = checkPostcode(m.postcode);
-  if (pcErr) issues.push({ type: 'postcode', field: 'postcode', label: pcErr, inline: true, currentValue: m.postcode ?? '' });
+  if (pcErr)
+    issues.push({
+      type: 'postcode',
+      field: 'postcode',
+      label: pcErr,
+      inline: true,
+      currentValue: m.postcode ?? '',
+    });
 
   // Email (optional but validate format if present)
   const emailErr = checkEmail(m.email);
-  if (emailErr) issues.push({ type: 'email', field: 'email', label: emailErr, inline: true, currentValue: m.email ?? '' });
+  if (emailErr)
+    issues.push({
+      type: 'email',
+      field: 'email',
+      label: emailErr,
+      inline: true,
+      currentValue: m.email ?? '',
+    });
 
   // Mobile
   const mobileErr = checkPhone(m.mobile, 'mobile');
-  if (mobileErr) issues.push({ type: 'mobile', field: 'mobile', label: mobileErr, inline: true, currentValue: m.mobile ?? '' });
+  if (mobileErr)
+    issues.push({
+      type: 'mobile',
+      field: 'mobile',
+      label: mobileErr,
+      inline: true,
+      currentValue: m.mobile ?? '',
+    });
 
   // Telephone (on address)
   const telErr = checkPhone(m.telephone, 'telephone');
-  if (telErr) issues.push({ type: 'telephone', field: 'telephone', label: telErr, inline: true, currentValue: m.telephone ?? '' });
+  if (telErr)
+    issues.push({
+      type: 'telephone',
+      field: 'telephone',
+      label: telErr,
+      inline: true,
+      currentValue: m.telephone ?? '',
+    });
 
   return issues;
 }
 
 const ISSUE_COLOURS = {
-  missing:   'bg-orange-50 border-orange-200 text-orange-800',
-  postcode:  'bg-yellow-50 border-yellow-200 text-yellow-800',
-  email:     'bg-red-50 border-red-200 text-red-800',
-  mobile:    'bg-purple-50 border-purple-200 text-purple-800',
+  missing: 'bg-orange-50 border-orange-200 text-orange-800',
+  postcode: 'bg-yellow-50 border-yellow-200 text-yellow-800',
+  email: 'bg-red-50 border-red-200 text-red-800',
+  mobile: 'bg-purple-50 border-purple-200 text-purple-800',
   telephone: 'bg-purple-50 border-purple-200 text-purple-800',
 };
 
 export default function MemberValidator() {
   const { tenant } = useAuth();
-  const [data,    setData]    = useState(null);   // raw fetched member list
+  const [data, setData] = useState(null); // raw fetched member list
   const [loading, setLoading] = useState(true);
-  const [error,   setError]   = useState(null);
+  const [error, setError] = useState(null);
 
   // Per-member inline edit state: { [memberId]: { [field]: { value, saving, saved, err } } }
   const [edits, setEdits] = useState({});
@@ -86,24 +122,27 @@ export default function MemberValidator() {
   const load = useCallback(() => {
     setLoading(true);
     setError(null);
-    membersApi.validate()
+    membersApi
+      .validate()
       .then(setData)
       .catch((err) => setError(err.message))
       .finally(() => setLoading(false));
   }, []);
 
-  useEffect(() => { load(); }, [load]);
+  useEffect(() => {
+    load();
+  }, [load]);
 
   // Derive flagged members from fetched data (re-computed when data changes)
   const flagged = data
-    ? data
-        .map((m) => ({ ...m, issues: getIssues(m) }))
-        .filter((m) => m.issues.length > 0)
+    ? data.map((m) => ({ ...m, issues: getIssues(m) })).filter((m) => m.issues.length > 0)
     : [];
 
   // Summary counts
   const counts = flagged.reduce((acc, m) => {
-    m.issues.forEach((iss) => { acc[iss.type] = (acc[iss.type] ?? 0) + 1; });
+    m.issues.forEach((iss) => {
+      acc[iss.type] = (acc[iss.type] ?? 0) + 1;
+    });
     return acc;
   }, {});
 
@@ -112,7 +151,10 @@ export default function MemberValidator() {
   function setEditValue(memberId, field, value) {
     setEdits((prev) => ({
       ...prev,
-      [memberId]: { ...(prev[memberId] ?? {}), [field]: { ...(prev[memberId]?.[field] ?? {}), value, saved: false, err: null } },
+      [memberId]: {
+        ...(prev[memberId] ?? {}),
+        [field]: { ...(prev[memberId]?.[field] ?? {}), value, saved: false, err: null },
+      },
     }));
   }
 
@@ -123,7 +165,10 @@ export default function MemberValidator() {
 
     setEdits((prev) => ({
       ...prev,
-      [memberId]: { ...(prev[memberId] ?? {}), [field]: { ...(prev[memberId]?.[field] ?? {}), saving: true, err: null } },
+      [memberId]: {
+        ...(prev[memberId] ?? {}),
+        [field]: { ...(prev[memberId]?.[field] ?? {}), saving: true, err: null },
+      },
     }));
 
     try {
@@ -131,14 +176,14 @@ export default function MemberValidator() {
       if (field === 'postcode' || field === 'telephone') {
         await membersApi.update(memberId, {
           address: {
-            houseNo:   member.house_no   ?? undefined,
-            street:    member.street     ?? undefined,
-            addLine1:  member.add_line1  ?? undefined,
-            addLine2:  member.add_line2  ?? undefined,
-            town:      member.town       ?? undefined,
-            county:    member.county     ?? undefined,
-            postcode:  field === 'postcode'  ? value : (member.postcode   ?? undefined),
-            telephone: field === 'telephone' ? value : (member.telephone  ?? undefined),
+            houseNo: member.house_no ?? undefined,
+            street: member.street ?? undefined,
+            addLine1: member.add_line1 ?? undefined,
+            addLine2: member.add_line2 ?? undefined,
+            town: member.town ?? undefined,
+            county: member.county ?? undefined,
+            postcode: field === 'postcode' ? value : (member.postcode ?? undefined),
+            telephone: field === 'telephone' ? value : (member.telephone ?? undefined),
           },
         });
       } else {
@@ -146,28 +191,37 @@ export default function MemberValidator() {
       }
 
       // Update local data so the issue disappears immediately
-      setData((prev) => prev.map((m) => {
-        if (m.id !== memberId) return m;
-        if (field === 'postcode')   return { ...m, postcode:   value };
-        if (field === 'telephone')  return { ...m, telephone:  value };
-        if (field === 'email')      return { ...m, email:      value };
-        if (field === 'mobile')     return { ...m, mobile:     value };
-        return m;
-      }));
+      setData((prev) =>
+        prev.map((m) => {
+          if (m.id !== memberId) return m;
+          if (field === 'postcode') return { ...m, postcode: value };
+          if (field === 'telephone') return { ...m, telephone: value };
+          if (field === 'email') return { ...m, email: value };
+          if (field === 'mobile') return { ...m, mobile: value };
+          return m;
+        }),
+      );
 
       setEdits((prev) => ({
         ...prev,
-        [memberId]: { ...(prev[memberId] ?? {}), [field]: { value, saving: false, saved: true, err: null } },
+        [memberId]: {
+          ...(prev[memberId] ?? {}),
+          [field]: { value, saving: false, saved: true, err: null },
+        },
       }));
     } catch (err) {
       setEdits((prev) => ({
         ...prev,
-        [memberId]: { ...(prev[memberId] ?? {}), [field]: { ...(prev[memberId]?.[field] ?? {}), saving: false, err: err.message } },
+        [memberId]: {
+          ...(prev[memberId] ?? {}),
+          [field]: { ...(prev[memberId]?.[field] ?? {}), saving: false, err: err.message },
+        },
       }));
     }
   }
 
-  const inputCls = 'border border-slate-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500';
+  const inputCls =
+    'border border-slate-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500';
 
   return (
     <div className="min-h-screen pb-10">
@@ -205,15 +259,19 @@ export default function MemberValidator() {
             ) : (
               <>
                 <div className="rounded-md bg-amber-50 border border-amber-200 px-4 py-3 text-sm text-amber-800">
-                  <strong>{flagged.length} member{flagged.length !== 1 ? 's' : ''}</strong> with issues
-                  {' '}(from {data.length} checked):
-                  {' '}
+                  <strong>
+                    {flagged.length} member{flagged.length !== 1 ? 's' : ''}
+                  </strong>{' '}
+                  with issues (from {data.length} checked):{' '}
                   {Object.entries(counts).map(([type, n]) => (
                     <span key={type} className="mr-3">
-                      {n} {type === 'missing' ? 'missing field' : type}{n !== 1 ? 's' : ''}
+                      {n} {type === 'missing' ? 'missing field' : type}
+                      {n !== 1 ? 's' : ''}
                     </span>
                   ))}
-                  <span className="ml-2 text-amber-600">— fix inline or open the member's record.</span>
+                  <span className="ml-2 text-amber-600">
+                    — fix inline or open the member's record.
+                  </span>
                 </div>
 
                 {/* Flagged member list */}
@@ -252,7 +310,9 @@ export default function MemberValidator() {
                                     type={issue.field === 'email' ? 'email' : 'text'}
                                     name="inlineEdit"
                                     value={currentEdit}
-                                    onChange={(e) => setEditValue(member.id, issue.field, e.target.value)}
+                                    onChange={(e) =>
+                                      setEditValue(member.id, issue.field, e.target.value)
+                                    }
                                     placeholder={issue.field === 'postcode' ? 'e.g. SW1A 1AA' : ''}
                                     className={`${inputCls} flex-1 min-w-32`}
                                   />
@@ -264,7 +324,9 @@ export default function MemberValidator() {
                                     {editState.saving ? 'Saving…' : 'Save'}
                                   </button>
                                   {editState.saved && (
-                                    <span className="text-green-700 text-xs font-medium">Saved ✓</span>
+                                    <span className="text-green-700 text-xs font-medium">
+                                      Saved ✓
+                                    </span>
                                   )}
                                   {editState.err && (
                                     <span className="text-red-700 text-xs">{editState.err}</span>
@@ -290,9 +352,7 @@ export default function MemberValidator() {
           </>
         )}
 
-        {loading && (
-          <p className="text-center text-slate-500 mt-8">Checking member data…</p>
-        )}
+        {loading && <p className="text-center text-slate-500 mt-8">Checking member data…</p>}
       </div>
 
       <NavBar links={navLinks} />

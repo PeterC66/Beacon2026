@@ -11,23 +11,35 @@ vi.mock('../context/AuthContext.jsx', () => ({
 
 vi.mock('../lib/api.js', () => ({
   backup: {
-    export:  vi.fn().mockResolvedValue(undefined),
+    export: vi.fn().mockResolvedValue(undefined),
   },
 }));
 
 describe('DataBackup page', () => {
   it('renders without crashing', () => {
-    const { container } = render(<MemoryRouter><DataBackup /></MemoryRouter>);
+    const { container } = render(
+      <MemoryRouter>
+        <DataBackup />
+      </MemoryRouter>,
+    );
     expect(container).toBeTruthy();
   });
 
   it('shows the page heading', () => {
-    const { getAllByText } = render(<MemoryRouter><DataBackup /></MemoryRouter>);
+    const { getAllByText } = render(
+      <MemoryRouter>
+        <DataBackup />
+      </MemoryRouter>,
+    );
     expect(getAllByText('Data Export & Backup').length).toBeGreaterThan(0);
   });
 
   it('shows all 7 individual export options', () => {
-    const { getByText } = render(<MemoryRouter><DataBackup /></MemoryRouter>);
+    const { getByText } = render(
+      <MemoryRouter>
+        <DataBackup />
+      </MemoryRouter>,
+    );
     expect(getByText('Members and addresses')).toBeInTheDocument();
     expect(getByText('Finance ledger with detail')).toBeInTheDocument();
     expect(getByText('Groups and teams, with members, venues and faculties')).toBeInTheDocument();
@@ -38,7 +50,11 @@ describe('DataBackup page', () => {
   });
 
   it('shows the Backup all data button', () => {
-    const { getAllByText } = render(<MemoryRouter><DataBackup /></MemoryRouter>);
+    const { getAllByText } = render(
+      <MemoryRouter>
+        <DataBackup />
+      </MemoryRouter>,
+    );
     expect(getAllByText('Backup all data').length).toBeGreaterThan(0);
   });
 });

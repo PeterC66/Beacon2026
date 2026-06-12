@@ -24,12 +24,20 @@ vi.mock('../lib/api.js', () => ({
 
 describe('MemberValidator page', () => {
   it('renders without crashing', () => {
-    const { container } = render(<MemoryRouter><MemberValidator /></MemoryRouter>);
+    const { container } = render(
+      <MemoryRouter>
+        <MemberValidator />
+      </MemoryRouter>,
+    );
     expect(container).toBeTruthy();
   });
 
   it('shows the Validate Member Data heading', () => {
-    const { getByText } = render(<MemoryRouter><MemberValidator /></MemoryRouter>);
+    const { getByText } = render(
+      <MemoryRouter>
+        <MemberValidator />
+      </MemoryRouter>,
+    );
     expect(getByText('Validate Member Data')).toBeInTheDocument();
   });
 });

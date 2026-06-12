@@ -32,7 +32,7 @@ router.get('/', requirePrivilege('event_types', 'view'), async (req, res, next) 
 // ─── POST /event-types ───────────────────────────────────────────────────────
 
 const createSchema = z.object({
-  name:        z.string().min(1).max(100),
+  name: z.string().min(1).max(100),
   description: z.string().max(500).nullable().optional(),
 });
 
@@ -41,15 +41,20 @@ router.post('/', requirePrivilege('event_types', 'create'), async (req, res, nex
     const slug = req.user.tenantSlug;
     const data = createSchema.parse(req.body);
 
-    const [et] = await tenantQuery(slug,
+    const [et] = await tenantQuery(
+      slug,
       `INSERT INTO event_types (name, description)
        VALUES ($1, $2)
        RETURNING id, name, description, is_default, created_at, updated_at`,
       [data.name, data.description ?? null],
     );
     logAudit(slug, {
-      userId: req.user.userId, userName: req.user.name,
-      action: 'create', entityType: 'event_type', entityId: et.id, entityName: et.name,
+      userId: req.user.userId,
+      userName: req.user.name,
+      action: 'create',
+      entityType: 'event_type',
+      entityId: et.id,
+      entityName: et.name,
     });
     res.status(201).json(et);
   } catch (err) {
@@ -60,7 +65,7 @@ router.post('/', requirePrivilege('event_types', 'create'), async (req, res, nex
 // ─── PATCH /event-types/:id ──────────────────────────────────────────────────
 
 const updateSchema = z.object({
-  name:        z.string().min(1).max(100).optional(),
+  name: z.string().min(1).max(100).optional(),
   description: z.string().max(500).nullable().optional(),
 });
 
@@ -70,7 +75,8 @@ router.patch('/:id', requirePrivilege('event_types', 'change'), async (req, res,
     const data = updateSchema.parse(req.body);
 
     // Check if it's the default type — block rename
-    const [existing] = await tenantQuery(slug,
+    const [existing] = await tenantQuery(
+      slug,
       `SELECT id, name, is_default FROM event_types WHERE id = $1`,
       [req.params.id],
     );
@@ -96,15 +102,20 @@ router.patch('/:id', requirePrivilege('event_types', 'change'), async (req, res,
     setClauses.push('updated_at = now()');
     values.push(req.params.id);
 
-    const [updated] = await tenantQuery(slug,
+    const [updated] = await tenantQuery(
+      slug,
       `UPDATE event_types SET ${setClauses.join(', ')}
        WHERE id = $${i}
        RETURNING id, name, description, is_default, created_at, updated_at`,
       values,
     );
     logAudit(slug, {
-      userId: req.user.userId, userName: req.user.name,
-      action: 'update', entityType: 'event_type', entityId: updated.id, entityName: updated.name,
+      userId: req.user.userId,
+      userName: req.user.name,
+      action: 'update',
+      entityType: 'event_type',
+      entityId: updated.id,
+      entityName: updated.name,
     });
     res.json(updated);
   } catch (err) {
@@ -118,7 +129,8 @@ router.delete('/:id', requirePrivilege('event_types', 'delete'), async (req, res
   try {
     const slug = req.user.tenantSlug;
 
-    const [existing] = await tenantQuery(slug,
+    const [existing] = await tenantQuery(
+      slug,
       `SELECT id, name, is_default FROM event_types WHERE id = $1`,
       [req.params.id],
     );
@@ -128,7 +140,8 @@ router.delete('/:id', requirePrivilege('event_types', 'delete'), async (req, res
     }
 
     // Check for events using this type
-    const [count] = await tenantQuery(slug,
+    const [count] = await tenantQuery(
+      slug,
       `SELECT COUNT(*)::int AS cnt FROM group_events WHERE event_type_id = $1`,
       [req.params.id],
     );
@@ -136,13 +149,14 @@ router.delete('/:id', requirePrivilege('event_types', 'delete'), async (req, res
       throw AppError(`Cannot delete: ${count.cnt} event(s) are using this type.`, 400);
     }
 
-    await tenantQuery(slug,
-      `DELETE FROM event_types WHERE id = $1`,
-      [req.params.id],
-    );
+    await tenantQuery(slug, `DELETE FROM event_types WHERE id = $1`, [req.params.id]);
     logAudit(slug, {
-      userId: req.user.userId, userName: req.user.name,
-      action: 'delete', entityType: 'event_type', entityId: existing.id, entityName: existing.name,
+      userId: req.user.userId,
+      userName: req.user.name,
+      action: 'delete',
+      entityType: 'event_type',
+      entityId: existing.id,
+      entityName: existing.name,
     });
     res.json({ deleted: true });
   } catch (err) {

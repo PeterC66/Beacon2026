@@ -5,14 +5,14 @@ import request from 'supertest';
 import { makeAuthHeader } from './helpers.js';
 
 vi.mock('../utils/redis.js', () => ({
-  isSessionInvalidated:   vi.fn().mockResolvedValue(false),
+  isSessionInvalidated: vi.fn().mockResolvedValue(false),
   invalidateUserSessions: vi.fn().mockResolvedValue(undefined),
 }));
 
 vi.mock('../utils/db.js', () => ({
-  prisma:      { $disconnect: vi.fn() },
+  prisma: { $disconnect: vi.fn() },
   tenantQuery: vi.fn(),
-  withTenant:  vi.fn(),
+  withTenant: vi.fn(),
 }));
 
 const { default: app } = await import('../app.js');
@@ -97,10 +97,7 @@ describe('POST /venues', () => {
   });
 
   it('returns 422 with empty name', async () => {
-    const res = await request(app)
-      .post('/venues')
-      .set('Authorization', AUTH)
-      .send({ name: '' });
+    const res = await request(app).post('/venues').set('Authorization', AUTH).send({ name: '' });
     expect(res.status).toBe(422);
   });
 
@@ -129,10 +126,7 @@ describe('PATCH /venues/:id', () => {
   });
 
   it('returns 400 when nothing to update', async () => {
-    const res = await request(app)
-      .patch('/venues/v1')
-      .set('Authorization', AUTH)
-      .send({});
+    const res = await request(app).patch('/venues/v1').set('Authorization', AUTH).send({});
     expect(res.status).toBe(400);
   });
 
@@ -153,20 +147,16 @@ describe('DELETE /venues/:id', () => {
 
   it('returns 200 on delete', async () => {
     tenantQuery
-      .mockResolvedValueOnce([{ id: 'v1' }])   // SELECT existing
-      .mockResolvedValueOnce([]);                // DELETE
-    const res = await request(app)
-      .delete('/venues/v1')
-      .set('Authorization', AUTH);
+      .mockResolvedValueOnce([{ id: 'v1' }]) // SELECT existing
+      .mockResolvedValueOnce([]); // DELETE
+    const res = await request(app).delete('/venues/v1').set('Authorization', AUTH);
     expect(res.status).toBe(200);
     expect(res.body.message).toBe('Venue deleted.');
   });
 
   it('returns 404 when not found', async () => {
     tenantQuery.mockResolvedValueOnce([]);
-    const res = await request(app)
-      .delete('/venues/unknown')
-      .set('Authorization', AUTH);
+    const res = await request(app).delete('/venues/unknown').set('Authorization', AUTH);
     expect(res.status).toBe(404);
   });
 });

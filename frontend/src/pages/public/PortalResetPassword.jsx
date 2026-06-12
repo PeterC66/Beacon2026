@@ -19,12 +19,22 @@ export default function PortalResetPassword() {
   async function handleSubmit(e) {
     e.preventDefault();
     setError('');
-    if (password.length < 10) { setError('Password must be at least 10 characters.'); return; }
-    if (!/[a-z]/.test(password) || !/[A-Z]/.test(password) || !/[0-9]/.test(password)) {
-      setError('Password must contain uppercase, lowercase, and a number.'); return;
+    if (password.length < 10) {
+      setError('Password must be at least 10 characters.');
+      return;
     }
-    if (password !== confirm) { setError('Passwords do not match.'); return; }
-    if (!token) { setError('Invalid reset link.'); return; }
+    if (!/[a-z]/.test(password) || !/[A-Z]/.test(password) || !/[0-9]/.test(password)) {
+      setError('Password must contain uppercase, lowercase, and a number.');
+      return;
+    }
+    if (password !== confirm) {
+      setError('Passwords do not match.');
+      return;
+    }
+    if (!token) {
+      setError('Invalid reset link.');
+      return;
+    }
 
     setSubmitting(true);
     try {
@@ -43,9 +53,13 @@ export default function PortalResetPassword() {
         <PortalVersion />
         <div className="bg-white rounded-lg shadow-md p-8 max-w-md w-full text-center">
           <h1 className="text-xl font-bold text-green-700 mb-2">Password Reset</h1>
-          <p className="text-sm text-slate-600 mb-4">Your password has been changed. You can now sign in.</p>
-          <Link to={`/public/${slug}/portal`}
-            className="inline-block bg-blue-600 hover:bg-blue-700 text-white rounded px-5 py-2 text-sm font-medium transition-colors">
+          <p className="text-sm text-slate-600 mb-4">
+            Your password has been changed. You can now sign in.
+          </p>
+          <Link
+            to={`/public/${slug}/portal`}
+            className="inline-block bg-blue-600 hover:bg-blue-700 text-white rounded px-5 py-2 text-sm font-medium transition-colors"
+          >
             Sign in
           </Link>
         </div>
@@ -62,21 +76,38 @@ export default function PortalResetPassword() {
           10–72 characters, with at least one uppercase, one lowercase, and one number.
         </p>
         {error && (
-          <div className="rounded-md bg-red-50 border border-red-300 px-4 py-3 text-red-700 text-sm font-medium text-center mb-4">{error}</div>
+          <div className="rounded-md bg-red-50 border border-red-300 px-4 py-3 text-red-700 text-sm font-medium text-center mb-4">
+            {error}
+          </div>
         )}
         <form onSubmit={handleSubmit} noValidate>
           <div className="mb-3">
             <label className="block text-sm font-medium text-slate-700 mb-1">New password</label>
-            <PasswordInput name="password" value={password} onChange={(e) => setPassword(e.target.value)}
-              className="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" autoComplete="new-password" />
+            <PasswordInput
+              name="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              autoComplete="new-password"
+            />
           </div>
           <div className="mb-6">
-            <label className="block text-sm font-medium text-slate-700 mb-1">Confirm password</label>
-            <PasswordInput name="confirm" value={confirm} onChange={(e) => setConfirm(e.target.value)}
-              className="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" autoComplete="new-password" />
+            <label className="block text-sm font-medium text-slate-700 mb-1">
+              Confirm password
+            </label>
+            <PasswordInput
+              name="confirm"
+              value={confirm}
+              onChange={(e) => setConfirm(e.target.value)}
+              className="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              autoComplete="new-password"
+            />
           </div>
-          <button type="submit" disabled={submitting}
-            className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white rounded px-5 py-3 text-sm font-medium transition-colors">
+          <button
+            type="submit"
+            disabled={submitting}
+            className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white rounded px-5 py-3 text-sm font-medium transition-colors"
+          >
             {submitting ? 'Changing...' : 'Change Password'}
           </button>
         </form>

@@ -50,7 +50,9 @@ export function setConsent(accepted) {
       localStorage.removeItem('beacon2_label_settings');
       localStorage.removeItem('beacon2_last_export_class');
       localStorage.removeItem('beacon2_email_compose_prefs');
-    } catch { /* ignore */ }
+    } catch {
+      /* ignore */
+    }
   }
 
   // Notify listeners (e.g. CookieConsent component)

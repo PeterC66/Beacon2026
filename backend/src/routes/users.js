@@ -18,21 +18,25 @@ router.use(requireAuth);
 
 // ─── GET /users/available-members ──────────────────────────────────────
 // Returns current members available to be linked as system users.
-router.get('/available-members', requirePrivilege('user_record', 'create'), async (req, res, next) => {
-  try {
-    const members = await tenantQuery(
-      req.user.tenantSlug,
-      `SELECT m.id, m.forenames, m.surname, m.email, ms.name AS status_name
+router.get(
+  '/available-members',
+  requirePrivilege('user_record', 'create'),
+  async (req, res, next) => {
+    try {
+      const members = await tenantQuery(
+        req.user.tenantSlug,
+        `SELECT m.id, m.forenames, m.surname, m.email, ms.name AS status_name
        FROM members m
        JOIN member_statuses ms ON ms.id = m.status_id
        WHERE ms.name = 'Current'
        ORDER BY m.surname, m.forenames`,
-    );
-    res.json(members);
-  } catch (err) {
-    next(err);
-  }
-});
+      );
+      res.json(members);
+    } catch (err) {
+      next(err);
+    }
+  },
+);
 
 // ─── GET /users ───────────────────────────────────────────────────────────
 router.get('/', requirePrivilege('users_list', 'view'), async (req, res, next) => {
@@ -95,9 +99,9 @@ router.get('/:id', requirePrivilege('user_record', 'view'), async (req, res, nex
 const createUserSchema = z.object({
   memberId: z.string().min(1, 'Member selection is required'),
   username: z.string().regex(/^[a-z0-9]+$/, 'Username must be lowercase letters and numbers only'),
-  email:    z.string().email().optional(),
-  active:   z.boolean().default(true),
-  roleIds:  z.array(z.string()).default([]),
+  email: z.string().email().optional(),
+  active: z.boolean().default(true),
+  roleIds: z.array(z.string()).default([]),
 });
 
 router.post('/', requirePrivilege('user_record', 'create'), async (req, res, next) => {
@@ -152,7 +156,14 @@ router.post('/', requirePrivilege('user_record', 'create'), async (req, res, nex
       );
     }
 
-    logAudit(req.user.tenantSlug, { userId: req.user.userId, userName: req.user.name, action: 'create', entityType: 'user', entityId: user.id, entityName: user.name });
+    logAudit(req.user.tenantSlug, {
+      userId: req.user.userId,
+      userName: req.user.name,
+      action: 'create',
+      entityType: 'user',
+      entityId: user.id,
+      entityName: user.name,
+    });
     res.status(201).json({ ...user, tempPassword });
   } catch (err) {
     next(err);
@@ -161,11 +172,15 @@ router.post('/', requirePrivilege('user_record', 'create'), async (req, res, nex
 
 // ─── PATCH /users/:id ────────────────────────────────────────────────────
 const updateUserSchema = z.object({
-  email:    z.string().email().optional(),
-  username: z.string().regex(/^[a-z0-9]+$/, 'Username must be lowercase letters and numbers only').nullable().optional(),
-  name:     z.string().min(1).optional(),
+  email: z.string().email().optional(),
+  username: z
+    .string()
+    .regex(/^[a-z0-9]+$/, 'Username must be lowercase letters and numbers only')
+    .nullable()
+    .optional(),
+  name: z.string().min(1).optional(),
   password: z.string().min(8).optional(),
-  active:   z.boolean().optional(),
+  active: z.boolean().optional(),
   memberId: z.string().nullable().optional(),
 });
 
@@ -176,12 +191,30 @@ router.patch('/:id', requirePrivilege('user_record', 'change'), async (req, res,
     const values = [];
     let i = 1;
 
-    if (data.email)    { fields.push(`email = $${i++}`);         values.push(data.email.toLowerCase()); }
-    if (data.username !== undefined) { fields.push(`username = $${i++}`); values.push(data.username); }
-    if (data.name)     { fields.push(`name = $${i++}`);          values.push(data.name); }
-    if (data.password) { fields.push(`password_hash = $${i++}`); values.push(await hashPassword(data.password)); }
-    if (data.active !== undefined) { fields.push(`active = $${i++}`); values.push(data.active); }
-    if (data.memberId !== undefined) { fields.push(`member_id = $${i++}`); values.push(data.memberId); }
+    if (data.email) {
+      fields.push(`email = $${i++}`);
+      values.push(data.email.toLowerCase());
+    }
+    if (data.username !== undefined) {
+      fields.push(`username = $${i++}`);
+      values.push(data.username);
+    }
+    if (data.name) {
+      fields.push(`name = $${i++}`);
+      values.push(data.name);
+    }
+    if (data.password) {
+      fields.push(`password_hash = $${i++}`);
+      values.push(await hashPassword(data.password));
+    }
+    if (data.active !== undefined) {
+      fields.push(`active = $${i++}`);
+      values.push(data.active);
+    }
+    if (data.memberId !== undefined) {
+      fields.push(`member_id = $${i++}`);
+      values.push(data.memberId);
+    }
 
     if (fields.length === 0) return res.status(400).json({ error: 'Nothing to update.' });
 
@@ -200,7 +233,14 @@ router.patch('/:id', requirePrivilege('user_record', 'change'), async (req, res,
       await invalidateUserSessions(req.user.tenantSlug, req.params.id);
     }
 
-    logAudit(req.user.tenantSlug, { userId: req.user.userId, userName: req.user.name, action: 'update', entityType: 'user', entityId: user.id, entityName: user.name });
+    logAudit(req.user.tenantSlug, {
+      userId: req.user.userId,
+      userName: req.user.name,
+      action: 'update',
+      entityType: 'user',
+      entityId: user.id,
+      entityName: user.name,
+    });
     res.json(user);
   } catch (err) {
     next(err);
@@ -208,26 +248,37 @@ router.patch('/:id', requirePrivilege('user_record', 'change'), async (req, res,
 });
 
 // ─── POST /users/:id/set-temp-password ──────────────────────────────────
-router.post('/:id/set-temp-password', requirePrivilege('user_record', 'change'), async (req, res, next) => {
-  try {
-    const tempPassword = generateTempPassword();
-    const hash = await hashPassword(tempPassword);
+router.post(
+  '/:id/set-temp-password',
+  requirePrivilege('user_record', 'change'),
+  async (req, res, next) => {
+    try {
+      const tempPassword = generateTempPassword();
+      const hash = await hashPassword(tempPassword);
 
-    const [user] = await tenantQuery(
-      req.user.tenantSlug,
-      `UPDATE users SET password_hash = $1, must_change_password = true, updated_at = now() WHERE id = $2 RETURNING id, name`,
-      [hash, req.params.id],
-    );
-    if (!user) throw AppError('User not found.', 404);
+      const [user] = await tenantQuery(
+        req.user.tenantSlug,
+        `UPDATE users SET password_hash = $1, must_change_password = true, updated_at = now() WHERE id = $2 RETURNING id, name`,
+        [hash, req.params.id],
+      );
+      if (!user) throw AppError('User not found.', 404);
 
-    await invalidateUserSessions(req.user.tenantSlug, req.params.id);
-    logAudit(req.user.tenantSlug, { userId: req.user.userId, userName: req.user.name, action: 'set_temp_password', entityType: 'user', entityId: user.id, entityName: user.name });
+      await invalidateUserSessions(req.user.tenantSlug, req.params.id);
+      logAudit(req.user.tenantSlug, {
+        userId: req.user.userId,
+        userName: req.user.name,
+        action: 'set_temp_password',
+        entityType: 'user',
+        entityId: user.id,
+        entityName: user.name,
+      });
 
-    res.json({ tempPassword });
-  } catch (err) {
-    next(err);
-  }
-});
+      res.json({ tempPassword });
+    } catch (err) {
+      next(err);
+    }
+  },
+);
 
 // ─── DELETE /users/:id ────────────────────────────────────────────────────
 router.delete('/:id', requirePrivilege('user_record', 'delete'), async (req, res, next) => {
@@ -258,7 +309,10 @@ router.delete('/:id', requirePrivilege('user_record', 'delete'), async (req, res
       [req.params.id],
     );
     if (parseInt(adminInfo?.is_admin || 0) > 0 && parseInt(adminInfo?.total_admins || 0) <= 1) {
-      throw AppError('Cannot delete the last user with the Administration role. Assign the role to another user first.', 400);
+      throw AppError(
+        'Cannot delete the last user with the Administration role. Assign the role to another user first.',
+        400,
+      );
     }
 
     await invalidateUserSessions(req.user.tenantSlug, req.params.id);
@@ -270,7 +324,14 @@ router.delete('/:id', requirePrivilege('user_record', 'delete'), async (req, res
     );
     if (!user) throw AppError('User not found.', 404);
 
-    logAudit(req.user.tenantSlug, { userId: req.user.userId, userName: req.user.name, action: 'delete', entityType: 'user', entityId: user.id, entityName: user.name });
+    logAudit(req.user.tenantSlug, {
+      userId: req.user.userId,
+      userName: req.user.name,
+      action: 'delete',
+      entityType: 'user',
+      entityId: user.id,
+      entityName: user.name,
+    });
     res.json({ message: 'User deleted.' });
   } catch (err) {
     next(err);
@@ -291,12 +352,13 @@ async function assertActorHoldsRolePrivileges(slug, actorPrivileges, roleId) {
     [roleId],
   );
   const have = new Set(actorPrivileges);
-  const missing = rows
-    .map((r) => `${r.code}:${r.action}`)
-    .filter((p) => !have.has(p));
+  const missing = rows.map((r) => `${r.code}:${r.action}`).filter((p) => !have.has(p));
   if (missing.length) {
     const sample = missing.slice(0, 3).join(', ') + (missing.length > 3 ? '…' : '');
-    throw AppError(`Cannot grant or revoke this role: it includes privileges you do not hold (${sample}).`, 403);
+    throw AppError(
+      `Cannot grant or revoke this role: it includes privileges you do not hold (${sample}).`,
+      403,
+    );
   }
 }
 
@@ -318,20 +380,28 @@ router.post('/:id/roles', requirePrivilege('user_record', 'change'), async (req,
 });
 
 // ─── DELETE /users/:id/roles/:roleId ─────────────────────────────────────
-router.delete('/:id/roles/:roleId', requirePrivilege('user_record', 'change'), async (req, res, next) => {
-  try {
-    await assertActorHoldsRolePrivileges(req.user.tenantSlug, req.user.privileges ?? [], req.params.roleId);
-    await tenantQuery(
-      req.user.tenantSlug,
-      `DELETE FROM user_roles WHERE user_id = $1 AND role_id = $2`,
-      [req.params.id, req.params.roleId],
-    );
-    await invalidateUserSessions(req.user.tenantSlug, req.params.id);
-    res.json({ message: 'Role removed.' });
-  } catch (err) {
-    next(err);
-  }
-});
+router.delete(
+  '/:id/roles/:roleId',
+  requirePrivilege('user_record', 'change'),
+  async (req, res, next) => {
+    try {
+      await assertActorHoldsRolePrivileges(
+        req.user.tenantSlug,
+        req.user.privileges ?? [],
+        req.params.roleId,
+      );
+      await tenantQuery(
+        req.user.tenantSlug,
+        `DELETE FROM user_roles WHERE user_id = $1 AND role_id = $2`,
+        [req.params.id, req.params.roleId],
+      );
+      await invalidateUserSessions(req.user.tenantSlug, req.params.id);
+      res.json({ message: 'Role removed.' });
+    } catch (err) {
+      next(err);
+    }
+  },
+);
 
 // ─── Helpers ──────────────────────────────────────────────────────────────
 
@@ -339,7 +409,9 @@ router.delete('/:id/roles/:roleId', requirePrivilege('user_record', 'change'), a
 function generateTempPassword() {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789!@#$%';
   const bytes = crypto.randomBytes(8);
-  return Array.from(bytes).map((b) => chars[b % chars.length]).join('');
+  return Array.from(bytes)
+    .map((b) => chars[b % chars.length])
+    .join('');
 }
 
 export default router;

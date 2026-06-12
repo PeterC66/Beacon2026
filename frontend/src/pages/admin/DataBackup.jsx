@@ -50,7 +50,8 @@ const EXPORT_OPTIONS = [
     type: 'settings',
     label: 'Site settings and set up',
     desc: 'System settings, finance accounts/categories, classes, statuses, polls, templates.',
-    sheets: 'Site Settings 1/2, Finance Accounts/Categories, Membership Classes/Fees, Member Statuses, Polls, Poll assignments, System Messages, Standard Messages, Standard Letters, Payment Method Defaults',
+    sheets:
+      'Site Settings 1/2, Finance Accounts/Categories, Membership Classes/Fees, Member Statuses, Polls, Poll assignments, System Messages, Standard Messages, Standard Letters, Payment Method Defaults',
   },
 ];
 
@@ -72,9 +73,10 @@ export default function DataBackup() {
     }
   }
 
-  const btnBase = 'inline-flex items-center gap-2 rounded px-4 py-2 text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed';
+  const btnBase =
+    'inline-flex items-center gap-2 rounded px-4 py-2 text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed';
   const btnPrimary = `${btnBase} bg-blue-600 hover:bg-blue-700 text-white`;
-  const btnGreen   = `${btnBase} bg-green-600 hover:bg-green-700 text-white`;
+  const btnGreen = `${btnBase} bg-green-600 hover:bg-green-700 text-white`;
 
   return (
     <div className="min-h-screen pb-10">
@@ -82,14 +84,12 @@ export default function DataBackup() {
       <NavBar links={[{ label: 'Home', to: '/' }, { label: 'Data Export & Backup' }]} />
 
       <div className="max-w-3xl mx-auto px-4 mt-6 space-y-8">
-
         {/* ── Export ──────────────────────────────────────────────────────── */}
         <section className="bg-white/90 rounded-lg shadow-sm p-4 sm:p-6">
           <h1 className="text-xl font-bold text-slate-800 mb-1">Data Export &amp; Backup</h1>
           <p className="text-sm text-slate-600 mb-5">
-            Download your data as an Excel spreadsheet. Files may contain personal
-            information — encrypt them if stored externally (e.g. with Excel&apos;s
-            Protect Workbook or 7-zip).
+            Download your data as an Excel spreadsheet. Files may contain personal information —
+            encrypt them if stored externally (e.g. with Excel&apos;s Protect Workbook or 7-zip).
           </p>
 
           {exportError && (
@@ -119,7 +119,12 @@ export default function DataBackup() {
                     <span className="animate-spin inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full" />
                   ) : (
                     <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
+                      />
                     </svg>
                   )}
                   Download
@@ -145,7 +150,12 @@ export default function DataBackup() {
                 <span className="animate-spin inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full" />
               ) : (
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
+                  />
                 </svg>
               )}
               Backup all data
@@ -154,7 +164,9 @@ export default function DataBackup() {
         </section>
 
         <div className="text-sm text-center">
-          <Link to="/" className="text-blue-700 hover:underline">← Back to Home</Link>
+          <Link to="/" className="text-blue-700 hover:underline">
+            ← Back to Home
+          </Link>
         </div>
       </div>
     </div>

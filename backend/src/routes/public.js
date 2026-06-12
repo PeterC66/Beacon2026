@@ -27,15 +27,13 @@ const PORTAL_FROM = process.env.RECOVERY_FROM_ADDRESS ?? 'noreply@u3abeacon.org.
 // Portal-login lockout — reuses the admin login env vars so operators have a
 // single knob. Mirrors registerFailedLogin() in services/authService.js.
 const MAX_FAILED_LOGINS = parseInt(process.env.MAX_FAILED_LOGINS ?? '5', 10);
-const LOCKOUT_MINUTES   = parseInt(process.env.LOCKOUT_MINUTES   ?? '15', 10);
+const LOCKOUT_MINUTES = parseInt(process.env.LOCKOUT_MINUTES ?? '15', 10);
 
 async function registerPortalFailedLogin(slug, members, attemptedEmail) {
   for (const m of members) {
     const newCount = (m.portal_failed_login_count ?? 0) + 1;
     const willLock = newCount >= MAX_FAILED_LOGINS;
-    const lockedUntil = willLock
-      ? new Date(Date.now() + LOCKOUT_MINUTES * 60_000)
-      : null;
+    const lockedUntil = willLock ? new Date(Date.now() + LOCKOUT_MINUTES * 60_000) : null;
 
     await tenantQuery(
       slug,
@@ -44,13 +42,13 @@ async function registerPortalFailedLogin(slug, members, attemptedEmail) {
     );
 
     await logAudit(slug, {
-      userId:     null,
-      userName:   `${m.forenames} ${m.surname}`,
-      action:     willLock ? 'portal_login_locked' : 'portal_login_failed',
+      userId: null,
+      userName: `${m.forenames} ${m.surname}`,
+      action: willLock ? 'portal_login_locked' : 'portal_login_failed',
       entityType: 'member',
-      entityId:   m.id,
+      entityId: m.id,
       entityName: `${m.forenames} ${m.surname}`,
-      detail:     willLock
+      detail: willLock
         ? `Portal account locked for ${LOCKOUT_MINUTES} min after ${MAX_FAILED_LOGINS} failed attempts (email ${attemptedEmail})`
         : `Failed portal attempt ${newCount}/${MAX_FAILED_LOGINS} (email ${attemptedEmail})`,
     });
@@ -85,7 +83,7 @@ router.use('/:slug', resolveTenant);
 router.get('/:slug/join-config', async (req, res, next) => {
   try {
     const slug = req.tenantSlug;
-    if (!await isFeatureEnabled(slug, 'onlineJoining')) {
+    if (!(await isFeatureEnabled(slug, 'onlineJoining'))) {
       return res.status(403).json({
         error: `Online joining is not enabled for ${req.tenant.name}.`,
         u3aName: req.tenant.name,
@@ -108,13 +106,13 @@ router.get('/:slug/join-config', async (req, res, next) => {
     );
 
     res.json({
-      u3aName:            req.tenant.name,
-      privacyPolicyUrl:   settings.privacy_policy_url ?? '',
-      giftAidEnabled:     await isFeatureEnabled(slug, 'giftAid'),
-      defaultTown:        settings.default_town ?? '',
-      defaultCounty:      settings.default_county ?? '',
-      onlineJoinEmail:    settings.online_join_email ?? '',
-      onlineRenewEmail:   settings.online_renew_email ?? '',
+      u3aName: req.tenant.name,
+      privacyPolicyUrl: settings.privacy_policy_url ?? '',
+      giftAidEnabled: await isFeatureEnabled(slug, 'giftAid'),
+      defaultTown: settings.default_town ?? '',
+      defaultCounty: settings.default_county ?? '',
+      onlineJoinEmail: settings.online_join_email ?? '',
+      onlineRenewEmail: settings.online_renew_email ?? '',
       classes,
     });
   } catch (err) {
@@ -127,31 +125,31 @@ router.get('/:slug/join-config', async (req, res, next) => {
 // Creates member record with Applicant status, then initiates PayPal payment.
 
 const partner2Schema = z.object({
-  title:     z.string().max(20).optional(),
+  title: z.string().max(20).optional(),
   forenames: z.string().min(1).max(100),
-  surname:   z.string().min(1).max(100),
-  email:     z.string().email().optional().or(z.literal('')),
-  mobile:    z.string().max(30).optional(),
-  giftAid:   z.boolean().default(false),
+  surname: z.string().min(1).max(100),
+  email: z.string().email().optional().or(z.literal('')),
+  mobile: z.string().max(30).optional(),
+  giftAid: z.boolean().default(false),
 });
 
 const joinSchema = z.object({
-  classId:     z.string().min(1),
-  title:       z.string().max(20).optional(),
-  forenames:   z.string().min(1).max(100),
-  surname:     z.string().min(1).max(100),
-  email:       z.string().email(),
-  mobile:      z.string().max(30).optional(),
+  classId: z.string().min(1),
+  title: z.string().max(20).optional(),
+  forenames: z.string().min(1).max(100),
+  surname: z.string().min(1).max(100),
+  email: z.string().email(),
+  mobile: z.string().max(30).optional(),
   address: z.object({
-    houseNo:   z.string().optional(),
-    street:    z.string().optional(),
-    town:      z.string().optional(),
-    county:    z.string().optional(),
-    postcode:  z.string().min(1, 'Postcode is required'),
+    houseNo: z.string().optional(),
+    street: z.string().optional(),
+    town: z.string().optional(),
+    county: z.string().optional(),
+    postcode: z.string().min(1, 'Postcode is required'),
     telephone: z.string().optional(),
   }),
-  giftAid:     z.boolean().default(false),
-  partner2:    partner2Schema.optional(),
+  giftAid: z.boolean().default(false),
+  partner2: partner2Schema.optional(),
 });
 
 router.post('/:slug/join', async (req, res, next) => {
@@ -160,8 +158,10 @@ router.post('/:slug/join', async (req, res, next) => {
     const data = joinSchema.parse(req.body);
 
     // Verify online joining is enabled
-    if (!await isFeatureEnabled(slug, 'onlineJoining')) {
-      return res.status(403).json({ error: `Online joining is not enabled for ${req.tenant.name}.` });
+    if (!(await isFeatureEnabled(slug, 'onlineJoining'))) {
+      return res
+        .status(403)
+        .json({ error: `Online joining is not enabled for ${req.tenant.name}.` });
     }
 
     const [settings] = await tenantQuery(
@@ -184,7 +184,9 @@ router.post('/:slug/join', async (req, res, next) => {
 
     // If class is joint, partner2 data is required
     if (cls.is_joint && !data.partner2) {
-      return res.status(400).json({ error: 'Joint membership requires details for the second person.' });
+      return res
+        .status(400)
+        .json({ error: 'Joint membership requires details for the second person.' });
     }
 
     // Find or create the Applicant status
@@ -206,9 +208,12 @@ router.post('/:slug/join', async (req, res, next) => {
       `INSERT INTO addresses (house_no, street, town, county, postcode, telephone)
        VALUES ($1, $2, $3, $4, $5, $6) RETURNING id`,
       [
-        addr.houseNo ?? null, addr.street ?? null,
-        addr.town ?? null, addr.county ?? null,
-        addr.postcode.trim().toUpperCase(), addr.telephone ?? null,
+        addr.houseNo ?? null,
+        addr.street ?? null,
+        addr.town ?? null,
+        addr.county ?? null,
+        addr.postcode.trim().toUpperCase(),
+        addr.telephone ?? null,
       ],
     );
 
@@ -223,11 +228,15 @@ router.post('/:slug/join', async (req, res, next) => {
     const nextRenewal = `${renewalYear}-${String(ysm).padStart(2, '0')}-${String(ysd).padStart(2, '0')}`;
 
     // Derive initials
-    const initials = data.forenames.split(/\s+/).map(n => n[0]?.toUpperCase()).filter(Boolean).join('');
+    const initials = data.forenames
+      .split(/\s+/)
+      .map((n) => n[0]?.toUpperCase())
+      .filter(Boolean)
+      .join('');
 
     // Set gift_aid_from if opted in and enabled
     const giftAidEnabled = await isFeatureEnabled(slug, 'giftAid');
-    const giftAidFrom = (data.giftAid && giftAidEnabled) ? joinedOn : null;
+    const giftAidFrom = data.giftAid && giftAidEnabled ? joinedOn : null;
 
     // Generate a payment token so the applicant can resume payment later.
     // Only the hash is persisted; the plaintext is returned below to embed
@@ -245,18 +254,29 @@ router.post('/:slug/join', async (req, res, next) => {
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10::date, $11::date, $12::date, $13)
        RETURNING id, membership_number, forenames, surname, email`,
       [
-        data.title ?? null, data.forenames, data.surname, initials,
-        data.email.toLowerCase(), data.mobile ?? null,
-        newAddr.id, applicantStatus.id, data.classId,
-        joinedOn, nextRenewal, giftAidFrom,
+        data.title ?? null,
+        data.forenames,
+        data.surname,
+        initials,
+        data.email.toLowerCase(),
+        data.mobile ?? null,
+        newAddr.id,
+        applicantStatus.id,
+        data.classId,
+        joinedOn,
+        nextRenewal,
+        giftAidFrom,
         paymentTokenHash,
       ],
     );
 
     logAudit(slug, {
-      userId: null, userName: `${data.forenames} ${data.surname} (online)`,
-      action: 'create', entityType: 'member',
-      entityId: member.id, entityName: `${data.forenames} ${data.surname}`,
+      userId: null,
+      userName: `${data.forenames} ${data.surname} (online)`,
+      action: 'create',
+      entityType: 'member',
+      entityId: member.id,
+      entityName: `${data.forenames} ${data.surname}`,
       detail: 'Online joining application',
     });
 
@@ -264,9 +284,13 @@ router.post('/:slug/join', async (req, res, next) => {
     let partner2Result = null;
     if (cls.is_joint && data.partner2) {
       const p2 = data.partner2;
-      const p2Initials = p2.forenames.split(/\s+/).map(n => n[0]?.toUpperCase()).filter(Boolean).join('');
+      const p2Initials = p2.forenames
+        .split(/\s+/)
+        .map((n) => n[0]?.toUpperCase())
+        .filter(Boolean)
+        .join('');
       const p2Email = p2.email ? p2.email.toLowerCase() : null;
-      const p2GiftAidFrom = (p2.giftAid && giftAidEnabled) ? joinedOn : null;
+      const p2GiftAidFrom = p2.giftAid && giftAidEnabled ? joinedOn : null;
 
       const [partner] = await tenantQuery(
         slug,
@@ -277,11 +301,20 @@ router.post('/:slug/join', async (req, res, next) => {
          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10::date, $11::date, $12::date, $13, $14)
          RETURNING id, membership_number, forenames, surname`,
         [
-          p2.title ?? null, p2.forenames, p2.surname, p2Initials,
-          p2Email, p2.mobile ?? null,
-          newAddr.id, applicantStatus.id, data.classId,
-          joinedOn, nextRenewal, p2GiftAidFrom,
-          paymentTokenHash, member.id,
+          p2.title ?? null,
+          p2.forenames,
+          p2.surname,
+          p2Initials,
+          p2Email,
+          p2.mobile ?? null,
+          newAddr.id,
+          applicantStatus.id,
+          data.classId,
+          joinedOn,
+          nextRenewal,
+          p2GiftAidFrom,
+          paymentTokenHash,
+          member.id,
         ],
       );
 
@@ -293,16 +326,19 @@ router.post('/:slug/join', async (req, res, next) => {
       );
 
       partner2Result = {
-        memberId:         partner.id,
+        memberId: partner.id,
         membershipNumber: partner.membership_number,
-        forenames:        p2.forenames,
-        surname:          p2.surname,
+        forenames: p2.forenames,
+        surname: p2.surname,
       };
 
       logAudit(slug, {
-        userId: null, userName: `${p2.forenames} ${p2.surname} (online)`,
-        action: 'create', entityType: 'member',
-        entityId: partner.id, entityName: `${p2.forenames} ${p2.surname}`,
+        userId: null,
+        userName: `${p2.forenames} ${p2.surname} (online)`,
+        action: 'create',
+        entityType: 'member',
+        entityId: partner.id,
+        entityName: `${p2.forenames} ${p2.surname}`,
         detail: 'Online joining application (joint partner)',
       });
     }
@@ -316,23 +352,23 @@ router.post('/:slug/join', async (req, res, next) => {
     const cancelUrl = settings.paypal_cancel_url || `${frontendBase}/public/${slug}/join`;
 
     const { paymentId, redirectUrl } = await initiatePayment({
-      amount:      totalAmount,
+      amount: totalAmount,
       description: cls.is_joint ? `Joint Membership: ${cls.name} (×2)` : `Membership: ${cls.name}`,
-      memberRef:   member.id,
+      memberRef: member.id,
       returnUrl,
       cancelUrl,
       paypalEmail: settings.paypal_email,
     });
 
     res.status(201).json({
-      memberId:         member.id,
+      memberId: member.id,
       membershipNumber: member.membership_number,
       paymentId,
       redirectUrl,
       paymentToken,
-      amount:           totalAmount,
-      className:        cls.name,
-      partner2:         partner2Result,
+      amount: totalAmount,
+      className: cls.name,
+      partner2: partner2Result,
     });
   } catch (err) {
     next(err);
@@ -345,7 +381,7 @@ router.post('/:slug/join', async (req, res, next) => {
 
 const paymentConfirmSchema = z.object({
   paymentId: z.string().min(1),
-  memberId:  z.string().min(1),
+  memberId: z.string().min(1),
 });
 
 router.post('/:slug/payment-confirm', async (req, res, next) => {
@@ -432,7 +468,14 @@ router.post('/:slug/payment-confirm', async (req, res, next) => {
 
         const detail = member.is_joint ? 'New Joint Membership' : 'New Membership';
 
-        const txnParams = [paypalAcct.id, member.joined_on, memberName, paypalAmount, detail, member.id];
+        const txnParams = [
+          paypalAcct.id,
+          member.joined_on,
+          memberName,
+          paypalAmount,
+          detail,
+          member.id,
+        ];
         let memberIdCols = 'member_id_1';
         let memberIdVals = '$6';
         if (partnerForTxn) {
@@ -483,10 +526,15 @@ router.post('/:slug/payment-confirm', async (req, res, next) => {
     await sendOfficerNotifications(slug, member);
 
     logAudit(slug, {
-      userId: null, userName: 'System (online payment)',
-      action: 'update', entityType: 'member',
-      entityId: member.id, entityName: `${member.forenames} ${member.surname}`,
-      detail: member.is_joint ? 'Online joining payment confirmed (joint membership)' : 'Online joining payment confirmed',
+      userId: null,
+      userName: 'System (online payment)',
+      action: 'update',
+      entityType: 'member',
+      entityId: member.id,
+      entityName: `${member.forenames} ${member.surname}`,
+      detail: member.is_joint
+        ? 'Online joining payment confirmed (joint membership)'
+        : 'Online joining payment confirmed',
     });
 
     res.json({ success: true, membershipNumber: member.membership_number });
@@ -526,7 +574,9 @@ router.get('/:slug/resume-payment/:token', async (req, res, next) => {
     );
 
     if (!member) {
-      return res.status(404).json({ error: 'This payment link is no longer valid. It may have expired or already been used.' });
+      return res.status(404).json({
+        error: 'This payment link is no longer valid. It may have expired or already been used.',
+      });
     }
 
     // If member is no longer an Applicant, they've already paid
@@ -547,10 +597,10 @@ router.get('/:slug/resume-payment/:token', async (req, res, next) => {
       );
       if (p) {
         partner2 = {
-          memberId:         p.id,
+          memberId: p.id,
           membershipNumber: p.membership_number,
-          forenames:        p.forenames,
-          surname:          p.surname,
+          forenames: p.forenames,
+          surname: p.surname,
         };
       }
     }
@@ -569,22 +619,24 @@ router.get('/:slug/resume-payment/:token', async (req, res, next) => {
     const cancelUrl = settings?.paypal_cancel_url || `${frontendBase}/public/${slug}/join`;
 
     const { paymentId, redirectUrl } = await initiatePayment({
-      amount:      totalAmount,
-      description: member.is_joint ? `Joint Membership: ${member.class_name} (×2)` : `Membership: ${member.class_name}`,
-      memberRef:   member.id,
+      amount: totalAmount,
+      description: member.is_joint
+        ? `Joint Membership: ${member.class_name} (×2)`
+        : `Membership: ${member.class_name}`,
+      memberRef: member.id,
       returnUrl,
       cancelUrl,
       paypalEmail: settings?.paypal_email,
     });
 
     res.json({
-      memberId:         member.id,
+      memberId: member.id,
       membershipNumber: member.membership_number,
-      forenames:        member.forenames,
-      surname:          member.surname,
-      email:            member.email,
-      className:        member.class_name,
-      amount:           totalAmount,
+      forenames: member.forenames,
+      surname: member.surname,
+      email: member.email,
+      className: member.class_name,
+      amount: totalAmount,
       paymentId,
       redirectUrl,
       partner2,
@@ -654,13 +706,17 @@ router.post('/:slug/email-payment-link', async (req, res, next) => {
     const replyTo = settings?.online_join_email || null;
 
     const { subject } = resolveTokens(
-      template.subject, template.body,
-      { ...member, class_name: member.class_name }, u3aName,
+      template.subject,
+      template.body,
+      { ...member, class_name: member.class_name },
+      u3aName,
       { '#PAYMENTLINK': paymentLink },
     );
 
     // In production, this would call SendGrid
-    console.log(`[Online Join] Would send payment link email to ${member.email}: "${subject}"${replyTo ? ` (reply-to: ${replyTo})` : ''}`);
+    console.log(
+      `[Online Join] Would send payment link email to ${member.email}: "${subject}"${replyTo ? ` (reply-to: ${replyTo})` : ''}`,
+    );
     console.log(`[Online Join] Payment link: ${paymentLink}`);
 
     res.json({ message: 'Payment link has been sent to your email address.' });
@@ -690,8 +746,10 @@ async function sendJoinConfirmationEmail(slug, member) {
     const replyTo = settings?.online_join_email || null;
 
     const { subject } = resolveTokens(
-      template.subject, template.body,
-      { ...member, class_name: member.class_name }, u3aName,
+      template.subject,
+      template.body,
+      { ...member, class_name: member.class_name },
+      u3aName,
     );
 
     // Build attachment list — attach membership card PDF when email_cards is enabled
@@ -700,9 +758,9 @@ async function sendJoinConfirmationEmail(slug, member) {
       try {
         const { pdfBuffer, filename } = await generateSingleCardPdf(slug, member.id);
         attachments.push({
-          content:     pdfBuffer.toString('base64'),
+          content: pdfBuffer.toString('base64'),
           filename,
-          type:        'application/pdf',
+          type: 'application/pdf',
           disposition: 'attachment',
         });
       } catch (cardErr) {
@@ -721,7 +779,9 @@ async function sendJoinConfirmationEmail(slug, member) {
     //   attachments: attachments.length > 0 ? attachments : undefined,
     // };
     // await sgMail.send(msg);
-    console.log(`[Online Join] Would send confirmation email to ${member.email}: "${subject}"${replyTo ? ` (reply-to: ${replyTo})` : ''}${attachments.length ? ` [+${attachments.length} attachment(s): ${attachments.map(a => a.filename).join(', ')}]` : ''}`);
+    console.log(
+      `[Online Join] Would send confirmation email to ${member.email}: "${subject}"${replyTo ? ` (reply-to: ${replyTo})` : ''}${attachments.length ? ` [+${attachments.length} attachment(s): ${attachments.map((a) => a.filename).join(', ')}]` : ''}`,
+    );
   } catch (err) {
     console.error('[Online Join] Failed to send confirmation email:', err.message);
   }
@@ -749,8 +809,10 @@ async function sendOfficerNotifications(slug, member) {
     const u3aName = tenant?.name ?? '';
 
     const { subject } = resolveTokens(
-      template.subject, template.body,
-      { ...member, class_name: member.class_name }, u3aName,
+      template.subject,
+      template.body,
+      { ...member, class_name: member.class_name },
+      u3aName,
     );
 
     for (const officer of officers) {
@@ -774,14 +836,18 @@ async function sendOfficerNotifications(slug, member) {
 
 const portalRegisterSchema = z.object({
   membershipNumber: z.number().int().positive(),
-  forename:         z.string().min(1),
-  surname:          z.string().min(1),
-  postcode:         z.string().min(1),
-  email:            z.string().email(),
-  password:         z.string().min(10).max(72).refine(
-    (pw) => /[a-z]/.test(pw) && /[A-Z]/.test(pw) && /[0-9]/.test(pw),
-    { message: 'Password must contain at least one uppercase, one lowercase, and one numeric character.' },
-  ),
+  forename: z.string().min(1),
+  surname: z.string().min(1),
+  postcode: z.string().min(1),
+  email: z.string().email(),
+  password: z
+    .string()
+    .min(10)
+    .max(72)
+    .refine((pw) => /[a-z]/.test(pw) && /[A-Z]/.test(pw) && /[0-9]/.test(pw), {
+      message:
+        'Password must contain at least one uppercase, one lowercase, and one numeric character.',
+    }),
 });
 
 router.post('/:slug/portal/register', async (req, res, next) => {
@@ -801,7 +867,9 @@ router.post('/:slug/portal/register', async (req, res, next) => {
     );
 
     if (!member) {
-      return res.status(400).json({ error: 'Details do not match our records. Please check and try again.' });
+      return res
+        .status(400)
+        .json({ error: 'Details do not match our records. Please check and try again.' });
     }
 
     // Verify each field matches (case-insensitive). Match the full forename
@@ -809,22 +877,26 @@ router.post('/:slug/portal/register', async (req, res, next) => {
     // prefix, so a one-letter `data.forename` cannot match every member
     // whose forename starts with that letter.
     const submittedForename = data.forename.toLowerCase().trim();
-    const memberForenameFull  = member.forenames?.toLowerCase() ?? '';
+    const memberForenameFull = member.forenames?.toLowerCase() ?? '';
     const memberForenameFirst = memberForenameFull.split(/\s+/)[0] ?? '';
     const forenameMatch =
-      submittedForename === memberForenameFull ||
-      submittedForename === memberForenameFirst;
-    const surnameMatch  = member.surname?.toLowerCase() === data.surname.toLowerCase();
-    const postcodeMatch = member.postcode?.replace(/\s+/g, '').toLowerCase() ===
-                          data.postcode.replace(/\s+/g, '').toLowerCase();
-    const emailMatch    = member.email?.toLowerCase() === data.email.toLowerCase();
+      submittedForename === memberForenameFull || submittedForename === memberForenameFirst;
+    const surnameMatch = member.surname?.toLowerCase() === data.surname.toLowerCase();
+    const postcodeMatch =
+      member.postcode?.replace(/\s+/g, '').toLowerCase() ===
+      data.postcode.replace(/\s+/g, '').toLowerCase();
+    const emailMatch = member.email?.toLowerCase() === data.email.toLowerCase();
 
     if (!forenameMatch || !surnameMatch || !postcodeMatch || !emailMatch) {
-      return res.status(400).json({ error: 'Details do not match our records. Please check and try again.' });
+      return res
+        .status(400)
+        .json({ error: 'Details do not match our records. Please check and try again.' });
     }
 
     if (member.portal_password_hash) {
-      return res.status(400).json({ error: 'A portal account already exists for this member. Please sign in instead.' });
+      return res.status(400).json({
+        error: 'A portal account already exists for this member. Please sign in instead.',
+      });
     }
 
     // Set portal credentials
@@ -842,7 +914,13 @@ router.post('/:slug/portal/register', async (req, res, next) => {
          portal_verification_expires = $4,
          updated_at = now()
        WHERE id = $5`,
-      [data.email.toLowerCase(), passwordHash, hashOpaqueToken(verificationToken), verificationExpires, member.id],
+      [
+        data.email.toLowerCase(),
+        passwordHash,
+        hashOpaqueToken(verificationToken),
+        verificationExpires,
+        member.id,
+      ],
     );
 
     // In production, send verification email with link
@@ -851,12 +929,17 @@ router.post('/:slug/portal/register', async (req, res, next) => {
     console.log(`[Portal] Would send verification email to ${data.email}: ${verifyLink}`);
 
     logAudit(slug, {
-      userId: null, userName: `${data.forename} ${data.surname} (portal)`,
-      action: 'create', entityType: 'portal_account',
-      entityId: member.id, entityName: `${member.forenames} ${member.surname}`,
+      userId: null,
+      userName: `${data.forename} ${data.surname} (portal)`,
+      action: 'create',
+      entityType: 'portal_account',
+      entityId: member.id,
+      entityName: `${member.forenames} ${member.surname}`,
     });
 
-    res.json({ message: 'Registration successful. Please check your email to verify your account.' });
+    res.json({
+      message: 'Registration successful. Please check your email to verify your account.',
+    });
   } catch (err) {
     next(err);
   }
@@ -886,7 +969,9 @@ router.post('/:slug/portal/verify-email', async (req, res, next) => {
     }
 
     if (new Date() > new Date(member.portal_verification_expires)) {
-      return res.status(400).json({ error: 'Verification link has expired. Please use Forgotten Password to get a new one.' });
+      return res.status(400).json({
+        error: 'Verification link has expired. Please use Forgotten Password to get a new one.',
+      });
     }
 
     await tenantQuery(
@@ -900,7 +985,9 @@ router.post('/:slug/portal/verify-email', async (req, res, next) => {
       [member.id],
     );
 
-    res.json({ message: 'Email verified successfully. You can now sign in to the Members Portal.' });
+    res.json({
+      message: 'Email verified successfully. You can now sign in to the Members Portal.',
+    });
   } catch (err) {
     next(err);
   }
@@ -909,7 +996,7 @@ router.post('/:slug/portal/verify-email', async (req, res, next) => {
 // ─── POST /:slug/portal/login ───────────────────────────────────────────
 
 const portalLoginSchema = z.object({
-  email:    z.string().email(),
+  email: z.string().email(),
   password: z.string().min(1),
 });
 
@@ -965,7 +1052,10 @@ router.post('/:slug/portal/login', async (req, res, next) => {
 
     // Successful login — clear any failure counter / lockout window on the
     // winning member row.
-    if (authenticatedMember.portal_failed_login_count > 0 || authenticatedMember.portal_locked_until) {
+    if (
+      authenticatedMember.portal_failed_login_count > 0 ||
+      authenticatedMember.portal_locked_until
+    ) {
       await tenantQuery(
         slug,
         `UPDATE members SET portal_failed_login_count = 0, portal_locked_until = NULL WHERE id = $1`,
@@ -975,18 +1065,18 @@ router.post('/:slug/portal/login', async (req, res, next) => {
 
     // Issue a portal JWT (different from admin JWT)
     const token = signAccessToken({
-      memberId:   authenticatedMember.id,
+      memberId: authenticatedMember.id,
       tenantSlug: slug,
-      name:       `${authenticatedMember.forenames} ${authenticatedMember.surname}`,
-      isPortal:   true,
+      name: `${authenticatedMember.forenames} ${authenticatedMember.surname}`,
+      isPortal: true,
     });
 
     res.json({
       token,
       member: {
-        id:               authenticatedMember.id,
+        id: authenticatedMember.id,
         membershipNumber: authenticatedMember.membership_number,
-        name:             `${authenticatedMember.forenames} ${authenticatedMember.surname}`,
+        name: `${authenticatedMember.forenames} ${authenticatedMember.surname}`,
       },
     });
   } catch (err) {
@@ -1015,7 +1105,9 @@ router.post('/:slug/portal/forgot-password', async (req, res, next) => {
 
     // Always return success to avoid email enumeration
     if (!member) {
-      return res.json({ message: 'If an account exists with that email, a reset link has been sent.' });
+      return res.json({
+        message: 'If an account exists with that email, a reset link has been sent.',
+      });
     }
 
     const resetToken = generateToken();
@@ -1062,7 +1154,7 @@ If you did not request this, you can ignore this email.`;
   if (!process.env.SENDGRID_API_KEY) {
     console.warn(
       `[Portal] SendGrid not configured — cannot deliver password reset email to ${toEmail}. ` +
-      `Set SENDGRID_API_KEY to enable portal reset emails.`,
+        `Set SENDGRID_API_KEY to enable portal reset emails.`,
     );
     return;
   }
@@ -1083,11 +1175,15 @@ If you did not request this, you can ignore this email.`;
 // ─── POST /:slug/portal/reset-password ──────────────────────────────────
 
 const resetPasswordSchema = z.object({
-  token:    z.string().min(1),
-  password: z.string().min(10).max(72).refine(
-    (pw) => /[a-z]/.test(pw) && /[A-Z]/.test(pw) && /[0-9]/.test(pw),
-    { message: 'Password must contain at least one uppercase, one lowercase, and one numeric character.' },
-  ),
+  token: z.string().min(1),
+  password: z
+    .string()
+    .min(10)
+    .max(72)
+    .refine((pw) => /[a-z]/.test(pw) && /[A-Z]/.test(pw) && /[0-9]/.test(pw), {
+      message:
+        'Password must contain at least one uppercase, one lowercase, and one numeric character.',
+    }),
 });
 
 router.post('/:slug/portal/reset-password', async (req, res, next) => {
@@ -1140,27 +1236,38 @@ router.get('/:slug/groups', async (req, res, next) => {
   try {
     const slug = req.tenantSlug;
 
-    if (!await isFeatureEnabled(slug, 'publicPages') || !await isFeatureEnabled(slug, 'groups')) {
-      return res.status(403).json({ error: 'This feature is not enabled for this u3a.', feature: 'publicPages' });
+    if (
+      !(await isFeatureEnabled(slug, 'publicPages')) ||
+      !(await isFeatureEnabled(slug, 'groups'))
+    ) {
+      return res
+        .status(403)
+        .json({ error: 'This feature is not enabled for this u3a.', feature: 'publicPages' });
     }
 
     const [[settings], groups] = await Promise.all([
-      tenantQuery(slug,
+      tenantQuery(
+        slug,
         `SELECT group_info_config
-         FROM tenant_settings WHERE id = 'singleton'`),
-      tenantQuery(slug,
+         FROM tenant_settings WHERE id = 'singleton'`,
+      ),
+      tenantQuery(
+        slug,
         `SELECT g.id, g.name, g.status, g.when_text, g.start_time, g.end_time,
                 g.enquiries, g.information,
                 v.name AS venue_name, v.postcode AS venue_postcode
          FROM groups g
          LEFT JOIN venues v ON v.id = g.venue_id
          WHERE g.status = 'active' AND g.type = 'group'
-         ORDER BY g.name`),
+         ORDER BY g.name`,
+      ),
     ]);
 
     const groupInfoConfig = {
-      status: { public: false }, venue: { public: false },
-      contact: { public: false }, detail: { public: false },
+      status: { public: false },
+      venue: { public: false },
+      contact: { public: false },
+      detail: { public: false },
       enquiries: { public: false },
       ...(settings?.group_info_config ?? {}),
     };
@@ -1168,11 +1275,13 @@ router.get('/:slug/groups', async (req, res, next) => {
     // Find leaders for contact info
     let leaderMap = new Map();
     if (groupInfoConfig.contact?.public) {
-      const leaderRows = await tenantQuery(slug,
+      const leaderRows = await tenantQuery(
+        slug,
         `SELECT gm.group_id, m.forenames, m.surname, m.known_as
          FROM group_members gm
          JOIN members m ON m.id = gm.member_id
-         WHERE gm.is_leader = true`);
+         WHERE gm.is_leader = true`,
+      );
       for (const row of leaderRows) {
         const name = row.known_as || row.forenames?.split(' ')[0] || row.forenames;
         const display = `${name} ${row.surname}`.trim();
@@ -1181,7 +1290,7 @@ router.get('/:slug/groups', async (req, res, next) => {
       }
     }
 
-    const result = groups.map(g => ({
+    const result = groups.map((g) => ({
       id: g.id,
       name: g.name,
       when: g.when_text || null,
@@ -1200,7 +1309,9 @@ router.get('/:slug/groups', async (req, res, next) => {
     }));
 
     res.json({ groups: result, u3aName: req.tenant.name || slug });
-  } catch (err) { next(err); }
+  } catch (err) {
+    next(err);
+  }
 });
 
 // GET /:slug/calendar — public calendar
@@ -1209,17 +1320,26 @@ router.get('/:slug/calendar', async (req, res, next) => {
     const slug = req.tenantSlug;
     const { from, to } = req.query;
 
-    if (!await isFeatureEnabled(slug, 'publicPages') || !await isFeatureEnabled(slug, 'events')) {
-      return res.status(403).json({ error: 'This feature is not enabled for this u3a.', feature: 'publicPages' });
+    if (
+      !(await isFeatureEnabled(slug, 'publicPages')) ||
+      !(await isFeatureEnabled(slug, 'events'))
+    ) {
+      return res
+        .status(403)
+        .json({ error: 'This feature is not enabled for this u3a.', feature: 'publicPages' });
     }
 
-    const [settings] = await tenantQuery(slug,
+    const [settings] = await tenantQuery(
+      slug,
       `SELECT calendar_config
-       FROM tenant_settings WHERE id = 'singleton'`);
+       FROM tenant_settings WHERE id = 'singleton'`,
+    );
 
     const calConfig = {
-      venue: { public: false }, topic: { public: false },
-      enquiries: { public: false }, detail: { public: false },
+      venue: { public: false },
+      topic: { public: false },
+      enquiries: { public: false },
+      detail: { public: false },
       ...(settings?.calendar_config ?? {}),
     };
 
@@ -1238,7 +1358,8 @@ router.get('/:slug/calendar', async (req, res, next) => {
 
     const where = 'WHERE ' + conditions.join(' AND ');
 
-    const events = await tenantQuery(slug,
+    const events = await tenantQuery(
+      slug,
       `SELECT ge.id, ge.event_date, ge.start_time, ge.end_time,
               ge.group_id, g.name AS group_name,
               ge.event_type_id, et.name AS event_type_name,
@@ -1250,9 +1371,10 @@ router.get('/:slug/calendar', async (req, res, next) => {
        LEFT JOIN event_types et ON et.id = ge.event_type_id
        ${where}
        ORDER BY ge.event_date, ge.start_time, g.name`,
-      params);
+      params,
+    );
 
-    const result = events.map(ev => ({
+    const result = events.map((ev) => ({
       id: ev.id,
       eventDate: ev.event_date,
       startTime: ev.start_time,
@@ -1269,7 +1391,9 @@ router.get('/:slug/calendar', async (req, res, next) => {
     }));
 
     res.json({ events: result, u3aName: req.tenant.name || slug });
-  } catch (err) { next(err); }
+  } catch (err) {
+    next(err);
+  }
 });
 
 // ═══════════════════════════════════════════════════════════════════════════════

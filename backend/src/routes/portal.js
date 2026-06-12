@@ -47,8 +47,10 @@ router.use(requirePortalAuth);
 // Gate all portal routes on the portal feature toggle
 router.use(async (req, res, next) => {
   try {
-    if (!await isFeatureEnabled(req.portal.tenantSlug, 'portal')) {
-      return res.status(403).json({ error: 'The Members Portal is not enabled for this organisation.' });
+    if (!(await isFeatureEnabled(req.portal.tenantSlug, 'portal'))) {
+      return res
+        .status(403)
+        .json({ error: 'The Members Portal is not enabled for this organisation.' });
     }
     next();
   } catch (err) {
@@ -64,25 +66,34 @@ router.get('/home', async (req, res, next) => {
     const memberId = req.portal.memberId;
 
     const [[settings], [member], tenant] = await Promise.all([
-      tenantQuery(slug,
+      tenantQuery(
+        slug,
         `SELECT portal_config, group_info_config, calendar_config
-         FROM tenant_settings WHERE id = 'singleton'`),
-      tenantQuery(slug,
+         FROM tenant_settings WHERE id = 'singleton'`,
+      ),
+      tenantQuery(
+        slug,
         `SELECT m.id, m.membership_number, m.forenames, m.surname, m.known_as,
                 m.next_renewal, ms.name AS status_name
          FROM members m
          LEFT JOIN member_statuses ms ON m.status_id = ms.id
-         WHERE m.id = $1`, [memberId]),
+         WHERE m.id = $1`,
+        [memberId],
+      ),
       prisma.sysTenant.findUnique({ where: { slug } }),
     ]);
 
     const portalConfig = {
-      renewals: false, groups: false, calendar: false,
-      personalDetails: false, replacementCard: false,
+      renewals: false,
+      groups: false,
+      calendar: false,
+      personalDetails: false,
+      replacementCard: false,
       ...(settings?.portal_config ?? {}),
     };
 
-    const displayName = member?.known_as || member?.forenames?.split(' ')[0] || member?.forenames || '';
+    const displayName =
+      member?.known_as || member?.forenames?.split(' ')[0] || member?.forenames || '';
     const fullName = `${member?.forenames ?? ''} ${member?.surname ?? ''}`.trim();
 
     res.json({
@@ -112,10 +123,13 @@ router.get('/groups', async (req, res, next) => {
     const memberId = req.portal.memberId;
 
     const [[settings], groups] = await Promise.all([
-      tenantQuery(slug,
+      tenantQuery(
+        slug,
         `SELECT portal_config, group_info_config
-         FROM tenant_settings WHERE id = 'singleton'`),
-      tenantQuery(slug,
+         FROM tenant_settings WHERE id = 'singleton'`,
+      ),
+      tenantQuery(
+        slug,
         `SELECT g.id, g.name, g.status, g.when_text, g.start_time, g.end_time,
                 g.enquiries, g.information, g.max_members, g.allow_online_join,
                 g.enable_waiting_list,
@@ -126,33 +140,43 @@ router.get('/groups', async (req, res, next) => {
          LEFT JOIN venues v ON v.id = g.venue_id
          LEFT JOIN faculties f ON f.id = g.faculty_id
          WHERE g.status = 'active'
-         ORDER BY g.name`),
+         ORDER BY g.name`,
+      ),
     ]);
 
     const portalConfig = { groups: false, ...(settings?.portal_config ?? {}) };
     if (!portalConfig.groups) {
-      return res.status(403).json({ error: 'Groups viewing is not enabled for this organisation.' });
+      return res
+        .status(403)
+        .json({ error: 'Groups viewing is not enabled for this organisation.' });
     }
 
     const groupInfoConfig = {
-      status: { members: false }, venue: { members: false },
-      contact: { members: false }, detail: { members: false },
-      enquiries: { members: false }, joinGroup: { members: false },
+      status: { members: false },
+      venue: { members: false },
+      contact: { members: false },
+      detail: { members: false },
+      enquiries: { members: false },
+      joinGroup: { members: false },
       ...(settings?.group_info_config ?? {}),
     };
 
     // Get the member's group memberships
-    const memberships = await tenantQuery(slug,
+    const memberships = await tenantQuery(
+      slug,
       `SELECT group_id, is_leader, waiting_since FROM group_members WHERE member_id = $1`,
-      [memberId]);
-    const memberGroupMap = new Map(memberships.map(m => [m.group_id, m]));
+      [memberId],
+    );
+    const memberGroupMap = new Map(memberships.map((m) => [m.group_id, m]));
 
     // Find leaders for contact info
-    const leaderRows = await tenantQuery(slug,
+    const leaderRows = await tenantQuery(
+      slug,
       `SELECT gm.group_id, m.forenames, m.surname, m.known_as
        FROM group_members gm
        JOIN members m ON m.id = gm.member_id
-       WHERE gm.is_leader = true`);
+       WHERE gm.is_leader = true`,
+    );
     const leaderMap = new Map();
     for (const row of leaderRows) {
       const name = row.known_as || row.forenames?.split(' ')[0] || row.forenames;
@@ -161,7 +185,7 @@ router.get('/groups', async (req, res, next) => {
       leaderMap.get(row.group_id).push(display);
     }
 
-    const result = groups.map(g => {
+    const result = groups.map((g) => {
       const membership = memberGroupMap.get(g.id);
       return {
         id: g.id,
@@ -204,18 +228,23 @@ router.post('/groups/:groupId/join', async (req, res, next) => {
     const { groupId } = req.params;
 
     // Check joinGroup is enabled
-    const [settings] = await tenantQuery(slug,
-      `SELECT group_info_config FROM tenant_settings WHERE id = 'singleton'`);
+    const [settings] = await tenantQuery(
+      slug,
+      `SELECT group_info_config FROM tenant_settings WHERE id = 'singleton'`,
+    );
     const gic = { joinGroup: { members: false }, ...(settings?.group_info_config ?? {}) };
     if (!gic.joinGroup?.members) {
       return res.status(403).json({ error: 'Online group joining is not enabled.' });
     }
 
     // Check group exists and is active
-    const [group] = await tenantQuery(slug,
+    const [group] = await tenantQuery(
+      slug,
       `SELECT id, name, max_members, enable_waiting_list, allow_online_join,
               (SELECT COUNT(*)::int FROM group_members gm2 WHERE gm2.group_id = g.id AND gm2.waiting_since IS NULL) AS member_count
-       FROM groups g WHERE g.id = $1 AND g.status = 'active'`, [groupId]);
+       FROM groups g WHERE g.id = $1 AND g.status = 'active'`,
+      [groupId],
+    );
     if (!group) {
       return res.status(404).json({ error: 'Group not found.' });
     }
@@ -224,9 +253,11 @@ router.post('/groups/:groupId/join', async (req, res, next) => {
     }
 
     // Check not already a member
-    const [existing] = await tenantQuery(slug,
+    const [existing] = await tenantQuery(
+      slug,
       `SELECT id FROM group_members WHERE group_id = $1 AND member_id = $2`,
-      [groupId, memberId]);
+      [groupId, memberId],
+    );
     if (existing) {
       return res.status(400).json({ error: 'You are already a member of this group.' });
     }
@@ -236,23 +267,30 @@ router.post('/groups/:groupId/join', async (req, res, next) => {
     let waitingSince = null;
     if (isFull) {
       if (!group.enable_waiting_list) {
-        return res.status(400).json({ error: 'This group is full and does not have a waiting list.' });
+        return res
+          .status(400)
+          .json({ error: 'This group is full and does not have a waiting list.' });
       }
       waitingSince = new Date().toISOString().slice(0, 10);
     }
 
-    await tenantQuery(slug,
+    await tenantQuery(
+      slug,
       `INSERT INTO group_members (group_id, member_id, waiting_since)
        VALUES ($1, $2, $3::date)`,
-      [groupId, memberId, waitingSince]);
+      [groupId, memberId, waitingSince],
+    );
 
     // Notify group leader (stubbed)
     await notifyGroupLeaders(slug, groupId, memberId, 'join', group.name);
 
     logAudit(slug, {
-      userId: null, userName: `${req.portal.name} (portal)`,
-      action: 'create', entityType: 'group_member',
-      entityId: groupId, entityName: group.name,
+      userId: null,
+      userName: `${req.portal.name} (portal)`,
+      action: 'create',
+      entityType: 'group_member',
+      entityId: groupId,
+      entityName: group.name,
       detail: waitingSince ? 'Added to waiting list via portal' : 'Joined group via portal',
     });
 
@@ -275,30 +313,35 @@ router.post('/groups/:groupId/leave', async (req, res, next) => {
     const memberId = req.portal.memberId;
     const { groupId } = req.params;
 
-    const [group] = await tenantQuery(slug,
-      `SELECT id, name FROM groups WHERE id = $1`, [groupId]);
+    const [group] = await tenantQuery(slug, `SELECT id, name FROM groups WHERE id = $1`, [groupId]);
     if (!group) {
       return res.status(404).json({ error: 'Group not found.' });
     }
 
-    const [membership] = await tenantQuery(slug,
+    const [membership] = await tenantQuery(
+      slug,
       `SELECT id FROM group_members WHERE group_id = $1 AND member_id = $2`,
-      [groupId, memberId]);
+      [groupId, memberId],
+    );
     if (!membership) {
       return res.status(400).json({ error: 'You are not a member of this group.' });
     }
 
-    await tenantQuery(slug,
-      `DELETE FROM group_members WHERE group_id = $1 AND member_id = $2`,
-      [groupId, memberId]);
+    await tenantQuery(slug, `DELETE FROM group_members WHERE group_id = $1 AND member_id = $2`, [
+      groupId,
+      memberId,
+    ]);
 
     // Notify group leader (stubbed)
     await notifyGroupLeaders(slug, groupId, memberId, 'leave', group.name);
 
     logAudit(slug, {
-      userId: null, userName: `${req.portal.name} (portal)`,
-      action: 'delete', entityType: 'group_member',
-      entityId: groupId, entityName: group.name,
+      userId: null,
+      userName: `${req.portal.name} (portal)`,
+      action: 'delete',
+      entityType: 'group_member',
+      entityId: groupId,
+      entityName: group.name,
       detail: 'Left group via portal',
     });
 
@@ -334,17 +377,23 @@ router.get('/calendar', async (req, res, next) => {
     const { from, to, groupId, eventTypeId, filter } = req.query;
     // filter: 'all' | 'own' | 'other'
 
-    const [settings] = await tenantQuery(slug,
+    const [settings] = await tenantQuery(
+      slug,
       `SELECT portal_config, calendar_config
-       FROM tenant_settings WHERE id = 'singleton'`);
+       FROM tenant_settings WHERE id = 'singleton'`,
+    );
     const portalConfig = { calendar: false, ...(settings?.portal_config ?? {}) };
     if (!portalConfig.calendar) {
-      return res.status(403).json({ error: 'Calendar viewing is not enabled for this organisation.' });
+      return res
+        .status(403)
+        .json({ error: 'Calendar viewing is not enabled for this organisation.' });
     }
 
     const calConfig = {
-      venue: { members: false }, topic: { members: false },
-      enquiries: { members: false }, detail: { members: false },
+      venue: { members: false },
+      topic: { members: false },
+      enquiries: { members: false },
+      detail: { members: false },
       download: { members: false },
       ...(settings?.calendar_config ?? {}),
     };
@@ -364,7 +413,9 @@ router.get('/calendar', async (req, res, next) => {
 
     if (filter === 'own') {
       // Own groups + general/open meetings
-      conditions.push(`(ge.group_id IS NULL OR ge.group_id IN (SELECT group_id FROM group_members WHERE member_id = $${i++}))`);
+      conditions.push(
+        `(ge.group_id IS NULL OR ge.group_id IN (SELECT group_id FROM group_members WHERE member_id = $${i++}))`,
+      );
       params.push(memberId);
     } else if (filter === 'other') {
       // Non-group events only, optionally filtered by event type
@@ -381,7 +432,8 @@ router.get('/calendar', async (req, res, next) => {
 
     const where = conditions.length > 0 ? 'WHERE ' + conditions.join(' AND ') : '';
 
-    const events = await tenantQuery(slug,
+    const events = await tenantQuery(
+      slug,
       `SELECT ge.id, ge.event_date, ge.start_time, ge.end_time,
               ge.group_id, g.name AS group_name,
               ge.event_type_id, et.name AS event_type_name,
@@ -393,10 +445,11 @@ router.get('/calendar', async (req, res, next) => {
        LEFT JOIN event_types et ON et.id = ge.event_type_id
        ${where}
        ORDER BY ge.event_date, ge.start_time, g.name`,
-      params);
+      params,
+    );
 
     // Filter fields based on calendarConfig
-    const result = events.map(ev => ({
+    const result = events.map((ev) => ({
       id: ev.id,
       eventDate: ev.event_date,
       startTime: ev.start_time,
@@ -415,17 +468,26 @@ router.get('/calendar', async (req, res, next) => {
     }));
 
     // Also return groups list for filter dropdown
-    const groups = await tenantQuery(slug,
+    const groups = await tenantQuery(
+      slug,
       `SELECT DISTINCT g.id, g.name
        FROM groups g
        WHERE g.status = 'active'
-       ORDER BY g.name`);
+       ORDER BY g.name`,
+    );
 
     // Also return event types for the "Other" filter
-    const eventTypes = await tenantQuery(slug,
-      `SELECT id, name FROM event_types ORDER BY is_default DESC, name`);
+    const eventTypes = await tenantQuery(
+      slug,
+      `SELECT id, name FROM event_types ORDER BY is_default DESC, name`,
+    );
 
-    res.json({ events: result, groups, eventTypes, canDownload: calConfig.download?.members ?? false });
+    res.json({
+      events: result,
+      groups,
+      eventTypes,
+      canDownload: calConfig.download?.members ?? false,
+    });
   } catch (err) {
     next(err);
   }
@@ -439,8 +501,10 @@ router.get('/calendar/pdf', async (req, res, next) => {
     const memberId = req.portal.memberId;
     const { from, to, groupId, eventTypeId, filter } = req.query;
 
-    const [settings] = await tenantQuery(slug,
-      `SELECT calendar_config FROM tenant_settings WHERE id = 'singleton'`);
+    const [settings] = await tenantQuery(
+      slug,
+      `SELECT calendar_config FROM tenant_settings WHERE id = 'singleton'`,
+    );
     const calConfig = { download: { members: false }, ...(settings?.calendar_config ?? {}) };
     if (!calConfig.download?.members) {
       return res.status(403).json({ error: 'Calendar download is not enabled.' });
@@ -450,10 +514,18 @@ router.get('/calendar/pdf', async (req, res, next) => {
     const params = [];
     let i = 1;
 
-    if (from) { conditions.push(`ge.event_date >= $${i++}::date`); params.push(from); }
-    if (to) { conditions.push(`ge.event_date <= $${i++}::date`); params.push(to); }
+    if (from) {
+      conditions.push(`ge.event_date >= $${i++}::date`);
+      params.push(from);
+    }
+    if (to) {
+      conditions.push(`ge.event_date <= $${i++}::date`);
+      params.push(to);
+    }
     if (filter === 'own') {
-      conditions.push(`(ge.group_id IS NULL OR ge.group_id IN (SELECT group_id FROM group_members WHERE member_id = $${i++}))`);
+      conditions.push(
+        `(ge.group_id IS NULL OR ge.group_id IN (SELECT group_id FROM group_members WHERE member_id = $${i++}))`,
+      );
       params.push(memberId);
     } else if (filter === 'other') {
       conditions.push('ge.group_id IS NULL');
@@ -467,7 +539,8 @@ router.get('/calendar/pdf', async (req, res, next) => {
     }
 
     const where = conditions.length > 0 ? 'WHERE ' + conditions.join(' AND ') : '';
-    const events = await tenantQuery(slug,
+    const events = await tenantQuery(
+      slug,
       `SELECT ge.event_date, ge.start_time, ge.end_time,
               g.name AS group_name, et.name AS event_type_name,
               v.name AS venue_name,
@@ -478,19 +551,26 @@ router.get('/calendar/pdf', async (req, res, next) => {
        LEFT JOIN event_types et ON et.id = ge.event_type_id
        ${where}
        ORDER BY ge.event_date, ge.start_time, g.name`,
-      params);
+      params,
+    );
 
     const tenant = await prisma.sysTenant.findUnique({ where: { slug } });
     const u3aName = tenant?.name ?? slug;
 
-    const doc = new PDFDocument({ size: 'A4', layout: 'landscape', margin: 40, autoFirstPage: true });
+    const doc = new PDFDocument({
+      size: 'A4',
+      layout: 'landscape',
+      margin: 40,
+      autoFirstPage: true,
+    });
     const chunks = [];
     doc.on('data', (c) => chunks.push(c));
 
-    doc.font('Helvetica-Bold').fontSize(16)
-      .text(`${u3aName} Calendar`, { align: 'center' });
+    doc.font('Helvetica-Bold').fontSize(16).text(`${u3aName} Calendar`, { align: 'center' });
     if (from || to) {
-      doc.font('Helvetica').fontSize(10)
+      doc
+        .font('Helvetica')
+        .fontSize(10)
         .text(`${fmtDateUK(from)} to ${fmtDateUK(to)}`, { align: 'center' });
     }
     doc.moveDown(0.5);
@@ -509,7 +589,11 @@ router.get('/calendar/pdf', async (req, res, next) => {
       for (const col of cols) {
         doc.text(col.label, col.x, y, { width: col.w, ellipsis: true });
       }
-      doc.moveTo(40, y + 12).lineTo(800, y + 12).lineWidth(0.5).stroke();
+      doc
+        .moveTo(40, y + 12)
+        .lineTo(800, y + 12)
+        .lineWidth(0.5)
+        .stroke();
       return y + 16;
     }
 
@@ -521,13 +605,17 @@ router.get('/calendar/pdf', async (req, res, next) => {
         y = drawHeader(40);
         doc.font('Helvetica').fontSize(8);
       }
-      const dateStr = fmtDateUK(ev.event_date) + (ev.start_time ? ' ' + fmtTime(ev.start_time) : '');
-      doc.text(dateStr,                    cols[0].x, y, { width: cols[0].w, ellipsis: true });
-      doc.text(fmtTime(ev.end_time),      cols[1].x, y, { width: cols[1].w, ellipsis: true });
-      doc.text(ev.group_name || ev.event_type_name || 'Open Meeting', cols[2].x, y, { width: cols[2].w, ellipsis: true });
-      doc.text(ev.venue_name || '',        cols[3].x, y, { width: cols[3].w, ellipsis: true });
-      doc.text(ev.topic || '',             cols[4].x, y, { width: cols[4].w, ellipsis: true });
-      doc.text(ev.contact || '',           cols[5].x, y, { width: cols[5].w, ellipsis: true });
+      const dateStr =
+        fmtDateUK(ev.event_date) + (ev.start_time ? ' ' + fmtTime(ev.start_time) : '');
+      doc.text(dateStr, cols[0].x, y, { width: cols[0].w, ellipsis: true });
+      doc.text(fmtTime(ev.end_time), cols[1].x, y, { width: cols[1].w, ellipsis: true });
+      doc.text(ev.group_name || ev.event_type_name || 'Open Meeting', cols[2].x, y, {
+        width: cols[2].w,
+        ellipsis: true,
+      });
+      doc.text(ev.venue_name || '', cols[3].x, y, { width: cols[3].w, ellipsis: true });
+      doc.text(ev.topic || '', cols[4].x, y, { width: cols[4].w, ellipsis: true });
+      doc.text(ev.contact || '', cols[5].x, y, { width: cols[5].w, ellipsis: true });
       y += 14;
     }
 
@@ -553,14 +641,17 @@ router.get('/personal-details', async (req, res, next) => {
     const slug = req.portal.tenantSlug;
     const memberId = req.portal.memberId;
 
-    const [settings] = await tenantQuery(slug,
-      `SELECT portal_config FROM tenant_settings WHERE id = 'singleton'`);
+    const [settings] = await tenantQuery(
+      slug,
+      `SELECT portal_config FROM tenant_settings WHERE id = 'singleton'`,
+    );
     const portalConfig = { personalDetails: false, ...(settings?.portal_config ?? {}) };
     if (!portalConfig.personalDetails) {
       return res.status(403).json({ error: 'Personal details editing is not enabled.' });
     }
 
-    const [member] = await tenantQuery(slug,
+    const [member] = await tenantQuery(
+      slug,
       `SELECT m.id, m.title, m.forenames, m.surname, m.known_as, m.initials,
               m.suffix, m.email, m.mobile, m.emergency_contact, m.hide_contact,
               m.portal_email,
@@ -568,7 +659,9 @@ router.get('/personal-details', async (req, res, next) => {
               a.house_no, a.street, a.add_line1, a.town, a.county, a.postcode, a.telephone
        FROM members m
        LEFT JOIN addresses a ON a.id = m.address_id
-       WHERE m.id = $1`, [memberId]);
+       WHERE m.id = $1`,
+      [memberId],
+    );
 
     if (!member) {
       return res.status(404).json({ error: 'Member not found.' });
@@ -603,23 +696,23 @@ router.get('/personal-details', async (req, res, next) => {
 });
 
 const updateDetailsSchema = z.object({
-  title:       z.string().max(20).optional(),
-  forenames:   z.string().min(1).max(100),
-  surname:     z.string().min(1).max(100),
-  knownAs:     z.string().max(100).optional(),
-  initials:    z.string().max(20).optional(),
-  suffix:      z.string().max(30).optional(),
-  email:       z.string().email(),
-  mobile:      z.string().max(30).optional(),
+  title: z.string().max(20).optional(),
+  forenames: z.string().min(1).max(100),
+  surname: z.string().min(1).max(100),
+  knownAs: z.string().max(100).optional(),
+  initials: z.string().max(20).optional(),
+  suffix: z.string().max(30).optional(),
+  email: z.string().email(),
+  mobile: z.string().max(30).optional(),
   emergencyContact: z.string().max(200).optional(),
   hideContact: z.boolean().optional(),
   address: z.object({
-    houseNo:   z.string().max(100).optional(),
-    street:    z.string().max(100).optional(),
-    addLine1:  z.string().max(100).optional(),
-    town:      z.string().max(100).optional(),
-    county:    z.string().max(100).optional(),
-    postcode:  z.string().min(1, 'Postcode is required'),
+    houseNo: z.string().max(100).optional(),
+    street: z.string().max(100).optional(),
+    addLine1: z.string().max(100).optional(),
+    town: z.string().max(100).optional(),
+    county: z.string().max(100).optional(),
+    postcode: z.string().min(1, 'Postcode is required'),
     telephone: z.string().max(30).optional(),
   }),
 });
@@ -630,16 +723,21 @@ router.patch('/personal-details', async (req, res, next) => {
     const memberId = req.portal.memberId;
     const data = updateDetailsSchema.parse(req.body);
 
-    const [settings] = await tenantQuery(slug,
-      `SELECT portal_config FROM tenant_settings WHERE id = 'singleton'`);
+    const [settings] = await tenantQuery(
+      slug,
+      `SELECT portal_config FROM tenant_settings WHERE id = 'singleton'`,
+    );
     const portalConfig = { personalDetails: false, ...(settings?.portal_config ?? {}) };
     if (!portalConfig.personalDetails) {
       return res.status(403).json({ error: 'Personal details editing is not enabled.' });
     }
 
     // Get current member to check email change
-    const [current] = await tenantQuery(slug,
-      `SELECT email, portal_email, address_id FROM members WHERE id = $1`, [memberId]);
+    const [current] = await tenantQuery(
+      slug,
+      `SELECT email, portal_email, address_id FROM members WHERE id = $1`,
+      [memberId],
+    );
     if (!current) {
       return res.status(404).json({ error: 'Member not found.' });
     }
@@ -647,37 +745,57 @@ router.patch('/personal-details', async (req, res, next) => {
     const emailChanged = data.email.toLowerCase() !== (current.email || '').toLowerCase();
 
     // Derive initials from forenames
-    const initials = data.initials || data.forenames.split(/\s+/).map(n => n[0]?.toUpperCase()).filter(Boolean).join('');
+    const initials =
+      data.initials ||
+      data.forenames
+        .split(/\s+/)
+        .map((n) => n[0]?.toUpperCase())
+        .filter(Boolean)
+        .join('');
 
     // Update member fields
-    await tenantQuery(slug,
+    await tenantQuery(
+      slug,
       `UPDATE members SET
          title = $1, forenames = $2, surname = $3, known_as = $4, initials = $5,
          suffix = $6, email = $7, mobile = $8, emergency_contact = $9,
          hide_contact = $10, updated_at = now()
        WHERE id = $11`,
       [
-        data.title ?? null, data.forenames, data.surname,
-        data.knownAs ?? null, initials, data.suffix ?? null,
-        data.email.toLowerCase(), data.mobile ?? null,
-        data.emergencyContact ?? null, data.hideContact ?? false,
+        data.title ?? null,
+        data.forenames,
+        data.surname,
+        data.knownAs ?? null,
+        initials,
+        data.suffix ?? null,
+        data.email.toLowerCase(),
+        data.mobile ?? null,
+        data.emergencyContact ?? null,
+        data.hideContact ?? false,
         memberId,
-      ]);
+      ],
+    );
 
     // Update address
     if (current.address_id) {
       const addr = data.address;
-      await tenantQuery(slug,
+      await tenantQuery(
+        slug,
         `UPDATE addresses SET
            house_no = $1, street = $2, add_line1 = $3, town = $4, county = $5,
            postcode = $6, telephone = $7, updated_at = now()
          WHERE id = $8`,
         [
-          addr.houseNo ?? null, addr.street ?? null, addr.addLine1 ?? null,
-          addr.town ?? null, addr.county ?? null,
-          addr.postcode.trim().toUpperCase(), addr.telephone ?? null,
+          addr.houseNo ?? null,
+          addr.street ?? null,
+          addr.addLine1 ?? null,
+          addr.town ?? null,
+          addr.county ?? null,
+          addr.postcode.trim().toUpperCase(),
+          addr.telephone ?? null,
           current.address_id,
-        ]);
+        ],
+      );
     }
 
     // If email changed, require re-verification
@@ -685,7 +803,8 @@ router.patch('/personal-details', async (req, res, next) => {
       const verificationToken = generateToken();
       const verificationExpires = new Date(Date.now() + 60 * 60 * 1000);
 
-      await tenantQuery(slug,
+      await tenantQuery(
+        slug,
         `UPDATE members SET
            portal_email = $1,
            portal_email_verified = false,
@@ -693,7 +812,13 @@ router.patch('/personal-details', async (req, res, next) => {
            portal_verification_expires = $3,
            updated_at = now()
          WHERE id = $4`,
-        [data.email.toLowerCase(), hashOpaqueToken(verificationToken), verificationExpires, memberId]);
+        [
+          data.email.toLowerCase(),
+          hashOpaqueToken(verificationToken),
+          verificationExpires,
+          memberId,
+        ],
+      );
 
       const frontendBase = process.env.CORS_ORIGIN || 'http://localhost:5173';
       const verifyLink = `${frontendBase}/public/${slug}/portal/verify?token=${verificationToken}`;
@@ -704,10 +829,15 @@ router.patch('/personal-details', async (req, res, next) => {
     await sendDetailsUpdateEmail(slug, memberId, emailChanged);
 
     logAudit(slug, {
-      userId: null, userName: `${req.portal.name} (portal)`,
-      action: 'update', entityType: 'member',
-      entityId: memberId, entityName: `${data.forenames} ${data.surname}`,
-      detail: emailChanged ? 'Personal details updated via portal (email changed)' : 'Personal details updated via portal',
+      userId: null,
+      userName: `${req.portal.name} (portal)`,
+      action: 'update',
+      entityType: 'member',
+      entityId: memberId,
+      entityName: `${data.forenames} ${data.surname}`,
+      detail: emailChanged
+        ? 'Personal details updated via portal (email changed)'
+        : 'Personal details updated via portal',
     });
 
     res.json({
@@ -724,7 +854,7 @@ router.patch('/personal-details', async (req, res, next) => {
 // ─── Portal Photo endpoints ─────────────────────────────────────────────────
 
 const portalPhotoUploadSchema = z.object({
-  data:     z.string().min(1, 'Photo data is required'),
+  data: z.string().min(1, 'Photo data is required'),
   mimeType: z.enum(['image/jpeg', 'image/png', 'image/gif'], {
     errorMap: () => ({ message: 'Photo must be jpg, png, or gif' }),
   }),
@@ -738,8 +868,10 @@ router.post('/photo', async (req, res, next) => {
     const memberId = req.portal.memberId;
 
     // Check personal details is enabled (photo upload is part of personal details)
-    const [settings] = await tenantQuery(slug,
-      `SELECT portal_config FROM tenant_settings WHERE id = 'singleton'`);
+    const [settings] = await tenantQuery(
+      slug,
+      `SELECT portal_config FROM tenant_settings WHERE id = 'singleton'`,
+    );
     const portalConfig = { personalDetails: false, ...(settings?.portal_config ?? {}) };
     if (!portalConfig.personalDetails) {
       return res.status(403).json({ error: 'Personal details editing is not enabled.' });
@@ -749,16 +881,29 @@ router.post('/photo', async (req, res, next) => {
 
     const byteLength = Buffer.from(data, 'base64').length;
     if (byteLength > MAX_PHOTO_BYTES) {
-      return res.status(400).json({ error: `Photo exceeds the 2 MB limit (${(byteLength / 1024 / 1024).toFixed(1)} MB).` });
+      return res.status(400).json({
+        error: `Photo exceeds the 2 MB limit (${(byteLength / 1024 / 1024).toFixed(1)} MB).`,
+      });
     }
 
-    await tenantQuery(slug,
+    await tenantQuery(
+      slug,
       `UPDATE members SET photo_data = $1, photo_mime_type = $2, updated_at = now() WHERE id = $3`,
-      [data, mimeType, memberId]);
+      [data, mimeType, memberId],
+    );
 
-    logAudit(slug, { userId: null, userName: `${req.portal.name} (portal)`, action: 'change', entityType: 'member', entityId: memberId, detail: 'Photo uploaded via portal' });
+    logAudit(slug, {
+      userId: null,
+      userName: `${req.portal.name} (portal)`,
+      action: 'change',
+      entityType: 'member',
+      entityId: memberId,
+      detail: 'Photo uploaded via portal',
+    });
     res.json({ message: 'Photo uploaded.' });
-  } catch (err) { next(err); }
+  } catch (err) {
+    next(err);
+  }
 });
 
 router.delete('/photo', async (req, res, next) => {
@@ -766,20 +911,33 @@ router.delete('/photo', async (req, res, next) => {
     const slug = req.portal.tenantSlug;
     const memberId = req.portal.memberId;
 
-    const [settings] = await tenantQuery(slug,
-      `SELECT portal_config FROM tenant_settings WHERE id = 'singleton'`);
+    const [settings] = await tenantQuery(
+      slug,
+      `SELECT portal_config FROM tenant_settings WHERE id = 'singleton'`,
+    );
     const portalConfig = { personalDetails: false, ...(settings?.portal_config ?? {}) };
     if (!portalConfig.personalDetails) {
       return res.status(403).json({ error: 'Personal details editing is not enabled.' });
     }
 
-    await tenantQuery(slug,
+    await tenantQuery(
+      slug,
       `UPDATE members SET photo_data = NULL, photo_mime_type = NULL, updated_at = now() WHERE id = $1`,
-      [memberId]);
+      [memberId],
+    );
 
-    logAudit(slug, { userId: null, userName: `${req.portal.name} (portal)`, action: 'change', entityType: 'member', entityId: memberId, detail: 'Photo removed via portal' });
+    logAudit(slug, {
+      userId: null,
+      userName: `${req.portal.name} (portal)`,
+      action: 'change',
+      entityType: 'member',
+      entityId: memberId,
+      detail: 'Photo removed via portal',
+    });
     res.json({ message: 'Photo removed.' });
-  } catch (err) { next(err); }
+  } catch (err) {
+    next(err);
+  }
 });
 
 router.get('/photo', async (req, res, next) => {
@@ -787,8 +945,11 @@ router.get('/photo', async (req, res, next) => {
     const slug = req.portal.tenantSlug;
     const memberId = req.portal.memberId;
 
-    const [member] = await tenantQuery(slug,
-      `SELECT photo_data, photo_mime_type FROM members WHERE id = $1`, [memberId]);
+    const [member] = await tenantQuery(
+      slug,
+      `SELECT photo_data, photo_mime_type FROM members WHERE id = $1`,
+      [memberId],
+    );
 
     if (!member || !member.photo_data) {
       return res.status(404).json({ error: 'No photo found.' });
@@ -798,17 +959,23 @@ router.get('/photo', async (req, res, next) => {
     res.setHeader('Content-Length', buf.length);
     res.setHeader('Cache-Control', 'private, max-age=3600');
     res.send(buf);
-  } catch (err) { next(err); }
+  } catch (err) {
+    next(err);
+  }
 });
 
 // ─── POST /change-password ───────────────────────────────────────────────────
 
 const changePasswordSchema = z.object({
   currentPassword: z.string().min(1),
-  newPassword: z.string().min(10).max(72).refine(
-    (pw) => /[a-z]/.test(pw) && /[A-Z]/.test(pw) && /[0-9]/.test(pw),
-    { message: 'Password must contain at least one uppercase, one lowercase, and one numeric character.' },
-  ),
+  newPassword: z
+    .string()
+    .min(10)
+    .max(72)
+    .refine((pw) => /[a-z]/.test(pw) && /[A-Z]/.test(pw) && /[0-9]/.test(pw), {
+      message:
+        'Password must contain at least one uppercase, one lowercase, and one numeric character.',
+    }),
 });
 
 router.post('/change-password', async (req, res, next) => {
@@ -817,8 +984,11 @@ router.post('/change-password', async (req, res, next) => {
     const memberId = req.portal.memberId;
     const data = changePasswordSchema.parse(req.body);
 
-    const [member] = await tenantQuery(slug,
-      `SELECT portal_password_hash FROM members WHERE id = $1`, [memberId]);
+    const [member] = await tenantQuery(
+      slug,
+      `SELECT portal_password_hash FROM members WHERE id = $1`,
+      [memberId],
+    );
     if (!member?.portal_password_hash) {
       return res.status(400).json({ error: 'Portal account not found.' });
     }
@@ -829,14 +999,19 @@ router.post('/change-password', async (req, res, next) => {
     }
 
     const newHash = await hashPassword(data.newPassword);
-    await tenantQuery(slug,
+    await tenantQuery(
+      slug,
       `UPDATE members SET portal_password_hash = $1, updated_at = now() WHERE id = $2`,
-      [newHash, memberId]);
+      [newHash, memberId],
+    );
 
     logAudit(slug, {
-      userId: null, userName: `${req.portal.name} (portal)`,
-      action: 'update', entityType: 'portal_password',
-      entityId: memberId, entityName: req.portal.name,
+      userId: null,
+      userName: `${req.portal.name} (portal)`,
+      action: 'update',
+      entityType: 'portal_password',
+      entityId: memberId,
+      entityName: req.portal.name,
     });
 
     res.json({ message: 'Password has been changed successfully.' });
@@ -854,23 +1029,28 @@ router.post('/request-card', async (req, res, next) => {
     const slug = req.portal.tenantSlug;
     const memberId = req.portal.memberId;
 
-    const [settings] = await tenantQuery(slug,
+    const [settings] = await tenantQuery(
+      slug,
       `SELECT portal_config, year_start_month, year_start_day,
               grace_lapse_weeks
-       FROM tenant_settings WHERE id = 'singleton'`);
+       FROM tenant_settings WHERE id = 'singleton'`,
+    );
     const portalConfig = { replacementCard: false, ...(settings?.portal_config ?? {}) };
     if (!portalConfig.replacementCard) {
       return res.status(403).json({ error: 'Card replacement is not enabled.' });
     }
 
     // Get member with status
-    const [member] = await tenantQuery(slug,
+    const [member] = await tenantQuery(
+      slug,
       `SELECT m.id, m.membership_number, m.forenames, m.surname, m.known_as,
               m.email, m.next_renewal, m.portal_email,
               ms.name AS status_name
        FROM members m
        LEFT JOIN member_statuses ms ON m.status_id = ms.id
-       WHERE m.id = $1`, [memberId]);
+       WHERE m.id = $1`,
+      [memberId],
+    );
 
     if (!member) {
       return res.status(404).json({ error: 'Member not found.' });
@@ -878,14 +1058,18 @@ router.post('/request-card', async (req, res, next) => {
 
     // Must be Current status
     if (!member.status_name || !member.status_name.toLowerCase().includes('current')) {
-      return res.status(400).json({ error: 'Card replacement is only available for current members.' });
+      return res
+        .status(400)
+        .json({ error: 'Card replacement is only available for current members.' });
     }
 
     // Must be within standard renewal period (not in grace period)
     if (member.next_renewal) {
       const renewal = new Date(member.next_renewal);
       if (renewal < new Date()) {
-        return res.status(400).json({ error: 'Your membership renewal date has passed. Please renew your membership first.' });
+        return res.status(400).json({
+          error: 'Your membership renewal date has passed. Please renew your membership first.',
+        });
       }
     }
 
@@ -896,26 +1080,25 @@ router.post('/request-card', async (req, res, next) => {
     }
 
     // Use the card replacement system message
-    const [template] = await tenantQuery(slug,
-      `SELECT subject, body FROM system_messages WHERE id = 'card_replacement_confirm'`);
+    const [template] = await tenantQuery(
+      slug,
+      `SELECT subject, body FROM system_messages WHERE id = 'card_replacement_confirm'`,
+    );
 
     const tenant = await prisma.sysTenant.findUnique({ where: { slug } });
     const u3aName = tenant?.name ?? slug;
 
     if (template) {
-      const { subject } = resolveTokens(
-        template.subject, template.body,
-        { ...member }, u3aName,
-      );
+      const { subject } = resolveTokens(template.subject, template.body, { ...member }, u3aName);
 
       // Generate the membership card PDF to attach to the email
       const attachments = [];
       try {
         const { pdfBuffer, filename } = await generateSingleCardPdf(slug, memberId);
         attachments.push({
-          content:     pdfBuffer.toString('base64'),
+          content: pdfBuffer.toString('base64'),
           filename,
-          type:        'application/pdf',
+          type: 'application/pdf',
           disposition: 'attachment',
         });
       } catch (cardErr) {
@@ -931,18 +1114,25 @@ router.post('/request-card', async (req, res, next) => {
       //   attachments: attachments.length > 0 ? attachments : undefined,
       // };
       // await sgMail.send(msg);
-      console.log(`[Portal] Would send card replacement email to ${emailAddr}: "${subject}"${attachments.length ? ` [+card PDF: ${attachments[0].filename}]` : ''}`);
+      console.log(
+        `[Portal] Would send card replacement email to ${emailAddr}: "${subject}"${attachments.length ? ` [+card PDF: ${attachments[0].filename}]` : ''}`,
+      );
     }
 
     // Mark card as not printed so admin knows to reprint
-    await tenantQuery(slug,
+    await tenantQuery(
+      slug,
       `UPDATE members SET card_printed = false, updated_at = now() WHERE id = $1`,
-      [memberId]);
+      [memberId],
+    );
 
     logAudit(slug, {
-      userId: null, userName: `${req.portal.name} (portal)`,
-      action: 'create', entityType: 'card_replacement',
-      entityId: memberId, entityName: `${member.forenames} ${member.surname}`,
+      userId: null,
+      userName: `${req.portal.name} (portal)`,
+      action: 'create',
+      entityType: 'card_replacement',
+      entityId: memberId,
+      entityName: `${member.forenames} ${member.surname}`,
     });
 
     res.json({ message: 'A replacement membership card has been sent to your email address.' });
@@ -962,12 +1152,15 @@ router.get('/renewal-info', async (req, res, next) => {
     const memberId = req.portal.memberId;
 
     const [[settings], [member], tenant] = await Promise.all([
-      tenantQuery(slug,
+      tenantQuery(
+        slug,
         `SELECT portal_config, year_start_month, year_start_day,
                 advance_renewals_weeks, gift_aid_online_renewals,
                 paypal_email, online_renew_email
-         FROM tenant_settings WHERE id = 'singleton'`),
-      tenantQuery(slug,
+         FROM tenant_settings WHERE id = 'singleton'`,
+      ),
+      tenantQuery(
+        slug,
         `SELECT m.id, m.membership_number, m.forenames, m.surname, m.known_as,
                 m.email, m.next_renewal, m.gift_aid_from, m.class_id, m.partner_id,
                 ms.name AS status_name,
@@ -976,13 +1169,17 @@ router.get('/renewal-info', async (req, res, next) => {
          FROM members m
          LEFT JOIN member_statuses ms ON m.status_id = ms.id
          LEFT JOIN member_classes mc ON m.class_id = mc.id
-         WHERE m.id = $1`, [memberId]),
+         WHERE m.id = $1`,
+        [memberId],
+      ),
       prisma.sysTenant.findUnique({ where: { slug } }),
     ]);
 
     const portalConfig = { renewals: false, ...(settings?.portal_config ?? {}) };
     if (!portalConfig.renewals) {
-      return res.status(403).json({ error: 'Online renewal is not enabled for this organisation.' });
+      return res
+        .status(403)
+        .json({ error: 'Online renewal is not enabled for this organisation.' });
     }
 
     if (!member) {
@@ -993,7 +1190,8 @@ router.get('/renewal-info', async (req, res, next) => {
     const statusLower = (member.status_name ?? '').toLowerCase();
     if (!statusLower.includes('current')) {
       return res.status(400).json({
-        error: 'Online renewal is only available for current members. Please contact your Membership Secretary.',
+        error:
+          'Online renewal is only available for current members. Please contact your Membership Secretary.',
       });
     }
 
@@ -1006,7 +1204,8 @@ router.get('/renewal-info', async (req, res, next) => {
 
     if (!nextRenewal) {
       return res.status(400).json({
-        error: 'No renewal date is set for your membership. Please contact your Membership Secretary.',
+        error:
+          'No renewal date is set for your membership. Please contact your Membership Secretary.',
       });
     }
 
@@ -1027,14 +1226,17 @@ router.get('/renewal-info', async (req, res, next) => {
     // Look up partner info for joint memberships
     let partner = null;
     if (member.partner_id && member.is_joint) {
-      const [p] = await tenantQuery(slug,
+      const [p] = await tenantQuery(
+        slug,
         `SELECT m.id, m.membership_number, m.forenames, m.surname, m.known_as,
                 m.gift_aid_from, m.next_renewal,
                 mc.name AS class_name, mc.fee::float AS fee,
                 mc.gift_aid_fee::float AS gift_aid_fee
          FROM members m
          LEFT JOIN member_classes mc ON m.class_id = mc.id
-         WHERE m.id = $1`, [member.partner_id]);
+         WHERE m.id = $1`,
+        [member.partner_id],
+      );
       if (p) {
         partner = {
           id: p.id,
@@ -1083,7 +1285,7 @@ router.get('/renewal-info', async (req, res, next) => {
 
 // POST /renew — process online renewal (creates PayPal payment)
 const portalRenewSchema = z.object({
-  giftAid:        z.boolean().default(false),
+  giftAid: z.boolean().default(false),
   partnerGiftAid: z.boolean().default(false),
 });
 
@@ -1094,12 +1296,15 @@ router.post('/renew', async (req, res, next) => {
     const data = portalRenewSchema.parse(req.body);
 
     const [[settings], [member]] = await Promise.all([
-      tenantQuery(slug,
+      tenantQuery(
+        slug,
         `SELECT portal_config, year_start_month, year_start_day,
                 advance_renewals_weeks, gift_aid_online_renewals,
                 paypal_email, paypal_cancel_url
-         FROM tenant_settings WHERE id = 'singleton'`),
-      tenantQuery(slug,
+         FROM tenant_settings WHERE id = 'singleton'`,
+      ),
+      tenantQuery(
+        slug,
         `SELECT m.id, m.membership_number, m.forenames, m.surname, m.email,
                 m.next_renewal, m.gift_aid_from, m.class_id, m.partner_id,
                 ms.name AS status_name,
@@ -1107,7 +1312,9 @@ router.post('/renew', async (req, res, next) => {
          FROM members m
          LEFT JOIN member_statuses ms ON m.status_id = ms.id
          LEFT JOIN member_classes mc ON m.class_id = mc.id
-         WHERE m.id = $1`, [memberId]),
+         WHERE m.id = $1`,
+        [memberId],
+      ),
     ]);
 
     const portalConfig = { renewals: false, ...(settings?.portal_config ?? {}) };
@@ -1119,7 +1326,9 @@ router.post('/renew', async (req, res, next) => {
 
     const statusLower = (member.status_name ?? '').toLowerCase();
     if (!statusLower.includes('current')) {
-      return res.status(400).json({ error: 'Online renewal is only available for current members.' });
+      return res
+        .status(400)
+        .json({ error: 'Online renewal is only available for current members.' });
     }
 
     // Validate renewal window
@@ -1141,13 +1350,16 @@ router.post('/renew', async (req, res, next) => {
     // Get partner for joint
     let partnerMember = null;
     if (member.partner_id && member.is_joint) {
-      const [p] = await tenantQuery(slug,
+      const [p] = await tenantQuery(
+        slug,
         `SELECT m.id, m.forenames, m.surname, m.email, m.next_renewal,
                 m.gift_aid_from, m.class_id,
                 mc.fee::float AS fee
          FROM members m
          LEFT JOIN member_classes mc ON m.class_id = mc.id
-         WHERE m.id = $1`, [member.partner_id]);
+         WHERE m.id = $1`,
+        [member.partner_id],
+      );
       if (p) partnerMember = p;
     }
 
@@ -1170,9 +1382,11 @@ router.post('/renew', async (req, res, next) => {
       partnerMemberId: partnerMember?.id ?? null,
     });
     const combinedToken = `${hashOpaqueToken(paymentToken)}|${Buffer.from(renewalMeta).toString('base64')}`;
-    await tenantQuery(slug,
+    await tenantQuery(
+      slug,
       `UPDATE members SET payment_token = $1, updated_at = now() WHERE id = $2`,
-      [combinedToken, memberId]);
+      [combinedToken, memberId],
+    );
 
     // Initiate PayPal payment
     const { initiatePayment } = await import('../utils/paypal.js');
@@ -1194,9 +1408,12 @@ router.post('/renew', async (req, res, next) => {
     });
 
     logAudit(slug, {
-      userId: null, userName: `${req.portal.name} (portal)`,
-      action: 'update', entityType: 'member',
-      entityId: memberId, entityName: `${member.forenames} ${member.surname}`,
+      userId: null,
+      userName: `${req.portal.name} (portal)`,
+      action: 'update',
+      entityType: 'member',
+      entityId: memberId,
+      entityName: `${member.forenames} ${member.surname}`,
       detail: 'Online renewal initiated',
     });
 
@@ -1232,7 +1449,8 @@ router.post('/renewal-confirm', async (req, res, next) => {
     }
 
     // Get member with payment token
-    const [member] = await tenantQuery(slug,
+    const [member] = await tenantQuery(
+      slug,
       `SELECT m.id, m.membership_number, m.forenames, m.surname, m.email,
               m.next_renewal, m.gift_aid_from, m.class_id, m.partner_id,
               m.payment_token,
@@ -1241,7 +1459,9 @@ router.post('/renewal-confirm', async (req, res, next) => {
        FROM members m
        LEFT JOIN member_statuses ms ON m.status_id = ms.id
        LEFT JOIN member_classes mc ON m.class_id = mc.id
-       WHERE m.id = $1`, [memberId]);
+       WHERE m.id = $1`,
+      [memberId],
+    );
 
     if (!member) return res.status(404).json({ error: 'Member not found.' });
 
@@ -1251,12 +1471,16 @@ router.post('/renewal-confirm', async (req, res, next) => {
       try {
         const metaPart = member.payment_token.split('|')[1];
         renewalMeta = JSON.parse(Buffer.from(metaPart, 'base64').toString('utf8'));
-      } catch { /* use defaults */ }
+      } catch {
+        /* use defaults */
+      }
     }
 
-    const [settings] = await tenantQuery(slug,
+    const [settings] = await tenantQuery(
+      slug,
       `SELECT gift_aid_online_renewals, year_start_month, year_start_day
-       FROM tenant_settings WHERE id = 'singleton'`);
+       FROM tenant_settings WHERE id = 'singleton'`,
+    );
 
     const giftAidFeatureOn = await isFeatureEnabled(slug, 'giftAid');
     const showGiftAid = giftAidFeatureOn && settings?.gift_aid_online_renewals;
@@ -1269,9 +1493,7 @@ router.post('/renewal-confirm', async (req, res, next) => {
     const newNextRenewal = baseDate.toISOString().slice(0, 10);
 
     // Update Gift Aid
-    let giftAidFrom = member.gift_aid_from
-      ? String(member.gift_aid_from).slice(0, 10)
-      : null;
+    let giftAidFrom = member.gift_aid_from ? String(member.gift_aid_from).slice(0, 10) : null;
     if (showGiftAid) {
       if (renewalMeta.giftAid && !giftAidFrom) {
         giftAidFrom = new Date().toISOString().slice(0, 10);
@@ -1281,7 +1503,8 @@ router.post('/renewal-confirm', async (req, res, next) => {
     }
 
     // Update member
-    await tenantQuery(slug,
+    await tenantQuery(
+      slug,
       `UPDATE members
        SET next_renewal = $1::date,
            gift_aid_from = $2::date,
@@ -1289,15 +1512,19 @@ router.post('/renewal-confirm', async (req, res, next) => {
            payment_token = NULL,
            updated_at = now()
        WHERE id = $3`,
-      [newNextRenewal, giftAidFrom, memberId]);
+      [newNextRenewal, giftAidFrom, memberId],
+    );
 
     // Handle joint partner renewal
     let partnerMember = null;
     if (member.is_joint && renewalMeta.partnerMemberId) {
-      const [p] = await tenantQuery(slug,
+      const [p] = await tenantQuery(
+        slug,
         `SELECT id, forenames, surname, email, next_renewal, gift_aid_from,
                 class_id
-         FROM members WHERE id = $1`, [renewalMeta.partnerMemberId]);
+         FROM members WHERE id = $1`,
+        [renewalMeta.partnerMemberId],
+      );
       if (p) {
         partnerMember = p;
         const pBaseDate = p.next_renewal
@@ -1306,9 +1533,7 @@ router.post('/renewal-confirm', async (req, res, next) => {
         pBaseDate.setFullYear(pBaseDate.getFullYear() + 1);
         const pNewNextRenewal = pBaseDate.toISOString().slice(0, 10);
 
-        let pGiftAidFrom = p.gift_aid_from
-          ? String(p.gift_aid_from).slice(0, 10)
-          : null;
+        let pGiftAidFrom = p.gift_aid_from ? String(p.gift_aid_from).slice(0, 10) : null;
         if (showGiftAid) {
           if (renewalMeta.partnerGiftAid && !pGiftAidFrom) {
             pGiftAidFrom = new Date().toISOString().slice(0, 10);
@@ -1317,7 +1542,8 @@ router.post('/renewal-confirm', async (req, res, next) => {
           }
         }
 
-        await tenantQuery(slug,
+        await tenantQuery(
+          slug,
           `UPDATE members
            SET next_renewal = $1::date,
                gift_aid_from = $2::date,
@@ -1325,24 +1551,31 @@ router.post('/renewal-confirm', async (req, res, next) => {
                payment_token = NULL,
                updated_at = now()
            WHERE id = $3`,
-          [pNewNextRenewal, pGiftAidFrom, p.id]);
+          [pNewNextRenewal, pGiftAidFrom, p.id],
+        );
       }
     }
 
     // Create finance transaction
     const memberFee = member.fee ?? 0;
     const partnerFee = partnerMember
-      ? (await tenantQuery(slug,
-          `SELECT fee::float FROM member_classes WHERE id = $1`,
-          [partnerMember.class_id]))[0]?.fee ?? 0
+      ? ((
+          await tenantQuery(slug, `SELECT fee::float FROM member_classes WHERE id = $1`, [
+            partnerMember.class_id,
+          ])
+        )[0]?.fee ?? 0)
       : 0;
     const totalAmount = member.is_joint ? memberFee + partnerFee : memberFee;
 
     if (totalAmount > 0) {
-      const [paypalAcct] = await tenantQuery(slug,
-        `SELECT id FROM finance_accounts WHERE name ILIKE '%PayPal%' AND active = true LIMIT 1`);
-      const [membershipCat] = await tenantQuery(slug,
-        `SELECT id FROM finance_categories WHERE name = 'Membership' AND active = true LIMIT 1`);
+      const [paypalAcct] = await tenantQuery(
+        slug,
+        `SELECT id FROM finance_accounts WHERE name ILIKE '%PayPal%' AND active = true LIMIT 1`,
+      );
+      const [membershipCat] = await tenantQuery(
+        slug,
+        `SELECT id FROM finance_categories WHERE name = 'Membership' AND active = true LIMIT 1`,
+      );
 
       if (paypalAcct) {
         const fromTo = partnerMember
@@ -1359,39 +1592,49 @@ router.post('/renewal-confirm', async (req, res, next) => {
           txnParams.push(partnerMember.id);
         }
 
-        const [txn] = await tenantQuery(slug,
+        const [txn] = await tenantQuery(
+          slug,
           `INSERT INTO transactions
              (account_id, date, type, from_to, amount, payment_method, detail, ${memberIdCols})
            VALUES ($1, CURRENT_DATE, 'in', $2, $3::numeric, 'Online', $4, ${memberIdVals})
            RETURNING id, transaction_number`,
-          txnParams);
+          txnParams,
+        );
 
         if (membershipCat && txn) {
-          await tenantQuery(slug,
+          await tenantQuery(
+            slug,
             `INSERT INTO transaction_categories (transaction_id, category_id, amount)
              VALUES ($1, $2, $3::numeric)`,
-            [txn.id, membershipCat.id, totalAmount]);
+            [txn.id, membershipCat.id, totalAmount],
+          );
         }
       }
     }
 
     // Send confirmation email
-    const [template] = await tenantQuery(slug,
-      `SELECT subject, body FROM system_messages WHERE id = 'online_renewal_confirm'`);
+    const [template] = await tenantQuery(
+      slug,
+      `SELECT subject, body FROM system_messages WHERE id = 'online_renewal_confirm'`,
+    );
     if (template) {
       const tenant = await prisma.sysTenant.findUnique({ where: { slug } });
       const u3aName = tenant?.name ?? slug;
 
       // Check if card attachment is enabled
-      const [cardSetting] = await tenantQuery(slug,
-        `SELECT email_cards FROM tenant_settings WHERE id = 'singleton'`);
+      const [cardSetting] = await tenantQuery(
+        slug,
+        `SELECT email_cards FROM tenant_settings WHERE id = 'singleton'`,
+      );
       const emailCards = cardSetting?.email_cards ?? false;
 
       const emailAddr = member.email;
       if (emailAddr) {
         const { subject } = resolveTokens(
-          template.subject, template.body,
-          { ...member, class_name: member.class_name }, u3aName,
+          template.subject,
+          template.body,
+          { ...member, class_name: member.class_name },
+          u3aName,
         );
 
         // Attach membership card PDF when email_cards is enabled
@@ -1400,9 +1643,9 @@ router.post('/renewal-confirm', async (req, res, next) => {
           try {
             const { pdfBuffer, filename } = await generateSingleCardPdf(slug, memberId);
             attachments.push({
-              content:     pdfBuffer.toString('base64'),
+              content: pdfBuffer.toString('base64'),
               filename,
-              type:        'application/pdf',
+              type: 'application/pdf',
               disposition: 'attachment',
             });
           } catch (cardErr) {
@@ -1418,16 +1661,23 @@ router.post('/renewal-confirm', async (req, res, next) => {
         //   attachments: attachments.length > 0 ? attachments : undefined,
         // };
         // await sgMail.send(msg);
-        console.log(`[Portal] Would send renewal confirmation to ${emailAddr}: "${subject}"${attachments.length ? ` [+card PDF: ${attachments[0].filename}]` : ''}`);
+        console.log(
+          `[Portal] Would send renewal confirmation to ${emailAddr}: "${subject}"${attachments.length ? ` [+card PDF: ${attachments[0].filename}]` : ''}`,
+        );
       }
       // Also email partner if joint — partner gets their own card
       if (partnerMember?.email) {
-        const pClassName = (await tenantQuery(slug,
-          `SELECT name FROM member_classes WHERE id = $1`,
-          [partnerMember.class_id]))[0]?.name ?? '';
+        const pClassName =
+          (
+            await tenantQuery(slug, `SELECT name FROM member_classes WHERE id = $1`, [
+              partnerMember.class_id,
+            ])
+          )[0]?.name ?? '';
         const { subject } = resolveTokens(
-          template.subject, template.body,
-          { ...partnerMember, class_name: pClassName }, u3aName,
+          template.subject,
+          template.body,
+          { ...partnerMember, class_name: pClassName },
+          u3aName,
         );
 
         const partnerAttachments = [];
@@ -1435,9 +1685,9 @@ router.post('/renewal-confirm', async (req, res, next) => {
           try {
             const { pdfBuffer, filename } = await generateSingleCardPdf(slug, partnerMember.id);
             partnerAttachments.push({
-              content:     pdfBuffer.toString('base64'),
+              content: pdfBuffer.toString('base64'),
               filename,
-              type:        'application/pdf',
+              type: 'application/pdf',
               disposition: 'attachment',
             });
           } catch (cardErr) {
@@ -1453,14 +1703,19 @@ router.post('/renewal-confirm', async (req, res, next) => {
         //   attachments: partnerAttachments.length > 0 ? partnerAttachments : undefined,
         // };
         // await sgMail.send(msg);
-        console.log(`[Portal] Would send renewal confirmation to ${partnerMember.email}: "${subject}"${partnerAttachments.length ? ` [+card PDF: ${partnerAttachments[0].filename}]` : ''}`);
+        console.log(
+          `[Portal] Would send renewal confirmation to ${partnerMember.email}: "${subject}"${partnerAttachments.length ? ` [+card PDF: ${partnerAttachments[0].filename}]` : ''}`,
+        );
       }
     }
 
     logAudit(slug, {
-      userId: null, userName: `${req.portal.name} (portal)`,
-      action: 'renew', entityType: 'member',
-      entityId: memberId, entityName: `${member.forenames} ${member.surname}`,
+      userId: null,
+      userName: `${req.portal.name} (portal)`,
+      action: 'renew',
+      entityType: 'member',
+      entityId: memberId,
+      entityName: `${member.forenames} ${member.surname}`,
       detail: `Online renewal confirmed — new next_renewal: ${newNextRenewal}`,
     });
 
@@ -1485,21 +1740,28 @@ function fmtDateISO(date) {
 
 async function notifyGroupLeaders(slug, groupId, memberId, action, groupName) {
   try {
-    const leaders = await tenantQuery(slug,
+    const leaders = await tenantQuery(
+      slug,
       `SELECT m.email, m.forenames, m.surname
        FROM group_members gm
        JOIN members m ON m.id = gm.member_id
        WHERE gm.group_id = $1 AND gm.is_leader = true`,
-      [groupId]);
+      [groupId],
+    );
 
-    const [member] = await tenantQuery(slug,
-      `SELECT forenames, surname FROM members WHERE id = $1`, [memberId]);
+    const [member] = await tenantQuery(
+      slug,
+      `SELECT forenames, surname FROM members WHERE id = $1`,
+      [memberId],
+    );
     const memberName = member ? `${member.forenames} ${member.surname}` : 'A member';
 
     for (const leader of leaders) {
       if (leader.email) {
         const verb = action === 'join' ? 'joined' : 'left';
-        console.log(`[Portal] Would notify leader ${leader.forenames} ${leader.surname} (${leader.email}): ${memberName} has ${verb} ${groupName}`);
+        console.log(
+          `[Portal] Would notify leader ${leader.forenames} ${leader.surname} (${leader.email}): ${memberName} has ${verb} ${groupName}`,
+        );
       }
     }
   } catch (err) {
@@ -1509,28 +1771,32 @@ async function notifyGroupLeaders(slug, groupId, memberId, action, groupName) {
 
 async function sendDetailsUpdateEmail(slug, memberId, emailChanged) {
   try {
-    const [member] = await tenantQuery(slug,
-      `SELECT forenames, surname, email, portal_email FROM members WHERE id = $1`, [memberId]);
+    const [member] = await tenantQuery(
+      slug,
+      `SELECT forenames, surname, email, portal_email FROM members WHERE id = $1`,
+      [memberId],
+    );
     if (!member) return;
 
-    const emailAddr = emailChanged ? member.portal_email : (member.portal_email || member.email);
+    const emailAddr = emailChanged ? member.portal_email : member.portal_email || member.email;
     if (!emailAddr) return;
 
     // Try to use a system message template
-    const [template] = await tenantQuery(slug,
-      `SELECT subject, body FROM system_messages WHERE id = 'portal_details_updated'`);
+    const [template] = await tenantQuery(
+      slug,
+      `SELECT subject, body FROM system_messages WHERE id = 'portal_details_updated'`,
+    );
 
     const tenant = await prisma.sysTenant.findUnique({ where: { slug } });
     const u3aName = tenant?.name ?? slug;
 
     if (template) {
-      const { subject } = resolveTokens(
-        template.subject, template.body,
-        member, u3aName,
-      );
+      const { subject } = resolveTokens(template.subject, template.body, member, u3aName);
       console.log(`[Portal] Would send details update confirmation to ${emailAddr}: "${subject}"`);
     } else {
-      console.log(`[Portal] Would send details update confirmation to ${emailAddr} (no template found for 'portal_details_updated')`);
+      console.log(
+        `[Portal] Would send details update confirmation to ${emailAddr} (no template found for 'portal_details_updated')`,
+      );
     }
   } catch (err) {
     console.error('[Portal] Failed to send details update email:', err.message);

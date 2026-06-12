@@ -11,7 +11,11 @@ vi.mock('react-router-dom', async (importActual) => {
 });
 
 vi.mock('../context/AuthContext.jsx', () => ({
-  useAuth: () => ({ tenant: 'test-u3a', can: vi.fn().mockReturnValue(true), hasFeature: vi.fn().mockReturnValue(true) }),
+  useAuth: () => ({
+    tenant: 'test-u3a',
+    can: vi.fn().mockReturnValue(true),
+    hasFeature: vi.fn().mockReturnValue(true),
+  }),
 }));
 
 vi.mock('../lib/api.js', () => ({
@@ -20,7 +24,13 @@ vi.mock('../lib/api.js', () => ({
       privacyPolicyUrl: '',
       paypalEmail: '',
       tenantSlug: 'test-u3a',
-      portalConfig: { renewals: false, groups: false, calendar: false, personalDetails: false, replacementCard: false },
+      portalConfig: {
+        renewals: false,
+        groups: false,
+        calendar: false,
+        personalDetails: false,
+        replacementCard: false,
+      },
       groupInfoConfig: { status: { members: false, public: false } },
       calendarConfig: { venue: { members: false, public: false } },
     }),
@@ -29,17 +39,29 @@ vi.mock('../lib/api.js', () => ({
 
 describe('PublicLinks page', () => {
   it('renders without crashing', () => {
-    const { container } = render(<MemoryRouter><PublicLinks /></MemoryRouter>);
+    const { container } = render(
+      <MemoryRouter>
+        <PublicLinks />
+      </MemoryRouter>,
+    );
     expect(container).toBeTruthy();
   });
 
   it('shows the Public Links heading', () => {
-    const { getAllByText } = render(<MemoryRouter><PublicLinks /></MemoryRouter>);
+    const { getAllByText } = render(
+      <MemoryRouter>
+        <PublicLinks />
+      </MemoryRouter>,
+    );
     expect(getAllByText('Public Links').length).toBeGreaterThan(0);
   });
 
   it('shows all five configuration sections', async () => {
-    const { getByText } = render(<MemoryRouter><PublicLinks /></MemoryRouter>);
+    const { getByText } = render(
+      <MemoryRouter>
+        <PublicLinks />
+      </MemoryRouter>,
+    );
     await waitFor(() => {
       expect(getByText('Member Services')).toBeInTheDocument();
       expect(getByText('Public Information')).toBeInTheDocument();
@@ -50,7 +72,11 @@ describe('PublicLinks page', () => {
   });
 
   it('shows portal config options', async () => {
-    const { getByText } = render(<MemoryRouter><PublicLinks /></MemoryRouter>);
+    const { getByText } = render(
+      <MemoryRouter>
+        <PublicLinks />
+      </MemoryRouter>,
+    );
     await waitFor(() => {
       expect(getByText('Membership renewals')).toBeInTheDocument();
       expect(getByText('Groups')).toBeInTheDocument();
@@ -60,7 +86,11 @@ describe('PublicLinks page', () => {
   });
 
   it('shows public information URLs', async () => {
-    const { getByDisplayValue } = render(<MemoryRouter><PublicLinks /></MemoryRouter>);
+    const { getByDisplayValue } = render(
+      <MemoryRouter>
+        <PublicLinks />
+      </MemoryRouter>,
+    );
     await waitFor(() => {
       expect(getByDisplayValue(/\/public\/test-u3a\/groups$/)).toBeInTheDocument();
       expect(getByDisplayValue(/\/public\/test-u3a\/calendar$/)).toBeInTheDocument();

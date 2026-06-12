@@ -21,55 +21,57 @@ import PageHeader from '../../components/PageHeader.jsx';
 const FontSize = Extension.create({
   name: 'fontSize',
   addGlobalAttributes() {
-    return [{
-      types: ['textStyle'],
-      attributes: {
-        fontSize: {
-          default: null,
-          parseHTML: (el) => el.style.fontSize?.replace(/[^0-9]/g, '') || null,
-          renderHTML: (attrs) => {
-            if (!attrs.fontSize) return {};
-            return { style: `font-size: ${attrs.fontSize}pt` };
+    return [
+      {
+        types: ['textStyle'],
+        attributes: {
+          fontSize: {
+            default: null,
+            parseHTML: (el) => el.style.fontSize?.replace(/[^0-9]/g, '') || null,
+            renderHTML: (attrs) => {
+              if (!attrs.fontSize) return {};
+              return { style: `font-size: ${attrs.fontSize}pt` };
+            },
           },
         },
       },
-    }];
+    ];
   },
 });
 
 const FONT_SIZES = [
-  { label: 'Small (10pt)',  value: '10' },
+  { label: 'Small (10pt)', value: '10' },
   { label: 'Normal (12pt)', value: '12' },
-  { label: 'Large (14pt)',  value: '14' },
-  { label: 'Huge (18pt)',   value: '18' },
+  { label: 'Large (14pt)', value: '14' },
+  { label: 'Huge (18pt)', value: '18' },
 ];
 
 // ── Token lists (same as email) ──────────────────────────────────────────
 
 const TOKENS = [
-  { token: '#FAM',         desc: 'Familiar name' },
-  { token: '#FORENAME',    desc: 'Forename(s)' },
-  { token: '#SURNAME',     desc: 'Surname' },
-  { token: '#TITLE',       desc: 'Title' },
-  { token: '#MEMNO',       desc: 'Membership number' },
-  { token: '#U3ANAME',     desc: 'u3a name' },
-  { token: '#EMAIL',       desc: 'Email address' },
-  { token: '#TELEPHONE',   desc: 'Telephone' },
-  { token: '#MOBILE',      desc: 'Mobile' },
-  { token: '#ADDRESSV',    desc: 'Address (vertical)' },
-  { token: '#RENEW',       desc: 'Renewal date' },
-  { token: '#MEMCLASS',    desc: 'Membership class' },
+  { token: '#FAM', desc: 'Familiar name' },
+  { token: '#FORENAME', desc: 'Forename(s)' },
+  { token: '#SURNAME', desc: 'Surname' },
+  { token: '#TITLE', desc: 'Title' },
+  { token: '#MEMNO', desc: 'Membership number' },
+  { token: '#U3ANAME', desc: 'u3a name' },
+  { token: '#EMAIL', desc: 'Email address' },
+  { token: '#TELEPHONE', desc: 'Telephone' },
+  { token: '#MOBILE', desc: 'Mobile' },
+  { token: '#ADDRESSV', desc: 'Address (vertical)' },
+  { token: '#RENEW', desc: 'Renewal date' },
+  { token: '#MEMCLASS', desc: 'Membership class' },
   { token: '#AFFILIATION', desc: 'Affiliation' },
 ];
 
 const PARTNER_TOKENS = [
-  { token: '#PFAM',       desc: "Partner's familiar name" },
-  { token: '#PFORENAME',  desc: "Partner's forename" },
-  { token: '#PSURNAME',   desc: "Partner's surname" },
-  { token: '#PTITLE',     desc: "Partner's title" },
-  { token: '#PEMAIL',     desc: "Partner's email" },
+  { token: '#PFAM', desc: "Partner's familiar name" },
+  { token: '#PFORENAME', desc: "Partner's forename" },
+  { token: '#PSURNAME', desc: "Partner's surname" },
+  { token: '#PTITLE', desc: "Partner's title" },
+  { token: '#PEMAIL', desc: "Partner's email" },
   { token: '#PTELEPHONE', desc: "Partner's telephone" },
-  { token: '#PMOBILE',    desc: "Partner's mobile" },
+  { token: '#PMOBILE', desc: "Partner's mobile" },
 ];
 
 // ── Toolbar component ────────────────────────────────────────────────────
@@ -157,7 +159,9 @@ function EditorToolbar({ editor }) {
         title="Font size"
       >
         {FONT_SIZES.map((s) => (
-          <option key={s.value} value={s.value}>{s.label}</option>
+          <option key={s.value} value={s.value}>
+            {s.label}
+          </option>
         ))}
       </select>
     </div>
@@ -169,15 +173,15 @@ function EditorToolbar({ editor }) {
 export default function LetterCompose() {
   const { can, tenant } = useAuth();
 
-  const [memberIds,     setMemberIds]     = useState([]);
-  const [recipients,    setRecipients]    = useState([]);
-  const [stdLetters,    setStdLetters]    = useState([]);
-  const [loadLetterId,  setLoadLetterId]  = useState('');
-  const [showSaveRow,   setShowSaveRow]   = useState(false);
-  const [saveName,      setSaveName]      = useState('');
-  const [downloading,   setDownloading]   = useState(false);
-  const [error,         setError]         = useState(null);
-  const [downloaded,    setDownloaded]    = useState(false);
+  const [memberIds, setMemberIds] = useState([]);
+  const [recipients, setRecipients] = useState([]);
+  const [stdLetters, setStdLetters] = useState([]);
+  const [loadLetterId, setLoadLetterId] = useState('');
+  const [showSaveRow, setShowSaveRow] = useState(false);
+  const [saveName, setSaveName] = useState('');
+  const [downloading, setDownloading] = useState(false);
+  const [error, setError] = useState(null);
+  const [downloaded, setDownloaded] = useState(false);
 
   const editor = useEditor({
     extensions: [
@@ -199,27 +203,38 @@ export default function LetterCompose() {
         setMemberIds(ids);
         sessionStorage.removeItem('letterComposeMemberIds');
       }
-    } catch { /* ignore */ }
+    } catch {
+      /* ignore */
+    }
 
     // Load standard letters
     if (can('letters_standard_messages', 'view')) {
-      lettersApi.listStandardLetters().then(setStdLetters).catch(() => {});
+      lettersApi
+        .listStandardLetters()
+        .then(setStdLetters)
+        .catch(() => {});
     }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Fetch recipient display info
   useEffect(() => {
     if (memberIds.length === 0) return;
-    membersApi.list({}).then((all) => {
-      const idSet = new Set(memberIds);
-      setRecipients(all.filter((m) => idSet.has(m.id)));
-    }).catch(() => {});
+    membersApi
+      .list({})
+      .then((all) => {
+        const idSet = new Set(memberIds);
+        setRecipients(all.filter((m) => idSet.has(m.id)));
+      })
+      .catch(() => {});
   }, [memberIds]);
 
-  const insertToken = useCallback((token) => {
-    if (!editor) return;
-    editor.chain().focus().insertContent(token).run();
-  }, [editor]);
+  const insertToken = useCallback(
+    (token) => {
+      if (!editor) return;
+      editor.chain().focus().insertContent(token).run();
+    },
+    [editor],
+  );
 
   function handleLoadLetter(id) {
     if (!id || !editor) return;
@@ -280,7 +295,10 @@ export default function LetterCompose() {
     }
   }
 
-  const navLinks = [{ label: 'Home', to: '/' }, { label: 'Members', to: '/members' }];
+  const navLinks = [
+    { label: 'Home', to: '/' },
+    { label: 'Members', to: '/members' },
+  ];
 
   if (downloaded) {
     return (
@@ -290,15 +308,24 @@ export default function LetterCompose() {
         <div className="max-w-2xl mx-auto px-4 py-8 text-center">
           <div className="bg-green-50 border border-green-200 rounded-lg p-6">
             <p className="text-green-700 font-medium text-lg">Letters downloaded successfully</p>
-            <p className="text-slate-600 mt-2">{recipients.length} letter{recipients.length !== 1 ? 's' : ''} generated.</p>
+            <p className="text-slate-600 mt-2">
+              {recipients.length} letter{recipients.length !== 1 ? 's' : ''} generated.
+            </p>
             <div className="mt-4 flex justify-center gap-4">
-              <button onClick={() => setDownloaded(false)} className="text-blue-700 hover:underline text-sm">
+              <button
+                onClick={() => setDownloaded(false)}
+                className="text-blue-700 hover:underline text-sm"
+              >
                 Compose another
               </button>
               <span className="text-slate-400">|</span>
-              <Link to="/members" className="text-blue-700 hover:underline text-sm">Members</Link>
+              <Link to="/members" className="text-blue-700 hover:underline text-sm">
+                Members
+              </Link>
               <span className="text-slate-400">|</span>
-              <Link to="/" className="text-blue-700 hover:underline text-sm">Home</Link>
+              <Link to="/" className="text-blue-700 hover:underline text-sm">
+                Home
+              </Link>
             </div>
           </div>
         </div>
@@ -321,10 +348,8 @@ export default function LetterCompose() {
         )}
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-
           {/* Main compose area */}
           <div className="md:col-span-2 space-y-4">
-
             {/* Recipients */}
             <div className="bg-white/90 rounded-lg shadow-sm p-4">
               <label className="block text-sm font-medium text-slate-700 mb-1">
@@ -335,10 +360,14 @@ export default function LetterCompose() {
                   <span className="text-slate-400 italic">No recipients selected</span>
                 ) : (
                   recipients.slice(0, 5).map((r) => (
-                    <div key={r.id}>{r.forenames} {r.surname}</div>
+                    <div key={r.id}>
+                      {r.forenames} {r.surname}
+                    </div>
                   ))
                 )}
-                {recipients.length > 5 && <div className="text-slate-400">… and {recipients.length - 5} more</div>}
+                {recipients.length > 5 && (
+                  <div className="text-slate-400">… and {recipients.length - 5} more</div>
+                )}
               </div>
             </div>
 
@@ -348,11 +377,18 @@ export default function LetterCompose() {
                 <select
                   name="loadLetterId"
                   value={loadLetterId}
-                  onChange={(e) => { setLoadLetterId(e.target.value); handleLoadLetter(e.target.value); }}
+                  onChange={(e) => {
+                    setLoadLetterId(e.target.value);
+                    handleLoadLetter(e.target.value);
+                  }}
                   className="border border-slate-300 rounded px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                   <option value="">Load standard letter…</option>
-                  {stdLetters.map((l) => <option key={l.id} value={l.id}>{l.name}</option>)}
+                  {stdLetters.map((l) => (
+                    <option key={l.id} value={l.id}>
+                      {l.name}
+                    </option>
+                  ))}
                 </select>
                 {can('letters_standard_messages', 'delete') && loadLetterId && (
                   <button
@@ -382,8 +418,21 @@ export default function LetterCompose() {
                       placeholder="Letter name"
                       className="flex-1 border border-slate-300 rounded px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
-                    <button onClick={handleSaveLetter} className="bg-blue-600 hover:bg-blue-700 text-white rounded px-4 py-1.5 text-sm">Save</button>
-                    <button onClick={() => { setShowSaveRow(false); setSaveName(''); }} className="border border-slate-300 text-slate-700 rounded px-3 py-1.5 text-sm">Cancel</button>
+                    <button
+                      onClick={handleSaveLetter}
+                      className="bg-blue-600 hover:bg-blue-700 text-white rounded px-4 py-1.5 text-sm"
+                    >
+                      Save
+                    </button>
+                    <button
+                      onClick={() => {
+                        setShowSaveRow(false);
+                        setSaveName('');
+                      }}
+                      className="border border-slate-300 text-slate-700 rounded px-3 py-1.5 text-sm"
+                    >
+                      Cancel
+                    </button>
                   </div>
                 )}
               </div>
@@ -400,7 +449,10 @@ export default function LetterCompose() {
 
             {/* Download button */}
             <div className="flex gap-3 justify-end">
-              <Link to="/members" className="border border-slate-300 text-slate-700 hover:bg-slate-50 rounded px-5 py-2 text-sm">
+              <Link
+                to="/members"
+                className="border border-slate-300 text-slate-700 hover:bg-slate-50 rounded px-5 py-2 text-sm"
+              >
                 Cancel
               </Link>
               <button
@@ -408,17 +460,21 @@ export default function LetterCompose() {
                 disabled={downloading || memberIds.length === 0}
                 className="bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white rounded px-5 py-2 text-sm font-medium transition-colors"
               >
-                {downloading ? 'Generating…' : `Download (${recipients.length} letter${recipients.length !== 1 ? 's' : ''})`}
+                {downloading
+                  ? 'Generating…'
+                  : `Download (${recipients.length} letter${recipients.length !== 1 ? 's' : ''})`}
               </button>
             </div>
-
           </div>
 
           {/* Token panel */}
           <div className="space-y-3">
             <div className="bg-white/90 rounded-lg shadow-sm p-4">
               <h2 className="text-sm font-bold text-slate-700 mb-2">Tokens — click to insert</h2>
-              <p className="text-xs text-slate-500 mb-3">Click a token to insert it at the cursor position. Tokens are replaced with each member's details when generating the PDF.</p>
+              <p className="text-xs text-slate-500 mb-3">
+                Click a token to insert it at the cursor position. Tokens are replaced with each
+                member's details when generating the PDF.
+              </p>
               <div className="space-y-1">
                 {TOKENS.map((t) => (
                   <button

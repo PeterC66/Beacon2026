@@ -20,18 +20,31 @@ export default function JoinForm() {
   const [fieldErrors, setFieldErrors] = useState({});
 
   const [form, setForm] = useState({
-    classId: '', title: '', forenames: '', surname: '',
-    email: '', mobile: '',
-    houseNo: '', street: '', town: '', county: '', postcode: '', telephone: '',
+    classId: '',
+    title: '',
+    forenames: '',
+    surname: '',
+    email: '',
+    mobile: '',
+    houseNo: '',
+    street: '',
+    town: '',
+    county: '',
+    postcode: '',
+    telephone: '',
     giftAid: false,
     // Joint member (second person) fields
-    p2Title: '', p2Forenames: '', p2Surname: '',
-    p2Email: '', p2Mobile: '',
+    p2Title: '',
+    p2Forenames: '',
+    p2Surname: '',
+    p2Email: '',
+    p2Mobile: '',
     p2GiftAid: false,
   });
 
   useEffect(() => {
-    publicApi.getJoinConfig(slug)
+    publicApi
+      .getJoinConfig(slug)
       .then((cfg) => {
         setConfig(cfg);
         setForm((f) => ({
@@ -61,19 +74,23 @@ export default function JoinForm() {
     if (!form.forenames.trim()) errs.forenames = 'First name is required.';
     if (!form.surname.trim()) errs.surname = 'Surname is required.';
     if (!form.email.trim()) errs.email = 'Email is required.';
-    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) errs.email = 'Please enter a valid email address.';
+    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email))
+      errs.email = 'Please enter a valid email address.';
     if (!form.postcode.trim()) errs.postcode = 'Postcode is required.';
-    else if (!UK_POSTCODE_RE.test(form.postcode.trim())) errs.postcode = 'Please enter a valid UK postcode.';
+    else if (!UK_POSTCODE_RE.test(form.postcode.trim()))
+      errs.postcode = 'Please enter a valid UK postcode.';
     if (config?.giftAidEnabled && form.giftAid) {
       if (!form.title.trim()) errs.title = 'Title is required for Gift Aid (HMRC requirement).';
-      if (!form.houseNo.trim()) errs.houseNo = 'House name or number is required for Gift Aid (HMRC requirement).';
+      if (!form.houseNo.trim())
+        errs.houseNo = 'House name or number is required for Gift Aid (HMRC requirement).';
     }
     // Joint member (second person) validation
     if (isJoint) {
-      if (!form.p2Forenames.trim()) errs.p2Forenames = 'Second person\'s first name is required.';
-      if (!form.p2Surname.trim()) errs.p2Surname = 'Second person\'s surname is required.';
+      if (!form.p2Forenames.trim()) errs.p2Forenames = "Second person's first name is required.";
+      if (!form.p2Surname.trim()) errs.p2Surname = "Second person's surname is required.";
       if (config?.giftAidEnabled && form.p2GiftAid) {
-        if (!form.p2Title.trim()) errs.p2Title = 'Title is required for Gift Aid (HMRC requirement).';
+        if (!form.p2Title.trim())
+          errs.p2Title = 'Title is required for Gift Aid (HMRC requirement).';
       }
     }
     return errs;
@@ -83,7 +100,10 @@ export default function JoinForm() {
     e.preventDefault();
     const errs = validate();
     setFieldErrors(errs);
-    if (Object.keys(errs).length > 0) { scrollToFirstFieldError(Object.keys(errs)); return; }
+    if (Object.keys(errs).length > 0) {
+      scrollToFirstFieldError(Object.keys(errs));
+      return;
+    }
 
     setSubmitting(true);
     setError('');
@@ -122,15 +142,15 @@ export default function JoinForm() {
       // Navigate to the pending page where the applicant can pay or get a link
       navigate(`/public/${slug}/join-pending`, {
         state: {
-          memberId:         result.memberId,
+          memberId: result.memberId,
           membershipNumber: result.membershipNumber,
-          paymentToken:     result.paymentToken,
-          redirectUrl:      result.redirectUrl,
-          amount:           result.amount,
-          className:        result.className,
-          forenames:        form.forenames.trim(),
-          surname:          form.surname.trim(),
-          partner2:         result.partner2 ?? null,
+          paymentToken: result.paymentToken,
+          redirectUrl: result.redirectUrl,
+          amount: result.amount,
+          className: result.className,
+          forenames: form.forenames.trim(),
+          surname: form.surname.trim(),
+          partner2: result.partner2 ?? null,
         },
       });
     } catch (err) {
@@ -167,9 +187,12 @@ export default function JoinForm() {
   }
 
   const selectedClass = config?.classes.find((c) => c.id === form.classId);
-  const displayFee = selectedClass?.fee != null
-    ? (isJoint ? Number(selectedClass.fee) * 2 : Number(selectedClass.fee))
-    : null;
+  const displayFee =
+    selectedClass?.fee != null
+      ? isJoint
+        ? Number(selectedClass.fee) * 2
+        : Number(selectedClass.fee)
+      : null;
 
   return (
     <div className="relative min-h-screen bg-gradient-to-br from-blue-50 to-slate-100 py-8 px-4">
@@ -205,28 +228,38 @@ export default function JoinForm() {
                 <option value="">— Select membership type —</option>
                 {config?.classes.map((c) => (
                   <option key={c.id} value={c.id}>
-                    {c.name}{c.fee != null ? ` — £${Number(c.fee).toFixed(2)}` : ''}
+                    {c.name}
+                    {c.fee != null ? ` — £${Number(c.fee).toFixed(2)}` : ''}
                   </option>
                 ))}
               </select>
-              {fieldErrors.classId && <p className="text-sm text-red-600 mt-1 font-medium">{fieldErrors.classId}</p>}
+              {fieldErrors.classId && (
+                <p className="text-sm text-red-600 mt-1 font-medium">{fieldErrors.classId}</p>
+              )}
               {selectedClass?.explanation && (
                 <p className="text-xs text-slate-500 mt-1">{selectedClass.explanation}</p>
               )}
               {isJoint && (
                 <p className="text-xs text-blue-600 mt-1 font-medium">
-                  This is a joint membership — please provide details for both people below.
-                  The fee is £{displayFee?.toFixed(2)} for two members.
+                  This is a joint membership — please provide details for both people below. The fee
+                  is £{displayFee?.toFixed(2)} for two members.
                 </p>
               )}
             </fieldset>
 
             {/* Personal details */}
             <fieldset className="mb-6">
-              <legend className="text-sm font-bold text-slate-700 mb-2">{isJoint ? 'First Person' : 'Your Details'}</legend>
+              <legend className="text-sm font-bold text-slate-700 mb-2">
+                {isJoint ? 'First Person' : 'Your Details'}
+              </legend>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label htmlFor="join-title" className="block text-sm font-medium text-slate-700 mb-1">Title</label>
+                  <label
+                    htmlFor="join-title"
+                    className="block text-sm font-medium text-slate-700 mb-1"
+                  >
+                    Title
+                  </label>
                   <input
                     id="join-title"
                     type="text"
@@ -236,10 +269,17 @@ export default function JoinForm() {
                     placeholder="Mr, Mrs, Ms, Dr..."
                     className="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
-                  {fieldErrors.title && <p className="text-sm text-red-600 mt-1 font-medium">{fieldErrors.title}</p>}
+                  {fieldErrors.title && (
+                    <p className="text-sm text-red-600 mt-1 font-medium">{fieldErrors.title}</p>
+                  )}
                 </div>
                 <div>
-                  <label htmlFor="join-forenames" className="block text-sm font-medium text-slate-700 mb-1">First name <RequiredMark /></label>
+                  <label
+                    htmlFor="join-forenames"
+                    className="block text-sm font-medium text-slate-700 mb-1"
+                  >
+                    First name <RequiredMark />
+                  </label>
                   <input
                     id="join-forenames"
                     type="text"
@@ -248,10 +288,17 @@ export default function JoinForm() {
                     onChange={(e) => handleChange('forenames', e.target.value)}
                     className="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
-                  {fieldErrors.forenames && <p className="text-sm text-red-600 mt-1 font-medium">{fieldErrors.forenames}</p>}
+                  {fieldErrors.forenames && (
+                    <p className="text-sm text-red-600 mt-1 font-medium">{fieldErrors.forenames}</p>
+                  )}
                 </div>
                 <div>
-                  <label htmlFor="join-surname" className="block text-sm font-medium text-slate-700 mb-1">Surname <RequiredMark /></label>
+                  <label
+                    htmlFor="join-surname"
+                    className="block text-sm font-medium text-slate-700 mb-1"
+                  >
+                    Surname <RequiredMark />
+                  </label>
                   <input
                     id="join-surname"
                     type="text"
@@ -260,10 +307,17 @@ export default function JoinForm() {
                     onChange={(e) => handleChange('surname', e.target.value)}
                     className="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
-                  {fieldErrors.surname && <p className="text-sm text-red-600 mt-1 font-medium">{fieldErrors.surname}</p>}
+                  {fieldErrors.surname && (
+                    <p className="text-sm text-red-600 mt-1 font-medium">{fieldErrors.surname}</p>
+                  )}
                 </div>
                 <div>
-                  <label htmlFor="join-email" className="block text-sm font-medium text-slate-700 mb-1">Email <RequiredMark /></label>
+                  <label
+                    htmlFor="join-email"
+                    className="block text-sm font-medium text-slate-700 mb-1"
+                  >
+                    Email <RequiredMark />
+                  </label>
                   <input
                     id="join-email"
                     type="email"
@@ -272,10 +326,17 @@ export default function JoinForm() {
                     onChange={(e) => handleChange('email', e.target.value)}
                     className="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
-                  {fieldErrors.email && <p className="text-sm text-red-600 mt-1 font-medium">{fieldErrors.email}</p>}
+                  {fieldErrors.email && (
+                    <p className="text-sm text-red-600 mt-1 font-medium">{fieldErrors.email}</p>
+                  )}
                 </div>
                 <div>
-                  <label htmlFor="join-mobile" className="block text-sm font-medium text-slate-700 mb-1">Mobile</label>
+                  <label
+                    htmlFor="join-mobile"
+                    className="block text-sm font-medium text-slate-700 mb-1"
+                  >
+                    Mobile
+                  </label>
                   <input
                     id="join-mobile"
                     type="tel"
@@ -294,7 +355,12 @@ export default function JoinForm() {
                 <legend className="text-sm font-bold text-slate-700 mb-2">Second Person</legend>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
-                    <label htmlFor="join2-title" className="block text-sm font-medium text-slate-700 mb-1">Title</label>
+                    <label
+                      htmlFor="join2-title"
+                      className="block text-sm font-medium text-slate-700 mb-1"
+                    >
+                      Title
+                    </label>
                     <input
                       id="join2-title"
                       type="text"
@@ -304,10 +370,17 @@ export default function JoinForm() {
                       placeholder="Mr, Mrs, Ms, Dr..."
                       className="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
-                    {fieldErrors.p2Title && <p className="text-sm text-red-600 mt-1 font-medium">{fieldErrors.p2Title}</p>}
+                    {fieldErrors.p2Title && (
+                      <p className="text-sm text-red-600 mt-1 font-medium">{fieldErrors.p2Title}</p>
+                    )}
                   </div>
                   <div>
-                    <label htmlFor="join2-forenames" className="block text-sm font-medium text-slate-700 mb-1">First name <RequiredMark /></label>
+                    <label
+                      htmlFor="join2-forenames"
+                      className="block text-sm font-medium text-slate-700 mb-1"
+                    >
+                      First name <RequiredMark />
+                    </label>
                     <input
                       id="join2-forenames"
                       type="text"
@@ -316,10 +389,19 @@ export default function JoinForm() {
                       onChange={(e) => handleChange('p2Forenames', e.target.value)}
                       className="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
-                    {fieldErrors.p2Forenames && <p className="text-sm text-red-600 mt-1 font-medium">{fieldErrors.p2Forenames}</p>}
+                    {fieldErrors.p2Forenames && (
+                      <p className="text-sm text-red-600 mt-1 font-medium">
+                        {fieldErrors.p2Forenames}
+                      </p>
+                    )}
                   </div>
                   <div>
-                    <label htmlFor="join2-surname" className="block text-sm font-medium text-slate-700 mb-1">Surname <RequiredMark /></label>
+                    <label
+                      htmlFor="join2-surname"
+                      className="block text-sm font-medium text-slate-700 mb-1"
+                    >
+                      Surname <RequiredMark />
+                    </label>
                     <input
                       id="join2-surname"
                       type="text"
@@ -328,10 +410,19 @@ export default function JoinForm() {
                       onChange={(e) => handleChange('p2Surname', e.target.value)}
                       className="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
-                    {fieldErrors.p2Surname && <p className="text-sm text-red-600 mt-1 font-medium">{fieldErrors.p2Surname}</p>}
+                    {fieldErrors.p2Surname && (
+                      <p className="text-sm text-red-600 mt-1 font-medium">
+                        {fieldErrors.p2Surname}
+                      </p>
+                    )}
                   </div>
                   <div>
-                    <label htmlFor="join2-email" className="block text-sm font-medium text-slate-700 mb-1">Email</label>
+                    <label
+                      htmlFor="join2-email"
+                      className="block text-sm font-medium text-slate-700 mb-1"
+                    >
+                      Email
+                    </label>
                     <input
                       id="join2-email"
                       type="email"
@@ -340,10 +431,17 @@ export default function JoinForm() {
                       onChange={(e) => handleChange('p2Email', e.target.value)}
                       className="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
-                    {fieldErrors.p2Email && <p className="text-sm text-red-600 mt-1 font-medium">{fieldErrors.p2Email}</p>}
+                    {fieldErrors.p2Email && (
+                      <p className="text-sm text-red-600 mt-1 font-medium">{fieldErrors.p2Email}</p>
+                    )}
                   </div>
                   <div>
-                    <label htmlFor="join2-mobile" className="block text-sm font-medium text-slate-700 mb-1">Mobile</label>
+                    <label
+                      htmlFor="join2-mobile"
+                      className="block text-sm font-medium text-slate-700 mb-1"
+                    >
+                      Mobile
+                    </label>
                     <input
                       id="join2-mobile"
                       type="tel"
@@ -359,10 +457,17 @@ export default function JoinForm() {
 
             {/* Address */}
             <fieldset className="mb-6">
-              <legend className="text-sm font-bold text-slate-700 mb-2">{isJoint ? 'Shared Address' : 'Address'}</legend>
+              <legend className="text-sm font-bold text-slate-700 mb-2">
+                {isJoint ? 'Shared Address' : 'Address'}
+              </legend>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label htmlFor="join-house-no" className="block text-sm font-medium text-slate-700 mb-1">House no / name</label>
+                  <label
+                    htmlFor="join-house-no"
+                    className="block text-sm font-medium text-slate-700 mb-1"
+                  >
+                    House no / name
+                  </label>
                   <input
                     id="join-house-no"
                     type="text"
@@ -371,10 +476,17 @@ export default function JoinForm() {
                     onChange={(e) => handleChange('houseNo', e.target.value)}
                     className={`w-full border rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${fieldErrors.houseNo ? 'border-red-400 ring-2 ring-red-200' : 'border-slate-300'}`}
                   />
-                  {fieldErrors.houseNo && <p className="text-red-600 text-xs mt-1">{fieldErrors.houseNo}</p>}
+                  {fieldErrors.houseNo && (
+                    <p className="text-red-600 text-xs mt-1">{fieldErrors.houseNo}</p>
+                  )}
                 </div>
                 <div>
-                  <label htmlFor="join-street" className="block text-sm font-medium text-slate-700 mb-1">Street</label>
+                  <label
+                    htmlFor="join-street"
+                    className="block text-sm font-medium text-slate-700 mb-1"
+                  >
+                    Street
+                  </label>
                   <input
                     id="join-street"
                     type="text"
@@ -385,7 +497,12 @@ export default function JoinForm() {
                   />
                 </div>
                 <div>
-                  <label htmlFor="join-town" className="block text-sm font-medium text-slate-700 mb-1">Town</label>
+                  <label
+                    htmlFor="join-town"
+                    className="block text-sm font-medium text-slate-700 mb-1"
+                  >
+                    Town
+                  </label>
                   <input
                     id="join-town"
                     type="text"
@@ -396,7 +513,12 @@ export default function JoinForm() {
                   />
                 </div>
                 <div>
-                  <label htmlFor="join-county" className="block text-sm font-medium text-slate-700 mb-1">County</label>
+                  <label
+                    htmlFor="join-county"
+                    className="block text-sm font-medium text-slate-700 mb-1"
+                  >
+                    County
+                  </label>
                   <input
                     id="join-county"
                     type="text"
@@ -407,7 +529,12 @@ export default function JoinForm() {
                   />
                 </div>
                 <div>
-                  <label htmlFor="join-postcode" className="block text-sm font-medium text-slate-700 mb-1">Postcode <RequiredMark /></label>
+                  <label
+                    htmlFor="join-postcode"
+                    className="block text-sm font-medium text-slate-700 mb-1"
+                  >
+                    Postcode <RequiredMark />
+                  </label>
                   <input
                     id="join-postcode"
                     type="text"
@@ -416,10 +543,17 @@ export default function JoinForm() {
                     onChange={(e) => handleChange('postcode', e.target.value.toUpperCase())}
                     className="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
-                  {fieldErrors.postcode && <p className="text-sm text-red-600 mt-1 font-medium">{fieldErrors.postcode}</p>}
+                  {fieldErrors.postcode && (
+                    <p className="text-sm text-red-600 mt-1 font-medium">{fieldErrors.postcode}</p>
+                  )}
                 </div>
                 <div>
-                  <label htmlFor="join-telephone" className="block text-sm font-medium text-slate-700 mb-1">Telephone</label>
+                  <label
+                    htmlFor="join-telephone"
+                    className="block text-sm font-medium text-slate-700 mb-1"
+                  >
+                    Telephone
+                  </label>
                   <input
                     id="join-telephone"
                     type="tel"
@@ -437,8 +571,8 @@ export default function JoinForm() {
               <fieldset className="mb-6">
                 <legend className="text-sm font-bold text-slate-700 mb-2">Gift Aid</legend>
                 <p className="text-xs text-slate-500 mb-2">
-                  If you are a UK taxpayer, your u3a can claim Gift Aid on your subscription
-                  at no extra cost to you. For Gift Aid to be processed, you must provide a Title.
+                  If you are a UK taxpayer, your u3a can claim Gift Aid on your subscription at no
+                  extra cost to you. For Gift Aid to be processed, you must provide a Title.
                 </p>
                 <label className="flex items-center gap-2 text-sm">
                   <input
@@ -457,7 +591,8 @@ export default function JoinForm() {
                       checked={form.p2GiftAid}
                       onChange={(e) => handleChange('p2GiftAid', e.target.checked)}
                     />
-                    I ({form.p2Forenames.trim() || 'second person'}) would like Gift Aid claimed on my subscription
+                    I ({form.p2Forenames.trim() || 'second person'}) would like Gift Aid claimed on
+                    my subscription
                   </label>
                 )}
               </fieldset>
@@ -467,16 +602,28 @@ export default function JoinForm() {
             {config?.privacyPolicyUrl && (
               <p className="text-xs text-slate-500 mb-4">
                 By submitting this form you agree to our{' '}
-                <a href={config.privacyPolicyUrl} target="_blank" rel="noopener noreferrer" className="text-blue-700 hover:underline">
+                <a
+                  href={config.privacyPolicyUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-700 hover:underline"
+                >
                   Privacy Policy
-                </a>.
+                </a>
+                .
               </p>
             )}
 
             {config?.onlineJoinEmail && (
               <p className="text-xs text-slate-500 mb-4">
                 For enquiries about joining, please contact{' '}
-                <a href={`mailto:${config.onlineJoinEmail}`} className="text-blue-700 hover:underline">{config.onlineJoinEmail}</a>.
+                <a
+                  href={`mailto:${config.onlineJoinEmail}`}
+                  className="text-blue-700 hover:underline"
+                >
+                  {config.onlineJoinEmail}
+                </a>
+                .
               </p>
             )}
 
@@ -485,7 +632,9 @@ export default function JoinForm() {
               disabled={submitting}
               className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white rounded px-5 py-3 text-sm font-medium transition-colors"
             >
-              {submitting ? 'Processing...' : `Make Payment${displayFee ? ` — £${displayFee.toFixed(2)}` : ''}`}
+              {submitting
+                ? 'Processing...'
+                : `Make Payment${displayFee ? ` — £${displayFee.toFixed(2)}` : ''}`}
             </button>
           </form>
         </div>

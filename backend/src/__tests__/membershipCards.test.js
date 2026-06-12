@@ -4,7 +4,7 @@ import request from 'supertest';
 import { makeAuthHeader } from './helpers.js';
 
 vi.mock('../utils/redis.js', () => ({
-  isSessionInvalidated:   vi.fn().mockResolvedValue(false),
+  isSessionInvalidated: vi.fn().mockResolvedValue(false),
   invalidateUserSessions: vi.fn().mockResolvedValue(undefined),
 }));
 
@@ -16,7 +16,7 @@ vi.mock('../utils/db.js', () => ({
     },
   },
   tenantQuery: vi.fn(),
-  withTenant:  vi.fn(),
+  withTenant: vi.fn(),
 }));
 
 const { default: app } = await import('../app.js');
@@ -92,7 +92,7 @@ describe('GET /membership-cards/download', () => {
 
   it('returns 200 with PDF content-type', async () => {
     tenantQuery.mockResolvedValueOnce([SAMPLE_MEMBER]); // fetchMembersById
-    tenantQuery.mockResolvedValueOnce([SETTINGS_ROW]);   // getCardSettings
+    tenantQuery.mockResolvedValueOnce([SETTINGS_ROW]); // getCardSettings
     const res = await request(app)
       .get('/membership-cards/download?ids=m1')
       .set('Authorization', AUTH);
@@ -107,9 +107,7 @@ describe('GET /membership-cards/blank', () => {
 
   it('returns 200 with PDF content-type', async () => {
     tenantQuery.mockResolvedValueOnce([SETTINGS_ROW]); // getCardSettings
-    const res = await request(app)
-      .get('/membership-cards/blank')
-      .set('Authorization', AUTH);
+    const res = await request(app).get('/membership-cards/blank').set('Authorization', AUTH);
     expect(res.status).toBe(200);
     expect(res.headers['content-type']).toContain('application/pdf');
     expect(res.headers['content-disposition']).toContain('blank_cards');
@@ -120,18 +118,14 @@ describe('GET /membership-cards/excel', () => {
   beforeEach(() => vi.clearAllMocks());
 
   it('returns 400 with no ids', async () => {
-    const res = await request(app)
-      .get('/membership-cards/excel?ids=')
-      .set('Authorization', AUTH);
+    const res = await request(app).get('/membership-cards/excel?ids=').set('Authorization', AUTH);
     expect(res.status).toBe(400);
   });
 
   it('returns 200 with Excel content-type', async () => {
     tenantQuery.mockResolvedValueOnce([SAMPLE_MEMBER]); // fetchMembersById
-    tenantQuery.mockResolvedValueOnce([SETTINGS_ROW]);   // getCardSettings
-    const res = await request(app)
-      .get('/membership-cards/excel?ids=m1')
-      .set('Authorization', AUTH);
+    tenantQuery.mockResolvedValueOnce([SETTINGS_ROW]); // getCardSettings
+    const res = await request(app).get('/membership-cards/excel?ids=m1').set('Authorization', AUTH);
     expect(res.status).toBe(200);
     expect(res.headers['content-type']).toContain('spreadsheetml');
     expect(res.headers['content-disposition']).toContain('card_data');
@@ -167,9 +161,7 @@ describe('GET /membership-cards/single-pdf', () => {
   beforeEach(() => vi.clearAllMocks());
 
   it('returns 400 without memberId', async () => {
-    const res = await request(app)
-      .get('/membership-cards/single-pdf')
-      .set('Authorization', AUTH);
+    const res = await request(app).get('/membership-cards/single-pdf').set('Authorization', AUTH);
     expect(res.status).toBe(400);
   });
 
@@ -183,7 +175,7 @@ describe('GET /membership-cards/single-pdf', () => {
 
   it('returns 200 with PDF for valid member', async () => {
     tenantQuery.mockResolvedValueOnce([SAMPLE_MEMBER]); // fetchMembersById
-    tenantQuery.mockResolvedValueOnce([SETTINGS_ROW]);   // getCardSettings
+    tenantQuery.mockResolvedValueOnce([SETTINGS_ROW]); // getCardSettings
     const res = await request(app)
       .get('/membership-cards/single-pdf?memberId=m1')
       .set('Authorization', AUTH);
@@ -197,7 +189,7 @@ describe('generateSingleCardPdf (exported helper)', () => {
 
   it('returns a PDF buffer and filename for a valid member', async () => {
     tenantQuery.mockResolvedValueOnce([SAMPLE_MEMBER]); // fetchMembersById
-    tenantQuery.mockResolvedValueOnce([SETTINGS_ROW]);   // getCardSettings
+    tenantQuery.mockResolvedValueOnce([SETTINGS_ROW]); // getCardSettings
     const { pdfBuffer, filename } = await generateSingleCardPdf('test-u3a', 'm1');
     expect(pdfBuffer).toBeInstanceOf(Buffer);
     expect(pdfBuffer.length).toBeGreaterThan(0);
@@ -209,8 +201,7 @@ describe('generateSingleCardPdf (exported helper)', () => {
 
   it('throws when member not found', async () => {
     tenantQuery.mockResolvedValueOnce([]); // empty result
-    await expect(generateSingleCardPdf('test-u3a', 'm99'))
-      .rejects.toThrow('not found');
+    await expect(generateSingleCardPdf('test-u3a', 'm99')).rejects.toThrow('not found');
   });
 
   it('supports advanceYear parameter', async () => {

@@ -8,14 +8,14 @@ import { makeAuthHeader } from './helpers.js';
 // ── Module mocks ──────────────────────────────────────────────────────────
 
 vi.mock('../utils/redis.js', () => ({
-  isSessionInvalidated:   vi.fn().mockResolvedValue(false),
+  isSessionInvalidated: vi.fn().mockResolvedValue(false),
   invalidateUserSessions: vi.fn().mockResolvedValue(undefined),
 }));
 
 vi.mock('../utils/db.js', () => ({
-  prisma:      { $disconnect: vi.fn() },
+  prisma: { $disconnect: vi.fn() },
   tenantQuery: vi.fn(),
-  withTenant:  vi.fn(),
+  withTenant: vi.fn(),
 }));
 
 const { default: app } = await import('../app.js');
@@ -26,7 +26,11 @@ const AUTH = makeAuthHeader();
 // ── Fixtures ──────────────────────────────────────────────────────────────
 
 const SAMPLE_ROLE = {
-  id: 'r1', name: 'Admin', is_committee: false, notes: null, user_count: 2,
+  id: 'r1',
+  name: 'Admin',
+  is_committee: false,
+  notes: null,
+  user_count: 2,
 };
 
 // ── GET /roles ────────────────────────────────────────────────────────────
@@ -89,7 +93,9 @@ describe('POST /roles', () => {
   beforeEach(() => vi.clearAllMocks());
 
   it('returns 201 with created role', async () => {
-    tenantQuery.mockResolvedValueOnce([{ id: 'r2', name: 'Treasurer', is_committee: true, notes: null }]);
+    tenantQuery.mockResolvedValueOnce([
+      { id: 'r2', name: 'Treasurer', is_committee: true, notes: null },
+    ]);
 
     const res = await request(app)
       .post('/roles')
@@ -101,10 +107,7 @@ describe('POST /roles', () => {
   });
 
   it('returns 422 on invalid body (empty name)', async () => {
-    const res = await request(app)
-      .post('/roles')
-      .set('Authorization', AUTH)
-      .send({ name: '' });
+    const res = await request(app).post('/roles').set('Authorization', AUTH).send({ name: '' });
 
     expect(res.status).toBe(422);
   });
@@ -116,7 +119,9 @@ describe('PATCH /roles/:id', () => {
   beforeEach(() => vi.clearAllMocks());
 
   it('returns 200 with updated role', async () => {
-    tenantQuery.mockResolvedValueOnce([{ id: 'r1', name: 'SuperAdmin', is_committee: false, notes: null }]);
+    tenantQuery.mockResolvedValueOnce([
+      { id: 'r1', name: 'SuperAdmin', is_committee: false, notes: null },
+    ]);
 
     const res = await request(app)
       .patch('/roles/r1')
@@ -128,10 +133,7 @@ describe('PATCH /roles/:id', () => {
   });
 
   it('returns 400 when nothing to update', async () => {
-    const res = await request(app)
-      .patch('/roles/r1')
-      .set('Authorization', AUTH)
-      .send({});
+    const res = await request(app).patch('/roles/r1').set('Authorization', AUTH).send({});
 
     expect(res.status).toBe(400);
   });
@@ -178,10 +180,10 @@ describe('PUT /roles/:id/privileges', () => {
 
   it('returns 200 when privileges updated', async () => {
     tenantQuery
-      .mockResolvedValueOnce([{ id: 'r1' }])  // role exists check
-      .mockResolvedValueOnce([])               // DELETE old privs
-      .mockResolvedValueOnce([])               // INSERT priv 1
-      .mockResolvedValueOnce([]);              // SELECT affected users
+      .mockResolvedValueOnce([{ id: 'r1' }]) // role exists check
+      .mockResolvedValueOnce([]) // DELETE old privs
+      .mockResolvedValueOnce([]) // INSERT priv 1
+      .mockResolvedValueOnce([]); // SELECT affected users
 
     const res = await request(app)
       .put('/roles/r1/privileges')

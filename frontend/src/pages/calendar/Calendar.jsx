@@ -3,7 +3,13 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { calendar as calendarApi, venues as venuesApi, groups as groupsApi, teams as teamsApi, members as membersApi } from '../../lib/api.js';
+import {
+  calendar as calendarApi,
+  venues as venuesApi,
+  groups as groupsApi,
+  teams as teamsApi,
+  members as membersApi,
+} from '../../lib/api.js';
 import { useAuth } from '../../context/AuthContext.jsx';
 import NavBar from '../../components/NavBar.jsx';
 import PageHeader from '../../components/PageHeader.jsx';
@@ -27,7 +33,20 @@ function fmtDate(d) {
   const [y, m, day] = s.split('-');
   const dt = new Date(+y, +m - 1, +day);
   const dayName = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][dt.getDay()];
-  const monthName = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][dt.getMonth()];
+  const monthName = [
+    'Jan',
+    'Feb',
+    'Mar',
+    'Apr',
+    'May',
+    'Jun',
+    'Jul',
+    'Aug',
+    'Sep',
+    'Oct',
+    'Nov',
+    'Dec',
+  ][dt.getMonth()];
   return `${dayName} ${+day} ${monthName} ${y}`;
 }
 
@@ -47,40 +66,48 @@ export default function Calendar() {
   const { can, tenant } = useAuth();
   const [searchParams] = useSearchParams();
 
-  const [events,    setEvents]    = useState([]);
+  const [events, setEvents] = useState([]);
   const [venueList, setVenueList] = useState([]);
   const [groupTeamList, setGroupTeamList] = useState([]);
   const [eventTypeList, setEventTypeList] = useState([]);
-  const [loading,   setLoading]   = useState(true);
-  const [error,     setError]     = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [showDetail, setShowDetail] = useState(false);
 
   // Filters
-  const [from,       setFrom]       = useState(defaultFrom);
-  const [to,         setTo]         = useState(defaultTo);
+  const [from, setFrom] = useState(defaultFrom);
+  const [to, setTo] = useState(defaultTo);
   const [filterMode, setFilterMode] = useState(() => {
     const p = searchParams.get('filter');
     return p === 'other' ? 'other' : 'all';
   }); // all | member | venue | group | other
-  const [memberId,   setMemberId]   = useState('');
-  const [venueId,    setVenueId]    = useState('');
-  const [groupId,    setGroupId]    = useState('');
+  const [memberId, setMemberId] = useState('');
+  const [venueId, setVenueId] = useState('');
+  const [groupId, setGroupId] = useState('');
   const [eventTypeId, setEventTypeId] = useState('');
-  const [viewMode,   setViewMode]   = useState('calendar'); // 'calendar' | 'table'
-  const [showPast,   setShowPast]   = useState(false);
+  const [viewMode, setViewMode] = useState('calendar'); // 'calendar' | 'table'
+  const [showPast, setShowPast] = useState(false);
 
   // Member filter + select
-  const [allMembers,    setAllMembers]    = useState([]);
-  const [memberFilter,  setMemberFilter]  = useState('');
+  const [allMembers, setAllMembers] = useState([]);
+  const [memberFilter, setMemberFilter] = useState('');
 
   // "Other" mode — event management
   const [otherEvents, setOtherEvents] = useState([]);
   const [otherLoading, setOtherLoading] = useState(false);
   const [otherSelected, setOtherSelected] = useState(new Set());
   const EMPTY_EV = {
-    eventDate: '', startTime: '', endTime: '', venueId: '',
-    topic: '', contact: '', details: '', isPrivate: false,
-    repeatEvery: '', repeatUnit: 'weeks', repeatUntil: '',
+    eventDate: '',
+    startTime: '',
+    endTime: '',
+    venueId: '',
+    topic: '',
+    contact: '',
+    details: '',
+    isPrivate: false,
+    repeatEvery: '',
+    repeatUnit: 'weeks',
+    repeatUntil: '',
   };
   const [addForm, setAddForm] = useState(EMPTY_EV);
   const [addError, setAddError] = useState(null);
@@ -91,27 +118,42 @@ export default function Calendar() {
 
   // Load venues, groups+teams, and event types for dropdowns
   useEffect(() => {
-    venuesApi.list().then(setVenueList).catch(() => {});
-    Promise.all([
-      groupsApi.list({ activeOnly: false }),
-      teamsApi.list({ activeOnly: false }),
-    ]).then(([groups, teams]) => {
-      const sortedGroups = groups.map((g) => ({ ...g, type: 'group' })).sort((a, b) => a.name.localeCompare(b.name));
-      const sortedTeams  = teams.map((t) => ({ ...t, type: 'team' })).sort((a, b) => a.name.localeCompare(b.name));
-      const combined = [...sortedGroups, ...sortedTeams];
-      setGroupTeamList(combined);
-    }).catch(() => {});
-    calendarApi.listEventTypes().then(setEventTypeList).catch(() => {});
-    membersApi.list().then(setAllMembers).catch(() => {});
+    venuesApi
+      .list()
+      .then(setVenueList)
+      .catch(() => {});
+    Promise.all([groupsApi.list({ activeOnly: false }), teamsApi.list({ activeOnly: false })])
+      .then(([groups, teams]) => {
+        const sortedGroups = groups
+          .map((g) => ({ ...g, type: 'group' }))
+          .sort((a, b) => a.name.localeCompare(b.name));
+        const sortedTeams = teams
+          .map((t) => ({ ...t, type: 'team' }))
+          .sort((a, b) => a.name.localeCompare(b.name));
+        const combined = [...sortedGroups, ...sortedTeams];
+        setGroupTeamList(combined);
+      })
+      .catch(() => {});
+    calendarApi
+      .listEventTypes()
+      .then(setEventTypeList)
+      .catch(() => {});
+    membersApi
+      .list()
+      .then(setAllMembers)
+      .catch(() => {});
   }, []);
 
   const filteredMembers = useMemo(() => {
     const q = memberFilter.trim().toLowerCase();
     if (!q) return allMembers.slice(0, 50);
-    return allMembers.filter((m) =>
-      `${m.forenames} ${m.surname}`.toLowerCase().includes(q) ||
-      String(m.membership_number).includes(q)
-    ).slice(0, 50);
+    return allMembers
+      .filter(
+        (m) =>
+          `${m.forenames} ${m.surname}`.toLowerCase().includes(q) ||
+          String(m.membership_number).includes(q),
+      )
+      .slice(0, 50);
   }, [allMembers, memberFilter]);
 
   // Load events when calendar filters change (not for "other" mode)
@@ -125,9 +167,9 @@ export default function Calendar() {
     try {
       const params = { from, to };
       if (filterMode === 'member' && memberId) params.memberId = memberId;
-      if (filterMode === 'venue'  && venueId)  params.venueId  = venueId;
-      if (filterMode === 'group'  && groupId)  params.groupId  = groupId;
-      if (filterMode === 'group'  && !groupId) params.groupsOnly = 'true';
+      if (filterMode === 'venue' && venueId) params.venueId = venueId;
+      if (filterMode === 'group' && groupId) params.groupId = groupId;
+      if (filterMode === 'group' && !groupId) params.groupsOnly = 'true';
       const data = await calendarApi.listEvents(params);
       setEvents(data);
     } catch (err) {
@@ -176,19 +218,19 @@ export default function Calendar() {
     setAddError(null);
     try {
       const payload = {
-        eventDate:   addForm.eventDate,
-        startTime:   addForm.startTime || null,
-        endTime:     addForm.endTime || null,
-        venueId:     addForm.venueId || null,
-        topic:       addForm.topic || null,
-        contact:     addForm.contact || null,
-        details:     addForm.details || null,
-        isPrivate:   addForm.isPrivate,
+        eventDate: addForm.eventDate,
+        startTime: addForm.startTime || null,
+        endTime: addForm.endTime || null,
+        venueId: addForm.venueId || null,
+        topic: addForm.topic || null,
+        contact: addForm.contact || null,
+        details: addForm.details || null,
+        isPrivate: addForm.isPrivate,
         eventTypeId: eventTypeId || null,
       };
       if (addForm.repeatEvery && addForm.repeatUntil) {
         payload.repeatEvery = parseInt(addForm.repeatEvery, 10);
-        payload.repeatUnit  = addForm.repeatUnit;
+        payload.repeatUnit = addForm.repeatUnit;
         payload.repeatUntil = addForm.repeatUntil;
       }
       await calendarApi.createOpenEvents(payload);
@@ -212,7 +254,8 @@ export default function Calendar() {
   function toggleOtherSelect(id) {
     setOtherSelected((prev) => {
       const next = new Set(prev);
-      if (next.has(id)) next.delete(id); else next.add(id);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
       return next;
     });
   }
@@ -236,28 +279,35 @@ export default function Calendar() {
   function downloadParams() {
     const params = { from, to };
     if (filterMode === 'member' && memberId) params.memberId = memberId;
-    if (filterMode === 'venue'  && venueId)  params.venueId  = venueId;
-    if (filterMode === 'group'  && groupId)  params.groupId  = groupId;
-    if (filterMode === 'group'  && !groupId) params.groupsOnly = 'true';
-    if (filterMode === 'other'  && eventTypeId) params.eventTypeId = eventTypeId;
+    if (filterMode === 'venue' && venueId) params.venueId = venueId;
+    if (filterMode === 'group' && groupId) params.groupId = groupId;
+    if (filterMode === 'group' && !groupId) params.groupsOnly = 'true';
+    if (filterMode === 'other' && eventTypeId) params.eventTypeId = eventTypeId;
     return params;
   }
 
   async function handleDownloadPdf() {
-    try { await calendarApi.downloadPdf(downloadParams()); }
-    catch (err) { setError(err.message); }
+    try {
+      await calendarApi.downloadPdf(downloadParams());
+    } catch (err) {
+      setError(err.message);
+    }
   }
 
   async function handleDownloadExcel() {
-    try { await calendarApi.downloadExcel(downloadParams()); }
-    catch (err) { setError(err.message); }
+    try {
+      await calendarApi.downloadExcel(downloadParams());
+    } catch (err) {
+      setError(err.message);
+    }
   }
 
   // Toggle "Show past events": expand 'from' back to 1 year ago on enable; revert to today on disable.
   function togglePast(checked) {
     setShowPast(checked);
     if (checked) {
-      const d = new Date(); d.setFullYear(d.getFullYear() - 1);
+      const d = new Date();
+      d.setFullYear(d.getFullYear() - 1);
       setFrom(d.toISOString().slice(0, 10));
     } else {
       setFrom(defaultFrom());
@@ -265,20 +315,29 @@ export default function Calendar() {
   }
 
   // Sortable table data for Table mode
-  const tableEvents = useMemo(() => events.map((ev) => ({
-    ...ev,
-    _dateTime: `${ev.event_date || ''} ${ev.start_time || ''}`,
-    _group_label: ev.group_name || ev.event_type_name || '',
-  })), [events]);
-  const { sorted: sortedTable, sortKey: tblSortKey, sortDir: tblSortDir, onSort: onTblSort } =
-    useSortedData(tableEvents, '_dateTime', 'asc');
+  const tableEvents = useMemo(
+    () =>
+      events.map((ev) => ({
+        ...ev,
+        _dateTime: `${ev.event_date || ''} ${ev.start_time || ''}`,
+        _group_label: ev.group_name || ev.event_type_name || '',
+      })),
+    [events],
+  );
+  const {
+    sorted: sortedTable,
+    sortKey: tblSortKey,
+    sortDir: tblSortDir,
+    onSort: onTblSort,
+  } = useSortedData(tableEvents, '_dateTime', 'asc');
 
-  const inputCls = 'border border-slate-300 rounded px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500';
-  const cbCls    = 'rounded border-slate-300 text-blue-600 focus:ring-blue-500';
+  const inputCls =
+    'border border-slate-300 rounded px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500';
+  const cbCls = 'rounded border-slate-300 text-blue-600 focus:ring-blue-500';
   const labelCls = 'block text-sm font-medium text-slate-700 mb-1';
 
   const navLinks = [
-    { label: 'Home',   to: '/' },
+    { label: 'Home', to: '/' },
     { label: 'Groups', to: '/groups' },
   ];
 
@@ -297,14 +356,33 @@ export default function Calendar() {
             <span className="font-medium text-slate-700">Show:</span>
 
             <label className="flex items-center gap-1 cursor-pointer">
-              <input type="radio" name="filter" value="all" checked={filterMode === 'all'}
-                onChange={() => { setFilterMode('all'); clearMember(); setEventTypeId(''); }} />
+              <input
+                type="radio"
+                name="filter"
+                value="all"
+                checked={filterMode === 'all'}
+                onChange={() => {
+                  setFilterMode('all');
+                  clearMember();
+                  setEventTypeId('');
+                }}
+              />
               all
             </label>
 
             <label className="flex items-center gap-1 cursor-pointer">
-              <input type="radio" name="filter" value="member" checked={filterMode === 'member'}
-                onChange={() => { setFilterMode('member'); setVenueId(''); setGroupId(''); setEventTypeId(''); }} />
+              <input
+                type="radio"
+                name="filter"
+                value="member"
+                checked={filterMode === 'member'}
+                onChange={() => {
+                  setFilterMode('member');
+                  setVenueId('');
+                  setGroupId('');
+                  setEventTypeId('');
+                }}
+              />
               for member
             </label>
             {filterMode === 'member' && (
@@ -335,42 +413,97 @@ export default function Calendar() {
             )}
 
             <label className="flex items-center gap-1 cursor-pointer">
-              <input type="radio" name="filter" value="venue" checked={filterMode === 'venue'}
-                onChange={() => { setFilterMode('venue'); clearMember(); setGroupId(''); setEventTypeId(''); }} />
+              <input
+                type="radio"
+                name="filter"
+                value="venue"
+                checked={filterMode === 'venue'}
+                onChange={() => {
+                  setFilterMode('venue');
+                  clearMember();
+                  setGroupId('');
+                  setEventTypeId('');
+                }}
+              />
               venue
             </label>
             {filterMode === 'venue' && (
-              <select className={inputCls} name="venueId" value={venueId}
-                onChange={(e) => setVenueId(e.target.value)}>
+              <select
+                className={inputCls}
+                name="venueId"
+                value={venueId}
+                onChange={(e) => setVenueId(e.target.value)}
+              >
                 <option value="">— select venue —</option>
-                {venueList.map((v) => <option key={v.id} value={v.id}>{v.name}</option>)}
+                {venueList.map((v) => (
+                  <option key={v.id} value={v.id}>
+                    {v.name}
+                  </option>
+                ))}
               </select>
             )}
 
             <label className="flex items-center gap-1 cursor-pointer">
-              <input type="radio" name="filter" value="group" checked={filterMode === 'group'}
-                onChange={() => { setFilterMode('group'); clearMember(); setVenueId(''); setEventTypeId(''); }} />
+              <input
+                type="radio"
+                name="filter"
+                value="group"
+                checked={filterMode === 'group'}
+                onChange={() => {
+                  setFilterMode('group');
+                  clearMember();
+                  setVenueId('');
+                  setEventTypeId('');
+                }}
+              />
               group/team
             </label>
             {filterMode === 'group' && (
-              <select className={inputCls} name="groupId" value={groupId}
-                onChange={(e) => setGroupId(e.target.value)}>
+              <select
+                className={inputCls}
+                name="groupId"
+                value={groupId}
+                onChange={(e) => setGroupId(e.target.value)}
+              >
                 <option value="">— select group/team —</option>
-                {groupTeamList.map((g) => <option key={g.id} value={g.id}>{g.name}{g.type === 'team' ? ' (team)' : ''}</option>)}
+                {groupTeamList.map((g) => (
+                  <option key={g.id} value={g.id}>
+                    {g.name}
+                    {g.type === 'team' ? ' (team)' : ''}
+                  </option>
+                ))}
               </select>
             )}
 
             {canViewMeetings && (
               <>
                 <label className="flex items-center gap-1 cursor-pointer">
-                  <input type="radio" name="filter" value="other" checked={filterMode === 'other'}
-                    onChange={() => { setFilterMode('other'); clearMember(); setVenueId(''); setGroupId(''); }} />
+                  <input
+                    type="radio"
+                    name="filter"
+                    value="other"
+                    checked={filterMode === 'other'}
+                    onChange={() => {
+                      setFilterMode('other');
+                      clearMember();
+                      setVenueId('');
+                      setGroupId('');
+                    }}
+                  />
                   open meetings and other
                 </label>
                 {filterMode === 'other' && (
-                  <select className={inputCls} name="eventTypeId" value={eventTypeId}
-                    onChange={(e) => setEventTypeId(e.target.value)}>
-                    {eventTypeList.map((et) => <option key={et.id} value={et.id}>{et.name}</option>)}
+                  <select
+                    className={inputCls}
+                    name="eventTypeId"
+                    value={eventTypeId}
+                    onChange={(e) => setEventTypeId(e.target.value)}
+                  >
+                    {eventTypeList.map((et) => (
+                      <option key={et.id} value={et.id}>
+                        {et.name}
+                      </option>
+                    ))}
                   </select>
                 )}
               </>
@@ -381,17 +514,34 @@ export default function Calendar() {
           <div className="flex flex-wrap gap-4 items-center text-sm">
             <label className="flex items-center gap-1">
               From
-              <input type="date" name="from" className={inputCls} value={from}
-                onChange={(e) => setFrom(e.target.value)} />
+              <input
+                type="date"
+                name="from"
+                className={inputCls}
+                value={from}
+                onChange={(e) => setFrom(e.target.value)}
+              />
             </label>
             <label className="flex items-center gap-1">
               To
-              <input type="date" name="to" className={inputCls} value={to}
-                onChange={(e) => setTo(e.target.value)} />
+              <input
+                type="date"
+                name="to"
+                className={inputCls}
+                value={to}
+                onChange={(e) => setTo(e.target.value)}
+              />
             </label>
-            <label className="flex items-center gap-2 cursor-pointer" title="Include events from the past 12 months">
-              <input type="checkbox" className={cbCls} checked={showPast}
-                onChange={(e) => togglePast(e.target.checked)} />
+            <label
+              className="flex items-center gap-2 cursor-pointer"
+              title="Include events from the past 12 months"
+            >
+              <input
+                type="checkbox"
+                className={cbCls}
+                checked={showPast}
+                onChange={(e) => togglePast(e.target.checked)}
+              />
               Show past events
             </label>
             {filterMode !== 'other' && (
@@ -400,22 +550,36 @@ export default function Calendar() {
                   type="button"
                   onClick={() => setViewMode('calendar')}
                   className={`px-3 py-1.5 rounded text-sm font-medium transition-colors ${
-                    viewMode === 'calendar' ? 'bg-blue-600 text-white' : 'border border-slate-300 text-slate-700 hover:bg-slate-50'
+                    viewMode === 'calendar'
+                      ? 'bg-blue-600 text-white'
+                      : 'border border-slate-300 text-slate-700 hover:bg-slate-50'
                   }`}
-                >Calendar</button>
+                >
+                  Calendar
+                </button>
                 <button
                   type="button"
                   onClick={() => setViewMode('table')}
                   className={`px-3 py-1.5 rounded text-sm font-medium transition-colors ${
-                    viewMode === 'table' ? 'bg-blue-600 text-white' : 'border border-slate-300 text-slate-700 hover:bg-slate-50'
+                    viewMode === 'table'
+                      ? 'bg-blue-600 text-white'
+                      : 'border border-slate-300 text-slate-700 hover:bg-slate-50'
                   }`}
-                >Table</button>
+                >
+                  Table
+                </button>
               </div>
             )}
             {(filterMode === 'other' || viewMode === 'calendar') && (
-              <label className={`flex items-center gap-2 cursor-pointer ${filterMode === 'other' ? 'ml-auto' : ''}`}>
-                <input type="checkbox" className={cbCls} checked={showDetail}
-                  onChange={(e) => setShowDetail(e.target.checked)} />
+              <label
+                className={`flex items-center gap-2 cursor-pointer ${filterMode === 'other' ? 'ml-auto' : ''}`}
+              >
+                <input
+                  type="checkbox"
+                  className={cbCls}
+                  checked={showDetail}
+                  onChange={(e) => setShowDetail(e.target.checked)}
+                />
                 Show Detail
               </label>
             )}
@@ -442,13 +606,23 @@ export default function Calendar() {
                 {/* Bulk actions */}
                 {canManage && otherEvents.length > 0 && (
                   <div className="flex gap-3 items-center text-sm">
-                    <button onClick={() => setOtherSelected(new Set(otherEvents.map((e) => e.id)))}
-                      className="text-blue-600 hover:underline text-xs">Select all</button>
-                    <button onClick={() => setOtherSelected(new Set())}
-                      className="text-slate-500 hover:underline text-xs">Deselect all</button>
+                    <button
+                      onClick={() => setOtherSelected(new Set(otherEvents.map((e) => e.id)))}
+                      className="text-blue-600 hover:underline text-xs"
+                    >
+                      Select all
+                    </button>
+                    <button
+                      onClick={() => setOtherSelected(new Set())}
+                      className="text-slate-500 hover:underline text-xs"
+                    >
+                      Deselect all
+                    </button>
                     {otherSelected.size > 0 && (
-                      <button onClick={handleDeleteSelected}
-                        className="border border-red-300 text-red-600 hover:bg-red-50 rounded px-3 py-1 text-xs">
+                      <button
+                        onClick={handleDeleteSelected}
+                        className="border border-red-300 text-red-600 hover:bg-red-50 rounded px-3 py-1 text-xs"
+                      >
                         Delete selected ({otherSelected.size})
                       </button>
                     )}
@@ -489,28 +663,202 @@ export default function Calendar() {
         )}
 
         {/* ── Calendar table (all/member/venue/group modes) ────────── */}
-        {filterMode !== 'other' && viewMode === 'calendar' && (loading ? (
-          <p className="text-center text-slate-500 py-8">Loading...</p>
-        ) : events.length === 0 ? (
-          <p className="text-slate-500 text-sm text-center py-4">No events found for the selected period.</p>
-        ) : (
-          <div className="overflow-x-auto rounded-lg shadow-sm">
-            <table className="w-full text-sm bg-white min-w-max">
-              <thead>
-                <tr className="bg-slate-50 border-b border-slate-200 text-left text-slate-600 italic font-normal">
-                  <th className="px-3 py-2 font-normal">Date &amp; Time</th>
-                  <th className="px-3 py-2 font-normal">Until</th>
-                  <th className="px-3 py-2 font-normal">Group</th>
-                  <th className="px-3 py-2 font-normal">Venue</th>
-                  <th className="px-3 py-2 font-normal">Topic</th>
-                  <th className="px-3 py-2 font-normal">Enquiries</th>
-                </tr>
-              </thead>
-              <tbody>
-                {events.map((ev, i) => {
-                  const rowBg = i % 2 === 0 ? 'bg-yellow-50' : 'bg-white';
-                  return (
-                    <>
+        {filterMode !== 'other' &&
+          viewMode === 'calendar' &&
+          (loading ? (
+            <p className="text-center text-slate-500 py-8">Loading...</p>
+          ) : events.length === 0 ? (
+            <p className="text-slate-500 text-sm text-center py-4">
+              No events found for the selected period.
+            </p>
+          ) : (
+            <div className="overflow-x-auto rounded-lg shadow-sm">
+              <table className="w-full text-sm bg-white min-w-max">
+                <thead>
+                  <tr className="bg-slate-50 border-b border-slate-200 text-left text-slate-600 italic font-normal">
+                    <th className="px-3 py-2 font-normal">Date &amp; Time</th>
+                    <th className="px-3 py-2 font-normal">Until</th>
+                    <th className="px-3 py-2 font-normal">Group</th>
+                    <th className="px-3 py-2 font-normal">Venue</th>
+                    <th className="px-3 py-2 font-normal">Topic</th>
+                    <th className="px-3 py-2 font-normal">Enquiries</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {events.map((ev, i) => {
+                    const rowBg = i % 2 === 0 ? 'bg-yellow-50' : 'bg-white';
+                    return (
+                      <>
+                        <tr key={ev.id} className={`border-b border-slate-100 ${rowBg}`}>
+                          <td className="px-3 py-2 whitespace-nowrap">
+                            <Link
+                              to={`/calendar/events/${ev.id}`}
+                              className="text-blue-700 hover:underline"
+                            >
+                              {fmtDate(ev.event_date)}
+                              {ev.start_time ? ` ${fmtTime(ev.start_time)}` : ''}
+                            </Link>
+                          </td>
+                          <td className="px-3 py-2 text-slate-600 whitespace-nowrap">
+                            {fmtTime(ev.end_time)}
+                          </td>
+                          <td className="px-3 py-2">
+                            {ev.group_id ? (
+                              <Link
+                                to={`/groups/${ev.group_id}`}
+                                className="text-blue-700 hover:underline"
+                              >
+                                {ev.group_name}
+                              </Link>
+                            ) : (
+                              <span className="italic text-slate-500">
+                                {ev.event_type_name || 'Open Meeting'}
+                              </span>
+                            )}
+                          </td>
+                          <td className="px-3 py-2 text-slate-600">
+                            {ev.venue_name && ev.venue_id ? (
+                              <>
+                                <Link
+                                  to={`/venues/${ev.venue_id}`}
+                                  className="text-blue-700 hover:underline"
+                                >
+                                  {ev.venue_name}
+                                </Link>
+                                {ev.venue_postcode && (
+                                  <>
+                                    {' - '}
+                                    <a
+                                      href={googleMapsUrl(ev.venue_postcode)}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="text-blue-600 hover:underline text-xs"
+                                    >
+                                      map
+                                    </a>
+                                  </>
+                                )}
+                              </>
+                            ) : (
+                              ''
+                            )}
+                          </td>
+                          <td className="px-3 py-2 text-slate-700">{ev.topic ?? ''}</td>
+                          <td className="px-3 py-2 text-slate-600">{ev.contact ?? ''}</td>
+                        </tr>
+                        {showDetail && ev.details && (
+                          <tr key={`${ev.id}-detail`} className={rowBg}>
+                            <td
+                              colSpan={6}
+                              className="px-3 pb-2 pt-0 text-xs text-slate-500 italic"
+                            >
+                              {ev.details}
+                            </td>
+                          </tr>
+                        )}
+                      </>
+                    );
+                  })}
+                </tbody>
+                <tfoot>
+                  <tr className="bg-slate-50 border-t border-slate-200 text-left text-slate-600 italic font-normal">
+                    <th className="px-3 py-2 font-normal">Date &amp; Time</th>
+                    <th className="px-3 py-2 font-normal">Until</th>
+                    <th className="px-3 py-2 font-normal">Group</th>
+                    <th className="px-3 py-2 font-normal">Venue</th>
+                    <th className="px-3 py-2 font-normal">Topic</th>
+                    <th className="px-3 py-2 font-normal">Enquiries</th>
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+          ))}
+
+        {/* ── Table view (sortable, flat list) ────────────────────────── */}
+        {filterMode !== 'other' &&
+          viewMode === 'table' &&
+          (loading ? (
+            <p className="text-center text-slate-500 py-8">Loading...</p>
+          ) : events.length === 0 ? (
+            <p className="text-slate-500 text-sm text-center py-4">
+              No events found for the selected period.
+            </p>
+          ) : (
+            <div className="overflow-x-auto rounded-lg shadow-sm">
+              <table className="w-full text-sm bg-white min-w-max">
+                <thead>
+                  <tr className="bg-slate-50 border-b border-slate-200 text-left text-slate-600 italic font-normal">
+                    <SortableHeader
+                      col="event_date"
+                      label="Date"
+                      sortKey={tblSortKey}
+                      sortDir={tblSortDir}
+                      onSort={onTblSort}
+                      className="px-3 py-2 font-normal"
+                    />
+                    <SortableHeader
+                      col="start_time"
+                      label="Start"
+                      sortKey={tblSortKey}
+                      sortDir={tblSortDir}
+                      onSort={onTblSort}
+                      className="px-3 py-2 font-normal"
+                    />
+                    <SortableHeader
+                      col="end_time"
+                      label="End"
+                      sortKey={tblSortKey}
+                      sortDir={tblSortDir}
+                      onSort={onTblSort}
+                      className="px-3 py-2 font-normal"
+                    />
+                    <SortableHeader
+                      col="_group_label"
+                      label="Group/Type"
+                      sortKey={tblSortKey}
+                      sortDir={tblSortDir}
+                      onSort={onTblSort}
+                      className="px-3 py-2 font-normal"
+                    />
+                    <SortableHeader
+                      col="topic"
+                      label="Topic"
+                      sortKey={tblSortKey}
+                      sortDir={tblSortDir}
+                      onSort={onTblSort}
+                      className="px-3 py-2 font-normal"
+                    />
+                    <SortableHeader
+                      col="venue_name"
+                      label="Venue"
+                      sortKey={tblSortKey}
+                      sortDir={tblSortDir}
+                      onSort={onTblSort}
+                      className="px-3 py-2 font-normal"
+                    />
+                    <SortableHeader
+                      col="venue_postcode"
+                      label="Postcode"
+                      sortKey={tblSortKey}
+                      sortDir={tblSortDir}
+                      onSort={onTblSort}
+                      className="px-3 py-2 font-normal"
+                    />
+                    <SortableHeader
+                      col="contact"
+                      label="Enquiries"
+                      sortKey={tblSortKey}
+                      sortDir={tblSortDir}
+                      onSort={onTblSort}
+                      className="px-3 py-2 font-normal"
+                    />
+                    <th className="px-3 py-2 font-normal">Details</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {sortedTable.map((ev, i) => {
+                    const rowBg = i % 2 === 0 ? 'bg-yellow-50' : 'bg-white';
+                    return (
                       <tr key={ev.id} className={`border-b border-slate-100 ${rowBg}`}>
                         <td className="px-3 py-2 whitespace-nowrap">
                           <Link
@@ -518,155 +866,103 @@ export default function Calendar() {
                             className="text-blue-700 hover:underline"
                           >
                             {fmtDate(ev.event_date)}
-                            {ev.start_time ? ` ${fmtTime(ev.start_time)}` : ''}
                           </Link>
+                        </td>
+                        <td className="px-3 py-2 text-slate-600 whitespace-nowrap">
+                          {fmtTime(ev.start_time)}
                         </td>
                         <td className="px-3 py-2 text-slate-600 whitespace-nowrap">
                           {fmtTime(ev.end_time)}
                         </td>
                         <td className="px-3 py-2">
                           {ev.group_id ? (
-                            <Link to={`/groups/${ev.group_id}`} className="text-blue-700 hover:underline">
+                            <Link
+                              to={`/groups/${ev.group_id}`}
+                              className="text-blue-700 hover:underline"
+                            >
                               {ev.group_name}
                             </Link>
                           ) : (
-                            <span className="italic text-slate-500">{ev.event_type_name || 'Open Meeting'}</span>
+                            <span className="italic text-slate-500">
+                              {ev.event_type_name || 'Open Meeting'}
+                            </span>
                           )}
                         </td>
+                        <td className="px-3 py-2 text-slate-700">{ev.topic ?? ''}</td>
                         <td className="px-3 py-2 text-slate-600">
                           {ev.venue_name && ev.venue_id ? (
-                            <>
-                              <Link to={`/venues/${ev.venue_id}`} className="text-blue-700 hover:underline">
-                                {ev.venue_name}
-                              </Link>
-                              {ev.venue_postcode && (
-                                <>
-                                  {' - '}
-                                  <a href={googleMapsUrl(ev.venue_postcode)}
-                                    target="_blank" rel="noopener noreferrer"
-                                    className="text-blue-600 hover:underline text-xs">
-                                    map
-                                  </a>
-                                </>
-                              )}
-                            </>
-                          ) : ''}
+                            <Link
+                              to={`/venues/${ev.venue_id}`}
+                              className="text-blue-700 hover:underline"
+                            >
+                              {ev.venue_name}
+                            </Link>
+                          ) : (
+                            ev.venue_name || ''
+                          )}
                         </td>
-                        <td className="px-3 py-2 text-slate-700">{ev.topic ?? ''}</td>
+                        <td className="px-3 py-2 text-slate-600 whitespace-nowrap">
+                          {ev.venue_postcode ? (
+                            <a
+                              href={googleMapsUrl(ev.venue_postcode)}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-blue-600 hover:underline"
+                            >
+                              {ev.venue_postcode}
+                            </a>
+                          ) : (
+                            ''
+                          )}
+                        </td>
                         <td className="px-3 py-2 text-slate-600">{ev.contact ?? ''}</td>
+                        <td
+                          className="px-3 py-2 text-slate-500 text-xs italic max-w-[24rem] truncate"
+                          title={ev.details || ''}
+                        >
+                          {ev.details || ''}
+                        </td>
                       </tr>
-                      {showDetail && ev.details && (
-                        <tr key={`${ev.id}-detail`} className={rowBg}>
-                          <td colSpan={6} className="px-3 pb-2 pt-0 text-xs text-slate-500 italic">
-                            {ev.details}
-                          </td>
-                        </tr>
-                      )}
-                    </>
-                  );
-                })}
-              </tbody>
-              <tfoot>
-                <tr className="bg-slate-50 border-t border-slate-200 text-left text-slate-600 italic font-normal">
-                  <th className="px-3 py-2 font-normal">Date &amp; Time</th>
-                  <th className="px-3 py-2 font-normal">Until</th>
-                  <th className="px-3 py-2 font-normal">Group</th>
-                  <th className="px-3 py-2 font-normal">Venue</th>
-                  <th className="px-3 py-2 font-normal">Topic</th>
-                  <th className="px-3 py-2 font-normal">Enquiries</th>
-                </tr>
-              </tfoot>
-            </table>
-          </div>
-        ))}
-
-        {/* ── Table view (sortable, flat list) ────────────────────────── */}
-        {filterMode !== 'other' && viewMode === 'table' && (loading ? (
-          <p className="text-center text-slate-500 py-8">Loading...</p>
-        ) : events.length === 0 ? (
-          <p className="text-slate-500 text-sm text-center py-4">No events found for the selected period.</p>
-        ) : (
-          <div className="overflow-x-auto rounded-lg shadow-sm">
-            <table className="w-full text-sm bg-white min-w-max">
-              <thead>
-                <tr className="bg-slate-50 border-b border-slate-200 text-left text-slate-600 italic font-normal">
-                  <SortableHeader col="event_date"    label="Date"     sortKey={tblSortKey} sortDir={tblSortDir} onSort={onTblSort} className="px-3 py-2 font-normal" />
-                  <SortableHeader col="start_time"    label="Start"    sortKey={tblSortKey} sortDir={tblSortDir} onSort={onTblSort} className="px-3 py-2 font-normal" />
-                  <SortableHeader col="end_time"      label="End"      sortKey={tblSortKey} sortDir={tblSortDir} onSort={onTblSort} className="px-3 py-2 font-normal" />
-                  <SortableHeader col="_group_label"  label="Group/Type" sortKey={tblSortKey} sortDir={tblSortDir} onSort={onTblSort} className="px-3 py-2 font-normal" />
-                  <SortableHeader col="topic"         label="Topic"    sortKey={tblSortKey} sortDir={tblSortDir} onSort={onTblSort} className="px-3 py-2 font-normal" />
-                  <SortableHeader col="venue_name"    label="Venue"    sortKey={tblSortKey} sortDir={tblSortDir} onSort={onTblSort} className="px-3 py-2 font-normal" />
-                  <SortableHeader col="venue_postcode" label="Postcode" sortKey={tblSortKey} sortDir={tblSortDir} onSort={onTblSort} className="px-3 py-2 font-normal" />
-                  <SortableHeader col="contact"       label="Enquiries" sortKey={tblSortKey} sortDir={tblSortDir} onSort={onTblSort} className="px-3 py-2 font-normal" />
-                  <th className="px-3 py-2 font-normal">Details</th>
-                </tr>
-              </thead>
-              <tbody>
-                {sortedTable.map((ev, i) => {
-                  const rowBg = i % 2 === 0 ? 'bg-yellow-50' : 'bg-white';
-                  return (
-                    <tr key={ev.id} className={`border-b border-slate-100 ${rowBg}`}>
-                      <td className="px-3 py-2 whitespace-nowrap">
-                        <Link to={`/calendar/events/${ev.id}`} className="text-blue-700 hover:underline">
-                          {fmtDate(ev.event_date)}
-                        </Link>
-                      </td>
-                      <td className="px-3 py-2 text-slate-600 whitespace-nowrap">{fmtTime(ev.start_time)}</td>
-                      <td className="px-3 py-2 text-slate-600 whitespace-nowrap">{fmtTime(ev.end_time)}</td>
-                      <td className="px-3 py-2">
-                        {ev.group_id ? (
-                          <Link to={`/groups/${ev.group_id}`} className="text-blue-700 hover:underline">{ev.group_name}</Link>
-                        ) : (
-                          <span className="italic text-slate-500">{ev.event_type_name || 'Open Meeting'}</span>
-                        )}
-                      </td>
-                      <td className="px-3 py-2 text-slate-700">{ev.topic ?? ''}</td>
-                      <td className="px-3 py-2 text-slate-600">
-                        {ev.venue_name && ev.venue_id ? (
-                          <Link to={`/venues/${ev.venue_id}`} className="text-blue-700 hover:underline">{ev.venue_name}</Link>
-                        ) : ev.venue_name || ''}
-                      </td>
-                      <td className="px-3 py-2 text-slate-600 whitespace-nowrap">
-                        {ev.venue_postcode ? (
-                          <a href={googleMapsUrl(ev.venue_postcode)} target="_blank" rel="noopener noreferrer"
-                            className="text-blue-600 hover:underline">{ev.venue_postcode}</a>
-                        ) : ''}
-                      </td>
-                      <td className="px-3 py-2 text-slate-600">{ev.contact ?? ''}</td>
-                      <td className="px-3 py-2 text-slate-500 text-xs italic max-w-[24rem] truncate" title={ev.details || ''}>
-                        {ev.details || ''}
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        ))}
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          ))}
 
         {/* Bottom actions */}
-        {!loading && ((filterMode !== 'other' && events.length > 0) || (filterMode === 'other' && otherEvents.length > 0)) && (
-          <div className="flex justify-center gap-4">
-            {can('calendar', 'download') && (
-              <>
-                <button onClick={handleDownloadExcel}
-                  className="bg-green-600 hover:bg-green-700 text-white rounded px-5 py-2 text-sm font-medium transition-colors">
-                  Download Excel
-                </button>
-                <button onClick={handleDownloadPdf}
-                  className="bg-blue-600 hover:bg-blue-700 text-white rounded px-5 py-2 text-sm font-medium transition-colors">
-                  Download PDF
-                </button>
-              </>
-            )}
-          </div>
-        )}
+        {!loading &&
+          ((filterMode !== 'other' && events.length > 0) ||
+            (filterMode === 'other' && otherEvents.length > 0)) && (
+            <div className="flex justify-center gap-4">
+              {can('calendar', 'download') && (
+                <>
+                  <button
+                    onClick={handleDownloadExcel}
+                    className="bg-green-600 hover:bg-green-700 text-white rounded px-5 py-2 text-sm font-medium transition-colors"
+                  >
+                    Download Excel
+                  </button>
+                  <button
+                    onClick={handleDownloadPdf}
+                    className="bg-blue-600 hover:bg-blue-700 text-white rounded px-5 py-2 text-sm font-medium transition-colors"
+                  >
+                    Download PDF
+                  </button>
+                </>
+              )}
+            </div>
+          )}
 
         {/* Bottom nav */}
         <div className="text-center text-sm space-x-4 pt-2">
-          <Link to="/" className="text-blue-700 hover:underline">Home</Link>
+          <Link to="/" className="text-blue-700 hover:underline">
+            Home
+          </Link>
           <span className="text-slate-400">-</span>
-          <Link to="/groups" className="text-blue-700 hover:underline">Groups</Link>
+          <Link to="/groups" className="text-blue-700 hover:underline">
+            Groups
+          </Link>
         </div>
       </div>
     </div>
@@ -680,20 +976,27 @@ export default function Calendar() {
         <tr key={ev.id} className={`border-b border-slate-100 ${rowBg}`}>
           {canManage && (
             <td className="px-3 py-2">
-              <input type="checkbox" className={cbCls}
+              <input
+                type="checkbox"
+                className={cbCls}
                 checked={otherSelected.has(ev.id)}
-                onChange={() => toggleOtherSelect(ev.id)} />
+                onChange={() => toggleOtherSelect(ev.id)}
+              />
             </td>
           )}
           <td className="px-3 py-2">
-            <Link to={`/calendar/events/${ev.id}`}
-              className="text-blue-700 hover:underline whitespace-nowrap">
+            <Link
+              to={`/calendar/events/${ev.id}`}
+              className="text-blue-700 hover:underline whitespace-nowrap"
+            >
               {fmtDate(ev.event_date)}
               {ev.start_time ? ` ${normaliseTime(ev.start_time)}` : ''}
             </Link>
             {ev.is_private && <span className="ml-2 text-xs text-slate-400">(private)</span>}
           </td>
-          <td className="px-3 py-2 text-slate-600 whitespace-nowrap">{normaliseTime(ev.end_time)}</td>
+          <td className="px-3 py-2 text-slate-600 whitespace-nowrap">
+            {normaliseTime(ev.end_time)}
+          </td>
           <td className="px-3 py-2 text-slate-600">{ev.venue_name ?? ''}</td>
           <td className="px-3 py-2 text-slate-700">{ev.topic ?? ''}</td>
           <td className="px-3 py-2 text-slate-600">{ev.contact ?? ''}</td>
@@ -701,7 +1004,9 @@ export default function Calendar() {
         {showDetail && ev.details && (
           <tr key={`${ev.id}-detail`} className={rowBg}>
             {canManage && <td></td>}
-            <td colSpan={5} className="px-3 pb-2 pt-0 text-xs text-slate-500 italic">{ev.details}</td>
+            <td colSpan={5} className="px-3 pb-2 pt-0 text-xs text-slate-500 italic">
+              {ev.details}
+            </td>
           </tr>
         )}
       </>
@@ -716,48 +1021,92 @@ export default function Calendar() {
         <form onSubmit={handleAdd} noValidate className="space-y-3">
           <div className="flex flex-wrap gap-3 items-end">
             <div>
-              <label className={labelCls}>First date and time <RequiredMark /></label>
-              <input type="date" name="eventDate" className={inputCls} required value={addForm.eventDate}
-                onChange={(e) => setAdd('eventDate', e.target.value)} />
+              <label className={labelCls}>
+                First date and time <RequiredMark />
+              </label>
+              <input
+                type="date"
+                name="eventDate"
+                className={inputCls}
+                required
+                value={addForm.eventDate}
+                onChange={(e) => setAdd('eventDate', e.target.value)}
+              />
             </div>
             <div>
               <label className={labelCls}>Start time</label>
-              <input type="time" step="900" name="startTime" className={inputCls} value={addForm.startTime}
-                onChange={(e) => setAdd('startTime', e.target.value)} />
+              <input
+                type="time"
+                step="900"
+                name="startTime"
+                className={inputCls}
+                value={addForm.startTime}
+                onChange={(e) => setAdd('startTime', e.target.value)}
+              />
             </div>
             <div>
               <label className={labelCls}>End time</label>
-              <input type="time" step="900" name="endTime" className={inputCls} value={addForm.endTime}
-                onChange={(e) => setAdd('endTime', e.target.value)} />
+              <input
+                type="time"
+                step="900"
+                name="endTime"
+                className={inputCls}
+                value={addForm.endTime}
+                onChange={(e) => setAdd('endTime', e.target.value)}
+              />
             </div>
             <div>
               <label className={labelCls}>Venue</label>
-              <select name="venueId" className={inputCls} value={addForm.venueId}
-                onChange={(e) => setAdd('venueId', e.target.value)}>
+              <select
+                name="venueId"
+                className={inputCls}
+                value={addForm.venueId}
+                onChange={(e) => setAdd('venueId', e.target.value)}
+              >
                 <option value="">-- none --</option>
-                {venueList.map((v) => <option key={v.id} value={v.id}>{v.name}</option>)}
+                {venueList.map((v) => (
+                  <option key={v.id} value={v.id}>
+                    {v.name}
+                  </option>
+                ))}
               </select>
             </div>
           </div>
           <div className="flex flex-wrap gap-3 items-end">
             <div className="min-w-40 flex-1">
               <label className={labelCls}>Topic</label>
-              <input name="topic" className={`${inputCls} w-full`} value={addForm.topic}
-                onChange={(e) => setAdd('topic', e.target.value)} />
+              <input
+                name="topic"
+                className={`${inputCls} w-full`}
+                value={addForm.topic}
+                onChange={(e) => setAdd('topic', e.target.value)}
+              />
             </div>
             <div>
               <label className={labelCls}>Enquiries</label>
-              <input name="contact" className={inputCls} value={addForm.contact}
-                onChange={(e) => setAdd('contact', e.target.value)} />
+              <input
+                name="contact"
+                className={inputCls}
+                value={addForm.contact}
+                onChange={(e) => setAdd('contact', e.target.value)}
+              />
             </div>
             <div className="flex-1 min-w-48">
               <label className={labelCls}>Details</label>
-              <input name="details" className={`${inputCls} w-full`} value={addForm.details}
-                onChange={(e) => setAdd('details', e.target.value)} />
+              <input
+                name="details"
+                className={`${inputCls} w-full`}
+                value={addForm.details}
+                onChange={(e) => setAdd('details', e.target.value)}
+              />
             </div>
             <label className="flex items-center gap-1 text-xs cursor-pointer mt-4">
-              <input type="checkbox" className={cbCls} checked={addForm.isPrivate}
-                onChange={(e) => setAdd('isPrivate', e.target.checked)} />
+              <input
+                type="checkbox"
+                className={cbCls}
+                checked={addForm.isPrivate}
+                onChange={(e) => setAdd('isPrivate', e.target.checked)}
+              />
               Exclude from public calendar
             </label>
           </div>
@@ -766,14 +1115,24 @@ export default function Calendar() {
             <span className="text-sm text-slate-600 self-end pb-2">then every</span>
             <div>
               <label className={labelCls}>Count</label>
-              <input type="number" min="1" name="repeatEvery" className={`${inputCls} w-20`} value={addForm.repeatEvery}
+              <input
+                type="number"
+                min="1"
+                name="repeatEvery"
+                className={`${inputCls} w-20`}
+                value={addForm.repeatEvery}
                 placeholder="--"
-                onChange={(e) => setAdd('repeatEvery', e.target.value)} />
+                onChange={(e) => setAdd('repeatEvery', e.target.value)}
+              />
             </div>
             <div>
               <label className={labelCls}>Unit</label>
-              <select name="repeatUnit" className={inputCls} value={addForm.repeatUnit}
-                onChange={(e) => setAdd('repeatUnit', e.target.value)}>
+              <select
+                name="repeatUnit"
+                className={inputCls}
+                value={addForm.repeatUnit}
+                onChange={(e) => setAdd('repeatUnit', e.target.value)}
+              >
                 <option value="days">days</option>
                 <option value="weeks">weeks</option>
                 <option value="months">months</option>
@@ -781,13 +1140,21 @@ export default function Calendar() {
             </div>
             <div>
               <label className={labelCls}>Not beyond</label>
-              <input type="date" name="repeatUntil" className={inputCls} value={addForm.repeatUntil}
-                onChange={(e) => setAdd('repeatUntil', e.target.value)} />
+              <input
+                type="date"
+                name="repeatUntil"
+                className={inputCls}
+                value={addForm.repeatUntil}
+                onChange={(e) => setAdd('repeatUntil', e.target.value)}
+              />
             </div>
           </div>
           <div className="pt-1">
-            <button type="submit" disabled={addSaving || !addForm.eventDate}
-              className="bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white rounded px-5 py-2 text-sm font-medium transition-colors">
+            <button
+              type="submit"
+              disabled={addSaving || !addForm.eventDate}
+              className="bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white rounded px-5 py-2 text-sm font-medium transition-colors"
+            >
               {addSaving ? 'Adding...' : 'Add Events'}
             </button>
           </div>

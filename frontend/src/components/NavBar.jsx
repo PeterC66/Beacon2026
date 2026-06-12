@@ -12,11 +12,19 @@ export default function NavBar({ links }) {
       {links.map((link, i) => (
         <span key={i}>
           {i > 0 && <span className="mx-2 text-slate-400">–</span>}
-          {link.to && !link.disabled
-            ? <Link to={link.to} className="text-blue-700 hover:underline">{link.label}</Link>
-            : link.onClick && !link.disabled
-              ? <button type="button" onClick={link.onClick} className="text-blue-700 hover:underline">{link.label}</button>
-              : <span className={link.disabled ? 'text-slate-400' : 'text-slate-500'}>{link.label}</span>}
+          {link.to && !link.disabled ? (
+            <Link to={link.to} className="text-blue-700 hover:underline">
+              {link.label}
+            </Link>
+          ) : link.onClick && !link.disabled ? (
+            <button type="button" onClick={link.onClick} className="text-blue-700 hover:underline">
+              {link.label}
+            </button>
+          ) : (
+            <span className={link.disabled ? 'text-slate-400' : 'text-slate-500'}>
+              {link.label}
+            </span>
+          )}
         </span>
       ))}
     </nav>

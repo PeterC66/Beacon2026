@@ -33,7 +33,8 @@ export default function JoinComplete() {
       return;
     }
 
-    publicApi.confirmPayment(slug, { paymentId, memberId })
+    publicApi
+      .confirmPayment(slug, { paymentId, memberId })
       .then((r) => {
         setResult(r);
         setStatus('success');
@@ -82,10 +83,7 @@ export default function JoinComplete() {
           <>
             <h1 className="text-xl font-bold text-red-700 mb-2">Something went wrong</h1>
             <p className="text-sm text-slate-600 mb-4">{error}</p>
-            <Link
-              to={`/public/${slug}/join`}
-              className="text-blue-700 hover:underline text-sm"
-            >
+            <Link to={`/public/${slug}/join`} className="text-blue-700 hover:underline text-sm">
               Try again
             </Link>
           </>

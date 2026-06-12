@@ -2,7 +2,15 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { members as membersApi, memberStatuses as statusApi, memberClasses as classApi, finance as financeApi, polls as pollsApi, settings as settingsApi, publicApi } from '../../lib/api.js';
+import {
+  members as membersApi,
+  memberStatuses as statusApi,
+  memberClasses as classApi,
+  finance as financeApi,
+  polls as pollsApi,
+  settings as settingsApi,
+  publicApi,
+} from '../../lib/api.js';
 import { MEMBER_PAYMENT_METHODS as PAYMENT_METHODS } from '../../lib/constants.js';
 import { isValidUKPostcode, validatePhone } from '../../lib/validation.js';
 import { useAuth } from '../../context/AuthContext.jsx';
@@ -15,20 +23,48 @@ import RecordTimestamp from '../../components/RecordTimestamp.jsx';
 import { useUnsavedChanges } from '../../hooks/useUnsavedChanges.js';
 import { scrollToFirstFieldError } from '../../lib/scrollToError.js';
 
-function todayIso() { return new Date().toISOString().slice(0, 10); }
+function todayIso() {
+  return new Date().toISOString().slice(0, 10);
+}
 
 const BLANK_FORM = {
-  title: '', forenames: '', surname: '', knownAs: '', initials: '', suffix: '', email: '',
-  mobile: '', statusId: '', classId: '', joinedOn: '', nextRenewal: '',
-  giftAidFrom: '', homeU3a: '', notes: '', hideContact: false,
+  title: '',
+  forenames: '',
+  surname: '',
+  knownAs: '',
+  initials: '',
+  suffix: '',
+  email: '',
+  mobile: '',
+  statusId: '',
+  classId: '',
+  joinedOn: '',
+  nextRenewal: '',
+  giftAidFrom: '',
+  homeU3a: '',
+  notes: '',
+  hideContact: false,
   emergencyContact: '',
-  customField1: '', customField2: '', customField3: '', customField4: '',
+  customField1: '',
+  customField2: '',
+  customField3: '',
+  customField4: '',
   // address
-  houseNo: '', street: '', addLine1: '', addLine2: '', town: '', county: '', postcode: '', telephone: '',
+  houseNo: '',
+  street: '',
+  addLine1: '',
+  addLine2: '',
+  town: '',
+  county: '',
+  postcode: '',
+  telephone: '',
   // partner
   existingPartnerId: '',
   // payment (new member only)
-  payAmount: '', payMethod: '', payAccountId: '', payRef: '',
+  payAmount: '',
+  payMethod: '',
+  payAccountId: '',
+  payRef: '',
 };
 
 const TITLES = ['', 'Mr', 'Mrs', 'Ms', 'Miss', 'Dr', 'Prof', 'Rev', 'Sir', 'Lady'];
@@ -47,12 +83,12 @@ function computeNextRenewal(joinedOnIso, config) {
   const { yearStartMonth, yearStartDay, extendedMembershipMonth } = config;
   // Parse in local time to avoid UTC-offset surprises on the date boundary
   const [jy, jm, jd] = joinedOnIso.split('-').map(Number);
-  const joinDate      = new Date(jy, jm - 1, jd);
-  const joinMonth     = jm; // calendar month 1-12
+  const joinDate = new Date(jy, jm - 1, jd);
+  const joinMonth = jm; // calendar month 1-12
 
   // First occurrence of year-start on or after the join date
   const thisYrStart = new Date(jy, yearStartMonth - 1, yearStartDay);
-  let renewalYear   = joinDate >= thisYrStart ? jy + 1 : jy;
+  let renewalYear = joinDate >= thisYrStart ? jy + 1 : jy;
 
   // Extended membership: if joined in month >= extendedMembershipMonth, skip one more year
   if (extendedMembershipMonth != null && joinMonth >= extendedMembershipMonth) {
@@ -64,40 +100,40 @@ function computeNextRenewal(joinedOnIso, config) {
 }
 
 export default function MemberEditor() {
-  const { id }    = useParams();
-  const navigate  = useNavigate();
+  const { id } = useParams();
+  const navigate = useNavigate();
   const { can, tenant, hasFeature } = useAuth();
-  const isNew     = !id || id === 'new';
+  const isNew = !id || id === 'new';
   const photosEnabled = hasFeature('memberPhotos');
 
-  const [form,           setForm]           = useState(BLANK_FORM);
-  const [statuses,       setStatuses]       = useState([]);
-  const [classes,        setClasses]        = useState([]);
-  const [allMembers,     setAllMembers]     = useState([]);
-  const [accounts,       setAccounts]       = useState([]);
-  const payDefaults                        = useRef({ defaultMethod: '', mappings: {} });
-  const [loading,        setLoading]        = useState(!isNew);
-  const [saving,         setSaving]         = useState(false);
-  const [saved,          setSaved]          = useState(false);
-  const savedTimer                          = useRef(null);
-  const [deleting,       setDeleting]       = useState(false);
-  const [error,          setError]          = useState(null);
+  const [form, setForm] = useState(BLANK_FORM);
+  const [statuses, setStatuses] = useState([]);
+  const [classes, setClasses] = useState([]);
+  const [allMembers, setAllMembers] = useState([]);
+  const [accounts, setAccounts] = useState([]);
+  const payDefaults = useRef({ defaultMethod: '', mappings: {} });
+  const [loading, setLoading] = useState(!isNew);
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+  const savedTimer = useRef(null);
+  const [deleting, setDeleting] = useState(false);
+  const [error, setError] = useState(null);
   const { markDirty, markClean } = useUnsavedChanges();
   // All inline validation errors — keyed by field name
-  const [fieldErrors,    setFieldErrors]    = useState({});
+  const [fieldErrors, setFieldErrors] = useState({});
   // Timestamps for existing member display
-  const [createdAt,      setCreatedAt]      = useState(null);
-  const [updatedAt,      setUpdatedAt]      = useState(null);
+  const [createdAt, setCreatedAt] = useState(null);
+  const [updatedAt, setUpdatedAt] = useState(null);
   // Timestamps for address record display
-  const [addrCreatedAt,  setAddrCreatedAt]  = useState(null);
-  const [addrUpdatedAt,  setAddrUpdatedAt]  = useState(null);
+  const [addrCreatedAt, setAddrCreatedAt] = useState(null);
+  const [addrUpdatedAt, setAddrUpdatedAt] = useState(null);
   // Whether the current address is shared with the linked partner (from server)
-  const [addressShared,  setAddressShared]  = useState(false);
+  const [addressShared, setAddressShared] = useState(false);
   // Display name of the linked partner (from server)
-  const [partnerName,    setPartnerName]    = useState('');
+  const [partnerName, setPartnerName] = useState('');
   // Partner's status/class for shared address warning
   const [partnerStatusId, setPartnerStatusId] = useState('');
-  const [partnerClassId,  setPartnerClassId2] = useState('');
+  const [partnerClassId, setPartnerClassId2] = useState('');
   // System setting: warn when saving shared address with differing status/class
   const sharedAddrWarn = useRef(false);
   // True when the partner dropdown was changed during this edit session
@@ -113,47 +149,56 @@ export default function MemberEditor() {
   // ── A: New partner joining at the same time ──────────────────────────
   const [newPartnerMode, setNewPartnerMode] = useState(false);
   const [npForm, setNpForm] = useState({
-    title: '', forenames: '', surname: '', knownAs: '', email: '', mobile: '',
-    statusId: '', classId: '', joinedOn: '', nextRenewal: '', giftAidFrom: '',
+    title: '',
+    forenames: '',
+    surname: '',
+    knownAs: '',
+    email: '',
+    mobile: '',
+    statusId: '',
+    classId: '',
+    joinedOn: '',
+    nextRenewal: '',
+    giftAidFrom: '',
   });
 
   // ── B: Renew existing partner prompt ─────────────────────────────────
-  const [partnerDueRenewal, setPartnerDueRenewal] = useState(false);  // show prompt
-  const [renewPartner,      setRenewPartner]      = useState(false);  // checkbox
-  const [partnerNewRenewal, setPartnerNewRenewal] = useState('');     // new date
+  const [partnerDueRenewal, setPartnerDueRenewal] = useState(false); // show prompt
+  const [renewPartner, setRenewPartner] = useState(false); // checkbox
+  const [partnerNewRenewal, setPartnerNewRenewal] = useState(''); // new date
 
   // ── C: Partner class mismatch prompt ─────────────────────────────────
   const [partnerClassMismatch, setPartnerClassMismatch] = useState(false);
-  const [partnerNewClassId,    setPartnerNewClassId]    = useState('');
+  const [partnerNewClassId, setPartnerNewClassId] = useState('');
 
   // ── Gift Aid checkbox (new member only) ──────────────────────────────
-  const [giftAidTick,   setGiftAidTick]   = useState(false);
+  const [giftAidTick, setGiftAidTick] = useState(false);
 
   // ── Groups & Ledger section ───────────────────────────────────────────
-  const [memberGroups,  setMemberGroups]  = useState([]);
-  const [memberTxns,    setMemberTxns]    = useState([]);
+  const [memberGroups, setMemberGroups] = useState([]);
+  const [memberTxns, setMemberTxns] = useState([]);
   const [ledgerLoading, setLedgerLoading] = useState(false);
 
   // ── Polls ─────────────────────────────────────────────────────────────
-  const [allPolls,      setAllPolls]      = useState([]);   // all polls in this u3a
-  const [memberPollIds, setMemberPollIds] = useState([]);   // polls this member is in
-  const [pollSaving,    setPollSaving]    = useState(false);
-  const [newMemberPollIds, setNewMemberPollIds] = useState([]);  // polls selected during add-new-member
+  const [allPolls, setAllPolls] = useState([]); // all polls in this u3a
+  const [memberPollIds, setMemberPollIds] = useState([]); // polls this member is in
+  const [pollSaving, setPollSaving] = useState(false);
+  const [newMemberPollIds, setNewMemberPollIds] = useState([]); // polls selected during add-new-member
 
   // ── Custom field labels ──────────────────────────────────────────────
   const [cfLabels, setCfLabels] = useState({ label1: '', label2: '', label3: '', label4: '' });
 
   // ── Photo ──────────────────────────────────────────────────────────
-  const [hasPhoto,       setHasPhoto]       = useState(false);
-  const [photoBlobUrl,   setPhotoBlobUrl]   = useState(null);
+  const [hasPhoto, setHasPhoto] = useState(false);
+  const [photoBlobUrl, setPhotoBlobUrl] = useState(null);
   const [photoUploading, setPhotoUploading] = useState(false);
-  const [photoError,     setPhotoError]     = useState(null);
-  const [photoDragOver,  setPhotoDragOver]  = useState(false);
+  const [photoError, setPhotoError] = useState(null);
+  const [photoDragOver, setPhotoDragOver] = useState(false);
   const pendingPhotoRef = useRef(null); // { data, mimeType } for new member pre-upload
 
   const selectedClass = classes.find((c) => c.id === form.classId);
-  const isAssociate   = selectedClass?.is_associate ?? false;
-  const classFee      = selectedClass?.fee ?? null;
+  const isAssociate = selectedClass?.is_associate ?? false;
+  const classFee = selectedClass?.fee ?? null;
 
   // Address fields are read-only when a partner change is pending
   const addressLocked = !isNew && partnerChanged && !!form.existingPartnerId;
@@ -208,99 +253,117 @@ export default function MemberEditor() {
       })
       .catch(() => {});
 
-    membersApi.list({ status: '' }).then(setAllMembers).catch(() => {});
-    settingsApi.getCustomFieldLabels().then(setCfLabels).catch(() => {});
+    membersApi
+      .list({ status: '' })
+      .then(setAllMembers)
+      .catch(() => {});
+    settingsApi
+      .getCustomFieldLabels()
+      .then(setCfLabels)
+      .catch(() => {});
 
     if (isNew) {
-      settingsApi.getYearConfig().then(setYearConfig).catch(() => {});
+      settingsApi
+        .getYearConfig()
+        .then(setYearConfig)
+        .catch(() => {});
 
       // Pre-fill default town, county, and STD code from system settings
-      settingsApi.getNewMemberDefaults().then((defaults) => {
-        setForm((prev) => ({
-          ...prev,
-          town:      prev.town      || defaults.defaultTown    || '',
-          county:    prev.county    || defaults.defaultCounty  || '',
-          telephone: prev.telephone || defaults.defaultStdCode || '',
-        }));
-      }).catch(() => {});
+      settingsApi
+        .getNewMemberDefaults()
+        .then((defaults) => {
+          setForm((prev) => ({
+            ...prev,
+            town: prev.town || defaults.defaultTown || '',
+            county: prev.county || defaults.defaultCounty || '',
+            telephone: prev.telephone || defaults.defaultStdCode || '',
+          }));
+        })
+        .catch(() => {});
 
       Promise.all([
         financeApi.listAccounts(),
         financeApi.getPaymentMethodDefaults().catch(() => ({ defaultMethod: '', mappings: {} })),
-      ]).then(([accs, defaults]) => {
-        const active = accs.filter((a) => a.active);
-        setAccounts(active);
-        payDefaults.current = defaults;
-        // Pre-select default payment method and its mapped account
-        if (defaults.defaultMethod) {
-          set('payMethod', defaults.defaultMethod);
-          const mappedAccId = defaults.mappings[defaults.defaultMethod];
-          if (mappedAccId && active.some((a) => a.id === mappedAccId)) {
-            set('payAccountId', mappedAccId);
+      ])
+        .then(([accs, defaults]) => {
+          const active = accs.filter((a) => a.active);
+          setAccounts(active);
+          payDefaults.current = defaults;
+          // Pre-select default payment method and its mapped account
+          if (defaults.defaultMethod) {
+            set('payMethod', defaults.defaultMethod);
+            const mappedAccId = defaults.mappings[defaults.defaultMethod];
+            if (mappedAccId && active.some((a) => a.id === mappedAccId)) {
+              set('payAccountId', mappedAccId);
+            }
           }
-        }
-      }).catch(() => {});
+        })
+        .catch(() => {});
     }
 
     // Load shared address warning setting
-    settingsApi.get().then((s) => {
-      sharedAddrWarn.current = !!s.shared_address_warning;
-    }).catch(() => {});
+    settingsApi
+      .get()
+      .then((s) => {
+        sharedAddrWarn.current = !!s.shared_address_warning;
+      })
+      .catch(() => {});
 
     if (!isNew) {
       // Load groups and transactions for the Groups & Ledger section
       setLedgerLoading(true);
-      Promise.all([
-        membersApi.getGroups(id),
-        financeApi.listTransactions({ memberId: id }),
-      ]).then(([grps, txns]) => {
-        setMemberGroups(grps);
-        setMemberTxns(txns);
-      }).catch(() => {}).finally(() => setLedgerLoading(false));
+      Promise.all([membersApi.getGroups(id), financeApi.listTransactions({ memberId: id })])
+        .then(([grps, txns]) => {
+          setMemberGroups(grps);
+          setMemberTxns(txns);
+        })
+        .catch(() => {})
+        .finally(() => setLedgerLoading(false));
 
-      membersApi.get(id)
+      membersApi
+        .get(id)
         .then((m) => {
           setForm({
-            title:             m.title          ?? '',
-            forenames:         m.forenames       ?? '',
-            surname:           m.surname         ?? '',
-            knownAs:           m.known_as        ?? '',
-            initials:          m.initials        ?? '',
-            suffix:            m.suffix          ?? '',
-            email:             m.email           ?? '',
-            mobile:            m.mobile          ?? '',
-            statusId:          m.status_id       ?? '',
-            classId:           m.class_id        ?? '',
-            joinedOn:          m.joined_on        ? m.joined_on.slice(0, 10)        : '',
-            nextRenewal:       m.next_renewal     ? m.next_renewal.slice(0, 10)     : '',
-            giftAidFrom:       m.gift_aid_from    ? m.gift_aid_from.slice(0, 10)    : '',
-            homeU3a:           m.home_u3a        ?? '',
-            notes:             m.notes           ?? '',
-            hideContact:       m.hide_contact    ?? false,
-            emergencyContact:  m.emergency_contact ?? '',
-            customField1:      m.custom_field_1  ?? '',
-            customField2:      m.custom_field_2  ?? '',
-            customField3:      m.custom_field_3  ?? '',
-            customField4:      m.custom_field_4  ?? '',
-            houseNo:           m.house_no        ?? '',
-            street:            m.street          ?? '',
-            addLine1:          m.add_line1       ?? '',
-            addLine2:          m.add_line2       ?? '',
-            town:              m.town            ?? '',
-            county:            m.county          ?? '',
-            postcode:          m.postcode        ?? '',
-            telephone:         m.telephone       ?? '',
-            existingPartnerId: m.partner_id      ?? '',
+            title: m.title ?? '',
+            forenames: m.forenames ?? '',
+            surname: m.surname ?? '',
+            knownAs: m.known_as ?? '',
+            initials: m.initials ?? '',
+            suffix: m.suffix ?? '',
+            email: m.email ?? '',
+            mobile: m.mobile ?? '',
+            statusId: m.status_id ?? '',
+            classId: m.class_id ?? '',
+            joinedOn: m.joined_on ? m.joined_on.slice(0, 10) : '',
+            nextRenewal: m.next_renewal ? m.next_renewal.slice(0, 10) : '',
+            giftAidFrom: m.gift_aid_from ? m.gift_aid_from.slice(0, 10) : '',
+            homeU3a: m.home_u3a ?? '',
+            notes: m.notes ?? '',
+            hideContact: m.hide_contact ?? false,
+            emergencyContact: m.emergency_contact ?? '',
+            customField1: m.custom_field_1 ?? '',
+            customField2: m.custom_field_2 ?? '',
+            customField3: m.custom_field_3 ?? '',
+            customField4: m.custom_field_4 ?? '',
+            houseNo: m.house_no ?? '',
+            street: m.street ?? '',
+            addLine1: m.add_line1 ?? '',
+            addLine2: m.add_line2 ?? '',
+            town: m.town ?? '',
+            county: m.county ?? '',
+            postcode: m.postcode ?? '',
+            telephone: m.telephone ?? '',
+            existingPartnerId: m.partner_id ?? '',
           });
           originalAddress.current = {
-            houseNo:   m.house_no   ?? '',
-            street:    m.street     ?? '',
-            addLine1:  m.add_line1  ?? '',
-            addLine2:  m.add_line2  ?? '',
-            town:      m.town       ?? '',
-            county:    m.county     ?? '',
-            postcode:  m.postcode   ?? '',
-            telephone: m.telephone  ?? '',
+            houseNo: m.house_no ?? '',
+            street: m.street ?? '',
+            addLine1: m.add_line1 ?? '',
+            addLine2: m.add_line2 ?? '',
+            town: m.town ?? '',
+            county: m.county ?? '',
+            postcode: m.postcode ?? '',
+            telephone: m.telephone ?? '',
           };
           setCreatedAt(m.created_at ?? null);
           setUpdatedAt(m.updated_at ?? null);
@@ -315,9 +378,12 @@ export default function MemberEditor() {
           setMemberPollIds(m.poll_ids ?? []);
           setHasPhoto(!!m.has_photo);
           if (m.has_photo) {
-            membersApi.getPhotoBlob(id).then((blob) => {
-              if (blob) setPhotoBlobUrl(URL.createObjectURL(blob));
-            }).catch(() => {});
+            membersApi
+              .getPhotoBlob(id)
+              .then((blob) => {
+                if (blob) setPhotoBlobUrl(URL.createObjectURL(blob));
+              })
+              .catch(() => {});
           }
         })
         .catch((err) => setError(err.message))
@@ -325,7 +391,10 @@ export default function MemberEditor() {
     }
     // Cleanup photo blob URL on unmount or id change
     return () => {
-      setPhotoBlobUrl((prev) => { if (prev) URL.revokeObjectURL(prev); return null; });
+      setPhotoBlobUrl((prev) => {
+        if (prev) URL.revokeObjectURL(prev);
+        return null;
+      });
     };
   }, [id]);
 
@@ -347,21 +416,21 @@ export default function MemberEditor() {
   // Full validation — returns a flat error map (empty = valid)
   function runValidation() {
     const errs = {};
-    if (!form.forenames.trim())  errs.forenames = 'Forenames is required';
-    if (!form.surname.trim())    errs.surname   = 'Surname is required';
-    if (!form.statusId)          errs.statusId  = 'Status is required';
-    if (!form.classId)           errs.classId   = 'Class is required';
-    if (!form.joinedOn)          errs.joinedOn    = 'Date joined is required';
+    if (!form.forenames.trim()) errs.forenames = 'Forenames is required';
+    if (!form.surname.trim()) errs.surname = 'Surname is required';
+    if (!form.statusId) errs.statusId = 'Status is required';
+    if (!form.classId) errs.classId = 'Class is required';
+    if (!form.joinedOn) errs.joinedOn = 'Date joined is required';
     if (isNew && !form.nextRenewal) errs.nextRenewal = 'Next renewal date is required';
 
     // Validate new partner fields if in new-partner mode
     if (isNew && newPartnerMode) {
-      if (!npForm.forenames.trim())  errs.npForenames  = 'Partner forenames is required';
-      if (!npForm.surname.trim())    errs.npSurname    = 'Partner surname is required';
-      if (!npForm.statusId)          errs.npStatusId   = 'Partner status is required';
-      if (!npForm.classId)           errs.npClassId    = 'Partner class is required';
-      if (!npForm.joinedOn)          errs.npJoinedOn   = 'Partner joined date is required';
-      if (!npForm.nextRenewal)       errs.npNextRenewal = 'Partner next renewal date is required';
+      if (!npForm.forenames.trim()) errs.npForenames = 'Partner forenames is required';
+      if (!npForm.surname.trim()) errs.npSurname = 'Partner surname is required';
+      if (!npForm.statusId) errs.npStatusId = 'Partner status is required';
+      if (!npForm.classId) errs.npClassId = 'Partner class is required';
+      if (!npForm.joinedOn) errs.npJoinedOn = 'Partner joined date is required';
+      if (!npForm.nextRenewal) errs.npNextRenewal = 'Partner next renewal date is required';
     }
 
     // Postcode is required unless sharing a partner's address (existing or new)
@@ -384,8 +453,10 @@ export default function MemberEditor() {
     // Forenames, surname, and postcode are already required above.
     const giftAidActive = isNew ? giftAidTick : !!form.giftAidFrom;
     if (giftAidActive) {
-      if (!form.title || !form.title.trim()) errs.title = 'Title is required for Gift Aid (HMRC requirement)';
-      if (!skipPostcode && !form.houseNo.trim()) errs.houseNo = 'House name or number is required for Gift Aid (HMRC requirement)';
+      if (!form.title || !form.title.trim())
+        errs.title = 'Title is required for Gift Aid (HMRC requirement)';
+      if (!skipPostcode && !form.houseNo.trim())
+        errs.houseNo = 'House name or number is required for Gift Aid (HMRC requirement)';
     }
 
     return errs;
@@ -405,7 +476,8 @@ export default function MemberEditor() {
 
     if (!newPartnerId) {
       // Clearing the partner
-      if (!isNew && !confirm(`Remove the partner link for ${form.forenames} ${form.surname}?`)) return;
+      if (!isNew && !confirm(`Remove the partner link for ${form.forenames} ${form.surname}?`))
+        return;
       setForm((prev) => ({ ...prev, existingPartnerId: '' }));
       setPartnerChanged(prevPartnerId !== '');
       setAddressShared(false);
@@ -419,10 +491,14 @@ export default function MemberEditor() {
       ? `${partnerRec.forenames} ${partnerRec.surname}`
       : 'this member';
 
-    if (!isNew && !confirm(
-      `Link ${form.forenames} ${form.surname} with ${partnerDisplay} as partner?\n\n` +
-      `${partnerDisplay}'s address will be used (their record will also be updated).`
-    )) return;
+    if (
+      !isNew &&
+      !confirm(
+        `Link ${form.forenames} ${form.surname} with ${partnerDisplay} as partner?\n\n` +
+          `${partnerDisplay}'s address will be used (their record will also be updated).`,
+      )
+    )
+      return;
 
     // Fetch Y's full record
     let partnerAddr = null;
@@ -430,13 +506,13 @@ export default function MemberEditor() {
       const partnerData = await membersApi.get(newPartnerId);
       if (partnerData.postcode) {
         partnerAddr = {
-          houseNo:   partnerData.house_no  ?? '',
-          street:    partnerData.street    ?? '',
-          addLine1:  partnerData.add_line1 ?? '',
-          addLine2:  partnerData.add_line2 ?? '',
-          town:      partnerData.town      ?? '',
-          county:    partnerData.county    ?? '',
-          postcode:  partnerData.postcode  ?? '',
+          houseNo: partnerData.house_no ?? '',
+          street: partnerData.street ?? '',
+          addLine1: partnerData.add_line1 ?? '',
+          addLine2: partnerData.add_line2 ?? '',
+          town: partnerData.town ?? '',
+          county: partnerData.county ?? '',
+          postcode: partnerData.postcode ?? '',
           telephone: partnerData.telephone ?? '',
         };
         setPartnerName(partnerDisplay);
@@ -460,7 +536,9 @@ export default function MemberEditor() {
         setPartnerClassMismatch(true);
         setPartnerNewClassId(form.classId); // suggest matching the new member's class
       }
-    } catch { /* ignore — address stays as-is */ }
+    } catch {
+      /* ignore — address stays as-is */
+    }
 
     setForm((prev) => ({
       ...prev,
@@ -481,9 +559,9 @@ export default function MemberEditor() {
       // Pre-fill partner's dates and membership from primary form
       setNpForm((prev) => ({
         ...prev,
-        statusId:    form.statusId,
-        classId:     form.classId,
-        joinedOn:    form.joinedOn,
+        statusId: form.statusId,
+        classId: form.classId,
+        joinedOn: form.joinedOn,
         nextRenewal: form.nextRenewal,
       }));
     }
@@ -494,7 +572,16 @@ export default function MemberEditor() {
   }
 
   // Check if any address fields changed compared to the loaded snapshot
-  const ADDRESS_FIELDS = ['houseNo', 'street', 'addLine1', 'addLine2', 'town', 'county', 'postcode', 'telephone'];
+  const ADDRESS_FIELDS = [
+    'houseNo',
+    'street',
+    'addLine1',
+    'addLine2',
+    'town',
+    'county',
+    'postcode',
+    'telephone',
+  ];
   function addressFieldsChanged() {
     if (!originalAddress.current) return false;
     return ADDRESS_FIELDS.some((f) => (form[f] ?? '') !== (originalAddress.current[f] ?? ''));
@@ -524,21 +611,25 @@ export default function MemberEditor() {
     setError(null);
 
     const payload = {
-      title:       form.title       || undefined,
-      forenames:   form.forenames,
-      surname:     form.surname,
-      knownAs:     form.knownAs     || undefined,
-      initials:    !isNew ? (form.initials || undefined) : undefined,
-      suffix:      form.suffix      || undefined,
-      email:       form.email       || undefined,
-      mobile:      form.mobile      || undefined,
-      statusId:    form.statusId,
-      classId:     form.classId,
-      joinedOn:    form.joinedOn    || undefined,
+      title: form.title || undefined,
+      forenames: form.forenames,
+      surname: form.surname,
+      knownAs: form.knownAs || undefined,
+      initials: !isNew ? form.initials || undefined : undefined,
+      suffix: form.suffix || undefined,
+      email: form.email || undefined,
+      mobile: form.mobile || undefined,
+      statusId: form.statusId,
+      classId: form.classId,
+      joinedOn: form.joinedOn || undefined,
       nextRenewal: form.nextRenewal || undefined,
-      giftAidFrom: isNew ? (giftAidTick ? new Date().toISOString().slice(0, 10) : undefined) : (form.giftAidFrom || null),
-      homeU3a:     isAssociate ? (form.homeU3a || undefined) : undefined,
-      notes:       form.notes       || undefined,
+      giftAidFrom: isNew
+        ? giftAidTick
+          ? new Date().toISOString().slice(0, 10)
+          : undefined
+        : form.giftAidFrom || null,
+      homeU3a: isAssociate ? form.homeU3a || undefined : undefined,
+      notes: form.notes || undefined,
       hideContact: form.hideContact,
       emergencyContact: form.emergencyContact || null,
       customField1: form.customField1 || null,
@@ -546,13 +637,13 @@ export default function MemberEditor() {
       customField3: form.customField3 || null,
       customField4: form.customField4 || null,
       address: {
-        houseNo:   form.houseNo   || undefined,
-        street:    form.street    || undefined,
-        addLine1:  form.addLine1  || undefined,
-        addLine2:  form.addLine2  || undefined,
-        town:      form.town      || undefined,
-        county:    form.county    || undefined,
-        postcode:  form.postcode  ? form.postcode.trim().toUpperCase() : undefined,
+        houseNo: form.houseNo || undefined,
+        street: form.street || undefined,
+        addLine1: form.addLine1 || undefined,
+        addLine2: form.addLine2 || undefined,
+        town: form.town || undefined,
+        county: form.county || undefined,
+        postcode: form.postcode ? form.postcode.trim().toUpperCase() : undefined,
         telephone: form.telephone || undefined,
       },
     };
@@ -560,15 +651,15 @@ export default function MemberEditor() {
     if (isNew && newPartnerMode && npForm.forenames) {
       // A: New partner joining at the same time — address is shared from primary
       payload.newPartner = {
-        title:       npForm.title       || undefined,
-        forenames:   npForm.forenames,
-        surname:     npForm.surname,
-        knownAs:     npForm.knownAs     || undefined,
-        email:       npForm.email       || undefined,
-        mobile:      npForm.mobile      || undefined,
-        statusId:    npForm.statusId    || payload.statusId,
-        classId:     npForm.classId     || payload.classId,
-        joinedOn:    npForm.joinedOn    || payload.joinedOn,
+        title: npForm.title || undefined,
+        forenames: npForm.forenames,
+        surname: npForm.surname,
+        knownAs: npForm.knownAs || undefined,
+        email: npForm.email || undefined,
+        mobile: npForm.mobile || undefined,
+        statusId: npForm.statusId || payload.statusId,
+        classId: npForm.classId || payload.classId,
+        joinedOn: npForm.joinedOn || payload.joinedOn,
         nextRenewal: npForm.nextRenewal || undefined,
         giftAidFrom: npForm.giftAidFrom || undefined,
       };
@@ -593,19 +684,21 @@ export default function MemberEditor() {
       if (!isNaN(payAmt) && payAmt > 0) {
         // Warn if underpayment — user can proceed
         if (classFee !== null && payAmt < classFee - 0.001) {
-          if (!confirm(
-            `The amount received (£${payAmt.toFixed(2)}) is less than the expected fee (£${classFee.toFixed(2)}).\n\n` +
-            `Continue and record the partial payment?`
-          )) {
+          if (
+            !confirm(
+              `The amount received (£${payAmt.toFixed(2)}) is less than the expected fee (£${classFee.toFixed(2)}).\n\n` +
+                `Continue and record the partial payment?`,
+            )
+          ) {
             setSaving(false);
             return;
           }
         }
         payload.payment = {
           accountId: form.payAccountId,
-          amount:    payAmt,
-          method:    form.payMethod || undefined,
-          ref:       form.payRef    || undefined,
+          amount: payAmt,
+          method: form.payMethod || undefined,
+          ref: form.payRef || undefined,
         };
       }
     }
@@ -617,23 +710,38 @@ export default function MemberEditor() {
         createdId = created?.id;
         // Save poll selections for the newly created member
         if (createdId && newMemberPollIds.length > 0) {
-          try { await pollsApi.setForMember(createdId, newMemberPollIds); }
-          catch { /* best-effort — member already created */ }
+          try {
+            await pollsApi.setForMember(createdId, newMemberPollIds);
+          } catch {
+            /* best-effort — member already created */
+          }
         }
         // Upload photo for newly created member
         if (createdId && pendingPhotoRef.current) {
-          try { await membersApi.uploadPhoto(createdId, pendingPhotoRef.current.data, pendingPhotoRef.current.mimeType); }
-          catch { /* best-effort — member already created */ }
+          try {
+            await membersApi.uploadPhoto(
+              createdId,
+              pendingPhotoRef.current.data,
+              pendingPhotoRef.current.mimeType,
+            );
+          } catch {
+            /* best-effort — member already created */
+          }
         }
         // If no payment was entered, backend switches to Applicant and returns a paymentToken.
         // Offer to email the payment link to the new applicant.
         if (created?.paymentToken && created?.email && tenant) {
-          if (confirm(
-            `${created.forenames} ${created.surname} has been saved as an Applicant (no payment received).\n\n` +
-            `Would you like to email them a payment link?`
-          )) {
-            try { await publicApi.emailPaymentLink(tenant, created.paymentToken); }
-            catch { /* best-effort — member already created */ }
+          if (
+            confirm(
+              `${created.forenames} ${created.surname} has been saved as an Applicant (no payment received).\n\n` +
+                `Would you like to email them a payment link?`,
+            )
+          ) {
+            try {
+              await publicApi.emailPaymentLink(tenant, created.paymentToken);
+            } catch {
+              /* best-effort — member already created */
+            }
           }
         }
       } else {
@@ -659,9 +767,11 @@ export default function MemberEditor() {
         // Shared address warning: alert if partner has different status or class
         if (sharedAddrWarn.current && addressShared && partnerName && !partnerChanged) {
           const statusDiff = partnerStatusId && form.statusId && partnerStatusId !== form.statusId;
-          const classDiff  = partnerClassId && form.classId && partnerClassId !== form.classId;
+          const classDiff = partnerClassId && form.classId && partnerClassId !== form.classId;
           if (statusDiff || classDiff) {
-            const diffs = [statusDiff && 'status', classDiff && 'class'].filter(Boolean).join(' and ');
+            const diffs = [statusDiff && 'status', classDiff && 'class']
+              .filter(Boolean)
+              .join(' and ');
             alert(`Note: ${partnerName} shares this address but has a different ${diffs}.`);
           }
         }
@@ -676,24 +786,43 @@ export default function MemberEditor() {
       savedTimer.current = setTimeout(() => navigate(dest), 1200);
     } catch (err) {
       if (err.status === 409 && err.body?.code === 'DUPLICATE_NAME') {
-        if (confirm(`A member named "${form.forenames} ${form.surname}" already exists. Create anyway?`)) {
+        if (
+          confirm(
+            `A member named "${form.forenames} ${form.surname}" already exists. Create anyway?`,
+          )
+        ) {
           try {
             const dup = await membersApi.create(payload, true);
             if (dup?.id && newMemberPollIds.length > 0) {
-              try { await pollsApi.setForMember(dup.id, newMemberPollIds); }
-              catch { /* best-effort */ }
+              try {
+                await pollsApi.setForMember(dup.id, newMemberPollIds);
+              } catch {
+                /* best-effort */
+              }
             }
             if (dup?.id && pendingPhotoRef.current) {
-              try { await membersApi.uploadPhoto(dup.id, pendingPhotoRef.current.data, pendingPhotoRef.current.mimeType); }
-              catch { /* best-effort */ }
+              try {
+                await membersApi.uploadPhoto(
+                  dup.id,
+                  pendingPhotoRef.current.data,
+                  pendingPhotoRef.current.mimeType,
+                );
+              } catch {
+                /* best-effort */
+              }
             }
             if (dup?.paymentToken && dup?.email && tenant) {
-              if (confirm(
-                `${dup.forenames} ${dup.surname} has been saved as an Applicant (no payment received).\n\n` +
-                `Would you like to email them a payment link?`
-              )) {
-                try { await publicApi.emailPaymentLink(tenant, dup.paymentToken); }
-                catch { /* best-effort */ }
+              if (
+                confirm(
+                  `${dup.forenames} ${dup.surname} has been saved as an Applicant (no payment received).\n\n` +
+                    `Would you like to email them a payment link?`,
+                )
+              ) {
+                try {
+                  await publicApi.emailPaymentLink(tenant, dup.paymentToken);
+                } catch {
+                  /* best-effort */
+                }
               }
             }
             markClean();
@@ -722,7 +851,10 @@ export default function MemberEditor() {
   }
 
   async function handleDelete() {
-    if (!confirm(`Delete member "${form.forenames} ${form.surname}" (#${id})? This cannot be undone.`)) return;
+    if (
+      !confirm(`Delete member "${form.forenames} ${form.surname}" (#${id})? This cannot be undone.`)
+    )
+      return;
     setDeleting(true);
     try {
       await membersApi.delete(id);
@@ -799,7 +931,7 @@ export default function MemberEditor() {
   }
 
   async function handlePhotoRemove() {
-    if (!confirm('Remove this member\'s photo?')) return;
+    if (!confirm("Remove this member's photo?")) return;
     if (isNew) {
       if (photoBlobUrl) URL.revokeObjectURL(photoBlobUrl);
       setPhotoBlobUrl(null);
@@ -828,22 +960,27 @@ export default function MemberEditor() {
     ...(!isNew ? [{ label: 'Compact View', to: `/members/${id}/compact` }] : []),
   ];
 
-  if (loading) return (
-    <div className="min-h-screen pb-10">
-      <PageHeader tenant={tenant} />
-      <NavBar links={navLinks} />
-      <p className="text-center text-slate-500 mt-8">Loading…</p>
-    </div>
-  );
+  if (loading)
+    return (
+      <div className="min-h-screen pb-10">
+        <PageHeader tenant={tenant} />
+        <NavBar links={navLinks} />
+        <p className="text-center text-slate-500 mt-8">Loading…</p>
+      </div>
+    );
 
   // ── Shared classes ──────────────────────────────────────────────────────
-  const inputCls   = 'w-full border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500';
-  const inputErrCls = 'w-full border border-red-400 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-400';
-  const labelCls   = 'block text-sm font-medium text-slate-700 mb-1';
+  const inputCls =
+    'w-full border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500';
+  const inputErrCls =
+    'w-full border border-red-400 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-400';
+  const labelCls = 'block text-sm font-medium text-slate-700 mb-1';
   const sectionCls = 'bg-white/90 rounded-lg shadow-sm p-4 sm:p-6';
-  const errMsgCls  = 'text-sm text-red-600 mt-1 font-medium';
+  const errMsgCls = 'text-sm text-red-600 mt-1 font-medium';
 
-  function ic(field) { return fieldErrors[field] ? inputErrCls : inputCls; }
+  function ic(field) {
+    return fieldErrors[field] ? inputErrCls : inputCls;
+  }
 
   return (
     <div className="min-h-screen pb-10">
@@ -854,7 +991,9 @@ export default function MemberEditor() {
         <h1 className="text-xl font-bold text-center">
           {isNew ? 'Add New Member' : `Member Record — ${form.forenames} ${form.surname}`}
         </h1>
-        {!isNew && <RecordTimestamp label="Member record" createdAt={createdAt} updatedAt={updatedAt} />}
+        {!isNew && (
+          <RecordTimestamp label="Member record" createdAt={createdAt} updatedAt={updatedAt} />
+        )}
 
         {saved && (
           <p className="text-green-700 text-sm font-medium bg-green-50 border border-green-200 rounded px-3 py-2 text-center">
@@ -868,51 +1007,87 @@ export default function MemberEditor() {
         )}
 
         <form onSubmit={handleSave} noValidate className="space-y-4">
-
           {/* ── i) Membership ──────────────────────────────────────── */}
           <div className={sectionCls}>
-            <h2 className="text-sm font-semibold text-slate-700 uppercase tracking-wide mb-3">Membership</h2>
+            <h2 className="text-sm font-semibold text-slate-700 uppercase tracking-wide mb-3">
+              Membership
+            </h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {!isNew && (
                 <div>
-                  <label htmlFor="member-status" className={labelCls}>Status <RequiredMark /></label>
-                  <select id="member-status" name="statusId" value={form.statusId}
+                  <label htmlFor="member-status" className={labelCls}>
+                    Status <RequiredMark />
+                  </label>
+                  <select
+                    id="member-status"
+                    name="statusId"
+                    value={form.statusId}
                     onChange={(e) => set('statusId', e.target.value)}
                     onBlur={() => handleBlur('statusId')}
-                    className={ic('statusId')}>
+                    className={ic('statusId')}
+                  >
                     <option value="">— select —</option>
-                    {statuses.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
+                    {statuses.map((s) => (
+                      <option key={s.id} value={s.id}>
+                        {s.name}
+                      </option>
+                    ))}
                   </select>
                   {fieldErrors.statusId && <p className={errMsgCls}>{fieldErrors.statusId}</p>}
                 </div>
               )}
               <div>
-                <label htmlFor="member-class" className={labelCls}>Class <RequiredMark /></label>
-                <select id="member-class" name="classId" value={form.classId}
+                <label htmlFor="member-class" className={labelCls}>
+                  Class <RequiredMark />
+                </label>
+                <select
+                  id="member-class"
+                  name="classId"
+                  value={form.classId}
                   onChange={(e) => set('classId', e.target.value)}
                   onBlur={() => handleBlur('classId')}
-                  className={ic('classId')}>
+                  className={ic('classId')}
+                >
                   <option value="">— select —</option>
-                  {classes.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+                  {classes.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.name}
+                    </option>
+                  ))}
                 </select>
                 {fieldErrors.classId && <p className={errMsgCls}>{fieldErrors.classId}</p>}
               </div>
               {!isNew && (
                 <div>
-                  <label htmlFor="member-joined" className={labelCls}>Joined <RequiredMark /></label>
-                  <DateInput id="member-joined" name="joinedOn" value={form.joinedOn}
+                  <label htmlFor="member-joined" className={labelCls}>
+                    Joined <RequiredMark />
+                  </label>
+                  <DateInput
+                    id="member-joined"
+                    name="joinedOn"
+                    value={form.joinedOn}
                     onChange={(v) => set('joinedOn', v)}
                     onBlur={() => handleBlur('joinedOn')}
-                    className={ic('joinedOn')} />
+                    className={ic('joinedOn')}
+                  />
                   {fieldErrors.joinedOn && <p className={errMsgCls}>{fieldErrors.joinedOn}</p>}
                 </div>
               )}
               {!isNew && (
                 <div>
-                  <label htmlFor="member-next-renewal" className={labelCls}>Next renewal <span className="text-xs text-slate-400 font-normal">(Updated automatically upon renewal)</span></label>
-                  <DateInput id="member-next-renewal" name="nextRenewal" value={form.nextRenewal}
+                  <label htmlFor="member-next-renewal" className={labelCls}>
+                    Next renewal{' '}
+                    <span className="text-xs text-slate-400 font-normal">
+                      (Updated automatically upon renewal)
+                    </span>
+                  </label>
+                  <DateInput
+                    id="member-next-renewal"
+                    name="nextRenewal"
+                    value={form.nextRenewal}
                     onChange={(v) => set('nextRenewal', v)}
-                    className={inputCls} />
+                    className={inputCls}
+                  />
                 </div>
               )}
             </div>
@@ -920,63 +1095,122 @@ export default function MemberEditor() {
 
           {/* ── ii) Member's Details ────────────────────────────────── */}
           <div className={sectionCls}>
-            <h2 className="text-sm font-semibold text-slate-700 uppercase tracking-wide mb-3">Member's Details</h2>
+            <h2 className="text-sm font-semibold text-slate-700 uppercase tracking-wide mb-3">
+              Member's Details
+            </h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label htmlFor="member-title" className={labelCls}>Title</label>
-                <select id="member-title" name="title" value={form.title} onChange={(e) => set('title', e.target.value)} className={ic('title')}>
-                  {TITLES.map((t) => <option key={t} value={t}>{t || '—'}</option>)}
+                <label htmlFor="member-title" className={labelCls}>
+                  Title
+                </label>
+                <select
+                  id="member-title"
+                  name="title"
+                  value={form.title}
+                  onChange={(e) => set('title', e.target.value)}
+                  className={ic('title')}
+                >
+                  {TITLES.map((t) => (
+                    <option key={t} value={t}>
+                      {t || '—'}
+                    </option>
+                  ))}
                 </select>
                 {fieldErrors.title && <p className={errMsgCls}>{fieldErrors.title}</p>}
               </div>
               <div>
-                <label htmlFor="member-forenames" className={labelCls}>Forenames <RequiredMark /></label>
-                <input id="member-forenames" type="text" name="forenames" value={form.forenames}
+                <label htmlFor="member-forenames" className={labelCls}>
+                  Forenames <RequiredMark />
+                </label>
+                <input
+                  id="member-forenames"
+                  type="text"
+                  name="forenames"
+                  value={form.forenames}
                   onChange={(e) => set('forenames', e.target.value)}
                   onBlur={() => handleBlur('forenames')}
-                  className={ic('forenames')} />
+                  className={ic('forenames')}
+                />
                 {fieldErrors.forenames && <p className={errMsgCls}>{fieldErrors.forenames}</p>}
               </div>
               <div>
-                <label htmlFor="member-surname" className={labelCls}>Surname <RequiredMark /></label>
-                <input id="member-surname" type="text" name="surname" value={form.surname}
+                <label htmlFor="member-surname" className={labelCls}>
+                  Surname <RequiredMark />
+                </label>
+                <input
+                  id="member-surname"
+                  type="text"
+                  name="surname"
+                  value={form.surname}
                   onChange={(e) => set('surname', e.target.value)}
                   onBlur={() => handleBlur('surname')}
-                  className={ic('surname')} />
+                  className={ic('surname')}
+                />
                 {fieldErrors.surname && <p className={errMsgCls}>{fieldErrors.surname}</p>}
               </div>
               <div>
-                <label htmlFor="member-known-as" className={labelCls}>Known as</label>
-                <input id="member-known-as" type="text" name="knownAs" value={form.knownAs}
+                <label htmlFor="member-known-as" className={labelCls}>
+                  Known as
+                </label>
+                <input
+                  id="member-known-as"
+                  type="text"
+                  name="knownAs"
+                  value={form.knownAs}
                   onChange={(e) => set('knownAs', e.target.value)}
-                  className={inputCls} />
+                  className={inputCls}
+                />
               </div>
               {!isNew && (
                 <div>
-                  <label htmlFor="member-initials" className={labelCls}>Initials</label>
-                  <input id="member-initials" type="text" name="initials" value={form.initials}
+                  <label htmlFor="member-initials" className={labelCls}>
+                    Initials
+                  </label>
+                  <input
+                    id="member-initials"
+                    type="text"
+                    name="initials"
+                    value={form.initials}
                     onChange={(e) => set('initials', e.target.value)}
-                    className={inputCls} maxLength={20} />
+                    className={inputCls}
+                    maxLength={20}
+                  />
                 </div>
               )}
               <div className="sm:col-span-2 grid grid-cols-[1fr_2fr_auto] gap-4 items-end">
                 <div>
-                  <label htmlFor="member-suffix" className={labelCls}>Suffix</label>
-                  <input id="member-suffix" type="text" name="suffix" value={form.suffix}
+                  <label htmlFor="member-suffix" className={labelCls}>
+                    Suffix
+                  </label>
+                  <input
+                    id="member-suffix"
+                    type="text"
+                    name="suffix"
+                    value={form.suffix}
                     onChange={(e) => set('suffix', e.target.value)}
                     title="eg DD, MBE"
-                    className={inputCls} maxLength={30} />
+                    className={inputCls}
+                    maxLength={30}
+                  />
                 </div>
                 <div>
-                  <label htmlFor="member-email" className={labelCls}>Email</label>
-                  <input id="member-email" type="email" name="email" value={form.email}
+                  <label htmlFor="member-email" className={labelCls}>
+                    Email
+                  </label>
+                  <input
+                    id="member-email"
+                    type="email"
+                    name="email"
+                    value={form.email}
                     onChange={(e) => set('email', e.target.value)}
-                    className={inputCls} />
+                    className={inputCls}
+                  />
                 </div>
                 {!isNew && (
                   <div>
                     {form.email && can('email', 'send') && (
-                      <button type="button"
+                      <button
+                        type="button"
                         onClick={() => {
                           sessionStorage.setItem('emailComposeMemberIds', JSON.stringify([id]));
                           navigate('/email/compose');
@@ -991,35 +1225,58 @@ export default function MemberEditor() {
                 )}
               </div>
               <div>
-                <label htmlFor="member-mobile" className={labelCls}>Mobile</label>
-                <input id="member-mobile" type="text" name="mobile" value={form.mobile}
+                <label htmlFor="member-mobile" className={labelCls}>
+                  Mobile
+                </label>
+                <input
+                  id="member-mobile"
+                  type="text"
+                  name="mobile"
+                  value={form.mobile}
                   onChange={(e) => set('mobile', e.target.value)}
                   onBlur={() => handleBlur('mobile')}
-                  className={ic('mobile')} />
+                  className={ic('mobile')}
+                />
                 {fieldErrors.mobile && <p className={errMsgCls}>{fieldErrors.mobile}</p>}
               </div>
               {isAssociate && (
                 <div>
-                  <label htmlFor="member-home-u3a" className={labelCls}>Home u3a and member no.</label>
-                  <input id="member-home-u3a" type="text" name="homeU3a" value={form.homeU3a}
+                  <label htmlFor="member-home-u3a" className={labelCls}>
+                    Home u3a and member no.
+                  </label>
+                  <input
+                    id="member-home-u3a"
+                    type="text"
+                    name="homeU3a"
+                    value={form.homeU3a}
                     onChange={(e) => set('homeU3a', e.target.value)}
                     title="e.g. name of main u3a, etc"
-                    className={inputCls} maxLength={100} />
+                    className={inputCls}
+                    maxLength={100}
+                  />
                 </div>
               )}
               {!isNew && (
                 <div>
-                  <label htmlFor="member-gift-aid-from" className={labelCls}>Gift Aid from</label>
+                  <label htmlFor="member-gift-aid-from" className={labelCls}>
+                    Gift Aid from
+                  </label>
                   <div className="flex items-center gap-1">
-                    <DateInput id="member-gift-aid-from" name="giftAidFrom" value={form.giftAidFrom}
+                    <DateInput
+                      id="member-gift-aid-from"
+                      name="giftAidFrom"
+                      value={form.giftAidFrom}
                       onChange={(v) => set('giftAidFrom', v)}
                       max={new Date().toISOString().slice(0, 10)}
-                      className={inputCls} />
+                      className={inputCls}
+                    />
                     {form.giftAidFrom && (
-                      <button type="button"
+                      <button
+                        type="button"
                         onClick={() => set('giftAidFrom', '')}
                         className="text-slate-400 hover:text-red-600 transition-colors px-1"
-                        title="Press if the member is no longer eligible for gift aid donations">
+                        title="Press if the member is no longer eligible for gift aid donations"
+                      >
                         ✕
                       </button>
                     )}
@@ -1029,92 +1286,129 @@ export default function MemberEditor() {
             </div>
 
             <div className="mt-4">
-              <label htmlFor="member-emergency-contact" className={labelCls}>Emergency contact <span className="text-slate-400 font-normal">(name and phone)</span></label>
-              <input id="member-emergency-contact" type="text" name="emergencyContact" value={form.emergencyContact}
+              <label htmlFor="member-emergency-contact" className={labelCls}>
+                Emergency contact{' '}
+                <span className="text-slate-400 font-normal">(name and phone)</span>
+              </label>
+              <input
+                id="member-emergency-contact"
+                type="text"
+                name="emergencyContact"
+                value={form.emergencyContact}
                 onChange={(e) => set('emergencyContact', e.target.value)}
-                className={inputCls} maxLength={200}
-                placeholder="e.g. John Smith 07700 900123" />
+                className={inputCls}
+                maxLength={200}
+                placeholder="e.g. John Smith 07700 900123"
+              />
             </div>
 
             <div className="mt-4">
-              <label htmlFor="member-notes" className={labelCls}>Notes</label>
-              <textarea id="member-notes" name="notes" rows={3} value={form.notes}
+              <label htmlFor="member-notes" className={labelCls}>
+                Notes
+              </label>
+              <textarea
+                id="member-notes"
+                name="notes"
+                rows={3}
+                value={form.notes}
                 onChange={(e) => set('notes', e.target.value)}
-                className={inputCls} />
+                className={inputCls}
+              />
             </div>
 
             <label className="flex items-center gap-2 mt-3 text-sm cursor-pointer">
-              <input type="checkbox" checked={form.hideContact}
+              <input
+                type="checkbox"
+                checked={form.hideContact}
                 onChange={(e) => set('hideContact', e.target.checked)}
-                className="rounded border-slate-300 text-blue-600 focus:ring-blue-500" />
+                className="rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+              />
               Hide contact details from group leaders
             </label>
 
             {isNew && (
               <label className="flex items-center gap-2 mt-3 text-sm cursor-pointer">
-                <input type="checkbox" checked={giftAidTick}
+                <input
+                  type="checkbox"
+                  checked={giftAidTick}
                   onChange={(e) => setGiftAidTick(e.target.checked)}
-                  className="rounded border-slate-300 text-blue-600 focus:ring-blue-500" />
+                  className="rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                />
                 Tick if eligible for Gift Aid claim (if applicable)
               </label>
             )}
 
             {/* ── Member Photo ───────────────────────────────────────── */}
             {photosEnabled && (
-            <div className="mt-4">
-              <label className={labelCls}>Member Photo</label>
-              <div className="flex items-start gap-4">
-                <div
-                  onDrop={handlePhotoDrop}
-                  onDragOver={handlePhotoDragOver}
-                  onDragLeave={handlePhotoDragLeave}
-                  className={`w-24 h-24 rounded border-2 flex items-center justify-center transition-colors ${
-                    photoDragOver
-                      ? 'border-blue-400 bg-blue-50'
-                      : photoBlobUrl
-                        ? 'border-slate-300'
-                        : 'border-dashed border-slate-300'
-                  }`}
-                >
-                  {photoBlobUrl ? (
-                    <img src={photoBlobUrl} alt="Member photo"
-                      className="w-full h-full object-cover rounded" />
-                  ) : (
-                    <span className="text-slate-400 text-xs text-center px-1">
-                      {photoDragOver ? 'Drop here' : 'No photo'}
-                    </span>
-                  )}
-                </div>
-                <div className="flex flex-col gap-2">
-                  <input type="file" accept="image/jpeg,image/png,image/gif"
-                    onChange={handlePhotoSelect}
-                    className="hidden" id="photo-upload" />
-                  <label htmlFor="photo-upload"
-                    className="inline-flex items-center px-3 py-1.5 border border-blue-300 text-blue-600 hover:bg-blue-50 rounded text-sm cursor-pointer transition-colors">
-                    {photoUploading ? 'Uploading…' : (hasPhoto ? 'Change Photo' : 'Choose File')}
-                  </label>
-                  {hasPhoto && (
-                    <button type="button" onClick={handlePhotoRemove}
-                      disabled={photoUploading}
-                      className="inline-flex items-center px-3 py-1.5 border border-red-300 text-red-600 hover:bg-red-50 rounded text-sm transition-colors">
-                      Remove
-                    </button>
-                  )}
-                  <p className="text-xs text-slate-500">
-                    jpg, png, or gif — max 2 MB. Drag and drop or click.
-                    <br />Square format (1:1) recommended for membership cards.
-                  </p>
-                  {photoError && <p className="text-sm text-red-600 font-medium">{photoError}</p>}
+              <div className="mt-4">
+                <label className={labelCls}>Member Photo</label>
+                <div className="flex items-start gap-4">
+                  <div
+                    onDrop={handlePhotoDrop}
+                    onDragOver={handlePhotoDragOver}
+                    onDragLeave={handlePhotoDragLeave}
+                    className={`w-24 h-24 rounded border-2 flex items-center justify-center transition-colors ${
+                      photoDragOver
+                        ? 'border-blue-400 bg-blue-50'
+                        : photoBlobUrl
+                          ? 'border-slate-300'
+                          : 'border-dashed border-slate-300'
+                    }`}
+                  >
+                    {photoBlobUrl ? (
+                      <img
+                        src={photoBlobUrl}
+                        alt="Member photo"
+                        className="w-full h-full object-cover rounded"
+                      />
+                    ) : (
+                      <span className="text-slate-400 text-xs text-center px-1">
+                        {photoDragOver ? 'Drop here' : 'No photo'}
+                      </span>
+                    )}
+                  </div>
+                  <div className="flex flex-col gap-2">
+                    <input
+                      type="file"
+                      accept="image/jpeg,image/png,image/gif"
+                      onChange={handlePhotoSelect}
+                      className="hidden"
+                      id="photo-upload"
+                    />
+                    <label
+                      htmlFor="photo-upload"
+                      className="inline-flex items-center px-3 py-1.5 border border-blue-300 text-blue-600 hover:bg-blue-50 rounded text-sm cursor-pointer transition-colors"
+                    >
+                      {photoUploading ? 'Uploading…' : hasPhoto ? 'Change Photo' : 'Choose File'}
+                    </label>
+                    {hasPhoto && (
+                      <button
+                        type="button"
+                        onClick={handlePhotoRemove}
+                        disabled={photoUploading}
+                        className="inline-flex items-center px-3 py-1.5 border border-red-300 text-red-600 hover:bg-red-50 rounded text-sm transition-colors"
+                      >
+                        Remove
+                      </button>
+                    )}
+                    <p className="text-xs text-slate-500">
+                      jpg, png, or gif — max 2 MB. Drag and drop or click.
+                      <br />
+                      Square format (1:1) recommended for membership cards.
+                    </p>
+                    {photoError && <p className="text-sm text-red-600 font-medium">{photoError}</p>}
+                  </div>
                 </div>
               </div>
-            </div>
             )}
           </div>
 
           {/* ── iii) Address ─────────────────────────────────────────── */}
           <div className={sectionCls}>
             <div className="flex items-center gap-3 mb-3">
-              <h2 className="text-sm font-semibold text-slate-700 uppercase tracking-wide">Address</h2>
+              <h2 className="text-sm font-semibold text-slate-700 uppercase tracking-wide">
+                Address
+              </h2>
               {!isNew && addressShared && partnerName && !partnerChanged && (
                 <span className="inline-flex items-center gap-1 rounded-full bg-blue-50 border border-blue-200 px-2 py-0.5 text-xs text-blue-700">
                   Shared with {partnerName}
@@ -1137,9 +1431,12 @@ export default function MemberEditor() {
               {isNew && (
                 <div className="flex items-center gap-3 mb-2">
                   <label className="flex items-center gap-2 text-sm cursor-pointer text-slate-600">
-                    <input type="checkbox" checked={newPartnerMode}
+                    <input
+                      type="checkbox"
+                      checked={newPartnerMode}
                       onChange={handleNewPartnerToggle}
-                      className="rounded border-slate-300 text-blue-600 focus:ring-blue-500" />
+                      className="rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                    />
                     Another new member is joining at the same time (new partner)
                   </label>
                 </div>
@@ -1178,15 +1475,29 @@ export default function MemberEditor() {
                   {isNew && partnerDueRenewal && form.existingPartnerId && (
                     <div className="mt-3 rounded-md bg-amber-50 border border-amber-200 p-3">
                       <label className="flex items-start gap-2 text-sm cursor-pointer text-amber-800">
-                        <input type="checkbox" checked={renewPartner}
+                        <input
+                          type="checkbox"
+                          checked={renewPartner}
                           onChange={(e) => setRenewPartner(e.target.checked)}
-                          className="mt-0.5 rounded border-amber-400 text-amber-600 focus:ring-amber-500" />
-                        <span><strong>{partnerName}'s</strong> membership renewal is due. Renew at the same time?</span>
+                          className="mt-0.5 rounded border-amber-400 text-amber-600 focus:ring-amber-500"
+                        />
+                        <span>
+                          <strong>{partnerName}'s</strong> membership renewal is due. Renew at the
+                          same time?
+                        </span>
                       </label>
                       {renewPartner && (
                         <div className="mt-2 ml-6">
-                          <label htmlFor="member-partner-new-renewal" className={labelCls}>New renewal date for {partnerName}</label>
-                          <DateInput id="member-partner-new-renewal" name="partnerNewRenewal" value={partnerNewRenewal} onChange={setPartnerNewRenewal} className={inputCls} />
+                          <label htmlFor="member-partner-new-renewal" className={labelCls}>
+                            New renewal date for {partnerName}
+                          </label>
+                          <DateInput
+                            id="member-partner-new-renewal"
+                            name="partnerNewRenewal"
+                            value={partnerNewRenewal}
+                            onChange={setPartnerNewRenewal}
+                            className={inputCls}
+                          />
                         </div>
                       )}
                     </div>
@@ -1196,11 +1507,21 @@ export default function MemberEditor() {
                   {isNew && partnerClassMismatch && form.existingPartnerId && (
                     <div className="mt-3 rounded-md bg-blue-50 border border-blue-200 p-3">
                       <p className="text-sm text-blue-800 mb-2">
-                        <strong>{partnerName}</strong> is in a different membership class. Update their class?
+                        <strong>{partnerName}</strong> is in a different membership class. Update
+                        their class?
                       </p>
-                      <select name="partnerNewClassId" value={partnerNewClassId} onChange={(e) => setPartnerNewClassId(e.target.value)} className={inputCls}>
+                      <select
+                        name="partnerNewClassId"
+                        value={partnerNewClassId}
+                        onChange={(e) => setPartnerNewClassId(e.target.value)}
+                        className={inputCls}
+                      >
                         <option value="">— keep current class —</option>
-                        {classes.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+                        {classes.map((c) => (
+                          <option key={c.id} value={c.id}>
+                            {c.name}
+                          </option>
+                        ))}
                       </select>
                     </div>
                   )}
@@ -1214,133 +1535,310 @@ export default function MemberEditor() {
                 <h3 className="text-sm font-semibold text-slate-700">New Partner's Details</h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
-                    <label htmlFor="np-title" className={labelCls}>Title</label>
-                    <select id="np-title" name="npTitle" value={npForm.title} onChange={(e) => setNp('title', e.target.value)} className={inputCls}>
-                      {TITLES.map((t) => <option key={t} value={t}>{t || '—'}</option>)}
+                    <label htmlFor="np-title" className={labelCls}>
+                      Title
+                    </label>
+                    <select
+                      id="np-title"
+                      name="npTitle"
+                      value={npForm.title}
+                      onChange={(e) => setNp('title', e.target.value)}
+                      className={inputCls}
+                    >
+                      {TITLES.map((t) => (
+                        <option key={t} value={t}>
+                          {t || '—'}
+                        </option>
+                      ))}
                     </select>
                   </div>
                   <div>
-                    <label htmlFor="np-forenames" className={labelCls}>Forenames <RequiredMark /></label>
-                    <input id="np-forenames" type="text" name="npForenames" value={npForm.forenames} onChange={(e) => setNp('forenames', e.target.value)}
-                      className={fieldErrors.npForenames ? inputErrCls : inputCls} />
-                    {fieldErrors.npForenames && <p className={errMsgCls}>{fieldErrors.npForenames}</p>}
+                    <label htmlFor="np-forenames" className={labelCls}>
+                      Forenames <RequiredMark />
+                    </label>
+                    <input
+                      id="np-forenames"
+                      type="text"
+                      name="npForenames"
+                      value={npForm.forenames}
+                      onChange={(e) => setNp('forenames', e.target.value)}
+                      className={fieldErrors.npForenames ? inputErrCls : inputCls}
+                    />
+                    {fieldErrors.npForenames && (
+                      <p className={errMsgCls}>{fieldErrors.npForenames}</p>
+                    )}
                   </div>
                   <div>
-                    <label htmlFor="np-surname" className={labelCls}>Surname <RequiredMark /></label>
-                    <input id="np-surname" type="text" name="npSurname" value={npForm.surname} onChange={(e) => setNp('surname', e.target.value)}
-                      className={fieldErrors.npSurname ? inputErrCls : inputCls} />
+                    <label htmlFor="np-surname" className={labelCls}>
+                      Surname <RequiredMark />
+                    </label>
+                    <input
+                      id="np-surname"
+                      type="text"
+                      name="npSurname"
+                      value={npForm.surname}
+                      onChange={(e) => setNp('surname', e.target.value)}
+                      className={fieldErrors.npSurname ? inputErrCls : inputCls}
+                    />
                     {fieldErrors.npSurname && <p className={errMsgCls}>{fieldErrors.npSurname}</p>}
                   </div>
                   <div>
-                    <label htmlFor="np-known-as" className={labelCls}>Known as</label>
-                    <input id="np-known-as" type="text" name="npKnownAs" value={npForm.knownAs} onChange={(e) => setNp('knownAs', e.target.value)} className={inputCls} />
+                    <label htmlFor="np-known-as" className={labelCls}>
+                      Known as
+                    </label>
+                    <input
+                      id="np-known-as"
+                      type="text"
+                      name="npKnownAs"
+                      value={npForm.knownAs}
+                      onChange={(e) => setNp('knownAs', e.target.value)}
+                      className={inputCls}
+                    />
                   </div>
                   <div>
-                    <label htmlFor="np-email" className={labelCls}>Email</label>
-                    <input id="np-email" type="email" name="npEmail" value={npForm.email} onChange={(e) => setNp('email', e.target.value)} className={inputCls} />
+                    <label htmlFor="np-email" className={labelCls}>
+                      Email
+                    </label>
+                    <input
+                      id="np-email"
+                      type="email"
+                      name="npEmail"
+                      value={npForm.email}
+                      onChange={(e) => setNp('email', e.target.value)}
+                      className={inputCls}
+                    />
                   </div>
                   <div>
-                    <label htmlFor="np-mobile" className={labelCls}>Mobile</label>
-                    <input id="np-mobile" type="text" name="npMobile" value={npForm.mobile} onChange={(e) => setNp('mobile', e.target.value)} className={inputCls} />
+                    <label htmlFor="np-mobile" className={labelCls}>
+                      Mobile
+                    </label>
+                    <input
+                      id="np-mobile"
+                      type="text"
+                      name="npMobile"
+                      value={npForm.mobile}
+                      onChange={(e) => setNp('mobile', e.target.value)}
+                      className={inputCls}
+                    />
                   </div>
                   <div>
-                    <label htmlFor="np-status" className={labelCls}>Status <RequiredMark /></label>
-                    <select id="np-status" name="npStatusId" value={npForm.statusId} onChange={(e) => setNp('statusId', e.target.value)} className={inputCls}>
+                    <label htmlFor="np-status" className={labelCls}>
+                      Status <RequiredMark />
+                    </label>
+                    <select
+                      id="np-status"
+                      name="npStatusId"
+                      value={npForm.statusId}
+                      onChange={(e) => setNp('statusId', e.target.value)}
+                      className={inputCls}
+                    >
                       <option value="">— select —</option>
-                      {statuses.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
+                      {statuses.map((s) => (
+                        <option key={s.id} value={s.id}>
+                          {s.name}
+                        </option>
+                      ))}
                     </select>
                   </div>
                   <div>
-                    <label htmlFor="np-class" className={labelCls}>Class <RequiredMark /></label>
-                    <select id="np-class" name="npClassId" value={npForm.classId} onChange={(e) => setNp('classId', e.target.value)} className={inputCls}>
+                    <label htmlFor="np-class" className={labelCls}>
+                      Class <RequiredMark />
+                    </label>
+                    <select
+                      id="np-class"
+                      name="npClassId"
+                      value={npForm.classId}
+                      onChange={(e) => setNp('classId', e.target.value)}
+                      className={inputCls}
+                    >
                       <option value="">— select —</option>
-                      {classes.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+                      {classes.map((c) => (
+                        <option key={c.id} value={c.id}>
+                          {c.name}
+                        </option>
+                      ))}
                     </select>
                   </div>
                   <div>
-                    <label htmlFor="np-joined" className={labelCls}>Joined <RequiredMark /></label>
-                    <DateInput id="np-joined" name="npJoinedOn" value={npForm.joinedOn} onChange={(v) => setNp('joinedOn', v)} className={inputCls} />
+                    <label htmlFor="np-joined" className={labelCls}>
+                      Joined <RequiredMark />
+                    </label>
+                    <DateInput
+                      id="np-joined"
+                      name="npJoinedOn"
+                      value={npForm.joinedOn}
+                      onChange={(v) => setNp('joinedOn', v)}
+                      className={inputCls}
+                    />
                   </div>
                   <div>
-                    <label htmlFor="np-next-renewal" className={labelCls}>Next renewal <RequiredMark /></label>
-                    <DateInput id="np-next-renewal" name="npNextRenewal" value={npForm.nextRenewal} onChange={(v) => setNp('nextRenewal', v)} className={fieldErrors.npNextRenewal ? ic('npNextRenewal') : inputCls} />
-                    {fieldErrors.npNextRenewal && <p className={errMsgCls}>{fieldErrors.npNextRenewal}</p>}
+                    <label htmlFor="np-next-renewal" className={labelCls}>
+                      Next renewal <RequiredMark />
+                    </label>
+                    <DateInput
+                      id="np-next-renewal"
+                      name="npNextRenewal"
+                      value={npForm.nextRenewal}
+                      onChange={(v) => setNp('nextRenewal', v)}
+                      className={fieldErrors.npNextRenewal ? ic('npNextRenewal') : inputCls}
+                    />
+                    {fieldErrors.npNextRenewal && (
+                      <p className={errMsgCls}>{fieldErrors.npNextRenewal}</p>
+                    )}
                   </div>
                   <div>
-                    <label htmlFor="np-gift-aid-from" className={labelCls}>Gift Aid from</label>
-                    <DateInput id="np-gift-aid-from" name="npGiftAidFrom" value={npForm.giftAidFrom} onChange={(v) => setNp('giftAidFrom', v)} className={inputCls} />
+                    <label htmlFor="np-gift-aid-from" className={labelCls}>
+                      Gift Aid from
+                    </label>
+                    <DateInput
+                      id="np-gift-aid-from"
+                      name="npGiftAidFrom"
+                      value={npForm.giftAidFrom}
+                      onChange={(v) => setNp('giftAidFrom', v)}
+                      className={inputCls}
+                    />
                   </div>
                 </div>
-                <p className="text-xs text-slate-400 italic">Address is shared with the primary member above.</p>
+                <p className="text-xs text-slate-400 italic">
+                  Address is shared with the primary member above.
+                </p>
               </div>
             )}
 
             {/* Address fields — locked when a new or existing partner is pending */}
-            <div className={`grid grid-cols-1 sm:grid-cols-2 gap-4 ${(form.existingPartnerId && isNew) || addressLocked || (isNew && newPartnerMode) ? 'opacity-40 pointer-events-none' : ''}`}>
+            <div
+              className={`grid grid-cols-1 sm:grid-cols-2 gap-4 ${(form.existingPartnerId && isNew) || addressLocked || (isNew && newPartnerMode) ? 'opacity-40 pointer-events-none' : ''}`}
+            >
               <div>
-                <label htmlFor="member-house-no" className={labelCls}>House / flat no.</label>
-                <input id="member-house-no" type="text" name="houseNo" value={form.houseNo}
+                <label htmlFor="member-house-no" className={labelCls}>
+                  House / flat no.
+                </label>
+                <input
+                  id="member-house-no"
+                  type="text"
+                  name="houseNo"
+                  value={form.houseNo}
                   onChange={(e) => set('houseNo', e.target.value)}
                   onBlur={() => handleBlur('houseNo')}
-                  className={ic('houseNo')} />
+                  className={ic('houseNo')}
+                />
                 {fieldErrors.houseNo && <p className={errMsgCls}>{fieldErrors.houseNo}</p>}
               </div>
               <div>
-                <label htmlFor="member-street" className={labelCls}>Street/Building</label>
-                <input id="member-street" type="text" name="street" value={form.street}
+                <label htmlFor="member-street" className={labelCls}>
+                  Street/Building
+                </label>
+                <input
+                  id="member-street"
+                  type="text"
+                  name="street"
+                  value={form.street}
                   onChange={(e) => set('street', e.target.value)}
-                  className={inputCls} />
+                  className={inputCls}
+                />
               </div>
               <div>
-                <label htmlFor="member-add-line1" className={labelCls}>Additional line 1</label>
-                <input id="member-add-line1" type="text" name="addLine1" value={form.addLine1}
+                <label htmlFor="member-add-line1" className={labelCls}>
+                  Additional line 1
+                </label>
+                <input
+                  id="member-add-line1"
+                  type="text"
+                  name="addLine1"
+                  value={form.addLine1}
                   onChange={(e) => set('addLine1', e.target.value)}
                   title="Use these fields for additional lines of address"
-                  className={inputCls} />
+                  className={inputCls}
+                />
               </div>
               <div>
-                <label htmlFor="member-add-line2" className={labelCls}>Additional line 2</label>
-                <input id="member-add-line2" type="text" name="addLine2" value={form.addLine2}
+                <label htmlFor="member-add-line2" className={labelCls}>
+                  Additional line 2
+                </label>
+                <input
+                  id="member-add-line2"
+                  type="text"
+                  name="addLine2"
+                  value={form.addLine2}
                   onChange={(e) => set('addLine2', e.target.value)}
                   title="Use these fields for additional lines of address"
-                  className={inputCls} />
+                  className={inputCls}
+                />
               </div>
               <div>
-                <label htmlFor="member-town" className={labelCls}>Town</label>
-                <input id="member-town" type="text" name="town" value={form.town}
+                <label htmlFor="member-town" className={labelCls}>
+                  Town
+                </label>
+                <input
+                  id="member-town"
+                  type="text"
+                  name="town"
+                  value={form.town}
                   onChange={(e) => set('town', e.target.value)}
-                  className={inputCls} />
+                  className={inputCls}
+                />
               </div>
               <div>
-                <label htmlFor="member-county" className={labelCls}>County</label>
-                <input id="member-county" type="text" name="county" value={form.county}
+                <label htmlFor="member-county" className={labelCls}>
+                  County
+                </label>
+                <input
+                  id="member-county"
+                  type="text"
+                  name="county"
+                  value={form.county}
                   onChange={(e) => set('county', e.target.value)}
-                  className={inputCls} />
+                  className={inputCls}
+                />
               </div>
               <div>
-                <label htmlFor="member-postcode" className={labelCls}>Postcode <RequiredMark /></label>
-                <input id="member-postcode" type="text" name="postcode" value={form.postcode}
+                <label htmlFor="member-postcode" className={labelCls}>
+                  Postcode <RequiredMark />
+                </label>
+                <input
+                  id="member-postcode"
+                  type="text"
+                  name="postcode"
+                  value={form.postcode}
                   onChange={(e) => set('postcode', e.target.value)}
                   onBlur={() => handleBlur('postcode')}
-                  className={ic('postcode')} maxLength={10} />
+                  className={ic('postcode')}
+                  maxLength={10}
+                />
                 {fieldErrors.postcode && <p className={errMsgCls}>{fieldErrors.postcode}</p>}
               </div>
               <div>
-                <label htmlFor="member-telephone" className={labelCls}>Home telephone <span className="text-slate-400 font-normal">(shared)</span></label>
-                <input id="member-telephone" type="text" name="telephone" value={form.telephone}
+                <label htmlFor="member-telephone" className={labelCls}>
+                  Home telephone <span className="text-slate-400 font-normal">(shared)</span>
+                </label>
+                <input
+                  id="member-telephone"
+                  type="text"
+                  name="telephone"
+                  value={form.telephone}
                   onChange={(e) => set('telephone', e.target.value)}
                   onBlur={() => handleBlur('telephone')}
-                  className={ic('telephone')} />
+                  className={ic('telephone')}
+                />
                 {fieldErrors.telephone && <p className={errMsgCls}>{fieldErrors.telephone}</p>}
               </div>
             </div>
-            {!isNew && <RecordTimestamp label="Address record" createdAt={addrCreatedAt} updatedAt={addrUpdatedAt} className="mt-2" />}
+            {!isNew && (
+              <RecordTimestamp
+                label="Address record"
+                createdAt={addrCreatedAt}
+                updatedAt={addrUpdatedAt}
+                className="mt-2"
+              />
+            )}
           </div>
 
           {/* ── iv) Payment (new member only) ───────────────────────── */}
           {isNew && accounts.length > 0 && (
             <div className={sectionCls}>
-              <h2 className="text-sm font-semibold text-slate-700 uppercase tracking-wide mb-3">Payment</h2>
+              <h2 className="text-sm font-semibold text-slate-700 uppercase tracking-wide mb-3">
+                Payment
+              </h2>
               {classFee !== null && (
                 <p className="text-sm text-slate-600 mb-3">
                   Expected fee: <strong>£{Number(classFee).toFixed(2)}</strong>
@@ -1349,12 +1847,18 @@ export default function MemberEditor() {
               )}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label htmlFor="member-pay-amount" className={labelCls}>Amount received</label>
+                  <label htmlFor="member-pay-amount" className={labelCls}>
+                    Amount received
+                  </label>
                   <div className="relative">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm">£</span>
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm">
+                      £
+                    </span>
                     <input
                       id="member-pay-amount"
-                      type="number" min="0" step="0.01"
+                      type="number"
+                      min="0"
+                      step="0.01"
                       name="payAmount"
                       value={form.payAmount}
                       onChange={(e) => set('payAmount', e.target.value)}
@@ -1364,45 +1868,87 @@ export default function MemberEditor() {
                   </div>
                 </div>
                 <div>
-                  <label htmlFor="member-pay-method" className={labelCls}>Payment method</label>
-                  <select id="member-pay-method" name="payMethod" value={form.payMethod} onChange={(e) => {
-                    const method = e.target.value;
-                    set('payMethod', method);
-                    const mappedAccId = payDefaults.current.mappings[method];
-                    if (mappedAccId && accounts.some((a) => a.id === mappedAccId)) {
-                      set('payAccountId', mappedAccId);
-                    }
-                  }} className={inputCls}>
+                  <label htmlFor="member-pay-method" className={labelCls}>
+                    Payment method
+                  </label>
+                  <select
+                    id="member-pay-method"
+                    name="payMethod"
+                    value={form.payMethod}
+                    onChange={(e) => {
+                      const method = e.target.value;
+                      set('payMethod', method);
+                      const mappedAccId = payDefaults.current.mappings[method];
+                      if (mappedAccId && accounts.some((a) => a.id === mappedAccId)) {
+                        set('payAccountId', mappedAccId);
+                      }
+                    }}
+                    className={inputCls}
+                  >
                     <option value="">— select —</option>
-                    {PAYMENT_METHODS.map((m) => <option key={m} value={m}>{m}</option>)}
+                    {PAYMENT_METHODS.map((m) => (
+                      <option key={m} value={m}>
+                        {m}
+                      </option>
+                    ))}
                   </select>
                 </div>
                 <div>
-                  <label htmlFor="member-pay-account" className={labelCls}>Account</label>
-                  <select id="member-pay-account" name="payAccountId" value={form.payAccountId} onChange={(e) => set('payAccountId', e.target.value)} className={inputCls}>
+                  <label htmlFor="member-pay-account" className={labelCls}>
+                    Account
+                  </label>
+                  <select
+                    id="member-pay-account"
+                    name="payAccountId"
+                    value={form.payAccountId}
+                    onChange={(e) => set('payAccountId', e.target.value)}
+                    className={inputCls}
+                  >
                     <option value="">— select —</option>
-                    {accounts.map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}
+                    {accounts.map((a) => (
+                      <option key={a.id} value={a.id}>
+                        {a.name}
+                      </option>
+                    ))}
                   </select>
                 </div>
                 <div>
-                  <label htmlFor="member-pay-ref" className={labelCls}>Payment ref <span className="text-slate-400 font-normal">(e.g. cheque no.)</span></label>
-                  <input id="member-pay-ref" type="text" name="payRef" value={form.payRef}
+                  <label htmlFor="member-pay-ref" className={labelCls}>
+                    Payment ref{' '}
+                    <span className="text-slate-400 font-normal">(e.g. cheque no.)</span>
+                  </label>
+                  <input
+                    id="member-pay-ref"
+                    type="text"
+                    name="payRef"
+                    value={form.payRef}
                     onChange={(e) => set('payRef', e.target.value)}
-                    className={inputCls} maxLength={100} />
+                    className={inputCls}
+                    maxLength={100}
+                  />
                 </div>
               </div>
-              {classFee !== null && form.payAmount && parseFloat(form.payAmount) > classFee + 0.001 && (
-                <p className="text-sm font-medium text-blue-700 bg-blue-50 border border-blue-200 rounded px-3 py-2 mt-2">
-                  £{(parseFloat(form.payAmount) - classFee).toFixed(2)} will be put to donations.
-                </p>
-              )}
-              {classFee !== null && classFee > 0 && form.payAmount && parseFloat(form.payAmount) > 0 && parseFloat(form.payAmount) < classFee - 0.001 && (
-                <p className="text-sm font-medium text-amber-700 bg-amber-50 border border-amber-200 rounded px-3 py-2 mt-2">
-                  £{(classFee - parseFloat(form.payAmount)).toFixed(2)} more needed to become a member.
-                </p>
-              )}
+              {classFee !== null &&
+                form.payAmount &&
+                parseFloat(form.payAmount) > classFee + 0.001 && (
+                  <p className="text-sm font-medium text-blue-700 bg-blue-50 border border-blue-200 rounded px-3 py-2 mt-2">
+                    £{(parseFloat(form.payAmount) - classFee).toFixed(2)} will be put to donations.
+                  </p>
+                )}
+              {classFee !== null &&
+                classFee > 0 &&
+                form.payAmount &&
+                parseFloat(form.payAmount) > 0 &&
+                parseFloat(form.payAmount) < classFee - 0.001 && (
+                  <p className="text-sm font-medium text-amber-700 bg-amber-50 border border-amber-200 rounded px-3 py-2 mt-2">
+                    £{(classFee - parseFloat(form.payAmount)).toFixed(2)} more needed to become a
+                    member.
+                  </p>
+                )}
               {!form.payAmount && (
-                <p className="text-xs text-slate-400 mt-2 italic">Leave blank to skip recording a payment now.</p>
+                <p className="text-xs text-slate-400 mt-2 italic">
+                  Leave blank to skip recording a payment now.
+                </p>
               )}
             </div>
           )}
@@ -1416,24 +1962,34 @@ export default function MemberEditor() {
                   <label key={poll.id} className="flex items-center gap-2 text-sm cursor-pointer">
                     <input
                       type="checkbox"
-                      checked={isNew ? newMemberPollIds.includes(poll.id) : memberPollIds.includes(poll.id)}
+                      checked={
+                        isNew ? newMemberPollIds.includes(poll.id) : memberPollIds.includes(poll.id)
+                      }
                       disabled={!isNew && (pollSaving || !can('poll_set_up', 'change'))}
-                      onChange={isNew
-                        ? (e) => {
-                            setNewMemberPollIds((prev) =>
-                              e.target.checked ? [...prev, poll.id] : prev.filter((x) => x !== poll.id)
-                            );
-                          }
-                        : async (e) => {
-                            const newIds = e.target.checked
-                              ? [...memberPollIds, poll.id]
-                              : memberPollIds.filter((x) => x !== poll.id);
-                            setMemberPollIds(newIds);
-                            setPollSaving(true);
-                            try { await pollsApi.setForMember(id, newIds); }
-                            catch { setMemberPollIds(memberPollIds); } // revert on error
-                            finally { setPollSaving(false); }
-                          }
+                      onChange={
+                        isNew
+                          ? (e) => {
+                              setNewMemberPollIds((prev) =>
+                                e.target.checked
+                                  ? [...prev, poll.id]
+                                  : prev.filter((x) => x !== poll.id),
+                              );
+                            }
+                          : async (e) => {
+                              const newIds = e.target.checked
+                                ? [...memberPollIds, poll.id]
+                                : memberPollIds.filter((x) => x !== poll.id);
+                              setMemberPollIds(newIds);
+                              setPollSaving(true);
+                              try {
+                                await pollsApi.setForMember(id, newIds);
+                              } catch {
+                                setMemberPollIds(memberPollIds);
+                              } finally {
+                                // revert on error
+                                setPollSaving(false);
+                              }
+                            }
                       }
                       className="rounded border-slate-300 text-blue-600 focus:ring-blue-500"
                     />
@@ -1448,7 +2004,9 @@ export default function MemberEditor() {
           {/* ── Custom Fields (doc 8.7) ─────────────────────────────── */}
           {(cfLabels.label1 || cfLabels.label2 || cfLabels.label3 || cfLabels.label4) && (
             <div className={sectionCls}>
-              <h2 className="text-sm font-semibold text-slate-700 uppercase tracking-wide mb-3">Custom Fields</h2>
+              <h2 className="text-sm font-semibold text-slate-700 uppercase tracking-wide mb-3">
+                Custom Fields
+              </h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {[1, 2, 3, 4].map((n) => {
                   const labelKey = `label${n}`;
@@ -1456,10 +2014,17 @@ export default function MemberEditor() {
                   if (!cfLabels[labelKey]) return null;
                   return (
                     <div key={n}>
-                      <label htmlFor={`member-custom-field-${n}`} className={labelCls}>{cfLabels[labelKey]}</label>
-                      <input id={`member-custom-field-${n}`} type="text" name={fieldKey} value={form[fieldKey]}
+                      <label htmlFor={`member-custom-field-${n}`} className={labelCls}>
+                        {cfLabels[labelKey]}
+                      </label>
+                      <input
+                        id={`member-custom-field-${n}`}
+                        type="text"
+                        name={fieldKey}
+                        value={form[fieldKey]}
                         onChange={(e) => set(fieldKey, e.target.value)}
-                        className={inputCls} />
+                        className={inputCls}
+                      />
                     </div>
                   );
                 })}
@@ -1470,7 +2035,9 @@ export default function MemberEditor() {
           {/* ── Groups, Teams & Ledger ────────────────────────────────── */}
           {!isNew && (
             <div className={sectionCls}>
-              <h2 className="text-base font-semibold text-slate-700 mb-3">Groups, Teams and Ledger</h2>
+              <h2 className="text-base font-semibold text-slate-700 mb-3">
+                Groups, Teams and Ledger
+              </h2>
               {ledgerLoading ? (
                 <p className="text-sm text-slate-400">Loading…</p>
               ) : (
@@ -1490,24 +2057,52 @@ export default function MemberEditor() {
                             </tr>
                           </thead>
                           <tbody>
-                            {memberGroups.filter((g) => g.type === 'group').map((g, i) => (
-                              <tr key={g.id} className={`border-b border-slate-100 ${i % 2 === 0 ? 'bg-yellow-50' : 'bg-white'}`}>
-                                <td className="px-3 py-1.5">
-                                  {can('group_records_all', 'view') ? (
-                                    <a href={`/groups/${g.id}`} className="text-blue-700 hover:underline" title={g.short_name ? g.name : 'Press to access the group record'}>{g.short_name || g.name}</a>
-                                  ) : (
-                                    <span className={g.status === 'inactive' ? 'text-red-600' : ''} title={g.short_name ? g.name : undefined}>{g.short_name || g.name}</span>
-                                  )}
-                                  {g.is_leader && <span className="ml-1.5 text-amber-500" title="Leader">★</span>}
-                                  {g.waiting_since && <span className="ml-1.5 text-slate-400" title="Waiting list">⏳</span>}
-                                </td>
-                                <td className="px-3 py-1.5">
-                                  {g.status === 'inactive'
-                                    ? <span className="text-red-600 font-medium">Inactive</span>
-                                    : <span className="text-slate-500">Active</span>}
-                                </td>
-                              </tr>
-                            ))}
+                            {memberGroups
+                              .filter((g) => g.type === 'group')
+                              .map((g, i) => (
+                                <tr
+                                  key={g.id}
+                                  className={`border-b border-slate-100 ${i % 2 === 0 ? 'bg-yellow-50' : 'bg-white'}`}
+                                >
+                                  <td className="px-3 py-1.5">
+                                    {can('group_records_all', 'view') ? (
+                                      <a
+                                        href={`/groups/${g.id}`}
+                                        className="text-blue-700 hover:underline"
+                                        title={
+                                          g.short_name ? g.name : 'Press to access the group record'
+                                        }
+                                      >
+                                        {g.short_name || g.name}
+                                      </a>
+                                    ) : (
+                                      <span
+                                        className={g.status === 'inactive' ? 'text-red-600' : ''}
+                                        title={g.short_name ? g.name : undefined}
+                                      >
+                                        {g.short_name || g.name}
+                                      </span>
+                                    )}
+                                    {g.is_leader && (
+                                      <span className="ml-1.5 text-amber-500" title="Leader">
+                                        ★
+                                      </span>
+                                    )}
+                                    {g.waiting_since && (
+                                      <span className="ml-1.5 text-slate-400" title="Waiting list">
+                                        ⏳
+                                      </span>
+                                    )}
+                                  </td>
+                                  <td className="px-3 py-1.5">
+                                    {g.status === 'inactive' ? (
+                                      <span className="text-red-600 font-medium">Inactive</span>
+                                    ) : (
+                                      <span className="text-slate-500">Active</span>
+                                    )}
+                                  </td>
+                                </tr>
+                              ))}
                           </tbody>
                         </table>
                       </div>
@@ -1529,23 +2124,47 @@ export default function MemberEditor() {
                             </tr>
                           </thead>
                           <tbody>
-                            {memberGroups.filter((g) => g.type === 'team').map((t, i) => (
-                              <tr key={t.id} className={`border-b border-slate-100 ${i % 2 === 0 ? 'bg-yellow-50' : 'bg-white'}`}>
-                                <td className="px-3 py-1.5">
-                                  {can('group_records_all', 'view') ? (
-                                    <a href={`/teams/${t.id}`} className="text-blue-700 hover:underline" title={t.short_name ? t.name : 'Press to access the team record'}>{t.short_name || t.name}</a>
-                                  ) : (
-                                    <span className={t.status === 'inactive' ? 'text-red-600' : ''} title={t.short_name ? t.name : undefined}>{t.short_name || t.name}</span>
-                                  )}
-                                  {t.is_leader && <span className="ml-1.5 text-amber-500" title="Leader">★</span>}
-                                </td>
-                                <td className="px-3 py-1.5">
-                                  {t.status === 'inactive'
-                                    ? <span className="text-red-600 font-medium">Inactive</span>
-                                    : <span className="text-slate-500">Active</span>}
-                                </td>
-                              </tr>
-                            ))}
+                            {memberGroups
+                              .filter((g) => g.type === 'team')
+                              .map((t, i) => (
+                                <tr
+                                  key={t.id}
+                                  className={`border-b border-slate-100 ${i % 2 === 0 ? 'bg-yellow-50' : 'bg-white'}`}
+                                >
+                                  <td className="px-3 py-1.5">
+                                    {can('group_records_all', 'view') ? (
+                                      <a
+                                        href={`/teams/${t.id}`}
+                                        className="text-blue-700 hover:underline"
+                                        title={
+                                          t.short_name ? t.name : 'Press to access the team record'
+                                        }
+                                      >
+                                        {t.short_name || t.name}
+                                      </a>
+                                    ) : (
+                                      <span
+                                        className={t.status === 'inactive' ? 'text-red-600' : ''}
+                                        title={t.short_name ? t.name : undefined}
+                                      >
+                                        {t.short_name || t.name}
+                                      </span>
+                                    )}
+                                    {t.is_leader && (
+                                      <span className="ml-1.5 text-amber-500" title="Leader">
+                                        ★
+                                      </span>
+                                    )}
+                                  </td>
+                                  <td className="px-3 py-1.5">
+                                    {t.status === 'inactive' ? (
+                                      <span className="text-red-600 font-medium">Inactive</span>
+                                    ) : (
+                                      <span className="text-slate-500">Active</span>
+                                    )}
+                                  </td>
+                                </tr>
+                              ))}
                           </tbody>
                         </table>
                       </div>
@@ -1557,7 +2176,9 @@ export default function MemberEditor() {
                     <div>
                       <h3 className="text-sm font-medium text-slate-600 mb-2">Transactions</h3>
                       {memberTxns.length === 0 ? (
-                        <p className="text-sm text-slate-400 italic">No transactions linked to this member.</p>
+                        <p className="text-sm text-slate-400 italic">
+                          No transactions linked to this member.
+                        </p>
                       ) : (
                         <div className="overflow-x-auto">
                           <table className="w-full text-sm min-w-max">
@@ -1567,23 +2188,46 @@ export default function MemberEditor() {
                                 <th className="px-3 py-2 font-normal">Date</th>
                                 <th className="px-3 py-2 font-normal">Detail</th>
                                 <th className="px-3 py-2 font-normal">Account</th>
-                                <th className="px-3 py-2 font-normal text-right" title="+/- means the member paid/received">Amount</th>
+                                <th
+                                  className="px-3 py-2 font-normal text-right"
+                                  title="+/- means the member paid/received"
+                                >
+                                  Amount
+                                </th>
                               </tr>
                             </thead>
                             <tbody>
                               {memberTxns.map((t, i) => (
-                                <tr key={t.id} className={`border-b border-slate-100 ${i % 2 === 0 ? 'bg-yellow-50' : 'bg-white'}`}>
+                                <tr
+                                  key={t.id}
+                                  className={`border-b border-slate-100 ${i % 2 === 0 ? 'bg-yellow-50' : 'bg-white'}`}
+                                >
                                   <td className="px-3 py-1.5">
                                     {can('finance_transactions', 'view') ? (
-                                      <a href={`/finance/transactions/${t.id}`} className="text-blue-700 hover:underline font-mono" title="Press to access the transaction record">{t.transaction_number}</a>
+                                      <a
+                                        href={`/finance/transactions/${t.id}`}
+                                        className="text-blue-700 hover:underline font-mono"
+                                        title="Press to access the transaction record"
+                                      >
+                                        {t.transaction_number}
+                                      </a>
                                     ) : (
                                       <span className="font-mono">{t.transaction_number}</span>
                                     )}
                                   </td>
-                                  <td className="px-3 py-1.5 whitespace-nowrap">{t.date ? new Date(t.date).toLocaleDateString('en-GB') : ''}</td>
-                                  <td className="px-3 py-1.5 max-w-[200px] truncate" title={t.detail}>{t.detail}</td>
+                                  <td className="px-3 py-1.5 whitespace-nowrap">
+                                    {t.date ? new Date(t.date).toLocaleDateString('en-GB') : ''}
+                                  </td>
+                                  <td
+                                    className="px-3 py-1.5 max-w-[200px] truncate"
+                                    title={t.detail}
+                                  >
+                                    {t.detail}
+                                  </td>
                                   <td className="px-3 py-1.5 text-slate-600">{t.account_name}</td>
-                                  <td className={`px-3 py-1.5 text-right font-medium ${t.type === 'in' ? 'text-green-700' : 'text-red-700'}`}>
+                                  <td
+                                    className={`px-3 py-1.5 text-right font-medium ${t.type === 'in' ? 'text-green-700' : 'text-red-700'}`}
+                                  >
                                     {t.type === 'in' ? '+' : '−'}£{Number(t.amount).toFixed(2)}
                                   </td>
                                 </tr>
@@ -1601,21 +2245,27 @@ export default function MemberEditor() {
 
           {/* ── Buttons ─────────────────────────────────────────────── */}
           <div className="flex gap-3 flex-wrap">
-            <button type="submit" disabled={saving}
+            <button
+              type="submit"
+              disabled={saving}
               title="Press to save this member record"
-              className="bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white rounded px-5 py-2 text-sm font-medium transition-colors">
-              {saving ? 'Saving…' : (isNew ? 'Add Member' : 'Save')}
+              className="bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white rounded px-5 py-2 text-sm font-medium transition-colors"
+            >
+              {saving ? 'Saving…' : isNew ? 'Add Member' : 'Save'}
             </button>
 
             {!isNew && can('member_record', 'delete') && (
-              <button type="button" onClick={handleDelete} disabled={deleting}
+              <button
+                type="button"
+                onClick={handleDelete}
+                disabled={deleting}
                 title="Press to remove this member record"
-                className="border border-red-300 text-red-600 hover:bg-red-50 rounded px-5 py-2 text-sm transition-colors">
+                className="border border-red-300 text-red-600 hover:bg-red-50 rounded px-5 py-2 text-sm transition-colors"
+              >
                 {deleting ? 'Deleting…' : 'Delete'}
               </button>
             )}
           </div>
-
         </form>
       </div>
 
@@ -1631,19 +2281,31 @@ export default function MemberEditor() {
             </p>
             <div className="flex flex-col gap-2">
               <button
-                onClick={() => { const r = addrScopeModal.resolve; setAddrScopeModal(null); r('both'); }}
+                onClick={() => {
+                  const r = addrScopeModal.resolve;
+                  setAddrScopeModal(null);
+                  r('both');
+                }}
                 className="bg-blue-600 hover:bg-blue-700 text-white rounded px-4 py-2 text-sm font-medium transition-colors"
               >
                 Both {addrScopeModal.thisName} and {partnerName}
               </button>
               <button
-                onClick={() => { const r = addrScopeModal.resolve; setAddrScopeModal(null); r('me-only'); }}
+                onClick={() => {
+                  const r = addrScopeModal.resolve;
+                  setAddrScopeModal(null);
+                  r('me-only');
+                }}
                 className="border border-blue-300 text-blue-700 hover:bg-blue-50 rounded px-4 py-2 text-sm font-medium transition-colors"
               >
                 Just {addrScopeModal.thisName}
               </button>
               <button
-                onClick={() => { const r = addrScopeModal.resolve; setAddrScopeModal(null); r('cancel'); }}
+                onClick={() => {
+                  const r = addrScopeModal.resolve;
+                  setAddrScopeModal(null);
+                  r('cancel');
+                }}
                 className="border border-slate-300 text-slate-600 hover:bg-slate-50 rounded px-4 py-2 text-sm transition-colors"
               >
                 Cancel

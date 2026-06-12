@@ -21,11 +21,7 @@ export async function requireAuth(req, res, next) {
     const payload = verifyAccessToken(token);
 
     // Check if this user's sessions were invalidated (e.g. role change)
-    const invalidated = await isSessionInvalidated(
-      payload.tenantSlug,
-      payload.userId,
-      payload.iat,
-    );
+    const invalidated = await isSessionInvalidated(payload.tenantSlug, payload.userId, payload.iat);
     if (invalidated) {
       return res.status(401).json({ error: 'Session expired. Please log in again.' });
     }

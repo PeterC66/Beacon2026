@@ -17,7 +17,7 @@ router.get('/', requirePrivilege('member_statuses', 'view'), async (req, res, ne
       req.user.tenantSlug,
       `SELECT id, name, locked, created_at, updated_at
        FROM member_statuses
-       ORDER BY locked DESC, name`,  // locked (system) ones first
+       ORDER BY locked DESC, name`, // locked (system) ones first
     );
     res.json(statuses);
   } catch (err) {

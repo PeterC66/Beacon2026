@@ -5,14 +5,32 @@
 import { useState, useEffect, useCallback } from 'react';
 
 const CHEVRON_UP = (
-  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-    <path fillRule="evenodd" d="M14.707 12.707a1 1 0 01-1.414 0L10 9.414l-3.293 3.293a1 1 0 01-1.414-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 010 1.414z" clipRule="evenodd" />
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    className="h-5 w-5"
+    viewBox="0 0 20 20"
+    fill="currentColor"
+  >
+    <path
+      fillRule="evenodd"
+      d="M14.707 12.707a1 1 0 01-1.414 0L10 9.414l-3.293 3.293a1 1 0 01-1.414-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 010 1.414z"
+      clipRule="evenodd"
+    />
   </svg>
 );
 
 const CHEVRON_DOWN = (
-  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-    <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 11.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    className="h-5 w-5"
+    viewBox="0 0 20 20"
+    fill="currentColor"
+  >
+    <path
+      fillRule="evenodd"
+      d="M5.293 7.293a1 1 0 011.414 0L10 11.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+      clipRule="evenodd"
+    />
   </svg>
 );
 
@@ -28,12 +46,16 @@ const btnCls =
  * @param {{ containerRef: React.RefObject<HTMLElement> }} props
  */
 export default function ScrollButtons({ containerRef }) {
-  const [showTop, setShowTop]       = useState(false);
-  const [showBottom, setShowBottom]  = useState(false);
+  const [showTop, setShowTop] = useState(false);
+  const [showBottom, setShowBottom] = useState(false);
 
   const update = useCallback(() => {
     const el = containerRef?.current;
-    if (!el) { setShowTop(false); setShowBottom(false); return; }
+    if (!el) {
+      setShowTop(false);
+      setShowBottom(false);
+      return;
+    }
 
     const rect = el.getBoundingClientRect();
     const viewH = window.innerHeight;

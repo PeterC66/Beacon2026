@@ -11,8 +11,8 @@
 import { prisma } from './db.js';
 import { AppError } from '../middleware/errorHandler.js';
 
-export const MAX_ROWS            = 5000;   // results truncated beyond this
-export const STATEMENT_TIMEOUT_MS = 15000;  // PG statement_timeout
+export const MAX_ROWS = 5000; // results truncated beyond this
+export const STATEMENT_TIMEOUT_MS = 15000; // PG statement_timeout
 
 /**
  * Validate that a SQL string is a single SELECT/WITH query with no embedded
@@ -45,7 +45,10 @@ function stripLeadingComments(s) {
   let i = 0;
   while (i < s.length) {
     const ch = s[i];
-    if (ch === ' ' || ch === '\n' || ch === '\r' || ch === '\t') { i++; continue; }
+    if (ch === ' ' || ch === '\n' || ch === '\r' || ch === '\t') {
+      i++;
+      continue;
+    }
     if (ch === '-' && s[i + 1] === '-') {
       const nl = s.indexOf('\n', i);
       if (nl === -1) return '';
@@ -103,7 +106,7 @@ function coerceValue(raw, type, required) {
     case 'boolean':
       return raw === true || raw === 'true' || raw === 1 || raw === '1';
     case 'date':
-      return String(raw);   // YYYY-MM-DD — pg casts to date as needed
+      return String(raw); // YYYY-MM-DD — pg casts to date as needed
     default:
       return String(raw);
   }
@@ -120,7 +123,7 @@ export async function runReadOnly(tenantSlug, sql, values = []) {
     throw AppError('Invalid tenant.', 400);
   }
   const schema = `u3a_${tenantSlug}`;
-  const start  = Date.now();
+  const start = Date.now();
 
   const rawRows = await prisma.$transaction(async (tx) => {
     await tx.$executeRawUnsafe(`SET LOCAL search_path TO ${schema}, public`);
@@ -130,10 +133,10 @@ export async function runReadOnly(tenantSlug, sql, values = []) {
   });
 
   const durationMs = Date.now() - start;
-  const truncated  = rawRows.length > MAX_ROWS;
-  const kept       = truncated ? rawRows.slice(0, MAX_ROWS) : rawRows;
-  const rows       = kept.map(sanitizeRow);
-  const columns    = rows.length ? Object.keys(rows[0]) : [];
+  const truncated = rawRows.length > MAX_ROWS;
+  const kept = truncated ? rawRows.slice(0, MAX_ROWS) : rawRows;
+  const rows = kept.map(sanitizeRow);
+  const columns = rows.length ? Object.keys(rows[0]) : [];
 
   return { columns, rows, rowCount: rows.length, truncated, durationMs };
 }
@@ -147,9 +150,9 @@ export async function runReadOnly(tenantSlug, sql, values = []) {
 export function sanitizeRow(row) {
   const out = {};
   for (const [k, v] of Object.entries(row)) {
-    if (typeof v === 'bigint')      out[k] = v.toString();
-    else if (v instanceof Date)     out[k] = v.toISOString();
-    else                            out[k] = v;
+    if (typeof v === 'bigint') out[k] = v.toString();
+    else if (v instanceof Date) out[k] = v.toISOString();
+    else out[k] = v;
   }
   return out;
 }

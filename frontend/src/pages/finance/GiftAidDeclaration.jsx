@@ -10,9 +10,11 @@ import PageHeader from '../../components/PageHeader.jsx';
 import SortableHeader from '../../components/SortableHeader.jsx';
 import { useSortedData } from '../../hooks/useSortedData.js';
 
-const inputCls   = 'border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500';
-const btnPrimary = 'bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white rounded px-5 py-2 text-sm font-medium transition-colors';
-const btnDanger  = 'border border-red-300 text-red-600 hover:bg-red-50 rounded px-5 py-2 text-sm';
+const inputCls =
+  'border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500';
+const btnPrimary =
+  'bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white rounded px-5 py-2 text-sm font-medium transition-colors';
+const btnDanger = 'border border-red-300 text-red-600 hover:bg-red-50 rounded px-5 py-2 text-sm';
 
 const CURRENT_YEAR = new Date().getFullYear();
 
@@ -32,25 +34,27 @@ export default function GiftAidDeclaration() {
   const { can, tenant } = useAuth();
   const navigate = useNavigate();
 
-  const [year, setYear]                   = useState(CURRENT_YEAR);
+  const [year, setYear] = useState(CURRENT_YEAR);
   const [excludeClaimed, setExcludeClaimed] = useState(true);
-  const [rows, setRows]                   = useState([]);
-  const [yearStart, setYearStart]         = useState('');
-  const [yearEnd, setYearEnd]             = useState('');
-  const [enabled, setEnabled]             = useState(true);
-  const [loading, setLoading]             = useState(true);
-  const [error, setError]                 = useState(null);
-  const [selected, setSelected]           = useState(new Set());
-  const [downloading, setDownloading]     = useState(false);
-  const [marking, setMarking]             = useState(false);
+  const [rows, setRows] = useState([]);
+  const [yearStart, setYearStart] = useState('');
+  const [yearEnd, setYearEnd] = useState('');
+  const [enabled, setEnabled] = useState(true);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [selected, setSelected] = useState(new Set());
+  const [downloading, setDownloading] = useState(false);
+  const [marking, setMarking] = useState(false);
   const [showMarkConfirm, setShowMarkConfirm] = useState(false);
-  const [saved, setSaved]                 = useState(false);
+  const [saved, setSaved] = useState(false);
   const savedTimer = useRef(null);
 
   // Build year options: current year down to 5 years back
   const [availableYears, setAvailableYears] = useState([CURRENT_YEAR]);
 
-  useEffect(() => { loadData(); }, [year, excludeClaimed]);
+  useEffect(() => {
+    loadData();
+  }, [year, excludeClaimed]);
 
   async function loadData() {
     setLoading(true);
@@ -73,26 +77,36 @@ export default function GiftAidDeclaration() {
       if (year !== actualYear && !year) {
         setYear(actualYear);
       }
-    } catch (err) { setError(err.message); }
-    finally { setLoading(false); }
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
   }
 
   // ─── Selection helpers ──────────────────────────────────────────────────
 
   /** Composite key: "txnId:memberSlot" — uniquely identifies a declaration row. */
-  function rowKey(r) { return `${r.id}:${r.member_slot ?? 1}`; }
+  function rowKey(r) {
+    return `${r.id}:${r.member_slot ?? 1}`;
+  }
 
   function toggleOne(r) {
     const k = rowKey(r);
     setSelected((prev) => {
       const next = new Set(prev);
-      if (next.has(k)) next.delete(k); else next.add(k);
+      if (next.has(k)) next.delete(k);
+      else next.add(k);
       return next;
     });
   }
 
-  function selectAll() { setSelected(new Set(rows.map(rowKey))); }
-  function selectNone() { setSelected(new Set()); }
+  function selectAll() {
+    setSelected(new Set(rows.map(rowKey)));
+  }
+  function selectNone() {
+    setSelected(new Set());
+  }
 
   // ─── Actions ────────────────────────────────────────────────────────────
 
@@ -101,12 +115,13 @@ export default function GiftAidDeclaration() {
     setDownloading(true);
     try {
       // Download uses transaction IDs — collect all unique txn IDs from selected rows
-      const txnIds = [...new Set(
-        rows.filter((r) => selected.has(rowKey(r))).map((r) => r.id),
-      )];
+      const txnIds = [...new Set(rows.filter((r) => selected.has(rowKey(r))).map((r) => r.id))];
       await giftAidApi.download(txnIds, yearStart, yearEnd);
-    } catch (err) { setError(err.message); }
-    finally { setDownloading(false); }
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setDownloading(false);
+    }
   }
 
   async function handleMark() {
@@ -128,16 +143,19 @@ export default function GiftAidDeclaration() {
       savedTimer.current = setTimeout(() => setSaved(false), 3000);
       setShowMarkConfirm(false);
       await loadData();
-    } catch (err) { setError(err.message); }
-    finally { setMarking(false); }
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setMarking(false);
+    }
   }
 
   function handleEmail() {
     if (selected.size === 0) return;
     // Collect unique member IDs from selected transactions
-    const memberIds = [...new Set(
-      rows.filter((r) => selected.has(rowKey(r))).map((r) => r.member_id),
-    )];
+    const memberIds = [
+      ...new Set(rows.filter((r) => selected.has(rowKey(r))).map((r) => r.member_id)),
+    ];
     // Store member IDs and GA context for email tokens
     sessionStorage.setItem('emailComposeMemberIds', JSON.stringify(memberIds));
     sessionStorage.setItem('emailGiftAidDates', JSON.stringify({ from: yearStart, to: yearEnd }));
@@ -178,7 +196,9 @@ export default function GiftAidDeclaration() {
             {/* Filters */}
             <div className="flex flex-wrap items-end gap-4 mb-4">
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Financial Year</label>
+                <label className="block text-sm font-medium text-slate-700 mb-1">
+                  Financial Year
+                </label>
                 <select
                   name="year"
                   value={year}
@@ -186,7 +206,9 @@ export default function GiftAidDeclaration() {
                   className={inputCls}
                 >
                   {availableYears.map((y) => (
-                    <option key={y} value={y}>{y}</option>
+                    <option key={y} value={y}>
+                      {y}
+                    </option>
                   ))}
                 </select>
               </div>
@@ -222,13 +244,19 @@ export default function GiftAidDeclaration() {
             {loading ? (
               <p className="text-sm text-slate-500">Loading...</p>
             ) : rows.length === 0 ? (
-              <p className="text-sm text-slate-500">No Gift Aid eligible transactions found for this period.</p>
+              <p className="text-sm text-slate-500">
+                No Gift Aid eligible transactions found for this period.
+              </p>
             ) : (
               <>
                 {/* Selection controls & actions */}
                 <div className="flex flex-wrap items-center gap-3 mb-3">
-                  <button onClick={selectAll} className="text-blue-700 hover:underline text-sm">Select All</button>
-                  <button onClick={selectNone} className="text-blue-700 hover:underline text-sm">Clear</button>
+                  <button onClick={selectAll} className="text-blue-700 hover:underline text-sm">
+                    Select All
+                  </button>
+                  <button onClick={selectNone} className="text-blue-700 hover:underline text-sm">
+                    Clear
+                  </button>
                   <span className="text-sm text-slate-500">
                     {selected.size} of {rows.length} selected
                     {selected.size > 0 && ` (${fmtAmt(selectedTotal)})`}
@@ -268,16 +296,22 @@ export default function GiftAidDeclaration() {
                 {/* Mark confirmation dialog */}
                 {showMarkConfirm && (
                   <div className="rounded-md bg-amber-50 border border-amber-300 px-4 py-3 text-amber-800 text-sm mb-4">
-                    <p className="font-medium mb-2">Mark {selected.size} transaction(s) as claimed?</p>
+                    <p className="font-medium mb-2">
+                      Mark {selected.size} transaction(s) as claimed?
+                    </p>
                     <p className="mb-3">
-                      These transactions will not appear again in subsequent declarations.
-                      Only select Mark when you are intending to use the download to make a Gift Aid claim.
+                      These transactions will not appear again in subsequent declarations. Only
+                      select Mark when you are intending to use the download to make a Gift Aid
+                      claim.
                     </p>
                     <div className="flex gap-3">
                       <button onClick={handleMark} disabled={marking} className={btnDanger}>
                         {marking ? 'Marking...' : 'Mark'}
                       </button>
-                      <button onClick={() => setShowMarkConfirm(false)} className="text-slate-600 hover:underline text-sm">
+                      <button
+                        onClick={() => setShowMarkConfirm(false)}
+                        className="text-slate-600 hover:underline text-sm"
+                      >
                         Skip
                       </button>
                     </div>
@@ -293,24 +327,59 @@ export default function GiftAidDeclaration() {
                           <input
                             type="checkbox"
                             checked={selected.size === rows.length && rows.length > 0}
-                            onChange={() => selected.size === rows.length ? selectNone() : selectAll()}
+                            onChange={() =>
+                              selected.size === rows.length ? selectNone() : selectAll()
+                            }
                           />
                         </th>
-                        <SortableHeader label="Mem No" field="membership_number" sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
-                        <SortableHeader label="Title" field="title" sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
-                        <SortableHeader label="Surname" field="surname" sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
-                        <SortableHeader label="Forenames" field="forenames" sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
-                        <SortableHeader label="Date" field="date" sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
-                        <SortableHeader label="GA Amount" field="gift_aid_amount" sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
+                        <SortableHeader
+                          label="Mem No"
+                          field="membership_number"
+                          sortKey={sortKey}
+                          sortDir={sortDir}
+                          onSort={onSort}
+                        />
+                        <SortableHeader
+                          label="Title"
+                          field="title"
+                          sortKey={sortKey}
+                          sortDir={sortDir}
+                          onSort={onSort}
+                        />
+                        <SortableHeader
+                          label="Surname"
+                          field="surname"
+                          sortKey={sortKey}
+                          sortDir={sortDir}
+                          onSort={onSort}
+                        />
+                        <SortableHeader
+                          label="Forenames"
+                          field="forenames"
+                          sortKey={sortKey}
+                          sortDir={sortDir}
+                          onSort={onSort}
+                        />
+                        <SortableHeader
+                          label="Date"
+                          field="date"
+                          sortKey={sortKey}
+                          sortDir={sortDir}
+                          onSort={onSort}
+                        />
+                        <SortableHeader
+                          label="GA Amount"
+                          field="gift_aid_amount"
+                          sortKey={sortKey}
+                          sortDir={sortDir}
+                          onSort={onSort}
+                        />
                         <th className="px-3 py-1 border-b border-slate-300 text-left">Claimed</th>
                       </tr>
                     </thead>
                     <tbody>
                       {sorted.map((r, i) => (
-                        <tr
-                          key={rowKey(r)}
-                          className={i % 2 === 0 ? 'bg-yellow-50' : 'bg-white'}
-                        >
+                        <tr key={rowKey(r)} className={i % 2 === 0 ? 'bg-yellow-50' : 'bg-white'}>
                           <td className="px-2 py-1 border-b border-slate-200 text-center">
                             <input
                               type="checkbox"
@@ -318,12 +387,16 @@ export default function GiftAidDeclaration() {
                               onChange={() => toggleOne(r)}
                             />
                           </td>
-                          <td className="px-3 py-1 border-b border-slate-200">{r.membership_number}</td>
+                          <td className="px-3 py-1 border-b border-slate-200">
+                            {r.membership_number}
+                          </td>
                           <td className="px-3 py-1 border-b border-slate-200">{r.title ?? ''}</td>
                           <td className="px-3 py-1 border-b border-slate-200">{r.surname}</td>
                           <td className="px-3 py-1 border-b border-slate-200">{r.forenames}</td>
                           <td className="px-3 py-1 border-b border-slate-200">{fmtDate(r.date)}</td>
-                          <td className="px-3 py-1 border-b border-slate-200 text-right">{fmtAmt(r.gift_aid_amount)}</td>
+                          <td className="px-3 py-1 border-b border-slate-200 text-right">
+                            {fmtAmt(r.gift_aid_amount)}
+                          </td>
                           <td className="px-3 py-1 border-b border-slate-200">
                             {r.gift_aid_claimed_at ? fmtDate(r.gift_aid_claimed_at) : ''}
                           </td>
@@ -332,8 +405,12 @@ export default function GiftAidDeclaration() {
                     </tbody>
                     <tfoot>
                       <tr className="bg-slate-50 font-medium">
-                        <td colSpan={6} className="px-3 py-1 border-t border-slate-300 text-right">Total:</td>
-                        <td className="px-3 py-1 border-t border-slate-300 text-right">{fmtAmt(totalGA)}</td>
+                        <td colSpan={6} className="px-3 py-1 border-t border-slate-300 text-right">
+                          Total:
+                        </td>
+                        <td className="px-3 py-1 border-t border-slate-300 text-right">
+                          {fmtAmt(totalGA)}
+                        </td>
                         <td className="border-t border-slate-300" />
                       </tr>
                     </tfoot>

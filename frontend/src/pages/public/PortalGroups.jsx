@@ -43,7 +43,7 @@ function GroupItem({ group, onJoin, onLeave, submitting }) {
         className="w-full flex items-center justify-between px-4 py-3 bg-slate-50 hover:bg-slate-100 transition-colors text-left"
       >
         <span className="font-semibold text-slate-800">
-          {expanded ? '\u25BC' : '\u25B6'}{' '}{group.name}
+          {expanded ? '\u25BC' : '\u25B6'} {group.name}
         </span>
         {group.isMember && (
           <span className="text-xs font-bold text-green-700 bg-green-100 px-2 py-0.5 rounded">
@@ -220,14 +220,15 @@ export default function PortalGroups() {
       <PortalVersion />
       <div className="max-w-2xl mx-auto">
         <div className="flex items-center justify-between mb-4">
-          <Link to={`/public/${slug}/portal/home`} className="text-sm text-blue-700 hover:underline">
+          <Link
+            to={`/public/${slug}/portal/home`}
+            className="text-sm text-blue-700 hover:underline"
+          >
             &larr; Members Portal
           </Link>
         </div>
 
-        <h1 className="text-xl font-bold text-center text-slate-800 mb-6">
-          u3a Groups
-        </h1>
+        <h1 className="text-xl font-bold text-center text-slate-800 mb-6">u3a Groups</h1>
 
         {error && (
           <div className="rounded-md bg-red-50 border border-red-300 px-4 py-3 text-red-700 text-sm font-medium text-center mb-4">

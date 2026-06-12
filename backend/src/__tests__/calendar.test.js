@@ -5,15 +5,15 @@ import request from 'supertest';
 import { makeAuthHeader } from './helpers.js';
 
 vi.mock('../utils/redis.js', () => ({
-  isSessionInvalidated:   vi.fn().mockResolvedValue(false),
+  isSessionInvalidated: vi.fn().mockResolvedValue(false),
   invalidateUserSessions: vi.fn().mockResolvedValue(undefined),
 }));
 
 vi.mock('../utils/db.js', () => ({
-  prisma:      { $disconnect: vi.fn() },
+  prisma: { $disconnect: vi.fn() },
   tenantQuery: vi.fn(),
-  withTenant:  vi.fn(),
-  escapeLike:  (s) => String(s).replace(/[\\%_]/g, (ch) => `\\${ch}`),
+  withTenant: vi.fn(),
+  escapeLike: (s) => String(s).replace(/[\\%_]/g, (ch) => `\\${ch}`),
 }));
 
 vi.mock('../utils/audit.js', () => ({
@@ -26,17 +26,35 @@ const { tenantQuery } = await import('../utils/db.js');
 const AUTH = makeAuthHeader();
 
 const SAMPLE_EVENT = {
-  id: 'ev1', event_date: '2026-04-01', start_time: '14:00', end_time: '16:00',
-  group_id: 'g1', group_name: 'History', venue_id: 'v1', venue_name: 'Town Hall',
-  venue_postcode: 'SW1A 1AA', topic: 'WW2 Lecture', contact: 'John 01234',
-  details: 'A great lecture', is_private: false,
+  id: 'ev1',
+  event_date: '2026-04-01',
+  start_time: '14:00',
+  end_time: '16:00',
+  group_id: 'g1',
+  group_name: 'History',
+  venue_id: 'v1',
+  venue_name: 'Town Hall',
+  venue_postcode: 'SW1A 1AA',
+  topic: 'WW2 Lecture',
+  contact: 'John 01234',
+  details: 'A great lecture',
+  is_private: false,
 };
 
 const SAMPLE_OPEN_EVENT = {
-  id: 'oe1', event_date: '2026-05-01', start_time: '10:00', end_time: '12:00',
-  group_id: null, venue_id: 'v1', venue_name: 'Community Centre',
-  topic: 'Quiz Night', contact: 'Neil 07700', details: null,
-  is_private: false, created_at: new Date().toISOString(), updated_at: new Date().toISOString(),
+  id: 'oe1',
+  event_date: '2026-05-01',
+  start_time: '10:00',
+  end_time: '12:00',
+  group_id: null,
+  venue_id: 'v1',
+  venue_name: 'Community Centre',
+  topic: 'Quiz Night',
+  contact: 'Neil 07700',
+  details: null,
+  is_private: false,
+  created_at: new Date().toISOString(),
+  updated_at: new Date().toISOString(),
 };
 
 // ── GET /calendar/events ──────────────────────────────────────────────────
@@ -179,18 +197,14 @@ describe('GET /calendar/members/search', () => {
     tenantQuery.mockResolvedValueOnce([
       { id: 'm1', member_no: 1, first_name: 'Alice', last_name: 'Smith' },
     ]);
-    const res = await request(app)
-      .get('/calendar/members/search?q=Smi')
-      .set('Authorization', AUTH);
+    const res = await request(app).get('/calendar/members/search?q=Smi').set('Authorization', AUTH);
     expect(res.status).toBe(200);
     expect(res.body).toHaveLength(1);
     expect(res.body[0].last_name).toBe('Smith');
   });
 
   it('returns empty array for short query', async () => {
-    const res = await request(app)
-      .get('/calendar/members/search?q=A')
-      .set('Authorization', AUTH);
+    const res = await request(app).get('/calendar/members/search?q=A').set('Authorization', AUTH);
     expect(res.status).toBe(200);
     expect(res.body).toEqual([]);
   });
@@ -216,9 +230,7 @@ describe('GET /calendar/open-events', () => {
 
   it('returns 200 with open events', async () => {
     tenantQuery.mockResolvedValueOnce([SAMPLE_OPEN_EVENT]);
-    const res = await request(app)
-      .get('/calendar/open-events')
-      .set('Authorization', AUTH);
+    const res = await request(app).get('/calendar/open-events').set('Authorization', AUTH);
     expect(res.status).toBe(200);
     expect(res.body).toHaveLength(1);
     expect(res.body[0].topic).toBe('Quiz Night');
@@ -251,13 +263,13 @@ describe('POST /calendar/open-events', () => {
     tenantQuery
       .mockResolvedValueOnce([{ id: 'r1', event_date: '2026-06-01' }])
       .mockResolvedValueOnce([{ id: 'r2', event_date: '2026-06-08' }]);
-    const res = await request(app)
-      .post('/calendar/open-events')
-      .set('Authorization', AUTH)
-      .send({
-        eventDate: '2026-06-01', startTime: '10:00',
-        repeatEvery: 1, repeatUnit: 'weeks', repeatUntil: '2026-06-10',
-      });
+    const res = await request(app).post('/calendar/open-events').set('Authorization', AUTH).send({
+      eventDate: '2026-06-01',
+      startTime: '10:00',
+      repeatEvery: 1,
+      repeatUnit: 'weeks',
+      repeatUntil: '2026-06-10',
+    });
     expect(res.status).toBe(201);
     expect(res.body).toHaveLength(2);
   });
@@ -333,18 +345,16 @@ describe('GET /calendar/events/search', () => {
   beforeEach(() => vi.clearAllMocks());
 
   it('returns matching events', async () => {
-    tenantQuery.mockResolvedValueOnce([{ id: 'ev1', topic: 'WW2 Lecture', event_date: '2026-04-01' }]);
-    const res = await request(app)
-      .get('/calendar/events/search?q=WW2')
-      .set('Authorization', AUTH);
+    tenantQuery.mockResolvedValueOnce([
+      { id: 'ev1', topic: 'WW2 Lecture', event_date: '2026-04-01' },
+    ]);
+    const res = await request(app).get('/calendar/events/search?q=WW2').set('Authorization', AUTH);
     expect(res.status).toBe(200);
     expect(res.body).toHaveLength(1);
   });
 
   it('returns empty for short query', async () => {
-    const res = await request(app)
-      .get('/calendar/events/search?q=W')
-      .set('Authorization', AUTH);
+    const res = await request(app).get('/calendar/events/search?q=W').set('Authorization', AUTH);
     expect(res.status).toBe(200);
     expect(res.body).toEqual([]);
   });
@@ -357,18 +367,14 @@ describe('GET /calendar/events/:eventId', () => {
 
   it('returns event with member count', async () => {
     tenantQuery.mockResolvedValueOnce([{ ...SAMPLE_EVENT, member_count: 5 }]);
-    const res = await request(app)
-      .get('/calendar/events/ev1')
-      .set('Authorization', AUTH);
+    const res = await request(app).get('/calendar/events/ev1').set('Authorization', AUTH);
     expect(res.status).toBe(200);
     expect(res.body.member_count).toBe(5);
   });
 
   it('returns 404 for missing event', async () => {
     tenantQuery.mockResolvedValueOnce([]);
-    const res = await request(app)
-      .get('/calendar/events/missing')
-      .set('Authorization', AUTH);
+    const res = await request(app).get('/calendar/events/missing').set('Authorization', AUTH);
     expect(res.status).toBe(404);
   });
 });
@@ -382,9 +388,7 @@ describe('GET /calendar/events/:eventId/members', () => {
     tenantQuery.mockResolvedValueOnce([
       { id: 'em1', member_id: 'm1', forenames: 'John', surname: 'Smith', is_organiser: false },
     ]);
-    const res = await request(app)
-      .get('/calendar/events/ev1/members')
-      .set('Authorization', AUTH);
+    const res = await request(app).get('/calendar/events/ev1/members').set('Authorization', AUTH);
     expect(res.status).toBe(200);
     expect(res.body).toHaveLength(1);
     expect(res.body[0].surname).toBe('Smith');
@@ -396,8 +400,8 @@ describe('POST /calendar/events/:eventId/members', () => {
 
   it('adds members and returns 201', async () => {
     tenantQuery
-      .mockResolvedValueOnce([{ id: 'ev1' }])           // event exists
-      .mockResolvedValueOnce([{ id: 'em1' }]);           // INSERT member
+      .mockResolvedValueOnce([{ id: 'ev1' }]) // event exists
+      .mockResolvedValueOnce([{ id: 'em1' }]); // INSERT member
     const res = await request(app)
       .post('/calendar/events/ev1/members')
       .set('Authorization', AUTH)
@@ -421,8 +425,8 @@ describe('POST /calendar/events/:eventId/members/from-group', () => {
 
   it('copies group members into event', async () => {
     tenantQuery
-      .mockResolvedValueOnce([{ id: 'ev1', group_id: 'g1' }])   // event with group
-      .mockResolvedValueOnce([{ id: 'em1' }, { id: 'em2' }]);    // INSERT...SELECT
+      .mockResolvedValueOnce([{ id: 'ev1', group_id: 'g1' }]) // event with group
+      .mockResolvedValueOnce([{ id: 'em1' }, { id: 'em2' }]); // INSERT...SELECT
     const res = await request(app)
       .post('/calendar/events/ev1/members/from-group')
       .set('Authorization', AUTH);

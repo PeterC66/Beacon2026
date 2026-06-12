@@ -12,19 +12,19 @@ import { useSortedData } from '../../hooks/useSortedData.js';
 export default function FacultyList() {
   const { can, tenant } = useAuth();
 
-  const [list,    setList]    = useState([]);
+  const [list, setList] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error,   setError]   = useState(null);
+  const [error, setError] = useState(null);
 
   // Inline edit state
-  const [editingId,   setEditingId]   = useState(null);
+  const [editingId, setEditingId] = useState(null);
   const [editingName, setEditingName] = useState('');
-  const [editError,   setEditError]   = useState(null);
-  const [editSaving,  setEditSaving]  = useState(false);
+  const [editError, setEditError] = useState(null);
+  const [editSaving, setEditSaving] = useState(false);
 
   // Add new faculty
-  const [newName,   setNewName]   = useState('');
-  const [addError,  setAddError]  = useState(null);
+  const [newName, setNewName] = useState('');
+  const [addError, setAddError] = useState(null);
   const [addSaving, setAddSaving] = useState(false);
 
   const { sorted, sortKey, sortDir, onSort } = useSortedData(list, 'name');
@@ -33,7 +33,9 @@ export default function FacultyList() {
   const canCreate = can('group_faculties', 'create');
   const canDelete = can('group_faculties', 'delete');
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => {
+    load();
+  }, []);
 
   async function load() {
     setLoading(true);
@@ -66,7 +68,7 @@ export default function FacultyList() {
     setEditError(null);
     try {
       const updated = await facultiesApi.update(id, { name: editingName.trim() });
-      setList((prev) => prev.map((f) => f.id === id ? { ...f, name: updated.name } : f));
+      setList((prev) => prev.map((f) => (f.id === id ? { ...f, name: updated.name } : f)));
       cancelEdit();
     } catch (err) {
       setEditError(err.message);
@@ -76,7 +78,8 @@ export default function FacultyList() {
   }
 
   async function handleDelete(id, name) {
-    if (!window.confirm(`Delete faculty "${name}"? Groups assigned to it will become unassigned.`)) return;
+    if (!window.confirm(`Delete faculty "${name}"? Groups assigned to it will become unassigned.`))
+      return;
     try {
       await facultiesApi.delete(id);
       setList((prev) => prev.filter((f) => f.id !== id));
@@ -102,11 +105,12 @@ export default function FacultyList() {
   }
 
   const navLinks = [
-    { label: 'Home',   to: '/' },
+    { label: 'Home', to: '/' },
     { label: 'Groups', to: '/groups' },
   ];
 
-  const inputCls = 'border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500';
+  const inputCls =
+    'border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500';
 
   return (
     <div className="min-h-screen pb-10">
@@ -128,13 +132,23 @@ export default function FacultyList() {
               <table className="w-full text-sm min-w-max">
                 <thead>
                   <tr className="bg-slate-50 border-b border-slate-200 text-left text-slate-600 italic font-normal">
-                    <SortableHeader col="name" label="Faculty Name" sortKey={sortKey} sortDir={sortDir} onSort={onSort} className="px-4 py-2.5 font-normal" />
+                    <SortableHeader
+                      col="name"
+                      label="Faculty Name"
+                      sortKey={sortKey}
+                      sortDir={sortDir}
+                      onSort={onSort}
+                      className="px-4 py-2.5 font-normal"
+                    />
                     {(canChange || canDelete) && <th className="px-4 py-2.5 font-normal"></th>}
                   </tr>
                 </thead>
                 <tbody>
                   {sorted.map((f, i) => (
-                    <tr key={f.id} className={`border-b border-slate-100 ${i % 2 === 0 ? 'bg-yellow-50' : 'bg-white'}`}>
+                    <tr
+                      key={f.id}
+                      className={`border-b border-slate-100 ${i % 2 === 0 ? 'bg-yellow-50' : 'bg-white'}`}
+                    >
                       <td className="px-4 py-2">
                         {editingId === f.id ? (
                           <div className="flex gap-2 items-center">

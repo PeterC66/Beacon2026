@@ -31,7 +31,9 @@ export default function EventTypeList() {
   const canCreate = can('event_types', 'create');
   const canDelete = can('event_types', 'delete');
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => {
+    load();
+  }, []);
 
   async function load() {
     setLoading(true);
@@ -68,7 +70,7 @@ export default function EventTypeList() {
         name: editName.trim(),
         description: editDesc.trim() || null,
       });
-      setList((prev) => prev.map((et) => et.id === id ? updated : et));
+      setList((prev) => prev.map((et) => (et.id === id ? updated : et)));
       cancelEdit();
     } catch (err) {
       setEditError(err.body?.error || err.message);
@@ -112,7 +114,8 @@ export default function EventTypeList() {
     { label: 'Calendar', to: '/calendar' },
   ];
 
-  const inputCls = 'border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500';
+  const inputCls =
+    'border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500';
 
   return (
     <div className="min-h-screen pb-10">
@@ -141,34 +144,59 @@ export default function EventTypeList() {
                 </thead>
                 <tbody>
                   {list.map((et, i) => (
-                    <tr key={et.id} className={`border-b border-slate-100 ${i % 2 === 0 ? 'bg-yellow-50' : 'bg-white'}`}>
+                    <tr
+                      key={et.id}
+                      className={`border-b border-slate-100 ${i % 2 === 0 ? 'bg-yellow-50' : 'bg-white'}`}
+                    >
                       {editingId === et.id ? (
                         <>
                           <td className="px-4 py-2" colSpan={2}>
                             <div className="flex flex-wrap gap-2 items-start">
                               <div className="flex-1 min-w-40">
-                                <input className={`${inputCls} w-full`} name="editName" value={editName}
-                                  onChange={(e) => setEditName(e.target.value)} autoFocus
+                                <input
+                                  className={`${inputCls} w-full`}
+                                  name="editName"
+                                  value={editName}
+                                  onChange={(e) => setEditName(e.target.value)}
+                                  autoFocus
                                   disabled={et.is_default}
-                                  onKeyDown={(e) => { if (e.key === 'Escape') cancelEdit(); }} />
+                                  onKeyDown={(e) => {
+                                    if (e.key === 'Escape') cancelEdit();
+                                  }}
+                                />
                               </div>
                               <div className="flex-1 min-w-48">
-                                <input className={`${inputCls} w-full`} name="editDesc" value={editDesc}
+                                <input
+                                  className={`${inputCls} w-full`}
+                                  name="editDesc"
+                                  value={editDesc}
                                   placeholder="Description"
                                   onChange={(e) => setEditDesc(e.target.value)}
-                                  onKeyDown={(e) => { if (e.key === 'Escape') cancelEdit(); }} />
+                                  onKeyDown={(e) => {
+                                    if (e.key === 'Escape') cancelEdit();
+                                  }}
+                                />
                               </div>
                             </div>
                             {editError && <p className="text-red-600 text-xs mt-1">{editError}</p>}
-                            {et.is_default && <p className="text-xs text-slate-500 mt-1">The default event type cannot be renamed.</p>}
+                            {et.is_default && (
+                              <p className="text-xs text-slate-500 mt-1">
+                                The default event type cannot be renamed.
+                              </p>
+                            )}
                           </td>
                           <td className="px-4 py-2 text-right whitespace-nowrap">
-                            <button onClick={() => handleSaveEdit(et.id)} disabled={editSaving}
-                              className="bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white rounded px-3 py-1 text-xs mr-2">
+                            <button
+                              onClick={() => handleSaveEdit(et.id)}
+                              disabled={editSaving}
+                              className="bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white rounded px-3 py-1 text-xs mr-2"
+                            >
                               Save
                             </button>
-                            <button onClick={cancelEdit}
-                              className="border border-slate-300 rounded px-3 py-1 text-xs hover:bg-slate-50">
+                            <button
+                              onClick={cancelEdit}
+                              className="border border-slate-300 rounded px-3 py-1 text-xs hover:bg-slate-50"
+                            >
                               Cancel
                             </button>
                           </td>
@@ -177,18 +205,28 @@ export default function EventTypeList() {
                         <>
                           <td className="px-4 py-2">
                             {et.name}
-                            {et.is_default && <span className="ml-2 text-xs text-slate-400">(default)</span>}
+                            {et.is_default && (
+                              <span className="ml-2 text-xs text-slate-400">(default)</span>
+                            )}
                           </td>
                           <td className="px-4 py-2 text-slate-600">{et.description ?? ''}</td>
                           {(canChange || canDelete) && (
                             <td className="px-4 py-2 text-right space-x-3 whitespace-nowrap">
                               {canChange && (
-                                <button onClick={() => startEdit(et)}
-                                  className="text-blue-600 hover:underline text-xs">Edit</button>
+                                <button
+                                  onClick={() => startEdit(et)}
+                                  className="text-blue-600 hover:underline text-xs"
+                                >
+                                  Edit
+                                </button>
                               )}
                               {canDelete && !et.is_default && (
-                                <button onClick={() => handleDelete(et.id, et.name)}
-                                  className="text-red-600 hover:underline text-xs">Delete</button>
+                                <button
+                                  onClick={() => handleDelete(et.id, et.name)}
+                                  className="text-red-600 hover:underline text-xs"
+                                >
+                                  Delete
+                                </button>
                               )}
                             </td>
                           )}
@@ -210,16 +248,30 @@ export default function EventTypeList() {
             <form onSubmit={handleAdd} className="flex gap-2 items-end">
               <div className="flex-1">
                 <label className="block text-sm font-medium text-slate-700 mb-1">Name</label>
-                <input className={`${inputCls} w-full`} name="newName" placeholder="Event type name"
-                  value={newName} onChange={(e) => setNewName(e.target.value)} required />
+                <input
+                  className={`${inputCls} w-full`}
+                  name="newName"
+                  placeholder="Event type name"
+                  value={newName}
+                  onChange={(e) => setNewName(e.target.value)}
+                  required
+                />
               </div>
               <div className="flex-1">
                 <label className="block text-sm font-medium text-slate-700 mb-1">Description</label>
-                <input className={`${inputCls} w-full`} name="newDesc" placeholder="Optional description"
-                  value={newDesc} onChange={(e) => setNewDesc(e.target.value)} />
+                <input
+                  className={`${inputCls} w-full`}
+                  name="newDesc"
+                  placeholder="Optional description"
+                  value={newDesc}
+                  onChange={(e) => setNewDesc(e.target.value)}
+                />
               </div>
-              <button type="submit" disabled={addSaving || !newName.trim()}
-                className="bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white rounded px-5 py-2 text-sm font-medium transition-colors">
+              <button
+                type="submit"
+                disabled={addSaving || !newName.trim()}
+                className="bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white rounded px-5 py-2 text-sm font-medium transition-colors"
+              >
                 {addSaving ? 'Saving...' : 'Save'}
               </button>
             </form>

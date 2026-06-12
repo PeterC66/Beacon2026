@@ -18,7 +18,9 @@ const { default: app } = await import('../app.js');
 const request = supertest(app);
 const auth = makeAuthHeader();
 
-beforeEach(() => { vi.clearAllMocks(); });
+beforeEach(() => {
+  vi.clearAllMocks();
+});
 
 // ─── Standard Letters CRUD ───────────────────────────────────────────────
 
@@ -51,9 +53,7 @@ describe('GET /letters/standard-letters', () => {
 
 describe('POST /letters/standard-letters', () => {
   it('creates a standard letter', async () => {
-    tenantQuery.mockResolvedValueOnce([
-      { id: 'sl-new', name: 'Renewal', body: '{}' },
-    ]);
+    tenantQuery.mockResolvedValueOnce([{ id: 'sl-new', name: 'Renewal', body: '{}' }]);
     const res = await request
       .post('/letters/standard-letters')
       .set('Authorization', auth)
@@ -74,9 +74,7 @@ describe('POST /letters/standard-letters', () => {
 describe('DELETE /letters/standard-letters/:id', () => {
   it('deletes a standard letter', async () => {
     tenantQuery.mockResolvedValueOnce([]);
-    const res = await request
-      .delete('/letters/standard-letters/sl-1')
-      .set('Authorization', auth);
+    const res = await request.delete('/letters/standard-letters/sl-1').set('Authorization', auth);
     expect(res.status).toBe(204);
   });
 });
@@ -98,13 +96,33 @@ describe('POST /letters/download', () => {
     // fetchMembersForLetters query
     tenantQuery.mockResolvedValueOnce([
       {
-        id: 'm1', membership_number: 1, title: 'Mr', forenames: 'John', surname: 'Smith',
-        known_as: null, email: 'john@test.com', mobile: '07700', next_renewal: null,
-        home_u3a: null, class_name: 'Individual',
-        house_no: '1', street: 'High St', add_line1: null, add_line2: null,
-        town: 'Oxford', county: 'Oxon', postcode: 'OX1 1AA', telephone: '01234',
-        p_id: null, p_title: null, p_forenames: null, p_surname: null,
-        p_known_as: null, p_email: null, p_mobile: null, p_telephone: null,
+        id: 'm1',
+        membership_number: 1,
+        title: 'Mr',
+        forenames: 'John',
+        surname: 'Smith',
+        known_as: null,
+        email: 'john@test.com',
+        mobile: '07700',
+        next_renewal: null,
+        home_u3a: null,
+        class_name: 'Individual',
+        house_no: '1',
+        street: 'High St',
+        add_line1: null,
+        add_line2: null,
+        town: 'Oxford',
+        county: 'Oxon',
+        postcode: 'OX1 1AA',
+        telephone: '01234',
+        p_id: null,
+        p_title: null,
+        p_forenames: null,
+        p_surname: null,
+        p_known_as: null,
+        p_email: null,
+        p_mobile: null,
+        p_telephone: null,
       },
     ]);
     // getTenantDisplayName query

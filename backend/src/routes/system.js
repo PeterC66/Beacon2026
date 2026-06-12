@@ -11,7 +11,13 @@ import { prisma, tenantQuery } from '../utils/db.js';
 import { hashPassword } from '../utils/password.js';
 import { AppError } from '../middleware/errorHandler.js';
 import { createTenantSchema } from '../seed/createTenant.js';
-import { clearTenantData, resetSequences, restoreBeacon2, restoreBeacon, BEACON_DEFAULT_PASSWORD } from './backup.js';
+import {
+  clearTenantData,
+  resetSequences,
+  restoreBeacon2,
+  restoreBeacon,
+  BEACON_DEFAULT_PASSWORD,
+} from './backup.js';
 import { syncDefaultRolePrivileges } from '../utils/migrate.js';
 import { logAudit } from '../utils/audit.js';
 import { ALL_FEATURE_KEYS } from '../../../shared/constants.js';
@@ -35,12 +41,14 @@ router.get('/tenants', async (_req, res, next) => {
 // and creates the first admin user.
 
 const newTenantSchema = z.object({
-  name:           z.string().min(1),
-  slug:           z.string().regex(/^[a-z0-9_]+$/, 'Slug must be lowercase alphanumeric with underscores'),
-  adminEmail:     z.string().email(),
-  adminName:      z.string().min(1),
-  adminPassword:  z.string().min(8),
-  adminUsername:  z.string().regex(/^[a-z0-9]+$/, 'Username must be lowercase letters and numbers only'),
+  name: z.string().min(1),
+  slug: z.string().regex(/^[a-z0-9_]+$/, 'Slug must be lowercase alphanumeric with underscores'),
+  adminEmail: z.string().email(),
+  adminName: z.string().min(1),
+  adminPassword: z.string().min(8),
+  adminUsername: z
+    .string()
+    .regex(/^[a-z0-9]+$/, 'Username must be lowercase letters and numbers only'),
 });
 
 router.post('/tenants', async (req, res, next) => {
@@ -61,10 +69,12 @@ router.post('/tenants', async (req, res, next) => {
 // ─── PATCH /system/tenants/:id ────────────────────────────────────────────
 router.patch('/tenants/:id', async (req, res, next) => {
   try {
-    const { name, active } = z.object({
-      name:   z.string().min(1).optional(),
-      active: z.boolean().optional(),
-    }).parse(req.body);
+    const { name, active } = z
+      .object({
+        name: z.string().min(1).optional(),
+        active: z.boolean().optional(),
+      })
+      .parse(req.body);
 
     const tenant = await prisma.sysTenant.update({
       where: { id: req.params.id },
@@ -115,13 +125,13 @@ router.post('/tenants/:id/set-temp-password', async (req, res, next) => {
     // the sys-admin's display name, prefixed so it can't be confused with a
     // regular tenant user.
     await logAudit(tenant.slug, {
-      userId:     null,
-      userName:   `System Admin: ${req.sysAdmin?.name ?? 'unknown'}`,
-      action:     'bulk_password_reset',
+      userId: null,
+      userName: `System Admin: ${req.sysAdmin?.name ?? 'unknown'}`,
+      action: 'bulk_password_reset',
       entityType: 'tenant',
-      entityId:   tenant.id,
+      entityId: tenant.id,
       entityName: tenant.name,
-      detail:     `Set temporary password for ${result.length} user(s); must_change_password=true.`,
+      detail: `Set temporary password for ${result.length} user(s); must_change_password=true.`,
     });
 
     res.json({ ok: true, updated: result.length, users: result.map((u) => u.username || u.name) });
@@ -144,14 +154,26 @@ async function ensureSysSettings() {
   `);
   // If the table was created with camelCase columns, rename them
   try {
-    await prisma.$executeRawUnsafe(`ALTER TABLE sys_settings RENAME COLUMN "systemMessage" TO system_message`);
-  } catch { /* column already snake_case — ignore */ }
+    await prisma.$executeRawUnsafe(
+      `ALTER TABLE sys_settings RENAME COLUMN "systemMessage" TO system_message`,
+    );
+  } catch {
+    /* column already snake_case — ignore */
+  }
   try {
-    await prisma.$executeRawUnsafe(`ALTER TABLE sys_settings RENAME COLUMN "createdAt" TO created_at`);
-  } catch { /* already snake_case */ }
+    await prisma.$executeRawUnsafe(
+      `ALTER TABLE sys_settings RENAME COLUMN "createdAt" TO created_at`,
+    );
+  } catch {
+    /* already snake_case */
+  }
   try {
-    await prisma.$executeRawUnsafe(`ALTER TABLE sys_settings RENAME COLUMN "updatedAt" TO updated_at`);
-  } catch { /* already snake_case */ }
+    await prisma.$executeRawUnsafe(
+      `ALTER TABLE sys_settings RENAME COLUMN "updatedAt" TO updated_at`,
+    );
+  } catch {
+    /* already snake_case */
+  }
 }
 
 // ─── GET /system/settings ─────────────────────────────────────────────────────
@@ -159,12 +181,12 @@ router.get('/settings', async (_req, res, next) => {
   try {
     await ensureSysSettings();
     const rows = await prisma.$queryRawUnsafe(
-      `INSERT INTO sys_settings (id) VALUES ('singleton') ON CONFLICT (id) DO NOTHING RETURNING system_message`
+      `INSERT INTO sys_settings (id) VALUES ('singleton') ON CONFLICT (id) DO NOTHING RETURNING system_message`,
     );
     let msg = rows[0]?.system_message;
     if (msg == null) {
       const existing = await prisma.$queryRawUnsafe(
-        `SELECT system_message FROM sys_settings WHERE id = 'singleton'`
+        `SELECT system_message FROM sys_settings WHERE id = 'singleton'`,
       );
       msg = existing[0]?.system_message;
     }
@@ -177,9 +199,11 @@ router.get('/settings', async (_req, res, next) => {
 // ─── PATCH /system/settings ──────────────────────────────────────────────────
 router.patch('/settings', async (req, res, next) => {
   try {
-    const { systemMessage } = z.object({
-      systemMessage: z.string().optional(),
-    }).parse(req.body);
+    const { systemMessage } = z
+      .object({
+        systemMessage: z.string().optional(),
+      })
+      .parse(req.body);
 
     await ensureSysSettings();
     const rows = await prisma.$queryRawUnsafe(
@@ -221,20 +245,25 @@ router.post('/restore/:tenantSlug', upload.single('backup'), async (req, res, ne
     // Detect format: Members sheet first column header 'mkey' → Beacon; 'id' → Beacon2
     const membersWs = wb.getWorksheet('Members');
     if (!membersWs) return next(AppError('Invalid backup file: no Members sheet found.', 400));
-    const firstHeader = String(membersWs.getRow(1).getCell(1).value ?? '').trim().toLowerCase();
+    const firstHeader = String(membersWs.getRow(1).getCell(1).value ?? '')
+      .trim()
+      .toLowerCase();
     const format = firstHeader === 'mkey' ? 'beacon' : 'beacon2';
 
     const schema = `u3a_${tenantSlug}`;
-    await prisma.$transaction(async (tx) => {
-      await tx.$executeRawUnsafe(`SET search_path TO ${schema}, public`);
-      await clearTenantData(tx);
-      if (format === 'beacon2') {
-        await restoreBeacon2(tx, wb);
-      } else {
-        await restoreBeacon(tx, wb);
-        await resetSequences(tx);
-      }
-    }, { timeout: 300_000 });
+    await prisma.$transaction(
+      async (tx) => {
+        await tx.$executeRawUnsafe(`SET search_path TO ${schema}, public`);
+        await clearTenantData(tx);
+        if (format === 'beacon2') {
+          await restoreBeacon2(tx, wb);
+        } else {
+          await restoreBeacon(tx, wb);
+          await resetSequences(tx);
+        }
+      },
+      { timeout: 300_000 },
+    );
 
     // Ensure default-named roles (Administration, Treasurer, etc.) have their
     // canonical privileges.  For Beacon restores this is essential because the
@@ -242,9 +271,10 @@ router.post('/restore/:tenantSlug', upload.single('backup'), async (req, res, ne
     // For Beacon2 restores it fills any gaps from backups predating new resources.
     await syncDefaultRolePrivileges(tenantSlug);
 
-    const msg = format === 'beacon'
-      ? `Restore complete (migrated from Beacon).\nImported users have been given the temporary password: ${BEACON_DEFAULT_PASSWORD}\nPlease ask each user to change their password after first login.`
-      : 'Restore complete (Beacon2 format).\nImported users have no password set — use "Set temporary password for all users" on the tenant before they can log in.';
+    const msg =
+      format === 'beacon'
+        ? `Restore complete (migrated from Beacon).\nImported users have been given the temporary password: ${BEACON_DEFAULT_PASSWORD}\nPlease ask each user to change their password after first login.`
+        : 'Restore complete (Beacon2 format).\nImported users have no password set — use "Set temporary password for all users" on the tenant before they can log in.';
     res.json({ ok: true, format, message: msg });
   } catch (err) {
     next(err);
@@ -259,7 +289,10 @@ router.get('/tenants/:slug/feature-config', async (req, res, next) => {
     const tenant = await prisma.sysTenant.findUnique({ where: { slug } });
     if (!tenant) return next(AppError('Tenant not found.', 404));
 
-    const [row] = await tenantQuery(slug, `SELECT feature_config FROM tenant_settings WHERE id = 'singleton'`);
+    const [row] = await tenantQuery(
+      slug,
+      `SELECT feature_config FROM tenant_settings WHERE id = 'singleton'`,
+    );
     res.json(row?.feature_config ?? {});
   } catch (err) {
     next(err);
@@ -282,7 +315,10 @@ router.patch('/tenants/:slug/feature-config', async (req, res, next) => {
       if (ALL_FEATURE_KEYS.includes(key)) updates[key] = value;
     }
     if (Object.keys(updates).length === 0) {
-      const [row] = await tenantQuery(slug, `SELECT feature_config FROM tenant_settings WHERE id = 'singleton'`);
+      const [row] = await tenantQuery(
+        slug,
+        `SELECT feature_config FROM tenant_settings WHERE id = 'singleton'`,
+      );
       return res.json(row?.feature_config ?? {});
     }
 

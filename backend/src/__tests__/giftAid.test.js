@@ -5,14 +5,14 @@ import request from 'supertest';
 import { makeAuthHeader } from './helpers.js';
 
 vi.mock('../utils/redis.js', () => ({
-  isSessionInvalidated:   vi.fn().mockResolvedValue(false),
+  isSessionInvalidated: vi.fn().mockResolvedValue(false),
   invalidateUserSessions: vi.fn().mockResolvedValue(undefined),
 }));
 
 vi.mock('../utils/db.js', () => ({
-  prisma:      { $disconnect: vi.fn() },
+  prisma: { $disconnect: vi.fn() },
   tenantQuery: vi.fn(),
-  withTenant:  vi.fn(),
+  withTenant: vi.fn(),
 }));
 
 const { default: app } = await import('../app.js');
@@ -26,11 +26,20 @@ const SETTINGS = {
 };
 
 const SAMPLE_ROW = {
-  id: 't1', transaction_number: 1, date: '2026-03-01',
-  gift_aid_amount: 25.00, gift_aid_claimed_at: null,
-  member_id: 'm1', title: 'Mr', forenames: 'John', surname: 'Smith',
-  membership_number: 101, gift_aid_from: '2025-01-01', email: 'john@test.com',
-  house_no: '42', postcode: 'CB1 1AA',
+  id: 't1',
+  transaction_number: 1,
+  date: '2026-03-01',
+  gift_aid_amount: 25.0,
+  gift_aid_claimed_at: null,
+  member_id: 'm1',
+  title: 'Mr',
+  forenames: 'John',
+  surname: 'Smith',
+  membership_number: 101,
+  gift_aid_from: '2025-01-01',
+  email: 'john@test.com',
+  house_no: '42',
+  postcode: 'CB1 1AA',
 };
 
 // ── GET /gift-aid ─────────────────────────────────────────────────────────
@@ -39,7 +48,7 @@ describe('GET /gift-aid', () => {
   beforeEach(() => vi.clearAllMocks());
 
   it('returns 200 with eligible rows', async () => {
-    tenantQuery.mockResolvedValueOnce([SETTINGS]);   // settings
+    tenantQuery.mockResolvedValueOnce([SETTINGS]); // settings
     tenantQuery.mockResolvedValueOnce([SAMPLE_ROW]); // fetchDeclarationRows
     const res = await request(app).get('/gift-aid').set('Authorization', AUTH);
     expect(res.status).toBe(200);
@@ -55,7 +64,9 @@ describe('GET /gift-aid', () => {
   });
 
   it('returns 403 without privilege', async () => {
-    const res = await request(app).get('/gift-aid').set('Authorization', makeAuthHeader({ privileges: [] }));
+    const res = await request(app)
+      .get('/gift-aid')
+      .set('Authorization', makeAuthHeader({ privileges: [] }));
     expect(res.status).toBe(403);
   });
 });
@@ -73,7 +84,9 @@ describe('POST /gift-aid/download', () => {
       .send({ ids: ['t1'], from: '2026-01-01', to: '2026-12-31' });
     expect(res.status).toBe(200);
     expect(res.headers['content-type']).toMatch(/spreadsheetml/);
-    expect(res.headers['content-disposition']).toMatch(/gift_aid_declaration_\d{4}-\d{2}-\d{2}\.xlsx/);
+    expect(res.headers['content-disposition']).toMatch(
+      /gift_aid_declaration_\d{4}-\d{2}-\d{2}\.xlsx/,
+    );
   });
 
   it('returns 400 when no matching transactions', async () => {

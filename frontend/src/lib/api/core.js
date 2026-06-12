@@ -3,21 +3,25 @@
 
 export const BASE = import.meta.env.VITE_API_URL ?? 'http://localhost:3001';
 
-let accessToken = null;   // stored in memory only — never localStorage
-let tenantSlug  = null;
+let accessToken = null; // stored in memory only — never localStorage
+let tenantSlug = null;
 
 export function setAuth(token, slug) {
   accessToken = token;
-  tenantSlug  = slug;
+  tenantSlug = slug;
 }
 
 export function clearAuth() {
   accessToken = null;
-  tenantSlug  = null;
+  tenantSlug = null;
 }
 
-export function getAccessToken() { return accessToken; }
-export function getTenantSlug()  { return tenantSlug; }
+export function getAccessToken() {
+  return accessToken;
+}
+export function getTenantSlug() {
+  return tenantSlug;
+}
 
 // ─── Core fetch wrapper ───────────────────────────────────────────────────
 
@@ -25,21 +29,21 @@ export async function request(path, options = {}, retry = true) {
   const headers = {
     'Content-Type': 'application/json',
     ...(accessToken && { Authorization: `Bearer ${accessToken}` }),
-    ...(tenantSlug  && { 'x-tenant-slug': tenantSlug }),
+    ...(tenantSlug && { 'x-tenant-slug': tenantSlug }),
     ...options.headers,
   };
 
   const res = await fetch(`${BASE}${path}`, {
     ...options,
     headers,
-    credentials: 'include',   // send httpOnly refresh token cookie
+    credentials: 'include', // send httpOnly refresh token cookie
   });
 
   // Token expired — try refreshing once
   if (res.status === 401 && retry) {
     const refreshed = await tryRefresh();
     if (refreshed) {
-      return request(path, options, false);  // retry with new token
+      return request(path, options, false); // retry with new token
     } else {
       // Force logout
       clearAuth();
@@ -91,7 +95,7 @@ export async function restoreSession(slug) {
     const data = await res.json();
     if (data?.accessToken) {
       accessToken = data.accessToken;
-      tenantSlug  = slug;
+      tenantSlug = slug;
       return data;
     }
   } catch {}
@@ -102,7 +106,7 @@ export class ApiError extends Error {
   constructor(message, status, body = {}) {
     super(message);
     this.status = status;
-    this.body   = body;
+    this.body = body;
   }
 }
 
@@ -110,7 +114,7 @@ export class ApiError extends Error {
 export async function fetchAuthBlob(path) {
   const headers = {
     ...(accessToken && { Authorization: `Bearer ${accessToken}` }),
-    ...(tenantSlug  && { 'x-tenant-slug': tenantSlug }),
+    ...(tenantSlug && { 'x-tenant-slug': tenantSlug }),
   };
   const res = await fetch(`${BASE}${path}`, { headers, credentials: 'include' });
   if (!res.ok) return null;
@@ -123,7 +127,7 @@ export async function fetchAuthBlob(path) {
 export async function requestBlob(path, options = {}) {
   const headers = {
     ...(accessToken && { Authorization: `Bearer ${accessToken}` }),
-    ...(tenantSlug  && { 'x-tenant-slug': tenantSlug }),
+    ...(tenantSlug && { 'x-tenant-slug': tenantSlug }),
     ...options.headers,
   };
   const res = await fetch(`${BASE}${path}`, { ...options, headers, credentials: 'include' });
@@ -138,9 +142,9 @@ export async function requestBlob(path, options = {}) {
     if (m) filename = m[1];
   }
   const blob = await res.blob();
-  const url  = URL.createObjectURL(blob);
-  const a    = document.createElement('a');
-  a.href     = url;
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
   a.download = filename;
   document.body.appendChild(a);
   a.click();
@@ -152,10 +156,13 @@ export async function requestBlob(path, options = {}) {
 export async function requestMultipart(path, formData) {
   const headers = {
     ...(accessToken && { Authorization: `Bearer ${accessToken}` }),
-    ...(tenantSlug  && { 'x-tenant-slug': tenantSlug }),
+    ...(tenantSlug && { 'x-tenant-slug': tenantSlug }),
   };
   const res = await fetch(`${BASE}${path}`, {
-    method: 'POST', body: formData, headers, credentials: 'include',
+    method: 'POST',
+    body: formData,
+    headers,
+    credentials: 'include',
   });
   if (!res.ok) {
     const body = await res.json().catch(() => ({}));

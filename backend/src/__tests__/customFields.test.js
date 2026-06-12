@@ -5,14 +5,14 @@ import request from 'supertest';
 import { makeAuthHeader } from './helpers.js';
 
 vi.mock('../utils/redis.js', () => ({
-  isSessionInvalidated:   vi.fn().mockResolvedValue(false),
+  isSessionInvalidated: vi.fn().mockResolvedValue(false),
   invalidateUserSessions: vi.fn().mockResolvedValue(undefined),
 }));
 
 vi.mock('../utils/db.js', () => ({
-  prisma:      { $disconnect: vi.fn() },
+  prisma: { $disconnect: vi.fn() },
   tenantQuery: vi.fn(),
-  withTenant:  vi.fn(),
+  withTenant: vi.fn(),
 }));
 
 vi.mock('../utils/audit.js', () => ({
@@ -64,12 +64,14 @@ describe('PATCH /custom-fields', () => {
   beforeEach(() => vi.clearAllMocks());
 
   it('returns 200 with updated labels', async () => {
-    tenantQuery.mockResolvedValueOnce([{
-      custom_field_label_1: 'Updated',
-      custom_field_label_2: 'Skill',
-      custom_field_label_3: null,
-      custom_field_label_4: null,
-    }]);
+    tenantQuery.mockResolvedValueOnce([
+      {
+        custom_field_label_1: 'Updated',
+        custom_field_label_2: 'Skill',
+        custom_field_label_3: null,
+        custom_field_label_4: null,
+      },
+    ]);
     const res = await request(app)
       .patch('/custom-fields')
       .set('Authorization', AUTH)
@@ -79,10 +81,7 @@ describe('PATCH /custom-fields', () => {
   });
 
   it('returns 400 when nothing to update', async () => {
-    const res = await request(app)
-      .patch('/custom-fields')
-      .set('Authorization', AUTH)
-      .send({});
+    const res = await request(app).patch('/custom-fields').set('Authorization', AUTH).send({});
     expect(res.status).toBe(400);
   });
 

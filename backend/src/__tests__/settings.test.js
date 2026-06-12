@@ -5,18 +5,18 @@ import request from 'supertest';
 import { makeAuthHeader } from './helpers.js';
 
 vi.mock('../utils/redis.js', () => ({
-  isSessionInvalidated:   vi.fn().mockResolvedValue(false),
+  isSessionInvalidated: vi.fn().mockResolvedValue(false),
   invalidateUserSessions: vi.fn().mockResolvedValue(undefined),
 }));
 
 vi.mock('../utils/db.js', () => ({
   prisma: {
-    $disconnect:      vi.fn(),
-    sysTenant:        { findUnique: vi.fn() },
-    $queryRawUnsafe:  vi.fn(),
+    $disconnect: vi.fn(),
+    sysTenant: { findUnique: vi.fn() },
+    $queryRawUnsafe: vi.fn(),
   },
   tenantQuery: vi.fn(),
-  withTenant:  vi.fn(),
+  withTenant: vi.fn(),
 }));
 
 vi.mock('../utils/audit.js', () => ({
@@ -34,11 +34,13 @@ describe('GET /settings/year-config', () => {
   beforeEach(() => vi.clearAllMocks());
 
   it('returns 200 with year config', async () => {
-    tenantQuery.mockResolvedValueOnce([{
-      year_start_month: 4,
-      year_start_day: 1,
-      extended_membership_month: 9,
-    }]);
+    tenantQuery.mockResolvedValueOnce([
+      {
+        year_start_month: 4,
+        year_start_day: 1,
+        extended_membership_month: 9,
+      },
+    ]);
     const res = await request(app).get('/settings/year-config').set('Authorization', AUTH);
     expect(res.status).toBe(200);
     expect(res.body.yearStartMonth).toBe(4);
@@ -67,11 +69,13 @@ describe('GET /settings/new-member-defaults', () => {
   beforeEach(() => vi.clearAllMocks());
 
   it('returns 200 with defaults', async () => {
-    tenantQuery.mockResolvedValueOnce([{
-      default_town: 'Oxford',
-      default_county: 'Oxon',
-      default_std_code: '01865',
-    }]);
+    tenantQuery.mockResolvedValueOnce([
+      {
+        default_town: 'Oxford',
+        default_county: 'Oxon',
+        default_std_code: '01865',
+      },
+    ]);
     const res = await request(app).get('/settings/new-member-defaults').set('Authorization', AUTH);
     expect(res.status).toBe(200);
     expect(res.body.defaultTown).toBe('Oxford');
@@ -91,12 +95,14 @@ describe('GET /settings/custom-field-labels', () => {
   beforeEach(() => vi.clearAllMocks());
 
   it('returns 200 with labels', async () => {
-    tenantQuery.mockResolvedValueOnce([{
-      custom_field_label_1: 'Hobby',
-      custom_field_label_2: null,
-      custom_field_label_3: null,
-      custom_field_label_4: null,
-    }]);
+    tenantQuery.mockResolvedValueOnce([
+      {
+        custom_field_label_1: 'Hobby',
+        custom_field_label_2: null,
+        custom_field_label_3: null,
+        custom_field_label_4: null,
+      },
+    ]);
     const res = await request(app).get('/settings/custom-field-labels').set('Authorization', AUTH);
     expect(res.status).toBe(200);
     expect(res.body.label1).toBe('Hobby');
@@ -167,10 +173,7 @@ describe('PATCH /settings', () => {
   });
 
   it('returns 400 when nothing to update', async () => {
-    const res = await request(app)
-      .patch('/settings')
-      .set('Authorization', AUTH)
-      .send({});
+    const res = await request(app).patch('/settings').set('Authorization', AUTH).send({});
     expect(res.status).toBe(400);
   });
 

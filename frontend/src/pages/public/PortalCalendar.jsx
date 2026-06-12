@@ -10,7 +10,7 @@ function fmtDateUK(d) {
   if (!d) return '';
   const s = String(d).slice(0, 10);
   const [y, m, day] = s.split('-');
-  const days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
   const dt = new Date(parseInt(y), parseInt(m) - 1, parseInt(day));
   return `${days[dt.getDay()]} ${parseInt(day)}/${m}/${y}`;
 }
@@ -110,14 +110,15 @@ export default function PortalCalendar() {
       <PortalVersion />
       <div className="max-w-4xl mx-auto">
         <div className="flex items-center justify-between mb-4">
-          <Link to={`/public/${slug}/portal/home`} className="text-sm text-blue-700 hover:underline">
+          <Link
+            to={`/public/${slug}/portal/home`}
+            className="text-sm text-blue-700 hover:underline"
+          >
             &larr; Members Portal
           </Link>
         </div>
 
-        <h1 className="text-xl font-bold text-center text-slate-800 mb-4">
-          Calendar
-        </h1>
+        <h1 className="text-xl font-bold text-center text-slate-800 mb-4">Calendar</h1>
 
         {error && (
           <div className="rounded-md bg-red-50 border border-red-300 px-4 py-3 text-red-700 text-sm font-medium text-center mb-4">
@@ -134,7 +135,11 @@ export default function PortalCalendar() {
               type="radio"
               name="calFilter"
               checked={filter === 'all'}
-              onChange={() => { setFilter('all'); setSelectedGroup(''); setSelectedEventType(''); }}
+              onChange={() => {
+                setFilter('all');
+                setSelectedGroup('');
+                setSelectedEventType('');
+              }}
             />
             All
           </label>
@@ -144,7 +149,10 @@ export default function PortalCalendar() {
               type="radio"
               name="calFilter"
               checked={filter === 'group'}
-              onChange={() => { setFilter('group'); setSelectedEventType(''); }}
+              onChange={() => {
+                setFilter('group');
+                setSelectedEventType('');
+              }}
             />
             Group
           </label>
@@ -158,7 +166,9 @@ export default function PortalCalendar() {
             >
               <option value="">— select group —</option>
               {groupList.map((g) => (
-                <option key={g.id} value={g.id}>{g.name}</option>
+                <option key={g.id} value={g.id}>
+                  {g.name}
+                </option>
               ))}
             </select>
           )}
@@ -168,7 +178,11 @@ export default function PortalCalendar() {
               type="radio"
               name="calFilter"
               checked={filter === 'own'}
-              onChange={() => { setFilter('own'); setSelectedGroup(''); setSelectedEventType(''); }}
+              onChange={() => {
+                setFilter('own');
+                setSelectedGroup('');
+                setSelectedEventType('');
+              }}
             />
             Own groups and general meetings
           </label>
@@ -178,7 +192,10 @@ export default function PortalCalendar() {
               type="radio"
               name="calFilter"
               checked={filter === 'other'}
-              onChange={() => { setFilter('other'); setSelectedGroup(''); }}
+              onChange={() => {
+                setFilter('other');
+                setSelectedGroup('');
+              }}
             />
             Other
           </label>
@@ -191,7 +208,9 @@ export default function PortalCalendar() {
               className="border border-slate-300 rounded px-2 py-1 text-sm"
             >
               {eventTypeList.map((et) => (
-                <option key={et.id} value={et.id}>{et.name}</option>
+                <option key={et.id} value={et.id}>
+                  {et.name}
+                </option>
               ))}
             </select>
           )}
@@ -207,13 +226,13 @@ export default function PortalCalendar() {
                   <tr className="bg-slate-100 text-left">
                     <th className="px-3 py-2 font-semibold text-slate-600">Date &amp; Time</th>
                     <th className="px-3 py-2 font-semibold text-slate-600">Group</th>
-                    {events.some(e => e.topic) && (
+                    {events.some((e) => e.topic) && (
                       <th className="px-3 py-2 font-semibold text-slate-600">Topic</th>
                     )}
-                    {events.some(e => e.venue) && (
+                    {events.some((e) => e.venue) && (
                       <th className="px-3 py-2 font-semibold text-slate-600">Venue</th>
                     )}
-                    {events.some(e => e.contact) && (
+                    {events.some((e) => e.contact) && (
                       <th className="px-3 py-2 font-semibold text-slate-600">Enquiries</th>
                     )}
                   </tr>
@@ -222,17 +241,16 @@ export default function PortalCalendar() {
                   {events.map((ev) => (
                     <tr key={ev.id} className="border-t border-slate-100 hover:bg-slate-50">
                       <td className="px-3 py-2 whitespace-nowrap">
-                        {fmtDateUK(ev.eventDate)}{' '}
-                        {ev.startTime && fmtTime(ev.startTime)}
+                        {fmtDateUK(ev.eventDate)} {ev.startTime && fmtTime(ev.startTime)}
                       </td>
                       <td className="px-3 py-2">{ev.groupName}</td>
-                      {events.some(e => e.topic) && (
+                      {events.some((e) => e.topic) && (
                         <td className="px-3 py-2">{ev.topic || ''}</td>
                       )}
-                      {events.some(e => e.venue) && (
+                      {events.some((e) => e.venue) && (
                         <td className="px-3 py-2">{ev.venue || ''}</td>
                       )}
-                      {events.some(e => e.contact) && (
+                      {events.some((e) => e.contact) && (
                         <td className="px-3 py-2">{ev.contact || ''}</td>
                       )}
                     </tr>

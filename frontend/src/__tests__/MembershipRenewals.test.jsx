@@ -34,12 +34,20 @@ vi.mock('../lib/api.js', () => ({
 
 describe('MembershipRenewals page', () => {
   it('renders without crashing', () => {
-    const { container } = render(<MemoryRouter><MembershipRenewals /></MemoryRouter>);
+    const { container } = render(
+      <MemoryRouter>
+        <MembershipRenewals />
+      </MemoryRouter>,
+    );
     expect(container).toBeTruthy();
   });
 
   it('shows the Membership Renewals heading', () => {
-    const { getAllByText } = render(<MemoryRouter><MembershipRenewals /></MemoryRouter>);
+    const { getAllByText } = render(
+      <MemoryRouter>
+        <MembershipRenewals />
+      </MemoryRouter>,
+    );
     expect(getAllByText('Membership Renewals').length).toBeGreaterThan(0);
   });
 });

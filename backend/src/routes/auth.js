@@ -25,7 +25,7 @@ const COOKIE_NAME = 'beacon2_refresh';
 const cookieOptions = {
   httpOnly: true,
   secure: true,
-  sameSite: 'none',   // required for cross-origin (Vercel frontend → Render backend)
+  sameSite: 'none', // required for cross-origin (Vercel frontend → Render backend)
   maxAge: 1000 * 60 * 60 * 24 * parseInt(process.env.JWT_REFRESH_EXPIRES_DAYS ?? '30', 10),
 };
 
@@ -58,8 +58,8 @@ function isAllowedOrigin(req) {
 
 const loginSchema = z.object({
   tenantSlug: z.string().min(1),
-  username:   z.string().min(1),
-  password:   z.string().min(1),
+  username: z.string().min(1),
+  password: z.string().min(1),
 });
 
 router.post('/login', async (req, res, next) => {
@@ -118,7 +118,11 @@ router.post('/refresh', async (req, res, next) => {
     const result = await refreshTokens(tenantSlug, refreshToken);
 
     res.cookie(COOKIE_NAME, result.refreshToken, cookieOptions);
-    res.json({ accessToken: result.accessToken, user: result.user, mustChangePassword: result.user?.mustChangePassword || false });
+    res.json({
+      accessToken: result.accessToken,
+      user: result.user,
+      mustChangePassword: result.user?.mustChangePassword || false,
+    });
   } catch (err) {
     next(err);
   }
@@ -128,7 +132,7 @@ router.post('/refresh', async (req, res, next) => {
 // Log in a system administrator (separate credentials, no tenant).
 
 const sysLoginSchema = z.object({
-  email:    z.string().email(),
+  email: z.string().email(),
   password: z.string().min(1),
 });
 
@@ -147,32 +151,49 @@ router.post('/system/login', async (req, res, next) => {
 
 const changePwSchema = z.object({
   currentPassword: z.string().min(1),
-  newPassword:     z.string().min(10).max(72),
+  newPassword: z.string().min(10).max(72),
 });
 
 router.post('/change-password', requireAuth, async (req, res, next) => {
   try {
     const { currentPassword, newPassword } = changePwSchema.parse(req.body);
     const slug = req.user.tenantSlug;
-    const [user] = await tenantQuery(slug, `SELECT id, password_hash FROM users WHERE id = $1`, [req.user.userId]);
+    const [user] = await tenantQuery(slug, `SELECT id, password_hash FROM users WHERE id = $1`, [
+      req.user.userId,
+    ]);
     if (!user) throw AppError('User not found.', 404);
 
     const valid = await verifyPassword(currentPassword, user.password_hash);
     if (!valid) throw AppError('Current password is incorrect.', 400);
 
     const newHash = await hashPassword(newPassword);
-    await tenantQuery(slug, `UPDATE users SET password_hash = $1, updated_at = now() WHERE id = $2`, [newHash, user.id]);
+    await tenantQuery(
+      slug,
+      `UPDATE users SET password_hash = $1, updated_at = now() WHERE id = $2`,
+      [newHash, user.id],
+    );
 
     // Revoke all other refresh tokens for this user and mark sessions
     // invalidated in Redis so any access tokens still in flight stop working
     // at their next request. The caller's current access token continues to
     // work until it expires (matches admin password-change behaviour).
-    await tenantQuery(slug, `UPDATE refresh_tokens SET revoked = true WHERE user_id = $1`, [user.id]);
+    await tenantQuery(slug, `UPDATE refresh_tokens SET revoked = true WHERE user_id = $1`, [
+      user.id,
+    ]);
     await invalidateUserSessions(slug, user.id);
 
-    logAudit(slug, { userId: req.user.userId, userName: req.user.name, action: 'change_password', entityType: 'user', entityId: user.id, entityName: req.user.name });
+    logAudit(slug, {
+      userId: req.user.userId,
+      userName: req.user.name,
+      action: 'change_password',
+      entityType: 'user',
+      entityId: user.id,
+      entityName: req.user.name,
+    });
     res.json({ message: 'Password changed.' });
-  } catch (err) { next(err); }
+  } catch (err) {
+    next(err);
+  }
 });
 
 // ─── PATCH /auth/qa ───────────────────────────────────────────────────────
@@ -180,7 +201,7 @@ router.post('/change-password', requireAuth, async (req, res, next) => {
 
 const qaSchema = z.object({
   question: z.string().min(1).max(200),
-  answer:   z.string().min(1).max(200),
+  answer: z.string().min(1).max(200),
 });
 
 router.patch('/qa', requireAuth, async (req, res, next) => {
@@ -197,7 +218,9 @@ router.patch('/qa', requireAuth, async (req, res, next) => {
       [question, answerHash, user.id],
     );
     res.json({ message: 'Security Q&A updated.' });
-  } catch (err) { next(err); }
+  } catch (err) {
+    next(err);
+  }
 });
 
 // ─── GET /auth/qa ─────────────────────────────────────────────────────────
@@ -206,13 +229,13 @@ router.patch('/qa', requireAuth, async (req, res, next) => {
 router.get('/qa', requireAuth, async (req, res, next) => {
   try {
     const slug = req.user.tenantSlug;
-    const [user] = await tenantQuery(
-      slug,
-      `SELECT security_question FROM users WHERE id = $1`,
-      [req.user.userId],
-    );
+    const [user] = await tenantQuery(slug, `SELECT security_question FROM users WHERE id = $1`, [
+      req.user.userId,
+    ]);
     res.json({ question: user?.security_question ?? null });
-  } catch (err) { next(err); }
+  } catch (err) {
+    next(err);
+  }
 });
 
 // ─── POST /auth/recover ──────────────────────────────────────────────────
@@ -222,14 +245,15 @@ router.get('/qa', requireAuth, async (req, res, next) => {
 
 const recoverSchema = z.object({
   tenantSlug: z.string().min(1),
-  forename:   z.string().min(1),
-  surname:    z.string().min(1),
-  postcode:   z.string().min(1),
-  email:      z.string().email(),
+  forename: z.string().min(1),
+  surname: z.string().min(1),
+  postcode: z.string().min(1),
+  email: z.string().email(),
 });
 
 // Generic message to avoid revealing whether the user exists
-const RECOVER_GENERIC = 'If a matching account was found, you will receive an email with your login details.';
+const RECOVER_GENERIC =
+  'If a matching account was found, you will receive an email with your login details.';
 
 router.post('/recover', async (req, res, next) => {
   try {
@@ -272,7 +296,9 @@ router.post('/recover', async (req, res, next) => {
     // No security question set — send recovery email directly
     await sendRecoveryEmail(data.tenantSlug, user);
     res.json({ message: RECOVER_GENERIC });
-  } catch (err) { next(err); }
+  } catch (err) {
+    next(err);
+  }
 });
 
 // ─── POST /auth/recover/verify ───────────────────────────────────────────
@@ -280,8 +306,8 @@ router.post('/recover', async (req, res, next) => {
 
 const recoverVerifySchema = z.object({
   tenantSlug: z.string().min(1),
-  userId:     z.string().min(1),
-  answer:     z.string().min(1),
+  userId: z.string().min(1),
+  answer: z.string().min(1),
 });
 
 router.post('/recover/verify', async (req, res, next) => {
@@ -305,12 +331,17 @@ router.post('/recover/verify', async (req, res, next) => {
 
     const valid = await verifyPassword(data.answer, user.security_answer_hash);
     if (!valid) {
-      return res.status(400).json({ error: 'The answer is incorrect. Please try again, using the same format as when it was originally set.' });
+      return res.status(400).json({
+        error:
+          'The answer is incorrect. Please try again, using the same format as when it was originally set.',
+      });
     }
 
     await sendRecoveryEmail(data.tenantSlug, user);
     res.json({ message: RECOVER_GENERIC });
-  } catch (err) { next(err); }
+  } catch (err) {
+    next(err);
+  }
 });
 
 // ─── POST /auth/force-change-password ────────────────────────────────────
@@ -319,8 +350,8 @@ router.post('/recover/verify', async (req, res, next) => {
 
 const forceChangePwSchema = z.object({
   newPassword: z.string().min(10).max(72),
-  question:    z.string().min(1).max(200),
-  answer:      z.string().min(1).max(200),
+  question: z.string().min(1).max(200),
+  answer: z.string().min(1).max(200),
 });
 
 router.post('/force-change-password', requireAuth, async (req, res, next) => {
@@ -329,9 +360,12 @@ router.post('/force-change-password', requireAuth, async (req, res, next) => {
 
     // Validate password rules: no spaces, upper+lower+number
     if (/\s/.test(newPassword)) throw AppError('Password must not contain spaces.', 400);
-    if (!/[A-Z]/.test(newPassword)) throw AppError('Password must include at least one uppercase letter.', 400);
-    if (!/[a-z]/.test(newPassword)) throw AppError('Password must include at least one lowercase letter.', 400);
-    if (!/[0-9]/.test(newPassword)) throw AppError('Password must include at least one number.', 400);
+    if (!/[A-Z]/.test(newPassword))
+      throw AppError('Password must include at least one uppercase letter.', 400);
+    if (!/[a-z]/.test(newPassword))
+      throw AppError('Password must include at least one lowercase letter.', 400);
+    if (!/[0-9]/.test(newPassword))
+      throw AppError('Password must include at least one number.', 400);
 
     const slug = req.user.tenantSlug;
 
@@ -359,12 +393,23 @@ router.post('/force-change-password', requireAuth, async (req, res, next) => {
       [newHash, question, answerHash, req.user.userId],
     );
 
-    await tenantQuery(slug, `UPDATE refresh_tokens SET revoked = true WHERE user_id = $1`, [req.user.userId]);
+    await tenantQuery(slug, `UPDATE refresh_tokens SET revoked = true WHERE user_id = $1`, [
+      req.user.userId,
+    ]);
     await invalidateUserSessions(slug, req.user.userId);
 
-    logAudit(slug, { userId: req.user.userId, userName: req.user.name, action: 'force_change_password', entityType: 'user', entityId: req.user.userId, entityName: req.user.name });
+    logAudit(slug, {
+      userId: req.user.userId,
+      userName: req.user.name,
+      action: 'force_change_password',
+      entityType: 'user',
+      entityId: req.user.userId,
+      entityName: req.user.name,
+    });
     res.json({ message: 'Password changed successfully.' });
-  } catch (err) { next(err); }
+  } catch (err) {
+    next(err);
+  }
 });
 
 // ─── Helpers ─────────────────────────────────────────────────────────────
@@ -373,7 +418,9 @@ router.post('/force-change-password', requireAuth, async (req, res, next) => {
 function generateTempPassword() {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789!@#$%';
   const bytes = crypto.randomBytes(8);
-  return Array.from(bytes).map((b) => chars[b % chars.length]).join('');
+  return Array.from(bytes)
+    .map((b) => chars[b % chars.length])
+    .join('');
 }
 
 /** Generate temp password, update user, and send recovery email.
@@ -396,7 +443,7 @@ async function sendRecoveryEmail(tenantSlug, user) {
   if (!process.env.SENDGRID_API_KEY) {
     console.warn(
       `[Recovery] SendGrid not configured — cannot deliver recovery email to ${user.email}. ` +
-      `Set SENDGRID_API_KEY to enable account recovery emails.`,
+        `Set SENDGRID_API_KEY to enable account recovery emails.`,
     );
     return;
   }

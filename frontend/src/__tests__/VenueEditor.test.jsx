@@ -7,13 +7,25 @@ import VenueEditor from '../pages/groups/VenueEditor.jsx';
 vi.mock('../context/AuthContext.jsx', () => ({
   useAuth: () => ({
     tenant: 'test-u3a',
-    can:    vi.fn().mockReturnValue(true),
+    can: vi.fn().mockReturnValue(true),
   }),
 }));
 
 vi.mock('../lib/api.js', () => ({
   venues: {
-    get:    vi.fn().mockResolvedValue({ id: 'v1', name: 'Village Hall', contact: null, address: null, postcode: null, telephone: null, email: null, website: null, notes: null, private_address: false, accessible: false }),
+    get: vi.fn().mockResolvedValue({
+      id: 'v1',
+      name: 'Village Hall',
+      contact: null,
+      address: null,
+      postcode: null,
+      telephone: null,
+      email: null,
+      website: null,
+      notes: null,
+      private_address: false,
+      accessible: false,
+    }),
     create: vi.fn().mockResolvedValue({}),
     update: vi.fn().mockResolvedValue({}),
     delete: vi.fn().mockResolvedValue({}),
