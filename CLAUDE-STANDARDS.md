@@ -164,6 +164,12 @@ Every item below applies to every new feature — no exceptions.
 
 - [ ] **All tenant queries** through `tenantQuery()` or `withTenant()`.
 
+- [ ] **Tenant slug source** — on authenticated routes use `req.user.tenantSlug`
+  (set by `requireAuth`). `req.tenantSlug` exists **only** on public routes
+  (set by the public-routes middleware) and is `undefined` elsewhere.
+  `tenantQuery()`/`withTenant()` now throw on a non-string slug, so a wrong
+  source fails loudly rather than silently querying `u3a_undefined`.
+
 - [ ] **Data export/restore** — when adding or changing columns in `tenant_schema.sql`,
   update `backend/src/routes/backup.js` to match:
   1. **Export** — add the column to the relevant `buildXxxSheets` SELECT query and the

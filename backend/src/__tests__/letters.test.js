@@ -33,6 +33,16 @@ describe('GET /letters/standard-letters', () => {
     expect(res.body[0].name).toBe('Welcome');
   });
 
+  // Regression for S1: letters.js must scope queries to the authenticated
+  // user's tenant (req.user.tenantSlug), not the undefined req.tenantSlug
+  // which would silently target a u3a_undefined schema.
+  it('scopes the query to the authenticated user tenant', async () => {
+    tenantQuery.mockResolvedValueOnce([]);
+    await request.get('/letters/standard-letters').set('Authorization', auth);
+    expect(tenantQuery).toHaveBeenCalled();
+    expect(tenantQuery.mock.calls[0][0]).toBe(TEST_TENANT);
+  });
+
   it('returns 401 without auth', async () => {
     const res = await request.get('/letters/standard-letters');
     expect(res.status).toBe(401);

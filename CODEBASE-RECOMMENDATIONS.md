@@ -3,6 +3,11 @@
 Produced 2026-04-14. R1–R12 implemented (except R11 which was already done as part of R6);
 remaining recommendations documented below.
 
+> **Related documents:** security and quality findings that aren't pure
+> rationalisation live in [`KNOWN-ISSUES.md`](KNOWN-ISSUES.md); the consolidated,
+> chunked work plan is [`docs/ImprovementPlan.md`](docs/ImprovementPlan.md)
+> (R12's remaining untested routes are its Chunk 7).
+
 ---
 
 ## Completed (for reference)

@@ -158,7 +158,7 @@ function tiptapToPdfContent(doc, tokenMap) {
 // GET /letters/standard-letters
 router.get('/standard-letters', requirePrivilege('letters_standard_messages', 'view'), async (req, res, next) => {
   try {
-    const rows = await tenantQuery(req.tenantSlug, `
+    const rows = await tenantQuery(req.user.tenantSlug, `
       SELECT id, name, body FROM standard_letters ORDER BY name
     `, []);
     res.json(rows);
@@ -175,7 +175,7 @@ router.post('/standard-letters', requirePrivilege('letters_standard_messages', '
   if (!parsed.success) return res.status(422).json({ error: 'Validation error', issues: parsed.error.issues.map((i) => ({ path: i.path.join('.'), message: i.message })) });
   const { name, body } = parsed.data;
   try {
-    const rows = await tenantQuery(req.tenantSlug, `
+    const rows = await tenantQuery(req.user.tenantSlug, `
       INSERT INTO standard_letters (name, body)
       VALUES ($1, $2)
       ON CONFLICT (name) DO UPDATE SET body = $2, updated_at = NOW()
@@ -188,7 +188,7 @@ router.post('/standard-letters', requirePrivilege('letters_standard_messages', '
 // DELETE /letters/standard-letters/:id
 router.delete('/standard-letters/:id', requirePrivilege('letters_standard_messages', 'delete'), async (req, res, next) => {
   try {
-    await tenantQuery(req.tenantSlug, `DELETE FROM standard_letters WHERE id = $1`, [req.params.id]);
+    await tenantQuery(req.user.tenantSlug, `DELETE FROM standard_letters WHERE id = $1`, [req.params.id]);
     res.status(204).end();
   } catch (err) { next(err); }
 });
@@ -210,8 +210,8 @@ router.post('/download', requirePrivilege('letters', 'download'), async (req, re
 
   try {
     const [members, displayName] = await Promise.all([
-      fetchMembersForLetters(req.tenantSlug, memberIds),
-      getTenantDisplayName(req.tenantSlug),
+      fetchMembersForLetters(req.user.tenantSlug, memberIds),
+      getTenantDisplayName(req.user.tenantSlug),
     ]);
 
     if (members.length === 0) {

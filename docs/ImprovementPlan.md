@@ -158,7 +158,7 @@ still open where marked open, and added one new finding:
 Each chunk is sized for one session. Recommended order below; chunks 4+ are
 largely independent of each other unless noted.
 
-### Chunk 1 — Fix the tenant-context bug (S1) ⚠️ do first
+### Chunk 1 — Fix the tenant-context bug (S1) ✅ Done (2026-06-12)
 - Replace `req.tenantSlug` with `req.user.tenantSlug` throughout
   `routes/email.js` and `routes/letters.js`.
 - Harden `withTenant()`/`tenantQuery()` in `utils/db.js` to reject non-string
@@ -168,7 +168,12 @@ largely independent of each other unless noted.
   authenticated user's tenant (the existing mocks make this easy to assert).
 - Manually verify the Email compose and Letters pages against a real backend.
 
-### Chunk 2 — Repo hygiene & onboarding docs (O1–O4, P3)
+### Chunk 2 — Repo hygiene & onboarding docs (O1–O4, P3) ✅ Done (2026-06-12)
+**Deferred by owner decision:** the `LICENSE` file (owner to choose a licence)
+and the `docs/FromBeacon/` provenance README (owner to confirm permission) —
+both logged in `KNOWN-ISSUES.md` under "Repo hygiene & licensing". Everything
+else in this chunk is done.
+
 Docs-only. Add LICENSE (owner to choose; decide before the session) and
 CONTRIBUTING.md; create `backend/.env.example` and `frontend/.env.example`
 listing every env var with required/optional status; fix README quickstart to
