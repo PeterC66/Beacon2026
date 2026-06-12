@@ -213,31 +213,30 @@ gate CI.
   rate limiter; base the refresh-origin check on `CORS_ORIGIN` presence rather
   than `NODE_ENV`.
 
-**Notes:** New `backend/src/utils/passwordPolicy.js` is the single source of
-truth for `passwordSchema` (10–72 chars, upper+lower+digit) and
-`generateTempPassword()` (now `crypto.randomInt`, no modulo bias); it lives
-apart from `password.js` because several test files mock the latter wholesale.
-`requireSysAdmin` now re-checks `sysAdmin.active` on every request (sys-admin
-tokens carry no Redis invalidation marker, so the active flag is the meaningful
-state check). Portal auth honours the Redis invalidation marker (set on portal
-password change/reset). **Deviation:** the portal-login "verify your email"
-response is *retained* (not collapsed to a generic 401) — it is only reachable
-after a correct password, so it is not an email-enumeration vector; the actual
-vector (response timing) was closed with a dummy bcrypt comparison on the
-no-account path. Recover / forgot-password emails are now fire-and-forget so
-response time no longer leaks account existence. Verification tokens are emailed
-via SendGrid (or a token-free warning when unset), never `console.log`'d. The
-public slug regex was tightened to `[a-z0-9_]+` to match `utils/db.js`. A
-dedicated `portalAuthLimiter` (20/15 min/IP, `PORTAL_AUTH_RATE_LIMIT_MAX`)
-guards register/login/forgot/reset/verify.
-
-### Chunk 5 — Security: email & uploads (S9, S10, S13)
+### Chunk 5 — Security: email & uploads (S9, S10, S13) ✅ Done (2026-06-12)
 - Sanitise attachment filenames; constrain `replyTo` to the sender's own
   addresses; wire or remove `fromEmail`; make `FROM_ADDRESS` env-configurable;
   cap per-click SendGrid status refresh.
 - Magic-byte validation (`file-type`) on photo uploads; MIME whitelist on
   `/system/restore` and `/email/send` multer configs.
 - Purge tenant Redis invalidation keys in `clearTenantData()`.
+
+**Notes:** new shared helper `backend/src/utils/uploads.js` holds the image
+magic-byte sniffer (`decodeAndValidateImage` — hand-rolled jpeg/png/gif check,
+no `file-type` dependency added), `sanitizeAttachmentFilename`, and a reusable
+`mimeFileFilter` plus the spreadsheet/attachment MIME whitelists. Both photo
+routes (`members.js`, `portal.js`) validate magic bytes; `/system/restore` and
+`/email/send` multer configs whitelist MIME and cap file counts. In `email.js`,
+`fromEmail` **and** `replyTo` are validated against the user's own permitted
+addresses via the extracted `getUserFromAddresses()` helper (shared with
+`/from-addresses`), `FROM_ADDRESS` reads `EMAIL_FROM_ADDRESS` →
+`RECOVERY_FROM_ADDRESS` → default, and the delivery refresh is capped at 100
+lookups per click. The restore route purges tenant Redis invalidation marks
+via the new `purgeTenantInvalidations()`. KI #23 (bodyHtml on portal/public
+templated emails) remains `[OPEN]` — it is latent until SendGrid is wired for
+those flows, so there is nothing to change yet. New unit tests:
+`__tests__/uploads.test.js`; magic-byte mismatch case added to
+`members.test.js`.
 
 ### Chunk 6 — Backend consistency (N1–N3, N6, C5, C6)
 - Extract the shared WHERE-builder helper used by calendar/members/
