@@ -5,6 +5,20 @@ Format: `## [version] — YYYY-MM-DD` with bullet points per change.
 
 ---
 
+## [Unreleased] — 2026-06-12
+
+### Added
+- **`docs/ImprovementPlan.md`** — consolidated full-codebase review
+  (security, completeness, consistency, maintainability, readability,
+  standards, production readiness). Findings are grouped into 12
+  numbered implementation chunks, each sized for one session, and
+  cross-referenced to SECURITY-REVIEW.md, KNOWN-ISSUES.md, and
+  CODEBASE-RECOMMENDATIONS.md (all prior fixed findings re-verified).
+  Headline new finding: `routes/email.js` and `routes/letters.js` use
+  `req.tenantSlug`, which is undefined on authenticated routes, and
+  `tenantQuery()` accepts the coerced string `"undefined"` as a slug —
+  see Chunk 1. No code changes this session.
+
 ## [Unreleased] — 2026-06-10
 
 ### Security
