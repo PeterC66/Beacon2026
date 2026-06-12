@@ -168,7 +168,12 @@ largely independent of each other unless noted.
   authenticated user's tenant (the existing mocks make this easy to assert).
 - Manually verify the Email compose and Letters pages against a real backend.
 
-### Chunk 2 — Repo hygiene & onboarding docs (O1–O4, P3)
+### Chunk 2 — Repo hygiene & onboarding docs (O1–O4, P3) ✅ Done (2026-06-12)
+**Deferred by owner decision:** the `LICENSE` file (owner to choose a licence)
+and the `docs/FromBeacon/` provenance README (owner to confirm permission) —
+both logged in `KNOWN-ISSUES.md` under "Repo hygiene & licensing". Everything
+else in this chunk is done.
+
 Docs-only. Add LICENSE (owner to choose; decide before the session) and
 CONTRIBUTING.md; create `backend/.env.example` and `frontend/.env.example`
 listing every env var with required/optional status; fix README quickstart to
