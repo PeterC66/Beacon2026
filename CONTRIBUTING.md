@@ -59,6 +59,18 @@ implementation notes.
   behaviour.
 - Documentation-only changes (`*.md`, `docs/`) don't need the test suites.
 
+## Linting & formatting
+
+- Both packages use ESLint 9 (flat config) and Prettier. Before opening a PR:
+  ```bash
+  cd backend  && npm run lint && npm run format:check
+  cd frontend && npm run lint && npm run format:check
+  ```
+- `npm run lint:fix` and `npm run format` auto-fix most issues. CI runs `lint`
+  and `format:check` for both packages, so they must pass.
+- Lint must be error-free. `react-hooks/exhaustive-deps` is configured as a
+  warning; fix it where practical.
+
 ## New pages & privileges
 
 Every new page must use its own named privilege resource (never reuse

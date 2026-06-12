@@ -133,6 +133,27 @@ These are catalogued and re-verified in `docs/ImprovementPlan.md` (Chunks 4–5)
 
 ---
 
+## Linting & tooling (ImprovementPlan Chunk 3)
+
+1. `[DEFERRED]` **Newer `eslint-plugin-react-hooks` rules not adopted** — the
+   v7 plugin's recommended set adds `react-hooks/set-state-in-effect` (~27
+   sites) and `react-hooks/immutability` (~25 sites), which would each require
+   real component refactors. The plugin is pinned to v5 (`rules-of-hooks` +
+   `exhaustive-deps`) for the baseline. Revisit alongside the frontend
+   dedup/refactor work (Chunks 8/10), then consider upgrading to v7.
+2. `[OPEN]` **`react-hooks/exhaustive-deps` left as a warning (~30 sites)** —
+   each is a `useEffect`/`useMemo`/`useCallback` with an incomplete dependency
+   array. Warnings do not fail CI. Audit and fix incrementally; some are
+   deliberate (mount-only effects) and can take an inline disable with a note.
+3. `[ACCEPTED]` **`react/no-unescaped-entities` disabled** — apostrophes and
+   quotes in JSX text render correctly; escaping them is noise.
+4. `[OPEN]` **`shared/constants.js` not covered by either package's `lint` /
+   `format:check`** — it lives outside `backend/src` and `frontend/src`, so CI
+   does not enforce its style. It was Prettier-formatted once during Chunk 3.
+   Add a dedicated lint/format target for `shared/` if it grows.
+
+---
+
 ## UI Terminology
 
 1. `[OPEN]` **Group/Team Cash — "Central Ledger" vs "Finance Ledger" wording** — The
