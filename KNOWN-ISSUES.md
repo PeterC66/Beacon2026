@@ -59,10 +59,11 @@ These are catalogued and re-verified in `docs/ImprovementPlan.md` (Chunks 4–5)
     `[a-z0-9_-]` but `utils/db.js:27` only allows `[a-z0-9_]`. A slug
     containing `-` 500s inside `tenantQuery` rather than 400-ing at the
     edge. Unify both regexes.
-12. `[OPEN]` **Photo upload doesn't validate magic bytes** —
-    `routes/portal.js:726`. Mime-type is whitelisted to jpeg/png/gif and
-    Helmet's nosniff blocks browser sniffing, so no XSS — but mislabelled
-    payloads silently succeed and may break PDF rendering downstream.
+12. `[RESOLVED 2026-06-12]` **Photo upload doesn't validate magic bytes** —
+    `routes/portal.js`. Fixed in ImprovementPlan Chunk 5: both photo routes now
+    call `decodeAndValidateImage()` (`utils/uploads.js`), which sniffs the
+    leading bytes and rejects a payload whose content doesn't match its
+    declared jpeg/png/gif type. (See also #15.)
 13. `[OPEN]` **Portal login email-enumeration via differentiated responses** —
     `routes/public.js:887,891`. 401 for unknown/wrong-password but 403
     "Please verify your email" for known-unverified accounts reveals
@@ -70,33 +71,36 @@ These are catalogued and re-verified in `docs/ImprovementPlan.md` (Chunks 4–5)
 14. `[OPEN]` **`/portal/forgot-password` timing enumeration** —
     `routes/public.js:922`. Bcrypt + DB write happen only on hit;
     response time leaks account existence.
-15. `[OPEN]` **No magic-byte validation on photo uploads**
-    (`routes/members.js:1494`, `routes/portal.js:726`). Mime-type is
-    whitelisted; nosniff blocks browser XSS. But mislabelled payloads
-    silently succeed and break PDF rendering downstream — DoS vector.
-16. `[OPEN]` **Email-attachment `originalname` passed through unsanitised**
-    (`routes/email.js:267`). Recipients can be sent files with
-    attacker-crafted names (`Invoice.pdf .exe`, control-char headers).
-    Sanitise to a basename, strip control chars, cap length.
-17. `[OPEN]` **`clearTenantData()` doesn't purge Redis invalidation marks**
-    (`routes/backup.js:658`). After restore, stale `invalidated:slug:userId`
-    keys (31-day TTL) may make fresh sessions appear pre-revoked.
-18. `[OPEN]` **Multer accepts any MIME type on `/system/restore` and `/email/send`**
-    (`routes/system.js:201`, `routes/email.js:16`). FileSize caps the
-    only bound; per-request /email/send worst case ≈ 400 MB in memory.
-19. `[OPEN]` **`/email/send` `fromEmail` field is declared but ignored** —
-    `routes/email.js:205,293`. The SendGrid message hard-codes
-    `FROM_ADDRESS`. Either wire it up with an allow-list, or drop the
-    field from the schema.
-20. `[OPEN]` **`/email/send` `replyTo` is unconstrained** — anyone with
-    `email:send` can set it to any address (e.g. impersonating an
-    officer). Limit to the user's own member-email + offices they hold
-    (the same source as `/email/from-addresses`).
-21. `[OPEN]` **`/email/delivery/:batchId/refresh` issues one SendGrid API call
-    per recipient** — `routes/email.js:433`. Cap the per-click amplification.
-22. `[OPEN]` **Hard-coded `FROM_ADDRESS = 'noreply@u3abeacon.org.uk'`** —
-    `routes/email.js:23`. Make env-configurable so deployments under
-    other domains don't fail SPF/DKIM silently.
+15. `[RESOLVED 2026-06-12]` **No magic-byte validation on photo uploads**
+    (`routes/members.js`, `routes/portal.js`). Fixed in ImprovementPlan
+    Chunk 5 — see #12.
+16. `[RESOLVED 2026-06-12]` **Email-attachment `originalname` passed through
+    unsanitised** (`routes/email.js`). Fixed in Chunk 5: attachments are run
+    through `sanitizeAttachmentFilename()` (basename only, control/illegal
+    chars stripped, whitespace padding collapsed, length capped).
+17. `[RESOLVED 2026-06-12]` **`clearTenantData()` doesn't purge Redis
+    invalidation marks** (`routes/backup.js`). Fixed in Chunk 5: the restore
+    route calls `purgeTenantInvalidations(tenantSlug)` (`utils/redis.js`, SCAN
+    + DEL) after a successful restore, clearing stale
+    `invalidated:slug:userId` keys.
+18. `[RESOLVED 2026-06-12]` **Multer accepts any MIME type on `/system/restore`
+    and `/email/send`** (`routes/system.js`, `routes/email.js`). Fixed in
+    Chunk 5: both multer configs now use `mimeFileFilter()` (spreadsheet
+    whitelist for restore, safe-attachment whitelist for email) plus explicit
+    `files` count limits.
+19. `[RESOLVED 2026-06-12]` **`/email/send` `fromEmail` field is declared but
+    ignored** (`routes/email.js`). Fixed in Chunk 5: `fromEmail` and `replyTo`
+    are now validated against the user's own permitted addresses
+    (`getUserFromAddresses()`, the same source as `/email/from-addresses`);
+    a value outside that set is rejected with 403.
+20. `[RESOLVED 2026-06-12]` **`/email/send` `replyTo` is unconstrained**
+    (`routes/email.js`). Fixed in Chunk 5 — see #19.
+21. `[RESOLVED 2026-06-12]` **`/email/delivery/:batchId/refresh` issues one
+    SendGrid API call per recipient** (`routes/email.js`). Fixed in Chunk 5:
+    the per-click lookup count is capped at `MAX_REFRESH_LOOKUPS` (100).
+22. `[RESOLVED 2026-06-12]` **Hard-coded `FROM_ADDRESS`** (`routes/email.js`).
+    Fixed in Chunk 5: the broadcast sender now reads `EMAIL_FROM_ADDRESS`
+    (falling back to `RECOVERY_FROM_ADDRESS`, then the original default).
 23. `[OPEN]` **`routes/public.js` and `routes/portal.js` `resolveTokens` callers
     still use `body` for templated emails** — currently only `console.log`'d
     so latent, but when SendGrid is wired they should also use the new
