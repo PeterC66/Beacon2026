@@ -202,7 +202,7 @@ disabled (noise). `exhaustive-deps` left as a warning (30 sites). Backend
 separately. Node bumped 20 → 22 in `ci.yml`; `lint` + `format:check` now
 gate CI.
 
-### Chunk 4 — Security: auth & enumeration (S2–S8, S11, S12)
+### Chunk 4 — Security: auth & enumeration (S2–S8, S11, S12) ✅ Done (2026-06-12)
 - Centralise password policy into one shared Zod schema; apply to
   `PATCH /users`, `/system/tenants`, and all reset flows.
 - Replace biased temp-password generation with `crypto.randomInt`.

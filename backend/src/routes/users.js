@@ -1,12 +1,12 @@
 // beacon2/backend/src/routes/users.js
 
 import { Router } from 'express';
-import crypto from 'crypto';
 import { z } from 'zod';
 import { requireAuth } from '../middleware/auth.js';
 import { requirePrivilege } from '../middleware/requirePrivilege.js';
 import { tenantQuery } from '../utils/db.js';
 import { hashPassword } from '../utils/password.js';
+import { passwordSchema, generateTempPassword } from '../utils/passwordPolicy.js';
 import { AppError } from '../middleware/errorHandler.js';
 import { invalidateUserSessions } from '../utils/redis.js';
 import { logAudit } from '../utils/audit.js';
@@ -179,7 +179,7 @@ const updateUserSchema = z.object({
     .nullable()
     .optional(),
   name: z.string().min(1).optional(),
-  password: z.string().min(8).optional(),
+  password: passwordSchema.optional(),
   active: z.boolean().optional(),
   memberId: z.string().nullable().optional(),
 });
@@ -402,16 +402,5 @@ router.delete(
     }
   },
 );
-
-// ─── Helpers ──────────────────────────────────────────────────────────────
-
-/** Generate a random temporary password like "!xZ#8kP2" */
-function generateTempPassword() {
-  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789!@#$%';
-  const bytes = crypto.randomBytes(8);
-  return Array.from(bytes)
-    .map((b) => chars[b % chars.length])
-    .join('');
-}
 
 export default router;

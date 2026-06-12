@@ -5,11 +5,14 @@
 
 import { Router } from 'express';
 import { z } from 'zod';
+import sgMail from '@sendgrid/mail';
 import PDFDocument from 'pdfkit';
 import { tenantQuery, prisma } from '../utils/db.js';
 import { verifyAccessToken } from '../utils/jwt.js';
 import { hashPassword, verifyPassword } from '../utils/password.js';
 import { generateToken, hashOpaqueToken } from '../utils/password.js';
+import { passwordSchema } from '../utils/passwordPolicy.js';
+import { isSessionInvalidated, invalidateUserSessions } from '../utils/redis.js';
 import { resolveTokens } from '../utils/emailTokens.js';
 import { isFeatureEnabled } from '../middleware/requireFeature.js';
 import { logAudit } from '../utils/audit.js';
@@ -17,6 +20,12 @@ import { generateSingleCardPdf } from './membershipCards.js';
 import { decodeAndValidateImage } from '../utils/uploads.js';
 
 const router = Router({ mergeParams: true });
+
+if (process.env.SENDGRID_API_KEY) {
+  sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+}
+
+const PORTAL_FROM = process.env.RECOVERY_FROM_ADDRESS ?? 'noreply@u3abeacon.org.uk';
 
 // ─── Portal auth middleware ──────────────────────────────────────────────────
 
@@ -32,6 +41,16 @@ async function requirePortalAuth(req, res, next) {
     }
     if (payload.tenantSlug !== req.params.slug) {
       return res.status(403).json({ error: 'Token does not match this organisation.' });
+    }
+    // Honour session invalidation (e.g. portal password change/reset) the same
+    // way requireAuth does for tenant users, keyed on the member id.
+    const invalidated = await isSessionInvalidated(
+      payload.tenantSlug,
+      payload.memberId,
+      payload.iat,
+    );
+    if (invalidated) {
+      return res.status(401).json({ error: 'Session expired. Please sign in again.' });
     }
     req.portal = payload; // { memberId, tenantSlug, name, isPortal }
     next();
@@ -823,7 +842,11 @@ router.patch('/personal-details', async (req, res, next) => {
 
       const frontendBase = process.env.CORS_ORIGIN || 'http://localhost:5173';
       const verifyLink = `${frontendBase}/public/${slug}/portal/verify?token=${verificationToken}`;
-      console.log(`[Portal] Would send email verification to ${data.email}: ${verifyLink}`);
+      // Send the link by email. Fire-and-forget; never log the token (a leaked
+      // verification token lets an attacker confirm a changed email address).
+      void sendPortalVerificationEmail(data.email.toLowerCase(), verifyLink).catch((err) =>
+        console.error('[Portal] Background email-verification send failed:', err.message),
+      );
     }
 
     // Send confirmation email via system_messages template
@@ -972,14 +995,7 @@ router.get('/photo', async (req, res, next) => {
 
 const changePasswordSchema = z.object({
   currentPassword: z.string().min(1),
-  newPassword: z
-    .string()
-    .min(10)
-    .max(72)
-    .refine((pw) => /[a-z]/.test(pw) && /[A-Z]/.test(pw) && /[0-9]/.test(pw), {
-      message:
-        'Password must contain at least one uppercase, one lowercase, and one numeric character.',
-    }),
+  newPassword: passwordSchema,
 });
 
 router.post('/change-password', async (req, res, next) => {
@@ -1008,6 +1024,10 @@ router.post('/change-password', async (req, res, next) => {
       `UPDATE members SET portal_password_hash = $1, updated_at = now() WHERE id = $2`,
       [newHash, memberId],
     );
+
+    // Invalidate any other portal sessions for this member (requirePortalAuth
+    // checks this marker on every request).
+    await invalidateUserSessions(slug, memberId);
 
     logAudit(slug, {
       userId: null,
@@ -1804,6 +1824,35 @@ async function sendDetailsUpdateEmail(slug, memberId, emailChanged) {
     }
   } catch (err) {
     console.error('[Portal] Failed to send details update email:', err.message);
+  }
+}
+
+/** Send the portal email-change verification link. Mirrors sendPortalResetEmail()
+ *  in public.js — if SendGrid is not configured we log a warning (without the
+ *  token) and return silently rather than emitting the link to stdout. */
+async function sendPortalVerificationEmail(toEmail, verifyLink) {
+  const subject = 'Verify your new Members Portal email address';
+  const body = `You changed the email address on your Members Portal account.
+
+Use the link below to verify this new address. The link expires in one hour.
+
+${verifyLink}
+
+If you did not request this, please contact your u3a.`;
+
+  if (!process.env.SENDGRID_API_KEY) {
+    console.warn(
+      `[Portal] SendGrid not configured — cannot deliver email-verification message to ${toEmail}. ` +
+        `Set SENDGRID_API_KEY to enable portal verification emails.`,
+    );
+    return;
+  }
+
+  try {
+    await sgMail.send({ to: toEmail, from: PORTAL_FROM, subject, text: body });
+  } catch (err) {
+    // Never include the verification link in the error log.
+    console.error(`[Portal] Failed to send email-verification message to ${toEmail}:`, err.message);
   }
 }
 
