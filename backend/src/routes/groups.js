@@ -10,6 +10,7 @@ import { requireFeature } from '../middleware/requireFeature.js';
 import { tenantQuery } from '../utils/db.js';
 import { sanitizeCell } from '../utils/spreadsheet.js';
 import { AppError } from '../middleware/errorHandler.js';
+import { logAudit } from '../utils/audit.js';
 import {
   addMemberSchema,
   bulkAddMembersSchema,
@@ -324,6 +325,14 @@ router.post('/', requirePrivilege('group_records_all', 'create'), async (req, re
         data.showAddresses,
       ],
     );
+    logAudit(slug, {
+      userId: req.user.userId,
+      userName: req.user.name,
+      action: 'create',
+      entityType: 'group',
+      entityId: group.id,
+      entityName: group.name,
+    });
     res.status(201).json(group);
   } catch (err) {
     next(err);
@@ -400,6 +409,14 @@ router.patch('/:id', requirePrivilege('group_records_all', 'change'), async (req
       values,
     );
     if (!group) throw AppError('Group not found.', 404);
+    logAudit(slug, {
+      userId: req.user.userId,
+      userName: req.user.name,
+      action: 'update',
+      entityType: 'group',
+      entityId: group.id,
+      entityName: group.name,
+    });
     res.json(group);
   } catch (err) {
     next(err);
@@ -413,12 +430,20 @@ router.delete('/:id', requirePrivilege('group_records_all', 'delete'), async (re
     const slug = req.user.tenantSlug;
     const [existing] = await tenantQuery(
       slug,
-      `SELECT id FROM groups WHERE id = $1 AND type = 'group'`,
+      `SELECT id, name FROM groups WHERE id = $1 AND type = 'group'`,
       [req.params.id],
     );
     if (!existing) throw AppError('Group not found.', 404);
 
     await tenantQuery(slug, `DELETE FROM groups WHERE id = $1 AND type = 'group'`, [req.params.id]);
+    logAudit(slug, {
+      userId: req.user.userId,
+      userName: req.user.name,
+      action: 'delete',
+      entityType: 'group',
+      entityId: existing.id,
+      entityName: existing.name,
+    });
     res.json({ message: 'Group deleted.' });
   } catch (err) {
     next(err);

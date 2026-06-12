@@ -1346,6 +1346,14 @@ to the default event type.
 
 ### Key decisions
 
+- **Shared event-filter builders** — `backend/src/utils/eventFilters.js` exports
+  `buildCalendarEventFilters(query)` (used by all three `calendar.js` event
+  endpoints: list / pdf / excel) and `buildPortalCalendarFilters(query, memberId)`
+  (used by both `portal.js` calendar endpoints: view / pdf). Each returns
+  `{ where, params }` and validates the query string with Zod, so a malformed
+  `from`/`to` returns 422 at the edge rather than 500-ing on the `::date` cast.
+  Note the PDF/Excel handlers still read `req.query.from`/`to` separately, purely
+  for the report's title label. Added in ImprovementPlan Chunk 6 (N1, N3).
 - **Non-group events** share the `group_events` table (nullable `group_id`) rather than a separate table
 - **Event types** are a single flexible system — no per-type privileges
 - **Calendar "Other" mode** embeds event management inline rather than a separate page
