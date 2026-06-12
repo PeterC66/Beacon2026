@@ -17,6 +17,7 @@ import { resolveTokens } from '../utils/emailTokens.js';
 import { isFeatureEnabled } from '../middleware/requireFeature.js';
 import { logAudit } from '../utils/audit.js';
 import { generateSingleCardPdf } from './membershipCards.js';
+import { decodeAndValidateImage } from '../utils/uploads.js';
 
 const router = Router({ mergeParams: true });
 
@@ -902,7 +903,10 @@ router.post('/photo', async (req, res, next) => {
 
     const { data, mimeType } = portalPhotoUploadSchema.parse(req.body);
 
-    const byteLength = Buffer.from(data, 'base64').length;
+    // Validate the real content matches the declared image type (magic bytes)
+    const buffer = decodeAndValidateImage(data, mimeType);
+
+    const byteLength = buffer.length;
     if (byteLength > MAX_PHOTO_BYTES) {
       return res.status(400).json({
         error: `Photo exceeds the 2 MB limit (${(byteLength / 1024 / 1024).toFixed(1)} MB).`,

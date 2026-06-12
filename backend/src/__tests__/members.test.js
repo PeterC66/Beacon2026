@@ -493,6 +493,16 @@ describe('POST /members/:id/photo', () => {
     expect(res.status).toBe(422);
   });
 
+  it('rejects content whose magic bytes do not match the declared type', async () => {
+    // PNG bytes declared as JPEG — should be rejected before any DB write.
+    const res = await request(app)
+      .post('/members/m1/photo')
+      .set('Authorization', AUTH)
+      .send({ data: TINY_PNG, mimeType: 'image/jpeg' });
+
+    expect(res.status).toBe(400);
+  });
+
   it('returns 404 when member not found', async () => {
     tenantQuery.mockResolvedValueOnce([]); // member not found
 

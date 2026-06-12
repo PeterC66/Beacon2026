@@ -9,18 +9,37 @@ import { requirePrivilege } from '../middleware/requirePrivilege.js';
 import { requireAuth } from '../middleware/auth.js';
 import { requireFeature } from '../middleware/requireFeature.js';
 import { resolveTokens, fmtDate } from '../utils/emailTokens.js';
+import {
+  sanitizeAttachmentFilename,
+  mimeFileFilter,
+  ATTACHMENT_MIME_TYPES,
+} from '../utils/uploads.js';
 
 const router = Router();
 router.use(requireAuth);
 router.use(requireFeature('email'));
-const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 20 * 1024 * 1024 } });
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 20 * 1024 * 1024, files: 20 },
+  fileFilter: mimeFileFilter(ATTACHMENT_MIME_TYPES, { label: 'attachment' }),
+});
 
 // Configure SendGrid (noop if no key — unit tests mock before this runs)
 if (process.env.SENDGRID_API_KEY) {
   sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 }
 
-const FROM_ADDRESS = 'noreply@u3abeacon.org.uk';
+// Envelope sender for all outbound mail. Must be an address whose domain is
+// SPF/DKIM-authorised for the deploying u3a; configurable so deployments under
+// other domains don't fail authentication silently. Falls back to the shared
+// RECOVERY_FROM_ADDRESS used by the auth/portal mailers so a deployment can set
+// a single sender address.
+const FROM_ADDRESS =
+  process.env.EMAIL_FROM_ADDRESS || process.env.RECOVERY_FROM_ADDRESS || 'noreply@u3abeacon.org.uk';
+
+// Cap the number of per-recipient SendGrid status lookups a single refresh
+// click may trigger, bounding the outbound-API amplification.
+const MAX_REFRESH_LOOKUPS = 100;
 
 // ─── Helpers ──────────────────────────────────────────────────────────────
 
@@ -99,6 +118,59 @@ async function fetchMembersForEmail(tenantSlug, memberIds) {
 async function getTenantDisplayName(tenantSlug) {
   const tenant = await prisma.sysTenant.findUnique({ where: { slug: tenantSlug } });
   return tenant?.name || tenantSlug;
+}
+
+/**
+ * Resolve the email addresses a user is allowed to send "from" / reply-to:
+ * their own member email plus any office emails they hold, falling back to
+ * their user-account email. This is the single source of truth shared by the
+ * GET /from-addresses endpoint and the From/Reply-To allow-list on send.
+ * @returns {Promise<Array<{ label: string, email: string }>>}
+ */
+async function getUserFromAddresses(tenantSlug, userId, userName) {
+  const userRows = await tenantQuery(
+    tenantSlug,
+    `SELECT member_id, name FROM users WHERE id = $1`,
+    [userId],
+  );
+  const user = userRows[0];
+  const addresses = [];
+
+  if (user?.member_id) {
+    const memberRows = await tenantQuery(
+      tenantSlug,
+      `SELECT email, forenames, surname FROM members WHERE id = $1`,
+      [user.member_id],
+    );
+    if (memberRows[0]?.email) {
+      const m = memberRows[0];
+      addresses.push({ label: `${m.forenames} ${m.surname} <${m.email}>`, email: m.email });
+    }
+    const officeRows = await tenantQuery(
+      tenantSlug,
+      `SELECT name, office_email FROM offices
+       WHERE member_id = $1 AND office_email IS NOT NULL AND office_email != ''`,
+      [user.member_id],
+    );
+    for (const o of officeRows) {
+      addresses.push({ label: `${o.name} <${o.office_email}>`, email: o.office_email });
+    }
+  }
+
+  // Fallback: if no member linked, use the user's account email.
+  if (addresses.length === 0) {
+    const emailRows = await tenantQuery(tenantSlug, `SELECT email FROM users WHERE id = $1`, [
+      userId,
+    ]);
+    if (emailRows[0]?.email) {
+      addresses.push({
+        label: `${user?.name ?? userName ?? ''} <${emailRows[0].email}>`,
+        email: emailRows[0].email,
+      });
+    }
+  }
+
+  return addresses;
 }
 
 /**
@@ -207,54 +279,11 @@ router.delete(
 // GET /email/from-addresses  — member email + any office emails the user holds
 router.get('/from-addresses', requirePrivilege('email', 'send'), async (req, res, next) => {
   try {
-    const userId = req.user.userId;
-    // Get the user record to find their linked member_id
-    const userRows = await tenantQuery(
+    const addresses = await getUserFromAddresses(
       req.user.tenantSlug,
-      `SELECT member_id, name FROM users WHERE id = $1`,
-      [userId],
+      req.user.userId,
+      req.user.name,
     );
-    const user = userRows[0];
-    const addresses = [];
-
-    if (user?.member_id) {
-      const memberRows = await tenantQuery(
-        req.user.tenantSlug,
-        `SELECT email, forenames, surname FROM members WHERE id = $1`,
-        [user.member_id],
-      );
-      if (memberRows[0]?.email) {
-        const m = memberRows[0];
-        addresses.push({ label: `${m.forenames} ${m.surname} <${m.email}>`, email: m.email });
-      }
-      // Office emails for this member
-      const officeRows = await tenantQuery(
-        req.user.tenantSlug,
-        `
-        SELECT name, office_email FROM offices WHERE member_id = $1 AND office_email IS NOT NULL AND office_email != ''
-      `,
-        [user.member_id],
-      );
-      for (const o of officeRows) {
-        addresses.push({ label: `${o.name} <${o.office_email}>`, email: o.office_email });
-      }
-    }
-
-    // Fallback: if no member linked, use user's email from users table
-    if (addresses.length === 0) {
-      const emailRows = await tenantQuery(
-        req.user.tenantSlug,
-        `SELECT email FROM users WHERE id = $1`,
-        [userId],
-      );
-      if (emailRows[0]?.email) {
-        addresses.push({
-          label: `${user?.name ?? ''} <${emailRows[0].email}>`,
-          email: emailRows[0].email,
-        });
-      }
-    }
-
     res.json(addresses);
   } catch (err) {
     next(err);
@@ -297,6 +326,20 @@ router.post(
     const { memberIds, subject, body, fromEmail, replyTo, copyToSelf, giftAidDates } = parsed.data;
 
     try {
+      // Constrain From / Reply-To to addresses the user actually holds, so a
+      // user with email:send can't impersonate an officer or arbitrary address.
+      const allowedAddresses = await getUserFromAddresses(
+        req.user.tenantSlug,
+        req.user.userId,
+        req.user.name,
+      );
+      const allowedSet = new Set(allowedAddresses.map((a) => a.email.toLowerCase()));
+      if (!allowedSet.has(fromEmail.toLowerCase()) || !allowedSet.has(replyTo.toLowerCase())) {
+        return res
+          .status(403)
+          .json({ error: 'From / Reply-To address is not one of your permitted addresses.' });
+      }
+
       const [members, u3aName] = await Promise.all([
         fetchMembersForEmail(req.user.tenantSlug, memberIds),
         getTenantDisplayName(req.user.tenantSlug),
@@ -333,10 +376,12 @@ router.post(
         return res.status(400).json({ error: 'No recipients have a valid email address' });
       }
 
-      // Build attachments array for SendGrid
+      // Build attachments array for SendGrid (filenames sanitised to a safe
+      // basename — strip path/control chars so recipients can't be sent a
+      // file with an attacker-crafted name).
       const attachments = (req.files || []).map((f) => ({
         content: f.buffer.toString('base64'),
-        filename: f.originalname,
+        filename: sanitizeAttachmentFilename(f.originalname),
         type: f.mimetype,
         disposition: 'attachment',
       }));
@@ -578,8 +623,12 @@ router.post(
         [req.params.batchId],
       );
 
-      // Query SendGrid Activity Feed API for each message ID that we have
-      const withMsgId = recipients.filter((r) => r.sendgrid_message_id);
+      // Query SendGrid Activity Feed API for each message ID that we have,
+      // capped so a single refresh click can't fan out into unbounded
+      // outbound API calls on a large batch.
+      const withMsgId = recipients
+        .filter((r) => r.sendgrid_message_id)
+        .slice(0, MAX_REFRESH_LOOKUPS);
       let updated = 0;
 
       for (const r of withMsgId) {

@@ -59,3 +59,20 @@ export async function isSessionInvalidated(tenantSlug, userId, tokenIssuedAt) {
   const invalidatedAt = parseInt(value, 10);
   return tokenIssuedAt * 1000 < invalidatedAt;
 }
+
+// Remove every session-invalidation mark for a tenant. Used after a restore,
+// which deletes and re-creates the tenant's users — stale marks (31-day TTL)
+// would otherwise make the new users' sessions appear pre-revoked.
+export async function purgeTenantInvalidations(tenantSlug) {
+  if (!client) return;
+  const pattern = `invalidated:${tenantSlug}:*`;
+  // SCAN avoids blocking Redis on large keyspaces (unlike KEYS).
+  for await (const key of client.scanIterator({ MATCH: pattern, COUNT: 100 })) {
+    // node-redis v4 yields a string per key (v5 may batch into arrays).
+    if (Array.isArray(key)) {
+      if (key.length) await client.del(key);
+    } else {
+      await client.del(key);
+    }
+  }
+}

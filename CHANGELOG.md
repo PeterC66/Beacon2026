@@ -7,7 +7,30 @@ Format: `## [version] — YYYY-MM-DD` with bullet points per change.
 
 ## [Unreleased] — 2026-06-12
 
+### Security
+- **Email & upload hardening (ImprovementPlan Chunk 5, findings S9/S10/S13)** —
+  - Member photo uploads (admin and portal) now validate the file's leading
+    bytes against the declared `image/jpeg|png|gif` type and reject mismatches,
+    closing the mislabelled-payload vector.
+  - Email attachment filenames are sanitised to a safe basename (path and
+    control characters stripped, whitespace padding collapsed, length capped).
+  - `/email/send` now constrains both `fromEmail` and `replyTo` to the
+    sender's own permitted addresses (member email + offices held), preventing
+    officer/address impersonation by anyone holding `email:send`.
+  - `/email/send` and `/system/restore` multer configs now whitelist MIME
+    types and cap file counts instead of accepting any type.
+  - The SendGrid delivery-status refresh is capped at 100 per-recipient API
+    lookups per click, bounding outbound-API amplification.
+  - The broadcast sender address is now configurable via `EMAIL_FROM_ADDRESS`
+    (falling back to `RECOVERY_FROM_ADDRESS`) instead of being hard-coded.
+  - Tenant restore purges that tenant's Redis session-invalidation marks, so
+    freshly-restored users' sessions are no longer treated as pre-revoked.
+
 ### Added
+- **Upload-hardening helper `backend/src/utils/uploads.js`** (ImprovementPlan
+  Chunk 5) — shared image magic-byte sniffer, attachment-filename sanitiser,
+  and a reusable multer MIME `fileFilter` with spreadsheet/attachment
+  whitelists, with unit coverage in `__tests__/uploads.test.js`.
 - **Shared password policy & temp-password generator (ImprovementPlan Chunk 4)** —
   new `backend/src/utils/passwordPolicy.js` exports `passwordSchema` (10–72
   chars, at least one upper, lower, and digit) and a `crypto.randomInt`-based
