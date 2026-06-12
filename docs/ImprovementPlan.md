@@ -238,13 +238,35 @@ those flows, so there is nothing to change yet. New unit tests:
 `__tests__/uploads.test.js`; magic-byte mismatch case added to
 `members.test.js`.
 
-### Chunk 6 — Backend consistency (N1–N3, N6, C5, C6)
+### Chunk 6 — Backend consistency (N1–N3, N6, C5, C6) ✅ Done (2026-06-12)
 - Extract the shared WHERE-builder helper used by calendar/members/
   addressExport/membershipCards/portal.
 - Adopt and document one response-shape convention; fix the stray bare `Error`;
   add Zod validation for query params on the routes that use them raw;
   hoist pagination limits to constants; add `logAudit()` to groups/teams
   mutations; resolve the `eventAttendance` FEATURE_DEPS question.
+
+**Notes:** N1 was scoped to the **event** filters only (owner decision) — the
+genuinely byte-identical duplication. New `backend/src/utils/eventFilters.js`
+holds `buildCalendarEventFilters()` (replacing 3 inline blocks in `calendar.js`)
+and `buildPortalCalendarFilters()` (replacing 2 in `portal.js`); both validate
+the query string with Zod, so a malformed `from`/`to` now 422s at the edge
+instead of 500-ing on the `::date` cast (N3). The member-filter helpers in
+`members.js` / `addressExport.js` / `membershipCards.js` were left as-is — they
+are already locally factored and not actually identical (membershipCards hard-codes
+`Current`; members.js adds search/custom-field/payment-method conditions).
+N2: response-shape + status-code convention documented in CLAUDE-STANDARDS
+(`{ error }` for all errors via `AppError`; `{ message }` only for action-only
+successes; 201 create / 200 fetch+update). N6: the bare `throw new Error` in
+`membershipCards.js` → `AppError(…, 404)`; pagination magic numbers hoisted to
+named constants (`EVENT_SEARCH_*` in calendar.js, `CONSENT_HISTORY_MAX_ROWS` in
+giftAid.js). The `settings.js` "Prisma vs tenantQuery" item was a **false
+positive** — its Prisma calls read the **public** schema (`sys_tenants`,
+`sys_settings`), which `tenantQuery()` cannot reach; left unchanged. C5: already
+resolved — `eventAttendance: 'events'` is present in `shared/constants.js`
+`FEATURE_DEPS` (fixed earlier; see CHANGELOG). C6: `logAudit()` added to the
+group and team create/update/delete handlers (entity-level CRUD).
+New unit tests: `__tests__/eventFilters.test.js`.
 
 ### Chunk 7 — Backend tests for untested routes (C1, M4 backend half, T4)
 - Shared mock-setup helper to replace the per-file boilerplate.

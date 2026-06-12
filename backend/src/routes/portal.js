@@ -18,6 +18,7 @@ import { isFeatureEnabled } from '../middleware/requireFeature.js';
 import { logAudit } from '../utils/audit.js';
 import { generateSingleCardPdf } from './membershipCards.js';
 import { decodeAndValidateImage } from '../utils/uploads.js';
+import { buildPortalCalendarFilters } from '../utils/eventFilters.js';
 
 const router = Router({ mergeParams: true });
 
@@ -394,8 +395,6 @@ router.get('/calendar', async (req, res, next) => {
   try {
     const slug = req.portal.tenantSlug;
     const memberId = req.portal.memberId;
-    const { from, to, groupId, eventTypeId, filter } = req.query;
-    // filter: 'all' | 'own' | 'other'
 
     const [settings] = await tenantQuery(
       slug,
@@ -418,39 +417,7 @@ router.get('/calendar', async (req, res, next) => {
       ...(settings?.calendar_config ?? {}),
     };
 
-    const conditions = [];
-    const params = [];
-    let i = 1;
-
-    if (from) {
-      conditions.push(`ge.event_date >= $${i++}::date`);
-      params.push(from);
-    }
-    if (to) {
-      conditions.push(`ge.event_date <= $${i++}::date`);
-      params.push(to);
-    }
-
-    if (filter === 'own') {
-      // Own groups + general/open meetings
-      conditions.push(
-        `(ge.group_id IS NULL OR ge.group_id IN (SELECT group_id FROM group_members WHERE member_id = $${i++}))`,
-      );
-      params.push(memberId);
-    } else if (filter === 'other') {
-      // Non-group events only, optionally filtered by event type
-      conditions.push('ge.group_id IS NULL');
-      if (eventTypeId) {
-        conditions.push(`ge.event_type_id = $${i++}`);
-        params.push(eventTypeId);
-      }
-    } else if (groupId) {
-      conditions.push(`ge.group_id = $${i++}`);
-      params.push(groupId);
-    }
-    // 'all' = no group filter
-
-    const where = conditions.length > 0 ? 'WHERE ' + conditions.join(' AND ') : '';
+    const { where, params } = buildPortalCalendarFilters(req.query, memberId);
 
     const events = await tenantQuery(
       slug,
@@ -519,7 +486,7 @@ router.get('/calendar/pdf', async (req, res, next) => {
   try {
     const slug = req.portal.tenantSlug;
     const memberId = req.portal.memberId;
-    const { from, to, groupId, eventTypeId, filter } = req.query;
+    const { from, to } = req.query; // retained for the PDF title label
 
     const [settings] = await tenantQuery(
       slug,
@@ -530,35 +497,7 @@ router.get('/calendar/pdf', async (req, res, next) => {
       return res.status(403).json({ error: 'Calendar download is not enabled.' });
     }
 
-    const conditions = [];
-    const params = [];
-    let i = 1;
-
-    if (from) {
-      conditions.push(`ge.event_date >= $${i++}::date`);
-      params.push(from);
-    }
-    if (to) {
-      conditions.push(`ge.event_date <= $${i++}::date`);
-      params.push(to);
-    }
-    if (filter === 'own') {
-      conditions.push(
-        `(ge.group_id IS NULL OR ge.group_id IN (SELECT group_id FROM group_members WHERE member_id = $${i++}))`,
-      );
-      params.push(memberId);
-    } else if (filter === 'other') {
-      conditions.push('ge.group_id IS NULL');
-      if (eventTypeId) {
-        conditions.push(`ge.event_type_id = $${i++}`);
-        params.push(eventTypeId);
-      }
-    } else if (groupId) {
-      conditions.push(`ge.group_id = $${i++}`);
-      params.push(groupId);
-    }
-
-    const where = conditions.length > 0 ? 'WHERE ' + conditions.join(' AND ') : '';
+    const { where, params } = buildPortalCalendarFilters(req.query, memberId);
     const events = await tenantQuery(
       slug,
       `SELECT ge.event_date, ge.start_time, ge.end_time,

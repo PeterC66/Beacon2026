@@ -11,6 +11,7 @@ import ExcelJS from 'exceljs';
 import PDFDocument from 'pdfkit';
 import bwipjs from 'bwip-js';
 import { sanitizeCell } from '../utils/spreadsheet.js';
+import { AppError } from '../middleware/errorHandler.js';
 
 const router = Router();
 router.use(requireAuth);
@@ -634,7 +635,7 @@ router.get(
  */
 export async function generateSingleCardPdf(slug, memberId, advanceYear = false) {
   const members = await fetchMembersById(slug, [memberId]);
-  if (!members.length) throw new Error(`Member ${memberId} not found`);
+  if (!members.length) throw AppError(`Member ${memberId} not found`, 404);
 
   const member = members[0];
   const settings = await getCardSettings(slug);

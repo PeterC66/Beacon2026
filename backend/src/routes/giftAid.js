@@ -14,6 +14,9 @@ import { logAudit } from '../utils/audit.js';
 const router = Router();
 router.use(requireAuth);
 
+// Cap on rows returned by the Gift Aid consent-history audit query.
+const CONSENT_HISTORY_MAX_ROWS = 500;
+
 /** Compute financial year bounds from settings. */
 function computeYearBounds(yearNum, startMonth, startDay) {
   const m = String(startMonth).padStart(2, '0');
@@ -320,7 +323,7 @@ router.get(
         params.push(req.query.memberId);
       }
 
-      sql += `\n      ORDER BY created_at DESC LIMIT 500`;
+      sql += `\n      ORDER BY created_at DESC LIMIT ${CONSENT_HISTORY_MAX_ROWS}`;
 
       const rows = await tenantQuery(slug, sql, params);
 
