@@ -122,7 +122,7 @@ function mapSgStatus(events) {
 // GET /email/standard-messages
 router.get('/standard-messages', requirePrivilege('email_standard_messages', 'view'), async (req, res, next) => {
   try {
-    const rows = await tenantQuery(req.tenantSlug, `
+    const rows = await tenantQuery(req.user.tenantSlug, `
       SELECT id, name, subject, body FROM standard_messages ORDER BY name
     `, []);
     res.json(rows);
@@ -140,7 +140,7 @@ router.post('/standard-messages', requirePrivilege('email_standard_messages', 'c
   if (!parsed.success) return res.status(422).json({ error: 'Validation error', issues: parsed.error.issues.map((i) => ({ path: i.path.join('.'), message: i.message })) });
   const { name, subject, body } = parsed.data;
   try {
-    const rows = await tenantQuery(req.tenantSlug, `
+    const rows = await tenantQuery(req.user.tenantSlug, `
       INSERT INTO standard_messages (name, subject, body)
       VALUES ($1, $2, $3)
       ON CONFLICT (name) DO UPDATE SET subject = $2, body = $3, updated_at = NOW()
@@ -153,7 +153,7 @@ router.post('/standard-messages', requirePrivilege('email_standard_messages', 'c
 // DELETE /email/standard-messages/:id
 router.delete('/standard-messages/:id', requirePrivilege('email_standard_messages', 'delete'), async (req, res, next) => {
   try {
-    await tenantQuery(req.tenantSlug, `DELETE FROM standard_messages WHERE id = $1`, [req.params.id]);
+    await tenantQuery(req.user.tenantSlug, `DELETE FROM standard_messages WHERE id = $1`, [req.params.id]);
     res.status(204).end();
   } catch (err) { next(err); }
 });
@@ -165,18 +165,18 @@ router.get('/from-addresses', requirePrivilege('email', 'send'), async (req, res
   try {
     const userId = req.user.userId;
     // Get the user record to find their linked member_id
-    const userRows = await tenantQuery(req.tenantSlug, `SELECT member_id, name FROM users WHERE id = $1`, [userId]);
+    const userRows = await tenantQuery(req.user.tenantSlug, `SELECT member_id, name FROM users WHERE id = $1`, [userId]);
     const user = userRows[0];
     const addresses = [];
 
     if (user?.member_id) {
-      const memberRows = await tenantQuery(req.tenantSlug, `SELECT email, forenames, surname FROM members WHERE id = $1`, [user.member_id]);
+      const memberRows = await tenantQuery(req.user.tenantSlug, `SELECT email, forenames, surname FROM members WHERE id = $1`, [user.member_id]);
       if (memberRows[0]?.email) {
         const m = memberRows[0];
         addresses.push({ label: `${m.forenames} ${m.surname} <${m.email}>`, email: m.email });
       }
       // Office emails for this member
-      const officeRows = await tenantQuery(req.tenantSlug, `
+      const officeRows = await tenantQuery(req.user.tenantSlug, `
         SELECT name, office_email FROM offices WHERE member_id = $1 AND office_email IS NOT NULL AND office_email != ''
       `, [user.member_id]);
       for (const o of officeRows) {
@@ -186,7 +186,7 @@ router.get('/from-addresses', requirePrivilege('email', 'send'), async (req, res
 
     // Fallback: if no member linked, use user's email from users table
     if (addresses.length === 0) {
-      const emailRows = await tenantQuery(req.tenantSlug, `SELECT email FROM users WHERE id = $1`, [userId]);
+      const emailRows = await tenantQuery(req.user.tenantSlug, `SELECT email FROM users WHERE id = $1`, [userId]);
       if (emailRows[0]?.email) {
         addresses.push({ label: `${user?.name ?? ''} <${emailRows[0].email}>`, email: emailRows[0].email });
       }
@@ -228,15 +228,15 @@ router.post('/send',
 
     try {
       const [members, u3aName] = await Promise.all([
-        fetchMembersForEmail(req.tenantSlug, memberIds),
-        getTenantDisplayName(req.tenantSlug),
+        fetchMembersForEmail(req.user.tenantSlug, memberIds),
+        getTenantDisplayName(req.user.tenantSlug),
       ]);
 
       // Pre-build Gift Aid tokens per member if sending from GA page
       let gaTokensByMemberId = {};
       if (giftAidDates) {
         const gaRows = await tenantQuery(
-          req.tenantSlug,
+          req.user.tenantSlug,
           `SELECT t.member_id_1, t.date, t.gift_aid_amount::float,
                   m.gift_aid_from
            FROM transactions t
@@ -272,7 +272,7 @@ router.post('/send',
       }));
 
       // Send one personalised email per recipient
-      const batchId = await createBatch(req.tenantSlug, req.user.userId, subject, body, fromEmail, replyTo, recipients.length);
+      const batchId = await createBatch(req.user.tenantSlug, req.user.userId, subject, body, fromEmail, replyTo, recipients.length);
 
       const sendResults = await Promise.allSettled(
         recipients.map(async (member) => {
@@ -318,7 +318,7 @@ router.post('/send',
         }
       });
 
-      await storeRecipients(req.tenantSlug, batchId, recipientRows);
+      await storeRecipients(req.user.tenantSlug, batchId, recipientRows);
 
       // Optional copy to self (no token substitution)
       if (copyToSelf && replyTo) {
@@ -387,7 +387,7 @@ router.get('/delivery', requirePrivilege('email_delivery', 'view'), async (req, 
 
     sql += ` ORDER BY sent_at DESC LIMIT 50`;
 
-    const rows = await tenantQuery(req.tenantSlug, sql, params);
+    const rows = await tenantQuery(req.user.tenantSlug, sql, params);
     res.json(rows);
   } catch (err) { next(err); }
 });
@@ -399,11 +399,11 @@ router.get('/delivery/:batchId', requirePrivilege('email_delivery', 'view'), asy
     const isAdmin = req.user.privileges?.includes('email_delivery:all');
 
     // Verify ownership
-    const batchRows = await tenantQuery(req.tenantSlug, `SELECT * FROM email_batches WHERE id = $1`, [req.params.batchId]);
+    const batchRows = await tenantQuery(req.user.tenantSlug, `SELECT * FROM email_batches WHERE id = $1`, [req.params.batchId]);
     if (!batchRows[0]) return res.status(404).json({ error: 'Not found' });
     if (!isAdmin && batchRows[0].user_id !== userId) return res.status(403).json({ error: 'Forbidden' });
 
-    const recipients = await tenantQuery(req.tenantSlug, `
+    const recipients = await tenantQuery(req.user.tenantSlug, `
       SELECT id, member_id, email_address, display_name, status, sendgrid_message_id, error_message, updated_at
       FROM email_recipients WHERE batch_id = $1 ORDER BY display_name
     `, [req.params.batchId]);
@@ -418,7 +418,7 @@ router.post('/delivery/:batchId/refresh', requirePrivilege('email_delivery', 'vi
     const userId = req.user.userId;
     const isAdmin = req.user.privileges?.includes('email_delivery:all');
 
-    const batchRows = await tenantQuery(req.tenantSlug, `SELECT * FROM email_batches WHERE id = $1`, [req.params.batchId]);
+    const batchRows = await tenantQuery(req.user.tenantSlug, `SELECT * FROM email_batches WHERE id = $1`, [req.params.batchId]);
     if (!batchRows[0]) return res.status(404).json({ error: 'Not found' });
     if (!isAdmin && batchRows[0].user_id !== userId) return res.status(403).json({ error: 'Forbidden' });
 
@@ -426,7 +426,7 @@ router.post('/delivery/:batchId/refresh', requirePrivilege('email_delivery', 'vi
       return res.status(503).json({ error: 'SendGrid not configured' });
     }
 
-    const recipients = await tenantQuery(req.tenantSlug, `
+    const recipients = await tenantQuery(req.user.tenantSlug, `
       SELECT id, email_address, sendgrid_message_id FROM email_recipients WHERE batch_id = $1
     `, [req.params.batchId]);
 
@@ -444,7 +444,7 @@ router.post('/delivery/:batchId/refresh', requirePrivilege('email_delivery', 'vi
         const data = await response.json();
         // data.events is an array of event objects
         const newStatus = mapSgStatus(data.events || []);
-        await tenantQuery(req.tenantSlug, `
+        await tenantQuery(req.user.tenantSlug, `
           UPDATE email_recipients SET status = $1, updated_at = NOW() WHERE id = $2
         `, [newStatus, r.id]);
         updated++;
@@ -453,7 +453,7 @@ router.post('/delivery/:batchId/refresh', requirePrivilege('email_delivery', 'vi
       }
     }
 
-    const refreshed = await tenantQuery(req.tenantSlug, `
+    const refreshed = await tenantQuery(req.user.tenantSlug, `
       SELECT id, member_id, email_address, display_name, status, sendgrid_message_id, error_message, updated_at
       FROM email_recipients WHERE batch_id = $1 ORDER BY display_name
     `, [req.params.batchId]);

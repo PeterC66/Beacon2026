@@ -24,7 +24,7 @@ services:
         sync: false        # Paste a DIFFERENT random 64-char string
 
       - key: SEED_ADMIN_EMAIL
-        value: "admin@beacon2.local"   # Change to your preferred admin email
+        sync: false        # Set your real admin email in the Render dashboard before first deploy
 
       - key: SEED_ADMIN_PASSWORD
         sync: false        # Paste your chosen admin password here — set this before first deploy
