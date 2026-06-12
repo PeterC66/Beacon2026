@@ -21,6 +21,8 @@ import {
 import { syncDefaultRolePrivileges } from '../utils/migrate.js';
 import { logAudit } from '../utils/audit.js';
 import { ALL_FEATURE_KEYS } from '../../../shared/constants.js';
+import { mimeFileFilter, SPREADSHEET_MIME_TYPES } from '../utils/uploads.js';
+import { purgeTenantInvalidations } from '../utils/redis.js';
 import ExcelJS from 'exceljs';
 
 const router = Router();
@@ -222,7 +224,11 @@ router.patch('/settings', async (req, res, next) => {
 // Restore a full tenant backup (Beacon2 or Beacon legacy format).
 // System-admin only (requireSysAdmin already applied above).
 
-const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 50 * 1024 * 1024 } });
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 50 * 1024 * 1024, files: 1 },
+  fileFilter: mimeFileFilter(SPREADSHEET_MIME_TYPES, { label: 'backup file' }),
+});
 
 router.post('/restore/:tenantSlug', upload.single('backup'), async (req, res, next) => {
   try {
@@ -270,6 +276,11 @@ router.post('/restore/:tenantSlug', upload.single('backup'), async (req, res, ne
     // Beacon export has no privileges sheet — roles are created but empty.
     // For Beacon2 restores it fills any gaps from backups predating new resources.
     await syncDefaultRolePrivileges(tenantSlug);
+
+    // The old user set has been deleted, so any leftover session-invalidation
+    // marks for this tenant (31-day TTL) would otherwise make freshly-restored
+    // users' future sessions appear pre-revoked. Purge them.
+    await purgeTenantInvalidations(tenantSlug);
 
     const msg =
       format === 'beacon'

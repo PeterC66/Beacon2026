@@ -13,6 +13,7 @@ import { sanitizeCell } from '../utils/spreadsheet.js';
 import { AppError } from '../middleware/errorHandler.js';
 import { isFeatureEnabled, requireFeature } from '../middleware/requireFeature.js';
 import { logAudit } from '../utils/audit.js';
+import { decodeAndValidateImage } from '../utils/uploads.js';
 
 const router = Router();
 router.use(requireAuth);
@@ -1815,8 +1816,11 @@ router.post(
       const memberId = req.params.id;
       const { data, mimeType } = photoUploadSchema.parse(req.body);
 
+      // Validate the real content matches the declared image type (magic bytes)
+      const buffer = decodeAndValidateImage(data, mimeType);
+
       // Validate decoded size
-      const byteLength = Buffer.from(data, 'base64').length;
+      const byteLength = buffer.length;
       if (byteLength > MAX_PHOTO_BYTES) {
         throw AppError(
           `Photo exceeds the 2 MB limit (${(byteLength / 1024 / 1024).toFixed(1)} MB).`,
