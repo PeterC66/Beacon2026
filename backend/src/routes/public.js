@@ -6,8 +6,11 @@ import { Router } from 'express';
 import { randomBytes } from 'crypto';
 import { z } from 'zod';
 import sgMail from '@sendgrid/mail';
+import { rateLimit } from 'express-rate-limit';
 import { prisma, tenantQuery } from '../utils/db.js';
 import { hashPassword, verifyPassword, generateToken, hashOpaqueToken } from '../utils/password.js';
+import { passwordSchema } from '../utils/passwordPolicy.js';
+import { invalidateUserSessions } from '../utils/redis.js';
 import { signAccessToken } from '../utils/jwt.js';
 import { resolveTokens } from '../utils/emailTokens.js';
 import { generateSingleCardPdf } from './membershipCards.js';
@@ -23,6 +26,20 @@ if (process.env.SENDGRID_API_KEY) {
 }
 
 const PORTAL_FROM = process.env.RECOVERY_FROM_ADDRESS ?? 'noreply@u3abeacon.org.uk';
+
+// Dummy bcrypt hash used to equalise response timing when no matching portal
+// account exists, so a miss takes the same time as a wrong-password hit and
+// cannot be distinguished by an attacker probing for registered emails.
+const DUMMY_PORTAL_HASH = '$2b$12$invalidhashfortimingattackprevention000000000000000000000';
+
+// Targeted rate limiter for the unauthenticated portal-auth endpoints
+// (register/login/forgot/reset/verify). The global limiter is 300/15min/IP;
+// these are far more sensitive, so cap them tightly. Env-tunable.
+const portalAuthLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: parseInt(process.env.PORTAL_AUTH_RATE_LIMIT_MAX ?? '20', 10),
+  message: { error: 'Too many attempts, please try again later.' },
+});
 
 // Portal-login lockout — reuses the admin login env vars so operators have a
 // single knob. Mirrors registerFailedLogin() in services/authService.js.
@@ -59,7 +76,9 @@ async function registerPortalFailedLogin(slug, members, attemptedEmail) {
 
 async function resolveTenant(req, res, next) {
   const { slug } = req.params;
-  if (!slug || !/^[a-z0-9_-]+$/.test(slug)) {
+  // Keep this identical to the guard in utils/db.js so a slug that the edge
+  // accepts can never 500 inside tenantQuery (schema names cannot contain `-`).
+  if (!slug || !/^[a-z0-9_]+$/.test(slug)) {
     return res.status(400).json({ error: 'Invalid tenant slug.' });
   }
   try {
@@ -840,17 +859,10 @@ const portalRegisterSchema = z.object({
   surname: z.string().min(1),
   postcode: z.string().min(1),
   email: z.string().email(),
-  password: z
-    .string()
-    .min(10)
-    .max(72)
-    .refine((pw) => /[a-z]/.test(pw) && /[A-Z]/.test(pw) && /[0-9]/.test(pw), {
-      message:
-        'Password must contain at least one uppercase, one lowercase, and one numeric character.',
-    }),
+  password: passwordSchema,
 });
 
-router.post('/:slug/portal/register', async (req, res, next) => {
+router.post('/:slug/portal/register', portalAuthLimiter, async (req, res, next) => {
   try {
     const slug = req.tenantSlug;
     const data = portalRegisterSchema.parse(req.body);
@@ -923,10 +935,14 @@ router.post('/:slug/portal/register', async (req, res, next) => {
       ],
     );
 
-    // In production, send verification email with link
+    // Send the verification email with the link. Fire-and-forget; never log
+    // the token (a leaked verification token would let an attacker activate an
+    // account they registered against someone else's membership record).
     const frontendBase = process.env.CORS_ORIGIN || 'http://localhost:5173';
     const verifyLink = `${frontendBase}/public/${slug}/portal/verify?token=${verificationToken}`;
-    console.log(`[Portal] Would send verification email to ${data.email}: ${verifyLink}`);
+    void sendPortalVerificationEmail(data.email.toLowerCase(), verifyLink).catch((err) =>
+      console.error('[Portal] Background verification email failed:', err.message),
+    );
 
     logAudit(slug, {
       userId: null,
@@ -951,7 +967,7 @@ const verifyEmailSchema = z.object({
   token: z.string().min(1),
 });
 
-router.post('/:slug/portal/verify-email', async (req, res, next) => {
+router.post('/:slug/portal/verify-email', portalAuthLimiter, async (req, res, next) => {
   try {
     const slug = req.tenantSlug;
     const { token } = verifyEmailSchema.parse(req.body);
@@ -1000,7 +1016,7 @@ const portalLoginSchema = z.object({
   password: z.string().min(1),
 });
 
-router.post('/:slug/portal/login', async (req, res, next) => {
+router.post('/:slug/portal/login', portalAuthLimiter, async (req, res, next) => {
   try {
     const slug = req.tenantSlug;
     const data = portalLoginSchema.parse(req.body);
@@ -1016,6 +1032,10 @@ router.post('/:slug/portal/login', async (req, res, next) => {
     );
 
     if (members.length === 0) {
+      // Run a throwaway comparison so an unknown email takes about the same
+      // time as a wrong password — otherwise response timing reveals which
+      // emails have a portal account.
+      await verifyPassword(data.password, DUMMY_PORTAL_HASH);
       return res.status(401).json({ error: 'Invalid email or password.' });
     }
 
@@ -1090,7 +1110,7 @@ const forgotPasswordSchema = z.object({
   email: z.string().email(),
 });
 
-router.post('/:slug/portal/forgot-password', async (req, res, next) => {
+router.post('/:slug/portal/forgot-password', portalAuthLimiter, async (req, res, next) => {
   try {
     const slug = req.tenantSlug;
     const { email } = forgotPasswordSchema.parse(req.body);
@@ -1128,7 +1148,11 @@ router.post('/:slug/portal/forgot-password', async (req, res, next) => {
     const frontendBase = process.env.CORS_ORIGIN || 'http://localhost:5173';
     const resetLink = `${frontendBase}/public/${slug}/portal/reset-password?token=${resetToken}`;
 
-    await sendPortalResetEmail(email.toLowerCase(), resetLink);
+    // Fire-and-forget so the response time does not depend on email delivery
+    // (which only happens on a hit) and so cannot be used to enumerate accounts.
+    void sendPortalResetEmail(email.toLowerCase(), resetLink).catch((err) =>
+      console.error('[Portal] Background reset email failed:', err.message),
+    );
 
     res.json({ message: 'If an account exists with that email, a reset link has been sent.' });
   } catch (err) {
@@ -1172,21 +1196,44 @@ If you did not request this, you can ignore this email.`;
   }
 }
 
+/** Send the portal email-verification link (registration + email change).
+ *  Mirrors sendPortalResetEmail() — if SendGrid is not configured we log a
+ *  warning (without the token) and return silently rather than emitting the
+ *  link to stdout. */
+async function sendPortalVerificationEmail(toEmail, verifyLink) {
+  const subject = 'Verify your Members Portal account';
+  const body = `Please verify your Members Portal email address.
+
+Use the link below to confirm your account. The link expires in one hour.
+
+${verifyLink}
+
+If you did not request this, you can ignore this email.`;
+
+  if (!process.env.SENDGRID_API_KEY) {
+    console.warn(
+      `[Portal] SendGrid not configured — cannot deliver verification email to ${toEmail}. ` +
+        `Set SENDGRID_API_KEY to enable portal verification emails.`,
+    );
+    return;
+  }
+
+  try {
+    await sgMail.send({ to: toEmail, from: PORTAL_FROM, subject, text: body });
+  } catch (err) {
+    // Never include the verification link in the error log.
+    console.error(`[Portal] Failed to send verification email to ${toEmail}:`, err.message);
+  }
+}
+
 // ─── POST /:slug/portal/reset-password ──────────────────────────────────
 
 const resetPasswordSchema = z.object({
   token: z.string().min(1),
-  password: z
-    .string()
-    .min(10)
-    .max(72)
-    .refine((pw) => /[a-z]/.test(pw) && /[A-Z]/.test(pw) && /[0-9]/.test(pw), {
-      message:
-        'Password must contain at least one uppercase, one lowercase, and one numeric character.',
-    }),
+  password: passwordSchema,
 });
 
-router.post('/:slug/portal/reset-password', async (req, res, next) => {
+router.post('/:slug/portal/reset-password', portalAuthLimiter, async (req, res, next) => {
   try {
     const slug = req.tenantSlug;
     const { token, password } = resetPasswordSchema.parse(req.body);
@@ -1220,6 +1267,9 @@ router.post('/:slug/portal/reset-password', async (req, res, next) => {
        WHERE id = $2`,
       [passwordHash, member.id],
     );
+
+    // Invalidate any existing portal sessions for this member.
+    await invalidateUserSessions(slug, member.id);
 
     res.json({ message: 'Password has been reset successfully. You can now sign in.' });
   } catch (err) {

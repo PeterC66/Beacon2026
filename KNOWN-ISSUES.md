@@ -7,6 +7,8 @@ Items noted during development that need addressing in future sessions.
 - `[OPEN]` — a genuine issue to fix when convenient.
 - `[ACCEPTED]` — understood and deliberately not changing (rationale given).
 - `[DEFERRED]` — worth doing but parked for a later phase / dependency.
+- `[FIXED]` — resolved; kept here (not deleted) so the numbered cross-references
+  from `docs/ImprovementPlan.md` stay stable. See CHANGELOG for the date.
 
 **Related documents:** the consolidated, chunked work plan is
 [`docs/ImprovementPlan.md`](docs/ImprovementPlan.md); pure code-rationalisation
@@ -21,24 +23,31 @@ Items identified during the chunk 1 + chunk 2 security sweep that were not
 fixed in the same session. See CHANGELOG 2026-06-10 for what was fixed.
 These are catalogued and re-verified in `docs/ImprovementPlan.md` (Chunks 4–5).
 
-1. `[OPEN]` **Account-enumeration via response timing on `/auth/recover`**
-   (`routes/auth.js:248`). Send the email asynchronously or add a constant-
-   time delay.
-2. `[OPEN]` **Inconsistent password policy** — `PATCH /users/:id` accepts `min(8)` with
-   no complexity rules, while `/force-change-password` and portal reset
-   require `min(10)` + complexity. Centralise into a single helper.
+1. `[FIXED]` **Account-enumeration via response timing on `/auth/recover`**
+   (`routes/auth.js:248`). `sendRecoveryEmail` (and the verify variant) are now
+   fire-and-forget, so the bcrypt hash + DB write no longer add latency to the
+   matched-account response. (Chunk 4, 2026-06-12.)
+2. `[FIXED]` **Inconsistent password policy** — centralised into
+   `utils/passwordPolicy.js` (`passwordSchema`: 10–72 chars, upper+lower+digit)
+   and applied to `PATCH /users`, `POST /system/tenants`, `/auth/change-password`,
+   `/auth/force-change-password`, and all portal register/reset/change flows.
+   (Chunk 4, 2026-06-12.)
 3. `[OPEN]` **Refresh-token reuse detection silently no-ops without Redis**
    (`utils/redis.js:48`). Document this more prominently or persist
    invalidation marks in Postgres as a fallback.
-4. `[OPEN]` **`requireSysAdmin` skips invalidation / `active` check**
-   (`middleware/auth.js:47`). Sysadmin tokens stay valid for the full access-
-   token lifetime regardless of account state.
-5. `[OPEN]` **Temp-password generator has modulo bias** (`routes/users.js:312`,
-   `routes/auth.js:346`). `b % 58` over 256-byte values is biased. Use
-   rejection sampling or `crypto.randomInt`.
-6. `[OPEN]` **Origin check bypass when `NODE_ENV !== 'production'`**
-   (`routes/auth.js:38`). Mis-set `NODE_ENV` in staging would silently lose
-   CSRF protection on `/refresh`.
+4. `[FIXED]` **`requireSysAdmin` skips invalidation / `active` check**
+   (`middleware/auth.js:47`). The middleware now re-loads the sys-admin via
+   Prisma on every request and rejects (401) if the account is missing or
+   `active = false`. Sys-admin tokens carry no Redis invalidation marker, so the
+   active flag is the meaningful state check. (Chunk 4, 2026-06-12.)
+5. `[FIXED]` **Temp-password generator has modulo bias**. Replaced with
+   `crypto.randomInt`-based `generateTempPassword()` in `utils/passwordPolicy.js`,
+   shared by `routes/users.js` and `routes/auth.js`. (Chunk 4, 2026-06-12.)
+6. `[FIXED]` **Origin check bypass when `NODE_ENV !== 'production'`**
+   (`routes/auth.js`). `isAllowedOrigin()` now gates enforcement solely on
+   `CORS_ORIGIN` being set; a missing `Origin` header (non-browser caller) is
+   always allowed and `NODE_ENV` no longer influences the decision.
+   (Chunk 4, 2026-06-12.)
 7. `[OPEN]` **Privilege-string format collisions** — `${resource}:${action}` with
    resources that may contain `:` (`finance:transactions:create`). Works
    today, fragile if a future resource code includes `:create`.
@@ -101,6 +110,65 @@ These are catalogued and re-verified in `docs/ImprovementPlan.md` (Chunks 4–5)
 22. `[RESOLVED 2026-06-12]` **Hard-coded `FROM_ADDRESS`** (`routes/email.js`).
     Fixed in Chunk 5: the broadcast sender now reads `EMAIL_FROM_ADDRESS`
     (falling back to `RECOVERY_FROM_ADDRESS`, then the original default).
+8. `[FIXED]` **No targeted rate limit on portal endpoints**. A dedicated
+   `portalAuthLimiter` (20/15 min/IP, env `PORTAL_AUTH_RATE_LIMIT_MAX`) now
+   guards `register`, `login`, `forgot-password`, `reset-password`, and
+   `verify-email` in `routes/public.js`. (Chunk 4, 2026-06-12.)
+9. `[FIXED]` **Portal JWT skips Redis session-invalidation check**
+   (`routes/portal.js`). `requirePortalAuth` now checks the
+   `invalidated:<slug>:<memberId>` marker on every request, and portal
+   password change/reset set it. (Chunk 4, 2026-06-12.)
+10. `[FIXED]` **Verification tokens still logged via `console.log`**. Portal
+    register and email-change now send the link via SendGrid
+    (`sendPortalVerificationEmail`), or log a token-free warning when SendGrid
+    is unset — the token is never written to stdout. (Chunk 4, 2026-06-12.)
+11. `[FIXED]` **Slug regex inconsistency**. `routes/public.js` `resolveTenant`
+    now uses `[a-z0-9_]+`, identical to `utils/db.js`, so a `-`-containing slug
+    400s at the edge instead of 500-ing in `tenantQuery`. (Chunk 4, 2026-06-12.)
+12. `[OPEN]` **Photo upload doesn't validate magic bytes** —
+    `routes/portal.js:726`. Mime-type is whitelisted to jpeg/png/gif and
+    Helmet's nosniff blocks browser sniffing, so no XSS — but mislabelled
+    payloads silently succeed and may break PDF rendering downstream.
+13. `[ACCEPTED]` **Portal login "verify your email" differentiated response** —
+    `routes/public.js`. The 403 "Please verify your email" branch is only
+    reachable *after* a correct password match, so it does not enable
+    email-enumeration by an attacker who lacks the password (they would already
+    be that account). It is retained for usability — collapsing it to a generic
+    401 would leave verified-but-unable-to-sign-in users with no guidance. The
+    real vector (response timing) is closed: a no-account login now runs a
+    throwaway bcrypt comparison so a miss costs the same as a wrong-password hit.
+    (Reviewed Chunk 4, 2026-06-12.)
+14. `[FIXED]` **`/portal/forgot-password` timing enumeration** —
+    `routes/public.js`. The reset email is now fire-and-forget, so the
+    matched-account response no longer waits on email delivery. (Chunk 4,
+    2026-06-12.)
+15. `[OPEN]` **No magic-byte validation on photo uploads**
+    (`routes/members.js:1494`, `routes/portal.js:726`). Mime-type is
+    whitelisted; nosniff blocks browser XSS. But mislabelled payloads
+    silently succeed and break PDF rendering downstream — DoS vector.
+16. `[OPEN]` **Email-attachment `originalname` passed through unsanitised**
+    (`routes/email.js:267`). Recipients can be sent files with
+    attacker-crafted names (`Invoice.pdf .exe`, control-char headers).
+    Sanitise to a basename, strip control chars, cap length.
+17. `[OPEN]` **`clearTenantData()` doesn't purge Redis invalidation marks**
+    (`routes/backup.js:658`). After restore, stale `invalidated:slug:userId`
+    keys (31-day TTL) may make fresh sessions appear pre-revoked.
+18. `[OPEN]` **Multer accepts any MIME type on `/system/restore` and `/email/send`**
+    (`routes/system.js:201`, `routes/email.js:16`). FileSize caps the
+    only bound; per-request /email/send worst case ≈ 400 MB in memory.
+19. `[OPEN]` **`/email/send` `fromEmail` field is declared but ignored** —
+    `routes/email.js:205,293`. The SendGrid message hard-codes
+    `FROM_ADDRESS`. Either wire it up with an allow-list, or drop the
+    field from the schema.
+20. `[OPEN]` **`/email/send` `replyTo` is unconstrained** — anyone with
+    `email:send` can set it to any address (e.g. impersonating an
+    officer). Limit to the user's own member-email + offices they hold
+    (the same source as `/email/from-addresses`).
+21. `[OPEN]` **`/email/delivery/:batchId/refresh` issues one SendGrid API call
+    per recipient** — `routes/email.js:433`. Cap the per-click amplification.
+22. `[OPEN]` **Hard-coded `FROM_ADDRESS = 'noreply@u3abeacon.org.uk'`** —
+    `routes/email.js:23`. Make env-configurable so deployments under
+    other domains don't fail SPF/DKIM silently.
 23. `[OPEN]` **`routes/public.js` and `routes/portal.js` `resolveTokens` callers
     still use `body` for templated emails** — currently only `console.log`'d
     so latent, but when SendGrid is wired they should also use the new
