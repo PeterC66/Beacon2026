@@ -27,10 +27,37 @@ Format: `## [version] — YYYY-MM-DD` with bullet points per change.
     freshly-restored users' sessions are no longer treated as pre-revoked.
 
 ### Added
+- **Shared event-filter builders `backend/src/utils/eventFilters.js`**
+  (ImprovementPlan Chunk 6, findings N1/N3) — `buildCalendarEventFilters()` and
+  `buildPortalCalendarFilters()` replace five byte-identical inline WHERE-clause
+  blocks across `calendar.js` (events / pdf / excel) and `portal.js`
+  (calendar / pdf). Both validate the query string with Zod, so a malformed
+  `from`/`to` now returns **422** at the edge instead of **500**-ing on the
+  Postgres `::date` cast. Unit coverage in `__tests__/eventFilters.test.js`.
+- **Audit logging on groups and teams (ImprovementPlan Chunk 6, finding C6)** —
+  the group and team create/update/delete handlers now write `logAudit()`
+  entries, matching members/finance.
 - **Upload-hardening helper `backend/src/utils/uploads.js`** (ImprovementPlan
   Chunk 5) — shared image magic-byte sniffer, attachment-filename sanitiser,
   and a reusable multer MIME `fileFilter` with spreadsheet/attachment
   whitelists, with unit coverage in `__tests__/uploads.test.js`.
+
+### Changed
+- **Backend consistency cleanup (ImprovementPlan Chunk 6, findings N2/N6)** —
+  documented a single response-shape + status-code convention in
+  `CLAUDE-STANDARDS.md` (`{ error }` for all error bodies via `AppError`;
+  `{ message }` only for action-only successes; 201 create / 200 fetch+update).
+  Replaced the lone bare `throw new Error` in `membershipCards.js` with
+  `AppError(…, 404)`, and hoisted scattered pagination limits to named constants
+  (`EVENT_SEARCH_DEFAULT_LIMIT`/`EVENT_SEARCH_MAX_LIMIT` in `calendar.js`,
+  `CONSENT_HISTORY_MAX_ROWS` in `giftAid.js`).
+
+### Fixed
+- **Duplicated security findings in `KNOWN-ISSUES.md`** — the Chunk 4 and Chunk 5
+  edits had appended a second copy of findings #8–#22, leaving two contradictory
+  blocks (each showing only one chunk's fixes). Consolidated back to a single,
+  consistent 1–26 list with correct status tags, and normalised the non-standard
+  `[RESOLVED]` tag to `[FIXED]`.
 - **Shared password policy & temp-password generator (ImprovementPlan Chunk 4)** —
   new `backend/src/utils/passwordPolicy.js` exports `passwordSchema` (10–72
   chars, at least one upper, lower, and digit) and a `crypto.randomInt`-based
