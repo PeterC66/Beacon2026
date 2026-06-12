@@ -202,7 +202,7 @@ disabled (noise). `exhaustive-deps` left as a warning (30 sites). Backend
 separately. Node bumped 20 → 22 in `ci.yml`; `lint` + `format:check` now
 gate CI.
 
-### Chunk 4 — Security: auth & enumeration (S2–S8, S11, S12)
+### Chunk 4 — Security: auth & enumeration (S2–S8, S11, S12) ✅ Done (2026-06-12)
 - Centralise password policy into one shared Zod schema; apply to
   `PATCH /users`, `/system/tenants`, and all reset flows.
 - Replace biased temp-password generation with `crypto.randomInt`.
@@ -212,6 +212,24 @@ gate CI.
 - Stop logging verification tokens; unify the slug regexes; add a portal auth
   rate limiter; base the refresh-origin check on `CORS_ORIGIN` presence rather
   than `NODE_ENV`.
+
+**Notes:** New `backend/src/utils/passwordPolicy.js` is the single source of
+truth for `passwordSchema` (10–72 chars, upper+lower+digit) and
+`generateTempPassword()` (now `crypto.randomInt`, no modulo bias); it lives
+apart from `password.js` because several test files mock the latter wholesale.
+`requireSysAdmin` now re-checks `sysAdmin.active` on every request (sys-admin
+tokens carry no Redis invalidation marker, so the active flag is the meaningful
+state check). Portal auth honours the Redis invalidation marker (set on portal
+password change/reset). **Deviation:** the portal-login "verify your email"
+response is *retained* (not collapsed to a generic 401) — it is only reachable
+after a correct password, so it is not an email-enumeration vector; the actual
+vector (response timing) was closed with a dummy bcrypt comparison on the
+no-account path. Recover / forgot-password emails are now fire-and-forget so
+response time no longer leaks account existence. Verification tokens are emailed
+via SendGrid (or a token-free warning when unset), never `console.log`'d. The
+public slug regex was tightened to `[a-z0-9_]+` to match `utils/db.js`. A
+dedicated `portalAuthLimiter` (20/15 min/IP, `PORTAL_AUTH_RATE_LIMIT_MAX`)
+guards register/login/forgot/reset/verify.
 
 ### Chunk 5 — Security: email & uploads (S9, S10, S13)
 - Sanitise attachment filenames; constrain `replyTo` to the sender's own

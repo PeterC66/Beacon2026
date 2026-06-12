@@ -172,6 +172,17 @@ describe('PATCH /users/:id', () => {
     expect(res.status).toBe(400);
   });
 
+  it('rejects a password that fails the shared policy (too short / no complexity)', async () => {
+    const res = await request(app)
+      .patch('/users/u1')
+      .set('Authorization', AUTH)
+      .send({ password: 'short' });
+
+    expect(res.status).toBe(422);
+    // No UPDATE should have run
+    expect(tenantQuery).not.toHaveBeenCalled();
+  });
+
   it('returns 404 when user does not exist', async () => {
     tenantQuery.mockResolvedValueOnce([]); // UPDATE returns nothing
 
