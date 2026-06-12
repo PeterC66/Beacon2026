@@ -7,11 +7,17 @@
 // Sub-feature → master-toggle dependency map.
 // When a master toggle is off, all its dependents are treated as off too.
 export const FEATURE_DEPS = {
-  teams: 'groups', venues: 'groups', faculties: 'groups',
-  groupLedger: 'groups', siteworks: 'groups',
-  eventTypes: 'events', eventAttendance: 'events',
-  creditBatches: 'finance', reconciliation: 'finance',
-  financialStatement: 'finance', groupsStatement: 'finance',
+  teams: 'groups',
+  venues: 'groups',
+  faculties: 'groups',
+  groupLedger: 'groups',
+  siteworks: 'groups',
+  eventTypes: 'events',
+  eventAttendance: 'events',
+  creditBatches: 'finance',
+  reconciliation: 'finance',
+  financialStatement: 'finance',
+  groupsStatement: 'finance',
   transferMoney: 'finance',
 };
 
@@ -31,21 +37,39 @@ export function isOn(config, key) {
 // drift from the UI definition.
 export const ALL_FEATURE_KEYS = Object.freeze([
   // Masters
-  'groups', 'finance', 'email', 'portal', 'onlineJoining', 'events',
+  'groups',
+  'finance',
+  'email',
+  'portal',
+  'onlineJoining',
+  'events',
   // Membership sub-features
-  'membershipCards', 'membershipRenewals',
-  'giftAid', 'customFields', 'polls', 'memberPhotos',
+  'membershipCards',
+  'membershipRenewals',
+  'giftAid',
+  'customFields',
+  'polls',
+  'memberPhotos',
   // Groups sub-features
-  'teams', 'venues', 'faculties', 'groupLedger', 'siteworks',
+  'teams',
+  'venues',
+  'faculties',
+  'groupLedger',
+  'siteworks',
   // Events sub-features
-  'eventTypes', 'eventAttendance',
+  'eventTypes',
+  'eventAttendance',
   // Finance sub-features
-  'creditBatches', 'reconciliation', 'financialStatement',
-  'groupsStatement', 'transferMoney',
+  'creditBatches',
+  'reconciliation',
+  'financialStatement',
+  'groupsStatement',
+  'transferMoney',
   // Communications
   'letters',
   // Other
-  'reports', 'publicPages',
+  'reports',
+  'publicPages',
 ]);
 
 // ── Standard Beacon Implementations ─────────────────────────────────────
@@ -66,10 +90,12 @@ export const STANDARD_IMPLEMENTATIONS = Object.freeze([
     name: 'Beacon Migration Default',
     description:
       'All features enabled except SiteWorks Integration and Custom Fields — the recommended starting point for a u3a migrating from Beacon.',
-    features: Object.freeze(buildStandardFeatures({
-      siteworks: false,
-      customFields: false,
-    })),
+    features: Object.freeze(
+      buildStandardFeatures({
+        siteworks: false,
+        customFields: false,
+      }),
+    ),
   }),
 ]);
 
@@ -79,24 +105,51 @@ export const STANDARD_IMPLEMENTATIONS = Object.freeze([
 
 /** Finance transactions (accounts, ledger, payment-method defaults). */
 export const FINANCE_PAYMENT_METHODS = [
-  'Cheque', 'Cash', 'PayPal', 'Standing Order', 'Direct Debit',
-  'BACS', 'Debit card', 'Account transfer', 'Credit card',
+  'Cheque',
+  'Cash',
+  'PayPal',
+  'Standing Order',
+  'Direct Debit',
+  'BACS',
+  'Debit card',
+  'Account transfer',
+  'Credit card',
 ];
 
 /** Member records (member editor — includes BACS). */
 export const MEMBER_PAYMENT_METHODS = [
-  'Cash', 'Cheque', 'Standing Order', 'Direct Debit', 'BACS', 'Online', 'Other',
+  'Cash',
+  'Cheque',
+  'Standing Order',
+  'Direct Debit',
+  'BACS',
+  'Online',
+  'Other',
 ];
 
 /** System settings and membership renewals. */
 export const SETTINGS_PAYMENT_METHODS = [
-  'Cash', 'Cheque', 'Standing Order', 'Direct Debit', 'Online', 'Other',
+  'Cash',
+  'Cheque',
+  'Standing Order',
+  'Direct Debit',
+  'Online',
+  'Other',
 ];
 
 /** All known payment methods (used in member-list filter). */
 export const ALL_PAYMENT_METHODS = [
-  'Cash', 'Cheque', 'PayPal', 'Standing Order', 'Direct Debit',
-  'BACS', 'Debit card', 'Account transfer', 'Credit card', 'Online', 'Other',
+  'Cash',
+  'Cheque',
+  'PayPal',
+  'Standing Order',
+  'Direct Debit',
+  'BACS',
+  'Debit card',
+  'Account transfer',
+  'Credit card',
+  'Online',
+  'Other',
 ];
 
 // ── Validation patterns ─────────────────────────────────────────────────

@@ -59,14 +59,14 @@ function groupByAddress(members) {
     if (!map.has(key)) {
       map.set(key, {
         address_id: m.address_id,
-        house_no:   m.house_no,
-        street:     m.street,
-        add_line1:  m.add_line1,
-        add_line2:  m.add_line2,
-        town:       m.town,
-        county:     m.county,
-        postcode:   m.postcode,
-        members:    [],
+        house_no: m.house_no,
+        street: m.street,
+        add_line1: m.add_line1,
+        add_line2: m.add_line2,
+        town: m.town,
+        county: m.county,
+        postcode: m.postcode,
+        members: [],
       });
     }
     map.get(key).members.push(m);
@@ -168,119 +168,162 @@ router.get('/', requirePrivilege('addresses_export', 'view'), async (req, res, n
 // Download an address export in the chosen format.
 // Query params: format (excel|csv|tsv|tam), ids (comma-separated member IDs)
 
-router.get('/download', requirePrivilege('addresses_export', 'download'), async (req, res, next) => {
-  try {
-    const { format = 'excel', ids = '' } = req.query;
-    const memberIds = ids.split(',').filter(Boolean);
-    if (!memberIds.length) {
-      return res.status(400).json({ error: 'No members selected.' });
-    }
+router.get(
+  '/download',
+  requirePrivilege('addresses_export', 'download'),
+  async (req, res, next) => {
+    try {
+      const { format = 'excel', ids = '' } = req.query;
+      const memberIds = ids.split(',').filter(Boolean);
+      if (!memberIds.length) {
+        return res.status(400).json({ error: 'No members selected.' });
+      }
 
-    const slug = req.user.tenantSlug;
-    const allMembers = await fetchMembersById(slug, memberIds);
-    const groups = groupByAddress(allMembers);
+      const slug = req.user.tenantSlug;
+      const allMembers = await fetchMembersById(slug, memberIds);
+      const groups = groupByAddress(allMembers);
 
-    const now = new Date();
-    const stamp = now.toISOString().slice(0, 10);
-    const slugPart = slug.replace(/^u3a_/, '').replace(/_/g, '-');
+      const now = new Date();
+      const stamp = now.toISOString().slice(0, 10);
+      const slugPart = slug.replace(/^u3a_/, '').replace(/_/g, '-');
 
-    if (format === 'csv' || format === 'tsv') {
-      const sep = format === 'tsv' ? '\t' : ',';
-      const headers = ['Name', 'Address 1', 'Address 2', 'Address 3', 'Town', 'County', 'Postcode'];
-      const rows = groups.map((g) => {
-        const name = combinedName(g.members);
-        const addrLine1 = [g.house_no, g.street].filter(Boolean).join(' ');
-        return [name, addrLine1, g.add_line1 ?? '', g.add_line2 ?? '', g.town ?? '', g.county ?? '', g.postcode ?? '']
-          .map((v) => sanitizeCell(String(v ?? '')))
-          .map((v) => (sep === ',' ? `"${v.replace(/"/g, '""')}"` : v))
-          .join(sep);
-      });
-      const content = [headers.map((h) => (sep === ',' ? `"${h}"` : h)).join(sep), ...rows].join('\r\n');
-      const ext = format === 'tsv' ? 'tsv' : 'csv';
-      res.setHeader('Content-Type', 'text/plain; charset=utf-8');
-      res.setHeader('Content-Disposition', `attachment; filename="${slugPart}_addresses_${stamp}.${ext}"`);
-      return res.send(content);
-    }
+      if (format === 'csv' || format === 'tsv') {
+        const sep = format === 'tsv' ? '\t' : ',';
+        const headers = [
+          'Name',
+          'Address 1',
+          'Address 2',
+          'Address 3',
+          'Town',
+          'County',
+          'Postcode',
+        ];
+        const rows = groups.map((g) => {
+          const name = combinedName(g.members);
+          const addrLine1 = [g.house_no, g.street].filter(Boolean).join(' ');
+          return [
+            name,
+            addrLine1,
+            g.add_line1 ?? '',
+            g.add_line2 ?? '',
+            g.town ?? '',
+            g.county ?? '',
+            g.postcode ?? '',
+          ]
+            .map((v) => sanitizeCell(String(v ?? '')))
+            .map((v) => (sep === ',' ? `"${v.replace(/"/g, '""')}"` : v))
+            .join(sep);
+        });
+        const content = [headers.map((h) => (sep === ',' ? `"${h}"` : h)).join(sep), ...rows].join(
+          '\r\n',
+        );
+        const ext = format === 'tsv' ? 'tsv' : 'csv';
+        res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+        res.setHeader(
+          'Content-Disposition',
+          `attachment; filename="${slugPart}_addresses_${stamp}.${ext}"`,
+        );
+        return res.send(content);
+      }
 
-    if (format === 'tam') {
-      // Third Age Matters: Excel format for TAM distribution
+      if (format === 'tam') {
+        // Third Age Matters: Excel format for TAM distribution
+        const wb = new ExcelJS.Workbook();
+        const ws = wb.addWorksheet('TAM Distribution');
+        ws.columns = [
+          { header: 'Title', key: 'title', width: 8 },
+          { header: 'Initials', key: 'initials', width: 10 },
+          { header: 'Surname', key: 'surname', width: 20 },
+          { header: 'Address1', key: 'addr1', width: 30 },
+          { header: 'Address2', key: 'addr2', width: 20 },
+          { header: 'Address3', key: 'addr3', width: 20 },
+          { header: 'Town', key: 'town', width: 20 },
+          { header: 'County', key: 'county', width: 15 },
+          { header: 'Postcode', key: 'postcode', width: 12 },
+        ];
+        ws.getRow(1).font = { bold: true };
+        for (const g of groups) {
+          // TAM uses one row per address, primary member's name fields
+          const primary = g.members[0];
+          const addrLine1 = [g.house_no, g.street].filter(Boolean).join(' ');
+          ws.addRow({
+            title: sanitizeCell(primary.title ?? ''),
+            initials: sanitizeCell(
+              (primary.known_as || primary.forenames || '')
+                .split(/\s+/)
+                .map((n) => n[0])
+                .join(''),
+            ),
+            surname: sanitizeCell(primary.surname ?? ''),
+            addr1: sanitizeCell(addrLine1),
+            addr2: sanitizeCell(g.add_line1 ?? ''),
+            addr3: sanitizeCell(g.add_line2 ?? ''),
+            town: sanitizeCell(g.town ?? ''),
+            county: sanitizeCell(g.county ?? ''),
+            postcode: sanitizeCell(g.postcode ?? ''),
+          });
+        }
+        res.setHeader(
+          'Content-Type',
+          'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        );
+        res.setHeader(
+          'Content-Disposition',
+          `attachment; filename="${slugPart}_tam_distribution_${stamp}.xlsx"`,
+        );
+        const buffer = await wb.xlsx.writeBuffer();
+        return res.send(buffer);
+      }
+
+      // Default: Excel
       const wb = new ExcelJS.Workbook();
-      const ws = wb.addWorksheet('TAM Distribution');
+      const ws = wb.addWorksheet('Addresses');
       ws.columns = [
-        { header: 'Title',    key: 'title',    width: 8 },
-        { header: 'Initials', key: 'initials', width: 10 },
-        { header: 'Surname',  key: 'surname',  width: 20 },
-        { header: 'Address1', key: 'addr1',    width: 30 },
-        { header: 'Address2', key: 'addr2',    width: 20 },
-        { header: 'Address3', key: 'addr3',    width: 20 },
-        { header: 'Town',     key: 'town',     width: 20 },
-        { header: 'County',   key: 'county',   width: 15 },
+        { header: 'Name', key: 'name', width: 30 },
+        { header: 'Address 1', key: 'addr1', width: 30 },
+        { header: 'Address 2', key: 'addr2', width: 20 },
+        { header: 'Address 3', key: 'addr3', width: 20 },
+        { header: 'Town', key: 'town', width: 20 },
+        { header: 'County', key: 'county', width: 15 },
         { header: 'Postcode', key: 'postcode', width: 12 },
+        { header: 'Telephone', key: 'telephone', width: 15 },
       ];
       ws.getRow(1).font = { bold: true };
+      ws.getRow(1).fill = {
+        type: 'pattern',
+        pattern: 'solid',
+        fgColor: { argb: 'FFE2EFDA' },
+      };
       for (const g of groups) {
-        // TAM uses one row per address, primary member's name fields
-        const primary = g.members[0];
+        const name = combinedName(g.members);
         const addrLine1 = [g.house_no, g.street].filter(Boolean).join(' ');
+        const tel = g.telephone || '';
         ws.addRow({
-          title:    sanitizeCell(primary.title ?? ''),
-          initials: sanitizeCell((primary.known_as || primary.forenames || '').split(/\s+/).map((n) => n[0]).join('')),
-          surname:  sanitizeCell(primary.surname ?? ''),
-          addr1:    sanitizeCell(addrLine1),
-          addr2:    sanitizeCell(g.add_line1 ?? ''),
-          addr3:    sanitizeCell(g.add_line2 ?? ''),
-          town:     sanitizeCell(g.town ?? ''),
-          county:   sanitizeCell(g.county ?? ''),
+          name: sanitizeCell(name),
+          addr1: sanitizeCell(addrLine1),
+          addr2: sanitizeCell(g.add_line1 ?? ''),
+          addr3: sanitizeCell(g.add_line2 ?? ''),
+          town: sanitizeCell(g.town ?? ''),
+          county: sanitizeCell(g.county ?? ''),
           postcode: sanitizeCell(g.postcode ?? ''),
+          telephone: sanitizeCell(tel ?? ''),
         });
       }
-      res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-      res.setHeader('Content-Disposition', `attachment; filename="${slugPart}_tam_distribution_${stamp}.xlsx"`);
+      res.setHeader(
+        'Content-Type',
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      );
+      res.setHeader(
+        'Content-Disposition',
+        `attachment; filename="${slugPart}_addresses_${stamp}.xlsx"`,
+      );
       const buffer = await wb.xlsx.writeBuffer();
       return res.send(buffer);
+    } catch (err) {
+      next(err);
     }
-
-    // Default: Excel
-    const wb = new ExcelJS.Workbook();
-    const ws = wb.addWorksheet('Addresses');
-    ws.columns = [
-      { header: 'Name',     key: 'name',     width: 30 },
-      { header: 'Address 1',key: 'addr1',    width: 30 },
-      { header: 'Address 2',key: 'addr2',    width: 20 },
-      { header: 'Address 3',key: 'addr3',    width: 20 },
-      { header: 'Town',     key: 'town',     width: 20 },
-      { header: 'County',   key: 'county',   width: 15 },
-      { header: 'Postcode', key: 'postcode', width: 12 },
-      { header: 'Telephone',key: 'telephone',width: 15 },
-    ];
-    ws.getRow(1).font = { bold: true };
-    ws.getRow(1).fill = {
-      type: 'pattern', pattern: 'solid',
-      fgColor: { argb: 'FFE2EFDA' },
-    };
-    for (const g of groups) {
-      const name = combinedName(g.members);
-      const addrLine1 = [g.house_no, g.street].filter(Boolean).join(' ');
-      const tel = g.telephone || '';
-      ws.addRow({
-        name:      sanitizeCell(name),
-        addr1:     sanitizeCell(addrLine1),
-        addr2:     sanitizeCell(g.add_line1 ?? ''),
-        addr3:     sanitizeCell(g.add_line2 ?? ''),
-        town:      sanitizeCell(g.town ?? ''),
-        county:    sanitizeCell(g.county ?? ''),
-        postcode:  sanitizeCell(g.postcode ?? ''),
-        telephone: sanitizeCell(tel ?? ''),
-      });
-    }
-    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-    res.setHeader('Content-Disposition', `attachment; filename="${slugPart}_addresses_${stamp}.xlsx"`);
-    const buffer = await wb.xlsx.writeBuffer();
-    return res.send(buffer);
-  } catch (err) {
-    next(err);
-  }
-});
+  },
+);
 
 // ── GET /address-export/labels ────────────────────────────────────────────────
 // Generate a PDF of address labels.
@@ -303,21 +346,21 @@ router.get('/labels', requirePrivilege('address_labels', 'download'), async (req
     }
 
     // Label layout settings
-    const cols        = Math.max(1, parseInt(req.query.cols        ?? '3',  10));
-    const rows        = Math.max(1, parseInt(req.query.rows        ?? '7',  10));
-    const labelWidth  = parseFloat(req.query.labelWidth  ?? '70')  * MM_TO_PT;
-    const labelHeight = parseFloat(req.query.labelHeight ?? '38')  * MM_TO_PT;
-    const topOffset   = parseFloat(req.query.topOffset   ?? '10')  * MM_TO_PT;
-    const leftOffset  = parseFloat(req.query.leftOffset  ?? '7')   * MM_TO_PT;
-    const fontSize    = parseFloat(req.query.fontSize    ?? '9');
-    const lineHeight  = fontSize * 1.3;
+    const cols = Math.max(1, parseInt(req.query.cols ?? '3', 10));
+    const rows = Math.max(1, parseInt(req.query.rows ?? '7', 10));
+    const labelWidth = parseFloat(req.query.labelWidth ?? '70') * MM_TO_PT;
+    const labelHeight = parseFloat(req.query.labelHeight ?? '38') * MM_TO_PT;
+    const topOffset = parseFloat(req.query.topOffset ?? '10') * MM_TO_PT;
+    const leftOffset = parseFloat(req.query.leftOffset ?? '7') * MM_TO_PT;
+    const fontSize = parseFloat(req.query.fontSize ?? '9');
+    const lineHeight = fontSize * 1.3;
 
     const slug = req.user.tenantSlug;
     const allMembers = await fetchMembersById(slug, memberIds);
     const groups = groupByAddress(allMembers);
 
     const slugPart = slug.replace(/^u3a_/, '').replace(/_/g, '-');
-    const stamp    = new Date().toISOString().slice(0, 10);
+    const stamp = new Date().toISOString().slice(0, 10);
 
     const doc = new PDFDocument({ size: 'A4', margin: 0, autoFirstPage: true });
     const chunks = [];
@@ -340,7 +383,7 @@ router.get('/labels', requirePrivilege('address_labels', 'download'), async (req
       }
 
       const x = leftOffset + col * labelWidth;
-      const y = topOffset  + row * labelHeight;
+      const y = topOffset + row * labelHeight;
 
       // Draw label content
       const name = combinedName(g.members);
@@ -367,7 +410,10 @@ router.get('/labels', requirePrivilege('address_labels', 'download'), async (req
 
     const pdfBuffer = Buffer.concat(chunks);
     res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader('Content-Disposition', `attachment; filename="${slugPart}_address_labels_${stamp}.pdf"`);
+    res.setHeader(
+      'Content-Disposition',
+      `attachment; filename="${slugPart}_address_labels_${stamp}.pdf"`,
+    );
     res.send(pdfBuffer);
   } catch (err) {
     next(err);

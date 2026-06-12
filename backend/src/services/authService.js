@@ -14,7 +14,7 @@ import { logAudit } from '../utils/audit.js';
 // LOCKOUT_MINUTES. Both are env-tunable to make tightening / loosening
 // straightforward in production.
 const MAX_FAILED_LOGINS = parseInt(process.env.MAX_FAILED_LOGINS ?? '5', 10);
-const LOCKOUT_MINUTES   = parseInt(process.env.LOCKOUT_MINUTES   ?? '15', 10);
+const LOCKOUT_MINUTES = parseInt(process.env.LOCKOUT_MINUTES ?? '15', 10);
 
 // ─── Login ────────────────────────────────────────────────────────────────
 
@@ -35,18 +35,14 @@ export async function loginUser(tenantSlug, username, password) {
   //    (fallback allows existing users without a username set to still log in)
   const userCols = `id, email, name, password_hash, active, is_site_admin,
                     must_change_password, failed_login_count, locked_until`;
-  let [user] = await tenantQuery(
-    tenantSlug,
-    `SELECT ${userCols} FROM users WHERE username = $1`,
-    [username.toLowerCase()],
-  );
+  let [user] = await tenantQuery(tenantSlug, `SELECT ${userCols} FROM users WHERE username = $1`, [
+    username.toLowerCase(),
+  ]);
 
   if (!user) {
-    [user] = await tenantQuery(
-      tenantSlug,
-      `SELECT ${userCols} FROM users WHERE email = $1`,
-      [username.toLowerCase()],
-    );
+    [user] = await tenantQuery(tenantSlug, `SELECT ${userCols} FROM users WHERE email = $1`, [
+      username.toLowerCase(),
+    ]);
   }
 
   // Use a consistent comparison time even if user not found (timing attack prevention)
@@ -100,7 +96,9 @@ export async function loginUser(tenantSlug, username, password) {
   // 5. Store refresh token hash in DB
   const tokenHash = hashToken(refreshToken);
   const expiresAt = new Date();
-  expiresAt.setDate(expiresAt.getDate() + parseInt(process.env.JWT_REFRESH_EXPIRES_DAYS ?? '30', 10));
+  expiresAt.setDate(
+    expiresAt.getDate() + parseInt(process.env.JWT_REFRESH_EXPIRES_DAYS ?? '30', 10),
+  );
 
   await tenantQuery(
     tenantSlug,
@@ -109,13 +107,18 @@ export async function loginUser(tenantSlug, username, password) {
   );
 
   // 6. Update last_login
-  await tenantQuery(
-    tenantSlug,
-    `UPDATE users SET last_login = now() WHERE id = $1`,
-    [user.id],
-  );
+  await tenantQuery(tenantSlug, `UPDATE users SET last_login = now() WHERE id = $1`, [user.id]);
 
-  return { accessToken, refreshToken, user: { id: user.id, name: user.name, email: user.email, mustChangePassword: user.must_change_password || false } };
+  return {
+    accessToken,
+    refreshToken,
+    user: {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      mustChangePassword: user.must_change_password || false,
+    },
+  };
 }
 
 // ─── Token refresh ────────────────────────────────────────────────────────
@@ -158,11 +161,9 @@ export async function refreshTokens(tenantSlug, refreshToken) {
   }
 
   // Revoke old token
-  await tenantQuery(
-    tenantSlug,
-    `UPDATE refresh_tokens SET revoked = true WHERE id = $1`,
-    [stored.id],
-  );
+  await tenantQuery(tenantSlug, `UPDATE refresh_tokens SET revoked = true WHERE id = $1`, [
+    stored.id,
+  ]);
 
   // Re-compute privileges (may have changed since last login)
   const [user] = await tenantQuery(
@@ -176,12 +177,20 @@ export async function refreshTokens(tenantSlug, refreshToken) {
     : await computePrivileges(tenantSlug, stored.user_id);
 
   // Issue new tokens
-  const newAccessToken = signAccessToken({ userId: user.id, tenantSlug, name: user.name, privileges, isSiteAdmin: user.is_site_admin || false });
+  const newAccessToken = signAccessToken({
+    userId: user.id,
+    tenantSlug,
+    name: user.name,
+    privileges,
+    isSiteAdmin: user.is_site_admin || false,
+  });
   const newRefreshToken = signRefreshToken({ userId: user.id, tenantSlug });
 
   const newHash = hashToken(newRefreshToken);
   const expiresAt = new Date();
-  expiresAt.setDate(expiresAt.getDate() + parseInt(process.env.JWT_REFRESH_EXPIRES_DAYS ?? '30', 10));
+  expiresAt.setDate(
+    expiresAt.getDate() + parseInt(process.env.JWT_REFRESH_EXPIRES_DAYS ?? '30', 10),
+  );
 
   await tenantQuery(
     tenantSlug,
@@ -189,7 +198,16 @@ export async function refreshTokens(tenantSlug, refreshToken) {
     [user.id, newHash, expiresAt],
   );
 
-  return { accessToken: newAccessToken, refreshToken: newRefreshToken, user: { id: user.id, name: user.name, email: user.email, mustChangePassword: user.must_change_password || false } };
+  return {
+    accessToken: newAccessToken,
+    refreshToken: newRefreshToken,
+    user: {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      mustChangePassword: user.must_change_password || false,
+    },
+  };
 }
 
 // ─── Logout ───────────────────────────────────────────────────────────────
@@ -197,11 +215,9 @@ export async function refreshTokens(tenantSlug, refreshToken) {
 export async function logoutUser(tenantSlug, refreshToken) {
   if (!refreshToken) return;
   const tokenHash = hashToken(refreshToken);
-  await tenantQuery(
-    tenantSlug,
-    `UPDATE refresh_tokens SET revoked = true WHERE token_hash = $1`,
-    [tokenHash],
-  );
+  await tenantQuery(tenantSlug, `UPDATE refresh_tokens SET revoked = true WHERE token_hash = $1`, [
+    tokenHash,
+  ]);
 }
 
 // ─── System admin login ───────────────────────────────────────────────────
@@ -279,9 +295,7 @@ function hashToken(token) {
 async function registerFailedLogin(tenantSlug, user, attemptedUsername) {
   const newCount = (user.failed_login_count ?? 0) + 1;
   const willLock = newCount >= MAX_FAILED_LOGINS;
-  const lockedUntil = willLock
-    ? new Date(Date.now() + LOCKOUT_MINUTES * 60_000)
-    : null;
+  const lockedUntil = willLock ? new Date(Date.now() + LOCKOUT_MINUTES * 60_000) : null;
 
   await tenantQuery(
     tenantSlug,
@@ -290,13 +304,13 @@ async function registerFailedLogin(tenantSlug, user, attemptedUsername) {
   );
 
   await logAudit(tenantSlug, {
-    userId:     user.id,
-    userName:   user.name ?? attemptedUsername,
-    action:     willLock ? 'login_locked' : 'login_failed',
+    userId: user.id,
+    userName: user.name ?? attemptedUsername,
+    action: willLock ? 'login_locked' : 'login_failed',
     entityType: 'user',
-    entityId:   user.id,
+    entityId: user.id,
     entityName: user.name ?? attemptedUsername,
-    detail:     willLock
+    detail: willLock
       ? `Account locked for ${LOCKOUT_MINUTES} min after ${MAX_FAILED_LOGINS} failed attempts`
       : `Failed attempt ${newCount}/${MAX_FAILED_LOGINS}`,
   });

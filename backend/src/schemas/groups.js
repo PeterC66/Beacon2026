@@ -6,7 +6,7 @@ import { patchMemberSchema, bulkMemberIdsSchema } from './common.js';
 
 // Groups also allow promoting from waiting list
 export const patchGroupMemberSchema = patchMemberSchema.extend({
-  waitingSince: z.null().optional(),   // pass null to promote from waiting list
+  waitingSince: z.null().optional(), // pass null to promote from waiting list
 });
 
 // Bulk-add members to another group

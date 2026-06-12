@@ -12,39 +12,52 @@ import PageHeader from '../../components/PageHeader.jsx';
 const PENDING_OPTIONS = [
   { value: 'disabled', label: 'Disable' },
   { value: 'optional', label: 'Transactions can be marked as pending' },
-  { value: 'by_type',  label: 'Select transactions to be pending' },
+  { value: 'by_type', label: 'Select transactions to be pending' },
 ];
 
 const PAYMENT_TYPES = [
-  'Cheque', 'Cash', 'PayPal', 'Standing Order', 'Direct Debit',
-  'BACS', 'Debit card', 'Account transfer', 'Credit card',
+  'Cheque',
+  'Cash',
+  'PayPal',
+  'Standing Order',
+  'Direct Debit',
+  'BACS',
+  'Debit card',
+  'Account transfer',
+  'Credit card',
 ];
 
-const inputCls   = 'border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500';
-const labelCls   = 'block text-sm font-medium text-slate-700 mb-1';
-const btnPrimary = 'bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white rounded px-5 py-2 text-sm font-medium transition-colors';
+const inputCls =
+  'border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500';
+const labelCls = 'block text-sm font-medium text-slate-700 mb-1';
+const btnPrimary =
+  'bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white rounded px-5 py-2 text-sm font-medium transition-colors';
 
 export default function ConfigureAccount() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { can, tenant } = useAuth();
 
-  const [account,  setAccount]  = useState(null);
-  const [loading,  setLoading]  = useState(true);
-  const [saving,   setSaving]   = useState(false);
-  const [error,    setError]    = useState(null);
+  const [account, setAccount] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState(null);
 
-  const [name,           setName]           = useState('');
-  const [pendingConfig,  setPendingConfig]  = useState('disabled');
-  const [pendingTypes,   setPendingTypes]   = useState([]);
-  const [enableRefunds,  setEnableRefunds]  = useState(false);
+  const [name, setName] = useState('');
+  const [pendingConfig, setPendingConfig] = useState('disabled');
+  const [pendingTypes, setPendingTypes] = useState([]);
+  const [enableRefunds, setEnableRefunds] = useState(false);
 
   useEffect(() => {
     async function load() {
       try {
         const accounts = await financeApi.listAccounts();
         const acc = accounts.find((a) => a.id === id);
-        if (!acc) { setError('Account not found.'); setLoading(false); return; }
+        if (!acc) {
+          setError('Account not found.');
+          setLoading(false);
+          return;
+        }
         setAccount(acc);
         setName(acc.name);
         setPendingConfig(acc.pending_config ?? 'disabled');
@@ -82,21 +95,28 @@ export default function ConfigureAccount() {
   }
 
   const canChange = can('finance_accounts', 'change');
-  const navLinks  = [{ label: 'Home', to: '/' }, { label: 'Finance accounts', to: '/finance/accounts' }];
+  const navLinks = [
+    { label: 'Home', to: '/' },
+    { label: 'Finance accounts', to: '/finance/accounts' },
+  ];
 
-  if (loading) return (
-    <div className="min-h-screen pb-10">
-      <PageHeader tenant={tenant} /><NavBar links={navLinks} />
-      <p className="text-center mt-10 text-slate-500">Loading…</p>
-    </div>
-  );
+  if (loading)
+    return (
+      <div className="min-h-screen pb-10">
+        <PageHeader tenant={tenant} />
+        <NavBar links={navLinks} />
+        <p className="text-center mt-10 text-slate-500">Loading…</p>
+      </div>
+    );
 
-  if (error) return (
-    <div className="min-h-screen pb-10">
-      <PageHeader tenant={tenant} /><NavBar links={navLinks} />
-      <p className="text-center mt-10 text-red-600">{error}</p>
-    </div>
-  );
+  if (error)
+    return (
+      <div className="min-h-screen pb-10">
+        <PageHeader tenant={tenant} />
+        <NavBar links={navLinks} />
+        <p className="text-center mt-10 text-red-600">{error}</p>
+      </div>
+    );
 
   return (
     <div className="min-h-screen pb-10">
@@ -107,13 +127,13 @@ export default function ConfigureAccount() {
         <h1 className="text-xl font-bold text-center mb-6">Configure Account</h1>
 
         <form onSubmit={handleSave} className="bg-white/90 rounded-lg shadow-sm p-6 space-y-5">
-
           {/* Account name — read-only for locked accounts */}
           <div>
             <label className={labelCls}>Account name</label>
             {account.locked ? (
               <p className="text-sm text-slate-700 px-3 py-2 bg-slate-50 border border-slate-200 rounded">
-                {account.name} <span className="text-slate-400 text-xs ml-1">(locked — cannot be renamed)</span>
+                {account.name}{' '}
+                <span className="text-slate-400 text-xs ml-1">(locked — cannot be renamed)</span>
               </p>
             ) : (
               <input
@@ -138,7 +158,9 @@ export default function ConfigureAccount() {
               disabled={!canChange}
             >
               {PENDING_OPTIONS.map((o) => (
-                <option key={o.value} value={o.value}>{o.label}</option>
+                <option key={o.value} value={o.value}>
+                  {o.label}
+                </option>
               ))}
             </select>
 
@@ -182,15 +204,21 @@ export default function ConfigureAccount() {
               <button type="submit" disabled={saving} className={btnPrimary}>
                 {saving ? 'Saving…' : 'Save'}
               </button>
-              <button type="button" onClick={() => navigate('/finance/accounts')}
-                className="border border-slate-300 text-slate-700 hover:bg-slate-50 rounded px-5 py-2 text-sm transition-colors">
+              <button
+                type="button"
+                onClick={() => navigate('/finance/accounts')}
+                className="border border-slate-300 text-slate-700 hover:bg-slate-50 rounded px-5 py-2 text-sm transition-colors"
+              >
                 Cancel
               </button>
             </div>
           )}
           {!canChange && (
-            <button type="button" onClick={() => navigate('/finance/accounts')}
-              className="border border-slate-300 text-slate-700 hover:bg-slate-50 rounded px-5 py-2 text-sm transition-colors">
+            <button
+              type="button"
+              onClick={() => navigate('/finance/accounts')}
+              className="border border-slate-300 text-slate-700 hover:bg-slate-50 rounded px-5 py-2 text-sm transition-colors"
+            >
               Back
             </button>
           )}

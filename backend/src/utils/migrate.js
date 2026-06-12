@@ -30,14 +30,14 @@ export async function migrateAndSeed() {
   //    create an admin account with a hardcoded fallback password.
   const existing = await prisma.sysAdmin.findFirst();
   if (!existing) {
-    const email    = process.env.SEED_ADMIN_EMAIL;
+    const email = process.env.SEED_ADMIN_EMAIL;
     const password = process.env.SEED_ADMIN_PASSWORD;
-    const name     = process.env.SEED_ADMIN_NAME ?? 'System Administrator';
+    const name = process.env.SEED_ADMIN_NAME ?? 'System Administrator';
 
     if (!email || !password) {
       throw new Error(
         'No system administrator exists and SEED_ADMIN_EMAIL / SEED_ADMIN_PASSWORD are not set. ' +
-        'Set both environment variables before starting the server.',
+          'Set both environment variables before starting the server.',
       );
     }
 
@@ -166,13 +166,10 @@ async function migrateTenantSchemas() {
   const tenants = await prisma.sysTenant.findMany({ where: { active: true } });
   if (tenants.length === 0) return;
 
-  const schemaSQL = readFileSync(
-    resolve(__dirname, '../../prisma/tenant_schema.sql'),
-    'utf8',
-  );
+  const schemaSQL = readFileSync(resolve(__dirname, '../../prisma/tenant_schema.sql'), 'utf8');
 
   for (const tenant of tenants) {
-    const slug       = tenant.slug;
+    const slug = tenant.slug;
     const schemaName = `u3a_${slug}`;
     console.log(`Migrating tenant schema: ${schemaName}`);
 
@@ -247,20 +244,39 @@ async function migrateTenantSchemas() {
 
       // Seed payment method defaults (BACS + all methods → Current account)
       // Only if the table is empty — never overwrite tenant configuration.
-      const [pmCount] = await tenantQuery(slug, `SELECT count(*)::int AS n FROM payment_method_defaults`);
+      const [pmCount] = await tenantQuery(
+        slug,
+        `SELECT count(*)::int AS n FROM payment_method_defaults`,
+      );
       if (pmCount.n === 0) {
-        const [currentAcc] = await tenantQuery(slug, `SELECT id FROM finance_accounts WHERE name = 'Current' AND locked = true LIMIT 1`);
+        const [currentAcc] = await tenantQuery(
+          slug,
+          `SELECT id FROM finance_accounts WHERE name = 'Current' AND locked = true LIMIT 1`,
+        );
         if (currentAcc) {
-          const pmMethods = ['Cheque', 'Cash', 'PayPal', 'Standing Order', 'Direct Debit',
-                             'BACS', 'Debit card', 'Account transfer', 'Credit card'];
-          await tenantQuery(slug,
+          const pmMethods = [
+            'Cheque',
+            'Cash',
+            'PayPal',
+            'Standing Order',
+            'Direct Debit',
+            'BACS',
+            'Debit card',
+            'Account transfer',
+            'Credit card',
+          ];
+          await tenantQuery(
+            slug,
             `INSERT INTO payment_method_defaults (payment_method, account_id, updated_at)
-             VALUES ('_default_method', 'BACS', now())`);
+             VALUES ('_default_method', 'BACS', now())`,
+          );
           for (const pm of pmMethods) {
-            await tenantQuery(slug,
+            await tenantQuery(
+              slug,
               `INSERT INTO payment_method_defaults (payment_method, account_id, updated_at)
                VALUES ($1, $2, now())`,
-              [pm, currentAcc.id]);
+              [pm, currentAcc.id],
+            );
           }
         }
       }
@@ -290,11 +306,9 @@ export async function syncDefaultRolePrivileges(slug) {
   const resourceIdByCode = Object.fromEntries(dbResources.map((r) => [r.code, r.id]));
 
   for (const roleData of DEFAULT_ROLES) {
-    const rows = await tenantQuery(
-      slug,
-      `SELECT id FROM roles WHERE name = $1 LIMIT 1`,
-      [roleData.name],
-    );
+    const rows = await tenantQuery(slug, `SELECT id FROM roles WHERE name = $1 LIMIT 1`, [
+      roleData.name,
+    ]);
     if (rows.length === 0) continue;
     const roleId = rows[0].id;
 

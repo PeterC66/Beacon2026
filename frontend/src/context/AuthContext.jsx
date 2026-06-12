@@ -2,7 +2,13 @@
 // Provides authentication state and actions to the whole app.
 
 import { createContext, useContext, useState, useEffect, useRef, useCallback } from 'react';
-import { auth as authApi, settings as settingsApi, setAuth, clearAuth, restoreSession } from '../lib/api.js';
+import {
+  auth as authApi,
+  settings as settingsApi,
+  setAuth,
+  clearAuth,
+  restoreSession,
+} from '../lib/api.js';
 import { getPreferences } from '../hooks/usePreferences.js';
 import { hasOptionalCookieConsent } from '../hooks/useCookieConsent.js';
 import { FEATURE_DEPS, isOn } from '../lib/constants.js';
@@ -17,31 +23,38 @@ function getLastU3aCookie() {
 }
 
 export function AuthProvider({ children }) {
-  const [user,    setUser]    = useState(null);   // { id, name, email }
-  const [tenant,  setTenant]  = useState(null);   // slug string
-  const [privs,   setPrivs]   = useState([]);     // string[] of "resource:action"
+  const [user, setUser] = useState(null); // { id, name, email }
+  const [tenant, setTenant] = useState(null); // slug string
+  const [privs, setPrivs] = useState([]); // string[] of "resource:action"
   const [siteAdmin, setSiteAdmin] = useState(false); // true for site administrator
   const [mustChangePassword, setMustChangePassword] = useState(false);
   const [featureConfig, setFeatureConfig] = useState({}); // feature toggles from tenant_settings
   const [loading, setLoading] = useState(false);
-  const [error,   setError]   = useState(null);
+  const [error, setError] = useState(null);
   const [restoring, setRestoring] = useState(true); // true while checking refresh cookie
 
   // ── Session restoration on mount ──────────────────────────────────────
   useEffect(() => {
     const slug = getLastU3aCookie();
-    if (!slug) { setRestoring(false); return; }
-    restoreSession(slug).then(async (data) => {
-      if (data) {
-        const payload = parseJwt(data.accessToken);
-        setUser(data.user);
-        setTenant(slug);
-        setPrivs(payload.privileges ?? []);
-        setSiteAdmin(payload.isSiteAdmin || false);
-        setMustChangePassword(data.mustChangePassword || false);
-        try { setFeatureConfig(await settingsApi.getFeatureConfig()); } catch {}
-      }
-    }).finally(() => setRestoring(false));
+    if (!slug) {
+      setRestoring(false);
+      return;
+    }
+    restoreSession(slug)
+      .then(async (data) => {
+        if (data) {
+          const payload = parseJwt(data.accessToken);
+          setUser(data.user);
+          setTenant(slug);
+          setPrivs(payload.privileges ?? []);
+          setSiteAdmin(payload.isSiteAdmin || false);
+          setMustChangePassword(data.mustChangePassword || false);
+          try {
+            setFeatureConfig(await settingsApi.getFeatureConfig());
+          } catch {}
+        }
+      })
+      .finally(() => setRestoring(false));
   }, []);
 
   // ── Inactivity timeout ────────────────────────────────────────────────
@@ -51,10 +64,13 @@ export function AuthProvider({ children }) {
     if (!user) return;
     if (inactivityTimer.current) clearTimeout(inactivityTimer.current);
     const minutes = getPreferences().inactivityTimeout;
-    inactivityTimer.current = setTimeout(() => {
-      // Fire auth:expired to trigger logout
-      window.dispatchEvent(new Event('auth:expired'));
-    }, minutes * 60 * 1000);
+    inactivityTimer.current = setTimeout(
+      () => {
+        // Fire auth:expired to trigger logout
+        window.dispatchEvent(new Event('auth:expired'));
+      },
+      minutes * 60 * 1000,
+    );
   }, [user]);
 
   useEffect(() => {
@@ -99,7 +115,9 @@ export function AuthProvider({ children }) {
       setPrivs(payload.privileges ?? []);
       setSiteAdmin(payload.isSiteAdmin || false);
       setMustChangePassword(data.mustChangePassword || false);
-      try { setFeatureConfig(await settingsApi.getFeatureConfig()); } catch {}
+      try {
+        setFeatureConfig(await settingsApi.getFeatureConfig());
+      } catch {}
       return true;
     } catch (err) {
       setError(err.message);
@@ -110,7 +128,9 @@ export function AuthProvider({ children }) {
   }, []);
 
   const logout = useCallback(async () => {
-    try { await authApi.logout(); } catch {}
+    try {
+      await authApi.logout();
+    } catch {}
     clearAuth();
     setUser(null);
     setTenant(null);
@@ -125,10 +145,13 @@ export function AuthProvider({ children }) {
    * @param {string} resource  e.g. 'role_record'
    * @param {string} action    e.g. 'view'
    */
-  const can = useCallback((resource, action) => {
-    if (siteAdmin) return true;
-    return privs.includes(`${resource}:${action}`);
-  }, [privs, siteAdmin]);
+  const can = useCallback(
+    (resource, action) => {
+      if (siteAdmin) return true;
+      return privs.includes(`${resource}:${action}`);
+    },
+    [privs, siteAdmin],
+  );
 
   /**
    * Check if a feature toggle is enabled for this tenant.
@@ -137,16 +160,21 @@ export function AuthProvider({ children }) {
    * Also checks parent dependency — e.g. if 'events' is off, 'calendar' is off too.
    * @param {string} key  e.g. 'finance', 'giftAid'
    */
-  const hasFeature = useCallback((key) => {
-    if (!isOn(featureConfig, key)) return false;
-    const parent = FEATURE_DEPS[key];
-    if (parent && !isOn(featureConfig, parent)) return false;
-    return true;
-  }, [featureConfig]);
+  const hasFeature = useCallback(
+    (key) => {
+      if (!isOn(featureConfig, key)) return false;
+      const parent = FEATURE_DEPS[key];
+      if (parent && !isOn(featureConfig, parent)) return false;
+      return true;
+    },
+    [featureConfig],
+  );
 
   /** Re-fetch feature config from backend (call after updating toggles). */
   const refreshFeatureConfig = useCallback(async () => {
-    try { setFeatureConfig(await settingsApi.getFeatureConfig()); } catch {}
+    try {
+      setFeatureConfig(await settingsApi.getFeatureConfig());
+    } catch {}
   }, []);
 
   const clearMustChangePassword = useCallback(() => {
@@ -158,7 +186,25 @@ export function AuthProvider({ children }) {
   if (restoring) return null;
 
   return (
-    <AuthContext.Provider value={{ user, tenant, privs, loading, error, login, logout, can, hasFeature, featureConfig, refreshFeatureConfig, isLoggedIn: !!user, isSiteAdmin: siteAdmin, mustChangePassword, clearMustChangePassword }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        tenant,
+        privs,
+        loading,
+        error,
+        login,
+        logout,
+        can,
+        hasFeature,
+        featureConfig,
+        refreshFeatureConfig,
+        isLoggedIn: !!user,
+        isSiteAdmin: siteAdmin,
+        mustChangePassword,
+        clearMustChangePassword,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );

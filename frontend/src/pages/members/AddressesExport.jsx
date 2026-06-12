@@ -10,9 +10,9 @@ import NavBar from '../../components/NavBar.jsx';
 import {
   addressExport as addressExportApi,
   memberStatuses as statusApi,
-  memberClasses  as classApi,
-  polls          as pollsApi,
-  groups         as groupsApi,
+  memberClasses as classApi,
+  polls as pollsApi,
+  groups as groupsApi,
   requestBlob,
 } from '../../lib/api.js';
 import { hasOptionalCookieConsent } from '../../hooks/useCookieConsent.js';
@@ -20,8 +20,8 @@ import { hasOptionalCookieConsent } from '../../hooks/useCookieConsent.js';
 // ── Label settings localStorage key ─────────────────────────────────────────
 
 const LABEL_PREFS_KEY = 'beacon2_label_settings';
-const LAST_CLASS_KEY  = 'beacon2_last_export_class';
-const TAM_PREFS_KEY   = 'beacon2_tam_submission';
+const LAST_CLASS_KEY = 'beacon2_last_export_class';
+const TAM_PREFS_KEY = 'beacon2_tam_submission';
 
 function loadLabelPrefs() {
   if (!hasOptionalCookieConsent()) return defaultLabelSettings();
@@ -34,7 +34,11 @@ function loadLabelPrefs() {
 
 function loadLastClass() {
   if (!hasOptionalCookieConsent()) return '';
-  try { return localStorage.getItem(LAST_CLASS_KEY) || ''; } catch { return ''; }
+  try {
+    return localStorage.getItem(LAST_CLASS_KEY) || '';
+  } catch {
+    return '';
+  }
 }
 
 function saveLastClass(classId) {
@@ -50,7 +54,9 @@ function loadTamPrefs() {
   try {
     const raw = localStorage.getItem(TAM_PREFS_KEY);
     return raw ? JSON.parse(raw) : null;
-  } catch { return null; }
+  } catch {
+    return null;
+  }
 }
 
 function saveTamPrefs(statusIds, classId) {
@@ -61,7 +67,15 @@ function saveTamPrefs(statusIds, classId) {
 }
 
 function defaultLabelSettings() {
-  return { cols: 3, rows: 7, labelWidth: 70, labelHeight: 38, topOffset: 10, leftOffset: 7, fontSize: 9 };
+  return {
+    cols: 3,
+    rows: 7,
+    labelWidth: 70,
+    labelHeight: 38,
+    topOffset: 10,
+    leftOffset: 7,
+    fontSize: 9,
+  };
 }
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
@@ -75,14 +89,14 @@ function groupByAddress(members) {
       map.set(key, {
         key,
         address_id: m.address_id,
-        house_no:   m.house_no,
-        street:     m.street,
-        add_line1:  m.add_line1,
-        add_line2:  m.add_line2,
-        town:       m.town,
-        county:     m.county,
-        postcode:   m.postcode,
-        members:    [],
+        house_no: m.house_no,
+        street: m.street,
+        add_line1: m.add_line1,
+        add_line2: m.add_line2,
+        town: m.town,
+        county: m.county,
+        postcode: m.postcode,
+        members: [],
       });
     }
     map.get(key).members.push(m);
@@ -114,18 +128,21 @@ function addressDisplay(g) {
     g.town,
     g.county,
     g.postcode,
-  ].filter(Boolean).join(', ');
+  ]
+    .filter(Boolean)
+    .join(', ');
 }
 
 const FORMATS = [
-  { value: 'tam',   label: 'Third Age Matters (TAM)' },
-  { value: 'labels',label: 'Labels (PDF)' },
+  { value: 'tam', label: 'Third Age Matters (TAM)' },
+  { value: 'labels', label: 'Labels (PDF)' },
   { value: 'excel', label: 'Excel' },
-  { value: 'csv',   label: 'CSV' },
-  { value: 'tsv',   label: 'TSV' },
+  { value: 'csv', label: 'CSV' },
+  { value: 'tsv', label: 'TSV' },
 ];
 
-const inputCls = 'border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500';
+const inputCls =
+  'border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500';
 
 // ── Component ─────────────────────────────────────────────────────────────────
 
@@ -138,21 +155,21 @@ export default function AddressesExport() {
   const [tamPrefsApplied, setTamPrefsApplied] = useState(false);
 
   // Filter state
-  const [statuses,         setStatuses]         = useState([]);
-  const [classes,          setClasses]           = useState([]);
-  const [polls,            setPolls]             = useState([]);
-  const [allGroups,        setAllGroups]         = useState([]);
-  const [selectedStatuses, setSelectedStatuses]  = useState([]);
-  const [selectedClass,    setSelectedClass]     = useState(loadLastClass);
-  const [selectedPoll,     setSelectedPoll]      = useState('');
-  const [negatePoll,       setNegatePoll]        = useState(false);
-  const [groupSearch,      setGroupSearch]       = useState('');
-  const [selectedGroup,    setSelectedGroup]     = useState('');
+  const [statuses, setStatuses] = useState([]);
+  const [classes, setClasses] = useState([]);
+  const [polls, setPolls] = useState([]);
+  const [allGroups, setAllGroups] = useState([]);
+  const [selectedStatuses, setSelectedStatuses] = useState([]);
+  const [selectedClass, setSelectedClass] = useState(loadLastClass);
+  const [selectedPoll, setSelectedPoll] = useState('');
+  const [negatePoll, setNegatePoll] = useState(false);
+  const [groupSearch, setGroupSearch] = useState('');
+  const [selectedGroup, setSelectedGroup] = useState('');
 
   // Member data
   const [addressGroups, setAddressGroups] = useState([]);
-  const [loading,       setLoading]       = useState(false);
-  const [error,         setError]         = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
   // Selection
   const [selected, setSelected] = useState(new Set()); // keys (address group keys)
@@ -162,12 +179,17 @@ export default function AddressesExport() {
 
   // Download state
   const [downloading, setDownloading] = useState(false);
-  const [dlError,     setDlError]     = useState(null);
+  const [dlError, setDlError] = useState(null);
 
   // ── Load filter options on mount ───────────────────────────────────────────
 
   useEffect(() => {
-    Promise.all([statusApi.list(), classApi.list(), pollsApi.list(), groupsApi.list({ activeOnly: false })])
+    Promise.all([
+      statusApi.list(),
+      classApi.list(),
+      pollsApi.list(),
+      groupsApi.list({ activeOnly: false }),
+    ])
       .then(([s, c, p, g]) => {
         setStatuses(s);
         setClasses(c);
@@ -203,10 +225,10 @@ export default function AddressesExport() {
     try {
       const params = {};
       if (selectedStatuses.length) params.status = selectedStatuses.join(',');
-      if (selectedClass)           params.classId  = selectedClass;
-      if (selectedPoll)            params.pollId   = selectedPoll;
+      if (selectedClass) params.classId = selectedClass;
+      if (selectedPoll) params.pollId = selectedPoll;
       if (negatePoll && selectedPoll) params.negatePoll = '1';
-      if (selectedGroup)           params.groupId  = selectedGroup;
+      if (selectedGroup) params.groupId = selectedGroup;
       const data = await addressExportApi.list(params);
       setAddressGroups(groupByAddress(data));
     } catch (err) {
@@ -216,7 +238,9 @@ export default function AddressesExport() {
     }
   }, [selectedStatuses, selectedClass, selectedPoll, negatePoll, selectedGroup]);
 
-  useEffect(() => { loadMembers(); }, [loadMembers]);
+  useEffect(() => {
+    loadMembers();
+  }, [loadMembers]);
 
   // ── Selection helpers ─────────────────────────────────────────────────────
 
@@ -270,13 +294,13 @@ export default function AddressesExport() {
       if (format === 'labels') {
         const qs = new URLSearchParams({
           ids: memberIds.join(','),
-          cols:        String(labelSettings.cols),
-          rows:        String(labelSettings.rows),
-          labelWidth:  String(labelSettings.labelWidth),
+          cols: String(labelSettings.cols),
+          rows: String(labelSettings.rows),
+          labelWidth: String(labelSettings.labelWidth),
           labelHeight: String(labelSettings.labelHeight),
-          topOffset:   String(labelSettings.topOffset),
-          leftOffset:  String(labelSettings.leftOffset),
-          fontSize:    String(labelSettings.fontSize),
+          topOffset: String(labelSettings.topOffset),
+          leftOffset: String(labelSettings.leftOffset),
+          fontSize: String(labelSettings.fontSize),
         });
         await requestBlob(`/address-export/labels?${qs}`);
       } else {
@@ -298,17 +322,18 @@ export default function AddressesExport() {
 
   // ── Render ────────────────────────────────────────────────────────────────
 
-  const downloadLabel = {
-    tam:    'Download TAM Spreadsheet',
-    labels: 'Download Labels PDF',
-    excel:  'Download Excel',
-    csv:    'Download CSV',
-    tsv:    'Download TSV',
-  }[format] ?? 'Download';
+  const downloadLabel =
+    {
+      tam: 'Download TAM Spreadsheet',
+      labels: 'Download Labels PDF',
+      excel: 'Download Excel',
+      csv: 'Download CSV',
+      tsv: 'Download TSV',
+    }[format] ?? 'Download';
 
-  const canView     = can('addresses_export', 'view');
+  const canView = can('addresses_export', 'view');
   const canDownload = can('addresses_export', 'download');
-  const canLabels   = can('address_labels',   'download');
+  const canLabels = can('address_labels', 'download');
 
   if (!canView) {
     return (
@@ -384,12 +409,17 @@ export default function AddressesExport() {
               <select
                 name="selectedClass"
                 value={selectedClass}
-                onChange={(e) => { setSelectedClass(e.target.value); saveLastClass(e.target.value); }}
+                onChange={(e) => {
+                  setSelectedClass(e.target.value);
+                  saveLastClass(e.target.value);
+                }}
                 className={`${inputCls} w-full`}
               >
                 <option value="">All classes</option>
                 {classes.map((c) => (
-                  <option key={c.id} value={c.id}>{c.name}</option>
+                  <option key={c.id} value={c.id}>
+                    {c.name}
+                  </option>
                 ))}
               </select>
             </div>
@@ -405,7 +435,9 @@ export default function AddressesExport() {
               >
                 <option value="">Any / all</option>
                 {polls.map((p) => (
-                  <option key={p.id} value={p.id}>{p.name}</option>
+                  <option key={p.id} value={p.id}>
+                    {p.name}
+                  </option>
                 ))}
               </select>
               {selectedPoll && (
@@ -445,7 +477,8 @@ export default function AddressesExport() {
                     value={g.id}
                     style={g.status === 'Inactive' ? { color: '#dc2626' } : undefined}
                   >
-                    {g.name}{g.status === 'Inactive' ? ' (inactive)' : ''}
+                    {g.name}
+                    {g.status === 'Inactive' ? ' (inactive)' : ''}
                   </option>
                 ))}
               </select>
@@ -463,13 +496,13 @@ export default function AddressesExport() {
             </p>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
               {[
-                { key: 'cols',        label: 'Labels across' },
-                { key: 'rows',        label: 'Rows down' },
-                { key: 'labelWidth',  label: 'Label width (mm)' },
+                { key: 'cols', label: 'Labels across' },
+                { key: 'rows', label: 'Rows down' },
+                { key: 'labelWidth', label: 'Label width (mm)' },
                 { key: 'labelHeight', label: 'Label height (mm)' },
-                { key: 'topOffset',   label: 'Top offset (mm)' },
-                { key: 'leftOffset',  label: 'Left offset (mm)' },
-                { key: 'fontSize',    label: 'Font size (pt)' },
+                { key: 'topOffset', label: 'Top offset (mm)' },
+                { key: 'leftOffset', label: 'Left offset (mm)' },
+                { key: 'fontSize', label: 'Font size (pt)' },
               ].map(({ key, label }) => (
                 <div key={key}>
                   <label className="block text-sm font-medium text-slate-700 mb-1">{label}</label>
@@ -502,34 +535,27 @@ export default function AddressesExport() {
         <div className="bg-white/90 rounded-lg shadow-sm p-4 sm:p-5">
           <div className="flex items-center justify-between mb-3">
             <h2 className="text-base font-semibold text-slate-700">
-              Members {!loading && `(${addressGroups.length} address groups, ${selected.size} selected)`}
+              Members{' '}
+              {!loading && `(${addressGroups.length} address groups, ${selected.size} selected)`}
             </h2>
             <div className="flex gap-3 text-sm">
-              <button
-                type="button"
-                onClick={selectAll}
-                className="text-blue-700 hover:underline"
-              >
+              <button type="button" onClick={selectAll} className="text-blue-700 hover:underline">
                 Select all
               </button>
-              <button
-                type="button"
-                onClick={deselectAll}
-                className="text-blue-700 hover:underline"
-              >
+              <button type="button" onClick={deselectAll} className="text-blue-700 hover:underline">
                 Deselect all
               </button>
             </div>
           </div>
 
-          {error && (
-            <p className="text-red-600 text-sm mb-3">{error}</p>
-          )}
+          {error && <p className="text-red-600 text-sm mb-3">{error}</p>}
 
           {loading ? (
             <p className="text-slate-500 text-sm py-4 text-center">Loading…</p>
           ) : addressGroups.length === 0 ? (
-            <p className="text-slate-500 text-sm py-4 text-center">No members match the current filters.</p>
+            <p className="text-slate-500 text-sm py-4 text-center">
+              No members match the current filters.
+            </p>
           ) : (
             <div className="overflow-x-auto">
               <table className="min-w-max w-full text-sm border-collapse">
@@ -539,7 +565,7 @@ export default function AddressesExport() {
                       <input
                         type="checkbox"
                         checked={selected.size === addressGroups.length && addressGroups.length > 0}
-                        onChange={(e) => e.target.checked ? selectAll() : deselectAll()}
+                        onChange={(e) => (e.target.checked ? selectAll() : deselectAll())}
                         className="accent-blue-600"
                       />
                     </th>
@@ -563,12 +589,8 @@ export default function AddressesExport() {
                           className="accent-blue-600"
                         />
                       </td>
-                      <td className="px-3 py-2 whitespace-nowrap">
-                        {combinedName(g.members)}
-                      </td>
-                      <td className="px-3 py-2 text-slate-600">
-                        {addressDisplay(g)}
-                      </td>
+                      <td className="px-3 py-2 whitespace-nowrap">{combinedName(g.members)}</td>
+                      <td className="px-3 py-2 text-slate-600">{addressDisplay(g)}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -599,13 +621,19 @@ export default function AddressesExport() {
           <button
             type="button"
             onClick={handleDownload}
-            disabled={downloading || selected.size === 0 || (format === 'labels' ? !canLabels : !canDownload)}
+            disabled={
+              downloading ||
+              selected.size === 0 ||
+              (format === 'labels' ? !canLabels : !canDownload)
+            }
             className="bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white rounded px-5 py-2 text-sm font-medium transition-colors"
           >
             {downloading ? 'Downloading…' : downloadLabel}
           </button>
           {selected.size === 0 && !loading && (
-            <p className="text-sm text-slate-500">Select one or more addresses above to download.</p>
+            <p className="text-sm text-slate-500">
+              Select one or more addresses above to download.
+            </p>
           )}
         </div>
       </div>

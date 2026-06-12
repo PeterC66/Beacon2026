@@ -29,13 +29,10 @@ export default function JoinPending() {
         <div className="bg-white rounded-lg shadow-md p-8 max-w-md w-full text-center">
           <h1 className="text-xl font-bold text-slate-700 mb-2">Application Not Found</h1>
           <p className="text-sm text-slate-600 mb-4">
-            If you have a payment link, please use that to continue.
-            Otherwise, you can start a new application.
+            If you have a payment link, please use that to continue. Otherwise, you can start a new
+            application.
           </p>
-          <Link
-            to={`/public/${slug}/join`}
-            className="text-blue-700 hover:underline text-sm"
-          >
+          <Link to={`/public/${slug}/join`} className="text-blue-700 hover:underline text-sm">
             Start a new application
           </Link>
         </div>
@@ -44,8 +41,14 @@ export default function JoinPending() {
   }
 
   const {
-    membershipNumber, redirectUrl, paymentToken,
-    amount, className, forenames, surname, partner2,
+    membershipNumber,
+    redirectUrl,
+    paymentToken,
+    amount,
+    className,
+    forenames,
+    surname,
+    partner2,
   } = data;
 
   const resumeUrl = `${window.location.origin}/public/${slug}/resume-payment/${paymentToken}`;
@@ -56,7 +59,9 @@ export default function JoinPending() {
     // redirect to anywhere other than same-origin or the PayPal allow-list,
     // even if the backend has been compromised.
     if (!isSafePaymentRedirect(redirectUrl)) {
-      setRedirectError('The payment provider returned an unexpected redirect. Please contact your u3a.');
+      setRedirectError(
+        'The payment provider returned an unexpected redirect. Please contact your u3a.',
+      );
       return;
     }
     window.location.href = redirectUrl;
@@ -89,17 +94,34 @@ export default function JoinPending() {
 
           {/* Application summary */}
           <div className="bg-slate-50 rounded-md p-4 mb-6 text-sm space-y-1">
-            <p><span className="font-medium text-slate-700">Name:</span> {forenames} {surname}</p>
-            <p><span className="font-medium text-slate-700">Membership number:</span> {membershipNumber}</p>
+            <p>
+              <span className="font-medium text-slate-700">Name:</span> {forenames} {surname}
+            </p>
+            <p>
+              <span className="font-medium text-slate-700">Membership number:</span>{' '}
+              {membershipNumber}
+            </p>
             {partner2 && (
               <>
-                <p><span className="font-medium text-slate-700">Partner:</span> {partner2.forenames} {partner2.surname}</p>
-                <p><span className="font-medium text-slate-700">Partner membership number:</span> {partner2.membershipNumber}</p>
+                <p>
+                  <span className="font-medium text-slate-700">Partner:</span> {partner2.forenames}{' '}
+                  {partner2.surname}
+                </p>
+                <p>
+                  <span className="font-medium text-slate-700">Partner membership number:</span>{' '}
+                  {partner2.membershipNumber}
+                </p>
               </>
             )}
-            <p><span className="font-medium text-slate-700">Membership type:</span> {className}{partner2 ? ' (joint)' : ''}</p>
+            <p>
+              <span className="font-medium text-slate-700">Membership type:</span> {className}
+              {partner2 ? ' (joint)' : ''}
+            </p>
             {amount > 0 && (
-              <p><span className="font-medium text-slate-700">Amount due:</span> &pound;{Number(amount).toFixed(2)}</p>
+              <p>
+                <span className="font-medium text-slate-700">Amount due:</span> &pound;
+                {Number(amount).toFixed(2)}
+              </p>
             )}
           </div>
 
@@ -107,8 +129,8 @@ export default function JoinPending() {
           <div className="bg-amber-50 border border-amber-200 rounded-md p-4 mb-6">
             <p className="text-sm text-amber-800 font-medium mb-1">Payment required</p>
             <p className="text-sm text-amber-700">
-              Your membership will be activated once payment is received.
-              You can pay now or use the link below to pay later.
+              Your membership will be activated once payment is received. You can pay now or use the
+              link below to pay later.
             </p>
           </div>
 
@@ -153,9 +175,7 @@ export default function JoinPending() {
               </p>
             )}
 
-            {emailError && (
-              <p className="text-sm text-red-600 mt-2 text-center">{emailError}</p>
-            )}
+            {emailError && <p className="text-sm text-red-600 mt-2 text-center">{emailError}</p>}
           </div>
         </div>
       </div>

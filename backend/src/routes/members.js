@@ -24,7 +24,7 @@ router.use(requireAuth);
  */
 async function resolveGiftAidAmount(slug, memberId, classId, transactionDate) {
   // Check if GA feature is enabled
-  if (!await isFeatureEnabled(slug, 'giftAid')) return null;
+  if (!(await isFeatureEnabled(slug, 'giftAid'))) return null;
 
   const [settings] = await tenantQuery(
     slug,
@@ -32,11 +32,9 @@ async function resolveGiftAidAmount(slug, memberId, classId, transactionDate) {
   );
 
   // Check if member has a GA declaration at or before the transaction date
-  const [m] = await tenantQuery(
-    slug,
-    `SELECT gift_aid_from FROM members WHERE id = $1`,
-    [memberId],
-  );
+  const [m] = await tenantQuery(slug, `SELECT gift_aid_from FROM members WHERE id = $1`, [
+    memberId,
+  ]);
   if (!m?.gift_aid_from) return null;
   const gaFrom = String(m.gift_aid_from).slice(0, 10);
   const txDate = String(transactionDate).slice(0, 10);
@@ -205,10 +203,14 @@ router.get('/', requirePrivilege('members_list', 'view'), async (req, res, next)
 router.get('/recent', requirePrivilege('members_recent', 'view'), async (req, res, next) => {
   try {
     const slug = req.user.tenantSlug;
-    const toDate   = req.query.to   || new Date().toISOString().slice(0, 10);
-    const fromDate = req.query.from || (() => {
-      const d = new Date(); d.setDate(d.getDate() - 30); return d.toISOString().slice(0, 10);
-    })();
+    const toDate = req.query.to || new Date().toISOString().slice(0, 10);
+    const fromDate =
+      req.query.from ||
+      (() => {
+        const d = new Date();
+        d.setDate(d.getDate() - 30);
+        return d.toISOString().slice(0, 10);
+      })();
 
     const rows = await tenantQuery(
       slug,
@@ -238,34 +240,38 @@ router.get('/recent', requirePrivilege('members_recent', 'view'), async (req, re
 // Returns membership and group statistics.
 // Query params: from, to — date range for section 4 (Members by Renew Date).
 
-router.get('/statistics', requirePrivilege('membership_statistics', 'view'), async (req, res, next) => {
-  try {
-    const slug = req.user.tenantSlug;
+router.get(
+  '/statistics',
+  requirePrivilege('membership_statistics', 'view'),
+  async (req, res, next) => {
+    try {
+      const slug = req.user.tenantSlug;
 
-    // Fetch settings for year start and renewal periods
-    const [cfg] = await tenantQuery(
-      slug,
-      `SELECT year_start_month, year_start_day, advance_renewals_weeks, grace_lapse_weeks
+      // Fetch settings for year start and renewal periods
+      const [cfg] = await tenantQuery(
+        slug,
+        `SELECT year_start_month, year_start_day, advance_renewals_weeks, grace_lapse_weeks
        FROM tenant_settings WHERE id = 'singleton'`,
-    );
-    const yearStartMonth = cfg?.year_start_month ?? 1;
-    const yearStartDay   = cfg?.year_start_day   ?? 1;
-    const advanceWeeks   = cfg?.advance_renewals_weeks ?? 4;
-    const graceLapse     = cfg?.grace_lapse_weeks      ?? 4;
+      );
+      const yearStartMonth = cfg?.year_start_month ?? 1;
+      const yearStartDay = cfg?.year_start_day ?? 1;
+      const advanceWeeks = cfg?.advance_renewals_weeks ?? 4;
+      const graceLapse = cfg?.grace_lapse_weeks ?? 4;
 
-    // Compute current membership year start date
-    const now = new Date();
-    const thisYear = now.getFullYear();
-    const candidateStart = new Date(thisYear, yearStartMonth - 1, yearStartDay);
-    const yearStartDate = candidateStart <= now
-      ? candidateStart
-      : new Date(thisYear - 1, yearStartMonth - 1, yearStartDay);
-    const yearStartIso = yearStartDate.toISOString().slice(0, 10);
+      // Compute current membership year start date
+      const now = new Date();
+      const thisYear = now.getFullYear();
+      const candidateStart = new Date(thisYear, yearStartMonth - 1, yearStartDay);
+      const yearStartDate =
+        candidateStart <= now
+          ? candidateStart
+          : new Date(thisYear - 1, yearStartMonth - 1, yearStartDay);
+      const yearStartIso = yearStartDate.toISOString().slice(0, 10);
 
-    // Section 2: Current members by class
-    const classStats = await tenantQuery(
-      slug,
-      `SELECT mc.id, mc.name,
+      // Section 2: Current members by class
+      const classStats = await tenantQuery(
+        slug,
+        `SELECT mc.id, mc.name,
               COUNT(m.id)::int                                    AS total,
               COUNT(m.id) FILTER (WHERE m.email IS NOT NULL AND m.email <> '')::int AS with_email,
               COUNT(m.id) FILTER (WHERE m.joined_on >= $1::date)::int               AS first_year,
@@ -277,15 +283,15 @@ router.get('/statistics', requirePrivilege('membership_statistics', 'view'), asy
                            )
        GROUP BY mc.id, mc.name
        ORDER BY mc.name`,
-      [yearStartIso],
-    );
+        [yearStartIso],
+      );
 
-    const totalCurrent = classStats.reduce((s, r) => s + r.total, 0);
+      const totalCurrent = classStats.reduce((s, r) => s + r.total, 0);
 
-    // Section 1: General member status counts
-    const [statusCounts] = await tenantQuery(
-      slug,
-      `SELECT
+      // Section 1: General member status counts
+      const [statusCounts] = await tenantQuery(
+        slug,
+        `SELECT
          COUNT(*) FILTER (
            WHERE status_id IN (SELECT id FROM member_statuses WHERE name ILIKE '%Current%')
              AND (next_renewal IS NULL OR next_renewal < $1::date)
@@ -294,13 +300,13 @@ router.get('/statistics', requirePrivilege('membership_statistics', 'view'), asy
            WHERE status_id IN (SELECT id FROM member_statuses WHERE name ILIKE '%Lapsed%')
          )::int AS lapsed_count
        FROM members`,
-      [yearStartIso],
-    );
+        [yearStartIso],
+      );
 
-    // Section 3: Active groups
-    const [groupStats] = await tenantQuery(
-      slug,
-      `SELECT
+      // Section 3: Active groups
+      const [groupStats] = await tenantQuery(
+        slug,
+        `SELECT
          COUNT(*)::int AS active_groups,
          COALESCE(AVG(gm_counts.cnt), 0)::numeric(10,1) AS avg_members
        FROM groups g
@@ -311,26 +317,26 @@ router.get('/statistics', requirePrivilege('membership_statistics', 'view'), asy
          GROUP BY group_id
        ) gm_counts ON gm_counts.group_id = g.id
        WHERE g.status = 'active'`,
-    );
+      );
 
-    const [notInGroup] = await tenantQuery(
-      slug,
-      `SELECT COUNT(*)::int AS count
+      const [notInGroup] = await tenantQuery(
+        slug,
+        `SELECT COUNT(*)::int AS count
        FROM members m
        WHERE status_id IN (SELECT id FROM member_statuses WHERE name ILIKE '%Current%')
          AND NOT EXISTS (
            SELECT 1 FROM group_members gm
            WHERE gm.member_id = m.id AND gm.waiting_since IS NULL
          )`,
-    );
+      );
 
-    // Section 4: Members by Renew Date
-    const toDate   = req.query.to   || now.toISOString().slice(0, 10);
-    const fromDate = req.query.from || yearStartIso;
+      // Section 4: Members by Renew Date
+      const toDate = req.query.to || now.toISOString().slice(0, 10);
+      const fromDate = req.query.from || yearStartIso;
 
-    const renewStats = await tenantQuery(
-      slug,
-      `SELECT mc.id, mc.name,
+      const renewStats = await tenantQuery(
+        slug,
+        `SELECT mc.id, mc.name,
               COUNT(m.id) FILTER (
                 WHERE m.status_id IN (SELECT id FROM member_statuses WHERE name ILIKE '%Current%')
                   AND m.next_renewal IS NOT NULL
@@ -345,67 +351,70 @@ router.get('/statistics', requirePrivilege('membership_statistics', 'view'), asy
        LEFT JOIN members m ON m.class_id = mc.id
        GROUP BY mc.id, mc.name
        ORDER BY mc.name`,
-      [fromDate, toDate],
-    );
+        [fromDate, toDate],
+      );
 
-    res.json({
-      yearStart: yearStartIso,
-      advanceRenewalsWeeks: advanceWeeks,
-      graceLapseWeeks:      graceLapse,
-      currentNotRenewed:    statusCounts?.current_not_renewed ?? 0,
-      lapsedCount:          statusCounts?.lapsed_count        ?? 0,
-      totalCurrent,
-      classStats,
-      activeGroups:         groupStats?.active_groups ?? 0,
-      avgGroupMembers:      groupStats?.avg_members   ?? 0,
-      membersNotInGroup:    notInGroup?.count          ?? 0,
-      renewStats,
-      renewFrom:  fromDate,
-      renewTo:    toDate,
-    });
-  } catch (err) {
-    next(err);
-  }
-});
+      res.json({
+        yearStart: yearStartIso,
+        advanceRenewalsWeeks: advanceWeeks,
+        graceLapseWeeks: graceLapse,
+        currentNotRenewed: statusCounts?.current_not_renewed ?? 0,
+        lapsedCount: statusCounts?.lapsed_count ?? 0,
+        totalCurrent,
+        classStats,
+        activeGroups: groupStats?.active_groups ?? 0,
+        avgGroupMembers: groupStats?.avg_members ?? 0,
+        membersNotInGroup: notInGroup?.count ?? 0,
+        renewStats,
+        renewFrom: fromDate,
+        renewTo: toDate,
+      });
+    } catch (err) {
+      next(err);
+    }
+  },
+);
 
 // ─── GET /members/renewals ────────────────────────────────────────────────
 // Lists Current and Lapsed members with fee info for the renewals screen.
 // Also returns year boundaries so the client can filter by period.
 
-router.get('/renewals', requireFeature('membershipRenewals'), requirePrivilege('membership_renewals', 'view'), async (req, res, next) => {
-  try {
-    const slug = req.user.tenantSlug;
+router.get(
+  '/renewals',
+  requireFeature('membershipRenewals'),
+  requirePrivilege('membership_renewals', 'view'),
+  async (req, res, next) => {
+    try {
+      const slug = req.user.tenantSlug;
 
-    const [cfg] = await tenantQuery(
-      slug,
-      `SELECT year_start_month, year_start_day, advance_renewals_weeks
+      const [cfg] = await tenantQuery(
+        slug,
+        `SELECT year_start_month, year_start_day, advance_renewals_weeks
        FROM tenant_settings WHERE id = 'singleton'`,
-    );
-    const ysm  = cfg?.year_start_month     ?? 1;
-    const ysd  = cfg?.year_start_day       ?? 1;
-    const advW = cfg?.advance_renewals_weeks ?? 4;
+      );
+      const ysm = cfg?.year_start_month ?? 1;
+      const ysd = cfg?.year_start_day ?? 1;
+      const advW = cfg?.advance_renewals_weeks ?? 4;
 
-    const now = new Date();
-    const yr  = now.getFullYear();
-    const candidateStart = new Date(yr, ysm - 1, ysd);
-    const yearStart = candidateStart <= now
-      ? candidateStart
-      : new Date(yr - 1, ysm - 1, ysd);
+      const now = new Date();
+      const yr = now.getFullYear();
+      const candidateStart = new Date(yr, ysm - 1, ysd);
+      const yearStart = candidateStart <= now ? candidateStart : new Date(yr - 1, ysm - 1, ysd);
 
-    const prevYearStart = new Date(yearStart);
-    prevYearStart.setFullYear(prevYearStart.getFullYear() - 1);
+      const prevYearStart = new Date(yearStart);
+      prevYearStart.setFullYear(prevYearStart.getFullYear() - 1);
 
-    const nextYearStart = new Date(yearStart);
-    nextYearStart.setFullYear(nextYearStart.getFullYear() + 1);
+      const nextYearStart = new Date(yearStart);
+      nextYearStart.setFullYear(nextYearStart.getFullYear() + 1);
 
-    // "Next year" tab only visible within advance_renewals_weeks before nextYearStart
-    const advanceStart = new Date(nextYearStart);
-    advanceStart.setDate(advanceStart.getDate() - advW * 7);
-    const showNextYear = now >= advanceStart;
+      // "Next year" tab only visible within advance_renewals_weeks before nextYearStart
+      const advanceStart = new Date(nextYearStart);
+      advanceStart.setDate(advanceStart.getDate() - advW * 7);
+      const showNextYear = now >= advanceStart;
 
-    const rows = await tenantQuery(
-      slug,
-      `SELECT m.id, m.membership_number, m.forenames, m.surname, m.known_as,
+      const rows = await tenantQuery(
+        slug,
+        `SELECT m.id, m.membership_number, m.forenames, m.surname, m.known_as,
               ms.id   AS status_id, ms.name AS status_name,
               mc.id   AS class_id,  mc.name AS class_name,
               mc.fee, mc.gift_aid_fee,
@@ -419,173 +428,214 @@ router.get('/renewals', requireFeature('membershipRenewals'), requirePrivilege('
        LEFT JOIN members          p ON p.id  = m.partner_id
        WHERE ms.name ILIKE '%Current%' OR ms.name ILIKE '%Lapsed%'
        ORDER BY m.surname, m.forenames`,
-    );
+      );
 
-    res.json({
-      members: rows,
-      yearStart:     yearStart.toISOString().slice(0, 10),
-      prevYearStart: prevYearStart.toISOString().slice(0, 10),
-      nextYearStart: nextYearStart.toISOString().slice(0, 10),
-      showNextYear,
-    });
-  } catch (err) {
-    next(err);
-  }
-});
+      res.json({
+        members: rows,
+        yearStart: yearStart.toISOString().slice(0, 10),
+        prevYearStart: prevYearStart.toISOString().slice(0, 10),
+        nextYearStart: nextYearStart.toISOString().slice(0, 10),
+        showNextYear,
+      });
+    } catch (err) {
+      next(err);
+    }
+  },
+);
 
 // ─── POST /members/renew ──────────────────────────────────────────────────
 // Bulk-renews the given members: advances next_renewal by 1 year, sets
 // status to Current if Lapsed, creates a finance transaction for each.
 
 const renewSchema = z.object({
-  memberIds:      z.array(z.string().min(1)).min(1),
-  accountId:      z.string().min(1),
-  paymentMethod:  z.string().min(1),
-  amounts:        z.record(z.string(), z.number().positive()),
+  memberIds: z.array(z.string().min(1)).min(1),
+  accountId: z.string().min(1),
+  paymentMethod: z.string().min(1),
+  amounts: z.record(z.string(), z.number().positive()),
   giftAidChanges: z.record(z.string(), z.boolean()).optional(),
-  yearStart:      z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  yearStart: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
 });
 
-router.post('/renew', requireFeature('membershipRenewals'), requirePrivilege('membership_renewals', 'renew'), async (req, res, next) => {
-  try {
-    const slug = req.user.tenantSlug;
-    const data = renewSchema.parse(req.body);
+router.post(
+  '/renew',
+  requireFeature('membershipRenewals'),
+  requirePrivilege('membership_renewals', 'renew'),
+  async (req, res, next) => {
+    try {
+      const slug = req.user.tenantSlug;
+      const data = renewSchema.parse(req.body);
 
-    // Find the "Current" status id to upgrade Lapsed members
-    const [currentStatus] = await tenantQuery(
-      slug,
-      `SELECT id FROM member_statuses WHERE name ILIKE '%Current%' ORDER BY name LIMIT 1`,
-    );
-    if (!currentStatus) throw new AppError('No "Current" member status found.', 400);
+      // Find the "Current" status id to upgrade Lapsed members
+      const [currentStatus] = await tenantQuery(
+        slug,
+        `SELECT id FROM member_statuses WHERE name ILIKE '%Current%' ORDER BY name LIMIT 1`,
+      );
+      if (!currentStatus) throw new AppError('No "Current" member status found.', 400);
 
-    const renewed = [];
-    const errors  = [];
+      const renewed = [];
+      const errors = [];
 
-    for (const memberId of data.memberIds) {
-      try {
-        // Fetch member to get current next_renewal and status
-        const [m] = await tenantQuery(
-          slug,
-          `SELECT m.id, m.forenames, m.surname, m.next_renewal, m.status_id,
+      for (const memberId of data.memberIds) {
+        try {
+          // Fetch member to get current next_renewal and status
+          const [m] = await tenantQuery(
+            slug,
+            `SELECT m.id, m.forenames, m.surname, m.next_renewal, m.status_id,
                   ms.name AS status_name, m.gift_aid_from, m.class_id
            FROM members m
            LEFT JOIN member_statuses ms ON ms.id = m.status_id
            WHERE m.id = $1`,
-          [memberId],
-        );
-        if (!m) { errors.push({ memberId, error: 'Member not found' }); continue; }
+            [memberId],
+          );
+          if (!m) {
+            errors.push({ memberId, error: 'Member not found' });
+            continue;
+          }
 
-        // New next_renewal = current next_renewal + 1 year (or yearStart + 1 year if null)
-        const base = m.next_renewal
-          ? String(m.next_renewal).slice(0, 10)
-          : data.yearStart;
-        const baseDate = new Date(base);
-        baseDate.setFullYear(baseDate.getFullYear() + 1);
-        const newNextRenewal = baseDate.toISOString().slice(0, 10);
+          // New next_renewal = current next_renewal + 1 year (or yearStart + 1 year if null)
+          const base = m.next_renewal ? String(m.next_renewal).slice(0, 10) : data.yearStart;
+          const baseDate = new Date(base);
+          baseDate.setFullYear(baseDate.getFullYear() + 1);
+          const newNextRenewal = baseDate.toISOString().slice(0, 10);
 
-        // Should we set to Current?
-        const isLapsed = (m.status_name ?? '').toLowerCase().includes('lapsed');
-        const newStatusId = isLapsed ? currentStatus.id : m.status_id;
+          // Should we set to Current?
+          const isLapsed = (m.status_name ?? '').toLowerCase().includes('lapsed');
+          const newStatusId = isLapsed ? currentStatus.id : m.status_id;
 
-        // Gift Aid update
-        const gaChange = data.giftAidChanges?.[memberId];
-        let giftAidFrom;
-        if (gaChange === true && !m.gift_aid_from) {
-          giftAidFrom = 'TODAY';
-        } else if (gaChange === false) {
-          giftAidFrom = null;
-        } else {
-          giftAidFrom = m.gift_aid_from ? String(m.gift_aid_from).slice(0, 10) : null;
-        }
+          // Gift Aid update
+          const gaChange = data.giftAidChanges?.[memberId];
+          let giftAidFrom;
+          if (gaChange === true && !m.gift_aid_from) {
+            giftAidFrom = 'TODAY';
+          } else if (gaChange === false) {
+            giftAidFrom = null;
+          } else {
+            giftAidFrom = m.gift_aid_from ? String(m.gift_aid_from).slice(0, 10) : null;
+          }
 
-        // Update member record
-        await tenantQuery(
-          slug,
-          `UPDATE members
+          // Update member record
+          await tenantQuery(
+            slug,
+            `UPDATE members
            SET next_renewal  = $1::date,
                status_id     = $2,
                gift_aid_from = $3::date,
                card_printed  = false,
                updated_at    = now()
            WHERE id = $4`,
-          [newNextRenewal, newStatusId, giftAidFrom === 'TODAY' ? new Date().toISOString().slice(0, 10) : giftAidFrom, memberId],
-        );
+            [
+              newNextRenewal,
+              newStatusId,
+              giftAidFrom === 'TODAY' ? new Date().toISOString().slice(0, 10) : giftAidFrom,
+              memberId,
+            ],
+          );
 
-        // Create finance transaction (no category splits — user can categorize via ledger)
-        const amount = data.amounts[memberId];
-        const fromTo = `${m.forenames} ${m.surname}`;
+          // Create finance transaction (no category splits — user can categorize via ledger)
+          const amount = data.amounts[memberId];
+          const fromTo = `${m.forenames} ${m.surname}`;
 
-        // Resolve Gift Aid eligible amount (uses the member's gift_aid_from after any update above)
-        const effectiveGaFrom = giftAidFrom === 'TODAY'
-          ? new Date().toISOString().slice(0, 10)
-          : giftAidFrom;
-        let gaAmount = null;
-        if (effectiveGaFrom && m.class_id) {
-          gaAmount = await resolveGiftAidAmount(slug, memberId, m.class_id, new Date().toISOString().slice(0, 10));
-        }
+          // Resolve Gift Aid eligible amount (uses the member's gift_aid_from after any update above)
+          const effectiveGaFrom =
+            giftAidFrom === 'TODAY' ? new Date().toISOString().slice(0, 10) : giftAidFrom;
+          let gaAmount = null;
+          if (effectiveGaFrom && m.class_id) {
+            gaAmount = await resolveGiftAidAmount(
+              slug,
+              memberId,
+              m.class_id,
+              new Date().toISOString().slice(0, 10),
+            );
+          }
 
-        const [txn] = await tenantQuery(
-          slug,
-          `INSERT INTO transactions
+          const [txn] = await tenantQuery(
+            slug,
+            `INSERT INTO transactions
              (account_id, date, type, from_to, amount, payment_method, detail, member_id_1, gift_aid_amount)
            VALUES ($1, CURRENT_DATE, 'in', $2, $3::numeric, $4, 'Membership', $5, $6::numeric)
            RETURNING id, transaction_number`,
-          [data.accountId, fromTo, amount, data.paymentMethod, memberId, gaAmount],
-        );
+            [data.accountId, fromTo, amount, data.paymentMethod, memberId, gaAmount],
+          );
 
-        logAudit(slug, { userId: req.user.userId, userName: req.user.name, action: 'renew', entityType: 'member', entityId: memberId, detail: JSON.stringify({ newNextRenewal }) });
+          logAudit(slug, {
+            userId: req.user.userId,
+            userName: req.user.name,
+            action: 'renew',
+            entityType: 'member',
+            entityId: memberId,
+            detail: JSON.stringify({ newNextRenewal }),
+          });
 
-        // Gift Aid consent audit
-        if (gaChange === true && !m.gift_aid_from) {
-          logAudit(slug, { userId: req.user.userId, userName: req.user.name, action: 'gift_aid_consent', entityType: 'member', entityId: memberId, entityName: `${m.forenames} ${m.surname}`, detail: JSON.stringify({ giftAidFrom: new Date().toISOString().slice(0, 10) }) });
-        } else if (gaChange === false && m.gift_aid_from) {
-          logAudit(slug, { userId: req.user.userId, userName: req.user.name, action: 'gift_aid_withdrawn', entityType: 'member', entityId: memberId, entityName: `${m.forenames} ${m.surname}`, detail: JSON.stringify({ previousGiftAidFrom: String(m.gift_aid_from).slice(0, 10) }) });
+          // Gift Aid consent audit
+          if (gaChange === true && !m.gift_aid_from) {
+            logAudit(slug, {
+              userId: req.user.userId,
+              userName: req.user.name,
+              action: 'gift_aid_consent',
+              entityType: 'member',
+              entityId: memberId,
+              entityName: `${m.forenames} ${m.surname}`,
+              detail: JSON.stringify({ giftAidFrom: new Date().toISOString().slice(0, 10) }),
+            });
+          } else if (gaChange === false && m.gift_aid_from) {
+            logAudit(slug, {
+              userId: req.user.userId,
+              userName: req.user.name,
+              action: 'gift_aid_withdrawn',
+              entityType: 'member',
+              entityId: memberId,
+              entityName: `${m.forenames} ${m.surname}`,
+              detail: JSON.stringify({ previousGiftAidFrom: String(m.gift_aid_from).slice(0, 10) }),
+            });
+          }
+
+          renewed.push({ memberId, newNextRenewal, transactionNumber: txn.transaction_number });
+        } catch (err) {
+          errors.push({ memberId, error: err.message });
         }
-
-        renewed.push({ memberId, newNextRenewal, transactionNumber: txn.transaction_number });
-      } catch (err) {
-        errors.push({ memberId, error: err.message });
       }
-    }
 
-    res.json({ renewed, errors });
-  } catch (err) {
-    next(err);
-  }
-});
+      res.json({ renewed, errors });
+    } catch (err) {
+      next(err);
+    }
+  },
+);
 
 // ─── GET /members/non-renewals ────────────────────────────────────────────
 // mode=this_year  — Current members whose next_renewal < current year start
 // mode=long_term  — All members whose next_renewal is older than deletion_years
 
-router.get('/non-renewals', requireFeature('membershipRenewals'), requirePrivilege('members_non_renewals', 'view'), async (req, res, next) => {
-  try {
-    const slug = req.user.tenantSlug;
-    const mode = req.query.mode === 'long_term' ? 'long_term' : 'this_year';
+router.get(
+  '/non-renewals',
+  requireFeature('membershipRenewals'),
+  requirePrivilege('members_non_renewals', 'view'),
+  async (req, res, next) => {
+    try {
+      const slug = req.user.tenantSlug;
+      const mode = req.query.mode === 'long_term' ? 'long_term' : 'this_year';
 
-    const [cfg] = await tenantQuery(
-      slug,
-      `SELECT year_start_month, year_start_day, grace_lapse_weeks, deletion_years
-       FROM tenant_settings WHERE id = 'singleton'`,
-    );
-    const ysm          = cfg?.year_start_month   ?? 1;
-    const ysd          = cfg?.year_start_day     ?? 1;
-    const graceLapse   = cfg?.grace_lapse_weeks  ?? 4;
-    const deletionYrs  = cfg?.deletion_years     ?? 7;
-
-    const now = new Date();
-    const yr  = now.getFullYear();
-    const candidateStart = new Date(yr, ysm - 1, ysd);
-    const yearStart = candidateStart <= now
-      ? candidateStart
-      : new Date(yr - 1, ysm - 1, ysd);
-    const yearStartIso = yearStart.toISOString().slice(0, 10);
-
-    let rows;
-    if (mode === 'this_year') {
-      rows = await tenantQuery(
+      const [cfg] = await tenantQuery(
         slug,
-        `SELECT m.id, m.membership_number, m.forenames, m.surname, m.known_as,
+        `SELECT year_start_month, year_start_day, grace_lapse_weeks, deletion_years
+       FROM tenant_settings WHERE id = 'singleton'`,
+      );
+      const ysm = cfg?.year_start_month ?? 1;
+      const ysd = cfg?.year_start_day ?? 1;
+      const graceLapse = cfg?.grace_lapse_weeks ?? 4;
+      const deletionYrs = cfg?.deletion_years ?? 7;
+
+      const now = new Date();
+      const yr = now.getFullYear();
+      const candidateStart = new Date(yr, ysm - 1, ysd);
+      const yearStart = candidateStart <= now ? candidateStart : new Date(yr - 1, ysm - 1, ysd);
+      const yearStartIso = yearStart.toISOString().slice(0, 10);
+
+      let rows;
+      if (mode === 'this_year') {
+        rows = await tenantQuery(
+          slug,
+          `SELECT m.id, m.membership_number, m.forenames, m.surname, m.known_as,
                 ms.name AS status_name,
                 mc.name AS class_name,
                 m.next_renewal, m.email, m.mobile,
@@ -602,17 +652,17 @@ router.get('/non-renewals', requireFeature('membershipRenewals'), requirePrivile
          WHERE ms.name ILIKE '%Current%'
            AND (m.next_renewal IS NULL OR m.next_renewal < $1::date)
          ORDER BY m.surname, m.forenames`,
-        [yearStartIso],
-      );
-    } else {
-      // Compute cutoff date in JS to avoid PostgreSQL interval casting issues
-      const cutoff = new Date();
-      cutoff.setFullYear(cutoff.getFullYear() - deletionYrs);
-      const cutoffIso = cutoff.toISOString().slice(0, 10);
+          [yearStartIso],
+        );
+      } else {
+        // Compute cutoff date in JS to avoid PostgreSQL interval casting issues
+        const cutoff = new Date();
+        cutoff.setFullYear(cutoff.getFullYear() - deletionYrs);
+        const cutoffIso = cutoff.toISOString().slice(0, 10);
 
-      rows = await tenantQuery(
-        slug,
-        `SELECT m.id, m.membership_number, m.forenames, m.surname, m.known_as,
+        rows = await tenantQuery(
+          slug,
+          `SELECT m.id, m.membership_number, m.forenames, m.surname, m.known_as,
                 ms.name AS status_name,
                 mc.name AS class_name,
                 m.next_renewal, m.email, m.mobile,
@@ -629,55 +679,70 @@ router.get('/non-renewals', requireFeature('membershipRenewals'), requirePrivile
          WHERE m.next_renewal IS NOT NULL
            AND m.next_renewal < $1::date
          ORDER BY m.next_renewal, m.surname`,
-        [cutoffIso],
-      );
-    }
+          [cutoffIso],
+        );
+      }
 
-    res.json({
-      members: rows,
-      mode,
-      yearStart:    yearStartIso,
-      graceLapse,
-      deletionYears: deletionYrs,
-    });
-  } catch (err) {
-    next(err);
-  }
-});
+      res.json({
+        members: rows,
+        mode,
+        yearStart: yearStartIso,
+        graceLapse,
+        deletionYears: deletionYrs,
+      });
+    } catch (err) {
+      next(err);
+    }
+  },
+);
 
 // ─── POST /members/lapse ──────────────────────────────────────────────────
 // Changes status to the "Lapsed" status for the given member IDs.
 
-router.post('/lapse', requireFeature('membershipRenewals'), requirePrivilege('members_non_renewals', 'lapse'), async (req, res, next) => {
-  try {
-    const slug = req.user.tenantSlug;
-    const { memberIds } = z.object({ memberIds: z.array(z.string()).min(1) }).parse(req.body);
+router.post(
+  '/lapse',
+  requireFeature('membershipRenewals'),
+  requirePrivilege('members_non_renewals', 'lapse'),
+  async (req, res, next) => {
+    try {
+      const slug = req.user.tenantSlug;
+      const { memberIds } = z.object({ memberIds: z.array(z.string()).min(1) }).parse(req.body);
 
-    const [lapsedStatus] = await tenantQuery(
-      slug,
-      `SELECT id FROM member_statuses WHERE name ILIKE '%Lapsed%' ORDER BY name LIMIT 1`,
-    );
-    if (!lapsedStatus) throw new AppError('No "Lapsed" member status found.', 400);
+      const [lapsedStatus] = await tenantQuery(
+        slug,
+        `SELECT id FROM member_statuses WHERE name ILIKE '%Lapsed%' ORDER BY name LIMIT 1`,
+      );
+      if (!lapsedStatus) throw new AppError('No "Lapsed" member status found.', 400);
 
-    await tenantQuery(
-      slug,
-      `UPDATE members SET status_id = $1, updated_at = now()
+      await tenantQuery(
+        slug,
+        `UPDATE members SET status_id = $1, updated_at = now()
        WHERE id = ANY($2::text[])`,
-      [lapsedStatus.id, memberIds],
-    );
+        [lapsedStatus.id, memberIds],
+      );
 
-    logAudit(slug, { userId: req.user.userId, userName: req.user.name, action: 'lapse', entityType: 'member', entityId: memberIds.join(',') });
-    res.json({ lapsed: memberIds.length });
-  } catch (err) {
-    next(err);
-  }
-});
+      logAudit(slug, {
+        userId: req.user.userId,
+        userName: req.user.name,
+        action: 'lapse',
+        entityType: 'member',
+        entityId: memberIds.join(','),
+      });
+      res.json({ lapsed: memberIds.length });
+    } catch (err) {
+      next(err);
+    }
+  },
+);
 
-router.get('/validate', requirePrivilege('member_data_validation', 'view'), async (req, res, next) => {
-  try {
-    const members = await tenantQuery(
-      req.user.tenantSlug,
-      `SELECT m.id, m.membership_number, m.forenames, m.surname,
+router.get(
+  '/validate',
+  requirePrivilege('member_data_validation', 'view'),
+  async (req, res, next) => {
+    try {
+      const members = await tenantQuery(
+        req.user.tenantSlug,
+        `SELECT m.id, m.membership_number, m.forenames, m.surname,
               m.status_id, m.class_id, m.joined_on, m.next_renewal,
               m.email, m.mobile,
               a.id         AS address_id,
@@ -686,12 +751,13 @@ router.get('/validate', requirePrivilege('member_data_validation', 'view'), asyn
        FROM members m
        LEFT JOIN addresses a ON a.id = m.address_id
        ORDER BY m.surname, m.forenames`,
-    );
-    res.json(members);
-  } catch (err) {
-    next(err);
-  }
-});
+      );
+      res.json(members);
+    } catch (err) {
+      next(err);
+    }
+  },
+);
 
 // ─── GET /members/download ────────────────────────────────────────────────
 // Download selected members as Excel, PDF, or email-CSV.
@@ -699,41 +765,59 @@ router.get('/validate', requirePrivilege('member_data_validation', 'view'), asyn
 
 const MEMBER_FIELD_DEFS = {
   membership_number: { label: 'Membership No', get: (m) => String(m.membership_number ?? '') },
-  title:        { label: 'Title',       get: (m) => m.title ?? '' },
-  forenames:    { label: 'Forenames',   get: (m) => m.forenames ?? '' },
-  known_as:     { label: 'Known As',    get: (m) => m.known_as ?? '' },
-  surname:      { label: 'Surname',     get: (m) => m.surname ?? '' },
-  email:        { label: 'Email',       get: (m) => m.email ?? '' },
-  mobile:       { label: 'Mobile',      get: (m) => m.mobile ?? '' },
-  telephone:    { label: 'Telephone',   get: (m) => m.telephone ?? '' },
-  address:      { label: 'Address',     get: (m) => [m.house_no, m.street, m.add_line1, m.add_line2].filter(Boolean).join(', ') },
-  town:         { label: 'Town',        get: (m) => m.town ?? '' },
-  county:       { label: 'County',      get: (m) => m.county ?? '' },
-  postcode:     { label: 'Postcode',    get: (m) => m.postcode ?? '' },
-  country:      { label: 'Country',     get: (m) => m.country ?? '' },
-  status:       { label: 'Status',      get: (m) => m.status ?? '' },
-  class:        { label: 'Class',       get: (m) => m.class ?? '' },
-  joined_on:    { label: 'Joined',      get: (m) => m.joined_on    ? String(m.joined_on).slice(0, 10)    : '' },
-  next_renewal:    { label: 'Next Renewal',    get: (m) => m.next_renewal ? String(m.next_renewal).slice(0, 10) : '' },
-  custom_field_1:  { label: 'Custom Field 1',  get: (m) => m.custom_field_1 ?? '' },
-  custom_field_2:  { label: 'Custom Field 2',  get: (m) => m.custom_field_2 ?? '' },
-  custom_field_3:  { label: 'Custom Field 3',  get: (m) => m.custom_field_3 ?? '' },
-  custom_field_4:  { label: 'Custom Field 4',  get: (m) => m.custom_field_4 ?? '' },
+  title: { label: 'Title', get: (m) => m.title ?? '' },
+  forenames: { label: 'Forenames', get: (m) => m.forenames ?? '' },
+  known_as: { label: 'Known As', get: (m) => m.known_as ?? '' },
+  surname: { label: 'Surname', get: (m) => m.surname ?? '' },
+  email: { label: 'Email', get: (m) => m.email ?? '' },
+  mobile: { label: 'Mobile', get: (m) => m.mobile ?? '' },
+  telephone: { label: 'Telephone', get: (m) => m.telephone ?? '' },
+  address: {
+    label: 'Address',
+    get: (m) => [m.house_no, m.street, m.add_line1, m.add_line2].filter(Boolean).join(', '),
+  },
+  town: { label: 'Town', get: (m) => m.town ?? '' },
+  county: { label: 'County', get: (m) => m.county ?? '' },
+  postcode: { label: 'Postcode', get: (m) => m.postcode ?? '' },
+  country: { label: 'Country', get: (m) => m.country ?? '' },
+  status: { label: 'Status', get: (m) => m.status ?? '' },
+  class: { label: 'Class', get: (m) => m.class ?? '' },
+  joined_on: { label: 'Joined', get: (m) => (m.joined_on ? String(m.joined_on).slice(0, 10) : '') },
+  next_renewal: {
+    label: 'Next Renewal',
+    get: (m) => (m.next_renewal ? String(m.next_renewal).slice(0, 10) : ''),
+  },
+  custom_field_1: { label: 'Custom Field 1', get: (m) => m.custom_field_1 ?? '' },
+  custom_field_2: { label: 'Custom Field 2', get: (m) => m.custom_field_2 ?? '' },
+  custom_field_3: { label: 'Custom Field 3', get: (m) => m.custom_field_3 ?? '' },
+  custom_field_4: { label: 'Custom Field 4', get: (m) => m.custom_field_4 ?? '' },
   emergency_contact: { label: 'Emergency Contact', get: (m) => m.emergency_contact ?? '' },
 };
 
 function buildMemberPdf(rows, cols, title) {
-  const PAGE_W = 841.89; const PAGE_H = 595.28; // A4 landscape
-  const MARGIN = 36; const FONT_SZ = 7; const ROW_H = 13;
+  const PAGE_W = 841.89;
+  const PAGE_H = 595.28; // A4 landscape
+  const MARGIN = 36;
+  const FONT_SZ = 7;
+  const ROW_H = 13;
   const usableW = PAGE_W - MARGIN * 2;
   const colW = usableW / cols.length;
 
-  const doc = new PDFDocument({ margin: MARGIN, size: 'A4', layout: 'landscape', autoFirstPage: true });
+  const doc = new PDFDocument({
+    margin: MARGIN,
+    size: 'A4',
+    layout: 'landscape',
+    autoFirstPage: true,
+  });
 
   function drawHeader(y) {
     doc.font('Helvetica-Bold').fontSize(FONT_SZ);
     cols.forEach((f, idx) => {
-      doc.text(MEMBER_FIELD_DEFS[f].label, MARGIN + idx * colW, y, { width: colW - 3, lineBreak: false, ellipsis: true });
+      doc.text(MEMBER_FIELD_DEFS[f].label, MARGIN + idx * colW, y, {
+        width: colW - 3,
+        lineBreak: false,
+        ellipsis: true,
+      });
     });
     return y + ROW_H;
   }
@@ -742,7 +826,11 @@ function buildMemberPdf(rows, cols, title) {
   doc.font('Helvetica-Bold').fontSize(9).text(title, MARGIN, y, { lineBreak: false });
   y += 16;
   y = drawHeader(y);
-  doc.moveTo(MARGIN, y - 2).lineTo(PAGE_W - MARGIN, y - 2).strokeColor('#aaaaaa').stroke();
+  doc
+    .moveTo(MARGIN, y - 2)
+    .lineTo(PAGE_W - MARGIN, y - 2)
+    .strokeColor('#aaaaaa')
+    .stroke();
 
   doc.font('Helvetica').fontSize(FONT_SZ);
   for (const m of rows) {
@@ -750,11 +838,19 @@ function buildMemberPdf(rows, cols, title) {
       doc.addPage({ size: 'A4', layout: 'landscape' });
       y = MARGIN + 4;
       y = drawHeader(y);
-      doc.moveTo(MARGIN, y - 2).lineTo(PAGE_W - MARGIN, y - 2).strokeColor('#aaaaaa').stroke();
+      doc
+        .moveTo(MARGIN, y - 2)
+        .lineTo(PAGE_W - MARGIN, y - 2)
+        .strokeColor('#aaaaaa')
+        .stroke();
       doc.font('Helvetica').fontSize(FONT_SZ);
     }
     cols.forEach((f, idx) => {
-      doc.text(MEMBER_FIELD_DEFS[f].get(m), MARGIN + idx * colW, y, { width: colW - 3, lineBreak: false, ellipsis: true });
+      doc.text(MEMBER_FIELD_DEFS[f].get(m), MARGIN + idx * colW, y, {
+        width: colW - 3,
+        lineBreak: false,
+        ellipsis: true,
+      });
     });
     y += ROW_H;
   }
@@ -766,10 +862,14 @@ router.get('/download', requirePrivilege('members_list', 'view'), async (req, re
   try {
     const { format = 'excel', ids = '', fields = '' } = req.query;
     const slug = req.user.tenantSlug;
-    const memberIds = ids.split(',').map((s) => s.trim()).filter(Boolean);
+    const memberIds = ids
+      .split(',')
+      .map((s) => s.trim())
+      .filter(Boolean);
     if (!memberIds.length) throw AppError('No member IDs provided.', 400);
 
-    const rows = await tenantQuery(slug,
+    const rows = await tenantQuery(
+      slug,
       `SELECT m.id, m.membership_number, m.title, m.forenames, m.surname, m.known_as,
               m.email, m.mobile,
               ms.name AS status, mc.name AS class,
@@ -791,13 +891,22 @@ router.get('/download', requirePrivilege('members_list', 'view'), async (req, re
     const stamp = new Date().toISOString().slice(0, 10);
 
     if (format === 'email-csv') {
-      const content = rows.map((m) => m.email).filter(Boolean).join('\n');
+      const content = rows
+        .map((m) => m.email)
+        .filter(Boolean)
+        .join('\n');
       res.setHeader('Content-Type', 'text/plain; charset=utf-8');
-      res.setHeader('Content-Disposition', `attachment; filename="${tenantPart}_member_emails_${stamp}.csv"`);
+      res.setHeader(
+        'Content-Disposition',
+        `attachment; filename="${tenantPart}_member_emails_${stamp}.csv"`,
+      );
       return res.send(content);
     }
 
-    const activeCols = fields.split(',').map((s) => s.trim()).filter((f) => f && MEMBER_FIELD_DEFS[f]);
+    const activeCols = fields
+      .split(',')
+      .map((s) => s.trim())
+      .filter((f) => f && MEMBER_FIELD_DEFS[f]);
     const cols = activeCols.length ? activeCols : Object.keys(MEMBER_FIELD_DEFS);
 
     if (format === 'excel') {
@@ -806,8 +915,14 @@ router.get('/download', requirePrivilege('members_list', 'view'), async (req, re
       ws.columns = cols.map((f) => ({ header: MEMBER_FIELD_DEFS[f].label, width: 20 }));
       ws.getRow(1).font = { bold: true };
       for (const m of rows) ws.addRow(cols.map((f) => sanitizeCell(MEMBER_FIELD_DEFS[f].get(m))));
-      res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-      res.setHeader('Content-Disposition', `attachment; filename="${tenantPart}_members_${stamp}.xlsx"`);
+      res.setHeader(
+        'Content-Type',
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      );
+      res.setHeader(
+        'Content-Disposition',
+        `attachment; filename="${tenantPart}_members_${stamp}.xlsx"`,
+      );
       await wb.xlsx.write(res);
       return res.end();
     }
@@ -819,12 +934,17 @@ router.get('/download', requirePrivilege('members_list', 'view'), async (req, re
       await new Promise((resolve) => doc.on('end', resolve));
       const buf = Buffer.concat(chunks);
       res.setHeader('Content-Type', 'application/pdf');
-      res.setHeader('Content-Disposition', `attachment; filename="${tenantPart}_members_${stamp}.pdf"`);
+      res.setHeader(
+        'Content-Disposition',
+        `attachment; filename="${tenantPart}_members_${stamp}.pdf"`,
+      );
       return res.send(buf);
     }
 
     throw AppError('Invalid format.', 400);
-  } catch (err) { next(err); }
+  } catch (err) {
+    next(err);
+  }
 });
 
 // ─── GET /members/:id/groups ──────────────────────────────────────────────
@@ -902,82 +1022,88 @@ router.get('/:id', requirePrivilege('member_record', 'view'), async (req, res, n
 // ─── POST /members ────────────────────────────────────────────────────────
 
 const addressSchema = z.object({
-  houseNo:   z.string().optional(),
-  street:    z.string().optional(),
-  addLine1:  z.string().optional(),
-  addLine2:  z.string().optional(),
-  town:      z.string().optional(),
-  county:    z.string().optional(),
-  postcode:  z.string().optional(),
+  houseNo: z.string().optional(),
+  street: z.string().optional(),
+  addLine1: z.string().optional(),
+  addLine2: z.string().optional(),
+  town: z.string().optional(),
+  county: z.string().optional(),
+  postcode: z.string().optional(),
   telephone: z.string().optional(),
 });
 
 const paymentSchema = z.object({
   accountId: z.string().min(1),
-  amount:    z.number().positive(),
-  method:    z.string().optional().nullable(),
-  ref:       z.string().optional().nullable(),
+  amount: z.number().positive(),
+  method: z.string().optional().nullable(),
+  ref: z.string().optional().nullable(),
 });
 
 // Minimal schema for a new partner joining at the same time — shares the primary member's address
 const newPartnerSchema = z.object({
-  title:       z.string().max(20).optional(),
-  forenames:   z.string().min(1).max(100),
-  surname:     z.string().min(1).max(100),
-  knownAs:     z.string().max(50).optional(),
-  email:       z.string().email().optional().or(z.literal('')),
-  mobile:      z.string().max(30).optional(),
-  statusId:    z.string().min(1),
-  classId:     z.string().min(1),
-  joinedOn:    z.string().min(1),
+  title: z.string().max(20).optional(),
+  forenames: z.string().min(1).max(100),
+  surname: z.string().min(1).max(100),
+  knownAs: z.string().max(50).optional(),
+  email: z.string().email().optional().or(z.literal('')),
+  mobile: z.string().max(30).optional(),
+  statusId: z.string().min(1),
+  classId: z.string().min(1),
+  joinedOn: z.string().min(1),
   nextRenewal: z.string().min(1, 'Next renewal date is required'),
   giftAidFrom: z.string().optional(),
 });
 
-const createMemberSchema = z.object({
-  title:       z.string().max(20).optional(),
-  forenames:   z.string().min(1).max(100),
-  surname:     z.string().min(1).max(100),
-  knownAs:     z.string().max(50).optional(),
-  suffix:      z.string().max(30).optional(),
-  email:       z.string().email().optional().or(z.literal('')),
-  mobile:      z.string().max(30).optional(),
-  statusId:    z.string().min(1),
-  classId:     z.string().min(1),
-  joinedOn:    z.string().min(1, 'Date joined is required'),  // ISO date string
-  nextRenewal: z.string().min(1, 'Next renewal date is required'),
-  giftAidFrom: z.string().optional(),
-  homeU3a:      z.string().max(100).optional(),
-  notes:        z.string().optional(),
-  hideContact:  z.boolean().default(false),
-  customField1: z.string().nullable().optional(),
-  customField2: z.string().nullable().optional(),
-  customField3: z.string().nullable().optional(),
-  customField4: z.string().nullable().optional(),
-  emergencyContact: z.string().max(200).nullable().optional(),
-  // Address — either a new address object, an existing partner's id, or a new partner (shares primary's address)
-  address:           addressSchema.optional(),
-  existingPartnerId: z.string().optional(),
-  newPartner:        newPartnerSchema.optional(),   // A: two new members joining together
-  // Optional updates to an existing partner when linking
-  partnerClassId:    z.string().optional(),         // C: update partner's class
-  partnerRenewal:    z.object({ nextRenewal: z.string().min(1) }).optional(), // B: renew partner
-  // Optional payment — creates a financial transaction when provided
-  payment: paymentSchema.optional(),
-}).superRefine((val, ctx) => {
-  // Postcode is required when not sharing a partner's address and not adding a new partner
-  if (!val.existingPartnerId && !val.newPartner && !val.address?.postcode?.trim()) {
-    ctx.addIssue({
-      code: z.ZodIssueCode.custom,
-      path: ['address', 'postcode'],
-      message: 'Postcode is required',
-    });
-  }
-});
+const createMemberSchema = z
+  .object({
+    title: z.string().max(20).optional(),
+    forenames: z.string().min(1).max(100),
+    surname: z.string().min(1).max(100),
+    knownAs: z.string().max(50).optional(),
+    suffix: z.string().max(30).optional(),
+    email: z.string().email().optional().or(z.literal('')),
+    mobile: z.string().max(30).optional(),
+    statusId: z.string().min(1),
+    classId: z.string().min(1),
+    joinedOn: z.string().min(1, 'Date joined is required'), // ISO date string
+    nextRenewal: z.string().min(1, 'Next renewal date is required'),
+    giftAidFrom: z.string().optional(),
+    homeU3a: z.string().max(100).optional(),
+    notes: z.string().optional(),
+    hideContact: z.boolean().default(false),
+    customField1: z.string().nullable().optional(),
+    customField2: z.string().nullable().optional(),
+    customField3: z.string().nullable().optional(),
+    customField4: z.string().nullable().optional(),
+    emergencyContact: z.string().max(200).nullable().optional(),
+    // Address — either a new address object, an existing partner's id, or a new partner (shares primary's address)
+    address: addressSchema.optional(),
+    existingPartnerId: z.string().optional(),
+    newPartner: newPartnerSchema.optional(), // A: two new members joining together
+    // Optional updates to an existing partner when linking
+    partnerClassId: z.string().optional(), // C: update partner's class
+    partnerRenewal: z.object({ nextRenewal: z.string().min(1) }).optional(), // B: renew partner
+    // Optional payment — creates a financial transaction when provided
+    payment: paymentSchema.optional(),
+  })
+  .superRefine((val, ctx) => {
+    // Postcode is required when not sharing a partner's address and not adding a new partner
+    if (!val.existingPartnerId && !val.newPartner && !val.address?.postcode?.trim()) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['address', 'postcode'],
+        message: 'Postcode is required',
+      });
+    }
+  });
 
 /** Create a financial transaction linked to a member. Splits overpayments into Membership + Donations. */
 async function createMemberPayment(slug, pay, memberId, memberName, joinedOn, classId) {
-  const [cls] = await tenantQuery(slug, `SELECT fee::float AS fee FROM member_classes WHERE id = $1`, [classId]);
+  const [cls] = await tenantQuery(
+    slug,
+    `SELECT fee::float AS fee FROM member_classes WHERE id = $1`,
+    [classId],
+  );
   const classFee = cls?.fee ?? null;
 
   const cats = await tenantQuery(
@@ -986,18 +1112,19 @@ async function createMemberPayment(slug, pay, memberId, memberName, joinedOn, cl
     [],
   );
   const membershipCatId = cats.find((c) => c.name === 'Membership')?.id ?? null;
-  const donationsCatId  = cats.find((c) => c.name === 'Donations')?.id  ?? null;
+  const donationsCatId = cats.find((c) => c.name === 'Donations')?.id ?? null;
 
   let categories;
   if (classFee !== null && pay.amount > classFee + 0.001 && membershipCatId && donationsCatId) {
     const donation = Math.round((pay.amount - classFee) * 100) / 100;
     categories = [
       { categoryId: membershipCatId, amount: classFee },
-      { categoryId: donationsCatId,  amount: donation },
+      { categoryId: donationsCatId, amount: donation },
     ];
   } else {
     const catId = membershipCatId ?? donationsCatId;
-    if (!catId) throw AppError('No active Membership or Donations category found to record payment.', 500);
+    if (!catId)
+      throw AppError('No active Membership or Donations category found to record payment.', 500);
     categories = [{ categoryId: catId, amount: pay.amount }];
   }
 
@@ -1010,7 +1137,16 @@ async function createMemberPayment(slug, pay, memberId, memberName, joinedOn, cl
        (account_id, date, type, from_to, amount, payment_method, payment_ref, detail, member_id_1, gift_aid_amount)
      VALUES ($1, $2::date, 'in', $3, $4::numeric, $5, $6, 'New Membership', $7, $8::numeric)
      RETURNING id, transaction_number`,
-    [pay.accountId, joinedOn, memberName, pay.amount, pay.method ?? null, pay.ref ?? null, memberId, gaAmount],
+    [
+      pay.accountId,
+      joinedOn,
+      memberName,
+      pay.amount,
+      pay.method ?? null,
+      pay.ref ?? null,
+      memberId,
+      gaAmount,
+    ],
   );
 
   for (const cat of categories) {
@@ -1064,10 +1200,14 @@ router.post('/', requirePrivilege('member_record', 'create'), async (req, res, n
         `INSERT INTO addresses (house_no, street, add_line1, add_line2, town, county, postcode, telephone)
          VALUES ($1,$2,$3,$4,$5,$6,$7,$8) RETURNING id`,
         [
-          addr.houseNo   ?? null, addr.street   ?? null,
-          addr.addLine1  ?? null, addr.addLine2  ?? null,
-          addr.town      ?? null, addr.county    ?? null,
-          addr.postcode ? addr.postcode.trim().toUpperCase() : null, addr.telephone ?? null,
+          addr.houseNo ?? null,
+          addr.street ?? null,
+          addr.addLine1 ?? null,
+          addr.addLine2 ?? null,
+          addr.town ?? null,
+          addr.county ?? null,
+          addr.postcode ? addr.postcode.trim().toUpperCase() : null,
+          addr.telephone ?? null,
         ],
       );
       addressId = newAddr.id;
@@ -1089,22 +1229,22 @@ router.post('/', requirePrivilege('member_record', 'create'), async (req, res, n
                  joined_on, next_renewal, gift_aid_from, home_u3a, notes,
                  hide_contact, partner_id, address_id, created_at`,
       [
-        data.title      ?? null,
+        data.title ?? null,
         data.forenames,
         data.surname,
-        data.knownAs    ?? null,
+        data.knownAs ?? null,
         initials,
-        data.suffix     ?? null,
+        data.suffix ?? null,
         email,
-        data.mobile     ?? null,
+        data.mobile ?? null,
         addressId,
         data.statusId,
         data.classId,
-        data.joinedOn   ?? null,
+        data.joinedOn ?? null,
         data.nextRenewal ?? null,
         data.giftAidFrom ?? null,
-        data.homeU3a    ?? null,
-        data.notes      ?? null,
+        data.homeU3a ?? null,
+        data.notes ?? null,
         data.hideContact,
         data.existingPartnerId ?? null,
         data.customField1 ?? null,
@@ -1139,17 +1279,17 @@ router.post('/', requirePrivilege('member_record', 'create'), async (req, res, n
          VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11::date,$12::date,$13::date,$14,$15)
          RETURNING id, membership_number, forenames, surname`,
         [
-          np.title      ?? null,
+          np.title ?? null,
           np.forenames,
           np.surname,
-          np.knownAs    ?? null,
+          np.knownAs ?? null,
           npInitials,
           npEmail,
-          np.mobile     ?? null,
+          np.mobile ?? null,
           addressId,
           np.statusId,
           np.classId,
-          np.joinedOn   ?? null,
+          np.joinedOn ?? null,
           np.nextRenewal ?? null,
           np.giftAidFrom ?? null,
           false,
@@ -1187,7 +1327,14 @@ router.post('/', requirePrivilege('member_record', 'create'), async (req, res, n
     let paymentToken = null;
     if (data.payment) {
       const memberName = [data.title, data.forenames, data.surname].filter(Boolean).join(' ');
-      await createMemberPayment(slug, data.payment, member.id, memberName, data.joinedOn, data.classId);
+      await createMemberPayment(
+        slug,
+        data.payment,
+        member.id,
+        memberName,
+        data.joinedOn,
+        data.classId,
+      );
     } else {
       // No payment provided — switch status to Applicant and generate a payment token
       // so the member can be sent a "complete your payment" link.
@@ -1218,11 +1365,26 @@ router.post('/', requirePrivilege('member_record', 'create'), async (req, res, n
       }
     }
 
-    logAudit(slug, { userId: req.user.userId, userName: req.user.name, action: 'create', entityType: 'member', entityId: member.id, entityName: `${data.forenames} ${data.surname}` });
+    logAudit(slug, {
+      userId: req.user.userId,
+      userName: req.user.name,
+      action: 'create',
+      entityType: 'member',
+      entityId: member.id,
+      entityName: `${data.forenames} ${data.surname}`,
+    });
 
     // Gift Aid consent audit entry
     if (data.giftAidFrom) {
-      logAudit(slug, { userId: req.user.userId, userName: req.user.name, action: 'gift_aid_consent', entityType: 'member', entityId: member.id, entityName: `${data.forenames} ${data.surname}`, detail: JSON.stringify({ giftAidFrom: data.giftAidFrom }) });
+      logAudit(slug, {
+        userId: req.user.userId,
+        userName: req.user.name,
+        action: 'gift_aid_consent',
+        entityType: 'member',
+        entityId: member.id,
+        entityName: `${data.forenames} ${data.surname}`,
+        detail: JSON.stringify({ giftAidFrom: data.giftAidFrom }),
+      });
     }
 
     res.status(201).json({ ...member, paymentToken });
@@ -1234,41 +1396,43 @@ router.post('/', requirePrivilege('member_record', 'create'), async (req, res, n
 // ─── PATCH /members/:id ───────────────────────────────────────────────────
 
 const updateMemberSchema = z.object({
-  title:        z.string().max(20).optional(),
-  forenames:    z.string().min(1).max(100).optional(),
-  surname:      z.string().min(1).max(100).optional(),
-  knownAs:      z.string().max(50).nullable().optional(),
-  initials:     z.string().max(20).nullable().optional(),
-  suffix:       z.string().max(30).nullable().optional(),
-  email:        z.string().email().optional().or(z.literal('')).nullable(),
-  mobile:       z.string().max(30).nullable().optional(),
-  statusId:     z.string().optional(),
-  classId:      z.string().optional(),
-  joinedOn:     z.string().nullable().optional(),
-  nextRenewal:  z.string().nullable().optional(),
-  giftAidFrom:  z.string().nullable().optional(),
-  homeU3a:      z.string().max(100).nullable().optional(),
-  notes:        z.string().nullable().optional(),
-  hideContact:  z.boolean().optional(),
+  title: z.string().max(20).optional(),
+  forenames: z.string().min(1).max(100).optional(),
+  surname: z.string().min(1).max(100).optional(),
+  knownAs: z.string().max(50).nullable().optional(),
+  initials: z.string().max(20).nullable().optional(),
+  suffix: z.string().max(30).nullable().optional(),
+  email: z.string().email().optional().or(z.literal('')).nullable(),
+  mobile: z.string().max(30).nullable().optional(),
+  statusId: z.string().optional(),
+  classId: z.string().optional(),
+  joinedOn: z.string().nullable().optional(),
+  nextRenewal: z.string().nullable().optional(),
+  giftAidFrom: z.string().nullable().optional(),
+  homeU3a: z.string().max(100).nullable().optional(),
+  notes: z.string().nullable().optional(),
+  hideContact: z.boolean().optional(),
   customField1: z.string().nullable().optional(),
   customField2: z.string().nullable().optional(),
   customField3: z.string().nullable().optional(),
   customField4: z.string().nullable().optional(),
   emergencyContact: z.string().max(200).nullable().optional(),
-  partnerId:    z.string().nullable().optional(),
+  partnerId: z.string().nullable().optional(),
   // 'both' = update the shared address row in place; 'me-only' = create a new address for this member only
   addressScope: z.enum(['both', 'me-only']).optional(),
   // Address fields — updates the linked address record
-  address: z.object({
-    houseNo:   z.string().nullable().optional(),
-    street:    z.string().nullable().optional(),
-    addLine1:  z.string().nullable().optional(),
-    addLine2:  z.string().nullable().optional(),
-    town:      z.string().nullable().optional(),
-    county:    z.string().nullable().optional(),
-    postcode:  z.string().nullable().optional(),
-    telephone: z.string().nullable().optional(),
-  }).optional(),
+  address: z
+    .object({
+      houseNo: z.string().nullable().optional(),
+      street: z.string().nullable().optional(),
+      addLine1: z.string().nullable().optional(),
+      addLine2: z.string().nullable().optional(),
+      town: z.string().nullable().optional(),
+      county: z.string().nullable().optional(),
+      postcode: z.string().nullable().optional(),
+      telephone: z.string().nullable().optional(),
+    })
+    .optional(),
 });
 
 router.patch('/:id', requirePrivilege('member_record', 'change'), async (req, res, next) => {
@@ -1278,9 +1442,29 @@ router.patch('/:id', requirePrivilege('member_record', 'change'), async (req, re
     const memberId = req.params.id;
 
     // Early empty-body check (before any DB call)
-    const MEMBER_FIELDS = ['title','forenames','surname','knownAs','suffix','email','mobile',
-      'statusId','classId','joinedOn','nextRenewal','giftAidFrom','homeU3a','notes','hideContact',
-      'customField1','customField2','customField3','customField4','emergencyContact','partnerId'];
+    const MEMBER_FIELDS = [
+      'title',
+      'forenames',
+      'surname',
+      'knownAs',
+      'suffix',
+      'email',
+      'mobile',
+      'statusId',
+      'classId',
+      'joinedOn',
+      'nextRenewal',
+      'giftAidFrom',
+      'homeU3a',
+      'notes',
+      'hideContact',
+      'customField1',
+      'customField2',
+      'customField3',
+      'customField4',
+      'emergencyContact',
+      'partnerId',
+    ];
     if (!data.address && !MEMBER_FIELDS.some((f) => data[f] !== undefined)) {
       return res.status(400).json({ error: 'Nothing to update.' });
     }
@@ -1298,9 +1482,10 @@ router.patch('/:id', requirePrivilege('member_record', 'change'), async (req, re
     if (!current) throw AppError('Member not found.', 404);
 
     // Is this address currently shared with the partner?
-    const addressIsShared = current.partner_id !== null
-      && current.address_id !== null
-      && current.address_id === current.partner_address_id;
+    const addressIsShared =
+      current.partner_id !== null &&
+      current.address_id !== null &&
+      current.address_id === current.partner_address_id;
 
     // ── Handle partner change ──────────────────────────────────────────────
     // When partnerId changes we must: set the reverse link on the new partner,
@@ -1310,14 +1495,15 @@ router.patch('/:id', requirePrivilege('member_record', 'change'), async (req, re
     let partnerIsChanging = false;
 
     if (data.partnerId !== undefined) {
-      const newPartnerId = data.partnerId;                    // null = clearing
-      const oldPartnerId = current.partner_id ?? null;       // normalise to null
+      const newPartnerId = data.partnerId; // null = clearing
+      const oldPartnerId = current.partner_id ?? null; // normalise to null
 
       if (newPartnerId !== oldPartnerId) {
         partnerIsChanging = true;
 
         if (newPartnerId) {
-          if (newPartnerId === memberId) throw AppError('A member cannot be their own partner.', 400);
+          if (newPartnerId === memberId)
+            throw AppError('A member cannot be their own partner.', 400);
 
           const [partnerY] = await tenantQuery(
             slug,
@@ -1378,13 +1564,17 @@ router.patch('/:id', requirePrivilege('member_record', 'change'), async (req, re
           `INSERT INTO addresses (house_no, street, add_line1, add_line2, town, county, postcode, telephone)
            VALUES ($1,$2,$3,$4,$5,$6,$7,$8) RETURNING id`,
           [
-            addr.houseNo   !== undefined ? addr.houseNo   : (base.house_no  ?? null),
-            addr.street    !== undefined ? addr.street    : (base.street    ?? null),
-            addr.addLine1  !== undefined ? addr.addLine1  : (base.add_line1 ?? null),
-            addr.addLine2  !== undefined ? addr.addLine2  : (base.add_line2 ?? null),
-            addr.town      !== undefined ? addr.town      : (base.town      ?? null),
-            addr.county    !== undefined ? addr.county    : (base.county    ?? null),
-            addr.postcode  !== undefined ? (addr.postcode ? addr.postcode.trim().toUpperCase() : addr.postcode) : (base.postcode  ?? null),
+            addr.houseNo !== undefined ? addr.houseNo : (base.house_no ?? null),
+            addr.street !== undefined ? addr.street : (base.street ?? null),
+            addr.addLine1 !== undefined ? addr.addLine1 : (base.add_line1 ?? null),
+            addr.addLine2 !== undefined ? addr.addLine2 : (base.add_line2 ?? null),
+            addr.town !== undefined ? addr.town : (base.town ?? null),
+            addr.county !== undefined ? addr.county : (base.county ?? null),
+            addr.postcode !== undefined
+              ? addr.postcode
+                ? addr.postcode.trim().toUpperCase()
+                : addr.postcode
+              : (base.postcode ?? null),
             addr.telephone !== undefined ? addr.telephone : (base.telephone ?? null),
           ],
         );
@@ -1394,14 +1584,38 @@ router.patch('/:id', requirePrivilege('member_record', 'change'), async (req, re
         const addrFields = [];
         const addrVals = [];
         let ai = 1;
-        if (addr.houseNo   !== undefined) { addrFields.push(`house_no = $${ai++}`);   addrVals.push(addr.houseNo); }
-        if (addr.street    !== undefined) { addrFields.push(`street = $${ai++}`);     addrVals.push(addr.street); }
-        if (addr.addLine1  !== undefined) { addrFields.push(`add_line1 = $${ai++}`);  addrVals.push(addr.addLine1); }
-        if (addr.addLine2  !== undefined) { addrFields.push(`add_line2 = $${ai++}`);  addrVals.push(addr.addLine2); }
-        if (addr.town      !== undefined) { addrFields.push(`town = $${ai++}`);       addrVals.push(addr.town); }
-        if (addr.county    !== undefined) { addrFields.push(`county = $${ai++}`);     addrVals.push(addr.county); }
-        if (addr.postcode  !== undefined) { addrFields.push(`postcode = $${ai++}`);   addrVals.push(addr.postcode ? addr.postcode.trim().toUpperCase() : addr.postcode); }
-        if (addr.telephone !== undefined) { addrFields.push(`telephone = $${ai++}`);  addrVals.push(addr.telephone); }
+        if (addr.houseNo !== undefined) {
+          addrFields.push(`house_no = $${ai++}`);
+          addrVals.push(addr.houseNo);
+        }
+        if (addr.street !== undefined) {
+          addrFields.push(`street = $${ai++}`);
+          addrVals.push(addr.street);
+        }
+        if (addr.addLine1 !== undefined) {
+          addrFields.push(`add_line1 = $${ai++}`);
+          addrVals.push(addr.addLine1);
+        }
+        if (addr.addLine2 !== undefined) {
+          addrFields.push(`add_line2 = $${ai++}`);
+          addrVals.push(addr.addLine2);
+        }
+        if (addr.town !== undefined) {
+          addrFields.push(`town = $${ai++}`);
+          addrVals.push(addr.town);
+        }
+        if (addr.county !== undefined) {
+          addrFields.push(`county = $${ai++}`);
+          addrVals.push(addr.county);
+        }
+        if (addr.postcode !== undefined) {
+          addrFields.push(`postcode = $${ai++}`);
+          addrVals.push(addr.postcode ? addr.postcode.trim().toUpperCase() : addr.postcode);
+        }
+        if (addr.telephone !== undefined) {
+          addrFields.push(`telephone = $${ai++}`);
+          addrVals.push(addr.telephone);
+        }
         if (addrFields.length) {
           addrFields.push(`updated_at = now()`);
           addrVals.push(current.address_id);
@@ -1419,31 +1633,103 @@ router.patch('/:id', requirePrivilege('member_record', 'change'), async (req, re
     const values = [];
     let i = 1;
 
-    if (data.title       !== undefined) { fields.push(`title = $${i++}`);        values.push(data.title); }
-    if (data.forenames   !== undefined) { fields.push(`forenames = $${i++}`);    values.push(data.forenames);
-                                          if (data.initials === undefined) { fields.push(`initials = $${i++}`); values.push(deriveInitials(data.forenames)); } }
-    if (data.initials    !== undefined) { fields.push(`initials = $${i++}`);     values.push(data.initials); }
-    if (data.surname     !== undefined) { fields.push(`surname = $${i++}`);      values.push(data.surname); }
-    if (data.knownAs     !== undefined) { fields.push(`known_as = $${i++}`);     values.push(data.knownAs); }
-    if (data.suffix      !== undefined) { fields.push(`suffix = $${i++}`);       values.push(data.suffix); }
-    if (data.email       !== undefined) { fields.push(`email = $${i++}`);        values.push(data.email ? data.email.toLowerCase() : null); }
-    if (data.mobile      !== undefined) { fields.push(`mobile = $${i++}`);       values.push(data.mobile); }
-    if (data.statusId    !== undefined) { fields.push(`status_id = $${i++}`);    values.push(data.statusId);
-                                         fields.push('card_printed = false'); }
-    if (data.classId     !== undefined) { fields.push(`class_id = $${i++}`);     values.push(data.classId); }
-    if (data.joinedOn    !== undefined) { fields.push(`joined_on = $${i++}::date`);    values.push(data.joinedOn); }
-    if (data.nextRenewal !== undefined) { fields.push(`next_renewal = $${i++}::date`); values.push(data.nextRenewal); }
-    if (data.giftAidFrom !== undefined) { fields.push(`gift_aid_from = $${i++}::date`); values.push(data.giftAidFrom); }
-    if (data.homeU3a     !== undefined) { fields.push(`home_u3a = $${i++}`);     values.push(data.homeU3a); }
-    if (data.notes       !== undefined) { fields.push(`notes = $${i++}`);        values.push(data.notes); }
-    if (data.hideContact !== undefined) { fields.push(`hide_contact = $${i++}`); values.push(data.hideContact); }
-    if (data.customField1 !== undefined) { fields.push(`custom_field_1 = $${i++}`); values.push(data.customField1); }
-    if (data.customField2 !== undefined) { fields.push(`custom_field_2 = $${i++}`); values.push(data.customField2); }
-    if (data.customField3 !== undefined) { fields.push(`custom_field_3 = $${i++}`); values.push(data.customField3); }
-    if (data.customField4 !== undefined) { fields.push(`custom_field_4 = $${i++}`); values.push(data.customField4); }
-    if (data.emergencyContact !== undefined) { fields.push(`emergency_contact = $${i++}`); values.push(data.emergencyContact); }
-    if (data.partnerId   !== undefined) { fields.push(`partner_id = $${i++}`);   values.push(data.partnerId); }
-    if (data._newAddressId)             { fields.push(`address_id = $${i++}`);   values.push(data._newAddressId); }
+    if (data.title !== undefined) {
+      fields.push(`title = $${i++}`);
+      values.push(data.title);
+    }
+    if (data.forenames !== undefined) {
+      fields.push(`forenames = $${i++}`);
+      values.push(data.forenames);
+      if (data.initials === undefined) {
+        fields.push(`initials = $${i++}`);
+        values.push(deriveInitials(data.forenames));
+      }
+    }
+    if (data.initials !== undefined) {
+      fields.push(`initials = $${i++}`);
+      values.push(data.initials);
+    }
+    if (data.surname !== undefined) {
+      fields.push(`surname = $${i++}`);
+      values.push(data.surname);
+    }
+    if (data.knownAs !== undefined) {
+      fields.push(`known_as = $${i++}`);
+      values.push(data.knownAs);
+    }
+    if (data.suffix !== undefined) {
+      fields.push(`suffix = $${i++}`);
+      values.push(data.suffix);
+    }
+    if (data.email !== undefined) {
+      fields.push(`email = $${i++}`);
+      values.push(data.email ? data.email.toLowerCase() : null);
+    }
+    if (data.mobile !== undefined) {
+      fields.push(`mobile = $${i++}`);
+      values.push(data.mobile);
+    }
+    if (data.statusId !== undefined) {
+      fields.push(`status_id = $${i++}`);
+      values.push(data.statusId);
+      fields.push('card_printed = false');
+    }
+    if (data.classId !== undefined) {
+      fields.push(`class_id = $${i++}`);
+      values.push(data.classId);
+    }
+    if (data.joinedOn !== undefined) {
+      fields.push(`joined_on = $${i++}::date`);
+      values.push(data.joinedOn);
+    }
+    if (data.nextRenewal !== undefined) {
+      fields.push(`next_renewal = $${i++}::date`);
+      values.push(data.nextRenewal);
+    }
+    if (data.giftAidFrom !== undefined) {
+      fields.push(`gift_aid_from = $${i++}::date`);
+      values.push(data.giftAidFrom);
+    }
+    if (data.homeU3a !== undefined) {
+      fields.push(`home_u3a = $${i++}`);
+      values.push(data.homeU3a);
+    }
+    if (data.notes !== undefined) {
+      fields.push(`notes = $${i++}`);
+      values.push(data.notes);
+    }
+    if (data.hideContact !== undefined) {
+      fields.push(`hide_contact = $${i++}`);
+      values.push(data.hideContact);
+    }
+    if (data.customField1 !== undefined) {
+      fields.push(`custom_field_1 = $${i++}`);
+      values.push(data.customField1);
+    }
+    if (data.customField2 !== undefined) {
+      fields.push(`custom_field_2 = $${i++}`);
+      values.push(data.customField2);
+    }
+    if (data.customField3 !== undefined) {
+      fields.push(`custom_field_3 = $${i++}`);
+      values.push(data.customField3);
+    }
+    if (data.customField4 !== undefined) {
+      fields.push(`custom_field_4 = $${i++}`);
+      values.push(data.customField4);
+    }
+    if (data.emergencyContact !== undefined) {
+      fields.push(`emergency_contact = $${i++}`);
+      values.push(data.emergencyContact);
+    }
+    if (data.partnerId !== undefined) {
+      fields.push(`partner_id = $${i++}`);
+      values.push(data.partnerId);
+    }
+    if (data._newAddressId) {
+      fields.push(`address_id = $${i++}`);
+      values.push(data._newAddressId);
+    }
 
     if (fields.length === 0) return res.status(400).json({ error: 'Nothing to update.' });
 
@@ -1469,7 +1755,13 @@ router.patch('/:id', requirePrivilege('member_record', 'change'), async (req, re
       }
     }
 
-    logAudit(slug, { userId: req.user.userId, userName: req.user.name, action: 'update', entityType: 'member', entityId: member.id });
+    logAudit(slug, {
+      userId: req.user.userId,
+      userName: req.user.name,
+      action: 'update',
+      entityType: 'member',
+      entityId: member.id,
+    });
 
     // Gift Aid consent audit entry — log when gift_aid_from is set or cleared
     if (data.giftAidFrom !== undefined) {
@@ -1478,11 +1770,23 @@ router.patch('/:id', requirePrivilege('member_record', 'change'), async (req, re
       if (newGa !== oldGa) {
         const memberName = `${data.forenames ?? current.forenames} ${data.surname ?? current.surname}`;
         const action = newGa ? 'gift_aid_consent' : 'gift_aid_withdrawn';
-        logAudit(slug, { userId: req.user.userId, userName: req.user.name, action, entityType: 'member', entityId: member.id, entityName: memberName, detail: JSON.stringify({ giftAidFrom: newGa, previousGiftAidFrom: oldGa }) });
+        logAudit(slug, {
+          userId: req.user.userId,
+          userName: req.user.name,
+          action,
+          entityType: 'member',
+          entityId: member.id,
+          entityName: memberName,
+          detail: JSON.stringify({ giftAidFrom: newGa, previousGiftAidFrom: oldGa }),
+        });
       }
     }
 
-    res.json({ message: 'Member updated.', id: member.id, membership_number: member.membership_number });
+    res.json({
+      message: 'Member updated.',
+      id: member.id,
+      membership_number: member.membership_number,
+    });
   } catch (err) {
     next(err);
   }
@@ -1493,7 +1797,7 @@ router.patch('/:id', requirePrivilege('member_record', 'change'), async (req, re
 // Accepts: { data: "<base64>", mimeType: "image/jpeg" }
 
 const photoUploadSchema = z.object({
-  data:     z.string().min(1, 'Photo data is required'),
+  data: z.string().min(1, 'Photo data is required'),
   mimeType: z.enum(['image/jpeg', 'image/png', 'image/gif'], {
     errorMap: () => ({ message: 'Photo must be jpg, png, or gif' }),
   }),
@@ -1501,75 +1805,113 @@ const photoUploadSchema = z.object({
 
 const MAX_PHOTO_BYTES = 2 * 1024 * 1024; // 2 MB
 
-router.post('/:id/photo', requireFeature('memberPhotos'), requirePrivilege('member_record', 'change'), async (req, res, next) => {
-  try {
-    const slug = req.user.tenantSlug;
-    const memberId = req.params.id;
-    const { data, mimeType } = photoUploadSchema.parse(req.body);
+router.post(
+  '/:id/photo',
+  requireFeature('memberPhotos'),
+  requirePrivilege('member_record', 'change'),
+  async (req, res, next) => {
+    try {
+      const slug = req.user.tenantSlug;
+      const memberId = req.params.id;
+      const { data, mimeType } = photoUploadSchema.parse(req.body);
 
-    // Validate decoded size
-    const byteLength = Buffer.from(data, 'base64').length;
-    if (byteLength > MAX_PHOTO_BYTES) {
-      throw AppError(`Photo exceeds the 2 MB limit (${(byteLength / 1024 / 1024).toFixed(1)} MB).`, 400);
+      // Validate decoded size
+      const byteLength = Buffer.from(data, 'base64').length;
+      if (byteLength > MAX_PHOTO_BYTES) {
+        throw AppError(
+          `Photo exceeds the 2 MB limit (${(byteLength / 1024 / 1024).toFixed(1)} MB).`,
+          400,
+        );
+      }
+
+      const [member] = await tenantQuery(slug, `SELECT id FROM members WHERE id = $1`, [memberId]);
+      if (!member) throw AppError('Member not found.', 404);
+
+      await tenantQuery(
+        slug,
+        `UPDATE members SET photo_data = $1, photo_mime_type = $2, updated_at = now() WHERE id = $3`,
+        [data, mimeType, memberId],
+      );
+
+      logAudit(slug, {
+        userId: req.user.userId,
+        userName: req.user.name,
+        action: 'change',
+        entityType: 'member',
+        entityId: memberId,
+        detail: 'Photo uploaded',
+      });
+      res.json({ message: 'Photo uploaded.' });
+    } catch (err) {
+      next(err);
     }
-
-    const [member] = await tenantQuery(slug, `SELECT id FROM members WHERE id = $1`, [memberId]);
-    if (!member) throw AppError('Member not found.', 404);
-
-    await tenantQuery(
-      slug,
-      `UPDATE members SET photo_data = $1, photo_mime_type = $2, updated_at = now() WHERE id = $3`,
-      [data, mimeType, memberId],
-    );
-
-    logAudit(slug, { userId: req.user.userId, userName: req.user.name, action: 'change', entityType: 'member', entityId: memberId, detail: 'Photo uploaded' });
-    res.json({ message: 'Photo uploaded.' });
-  } catch (err) { next(err); }
-});
+  },
+);
 
 // ─── DELETE /members/:id/photo ───────────────────────────────────────────
 // Remove a member's photo.
 
-router.delete('/:id/photo', requireFeature('memberPhotos'), requirePrivilege('member_record', 'change'), async (req, res, next) => {
-  try {
-    const slug = req.user.tenantSlug;
-    const memberId = req.params.id;
+router.delete(
+  '/:id/photo',
+  requireFeature('memberPhotos'),
+  requirePrivilege('member_record', 'change'),
+  async (req, res, next) => {
+    try {
+      const slug = req.user.tenantSlug;
+      const memberId = req.params.id;
 
-    const [member] = await tenantQuery(slug, `SELECT id FROM members WHERE id = $1`, [memberId]);
-    if (!member) throw AppError('Member not found.', 404);
+      const [member] = await tenantQuery(slug, `SELECT id FROM members WHERE id = $1`, [memberId]);
+      if (!member) throw AppError('Member not found.', 404);
 
-    await tenantQuery(
-      slug,
-      `UPDATE members SET photo_data = NULL, photo_mime_type = NULL, updated_at = now() WHERE id = $1`,
-      [memberId],
-    );
+      await tenantQuery(
+        slug,
+        `UPDATE members SET photo_data = NULL, photo_mime_type = NULL, updated_at = now() WHERE id = $1`,
+        [memberId],
+      );
 
-    logAudit(slug, { userId: req.user.userId, userName: req.user.name, action: 'change', entityType: 'member', entityId: memberId, detail: 'Photo removed' });
-    res.json({ message: 'Photo removed.' });
-  } catch (err) { next(err); }
-});
+      logAudit(slug, {
+        userId: req.user.userId,
+        userName: req.user.name,
+        action: 'change',
+        entityType: 'member',
+        entityId: memberId,
+        detail: 'Photo removed',
+      });
+      res.json({ message: 'Photo removed.' });
+    } catch (err) {
+      next(err);
+    }
+  },
+);
 
 // ─── GET /members/:id/photo ──────────────────────────────────────────────
 // Get a member's photo as a binary image response.
 
-router.get('/:id/photo', requireFeature('memberPhotos'), requirePrivilege('member_record', 'view'), async (req, res, next) => {
-  try {
-    const slug = req.user.tenantSlug;
-    const [member] = await tenantQuery(
-      slug,
-      `SELECT photo_data, photo_mime_type FROM members WHERE id = $1`,
-      [req.params.id],
-    );
-    if (!member || !member.photo_data) {
-      return res.status(404).json({ error: 'No photo found.' });
+router.get(
+  '/:id/photo',
+  requireFeature('memberPhotos'),
+  requirePrivilege('member_record', 'view'),
+  async (req, res, next) => {
+    try {
+      const slug = req.user.tenantSlug;
+      const [member] = await tenantQuery(
+        slug,
+        `SELECT photo_data, photo_mime_type FROM members WHERE id = $1`,
+        [req.params.id],
+      );
+      if (!member || !member.photo_data) {
+        return res.status(404).json({ error: 'No photo found.' });
+      }
+      const buf = Buffer.from(member.photo_data, 'base64');
+      res.setHeader('Content-Type', member.photo_mime_type);
+      res.setHeader('Content-Length', buf.length);
+      res.setHeader('Cache-Control', 'private, max-age=3600');
+      res.send(buf);
+    } catch (err) {
+      next(err);
     }
-    const buf = Buffer.from(member.photo_data, 'base64');
-    res.setHeader('Content-Type', member.photo_mime_type);
-    res.setHeader('Content-Length', buf.length);
-    res.setHeader('Cache-Control', 'private, max-age=3600');
-    res.send(buf);
-  } catch (err) { next(err); }
-});
+  },
+);
 
 // ─── DELETE /members/:id ──────────────────────────────────────────────────
 
@@ -1608,7 +1950,13 @@ router.delete('/:id', requirePrivilege('member_record', 'delete'), async (req, r
       }
     }
 
-    logAudit(slug, { userId: req.user.userId, userName: req.user.name, action: 'delete', entityType: 'member', entityId: memberId });
+    logAudit(slug, {
+      userId: req.user.userId,
+      userName: req.user.name,
+      action: 'delete',
+      entityType: 'member',
+      entityId: memberId,
+    });
     res.json({ message: 'Member deleted.' });
   } catch (err) {
     next(err);

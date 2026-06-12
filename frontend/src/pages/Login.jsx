@@ -23,7 +23,8 @@ function setLastU3aCookie(slug) {
   document.cookie = `${COOKIE_NAME}=${encodeURIComponent(slug)}; expires=${expires}; path=/; SameSite=Lax`;
 }
 
-const inputCls = 'w-full border border-slate-400 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500';
+const inputCls =
+  'w-full border border-slate-400 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500';
 
 // ── Recovery section (doc 9.6) — rendered outside Login to avoid nested component ──
 
@@ -38,16 +39,26 @@ function renderRecoverySection(tenantSlug, recoverState, setRecoverState) {
     setRecoverState((s) => ({ ...s, busy: true, error: null, success: null }));
     try {
       const result = await authApi.recover(
-        tenantSlug, form.forename, form.surname, form.postcode, form.email,
+        tenantSlug,
+        form.forename,
+        form.surname,
+        form.postcode,
+        form.email,
       );
       if (result.securityQuestion) {
         setRecoverState((s) => ({
-          ...s, step: 'question', securityQuestion: result.securityQuestion,
-          userId: result.userId, busy: false,
+          ...s,
+          step: 'question',
+          securityQuestion: result.securityQuestion,
+          userId: result.userId,
+          busy: false,
         }));
       } else {
         setRecoverState((s) => ({
-          ...s, step: 'done', success: result.message, busy: false,
+          ...s,
+          step: 'done',
+          success: result.message,
+          busy: false,
         }));
       }
     } catch (err) {
@@ -61,7 +72,10 @@ function renderRecoverySection(tenantSlug, recoverState, setRecoverState) {
     try {
       const result = await authApi.recoverVerify(tenantSlug, userId, form.answer);
       setRecoverState((s) => ({
-        ...s, step: 'done', success: result.message, busy: false,
+        ...s,
+        step: 'done',
+        success: result.message,
+        busy: false,
       }));
     } catch (err) {
       setRecoverState((s) => ({ ...s, error: err.message, busy: false }));
@@ -74,8 +88,8 @@ function renderRecoverySection(tenantSlug, recoverState, setRecoverState) {
     <div className="w-full max-w-xs mt-4 p-4 bg-slate-50 border border-slate-300 rounded-lg">
       <h2 className="text-sm font-semibold text-slate-700 mb-1">Recover your credentials</h2>
       <p className="text-xs text-slate-500 mb-3">
-        Complete the following to recover your credentials. If you do not have
-        an email address registered, please contact your system administrator.
+        Complete the following to recover your credentials. If you do not have an email address
+        registered, please contact your system administrator.
       </p>
 
       {error && (
@@ -94,26 +108,50 @@ function renderRecoverySection(tenantSlug, recoverState, setRecoverState) {
         <form onSubmit={handleIdentify} className="space-y-2">
           <div>
             <label className="block text-xs font-medium text-slate-700 mb-0.5">Forename</label>
-            <input name="forename" value={form.forename} onChange={(e) => setField('forename', e.target.value)}
-              required className={inputCls} />
+            <input
+              name="forename"
+              value={form.forename}
+              onChange={(e) => setField('forename', e.target.value)}
+              required
+              className={inputCls}
+            />
           </div>
           <div>
             <label className="block text-xs font-medium text-slate-700 mb-0.5">Surname</label>
-            <input name="surname" value={form.surname} onChange={(e) => setField('surname', e.target.value)}
-              required className={inputCls} />
+            <input
+              name="surname"
+              value={form.surname}
+              onChange={(e) => setField('surname', e.target.value)}
+              required
+              className={inputCls}
+            />
           </div>
           <div>
             <label className="block text-xs font-medium text-slate-700 mb-0.5">Postcode</label>
-            <input name="postcode" value={form.postcode} onChange={(e) => setField('postcode', e.target.value)}
-              required className={inputCls} />
+            <input
+              name="postcode"
+              value={form.postcode}
+              onChange={(e) => setField('postcode', e.target.value)}
+              required
+              className={inputCls}
+            />
           </div>
           <div>
             <label className="block text-xs font-medium text-slate-700 mb-0.5">Email</label>
-            <input type="email" name="email" value={form.email} onChange={(e) => setField('email', e.target.value)}
-              required className={inputCls} />
+            <input
+              type="email"
+              name="email"
+              value={form.email}
+              onChange={(e) => setField('email', e.target.value)}
+              required
+              className={inputCls}
+            />
           </div>
-          <button type="submit" disabled={busy}
-            className="w-full py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white rounded text-sm font-medium transition-colors">
+          <button
+            type="submit"
+            disabled={busy}
+            className="w-full py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white rounded text-sm font-medium transition-colors"
+          >
             {busy ? 'Checking…' : 'Submit'}
           </button>
         </form>
@@ -125,15 +163,25 @@ function renderRecoverySection(tenantSlug, recoverState, setRecoverState) {
             Please answer your personal security question:
           </p>
           <div>
-            <label className="block text-xs font-medium text-slate-700 mb-0.5">{securityQuestion}</label>
-            <input name="answer" value={form.answer} onChange={(e) => setField('answer', e.target.value)}
-              required className={inputCls} />
+            <label className="block text-xs font-medium text-slate-700 mb-0.5">
+              {securityQuestion}
+            </label>
+            <input
+              name="answer"
+              value={form.answer}
+              onChange={(e) => setField('answer', e.target.value)}
+              required
+              className={inputCls}
+            />
             <p className="text-xs text-slate-500 mt-1">
               Type the answer in the same format as when it was originally set.
             </p>
           </div>
-          <button type="submit" disabled={busy}
-            className="w-full py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white rounded text-sm font-medium transition-colors">
+          <button
+            type="submit"
+            disabled={busy}
+            className="w-full py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white rounded text-sm font-medium transition-colors"
+          >
             {busy ? 'Verifying…' : 'Submit'}
           </button>
         </form>
@@ -161,7 +209,7 @@ export default function Login() {
   // Recovery state
   const [recoverState, setRecoverState] = useState({
     open: false,
-    step: 'identify',  // 'identify' | 'question' | 'done'
+    step: 'identify', // 'identify' | 'question' | 'done'
     form: { forename: '', surname: '', postcode: '', email: '', answer: '' },
     securityQuestion: null,
     userId: null,
@@ -170,8 +218,7 @@ export default function Login() {
     success: null,
   });
 
-  const handleChange = (e) =>
-    setForm((f) => ({ ...f, [e.target.name]: e.target.value }));
+  const handleChange = (e) => setForm((f) => ({ ...f, [e.target.name]: e.target.value }));
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -191,17 +238,21 @@ export default function Login() {
       ...s,
       open: !s.open,
       // Reset state when closing
-      ...(!s.open ? {} : {
-        step: 'identify',
-        form: { forename: '', surname: '', postcode: '', email: '', answer: '' },
-        securityQuestion: null, userId: null, error: null, success: null,
-      }),
+      ...(!s.open
+        ? {}
+        : {
+            step: 'identify',
+            form: { forename: '', surname: '', postcode: '', email: '', answer: '' },
+            securityQuestion: null,
+            userId: null,
+            error: null,
+            success: null,
+          }),
     }));
   };
 
   return (
     <div className="min-h-screen flex flex-col items-center px-4 pt-10 pb-10">
-
       <BeaconLogo large />
 
       <h1 className="mt-6 text-xl font-bold text-center">Administration</h1>
@@ -217,7 +268,9 @@ export default function Login() {
 
       <form onSubmit={handleSubmit} className="mt-4 w-full max-w-xs space-y-3">
         <div>
-          <label htmlFor="tenantSlug" className="block text-sm font-medium text-slate-700 mb-1">u3a</label>
+          <label htmlFor="tenantSlug" className="block text-sm font-medium text-slate-700 mb-1">
+            u3a
+          </label>
           <input
             id="tenantSlug"
             name="tenantSlug"
@@ -230,7 +283,9 @@ export default function Login() {
         </div>
 
         <div>
-          <label htmlFor="username" className="block text-sm font-medium text-slate-700 mb-1">Username</label>
+          <label htmlFor="username" className="block text-sm font-medium text-slate-700 mb-1">
+            Username
+          </label>
           <input
             id="username"
             name="username"
@@ -244,7 +299,9 @@ export default function Login() {
         </div>
 
         <div>
-          <label htmlFor="password" className="block text-sm font-medium text-slate-700 mb-1">Password</label>
+          <label htmlFor="password" className="block text-sm font-medium text-slate-700 mb-1">
+            Password
+          </label>
           <div className="relative">
             <input
               id="password"
@@ -289,7 +346,6 @@ export default function Login() {
       {renderRecoverySection(form.tenantSlug, recoverState, setRecoverState)}
 
       <p className="mt-6 text-sm text-slate-600 font-medium">v{__APP_VERSION__}</p>
-
     </div>
   );
 }

@@ -6,9 +6,7 @@ import BeaconLogo from './BeaconLogo.jsx';
 const APP_VERSION = typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : '';
 
 export default function PageHeader({ tenant }) {
-  const display = tenant
-    ? tenant.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())
-    : '';
+  const display = tenant ? tenant.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()) : '';
 
   return (
     <div className="flex items-center gap-4 px-4 py-3 sm:px-8 bg-white/70 backdrop-blur-sm">

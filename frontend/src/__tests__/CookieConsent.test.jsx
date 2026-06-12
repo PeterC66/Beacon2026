@@ -3,7 +3,11 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { render, fireEvent } from '@testing-library/react';
 import CookieConsent from '../components/CookieConsent.jsx';
-import { getConsentValue, hasOptionalCookieConsent, setConsent } from '../hooks/useCookieConsent.js';
+import {
+  getConsentValue,
+  hasOptionalCookieConsent,
+  setConsent,
+} from '../hooks/useCookieConsent.js';
 
 // Helper to clear all test cookies
 function clearCookies() {
@@ -63,13 +67,17 @@ describe('CookieConsent component', () => {
 
   it('shows dialog when no consent cookie exists', () => {
     const { getByText } = render(<CookieConsent />);
-    expect(getByText('This site uses cookies to store information on your computer.')).toBeInTheDocument();
+    expect(
+      getByText('This site uses cookies to store information on your computer.'),
+    ).toBeInTheDocument();
   });
 
   it('does not show dialog when consent already given', () => {
     setConsent(true);
     const { queryByText } = render(<CookieConsent />);
-    expect(queryByText('This site uses cookies to store information on your computer.')).not.toBeInTheDocument();
+    expect(
+      queryByText('This site uses cookies to store information on your computer.'),
+    ).not.toBeInTheDocument();
   });
 
   it('shows gear icon when dialog is closed', () => {
@@ -81,14 +89,18 @@ describe('CookieConsent component', () => {
   it('hides dialog and records consent on accept', () => {
     const { getByText, queryByText } = render(<CookieConsent />);
     fireEvent.click(getByText('I Accept optional cookies'));
-    expect(queryByText('This site uses cookies to store information on your computer.')).not.toBeInTheDocument();
+    expect(
+      queryByText('This site uses cookies to store information on your computer.'),
+    ).not.toBeInTheDocument();
     expect(getConsentValue()).toBe('accepted');
   });
 
   it('hides dialog and records decline on "I Do Not Accept"', () => {
     const { getByText, queryByText } = render(<CookieConsent />);
     fireEvent.click(getByText('I Do Not Accept'));
-    expect(queryByText('This site uses cookies to store information on your computer.')).not.toBeInTheDocument();
+    expect(
+      queryByText('This site uses cookies to store information on your computer.'),
+    ).not.toBeInTheDocument();
     expect(getConsentValue()).toBe('declined');
   });
 
@@ -96,7 +108,9 @@ describe('CookieConsent component', () => {
     setConsent(true);
     const { getByTitle, getByText } = render(<CookieConsent />);
     fireEvent.click(getByTitle('Cookie settings'));
-    expect(getByText('This site uses cookies to store information on your computer.')).toBeInTheDocument();
+    expect(
+      getByText('This site uses cookies to store information on your computer.'),
+    ).toBeInTheDocument();
   });
 
   it('shows optional cookies details when expanded', () => {

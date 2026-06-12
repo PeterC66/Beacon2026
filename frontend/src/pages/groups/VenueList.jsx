@@ -13,16 +13,18 @@ import { useSortedData } from '../../hooks/useSortedData.js';
 
 export default function VenueList() {
   const { can, tenant } = useAuth();
-  const [list,    setList]    = useState([]);
+  const [list, setList] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error,   setError]   = useState(null);
+  const [error, setError] = useState(null);
   const tableRef = useRef(null);
 
   const { sorted, sortKey, sortDir, onSort } = useSortedData(list, 'name');
 
   const canCreate = can('group_venues', 'create');
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => {
+    load();
+  }, []);
 
   async function load() {
     setLoading(true);
@@ -38,7 +40,7 @@ export default function VenueList() {
   }
 
   const navLinks = [
-    { label: 'Home',   to: '/' },
+    { label: 'Home', to: '/' },
     { label: 'Groups', to: '/groups' },
     ...(canCreate ? [{ label: 'Add new venue', to: '/venues/new' }] : []),
   ];
@@ -57,14 +59,30 @@ export default function VenueList() {
           <p className="text-center text-slate-500 py-8">Loading…</p>
         ) : sorted.length === 0 ? (
           <div className="bg-white/90 rounded-lg shadow-sm p-6 text-center text-slate-500 text-sm">
-            No venues yet.{canCreate && <> <Link to="/venues/new" className="text-blue-700 hover:underline">Add a venue</Link>.</>}
+            No venues yet.
+            {canCreate && (
+              <>
+                {' '}
+                <Link to="/venues/new" className="text-blue-700 hover:underline">
+                  Add a venue
+                </Link>
+                .
+              </>
+            )}
           </div>
         ) : (
           <div className="bg-white/90 rounded-lg shadow-sm overflow-x-auto" ref={tableRef}>
             <table className="w-full text-sm min-w-max">
               <thead>
                 <tr className="bg-slate-50 border-b border-slate-200 text-left text-slate-600 italic font-normal">
-                  <SortableHeader col="name" label="Venue" sortKey={sortKey} sortDir={sortDir} onSort={onSort} className="px-4 py-2.5 font-normal" />
+                  <SortableHeader
+                    col="name"
+                    label="Venue"
+                    sortKey={sortKey}
+                    sortDir={sortDir}
+                    onSort={onSort}
+                    className="px-4 py-2.5 font-normal"
+                  />
                   <th className="px-4 py-2.5 font-normal">Contact</th>
                   <th className="px-4 py-2.5 font-normal">Telephone</th>
                   <th className="px-4 py-2.5 font-normal">Accessible</th>
@@ -72,9 +90,14 @@ export default function VenueList() {
               </thead>
               <tbody>
                 {sorted.map((v, i) => (
-                  <tr key={v.id} className={`border-b border-slate-100 ${i % 2 === 0 ? 'bg-yellow-50' : 'bg-white'}`}>
+                  <tr
+                    key={v.id}
+                    className={`border-b border-slate-100 ${i % 2 === 0 ? 'bg-yellow-50' : 'bg-white'}`}
+                  >
                     <td className="px-4 py-2">
-                      <Link to={`/venues/${v.id}`} className="text-blue-700 hover:underline">{v.name}</Link>
+                      <Link to={`/venues/${v.id}`} className="text-blue-700 hover:underline">
+                        {v.name}
+                      </Link>
                     </td>
                     <td className="px-4 py-2">{v.contact ?? ''}</td>
                     <td className="px-4 py-2">{v.telephone ?? ''}</td>

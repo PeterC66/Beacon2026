@@ -5,14 +5,14 @@ import request from 'supertest';
 import { makeAuthHeader } from './helpers.js';
 
 vi.mock('../utils/redis.js', () => ({
-  isSessionInvalidated:   vi.fn().mockResolvedValue(false),
+  isSessionInvalidated: vi.fn().mockResolvedValue(false),
   invalidateUserSessions: vi.fn().mockResolvedValue(undefined),
 }));
 
 vi.mock('../utils/db.js', () => ({
-  prisma:      { $disconnect: vi.fn() },
+  prisma: { $disconnect: vi.fn() },
   tenantQuery: vi.fn(),
-  withTenant:  vi.fn(),
+  withTenant: vi.fn(),
 }));
 
 const { default: app } = await import('../app.js');
@@ -81,9 +81,7 @@ describe('GET /address-export/download', () => {
   beforeEach(() => vi.clearAllMocks());
 
   it('returns 400 when no members selected', async () => {
-    const res = await request(app)
-      .get('/address-export/download')
-      .set('Authorization', AUTH);
+    const res = await request(app).get('/address-export/download').set('Authorization', AUTH);
     expect(res.status).toBe(400);
   });
 
@@ -129,17 +127,13 @@ describe('GET /address-export/labels', () => {
   beforeEach(() => vi.clearAllMocks());
 
   it('returns 400 when no members selected', async () => {
-    const res = await request(app)
-      .get('/address-export/labels')
-      .set('Authorization', AUTH);
+    const res = await request(app).get('/address-export/labels').set('Authorization', AUTH);
     expect(res.status).toBe(400);
   });
 
   it('returns PDF when members provided', async () => {
     tenantQuery.mockResolvedValueOnce([SAMPLE_MEMBER]);
-    const res = await request(app)
-      .get('/address-export/labels?ids=m1')
-      .set('Authorization', AUTH);
+    const res = await request(app).get('/address-export/labels?ids=m1').set('Authorization', AUTH);
     expect(res.status).toBe(200);
     expect(res.headers['content-type']).toContain('application/pdf');
   });

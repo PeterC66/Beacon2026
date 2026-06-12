@@ -14,7 +14,12 @@ import EventMembers from '../../components/EventMembers.jsx';
 import EventFinancials from '../../components/EventFinancials.jsx';
 import RecordTimestamp from '../../components/RecordTimestamp.jsx';
 import RequiredMark from '../../components/RequiredMark.jsx';
-import { calendar, groups as groupsApi, teams as teamsApi, venues as venuesApi } from '../../lib/api.js';
+import {
+  calendar,
+  groups as groupsApi,
+  teams as teamsApi,
+  venues as venuesApi,
+} from '../../lib/api.js';
 
 function fmtDate(d) {
   if (!d) return '';
@@ -41,7 +46,9 @@ export default function EventRecord() {
 
   const activeTab = searchParams.get('tab') || 'details';
 
-  useEffect(() => { load(); }, [eventId]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    load();
+  }, [eventId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   async function load() {
     setLoading(true);
@@ -60,7 +67,9 @@ export default function EventRecord() {
   const isGroup = event?.group_id && !isTeam;
 
   const canEdit = event
-    ? (event.group_id ? can('group_records_all', 'change') : can('meetings', 'change'))
+    ? event.group_id
+      ? can('group_records_all', 'change')
+      : can('meetings', 'change')
     : false;
 
   const navLinks = [
@@ -74,8 +83,12 @@ export default function EventRecord() {
   ];
 
   const tabs = [
-    { key: 'details',    label: 'Details',    available: true },
-    { key: 'members',    label: 'Members',    available: hasFeature('eventAttendance') && can('event_attendance', 'view') },
+    { key: 'details', label: 'Details', available: true },
+    {
+      key: 'members',
+      label: 'Members',
+      available: hasFeature('eventAttendance') && can('event_attendance', 'view'),
+    },
     { key: 'financials', label: 'Financials', available: can('event_finance', 'view') },
   ];
 
@@ -83,7 +96,12 @@ export default function EventRecord() {
     return (
       <div className="min-h-screen pb-10">
         <PageHeader tenant={tenant} />
-        <NavBar links={[{ label: 'Home', to: '/' }, { label: 'Events', to: '/calendar' }]} />
+        <NavBar
+          links={[
+            { label: 'Home', to: '/' },
+            { label: 'Events', to: '/calendar' },
+          ]}
+        />
         <div className="max-w-4xl mx-auto px-4 py-4">
           <p className="text-slate-500 text-sm">Loading event...</p>
         </div>
@@ -95,7 +113,12 @@ export default function EventRecord() {
     return (
       <div className="min-h-screen pb-10">
         <PageHeader tenant={tenant} />
-        <NavBar links={[{ label: 'Home', to: '/' }, { label: 'Events', to: '/calendar' }]} />
+        <NavBar
+          links={[
+            { label: 'Home', to: '/' },
+            { label: 'Events', to: '/calendar' },
+          ]}
+        />
         <div className="max-w-4xl mx-auto px-4 py-4">
           <p className="text-red-600 text-sm">{error || 'Event not found.'}</p>
         </div>
@@ -111,7 +134,9 @@ export default function EventRecord() {
       <NavBar links={navLinks} />
 
       <div className="max-w-4xl mx-auto px-4 py-4">
-        <p className="text-xs font-semibold tracking-widest text-slate-500 uppercase text-center mb-1">Event</p>
+        <p className="text-xs font-semibold tracking-widest text-slate-500 uppercase text-center mb-1">
+          Event
+        </p>
         <h1 className="text-xl font-bold text-center mb-1">{title}</h1>
         <p className="text-sm text-slate-500 text-center mb-3">
           {fmtDate(event.event_date)}
@@ -121,22 +146,24 @@ export default function EventRecord() {
 
         {/* Tab navigation */}
         <div role="tablist" className="flex gap-0 mb-4 border-b border-slate-300">
-          {tabs.filter((t) => t.available).map((tab) => (
-            <button
-              key={tab.key}
-              role="tab"
-              aria-selected={activeTab === tab.key}
-              onClick={() => setSearchParams(tab.key === 'details' ? {} : { tab: tab.key })}
-              className={[
-                'px-5 py-2 text-sm font-medium border-b-2 -mb-px transition-colors',
-                activeTab === tab.key
-                  ? 'border-blue-600 text-blue-700'
-                  : 'border-transparent text-slate-600 hover:text-slate-900',
-              ].join(' ')}
-            >
-              {tab.label}
-            </button>
-          ))}
+          {tabs
+            .filter((t) => t.available)
+            .map((tab) => (
+              <button
+                key={tab.key}
+                role="tab"
+                aria-selected={activeTab === tab.key}
+                onClick={() => setSearchParams(tab.key === 'details' ? {} : { tab: tab.key })}
+                className={[
+                  'px-5 py-2 text-sm font-medium border-b-2 -mb-px transition-colors',
+                  activeTab === tab.key
+                    ? 'border-blue-600 text-blue-700'
+                    : 'border-transparent text-slate-600 hover:text-slate-900',
+                ].join(' ')}
+              >
+                {tab.label}
+              </button>
+            ))}
         </div>
 
         {/* Tab content */}
@@ -146,18 +173,21 @@ export default function EventRecord() {
               event={event}
               canEdit={canEdit}
               onUpdated={(updated) => setEvent((prev) => ({ ...prev, ...updated }))}
-              onDeleted={() => { /* handled below via navigate */ }}
+              onDeleted={() => {
+                /* handled below via navigate */
+              }}
             />
           )}
-          {activeTab === 'members' && (
-            <EventMembers eventId={eventId} groupId={event.group_id} />
-          )}
-          {activeTab === 'financials' && (
-            <EventFinancials eventId={eventId} />
-          )}
+          {activeTab === 'members' && <EventMembers eventId={eventId} groupId={event.group_id} />}
+          {activeTab === 'financials' && <EventFinancials eventId={eventId} />}
         </div>
 
-        <RecordTimestamp label="Event record" createdAt={event.created_at} updatedAt={event.updated_at} className="pt-3" />
+        <RecordTimestamp
+          label="Event record"
+          createdAt={event.created_at}
+          updatedAt={event.updated_at}
+          className="pt-3"
+        />
       </div>
 
       <NavBar links={navLinks} />
@@ -175,7 +205,10 @@ function EventDetails({ event, canEdit, onUpdated }) {
 
   useEffect(() => {
     if (editing && venues.length === 0) {
-      venuesApi.list().then(setVenues).catch(() => {});
+      venuesApi
+        .list()
+        .then(setVenues)
+        .catch(() => {});
     }
   }, [editing, venues.length]);
 
@@ -183,11 +216,11 @@ function EventDetails({ event, canEdit, onUpdated }) {
     setForm({
       eventDate: event.event_date ? String(event.event_date).slice(0, 10) : '',
       startTime: fmtTime(event.start_time),
-      endTime:   fmtTime(event.end_time),
-      venueId:   event.venue_id ?? '',
-      topic:     event.topic ?? '',
-      contact:   event.contact ?? '',
-      details:   event.details ?? '',
+      endTime: fmtTime(event.end_time),
+      venueId: event.venue_id ?? '',
+      topic: event.topic ?? '',
+      contact: event.contact ?? '',
+      details: event.details ?? '',
       isPrivate: event.is_private ?? false,
     });
     setErrMsg(null);
@@ -203,11 +236,11 @@ function EventDetails({ event, canEdit, onUpdated }) {
     return {
       eventDate: form.eventDate || undefined,
       startTime: form.startTime || null,
-      endTime:   form.endTime || null,
-      venueId:   form.venueId || null,
-      topic:     form.topic || null,
-      contact:   form.contact || null,
-      details:   form.details || null,
+      endTime: form.endTime || null,
+      venueId: form.venueId || null,
+      topic: form.topic || null,
+      contact: form.contact || null,
+      details: form.details || null,
       isPrivate: !!form.isPrivate,
     };
   }
@@ -257,9 +290,10 @@ function EventDetails({ event, canEdit, onUpdated }) {
     }
   }
 
-  const inputCls = 'border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500';
+  const inputCls =
+    'border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500';
   const labelCls = 'block text-sm font-medium text-slate-700 mb-1';
-  const cbCls    = 'rounded border-slate-300 text-blue-600 focus:ring-blue-500';
+  const cbCls = 'rounded border-slate-300 text-blue-600 focus:ring-blue-500';
   const fieldCls = 'text-sm text-slate-900';
   const viewLabelCls = 'text-sm font-medium text-slate-500';
 
@@ -270,66 +304,130 @@ function EventDetails({ event, canEdit, onUpdated }) {
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <label htmlFor="ev-date" className={labelCls}>Date <RequiredMark /></label>
-            <input id="ev-date" name="eventDate" type="date" className={inputCls} required
+            <label htmlFor="ev-date" className={labelCls}>
+              Date <RequiredMark />
+            </label>
+            <input
+              id="ev-date"
+              name="eventDate"
+              type="date"
+              className={inputCls}
+              required
               value={form.eventDate}
-              onChange={(e) => setForm((p) => ({ ...p, eventDate: e.target.value }))} />
+              onChange={(e) => setForm((p) => ({ ...p, eventDate: e.target.value }))}
+            />
           </div>
           <div className="flex gap-2">
             <div className="flex-1">
-              <label htmlFor="ev-start" className={labelCls}>Start</label>
-              <input id="ev-start" name="startTime" type="time" step="900" className={`${inputCls} w-full`}
+              <label htmlFor="ev-start" className={labelCls}>
+                Start
+              </label>
+              <input
+                id="ev-start"
+                name="startTime"
+                type="time"
+                step="900"
+                className={`${inputCls} w-full`}
                 value={form.startTime}
-                onChange={(e) => setForm((p) => ({ ...p, startTime: e.target.value }))} />
+                onChange={(e) => setForm((p) => ({ ...p, startTime: e.target.value }))}
+              />
             </div>
             <div className="flex-1">
-              <label htmlFor="ev-end" className={labelCls}>Until</label>
-              <input id="ev-end" name="endTime" type="time" step="900" className={`${inputCls} w-full`}
+              <label htmlFor="ev-end" className={labelCls}>
+                Until
+              </label>
+              <input
+                id="ev-end"
+                name="endTime"
+                type="time"
+                step="900"
+                className={`${inputCls} w-full`}
                 value={form.endTime}
-                onChange={(e) => setForm((p) => ({ ...p, endTime: e.target.value }))} />
+                onChange={(e) => setForm((p) => ({ ...p, endTime: e.target.value }))}
+              />
             </div>
           </div>
           <div>
-            <label htmlFor="ev-venue" className={labelCls}>Venue</label>
-            <select id="ev-venue" name="venueId" className={`${inputCls} w-full`}
+            <label htmlFor="ev-venue" className={labelCls}>
+              Venue
+            </label>
+            <select
+              id="ev-venue"
+              name="venueId"
+              className={`${inputCls} w-full`}
               value={form.venueId}
-              onChange={(e) => setForm((p) => ({ ...p, venueId: e.target.value }))}>
+              onChange={(e) => setForm((p) => ({ ...p, venueId: e.target.value }))}
+            >
               <option value="">— none —</option>
-              {venues.map((v) => <option key={v.id} value={v.id}>{v.name}</option>)}
+              {venues.map((v) => (
+                <option key={v.id} value={v.id}>
+                  {v.name}
+                </option>
+              ))}
             </select>
           </div>
           <div>
-            <label htmlFor="ev-topic" className={labelCls}>Topic</label>
-            <input id="ev-topic" name="topic" className={`${inputCls} w-full`}
+            <label htmlFor="ev-topic" className={labelCls}>
+              Topic
+            </label>
+            <input
+              id="ev-topic"
+              name="topic"
+              className={`${inputCls} w-full`}
               value={form.topic}
-              onChange={(e) => setForm((p) => ({ ...p, topic: e.target.value }))} />
+              onChange={(e) => setForm((p) => ({ ...p, topic: e.target.value }))}
+            />
           </div>
           <div>
-            <label htmlFor="ev-contact" className={labelCls}>Enquiries</label>
-            <input id="ev-contact" name="contact" className={`${inputCls} w-full`}
+            <label htmlFor="ev-contact" className={labelCls}>
+              Enquiries
+            </label>
+            <input
+              id="ev-contact"
+              name="contact"
+              className={`${inputCls} w-full`}
               value={form.contact}
-              onChange={(e) => setForm((p) => ({ ...p, contact: e.target.value }))} />
+              onChange={(e) => setForm((p) => ({ ...p, contact: e.target.value }))}
+            />
           </div>
           <div className="sm:col-span-2">
-            <label htmlFor="ev-details" className={labelCls}>Details</label>
-            <textarea id="ev-details" name="details" rows={3} className={`${inputCls} w-full`}
+            <label htmlFor="ev-details" className={labelCls}>
+              Details
+            </label>
+            <textarea
+              id="ev-details"
+              name="details"
+              rows={3}
+              className={`${inputCls} w-full`}
               value={form.details}
-              onChange={(e) => setForm((p) => ({ ...p, details: e.target.value }))} />
+              onChange={(e) => setForm((p) => ({ ...p, details: e.target.value }))}
+            />
           </div>
           <label className="flex items-center gap-2 text-sm cursor-pointer">
-            <input type="checkbox" className={cbCls} checked={!!form.isPrivate}
-              onChange={(e) => setForm((p) => ({ ...p, isPrivate: e.target.checked }))} />
+            <input
+              type="checkbox"
+              className={cbCls}
+              checked={!!form.isPrivate}
+              onChange={(e) => setForm((p) => ({ ...p, isPrivate: e.target.checked }))}
+            />
             Exclude from public calendar
           </label>
         </div>
 
         <div className="flex gap-2 pt-2">
-          <button type="submit" disabled={saving || !form.eventDate}
-            className="bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white rounded px-5 py-2 text-sm font-medium">
+          <button
+            type="submit"
+            disabled={saving || !form.eventDate}
+            className="bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white rounded px-5 py-2 text-sm font-medium"
+          >
             {saving ? 'Saving…' : 'Save'}
           </button>
-          <button type="button" onClick={cancelEdit} disabled={saving}
-            className="border border-slate-300 rounded px-5 py-2 text-sm hover:bg-slate-50">
+          <button
+            type="button"
+            onClick={cancelEdit}
+            disabled={saving}
+            className="border border-slate-300 rounded px-5 py-2 text-sm hover:bg-slate-50"
+          >
             Cancel
           </button>
         </div>
@@ -358,8 +456,10 @@ function EventDetails({ event, canEdit, onUpdated }) {
           <div>
             <p className={viewLabelCls}>{e.group_type === 'team' ? 'Team' : 'Group'}</p>
             <p className={fieldCls}>
-              <Link to={e.group_type === 'team' ? `/teams/${e.group_id}` : `/groups/${e.group_id}`}
-                className="text-blue-700 hover:underline">
+              <Link
+                to={e.group_type === 'team' ? `/teams/${e.group_id}` : `/groups/${e.group_id}`}
+                className="text-blue-700 hover:underline"
+              >
                 {e.group_name}
               </Link>
             </p>
@@ -412,12 +512,17 @@ function EventDetails({ event, canEdit, onUpdated }) {
 
       {canEdit && (
         <div className="flex gap-2 pt-3 border-t border-slate-200">
-          <button onClick={startEdit}
-            className="bg-blue-600 hover:bg-blue-700 text-white rounded px-5 py-2 text-sm font-medium">
+          <button
+            onClick={startEdit}
+            className="bg-blue-600 hover:bg-blue-700 text-white rounded px-5 py-2 text-sm font-medium"
+          >
             Edit
           </button>
-          <button onClick={handleDelete} disabled={saving}
-            className="border border-red-300 text-red-600 hover:bg-red-50 rounded px-5 py-2 text-sm font-medium">
+          <button
+            onClick={handleDelete}
+            disabled={saving}
+            className="border border-red-300 text-red-600 hover:bg-red-50 rounded px-5 py-2 text-sm font-medium"
+          >
             Delete
           </button>
         </div>

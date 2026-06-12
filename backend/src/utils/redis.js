@@ -10,19 +10,19 @@
 import { createClient } from 'redis';
 
 const USE_REDIS = process.env.USE_REDIS !== 'false' && !!process.env.REDIS_URL;
-const IS_PROD   = process.env.NODE_ENV === 'production';
+const IS_PROD = process.env.NODE_ENV === 'production';
 
 if (IS_PROD && process.env.USE_REDIS !== 'false' && !process.env.REDIS_URL) {
   throw new Error(
     'REDIS_URL is required in production. Set it, or set USE_REDIS=false to ' +
-    'explicitly run without session invalidation (not recommended).',
+      'explicitly run without session invalidation (not recommended).',
   );
 }
 
 if (IS_PROD && process.env.USE_REDIS === 'false') {
   console.warn(
     '⚠ Redis is disabled in production (USE_REDIS=false). Session invalidation ' +
-    'is OFF — revoked roles remain effective until the access token expires.',
+      'is OFF — revoked roles remain effective until the access token expires.',
   );
 }
 

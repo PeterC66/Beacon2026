@@ -8,33 +8,32 @@ import { makeAuthHeader, TEST_TENANT, TEST_USER_ID } from './helpers.js';
 // ── Module mocks (hoisted before imports by vitest) ───────────────────────
 
 vi.mock('../utils/db.js', () => ({
-  prisma:      { $disconnect: vi.fn() },
+  prisma: { $disconnect: vi.fn() },
   tenantQuery: vi.fn(),
-  withTenant:  vi.fn(),
+  withTenant: vi.fn(),
 }));
 
 vi.mock('../utils/redis.js', () => ({
-  isSessionInvalidated:   vi.fn().mockResolvedValue(false),
+  isSessionInvalidated: vi.fn().mockResolvedValue(false),
   invalidateUserSessions: vi.fn().mockResolvedValue(undefined),
 }));
 
 vi.mock('../utils/password.js', () => ({
-  hashPassword:   vi.fn().mockResolvedValue('$hashed$'),
+  hashPassword: vi.fn().mockResolvedValue('$hashed$'),
   verifyPassword: vi.fn().mockResolvedValue(true),
-  generateToken:  vi.fn(() => 'opaque-token'),
+  generateToken: vi.fn(() => 'opaque-token'),
   hashOpaqueToken: vi.fn((t) => `hashed:${t}`),
 }));
 
 vi.mock('../services/authService.js', () => ({
-  loginUser:     vi.fn(),
-  logoutUser:    vi.fn().mockResolvedValue(undefined),
+  loginUser: vi.fn(),
+  logoutUser: vi.fn().mockResolvedValue(undefined),
   refreshTokens: vi.fn(),
   loginSysAdmin: vi.fn(),
 }));
 
 const { default: app } = await import('../app.js');
-const { loginUser, refreshTokens, loginSysAdmin } =
-  await import('../services/authService.js');
+const { loginUser, refreshTokens, loginSysAdmin } = await import('../services/authService.js');
 const { tenantQuery } = await import('../utils/db.js');
 const { invalidateUserSessions } = await import('../utils/redis.js');
 
@@ -45,7 +44,7 @@ describe('POST /auth/login', () => {
 
   it('returns 200 with accessToken on valid credentials', async () => {
     loginUser.mockResolvedValueOnce({
-      accessToken:  'acc.tok.en',
+      accessToken: 'acc.tok.en',
       refreshToken: 'ref.tok.en',
       user: { id: 'u1', name: 'Alice', email: 'alice@example.com' },
     });
@@ -61,7 +60,8 @@ describe('POST /auth/login', () => {
   });
 
   it('returns 401 when authService throws an auth error', async () => {
-    const err = new Error('Invalid credentials.'); err.status = 401;
+    const err = new Error('Invalid credentials.');
+    err.status = 401;
     loginUser.mockRejectedValueOnce(err);
 
     const res = await request(app)
@@ -87,9 +87,7 @@ describe('POST /auth/logout', () => {
   beforeEach(() => vi.clearAllMocks());
 
   it('returns 200 with message on valid token', async () => {
-    const res = await request(app)
-      .post('/auth/logout')
-      .set('Authorization', makeAuthHeader());
+    const res = await request(app).post('/auth/logout').set('Authorization', makeAuthHeader());
 
     expect(res.status).toBe(200);
     expect(res.body.message).toBe('Logged out successfully.');
@@ -107,18 +105,14 @@ describe('POST /auth/refresh', () => {
   beforeEach(() => vi.clearAllMocks());
 
   it('returns 401 when no refresh cookie is present', async () => {
-    const res = await request(app)
-      .post('/auth/refresh')
-      .set('x-tenant-slug', TEST_TENANT);
+    const res = await request(app).post('/auth/refresh').set('x-tenant-slug', TEST_TENANT);
 
     expect(res.status).toBe(401);
     expect(res.body.error).toBe('No refresh token.');
   });
 
   it('returns 400 when x-tenant-slug header is missing', async () => {
-    const res = await request(app)
-      .post('/auth/refresh')
-      .set('Cookie', 'beacon2_refresh=sometoken');
+    const res = await request(app).post('/auth/refresh').set('Cookie', 'beacon2_refresh=sometoken');
 
     expect(res.status).toBe(400);
     expect(res.body.error).toBe('Tenant not specified.');
@@ -126,7 +120,7 @@ describe('POST /auth/refresh', () => {
 
   it('returns 200 with new accessToken on valid refresh', async () => {
     refreshTokens.mockResolvedValueOnce({
-      accessToken:  'new.acc.tok',
+      accessToken: 'new.acc.tok',
       refreshToken: 'new.ref.tok',
     });
 
@@ -153,7 +147,7 @@ describe('POST /auth/refresh', () => {
 
   it('accepts a refresh whose Origin matches CORS_ORIGIN', async () => {
     refreshTokens.mockResolvedValueOnce({
-      accessToken:  'new.acc.tok',
+      accessToken: 'new.acc.tok',
       refreshToken: 'new.ref.tok',
     });
 
@@ -248,8 +242,8 @@ describe('POST /auth/force-change-password', () => {
 
   const validBody = {
     newPassword: 'NewPass99X!',
-    question:    'Favourite colour?',
-    answer:      'Blue',
+    question: 'Favourite colour?',
+    answer: 'Blue',
   };
 
   it('returns 403 when must_change_password is false', async () => {
@@ -293,7 +287,11 @@ describe('POST /auth/force-change-password', () => {
 
     expect(res.status).toBe(200);
     const sqlCalls = tenantQuery.mock.calls.map((c) => c[1]);
-    expect(sqlCalls.some((s) => /UPDATE users SET password_hash = \$1, must_change_password = false/.test(s))).toBe(true);
+    expect(
+      sqlCalls.some((s) =>
+        /UPDATE users SET password_hash = \$1, must_change_password = false/.test(s),
+      ),
+    ).toBe(true);
     expect(sqlCalls.some((s) => /UPDATE refresh_tokens SET revoked = true/.test(s))).toBe(true);
     expect(invalidateUserSessions).toHaveBeenCalledWith(TEST_TENANT, TEST_USER_ID);
   });

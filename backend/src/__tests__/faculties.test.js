@@ -5,21 +5,26 @@ import request from 'supertest';
 import { makeAuthHeader } from './helpers.js';
 
 vi.mock('../utils/redis.js', () => ({
-  isSessionInvalidated:   vi.fn().mockResolvedValue(false),
+  isSessionInvalidated: vi.fn().mockResolvedValue(false),
   invalidateUserSessions: vi.fn().mockResolvedValue(undefined),
 }));
 
 vi.mock('../utils/db.js', () => ({
-  prisma:      { $disconnect: vi.fn() },
+  prisma: { $disconnect: vi.fn() },
   tenantQuery: vi.fn(),
-  withTenant:  vi.fn(),
+  withTenant: vi.fn(),
 }));
 
 const { default: app } = await import('../app.js');
 const { tenantQuery } = await import('../utils/db.js');
 
 const AUTH = makeAuthHeader();
-const SAMPLE_FACULTY = { id: 'f1', name: 'Art & Literature', created_at: new Date().toISOString(), updated_at: new Date().toISOString() };
+const SAMPLE_FACULTY = {
+  id: 'f1',
+  name: 'Art & Literature',
+  created_at: new Date().toISOString(),
+  updated_at: new Date().toISOString(),
+};
 
 // ── GET /faculties ─────────────────────────────────────────────────────────
 
@@ -39,7 +44,9 @@ describe('GET /faculties', () => {
   });
 
   it('returns 403 without privilege', async () => {
-    const res = await request(app).get('/faculties').set('Authorization', makeAuthHeader({ privileges: [] }));
+    const res = await request(app)
+      .get('/faculties')
+      .set('Authorization', makeAuthHeader({ privileges: [] }));
     expect(res.status).toBe(403);
   });
 });
@@ -51,7 +58,10 @@ describe('POST /faculties', () => {
 
   it('creates a faculty and returns 201', async () => {
     tenantQuery.mockResolvedValueOnce([SAMPLE_FACULTY]);
-    const res = await request(app).post('/faculties').set('Authorization', AUTH).send({ name: 'Art & Literature' });
+    const res = await request(app)
+      .post('/faculties')
+      .set('Authorization', AUTH)
+      .send({ name: 'Art & Literature' });
     expect(res.status).toBe(201);
     expect(res.body.name).toBe('Art & Literature');
   });
@@ -69,16 +79,22 @@ describe('PATCH /faculties/:id', () => {
 
   it('updates a faculty', async () => {
     tenantQuery
-      .mockResolvedValueOnce([SAMPLE_FACULTY])  // exists check
-      .mockResolvedValueOnce([{ id: 'f1', name: 'Walking' }]);  // update
-    const res = await request(app).patch('/faculties/f1').set('Authorization', AUTH).send({ name: 'Walking' });
+      .mockResolvedValueOnce([SAMPLE_FACULTY]) // exists check
+      .mockResolvedValueOnce([{ id: 'f1', name: 'Walking' }]); // update
+    const res = await request(app)
+      .patch('/faculties/f1')
+      .set('Authorization', AUTH)
+      .send({ name: 'Walking' });
     expect(res.status).toBe(200);
     expect(res.body.name).toBe('Walking');
   });
 
   it('returns 404 when not found', async () => {
     tenantQuery.mockResolvedValueOnce([]);
-    const res = await request(app).patch('/faculties/unknown').set('Authorization', AUTH).send({ name: 'X' });
+    const res = await request(app)
+      .patch('/faculties/unknown')
+      .set('Authorization', AUTH)
+      .send({ name: 'X' });
     expect(res.status).toBe(404);
   });
 });
@@ -90,8 +106,8 @@ describe('DELETE /faculties/:id', () => {
 
   it('deletes a faculty', async () => {
     tenantQuery
-      .mockResolvedValueOnce([SAMPLE_FACULTY])  // exists check
-      .mockResolvedValueOnce([]);               // delete
+      .mockResolvedValueOnce([SAMPLE_FACULTY]) // exists check
+      .mockResolvedValueOnce([]); // delete
     const res = await request(app).delete('/faculties/f1').set('Authorization', AUTH);
     expect(res.status).toBe(200);
     expect(res.body.message).toMatch(/deleted/i);

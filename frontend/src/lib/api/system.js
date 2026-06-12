@@ -7,14 +7,25 @@ import { BASE } from './core.js';
 
 let sysToken = null;
 
-export function setSysToken(token) { sysToken = token; }
-export function clearSysToken()     { sysToken = null; }
-export function getSysToken()       { return sysToken; }
-export function hasSysToken()       { return !!sysToken; }
+export function setSysToken(token) {
+  sysToken = token;
+}
+export function clearSysToken() {
+  sysToken = null;
+}
+export function getSysToken() {
+  return sysToken;
+}
+export function hasSysToken() {
+  return !!sysToken;
+}
 
 function systemFetch(url, options = {}) {
   return fetch(url, options).then((r) =>
-    r.json().then((b) => { if (!r.ok) throw new Error(b.error ?? `HTTP ${r.status}`); return b; }),
+    r.json().then((b) => {
+      if (!r.ok) throw new Error(b.error ?? `HTTP ${r.status}`);
+      return b;
+    }),
   );
 }
 

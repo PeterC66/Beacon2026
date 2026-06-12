@@ -7,7 +7,7 @@ import FacultyList from '../pages/groups/FacultyList.jsx';
 vi.mock('../context/AuthContext.jsx', () => ({
   useAuth: () => ({
     tenant: 'test-u3a',
-    can:    vi.fn().mockReturnValue(true),
+    can: vi.fn().mockReturnValue(true),
   }),
 }));
 
@@ -18,14 +18,18 @@ vi.mock('../lib/api.js', () => ({
 describe('FacultyList page', () => {
   it('renders without crashing', () => {
     const { container } = render(
-      <MemoryRouter><FacultyList /></MemoryRouter>,
+      <MemoryRouter>
+        <FacultyList />
+      </MemoryRouter>,
     );
     expect(container).toBeTruthy();
   });
 
   it('shows Group Faculties heading', () => {
     const { getByText } = render(
-      <MemoryRouter><FacultyList /></MemoryRouter>,
+      <MemoryRouter>
+        <FacultyList />
+      </MemoryRouter>,
     );
     expect(getByText('Group Faculties')).toBeTruthy();
   });

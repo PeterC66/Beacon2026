@@ -7,30 +7,32 @@ import GroupRecord from '../pages/groups/GroupRecord.jsx';
 vi.mock('../context/AuthContext.jsx', () => ({
   useAuth: () => ({
     tenant: 'test-u3a',
-    can:        vi.fn().mockReturnValue(true),
+    can: vi.fn().mockReturnValue(true),
     hasFeature: vi.fn().mockReturnValue(true),
   }),
 }));
 
 vi.mock('../lib/api.js', () => ({
-  groups:    {
-    get:          vi.fn().mockResolvedValue({ id: 'g1', name: 'Watercolour', status: 'active', faculty_id: null }),
-    update:       vi.fn().mockResolvedValue({}),
-    delete:       vi.fn().mockResolvedValue({}),
-    listMembers:  vi.fn().mockResolvedValue([]),
-    addMember:    vi.fn().mockResolvedValue({}),
+  groups: {
+    get: vi
+      .fn()
+      .mockResolvedValue({ id: 'g1', name: 'Watercolour', status: 'active', faculty_id: null }),
+    update: vi.fn().mockResolvedValue({}),
+    delete: vi.fn().mockResolvedValue({}),
+    listMembers: vi.fn().mockResolvedValue([]),
+    addMember: vi.fn().mockResolvedValue({}),
     updateMember: vi.fn().mockResolvedValue({}),
-    removeMember:     vi.fn().mockResolvedValue({}),
-    bulkAddToEntity:  vi.fn().mockResolvedValue({}),
-    list:             vi.fn().mockResolvedValue([]),
-    listEvents:       vi.fn().mockResolvedValue([]),
+    removeMember: vi.fn().mockResolvedValue({}),
+    bulkAddToEntity: vi.fn().mockResolvedValue({}),
+    list: vi.fn().mockResolvedValue([]),
+    listEvents: vi.fn().mockResolvedValue([]),
     createEvents: vi.fn().mockResolvedValue([]),
-    updateEvent:  vi.fn().mockResolvedValue({}),
+    updateEvent: vi.fn().mockResolvedValue({}),
     deleteEvents: vi.fn().mockResolvedValue({}),
   },
   faculties: { list: vi.fn().mockResolvedValue([]) },
-  members:   { list: vi.fn().mockResolvedValue([]) },
-  venues:    { list: vi.fn().mockResolvedValue([]) },
+  members: { list: vi.fn().mockResolvedValue([]) },
+  venues: { list: vi.fn().mockResolvedValue([]) },
 }));
 
 describe('GroupRecord page — new group', () => {

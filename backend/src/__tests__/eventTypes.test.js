@@ -5,14 +5,14 @@ import request from 'supertest';
 import { makeAuthHeader } from './helpers.js';
 
 vi.mock('../utils/redis.js', () => ({
-  isSessionInvalidated:   vi.fn().mockResolvedValue(false),
+  isSessionInvalidated: vi.fn().mockResolvedValue(false),
   invalidateUserSessions: vi.fn().mockResolvedValue(undefined),
 }));
 
 vi.mock('../utils/db.js', () => ({
-  prisma:      { $disconnect: vi.fn() },
+  prisma: { $disconnect: vi.fn() },
   tenantQuery: vi.fn(),
-  withTenant:  vi.fn(),
+  withTenant: vi.fn(),
 }));
 
 vi.mock('../utils/audit.js', () => ({
@@ -107,7 +107,7 @@ describe('PATCH /event-types/:id', () => {
 
   it('returns 200 on update', async () => {
     tenantQuery
-      .mockResolvedValueOnce([SAMPLE_EVENT_TYPE])   // SELECT existing
+      .mockResolvedValueOnce([SAMPLE_EVENT_TYPE]) // SELECT existing
       .mockResolvedValueOnce([{ ...SAMPLE_EVENT_TYPE, name: 'Workshop' }]); // UPDATE
     const res = await request(app)
       .patch('/event-types/et-1')
@@ -137,10 +137,7 @@ describe('PATCH /event-types/:id', () => {
 
   it('returns 400 when nothing to update', async () => {
     tenantQuery.mockResolvedValueOnce([SAMPLE_EVENT_TYPE]);
-    const res = await request(app)
-      .patch('/event-types/et-1')
-      .set('Authorization', AUTH)
-      .send({});
+    const res = await request(app).patch('/event-types/et-1').set('Authorization', AUTH).send({});
     expect(res.status).toBe(400);
   });
 });
@@ -152,39 +149,29 @@ describe('DELETE /event-types/:id', () => {
 
   it('returns 200 on delete', async () => {
     tenantQuery
-      .mockResolvedValueOnce([SAMPLE_EVENT_TYPE])   // SELECT existing
-      .mockResolvedValueOnce([{ cnt: 0 }])          // COUNT events
-      .mockResolvedValueOnce([]);                    // DELETE
-    const res = await request(app)
-      .delete('/event-types/et-1')
-      .set('Authorization', AUTH);
+      .mockResolvedValueOnce([SAMPLE_EVENT_TYPE]) // SELECT existing
+      .mockResolvedValueOnce([{ cnt: 0 }]) // COUNT events
+      .mockResolvedValueOnce([]); // DELETE
+    const res = await request(app).delete('/event-types/et-1').set('Authorization', AUTH);
     expect(res.status).toBe(200);
     expect(res.body.deleted).toBe(true);
   });
 
   it('returns 404 when not found', async () => {
     tenantQuery.mockResolvedValueOnce([]);
-    const res = await request(app)
-      .delete('/event-types/unknown')
-      .set('Authorization', AUTH);
+    const res = await request(app).delete('/event-types/unknown').set('Authorization', AUTH);
     expect(res.status).toBe(404);
   });
 
   it('returns 400 when deleting the default type', async () => {
     tenantQuery.mockResolvedValueOnce([DEFAULT_TYPE]);
-    const res = await request(app)
-      .delete('/event-types/et-0')
-      .set('Authorization', AUTH);
+    const res = await request(app).delete('/event-types/et-0').set('Authorization', AUTH);
     expect(res.status).toBe(400);
   });
 
   it('returns 400 when events are using the type', async () => {
-    tenantQuery
-      .mockResolvedValueOnce([SAMPLE_EVENT_TYPE])
-      .mockResolvedValueOnce([{ cnt: 3 }]);
-    const res = await request(app)
-      .delete('/event-types/et-1')
-      .set('Authorization', AUTH);
+    tenantQuery.mockResolvedValueOnce([SAMPLE_EVENT_TYPE]).mockResolvedValueOnce([{ cnt: 3 }]);
+    const res = await request(app).delete('/event-types/et-1').set('Authorization', AUTH);
     expect(res.status).toBe(400);
   });
 });

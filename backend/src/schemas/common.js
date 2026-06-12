@@ -26,29 +26,36 @@ export const patchMemberSchema = z.object({
 
 // Event creation with optional recurrence
 export const eventSchema = z.object({
-  eventDate:    z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
-  startTime:    z.string().nullable().optional(),
-  endTime:      z.string().nullable().optional(),
-  venueId:      z.string().nullable().optional(),
-  topic:        z.string().nullable().optional(),
-  contact:      z.string().nullable().optional(),
-  details:      z.string().nullable().optional(),
-  isPrivate:    z.boolean().default(false),
-  repeatEvery:  z.number().int().positive().nullable().optional(),
-  repeatUnit:   z.enum(['days', 'weeks', 'months']).optional(),
-  repeatUntil:  z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullable().optional(),
+  eventDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  startTime: z.string().nullable().optional(),
+  endTime: z.string().nullable().optional(),
+  venueId: z.string().nullable().optional(),
+  topic: z.string().nullable().optional(),
+  contact: z.string().nullable().optional(),
+  details: z.string().nullable().optional(),
+  isPrivate: z.boolean().default(false),
+  repeatEvery: z.number().int().positive().nullable().optional(),
+  repeatUnit: z.enum(['days', 'weeks', 'months']).optional(),
+  repeatUntil: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/)
+    .nullable()
+    .optional(),
 });
 
 // Event partial update (no recurrence fields)
 export const updateEventSchema = z.object({
-  eventDate:  z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
-  startTime:  z.string().nullable().optional(),
-  endTime:    z.string().nullable().optional(),
-  venueId:    z.string().nullable().optional(),
-  topic:      z.string().nullable().optional(),
-  contact:    z.string().nullable().optional(),
-  details:    z.string().nullable().optional(),
-  isPrivate:  z.boolean().optional(),
+  eventDate: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/)
+    .optional(),
+  startTime: z.string().nullable().optional(),
+  endTime: z.string().nullable().optional(),
+  venueId: z.string().nullable().optional(),
+  topic: z.string().nullable().optional(),
+  contact: z.string().nullable().optional(),
+  details: z.string().nullable().optional(),
+  isPrivate: z.boolean().optional(),
 });
 
 // Bulk-delete events by ID array
@@ -59,8 +66,8 @@ export const bulkDeleteIdsSchema = z.object({
 // Ledger entry (shared by group and team finance)
 export const ledgerEntrySchema = z.object({
   entryDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
-  payee:     z.string().max(200).nullable().optional(),
-  detail:    z.string().max(500).nullable().optional(),
-  moneyIn:   z.number().nonnegative().nullable().optional(),
-  moneyOut:  z.number().nonnegative().nullable().optional(),
+  payee: z.string().max(200).nullable().optional(),
+  detail: z.string().max(500).nullable().optional(),
+  moneyIn: z.number().nonnegative().nullable().optional(),
+  moneyOut: z.number().nonnegative().nullable().optional(),
 });

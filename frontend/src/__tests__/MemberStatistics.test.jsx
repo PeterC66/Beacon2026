@@ -36,12 +36,20 @@ vi.mock('../lib/api.js', () => ({
 
 describe('MemberStatistics page', () => {
   it('renders without crashing', () => {
-    const { container } = render(<MemoryRouter><MemberStatistics /></MemoryRouter>);
+    const { container } = render(
+      <MemoryRouter>
+        <MemberStatistics />
+      </MemoryRouter>,
+    );
     expect(container).toBeTruthy();
   });
 
   it('shows the Statistics heading', () => {
-    const { getByText } = render(<MemoryRouter><MemberStatistics /></MemoryRouter>);
+    const { getByText } = render(
+      <MemoryRouter>
+        <MemberStatistics />
+      </MemoryRouter>,
+    );
     expect(getByText('Membership Statistics')).toBeInTheDocument();
   });
 });

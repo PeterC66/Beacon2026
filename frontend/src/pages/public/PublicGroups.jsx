@@ -26,7 +26,7 @@ function GroupItem({ group }) {
         className="w-full flex items-center justify-between px-4 py-3 bg-slate-50 hover:bg-slate-100 transition-colors text-left"
       >
         <span className="font-semibold text-slate-800">
-          {expanded ? '\u25BC' : '\u25B6'}{' '}{group.name}
+          {expanded ? '\u25BC' : '\u25B6'} {group.name}
         </span>
       </button>
 
@@ -116,9 +116,7 @@ export default function PublicGroups() {
       <PortalVersion />
       <div className="max-w-2xl mx-auto">
         {!hideHeader && (
-          <h1 className="text-xl font-bold text-center text-slate-800 mb-6">
-            {u3aName} — Groups
-          </h1>
+          <h1 className="text-xl font-bold text-center text-slate-800 mb-6">{u3aName} — Groups</h1>
         )}
 
         {error && (
