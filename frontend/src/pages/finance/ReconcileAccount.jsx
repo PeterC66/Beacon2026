@@ -31,7 +31,7 @@ export default function ReconcileAccount() {
   const [data,            setData]            = useState(null);   // { account, clearedBalance, uncleared }
   const [selected,        setSelected]        = useState({});    // { txnId: true/false }
   const [loading,         setLoading]         = useState(false);
-  const [loadingAccounts, setLoadingAccounts] = useState(true);
+  const [, setLoadingAccounts] = useState(true);
   const [error,           setError]           = useState(null);
   const [saving,          setSaving]          = useState(false);
   const [saved,           setSaved]           = useState(false);

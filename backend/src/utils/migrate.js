@@ -321,7 +321,10 @@ export async function syncDefaultRolePrivileges(slug) {
  * entries and stale entries from earlier code versions.
  *
  * Custom roles and any admin-added privileges on non-default roles are untouched.
+ *
+ * Intentionally retained for reference (see note above); no longer called.
  */
+// eslint-disable-next-line no-unused-vars
 async function migrateDefaultRolePrivileges() {
   const tenants = await prisma.sysTenant.findMany({ where: { active: true } });
   if (tenants.length === 0) return;

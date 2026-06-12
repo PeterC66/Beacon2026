@@ -33,7 +33,7 @@ vi.mock('../services/authService.js', () => ({
 }));
 
 const { default: app } = await import('../app.js');
-const { loginUser, logoutUser, refreshTokens, loginSysAdmin } =
+const { loginUser, refreshTokens, loginSysAdmin } =
   await import('../services/authService.js');
 const { tenantQuery } = await import('../utils/db.js');
 const { invalidateUserSessions } = await import('../utils/redis.js');

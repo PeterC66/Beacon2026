@@ -22,9 +22,7 @@ function pct(n, total) {
   return `${Math.round((n / total) * 100)}%`;
 }
 
-const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
 
-function monthName(n) { return MONTHS[(n ?? 1) - 1] ?? ''; }
 
 export default function MemberStatistics() {
   const { tenant } = useAuth();

@@ -2,7 +2,6 @@
 // Admin page for viewing and editing system message templates.
 
 import { useState, useEffect, useRef } from 'react';
-import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { systemMessages as api } from '../../lib/api.js';
 import PageHeader from '../../components/PageHeader.jsx';

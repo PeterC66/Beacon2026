@@ -1,0 +1,17 @@
+# Dependencies & build output
+node_modules/
+dist/
+build/
+
+# Generated / vendored
+**/package-lock.json
+backend/prisma/generated/
+
+# Documentation and data fixtures are not code-formatted
+*.md
+docs/
+analyse-u3a-artifacts/
+
+# E2E artefacts
+e2e/test-results/
+e2e/playwright-report/

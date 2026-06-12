@@ -7,7 +7,6 @@ import { requirePrivilege } from '../../middleware/requirePrivilege.js';
 import { tenantQuery } from '../../utils/db.js';
 import { AppError } from '../../middleware/errorHandler.js';
 import { logAudit } from '../../utils/audit.js';
-import { FINANCE_PAYMENT_METHODS } from '../../../../shared/constants.js';
 import { computeYearBounds } from './helpers.js';
 
 const router = Router();

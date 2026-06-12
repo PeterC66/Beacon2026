@@ -70,7 +70,7 @@ const ISSUE_COLOURS = {
 };
 
 export default function MemberValidator() {
-  const { tenant, can } = useAuth();
+  const { tenant } = useAuth();
   const [data,    setData]    = useState(null);   // raw fetched member list
   const [loading, setLoading] = useState(true);
   const [error,   setError]   = useState(null);

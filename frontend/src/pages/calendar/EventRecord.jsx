@@ -58,7 +58,6 @@ export default function EventRecord() {
 
   const isTeam = event?.group_type === 'team';
   const isGroup = event?.group_id && !isTeam;
-  const isOpenMeeting = event && !event.group_id;
 
   const canEdit = event
     ? (event.group_id ? can('group_records_all', 'change') : can('meetings', 'change'))

@@ -151,7 +151,7 @@ function renderRecoverySection(tenantSlug, recoverState, setRecoverState) {
 // ── Main Login component ─────────────────────────────────────────────────
 
 export default function Login() {
-  const { login, loading, error, mustChangePassword } = useAuth();
+  const { login, loading, error } = useAuth();
   const navigate = useNavigate();
 
   const [form, setForm] = useState({ tenantSlug: getLastU3aCookie(), username: '', password: '' });

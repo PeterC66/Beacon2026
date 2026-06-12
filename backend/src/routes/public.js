@@ -6,7 +6,7 @@ import { Router } from 'express';
 import { randomBytes } from 'crypto';
 import { z } from 'zod';
 import sgMail from '@sendgrid/mail';
-import { prisma, tenantQuery, withTenant } from '../utils/db.js';
+import { prisma, tenantQuery } from '../utils/db.js';
 import { hashPassword, verifyPassword, generateToken, hashOpaqueToken } from '../utils/password.js';
 import { signAccessToken } from '../utils/jwt.js';
 import { resolveTokens } from '../utils/emailTokens.js';
@@ -653,7 +653,7 @@ router.post('/:slug/email-payment-link', async (req, res, next) => {
     );
     const replyTo = settings?.online_join_email || null;
 
-    const { subject, body } = resolveTokens(
+    const { subject } = resolveTokens(
       template.subject, template.body,
       { ...member, class_name: member.class_name }, u3aName,
       { '#PAYMENTLINK': paymentLink },
@@ -689,7 +689,7 @@ async function sendJoinConfirmationEmail(slug, member) {
     );
     const replyTo = settings?.online_join_email || null;
 
-    const { subject, body } = resolveTokens(
+    const { subject } = resolveTokens(
       template.subject, template.body,
       { ...member, class_name: member.class_name }, u3aName,
     );
@@ -748,7 +748,7 @@ async function sendOfficerNotifications(slug, member) {
     const tenant = await prisma.sysTenant.findUnique({ where: { slug } });
     const u3aName = tenant?.name ?? '';
 
-    const { subject, body } = resolveTokens(
+    const { subject } = resolveTokens(
       template.subject, template.body,
       { ...member, class_name: member.class_name }, u3aName,
     );

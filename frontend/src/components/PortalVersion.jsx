@@ -1,7 +1,6 @@
 // beacon2/frontend/src/components/PortalVersion.jsx
 // Discrete version badge for portal screens — top-right corner.
 
-/* global __APP_VERSION__ */
 const APP_VERSION = typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : '';
 
 export default function PortalVersion() {

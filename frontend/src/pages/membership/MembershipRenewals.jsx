@@ -103,7 +103,7 @@ export default function MembershipRenewals() {
   // Filter members by period
   const filtered = useMemo(() => {
     if (!data) return [];
-    const { members: mems, yearStart, prevYearStart, nextYearStart } = data;
+    const { members: mems, prevYearStart, nextYearStart } = data;
     return mems.filter((m) => {
       const nr = m.next_renewal ? String(m.next_renewal).slice(0, 10) : null;
       if (period === 'next_year') {

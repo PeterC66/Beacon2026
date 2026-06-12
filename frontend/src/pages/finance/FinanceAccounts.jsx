@@ -2,7 +2,7 @@
 // Finance accounts management — 8.6 Finance Set-up, section 1.
 
 import { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { finance as financeApi } from '../../lib/api.js';
 import { useAuth } from '../../context/AuthContext.jsx';
 import NavBar from '../../components/NavBar.jsx';
@@ -10,7 +10,6 @@ import PageHeader from '../../components/PageHeader.jsx';
 
 const inputCls  = 'border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500';
 const btnPrimary = 'bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white rounded px-4 py-1.5 text-sm font-medium transition-colors';
-const btnSmall   = 'border border-slate-300 text-slate-700 hover:bg-slate-50 rounded px-3 py-1 text-xs transition-colors';
 const btnDanger  = 'border border-red-300 text-red-600 hover:bg-red-50 rounded px-3 py-1 text-xs transition-colors';
 
 export default function FinanceAccounts() {
@@ -88,7 +87,6 @@ export default function FinanceAccounts() {
     } catch (err) { alert(err.message); }
   }
 
-  const navigate  = useNavigate();
   const canChange = can('finance_accounts', 'change');
   const canCreate = can('finance_accounts', 'create');
   const canDelete = can('finance_accounts', 'delete');

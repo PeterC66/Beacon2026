@@ -1,7 +1,7 @@
 // beacon2/frontend/src/pages/public/PortalPersonalDetails.jsx
 // Members Portal — view and update personal details (doc 10.2.4).
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { portalApi, clearPortalToken } from '../../lib/api.js';
 import PortalVersion from '../../components/PortalVersion.jsx';

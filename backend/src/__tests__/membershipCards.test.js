@@ -1,7 +1,7 @@
 // Tests for membership cards routes (doc 4.7)
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import request from 'supertest';
-import { makeAuthHeader, TEST_TENANT } from './helpers.js';
+import { makeAuthHeader } from './helpers.js';
 
 vi.mock('../utils/redis.js', () => ({
   isSessionInvalidated:   vi.fn().mockResolvedValue(false),

@@ -3,7 +3,7 @@
 
 import crypto from 'crypto';
 import { tenantQuery, prisma } from '../utils/db.js';
-import { hashPassword, verifyPassword } from '../utils/password.js';
+import { verifyPassword } from '../utils/password.js';
 import { signAccessToken, signRefreshToken, verifyRefreshToken } from '../utils/jwt.js';
 import { invalidateUserSessions } from '../utils/redis.js';
 import { AppError } from '../middleware/errorHandler.js';

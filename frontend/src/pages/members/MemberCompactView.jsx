@@ -4,7 +4,7 @@
 // while remaining responsive on smaller screens.
 
 import { useState, useEffect } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
 import { members as membersApi, memberStatuses as statusApi, memberClasses as classApi, finance as financeApi, polls as pollsApi, settings as settingsApi } from '../../lib/api.js';
 import { useAuth } from '../../context/AuthContext.jsx';
 import NavBar from '../../components/NavBar.jsx';
@@ -41,20 +41,8 @@ function Field({ label, value, className = '' }) {
   );
 }
 
-// Full-width field for longer content
-function FieldWide({ label, value }) {
-  if (value === null || value === undefined || value === '') return null;
-  return (
-    <div className="flex items-baseline gap-1.5 min-w-0 col-span-full">
-      <span className="text-xs font-medium text-slate-500 whitespace-nowrap shrink-0">{label}</span>
-      <span className="text-sm text-slate-900">{value}</span>
-    </div>
-  );
-}
-
 export default function MemberCompactView() {
   const { id } = useParams();
-  const navigate = useNavigate();
   const { can, tenant } = useAuth();
 
   const [member, setMember]       = useState(null);
