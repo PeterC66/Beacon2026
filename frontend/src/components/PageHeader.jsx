@@ -3,7 +3,6 @@
 
 import BeaconLogo from './BeaconLogo.jsx';
 
-/* global __APP_VERSION__ */
 const APP_VERSION = typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : '';
 
 export default function PageHeader({ tenant }) {

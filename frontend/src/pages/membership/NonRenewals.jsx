@@ -1,7 +1,7 @@
 // beacon2/frontend/src/pages/membership/NonRenewals.jsx
 // Doc 4.6 — Non-renewals (Lapsed, Resigned, Deceased members)
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { members as membersApi } from '../../lib/api.js';
 import { useAuth } from '../../context/AuthContext.jsx';

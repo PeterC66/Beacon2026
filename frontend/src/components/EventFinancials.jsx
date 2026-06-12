@@ -112,7 +112,7 @@ export default function EventFinancials({ eventId }) {
   );
 }
 
-function TransactionSection({ title, transactions, eventId }) {
+function TransactionSection({ title, transactions }) {
   if (!transactions || transactions.length === 0) {
     return (
       <div>

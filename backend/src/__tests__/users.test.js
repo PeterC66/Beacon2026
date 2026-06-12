@@ -3,7 +3,7 @@
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import request from 'supertest';
-import { makeAuthHeader, TEST_TENANT, TEST_USER_ID } from './helpers.js';
+import { makeAuthHeader, TEST_USER_ID } from './helpers.js';
 
 // ── Module mocks ──────────────────────────────────────────────────────────
 

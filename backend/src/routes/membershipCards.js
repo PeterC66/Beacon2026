@@ -355,7 +355,6 @@ router.get('/download', requirePrivilege('membership_cards', 'download_and_mark'
 
     let col = 0;
     let row = 0;
-    let pageStarted = true;
 
     for (const member of members) {
       if (row >= ROWS) {

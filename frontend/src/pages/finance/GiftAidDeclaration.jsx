@@ -121,7 +121,7 @@ export default function GiftAidDeclaration() {
         if ((r.member_slot ?? 1) === 1) ids1.push(r.id);
         else ids2.push(r.id);
       }
-      const result = await giftAidApi.mark(ids1, ids2.length > 0 ? ids2 : undefined);
+      await giftAidApi.mark(ids1, ids2.length > 0 ? ids2 : undefined);
       setSaved(true);
       window.scrollTo({ top: 0, behavior: 'smooth' });
       clearTimeout(savedTimer.current);

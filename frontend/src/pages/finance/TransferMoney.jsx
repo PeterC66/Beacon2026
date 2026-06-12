@@ -2,7 +2,7 @@
 // Transfer money between finance accounts (doc 7.3).
 
 import { useState, useEffect, useRef } from 'react';
-import { finance as financeApi, requestBlob } from '../../lib/api.js';
+import { finance as financeApi } from '../../lib/api.js';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { useUnsavedChanges } from '../../hooks/useUnsavedChanges.js';
 import NavBar from '../../components/NavBar.jsx';
@@ -36,7 +36,6 @@ function fmtAmt(n) {
 export default function TransferMoney() {
   const { can, tenant } = useAuth();
   const [accounts,  setAccounts]  = useState([]);
-  const [groups,    setGroups]    = useState([]);
   const [transfers, setTransfers] = useState([]);
   const [loading,   setLoading]   = useState(true);
   const [error,     setError]     = useState(null);

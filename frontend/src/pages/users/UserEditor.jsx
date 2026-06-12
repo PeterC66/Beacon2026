@@ -36,7 +36,7 @@ export default function UserEditor() {
   const { markDirty, markClean } = useUnsavedChanges();
 
   // Existing user fields (for edit mode display)
-  const [userName, setUserName] = useState('');
+  const [, setUserName] = useState('');
 
   useEffect(() => {
     if (isNew) {

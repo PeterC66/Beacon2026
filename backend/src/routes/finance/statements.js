@@ -117,7 +117,7 @@ router.get('/statement', requireFeature('financialStatement'), requirePrivilege(
 // GET /finance/statement/download?accountId=&year=&format=xlsx — download Excel
 router.get('/statement/download', requireFeature('financialStatement'), requirePrivilege('finance_statement', 'download'), async (req, res, next) => {
   try {
-    const { accountId, year, format } = req.query;
+    const { accountId, year } = req.query;
     if (!accountId) throw AppError('accountId is required.', 400);
     const yearNum = year ? parseInt(year, 10) : new Date().getFullYear();
     const d = await getStatementData(req.user.tenantSlug, accountId, yearNum);

@@ -2,7 +2,7 @@
 // Audit record detail view — doc 9.2(a)
 
 import { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import { audit as auditApi } from '../../lib/api.js';
 import { useAuth } from '../../context/AuthContext.jsx';
 import NavBar from '../../components/NavBar.jsx';
@@ -10,7 +10,6 @@ import PageHeader from '../../components/PageHeader.jsx';
 
 export default function AuditRecord() {
   const { id } = useParams();
-  const navigate = useNavigate();
   const { tenant } = useAuth();
   const [entry, setEntry] = useState(null);
   const [loading, setLoading] = useState(true);

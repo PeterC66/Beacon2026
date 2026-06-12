@@ -636,9 +636,6 @@ export const email = {
     const form = new FormData();
     form.append('data', JSON.stringify(data));
     for (const f of attachments) form.append('attachments', f);
-    const headers = {
-      ...(typeof window !== 'undefined' && {}), // no Content-Type — browser sets with boundary
-    };
     return requestMultipart('/email/send', form);
   },
 

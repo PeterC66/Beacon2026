@@ -2,7 +2,6 @@
 // Manage group faculties (5.8)
 
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { faculties as facultiesApi } from '../../lib/api.js';
 import { useAuth } from '../../context/AuthContext.jsx';
 import NavBar from '../../components/NavBar.jsx';
@@ -12,7 +11,6 @@ import { useSortedData } from '../../hooks/useSortedData.js';
 
 export default function FacultyList() {
   const { can, tenant } = useAuth();
-  const navigate = useNavigate();
 
   const [list,    setList]    = useState([]);
   const [loading, setLoading] = useState(true);

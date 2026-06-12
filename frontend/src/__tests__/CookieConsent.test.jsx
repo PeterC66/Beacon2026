@@ -1,6 +1,6 @@
 // beacon2/frontend/src/__tests__/CookieConsent.test.jsx
 
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { render, fireEvent } from '@testing-library/react';
 import CookieConsent from '../components/CookieConsent.jsx';
 import { getConsentValue, hasOptionalCookieConsent, setConsent } from '../hooks/useCookieConsent.js';

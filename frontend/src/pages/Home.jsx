@@ -285,6 +285,7 @@ export default function Home() {
           </div>
 
           {/* Documents row (hidden for now — may be needed later) */}
+          {/* eslint-disable-next-line no-constant-binary-expression */}
           {false && (
           <div className="flex flex-wrap items-center gap-x-6 gap-y-1 px-4 py-2 text-sm">
             <span className="font-bold text-sm whitespace-nowrap">Documents</span>

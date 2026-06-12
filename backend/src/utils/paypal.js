@@ -3,6 +3,11 @@
 // This module defines the interface for PayPal payments.
 // Currently uses stub implementations for development/testing.
 // Replace the stub functions with real PayPal API calls when ready.
+//
+// The exported functions destructure their full documented parameter set even
+// though the stub bodies ignore most of them — keeping the real API shape
+// visible for whoever wires PayPal up. Disable the unused-args rule for the file.
+/* eslint-disable no-unused-vars */
 
 import { randomBytes } from 'crypto';
 

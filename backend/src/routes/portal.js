@@ -903,7 +903,7 @@ router.post('/request-card', async (req, res, next) => {
     const u3aName = tenant?.name ?? slug;
 
     if (template) {
-      const { subject, body } = resolveTokens(
+      const { subject } = resolveTokens(
         template.subject, template.body,
         { ...member }, u3aName,
       );
@@ -1389,7 +1389,7 @@ router.post('/renewal-confirm', async (req, res, next) => {
 
       const emailAddr = member.email;
       if (emailAddr) {
-        const { subject, body } = resolveTokens(
+        const { subject } = resolveTokens(
           template.subject, template.body,
           { ...member, class_name: member.class_name }, u3aName,
         );
@@ -1425,7 +1425,7 @@ router.post('/renewal-confirm', async (req, res, next) => {
         const pClassName = (await tenantQuery(slug,
           `SELECT name FROM member_classes WHERE id = $1`,
           [partnerMember.class_id]))[0]?.name ?? '';
-        const { subject, body } = resolveTokens(
+        const { subject } = resolveTokens(
           template.subject, template.body,
           { ...partnerMember, class_name: pClassName }, u3aName,
         );
@@ -1524,7 +1524,7 @@ async function sendDetailsUpdateEmail(slug, memberId, emailChanged) {
     const u3aName = tenant?.name ?? slug;
 
     if (template) {
-      const { subject, body } = resolveTokens(
+      const { subject } = resolveTokens(
         template.subject, template.body,
         member, u3aName,
       );

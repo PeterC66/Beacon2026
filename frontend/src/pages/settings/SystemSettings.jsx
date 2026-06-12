@@ -1,7 +1,6 @@
 // beacon2/frontend/src/pages/settings/SystemSettings.jsx
 
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext.jsx';
 import PageHeader from '../../components/PageHeader.jsx';
 import NavBar from '../../components/NavBar.jsx';

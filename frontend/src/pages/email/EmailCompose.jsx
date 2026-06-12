@@ -3,7 +3,7 @@
 // Member IDs are passed via sessionStorage key 'emailComposeMemberIds'.
 
 import { useState, useEffect, useRef } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { email as emailApi, members as membersApi } from '../../lib/api.js';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { hasOptionalCookieConsent } from '../../hooks/useCookieConsent.js';
@@ -56,8 +56,7 @@ const PARTNER_TOKENS = [
 ];
 
 export default function EmailCompose() {
-  const { can, tenant } = useAuth();
-  const navigate = useNavigate();
+  const { tenant } = useAuth();
 
   const [memberIds,   setMemberIds]   = useState([]);
   const [recipients,  setRecipients]  = useState([]); // { id, forenames, surname, email }

@@ -319,10 +319,6 @@ router.get('/labels', requirePrivilege('address_labels', 'download'), async (req
     const slugPart = slug.replace(/^u3a_/, '').replace(/_/g, '-');
     const stamp    = new Date().toISOString().slice(0, 10);
 
-    // A4 page dimensions in points
-    const PAGE_W = 595.28;
-    const PAGE_H = 841.89;
-
     const doc = new PDFDocument({ size: 'A4', margin: 0, autoFirstPage: true });
     const chunks = [];
     doc.on('data', (c) => chunks.push(c));

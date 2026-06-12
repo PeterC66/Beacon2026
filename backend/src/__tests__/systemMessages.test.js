@@ -3,7 +3,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import request from 'supertest';
 import app from '../app.js';
-import { makeAuthHeader, TEST_TENANT } from './helpers.js';
+import { makeAuthHeader } from './helpers.js';
 import { tenantQuery } from '../utils/db.js';
 
 vi.mock('../utils/db.js', () => ({
