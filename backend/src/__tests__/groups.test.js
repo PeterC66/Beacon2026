@@ -5,14 +5,14 @@ import request from 'supertest';
 import { makeAuthHeader } from './helpers.js';
 
 vi.mock('../utils/redis.js', () => ({
-  isSessionInvalidated:   vi.fn().mockResolvedValue(false),
+  isSessionInvalidated: vi.fn().mockResolvedValue(false),
   invalidateUserSessions: vi.fn().mockResolvedValue(undefined),
 }));
 
 vi.mock('../utils/db.js', () => ({
-  prisma:      { $disconnect: vi.fn() },
+  prisma: { $disconnect: vi.fn() },
   tenantQuery: vi.fn(),
-  withTenant:  vi.fn(),
+  withTenant: vi.fn(),
 }));
 
 const { default: app } = await import('../app.js');
@@ -21,17 +21,32 @@ const { tenantQuery } = await import('../utils/db.js');
 const AUTH = makeAuthHeader();
 
 const SAMPLE_GROUP = {
-  id: 'g1', name: 'Watercolour', faculty_id: null, faculty_name: null,
-  status: 'active', when_text: 'Every Monday', max_members: null,
-  show_addresses: false, member_count: 3, leaders: [],
+  id: 'g1',
+  name: 'Watercolour',
+  faculty_id: null,
+  faculty_name: null,
+  status: 'active',
+  when_text: 'Every Monday',
+  max_members: null,
+  show_addresses: false,
+  member_count: 3,
+  leaders: [],
 };
 
 const SAMPLE_GROUP_FULL = {
   ...SAMPLE_GROUP,
-  start_time: null, end_time: null, venue: null, enquiries: null,
-  allow_online_join: false, enable_waiting_list: false, notify_leader: false,
-  display_waiting_list: false, information: null, notes: null,
-  created_at: new Date().toISOString(), updated_at: new Date().toISOString(),
+  start_time: null,
+  end_time: null,
+  venue: null,
+  enquiries: null,
+  allow_online_join: false,
+  enable_waiting_list: false,
+  notify_leader: false,
+  display_waiting_list: false,
+  information: null,
+  notes: null,
+  created_at: new Date().toISOString(),
+  updated_at: new Date().toISOString(),
 };
 
 // ── GET /groups ────────────────────────────────────────────────────────────
@@ -52,7 +67,9 @@ describe('GET /groups', () => {
   });
 
   it('returns 403 without privilege', async () => {
-    const res = await request(app).get('/groups').set('Authorization', makeAuthHeader({ privileges: [] }));
+    const res = await request(app)
+      .get('/groups')
+      .set('Authorization', makeAuthHeader({ privileges: [] }));
     expect(res.status).toBe(403);
   });
 });
@@ -83,7 +100,10 @@ describe('POST /groups', () => {
 
   it('creates a group and returns 201', async () => {
     tenantQuery.mockResolvedValueOnce([SAMPLE_GROUP_FULL]);
-    const res = await request(app).post('/groups').set('Authorization', AUTH).send({ name: 'Watercolour' });
+    const res = await request(app)
+      .post('/groups')
+      .set('Authorization', AUTH)
+      .send({ name: 'Watercolour' });
     expect(res.status).toBe(201);
     expect(res.body.name).toBe('Watercolour');
   });
@@ -101,7 +121,10 @@ describe('PATCH /groups/:id', () => {
 
   it('updates a group', async () => {
     tenantQuery.mockResolvedValueOnce([{ ...SAMPLE_GROUP_FULL, name: 'Oils' }]);
-    const res = await request(app).patch('/groups/g1').set('Authorization', AUTH).send({ name: 'Oils' });
+    const res = await request(app)
+      .patch('/groups/g1')
+      .set('Authorization', AUTH)
+      .send({ name: 'Oils' });
     expect(res.status).toBe(200);
     expect(res.body.name).toBe('Oils');
   });
@@ -112,8 +135,11 @@ describe('PATCH /groups/:id', () => {
   });
 
   it('returns 404 when not found', async () => {
-    tenantQuery.mockResolvedValueOnce([]);  // UPDATE returns empty
-    const res = await request(app).patch('/groups/unknown').set('Authorization', AUTH).send({ name: 'X' });
+    tenantQuery.mockResolvedValueOnce([]); // UPDATE returns empty
+    const res = await request(app)
+      .patch('/groups/unknown')
+      .set('Authorization', AUTH)
+      .send({ name: 'X' });
     expect(res.status).toBe(404);
   });
 });
@@ -125,8 +151,8 @@ describe('DELETE /groups/:id', () => {
 
   it('deletes a group', async () => {
     tenantQuery
-      .mockResolvedValueOnce([{ id: 'g1' }])  // exists check
-      .mockResolvedValueOnce([]);              // delete
+      .mockResolvedValueOnce([{ id: 'g1' }]) // exists check
+      .mockResolvedValueOnce([]); // delete
     const res = await request(app).delete('/groups/g1').set('Authorization', AUTH);
     expect(res.status).toBe(200);
     expect(res.body.message).toMatch(/deleted/i);
@@ -146,8 +172,17 @@ describe('GET /groups/:id/members', () => {
 
   it('returns 200 with member list', async () => {
     tenantQuery
-      .mockResolvedValueOnce([{ id: 'g1' }])   // group exists
-      .mockResolvedValueOnce([{ gm_id: 'gm1', member_id: 'm1', forenames: 'Jane', surname: 'Doe', is_leader: false, waiting_since: null }]);
+      .mockResolvedValueOnce([{ id: 'g1' }]) // group exists
+      .mockResolvedValueOnce([
+        {
+          gm_id: 'gm1',
+          member_id: 'm1',
+          forenames: 'Jane',
+          surname: 'Doe',
+          is_leader: false,
+          waiting_since: null,
+        },
+      ]);
     const res = await request(app).get('/groups/g1/members').set('Authorization', AUTH);
     expect(res.status).toBe(200);
     expect(res.body[0].surname).toBe('Doe');
@@ -167,12 +202,26 @@ describe('POST /groups/:id/members', () => {
 
   it('adds a member by memberId', async () => {
     tenantQuery
-      .mockResolvedValueOnce([{ id: 'g1' }])                                  // group exists
-      .mockResolvedValueOnce([{ id: 'm1', membership_number: 42, forenames: 'Jane', surname: 'Doe' }])  // member lookup
-      .mockResolvedValueOnce([])                                               // not already in group
-      .mockResolvedValueOnce([{ max_members: null, enable_waiting_list: false, joined_count: 0 }])  // max_members check
-      .mockResolvedValueOnce([{ id: 'gm1', group_id: 'g1', member_id: 'm1', is_leader: false, waiting_since: null, created_at: new Date().toISOString() }]);
-    const res = await request(app).post('/groups/g1/members').set('Authorization', AUTH).send({ memberId: 'm1' });
+      .mockResolvedValueOnce([{ id: 'g1' }]) // group exists
+      .mockResolvedValueOnce([
+        { id: 'm1', membership_number: 42, forenames: 'Jane', surname: 'Doe' },
+      ]) // member lookup
+      .mockResolvedValueOnce([]) // not already in group
+      .mockResolvedValueOnce([{ max_members: null, enable_waiting_list: false, joined_count: 0 }]) // max_members check
+      .mockResolvedValueOnce([
+        {
+          id: 'gm1',
+          group_id: 'g1',
+          member_id: 'm1',
+          is_leader: false,
+          waiting_since: null,
+          created_at: new Date().toISOString(),
+        },
+      ]);
+    const res = await request(app)
+      .post('/groups/g1/members')
+      .set('Authorization', AUTH)
+      .send({ memberId: 'm1' });
     expect(res.status).toBe(201);
     expect(res.body.member_id).toBe('m1');
   });
@@ -180,9 +229,14 @@ describe('POST /groups/:id/members', () => {
   it('returns 409 when member already in group', async () => {
     tenantQuery
       .mockResolvedValueOnce([{ id: 'g1' }])
-      .mockResolvedValueOnce([{ id: 'm1', membership_number: 42, forenames: 'Jane', surname: 'Doe' }])
-      .mockResolvedValueOnce([{ id: 'gm1' }]);  // already exists
-    const res = await request(app).post('/groups/g1/members').set('Authorization', AUTH).send({ memberId: 'm1' });
+      .mockResolvedValueOnce([
+        { id: 'm1', membership_number: 42, forenames: 'Jane', surname: 'Doe' },
+      ])
+      .mockResolvedValueOnce([{ id: 'gm1' }]); // already exists
+    const res = await request(app)
+      .post('/groups/g1/members')
+      .set('Authorization', AUTH)
+      .send({ memberId: 'm1' });
     expect(res.status).toBe(409);
   });
 
@@ -199,14 +253,20 @@ describe('PATCH /groups/:id/members/:memberId', () => {
 
   it('makes member a leader', async () => {
     tenantQuery.mockResolvedValueOnce([{ id: 'gm1', member_id: 'm1', is_leader: true }]);
-    const res = await request(app).patch('/groups/g1/members/m1').set('Authorization', AUTH).send({ isLeader: true });
+    const res = await request(app)
+      .patch('/groups/g1/members/m1')
+      .set('Authorization', AUTH)
+      .send({ isLeader: true });
     expect(res.status).toBe(200);
     expect(res.body.is_leader).toBe(true);
   });
 
   it('returns 404 when group member not found', async () => {
     tenantQuery.mockResolvedValueOnce([]);
-    const res = await request(app).patch('/groups/g1/members/unknown').set('Authorization', AUTH).send({ isLeader: true });
+    const res = await request(app)
+      .patch('/groups/g1/members/unknown')
+      .set('Authorization', AUTH)
+      .send({ isLeader: true });
     expect(res.status).toBe(404);
   });
 });
@@ -241,7 +301,9 @@ describe('DELETE /groups/:id/members/bulk', () => {
     const res = await request(app)
       .delete('/groups/g1/members/bulk')
       .set('Authorization', AUTH)
-      .send({ memberIds: ['aaaaaaaa-0000-0000-0000-000000000001', 'aaaaaaaa-0000-0000-0000-000000000002'] });
+      .send({
+        memberIds: ['aaaaaaaa-0000-0000-0000-000000000001', 'aaaaaaaa-0000-0000-0000-000000000002'],
+      });
     expect(res.status).toBe(200);
     expect(res.body.removed).toBe(2);
   });
@@ -270,7 +332,9 @@ describe('POST /groups/:id/members/bulk-add', () => {
   beforeEach(() => vi.clearAllMocks());
 
   it('adds members to target group', async () => {
-    tenantQuery.mockResolvedValueOnce([{ id: 'g2', max_members: null, enable_waiting_list: false }]); // target group
+    tenantQuery.mockResolvedValueOnce([
+      { id: 'g2', max_members: null, enable_waiting_list: false },
+    ]); // target group
     tenantQuery.mockResolvedValueOnce([{ count: 0 }]); // joined count
     tenantQuery.mockResolvedValueOnce([]); // no existing members
     tenantQuery.mockResolvedValueOnce([{ id: 'gm1' }]); // insert member 1
@@ -288,7 +352,9 @@ describe('POST /groups/:id/members/bulk-add', () => {
   });
 
   it('skips members already in target group', async () => {
-    tenantQuery.mockResolvedValueOnce([{ id: 'g2', max_members: null, enable_waiting_list: false }]); // target group
+    tenantQuery.mockResolvedValueOnce([
+      { id: 'g2', max_members: null, enable_waiting_list: false },
+    ]); // target group
     tenantQuery.mockResolvedValueOnce([{ count: 0 }]); // joined count
     tenantQuery.mockResolvedValueOnce([{ member_id: 'aaaaaaaa-0000-0000-0000-000000000001' }]); // m1 already in
     tenantQuery.mockResolvedValueOnce([{ id: 'gm2' }]); // insert member 2
@@ -320,9 +386,15 @@ describe('POST /groups/:id/members/bulk-add', () => {
 // ── GET /groups/:id/ledger ─────────────────────────────────────────────────
 
 const SAMPLE_ENTRY = {
-  id: 'e1', group_id: 'g1', entry_date: '2026-01-10',
-  payee: 'Art shop', detail: 'Brushes', money_in: null, money_out: '12.50',
-  created_at: new Date().toISOString(), updated_at: new Date().toISOString(),
+  id: 'e1',
+  group_id: 'g1',
+  entry_date: '2026-01-10',
+  payee: 'Art shop',
+  detail: 'Brushes',
+  money_in: null,
+  money_out: '12.50',
+  created_at: new Date().toISOString(),
+  updated_at: new Date().toISOString(),
 };
 
 describe('GET /groups/:id/ledger', () => {
@@ -330,8 +402,8 @@ describe('GET /groups/:id/ledger', () => {
 
   it('returns broughtForward and entries', async () => {
     tenantQuery
-      .mockResolvedValueOnce([{ bf: '5.00' }])  // broughtForward sum (aliased as bf in SQL)
-      .mockResolvedValueOnce([SAMPLE_ENTRY]);    // entries
+      .mockResolvedValueOnce([{ bf: '5.00' }]) // broughtForward sum (aliased as bf in SQL)
+      .mockResolvedValueOnce([SAMPLE_ENTRY]); // entries
     const res = await request(app).get('/groups/g1/ledger').set('Authorization', AUTH);
     expect(res.status).toBe(200);
     expect(res.body.broughtForward).toBe(5);
@@ -361,7 +433,7 @@ describe('POST /groups/:id/ledger', () => {
     const res = await request(app)
       .post('/groups/g1/ledger')
       .set('Authorization', AUTH)
-      .send({ entryDate: '2026-01-10', payee: 'Art shop', moneyOut: 12.50 });
+      .send({ entryDate: '2026-01-10', payee: 'Art shop', moneyOut: 12.5 });
     expect(res.status).toBe(201);
     expect(res.body.id).toBe('e2');
   });
@@ -407,9 +479,7 @@ describe('DELETE /groups/:id/ledger/:entryId', () => {
 
   it('deletes an entry', async () => {
     tenantQuery.mockResolvedValueOnce([]);
-    const res = await request(app)
-      .delete('/groups/g1/ledger/e1')
-      .set('Authorization', AUTH);
+    const res = await request(app).delete('/groups/g1/ledger/e1').set('Authorization', AUTH);
     expect(res.status).toBe(204);
   });
 });
@@ -418,21 +488,24 @@ describe('DELETE /groups/:id/ledger/:entryId', () => {
 
 const SAMPLE_TEAM = { id: 't1', type: 'team' };
 const SAMPLE_TEAM_EVENT = {
-  id: 'te1', event_date: '2026-05-01', start_time: '10:00', end_time: '12:00',
-  venue_id: 'v1', venue_name: 'Town Hall', topic: 'Planning', contact: 'Jane',
-  details: null, is_private: false,
+  id: 'te1',
+  event_date: '2026-05-01',
+  start_time: '10:00',
+  end_time: '12:00',
+  venue_id: 'v1',
+  venue_name: 'Town Hall',
+  topic: 'Planning',
+  contact: 'Jane',
+  details: null,
+  is_private: false,
 };
 
 describe('GET /teams/:id/events', () => {
   beforeEach(() => vi.clearAllMocks());
 
   it('returns events for a team', async () => {
-    tenantQuery
-      .mockResolvedValueOnce([SAMPLE_TEAM])
-      .mockResolvedValueOnce([SAMPLE_TEAM_EVENT]);
-    const res = await request(app)
-      .get('/teams/t1/events')
-      .set('Authorization', AUTH);
+    tenantQuery.mockResolvedValueOnce([SAMPLE_TEAM]).mockResolvedValueOnce([SAMPLE_TEAM_EVENT]);
+    const res = await request(app).get('/teams/t1/events').set('Authorization', AUTH);
     expect(res.status).toBe(200);
     expect(res.body).toHaveLength(1);
     expect(res.body[0].topic).toBe('Planning');
@@ -440,9 +513,7 @@ describe('GET /teams/:id/events', () => {
 
   it('returns 404 for non-existent team', async () => {
     tenantQuery.mockResolvedValueOnce([]);
-    const res = await request(app)
-      .get('/teams/bad/events')
-      .set('Authorization', AUTH);
+    const res = await request(app).get('/teams/bad/events').set('Authorization', AUTH);
     expect(res.status).toBe(404);
   });
 });

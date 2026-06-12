@@ -31,7 +31,7 @@ router.get('/', requirePrivilege('system_messages', 'view'), async (req, res, ne
 // ─── PATCH /system-messages/:id ────────────────────────────────────────────
 const updateSchema = z.object({
   subject: z.string().optional(),
-  body:    z.string().optional(),
+  body: z.string().optional(),
 });
 
 router.patch('/:id', requirePrivilege('system_messages', 'change'), async (req, res, next) => {
@@ -41,8 +41,14 @@ router.patch('/:id', requirePrivilege('system_messages', 'change'), async (req, 
     const values = [];
     let i = 1;
 
-    if (data.subject !== undefined) { fields.push(`subject = $${i++}`); values.push(data.subject); }
-    if (data.body    !== undefined) { fields.push(`body = $${i++}`);    values.push(data.body); }
+    if (data.subject !== undefined) {
+      fields.push(`subject = $${i++}`);
+      values.push(data.subject);
+    }
+    if (data.body !== undefined) {
+      fields.push(`body = $${i++}`);
+      values.push(data.body);
+    }
 
     if (fields.length === 0) return res.status(400).json({ error: 'Nothing to update.' });
 
@@ -59,9 +65,12 @@ router.patch('/:id', requirePrivilege('system_messages', 'change'), async (req, 
     if (!updated) return res.status(404).json({ error: 'System message not found.' });
 
     logAudit(req.user.tenantSlug, {
-      userId: req.user.userId, userName: req.user.name,
-      action: 'update', entityType: 'system_message',
-      entityId: updated.id, entityName: updated.name,
+      userId: req.user.userId,
+      userName: req.user.name,
+      action: 'update',
+      entityType: 'system_message',
+      entityId: updated.id,
+      entityName: updated.name,
     });
 
     res.json(updated);

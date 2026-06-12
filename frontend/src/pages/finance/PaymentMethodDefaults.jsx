@@ -12,19 +12,21 @@ import { FINANCE_PAYMENT_METHODS } from '../../lib/constants.js';
 
 const PAYMENT_METHODS = ['', ...FINANCE_PAYMENT_METHODS];
 
-const inputCls   = 'border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500';
-const btnPrimary = 'bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white rounded px-5 py-2 text-sm font-medium transition-colors';
+const inputCls =
+  'border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500';
+const btnPrimary =
+  'bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white rounded px-5 py-2 text-sm font-medium transition-colors';
 
 export default function PaymentMethodDefaults() {
   const navigate = useNavigate();
   const { can, tenant } = useAuth();
 
-  const [loading,       setLoading]       = useState(true);
-  const [saving,        setSaving]        = useState(false);
-  const [error,         setError]         = useState(null);
-  const [accounts,      setAccounts]      = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState(null);
+  const [accounts, setAccounts] = useState([]);
   const [defaultMethod, setDefaultMethod] = useState('');
-  const [mappings,      setMappings]      = useState({});  // { paymentMethod: accountId }
+  const [mappings, setMappings] = useState({}); // { paymentMethod: accountId }
 
   useEffect(() => {
     async function load() {
@@ -64,14 +66,19 @@ export default function PaymentMethodDefaults() {
   }
 
   const canChange = can('finance_accounts', 'change');
-  const navLinks  = [{ label: 'Home', to: '/' }, { label: 'Finance accounts', to: '/finance/accounts' }];
+  const navLinks = [
+    { label: 'Home', to: '/' },
+    { label: 'Finance accounts', to: '/finance/accounts' },
+  ];
 
-  if (loading) return (
-    <div className="min-h-screen pb-10">
-      <PageHeader tenant={tenant} /><NavBar links={navLinks} />
-      <p className="text-center mt-10 text-slate-500">Loading…</p>
-    </div>
-  );
+  if (loading)
+    return (
+      <div className="min-h-screen pb-10">
+        <PageHeader tenant={tenant} />
+        <NavBar links={navLinks} />
+        <p className="text-center mt-10 text-slate-500">Loading…</p>
+      </div>
+    );
 
   return (
     <div className="min-h-screen pb-10">
@@ -84,7 +91,6 @@ export default function PaymentMethodDefaults() {
         {error && <p className="text-center text-red-600 mb-4">Error: {error}</p>}
 
         <form onSubmit={handleSave} className="bg-white/90 rounded-lg shadow-sm p-6 space-y-5">
-
           {/* Default membership payment method */}
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1">
@@ -98,7 +104,9 @@ export default function PaymentMethodDefaults() {
               disabled={!canChange}
             >
               {PAYMENT_METHODS.map((m) => (
-                <option key={m} value={m}>{m || '— none —'}</option>
+                <option key={m} value={m}>
+                  {m || '— none —'}
+                </option>
               ))}
             </select>
           </div>
@@ -130,7 +138,9 @@ export default function PaymentMethodDefaults() {
                         >
                           <option value="">— none —</option>
                           {accounts.map((a) => (
-                            <option key={a.id} value={a.id}>{a.name}</option>
+                            <option key={a.id} value={a.id}>
+                              {a.name}
+                            </option>
                           ))}
                         </select>
                       </td>
@@ -146,15 +156,21 @@ export default function PaymentMethodDefaults() {
               <button type="submit" disabled={saving} className={btnPrimary}>
                 {saving ? 'Saving…' : 'Save'}
               </button>
-              <button type="button" onClick={() => navigate('/finance/accounts')}
-                className="border border-slate-300 text-slate-700 hover:bg-slate-50 rounded px-5 py-2 text-sm transition-colors">
+              <button
+                type="button"
+                onClick={() => navigate('/finance/accounts')}
+                className="border border-slate-300 text-slate-700 hover:bg-slate-50 rounded px-5 py-2 text-sm transition-colors"
+              >
                 Cancel
               </button>
             </div>
           )}
           {!canChange && (
-            <button type="button" onClick={() => navigate('/finance/accounts')}
-              className="border border-slate-300 text-slate-700 hover:bg-slate-50 rounded px-5 py-2 text-sm transition-colors">
+            <button
+              type="button"
+              onClick={() => navigate('/finance/accounts')}
+              className="border border-slate-300 text-slate-700 hover:bg-slate-50 rounded px-5 py-2 text-sm transition-colors"
+            >
               Back
             </button>
           )}

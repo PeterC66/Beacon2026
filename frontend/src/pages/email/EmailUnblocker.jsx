@@ -11,9 +11,9 @@ import PageHeader from '../../components/PageHeader.jsx';
 export default function EmailUnblocker() {
   const { tenant } = useAuth();
   const [emailAddr, setEmailAddr] = useState('');
-  const [working,   setWorking]   = useState(false);
-  const [result,    setResult]    = useState(null);
-  const [error,     setError]     = useState(null);
+  const [working, setWorking] = useState(false);
+  const [result, setResult] = useState(null);
+  const [error, setError] = useState(null);
 
   async function handleUnblock(e) {
     e.preventDefault();
@@ -48,12 +48,15 @@ export default function EmailUnblocker() {
           </p>
           <p className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded px-3 py-2 mb-4">
             <strong>Note:</strong> Only use this if you have confirmed the email address is valid
-            and the owner has indicated it can be unblocked. Copy/paste the address to avoid typing errors.
+            and the owner has indicated it can be unblocked. Copy/paste the address to avoid typing
+            errors.
           </p>
 
           <form onSubmit={handleUnblock} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Email address to unblock</label>
+              <label className="block text-sm font-medium text-slate-700 mb-1">
+                Email address to unblock
+              </label>
               <input
                 type="email"
                 name="emailAddr"
@@ -65,9 +68,7 @@ export default function EmailUnblocker() {
               />
             </div>
 
-            {error && (
-              <p className="text-red-600 text-sm">{error}</p>
-            )}
+            {error && <p className="text-red-600 text-sm">{error}</p>}
             {result && (
               <div className="bg-green-50 border border-green-200 rounded px-4 py-3 text-green-700 text-sm">
                 {result}

@@ -16,19 +16,27 @@ vi.mock('../context/AuthContext.jsx', () => ({
 
 vi.mock('../lib/api.js', () => ({
   offices: {
-    list:        vi.fn().mockResolvedValue([]),
+    list: vi.fn().mockResolvedValue([]),
     listMembers: vi.fn().mockResolvedValue([]),
   },
 }));
 
 describe('OfficerList page', () => {
   it('renders without crashing', () => {
-    const { container } = render(<MemoryRouter><OfficerList /></MemoryRouter>);
+    const { container } = render(
+      <MemoryRouter>
+        <OfficerList />
+      </MemoryRouter>,
+    );
     expect(container).toBeTruthy();
   });
 
   it('shows the u3a Offices heading', () => {
-    const { getByText } = render(<MemoryRouter><OfficerList /></MemoryRouter>);
+    const { getByText } = render(
+      <MemoryRouter>
+        <OfficerList />
+      </MemoryRouter>,
+    );
     expect(getByText('u3a Offices and Post Holders')).toBeInTheDocument();
   });
 });

@@ -12,11 +12,11 @@ import ReportResults from './ReportResults.jsx';
 export default function ReportSql() {
   const { isSiteAdmin, tenant } = useAuth();
 
-  const [sql, setSql]         = useState('SELECT * FROM members LIMIT 10');
+  const [sql, setSql] = useState('SELECT * FROM members LIMIT 10');
   const [running, setRunning] = useState(false);
   const [downloading, setDown] = useState(false);
-  const [result, setResult]   = useState(null);
-  const [error, setError]     = useState(null);
+  const [result, setResult] = useState(null);
+  const [error, setError] = useState(null);
 
   async function handleRun() {
     setRunning(true);
@@ -44,11 +44,12 @@ export default function ReportSql() {
   }
 
   const navLinks = [
-    { label: 'Home',    to: '/' },
+    { label: 'Home', to: '/' },
     { label: 'Reports', to: '/reports' },
   ];
 
-  const inputCls = 'border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500';
+  const inputCls =
+    'border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500';
 
   if (!isSiteAdmin) {
     return (
@@ -70,22 +71,33 @@ export default function ReportSql() {
       <div className="max-w-5xl mx-auto px-4 py-4">
         <h1 className="text-xl font-bold text-center mb-1">Ad-hoc SQL</h1>
         <p className="text-sm text-slate-600 text-center mb-4">
-          Read-only queries only — SELECT or WITH, single statement. Runs against your tenant schema.
+          Read-only queries only — SELECT or WITH, single statement. Runs against your tenant
+          schema.
         </p>
 
         <div className="bg-white/90 rounded-lg shadow-sm p-4 mb-4">
-          <textarea className={`${inputCls} w-full font-mono text-xs`}
-            value={sql} onChange={(e) => setSql(e.target.value)}
-            rows={10} maxLength={20000}
-            placeholder="SELECT …" />
+          <textarea
+            className={`${inputCls} w-full font-mono text-xs`}
+            value={sql}
+            onChange={(e) => setSql(e.target.value)}
+            rows={10}
+            maxLength={20000}
+            placeholder="SELECT …"
+          />
           <div className="flex gap-2 mt-3">
-            <button onClick={handleRun} disabled={running || !sql.trim()}
-              className="bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white rounded px-5 py-2 text-sm font-medium">
+            <button
+              onClick={handleRun}
+              disabled={running || !sql.trim()}
+              className="bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white rounded px-5 py-2 text-sm font-medium"
+            >
               {running ? 'Running…' : 'Run'}
             </button>
             {result && result.rowCount > 0 && (
-              <button onClick={handleDownload} disabled={downloading}
-                className="border border-slate-300 rounded px-5 py-2 text-sm hover:bg-slate-50 disabled:opacity-50">
+              <button
+                onClick={handleDownload}
+                disabled={downloading}
+                className="border border-slate-300 rounded px-5 py-2 text-sm hover:bg-slate-50 disabled:opacity-50"
+              >
                 {downloading ? 'Preparing…' : 'Download Excel'}
               </button>
             )}

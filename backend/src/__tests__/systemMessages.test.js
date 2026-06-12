@@ -3,7 +3,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import request from 'supertest';
 import app from '../app.js';
-import { makeAuthHeader, TEST_TENANT } from './helpers.js';
+import { makeAuthHeader } from './helpers.js';
 import { tenantQuery } from '../utils/db.js';
 
 vi.mock('../utils/db.js', () => ({
@@ -22,12 +22,16 @@ describe('System Messages routes', () => {
 
   it('GET /system-messages returns list', async () => {
     tenantQuery.mockResolvedValueOnce([
-      { id: 'online_join_confirm', name: 'Online Joining Confirmation', subject: 'Welcome', body: 'Hello', updated_at: new Date() },
+      {
+        id: 'online_join_confirm',
+        name: 'Online Joining Confirmation',
+        subject: 'Welcome',
+        body: 'Hello',
+        updated_at: new Date(),
+      },
     ]);
 
-    const res = await request(app)
-      .get('/system-messages')
-      .set('Authorization', auth);
+    const res = await request(app).get('/system-messages').set('Authorization', auth);
 
     expect(res.status).toBe(200);
     expect(res.body).toHaveLength(1);
@@ -36,7 +40,13 @@ describe('System Messages routes', () => {
 
   it('PATCH /system-messages/:id updates message', async () => {
     tenantQuery.mockResolvedValueOnce([
-      { id: 'online_join_confirm', name: 'Online Joining Confirmation', subject: 'Updated', body: 'New body', updated_at: new Date() },
+      {
+        id: 'online_join_confirm',
+        name: 'Online Joining Confirmation',
+        subject: 'Updated',
+        body: 'New body',
+        updated_at: new Date(),
+      },
     ]);
 
     const res = await request(app)

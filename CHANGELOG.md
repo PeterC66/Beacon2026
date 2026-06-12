@@ -8,6 +8,17 @@ Format: `## [version] — YYYY-MM-DD` with bullet points per change.
 ## [Unreleased] — 2026-06-12
 
 ### Added
+- **Linting & formatting baseline (ImprovementPlan Chunk 3, findings T1/T2)** —
+  added ESLint 9 (flat config) and Prettier to both `backend/` and
+  `frontend/`. The frontend config uses `eslint-plugin-react` plus the
+  stable `eslint-plugin-react-hooks` v5 (`rules-of-hooks` as an error,
+  `exhaustive-deps` as a warning). New `lint`, `lint:fix`, `format`, and
+  `format:check` scripts in each package. CI (`ci.yml`) now runs `lint`
+  and `format:check` for both packages and was bumped from Node 20 to
+  Node 22 to match the e2e workflow. Added a root `.editorconfig`,
+  `.prettierrc.json` (single quotes, semicolons, trailing commas, 100-col),
+  and `.prettierignore`.
+
 - **`docs/ImprovementPlan.md`** — consolidated full-codebase review
   (security, completeness, consistency, maintainability, readability,
   standards, production readiness). Findings are grouped into 12
@@ -19,7 +30,20 @@ Format: `## [version] — YYYY-MM-DD` with bullet points per change.
   `tenantQuery()` accepts the coerced string `"undefined"` as a slug —
   see Chunk 1. No code changes this session.
 
+### Changed
+- **Whole codebase reformatted with Prettier** (ImprovementPlan Chunk 3) —
+  a one-time, behaviour-preserving reflow of all backend and frontend
+  source plus `shared/constants.js`, committed separately from the
+  tooling/lint-fix changes. No logic changes.
+
 ### Fixed
+- **ESLint violations cleared (ImprovementPlan Chunk 3)** — removed unused
+  imports and variables and dropped dead destructured bindings across 27
+  backend and ~25 frontend files (e.g. unused `useNavigate`/`Link` imports,
+  an orphaned `headers` object in `lib/api.js`, dead `PAGE_W`/`PAGE_H` and
+  `monthName`/`MONTHS` locals). The intentional PayPal stub (`utils/paypal.js`)
+  and the retained-for-reference role-privilege migration (`utils/migrate.js`)
+  carry targeted `eslint-disable` comments instead.
 - **Tenant-context bug in email & letters routes (ImprovementPlan Chunk 1,
   finding S1)** — `routes/email.js` (19 sites) and `routes/letters.js`
   (5 sites) read `req.tenantSlug`, which is only set by the public-routes

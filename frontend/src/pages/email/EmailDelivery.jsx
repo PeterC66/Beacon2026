@@ -12,19 +12,25 @@ import ScrollButtons from '../../components/ScrollButtons.jsx';
 function fmtDateTime(ts) {
   if (!ts) return '';
   const d = new Date(ts);
-  return d.toLocaleDateString('en-GB') + ' ' + d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+  return (
+    d.toLocaleDateString('en-GB') +
+    ' ' +
+    d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })
+  );
 }
 
 export default function EmailDelivery() {
   const { tenant } = useAuth();
   const [batches, setBatches] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error,   setError]   = useState(null);
-  const [from,    setFrom]    = useState('');
-  const [to,      setTo]      = useState('');
+  const [error, setError] = useState(null);
+  const [from, setFrom] = useState('');
+  const [to, setTo] = useState('');
   const tableRef = useRef(null);
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => {
+    load();
+  }, []);
 
   async function load() {
     setLoading(true);
@@ -53,15 +59,30 @@ export default function EmailDelivery() {
         <div className="bg-white/90 rounded-lg shadow-sm p-3 mb-4 flex flex-wrap gap-3 items-end">
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1">From</label>
-            <input type="date" name="from" value={from} onChange={(e) => setFrom(e.target.value)}
-              className="border border-slate-300 rounded px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+            <input
+              type="date"
+              name="from"
+              value={from}
+              onChange={(e) => setFrom(e.target.value)}
+              className="border border-slate-300 rounded px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
           </div>
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1">To</label>
-            <input type="date" name="to" value={to} onChange={(e) => setTo(e.target.value)}
-              className="border border-slate-300 rounded px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+            <input
+              type="date"
+              name="to"
+              value={to}
+              onChange={(e) => setTo(e.target.value)}
+              className="border border-slate-300 rounded px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
           </div>
-          <button onClick={load} className="bg-blue-600 hover:bg-blue-700 text-white rounded px-4 py-1.5 text-sm">Search</button>
+          <button
+            onClick={load}
+            className="bg-blue-600 hover:bg-blue-700 text-white rounded px-4 py-1.5 text-sm"
+          >
+            Search
+          </button>
         </div>
 
         {error && <p className="text-red-600 text-sm mb-3">{error}</p>}
@@ -78,7 +99,9 @@ export default function EmailDelivery() {
                     <th className="px-4 py-2.5 text-left font-medium text-slate-700">Sent</th>
                     <th className="px-4 py-2.5 text-left font-medium text-slate-700">Subject</th>
                     <th className="px-4 py-2.5 text-left font-medium text-slate-700">From</th>
-                    <th className="px-4 py-2.5 text-right font-medium text-slate-700">Recipients</th>
+                    <th className="px-4 py-2.5 text-right font-medium text-slate-700">
+                      Recipients
+                    </th>
                     <th className="px-4 py-2.5"></th>
                   </tr>
                 </thead>
@@ -90,7 +113,12 @@ export default function EmailDelivery() {
                       <td className="px-4 py-2 text-slate-500 text-xs">{b.from_email}</td>
                       <td className="px-4 py-2 text-right">{b.recipient_count}</td>
                       <td className="px-4 py-2">
-                        <Link to={`/email/delivery/${b.id}`} className="text-blue-700 hover:underline text-xs">View status</Link>
+                        <Link
+                          to={`/email/delivery/${b.id}`}
+                          className="text-blue-700 hover:underline text-xs"
+                        >
+                          View status
+                        </Link>
                       </td>
                     </tr>
                   ))}

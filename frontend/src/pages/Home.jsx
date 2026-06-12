@@ -13,11 +13,16 @@ export default function Home() {
   const navigate = useNavigate();
 
   const [homeInfo, setHomeInfo] = useState(null);
-  const [upcomingExpanded, setUpcomingExpanded] = useState(() => getPreferences().upcomingEventsExpanded);
+  const [upcomingExpanded, setUpcomingExpanded] = useState(
+    () => getPreferences().upcomingEventsExpanded,
+  );
   const [upcomingEvents, setUpcomingEvents] = useState(null); // null = not loaded
 
   useEffect(() => {
-    settingsApi.getHomeInfo().then(setHomeInfo).catch(() => {});
+    settingsApi
+      .getHomeInfo()
+      .then(setHomeInfo)
+      .catch(() => {});
   }, []);
 
   // Lazy-load upcoming events only when the panel is expanded and user has privilege
@@ -27,7 +32,8 @@ export default function Home() {
     const today = new Date().toISOString().slice(0, 10);
     const end = new Date();
     end.setDate(end.getDate() + 90);
-    calendarApi.listEvents({ from: today, to: end.toISOString().slice(0, 10) })
+    calendarApi
+      .listEvents({ from: today, to: end.toISOString().slice(0, 10) })
       .then((evs) => setUpcomingEvents((evs || []).slice(0, 5)))
       .catch(() => setUpcomingEvents([]));
   }, [showUpcoming, upcomingExpanded, upcomingEvents]);
@@ -44,7 +50,20 @@ export default function Home() {
     const [y, m, day] = s.split('-');
     const dt = new Date(+y, +m - 1, +day);
     const dayName = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][dt.getDay()];
-    const monthName = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][dt.getMonth()];
+    const monthName = [
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
+    ][dt.getMonth()];
     return `${dayName} ${+day} ${monthName}`;
   }
   function fmtEvTime(t) {
@@ -66,73 +85,268 @@ export default function Home() {
       title: 'Membership',
       feature: null, // always shown
       items: [
-        { label: 'Members',             tip: 'Search, view and edit member records', to: can('members_list', 'view')   ? '/members'     : null },
-        { label: 'Add new member',      tip: 'Create a new member record',          to: can('member_record', 'create') ? '/members/new' : null },
-        { label: 'Membership renewals', tip: 'Process annual membership renewals',  to: can('membership_renewals', 'view') ? '/membership/renewals' : null, f: 'membershipRenewals' },
-        { label: 'Recent members',      tip: 'View recently added or changed members', to: can('members_recent', 'view') ? '/members/recent' : null },
-        { label: 'Non-renewals',        tip: 'View and lapse members who have not renewed', to: can('members_non_renewals', 'view') ? '/membership/non-renewals' : null, f: 'membershipRenewals' },
-        { label: 'Membership cards',    tip: 'Generate and download membership cards', to: can('membership_cards', 'view') ? '/membership/cards' : null, f: 'membershipCards' },
-        { label: 'Addresses export',    tip: 'Export member addresses for labels or mail merge', to: can('addresses_export', 'view') ? '/addresses-export' : null },
-        { label: 'Statistics',          tip: 'Membership counts and trends',        to: can('membership_statistics', 'view') ? '/members/statistics' : null },
+        {
+          label: 'Members',
+          tip: 'Search, view and edit member records',
+          to: can('members_list', 'view') ? '/members' : null,
+        },
+        {
+          label: 'Add new member',
+          tip: 'Create a new member record',
+          to: can('member_record', 'create') ? '/members/new' : null,
+        },
+        {
+          label: 'Membership renewals',
+          tip: 'Process annual membership renewals',
+          to: can('membership_renewals', 'view') ? '/membership/renewals' : null,
+          f: 'membershipRenewals',
+        },
+        {
+          label: 'Recent members',
+          tip: 'View recently added or changed members',
+          to: can('members_recent', 'view') ? '/members/recent' : null,
+        },
+        {
+          label: 'Non-renewals',
+          tip: 'View and lapse members who have not renewed',
+          to: can('members_non_renewals', 'view') ? '/membership/non-renewals' : null,
+          f: 'membershipRenewals',
+        },
+        {
+          label: 'Membership cards',
+          tip: 'Generate and download membership cards',
+          to: can('membership_cards', 'view') ? '/membership/cards' : null,
+          f: 'membershipCards',
+        },
+        {
+          label: 'Addresses export',
+          tip: 'Export member addresses for labels or mail merge',
+          to: can('addresses_export', 'view') ? '/addresses-export' : null,
+        },
+        {
+          label: 'Statistics',
+          tip: 'Membership counts and trends',
+          to: can('membership_statistics', 'view') ? '/members/statistics' : null,
+        },
       ],
     },
     {
       title: 'Groups',
       feature: 'groups',
       items: [
-        { label: 'Groups',    tip: 'View and manage interest groups',              to: can('groups_list',    'view') ? '/groups'    : null },
-        { label: 'Venues',    tip: 'Manage venues where groups meet',              to: can('group_venues',   'view') ? '/venues'    : null, f: 'venues' },
-        { label: 'Faculties', tip: 'Organise groups into subject categories',      to: can('group_faculties','view') ? '/faculties' : null, f: 'faculties' },
-        { label: 'Events',    tip: 'View group meetings and other events (calendar or table)', to: can('calendar', 'view') ? '/calendar' : null, f: 'events' },
-        { label: 'Teams',     tip: 'View and manage teams',                        to: can('groups_list',    'view') ? '/teams'     : null, f: 'teams' },
+        {
+          label: 'Groups',
+          tip: 'View and manage interest groups',
+          to: can('groups_list', 'view') ? '/groups' : null,
+        },
+        {
+          label: 'Venues',
+          tip: 'Manage venues where groups meet',
+          to: can('group_venues', 'view') ? '/venues' : null,
+          f: 'venues',
+        },
+        {
+          label: 'Faculties',
+          tip: 'Organise groups into subject categories',
+          to: can('group_faculties', 'view') ? '/faculties' : null,
+          f: 'faculties',
+        },
+        {
+          label: 'Events',
+          tip: 'View group meetings and other events (calendar or table)',
+          to: can('calendar', 'view') ? '/calendar' : null,
+          f: 'events',
+        },
+        {
+          label: 'Teams',
+          tip: 'View and manage teams',
+          to: can('groups_list', 'view') ? '/teams' : null,
+          f: 'teams',
+        },
       ],
     },
     {
       title: 'Finance',
       feature: 'finance',
       items: [
-        { label: 'Ledger',               tip: 'View transactions by account, category, group, or event', to: can('finance_ledger', 'view') ? '/finance/ledger' : null },
-        { label: 'Add transaction',      tip: 'Record a new payment or receipt',             to: can('finance_transactions', 'create') ? '/finance/transactions/new' : null },
-        { label: 'Transfer money',       tip: 'Transfer funds between accounts',             to: can('finance_transfer_money', 'view') ? '/finance/transfers' : null, f: 'transferMoney' },
-        { label: 'Credit batches',       tip: 'Process batches of member credits',           to: can('finance_batches', 'view') ? '/finance/batches' : null, f: 'creditBatches' },
-        { label: 'Reconcile account',    tip: 'Match transactions against bank statements',  to: can('finance_reconcile', 'view') ? '/finance/reconcile' : null, f: 'reconciliation' },
-        { label: 'Financial statement',  tip: 'Summary of income and expenditure by period', to: can('finance_statement', 'view') ? '/finance/statement' : null, f: 'financialStatement' },
-        { label: 'Groups statement',     tip: 'Financial summary broken down by group',      to: can('group_statement', 'view') ? '/finance/groups-statement' : null, f: 'groupsStatement' },
-        { label: 'Gift Aid declaration', tip: 'Generate Gift Aid declarations for HMRC',     to: can('gift_aid_declaration', 'view') ? '/finance/gift-aid' : null, f: 'giftAid' },
+        {
+          label: 'Ledger',
+          tip: 'View transactions by account, category, group, or event',
+          to: can('finance_ledger', 'view') ? '/finance/ledger' : null,
+        },
+        {
+          label: 'Add transaction',
+          tip: 'Record a new payment or receipt',
+          to: can('finance_transactions', 'create') ? '/finance/transactions/new' : null,
+        },
+        {
+          label: 'Transfer money',
+          tip: 'Transfer funds between accounts',
+          to: can('finance_transfer_money', 'view') ? '/finance/transfers' : null,
+          f: 'transferMoney',
+        },
+        {
+          label: 'Credit batches',
+          tip: 'Process batches of member credits',
+          to: can('finance_batches', 'view') ? '/finance/batches' : null,
+          f: 'creditBatches',
+        },
+        {
+          label: 'Reconcile account',
+          tip: 'Match transactions against bank statements',
+          to: can('finance_reconcile', 'view') ? '/finance/reconcile' : null,
+          f: 'reconciliation',
+        },
+        {
+          label: 'Financial statement',
+          tip: 'Summary of income and expenditure by period',
+          to: can('finance_statement', 'view') ? '/finance/statement' : null,
+          f: 'financialStatement',
+        },
+        {
+          label: 'Groups statement',
+          tip: 'Financial summary broken down by group',
+          to: can('group_statement', 'view') ? '/finance/groups-statement' : null,
+          f: 'groupsStatement',
+        },
+        {
+          label: 'Gift Aid declaration',
+          tip: 'Generate Gift Aid declarations for HMRC',
+          to: can('gift_aid_declaration', 'view') ? '/finance/gift-aid' : null,
+          f: 'giftAid',
+        },
       ],
     },
     {
       title: 'Misc',
       feature: null,
       items: [
-        { label: 'Audit log',             tip: 'Review a log of changes made by users',       to: can('audit_trail', 'view') ? '/audit' : null },
-        { label: 'Gift aid log',          tip: 'View history of Gift Aid declarations sent',   to: can('gift_aid_declaration', 'view') ? '/gift-aid-log' : null, f: 'giftAid' },
-        { label: 'u3a Officers',          tip: 'Manage committee and officer appointments',    to: can('offices', 'view') ? '/officers' : null },
-        { label: 'Public links',          tip: 'Configure online joining and members portal',  to: can('public_links', 'view') ? '/public-links' : null },
-        { label: 'Data export & backup',  tip: 'Export data or back up the database',          to: can('data_export_backup', 'view') ? '/backup' : null },
-        { label: 'E-mail delivery',       tip: 'Track the status of sent emails',              to: can('email_delivery', 'view') ? '/email/delivery' : null, f: 'email' },
-        { label: 'E-mail unblocker',      tip: 'Remove members from the email block list',     to: can('email_delivery', 'all')  ? '/email/unblocker' : null, f: 'email' },
-        { label: 'Personal preferences',  tip: 'Change your password, name display and timeout settings', to: '/preferences' },
-        { label: 'Utilities',              tip: 'Administrative utilities',                                to: can('utilities', 'view') ? '/utilities' : null },
-        { label: 'SQL reports',            tip: 'Run saved SQL reports and ad-hoc queries',                to: can('reports', 'view') ? '/reports' : null, f: 'reports' },
+        {
+          label: 'Audit log',
+          tip: 'Review a log of changes made by users',
+          to: can('audit_trail', 'view') ? '/audit' : null,
+        },
+        {
+          label: 'Gift aid log',
+          tip: 'View history of Gift Aid declarations sent',
+          to: can('gift_aid_declaration', 'view') ? '/gift-aid-log' : null,
+          f: 'giftAid',
+        },
+        {
+          label: 'u3a Officers',
+          tip: 'Manage committee and officer appointments',
+          to: can('offices', 'view') ? '/officers' : null,
+        },
+        {
+          label: 'Public links',
+          tip: 'Configure online joining and members portal',
+          to: can('public_links', 'view') ? '/public-links' : null,
+        },
+        {
+          label: 'Data export & backup',
+          tip: 'Export data or back up the database',
+          to: can('data_export_backup', 'view') ? '/backup' : null,
+        },
+        {
+          label: 'E-mail delivery',
+          tip: 'Track the status of sent emails',
+          to: can('email_delivery', 'view') ? '/email/delivery' : null,
+          f: 'email',
+        },
+        {
+          label: 'E-mail unblocker',
+          tip: 'Remove members from the email block list',
+          to: can('email_delivery', 'all') ? '/email/unblocker' : null,
+          f: 'email',
+        },
+        {
+          label: 'Personal preferences',
+          tip: 'Change your password, name display and timeout settings',
+          to: '/preferences',
+        },
+        {
+          label: 'Utilities',
+          tip: 'Administrative utilities',
+          to: can('utilities', 'view') ? '/utilities' : null,
+        },
+        {
+          label: 'SQL reports',
+          tip: 'Run saved SQL reports and ad-hoc queries',
+          to: can('reports', 'view') ? '/reports' : null,
+          f: 'reports',
+        },
       ],
     },
     {
       title: 'Set up',
       feature: null,
       items: [
-        { label: 'Feature configuration', tip: 'Choose which modules are available for your u3a', to: can('feature_config', 'view') ? '/feature-config' : null },
-        { label: 'System users',        tip: 'Manage who can log in and their access',       to: can('users_list', 'view') ? '/users' : null },
-        { label: 'Roles and privileges', tip: 'Define roles and what each role can do',       to: can('role_record', 'view') ? '/roles' : null },
-        { label: 'System settings',     tip: 'Configure u3a name, financial year and other settings', to: can('settings', 'view') ? '/settings' : null },
-        { label: 'System messages',     tip: 'Edit standard email and letter templates',      to: can('system_messages', 'view') ? '/system-messages' : null, f: 'email' },
-        { label: 'Finance accounts',    tip: 'Set up bank accounts and payment methods',     to: can('finance_accounts', 'view') ? '/finance/accounts' : null, f: 'finance' },
-        { label: 'Finance categories',  tip: 'Set up income and expenditure categories',     to: can('finance_categories', 'view') ? '/finance/categories' : null, f: 'finance' },
-        { label: 'Membership classes',  tip: 'Define membership types and their fees',       to: can('member_classes',  'view') ? '/membership/classes'  : null },
-        { label: 'Member statuses',     tip: 'View the lifecycle statuses for members',      to: can('member_statuses', 'view') ? '/membership/statuses' : null },
-        { label: 'Poll',                tip: 'Set up and manage membership polls',            to: can('poll_set_up', 'view') ? '/polls' : null, f: 'polls' },
-        { label: 'Custom fields',      tip: 'Define up to 4 free-form fields on member records', to: can('custom_fields', 'view') ? '/custom-fields' : null, f: 'customFields' },
-        { label: 'Event types',       tip: 'Define event types for non-group events',          to: can('event_types', 'view') ? '/event-types' : null, f: 'eventTypes' },
+        {
+          label: 'Feature configuration',
+          tip: 'Choose which modules are available for your u3a',
+          to: can('feature_config', 'view') ? '/feature-config' : null,
+        },
+        {
+          label: 'System users',
+          tip: 'Manage who can log in and their access',
+          to: can('users_list', 'view') ? '/users' : null,
+        },
+        {
+          label: 'Roles and privileges',
+          tip: 'Define roles and what each role can do',
+          to: can('role_record', 'view') ? '/roles' : null,
+        },
+        {
+          label: 'System settings',
+          tip: 'Configure u3a name, financial year and other settings',
+          to: can('settings', 'view') ? '/settings' : null,
+        },
+        {
+          label: 'System messages',
+          tip: 'Edit standard email and letter templates',
+          to: can('system_messages', 'view') ? '/system-messages' : null,
+          f: 'email',
+        },
+        {
+          label: 'Finance accounts',
+          tip: 'Set up bank accounts and payment methods',
+          to: can('finance_accounts', 'view') ? '/finance/accounts' : null,
+          f: 'finance',
+        },
+        {
+          label: 'Finance categories',
+          tip: 'Set up income and expenditure categories',
+          to: can('finance_categories', 'view') ? '/finance/categories' : null,
+          f: 'finance',
+        },
+        {
+          label: 'Membership classes',
+          tip: 'Define membership types and their fees',
+          to: can('member_classes', 'view') ? '/membership/classes' : null,
+        },
+        {
+          label: 'Member statuses',
+          tip: 'View the lifecycle statuses for members',
+          to: can('member_statuses', 'view') ? '/membership/statuses' : null,
+        },
+        {
+          label: 'Poll',
+          tip: 'Set up and manage membership polls',
+          to: can('poll_set_up', 'view') ? '/polls' : null,
+          f: 'polls',
+        },
+        {
+          label: 'Custom fields',
+          tip: 'Define up to 4 free-form fields on member records',
+          to: can('custom_fields', 'view') ? '/custom-fields' : null,
+          f: 'customFields',
+        },
+        {
+          label: 'Event types',
+          tip: 'Define event types for non-group events',
+          to: can('event_types', 'view') ? '/event-types' : null,
+          f: 'eventTypes',
+        },
       ],
     },
   ];
@@ -150,15 +364,19 @@ export default function Home() {
 
   // Public website links use the tenant slug — filtered by feature toggles
   const publicLinks = [
-    hasFeature('onlineJoining')                              && { label: `Join ${tenantName || 'us'} now!`, to: `/public/${tenant}/join` },
-    hasFeature('portal')                                      && { label: 'Members Portal', to: `/public/${tenant}/portal` },
-    hasFeature('publicPages') && hasFeature('groups')         && { label: 'Public groups list', to: `/public/${tenant}/groups` },
-    hasFeature('publicPages') && hasFeature('events')         && { label: 'Public calendar', to: `/public/${tenant}/calendar` },
+    hasFeature('onlineJoining') && {
+      label: `Join ${tenantName || 'us'} now!`,
+      to: `/public/${tenant}/join`,
+    },
+    hasFeature('portal') && { label: 'Members Portal', to: `/public/${tenant}/portal` },
+    hasFeature('publicPages') &&
+      hasFeature('groups') && { label: 'Public groups list', to: `/public/${tenant}/groups` },
+    hasFeature('publicPages') &&
+      hasFeature('events') && { label: 'Public calendar', to: `/public/${tenant}/calendar` },
   ].filter(Boolean);
 
   return (
     <div className="min-h-screen pb-10">
-
       <PageHeader tenant={tenant} />
 
       <div className="text-center py-3 px-4 bg-white/50 backdrop-blur-sm border-b border-white/50">
@@ -176,7 +394,6 @@ export default function Home() {
       </div>
 
       <div className="max-w-5xl mx-auto px-4 mt-4">
-
         {/* Upcoming events widget (collapsible, opt-in) */}
         {showUpcoming && (
           <div className="mb-3 bg-white/90 border border-slate-200 rounded-lg shadow-sm overflow-hidden">
@@ -188,8 +405,13 @@ export default function Home() {
             >
               <span className="text-slate-500 w-4">{upcomingExpanded ? '▾' : '▸'}</span>
               <span className="font-medium text-slate-700">Upcoming events</span>
-              <Link to="/calendar" className="ml-auto text-blue-700 hover:underline text-xs"
-                onClick={(e) => e.stopPropagation()}>View all →</Link>
+              <Link
+                to="/calendar"
+                className="ml-auto text-blue-700 hover:underline text-xs"
+                onClick={(e) => e.stopPropagation()}
+              >
+                View all →
+              </Link>
             </button>
             {upcomingExpanded && (
               <div className="border-t border-slate-200 px-4 py-2 text-sm">
@@ -201,8 +423,12 @@ export default function Home() {
                   <ul className="divide-y divide-slate-100">
                     {upcomingEvents.map((ev) => (
                       <li key={ev.id} className="py-1.5 flex flex-wrap gap-x-3">
-                        <Link to={`/calendar/events/${ev.id}`} className="text-blue-700 hover:underline whitespace-nowrap">
-                          {fmtEvDate(ev.event_date)}{ev.start_time ? ` ${fmtEvTime(ev.start_time)}` : ''}
+                        <Link
+                          to={`/calendar/events/${ev.id}`}
+                          className="text-blue-700 hover:underline whitespace-nowrap"
+                        >
+                          {fmtEvDate(ev.event_date)}
+                          {ev.start_time ? ` ${fmtEvTime(ev.start_time)}` : ''}
                         </Link>
                         <span className="text-slate-700">
                           {ev.topic || ev.group_name || ev.event_type_name || 'Event'}
@@ -210,9 +436,7 @@ export default function Home() {
                         {ev.group_name && ev.topic && (
                           <span className="text-slate-500 italic">— {ev.group_name}</span>
                         )}
-                        {ev.venue_name && (
-                          <span className="text-slate-500">· {ev.venue_name}</span>
-                        )}
+                        {ev.venue_name && <span className="text-slate-500">· {ev.venue_name}</span>}
                       </li>
                     ))}
                   </ul>
@@ -232,9 +456,15 @@ export default function Home() {
               <ul className="divide-y divide-slate-100">
                 {section.items.map((item) => (
                   <li key={item.label} className="px-4 py-2.5 text-sm">
-                    {item.to
-                      ? <Link to={item.to} title={item.tip} className="text-blue-700 hover:underline">{item.label}</Link>
-                      : <span title={item.tip} className="text-slate-400">{item.label}</span>}
+                    {item.to ? (
+                      <Link to={item.to} title={item.tip} className="text-blue-700 hover:underline">
+                        {item.label}
+                      </Link>
+                    ) : (
+                      <span title={item.tip} className="text-slate-400">
+                        {item.label}
+                      </span>
+                    )}
                   </li>
                 ))}
               </ul>
@@ -243,20 +473,38 @@ export default function Home() {
         </div>
 
         {/* Desktop: dynamic column grid based on visible sections */}
-        <div className={`hidden md:grid bg-gradient-to-br from-yellow-50 to-amber-100 border border-slate-300 rounded-lg overflow-hidden shadow-sm ${
-          visibleSections.length <= 3 ? 'grid-cols-3' : visibleSections.length === 4 ? 'grid-cols-4' : 'grid-cols-5'
-        }`}>
+        <div
+          className={`hidden md:grid bg-gradient-to-br from-yellow-50 to-amber-100 border border-slate-300 rounded-lg overflow-hidden shadow-sm ${
+            visibleSections.length <= 3
+              ? 'grid-cols-3'
+              : visibleSections.length === 4
+                ? 'grid-cols-4'
+                : 'grid-cols-5'
+          }`}
+        >
           {visibleSections.map((section, si) => (
-            <div key={section.title} className={`${si < visibleSections.length - 1 ? 'border-r border-slate-300' : ''}`}>
+            <div
+              key={section.title}
+              className={`${si < visibleSections.length - 1 ? 'border-r border-slate-300' : ''}`}
+            >
               <div className="font-bold text-sm px-4 py-2 border-b border-slate-300 bg-gradient-to-r from-amber-100 to-amber-200 whitespace-nowrap">
                 {section.title}
               </div>
               <ul>
                 {section.items.map((item) => (
-                  <li key={item.label} className="px-4 py-1 text-sm border-b border-slate-200 last:border-b-0 whitespace-nowrap">
-                    {item.to
-                      ? <Link to={item.to} title={item.tip} className="text-blue-700 hover:underline">{item.label}</Link>
-                      : <span title={item.tip} className="text-slate-400">{item.label}</span>}
+                  <li
+                    key={item.label}
+                    className="px-4 py-1 text-sm border-b border-slate-200 last:border-b-0 whitespace-nowrap"
+                  >
+                    {item.to ? (
+                      <Link to={item.to} title={item.tip} className="text-blue-700 hover:underline">
+                        {item.label}
+                      </Link>
+                    ) : (
+                      <span title={item.tip} className="text-slate-400">
+                        {item.label}
+                      </span>
+                    )}
                   </li>
                 ))}
               </ul>
@@ -266,30 +514,67 @@ export default function Home() {
 
         {/* ── Links & Messages panel ─────────────────────────────────── */}
         <div className="mt-4 bg-gradient-to-br from-yellow-50 to-amber-100 border border-slate-300 rounded-lg overflow-hidden shadow-sm">
-
           {/* Fixed links row */}
           <div className="flex flex-wrap justify-center gap-x-8 gap-y-1 px-4 py-2 border-b border-slate-300 text-sm">
-            <a href="https://forum.u3abeacon.org.uk/" target="_blank" rel="noopener noreferrer" className="text-blue-700 hover:underline" title="Go to the u3a Beacon Users' Forum for support on using Beacon, to give feedback on bugs and usability and to suggest new features">u3a Beacon Users' Forum</a>
-            <a href="https://u3abeacon.zendesk.com/hc/en-gb" target="_blank" rel="noopener noreferrer" className="text-blue-700 hover:underline" title="Display the u3a Beacon User Guide to assist your use of the system">Beacon User Guide</a>
-            <a href="https://beacon.u3a.org.uk/" target="_blank" rel="noopener noreferrer" className="text-blue-700 hover:underline" title="Visit the Beacon website for news, training and support">Beacon Website</a>
+            <a
+              href="https://forum.u3abeacon.org.uk/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-700 hover:underline"
+              title="Go to the u3a Beacon Users' Forum for support on using Beacon, to give feedback on bugs and usability and to suggest new features"
+            >
+              u3a Beacon Users' Forum
+            </a>
+            <a
+              href="https://u3abeacon.zendesk.com/hc/en-gb"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-700 hover:underline"
+              title="Display the u3a Beacon User Guide to assist your use of the system"
+            >
+              Beacon User Guide
+            </a>
+            <a
+              href="https://beacon.u3a.org.uk/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-700 hover:underline"
+              title="Visit the Beacon website for news, training and support"
+            >
+              Beacon Website
+            </a>
           </div>
 
           {/* Public website links row */}
           <div className="flex flex-wrap items-center gap-x-6 gap-y-1 px-4 py-2 border-b border-slate-300 text-sm">
             <span className="font-bold text-sm whitespace-nowrap">Public website links</span>
-            {publicLinks.map((link) => (
-              link.to
-                ? <Link key={link.label} to={link.to} className="text-blue-700 hover:underline">{link.label}</Link>
-                : <span key={link.label} className="text-slate-400">{link.label}</span>
-            ))}
+            {publicLinks.map((link) =>
+              link.to ? (
+                <Link key={link.label} to={link.to} className="text-blue-700 hover:underline">
+                  {link.label}
+                </Link>
+              ) : (
+                <span key={link.label} className="text-slate-400">
+                  {link.label}
+                </span>
+              ),
+            )}
           </div>
 
           {/* Documents row (hidden for now — may be needed later) */}
+          {/* eslint-disable-next-line no-constant-binary-expression */}
           {false && (
-          <div className="flex flex-wrap items-center gap-x-6 gap-y-1 px-4 py-2 text-sm">
-            <span className="font-bold text-sm whitespace-nowrap">Documents</span>
-            <a href="https://beacon.u3a.org.uk/engagement" target="_blank" rel="noopener noreferrer" className="text-blue-700 hover:underline">Documentation for prospective Beacon users</a>
-          </div>
+            <div className="flex flex-wrap items-center gap-x-6 gap-y-1 px-4 py-2 text-sm">
+              <span className="font-bold text-sm whitespace-nowrap">Documents</span>
+              <a
+                href="https://beacon.u3a.org.uk/engagement"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-blue-700 hover:underline"
+              >
+                Documentation for prospective Beacon users
+              </a>
+            </div>
           )}
         </div>
 
@@ -304,11 +589,12 @@ export default function Home() {
               <p className="text-sm text-slate-800 whitespace-pre-wrap">{homeInfo.systemMessage}</p>
             )}
             {homeInfo.homeNotice && (
-              <p className="text-sm text-slate-700 font-medium whitespace-pre-wrap">{homeInfo.homeNotice}</p>
+              <p className="text-sm text-slate-700 font-medium whitespace-pre-wrap">
+                {homeInfo.homeNotice}
+              </p>
             )}
           </div>
         )}
-
       </div>
     </div>
   );

@@ -83,10 +83,16 @@ export default function PortalLogin() {
         </form>
 
         <div className="text-center space-y-2 text-sm">
-          <Link to={`/public/${slug}/portal/register`} className="block text-blue-700 hover:underline">
+          <Link
+            to={`/public/${slug}/portal/register`}
+            className="block text-blue-700 hover:underline"
+          >
             Register for a membership account
           </Link>
-          <Link to={`/public/${slug}/portal/forgot-password`} className="block text-blue-700 hover:underline">
+          <Link
+            to={`/public/${slug}/portal/forgot-password`}
+            className="block text-blue-700 hover:underline"
+          >
             Forgotten Password
           </Link>
           <Link to={`/public/${slug}/join`} className="block text-blue-700 hover:underline">

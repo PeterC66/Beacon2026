@@ -15,19 +15,36 @@ vi.mock('../context/AuthContext.jsx', () => ({
 }));
 
 vi.mock('../lib/api.js', () => ({
-  members: { recent: vi.fn().mockResolvedValue([]), download: vi.fn().mockResolvedValue(undefined) },
-  groups:  { list: vi.fn().mockResolvedValue([]), bulkAddMembers: vi.fn().mockResolvedValue({ added: 0, waitlisted: 0, skipped: 0 }) },
-  polls:   { list: vi.fn().mockResolvedValue([]), addMembers: vi.fn().mockResolvedValue({ added: 0 }) },
+  members: {
+    recent: vi.fn().mockResolvedValue([]),
+    download: vi.fn().mockResolvedValue(undefined),
+  },
+  groups: {
+    list: vi.fn().mockResolvedValue([]),
+    bulkAddMembers: vi.fn().mockResolvedValue({ added: 0, waitlisted: 0, skipped: 0 }),
+  },
+  polls: {
+    list: vi.fn().mockResolvedValue([]),
+    addMembers: vi.fn().mockResolvedValue({ added: 0 }),
+  },
 }));
 
 describe('RecentMembers page', () => {
   it('renders without crashing', () => {
-    const { container } = render(<MemoryRouter><RecentMembers /></MemoryRouter>);
+    const { container } = render(
+      <MemoryRouter>
+        <RecentMembers />
+      </MemoryRouter>,
+    );
     expect(container).toBeTruthy();
   });
 
   it('shows the Recent Members heading', () => {
-    const { getAllByText } = render(<MemoryRouter><RecentMembers /></MemoryRouter>);
+    const { getAllByText } = render(
+      <MemoryRouter>
+        <RecentMembers />
+      </MemoryRouter>,
+    );
     expect(getAllByText('Recent Members').length).toBeGreaterThan(0);
   });
 });

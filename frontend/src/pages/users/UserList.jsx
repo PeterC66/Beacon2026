@@ -14,16 +14,19 @@ import { useSortedData } from '../../hooks/useSortedData.js';
 function formatDate(iso) {
   if (!iso) return 'NEVER';
   const d = new Date(iso);
-  return d.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' })
-    + ' ' + d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+  return (
+    d.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' }) +
+    ' ' +
+    d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })
+  );
 }
 
 export default function UserList() {
   const { can, tenant } = useAuth();
   const navigate = useNavigate();
   const [userList, setUserList] = useState([]);
-  const [loading,  setLoading]  = useState(true);
-  const [error,    setError]    = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [deleting, setDeleting] = useState(null);
   const [selected, setSelected] = useState(new Set());
 
@@ -31,22 +34,37 @@ export default function UserList() {
 
   const { sorted, sortKey, sortDir, onSort } = useSortedData(userList);
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => {
+    load();
+  }, []);
 
   async function load() {
     setLoading(true);
-    try { setUserList(await usersApi.list()); }
-    catch (err) { setError(err.message); }
-    finally { setLoading(false); }
+    try {
+      setUserList(await usersApi.list());
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
   }
 
   async function handleDelete(user) {
-    if (!confirm(`Delete user "${user.name}"?\nThis will only remove their ability to log in — their Member Record will remain.`)) return;
+    if (
+      !confirm(
+        `Delete user "${user.name}"?\nThis will only remove their ability to log in — their Member Record will remain.`,
+      )
+    )
+      return;
     setDeleting(user.id);
     try {
       await usersApi.delete(user.id);
       setUserList((prev) => prev.filter((u) => u.id !== user.id));
-      setSelected((prev) => { const next = new Set(prev); next.delete(user.id); return next; });
+      setSelected((prev) => {
+        const next = new Set(prev);
+        next.delete(user.id);
+        return next;
+      });
     } catch (err) {
       alert(err.message);
     } finally {
@@ -92,7 +110,6 @@ export default function UserList() {
 
   return (
     <div className="min-h-screen pb-10">
-
       <PageHeader tenant={tenant} />
       <NavBar links={navLinks} />
 
@@ -100,10 +117,11 @@ export default function UserList() {
         <h1 className="text-xl font-bold text-center mb-4">System Users</h1>
 
         {loading && <p className="text-center text-slate-500">Loading...</p>}
-        {error   && <p className="text-center text-red-600">Error: {error}</p>}
+        {error && <p className="text-center text-red-600">Error: {error}</p>}
 
-        {!loading && !error && (
-          userList.length === 0 ? (
+        {!loading &&
+          !error &&
+          (userList.length === 0 ? (
             <p className="text-center text-slate-500">No users found.</p>
           ) : (
             <>
@@ -112,23 +130,71 @@ export default function UserList() {
                   <thead>
                     <tr className="bg-slate-50 border-b border-slate-200 text-left text-slate-600 italic font-normal">
                       <th className={`${TH} text-center`}>
-                        <button onClick={selectAll} className="text-blue-700 hover:underline text-xs italic font-normal">
+                        <button
+                          onClick={selectAll}
+                          className="text-blue-700 hover:underline text-xs italic font-normal"
+                        >
                           Select
                         </button>
                       </th>
-                      <SortableHeader col="name"           label="Full Name"       sortKey={sortKey} sortDir={sortDir} onSort={onSort} className={TH} />
-                      <SortableHeader col="username"       label="Login User Name" sortKey={sortKey} sortDir={sortDir} onSort={onSort} className={TH} />
-                      <SortableHeader col="member_name"    label="Member"          sortKey={sortKey} sortDir={sortDir} onSort={onSort} className={TH} />
-                      <SortableHeader col="is_site_admin"  label="Site Admin"      sortKey={sortKey} sortDir={sortDir} onSort={onSort} className={`${TH} text-center`} />
-                      <SortableHeader col="created_at"     label="Date Created"    sortKey={sortKey} sortDir={sortDir} onSort={onSort} className={TH} />
-                      <SortableHeader col="last_login"     label="Last Accessed"   sortKey={sortKey} sortDir={sortDir} onSort={onSort} className={TH} />
+                      <SortableHeader
+                        col="name"
+                        label="Full Name"
+                        sortKey={sortKey}
+                        sortDir={sortDir}
+                        onSort={onSort}
+                        className={TH}
+                      />
+                      <SortableHeader
+                        col="username"
+                        label="Login User Name"
+                        sortKey={sortKey}
+                        sortDir={sortDir}
+                        onSort={onSort}
+                        className={TH}
+                      />
+                      <SortableHeader
+                        col="member_name"
+                        label="Member"
+                        sortKey={sortKey}
+                        sortDir={sortDir}
+                        onSort={onSort}
+                        className={TH}
+                      />
+                      <SortableHeader
+                        col="is_site_admin"
+                        label="Site Admin"
+                        sortKey={sortKey}
+                        sortDir={sortDir}
+                        onSort={onSort}
+                        className={`${TH} text-center`}
+                      />
+                      <SortableHeader
+                        col="created_at"
+                        label="Date Created"
+                        sortKey={sortKey}
+                        sortDir={sortDir}
+                        onSort={onSort}
+                        className={TH}
+                      />
+                      <SortableHeader
+                        col="last_login"
+                        label="Last Accessed"
+                        sortKey={sortKey}
+                        sortDir={sortDir}
+                        onSort={onSort}
+                        className={TH}
+                      />
                       <th className={TH}>Roles</th>
                       {can('user_record', 'delete') && <th className="px-4 py-2.5"></th>}
                     </tr>
                   </thead>
                   <tbody>
                     {sorted.map((user, i) => (
-                      <tr key={user.id} className={`border-b border-slate-100 ${i % 2 === 0 ? 'bg-yellow-50' : 'bg-white'}`}>
+                      <tr
+                        key={user.id}
+                        className={`border-b border-slate-100 ${i % 2 === 0 ? 'bg-yellow-50' : 'bg-white'}`}
+                      >
                         <td className="px-4 py-2.5 text-center">
                           <input
                             type="checkbox"
@@ -145,9 +211,13 @@ export default function UserList() {
                             >
                               {user.name}
                             </button>
-                          ) : user.name}
+                          ) : (
+                            user.name
+                          )}
                         </td>
-                        <td className="px-4 py-2.5 font-mono text-slate-600">{user.username ?? ''}</td>
+                        <td className="px-4 py-2.5 font-mono text-slate-600">
+                          {user.username ?? ''}
+                        </td>
                         <td className="px-4 py-2.5">
                           {user.member_id ? (
                             <button
@@ -157,13 +227,25 @@ export default function UserList() {
                               {user.member_name}
                             </button>
                           ) : (
-                            <span className="text-slate-400">{user.is_site_admin ? '' : 'Not linked'}</span>
+                            <span className="text-slate-400">
+                              {user.is_site_admin ? '' : 'Not linked'}
+                            </span>
                           )}
                         </td>
-                        <td className="px-4 py-2.5 text-center">{user.is_site_admin ? 'YES' : ''}</td>
-                        <td className="px-4 py-2.5 text-slate-600 whitespace-nowrap">{formatDate(user.created_at)}</td>
-                        <td className="px-4 py-2.5 text-slate-600 whitespace-nowrap">{formatDate(user.last_login)}</td>
-                        <td className="px-4 py-2.5">{user.is_site_admin ? 'Administration' : user.roles.map((r) => r.name).join(', ')}</td>
+                        <td className="px-4 py-2.5 text-center">
+                          {user.is_site_admin ? 'YES' : ''}
+                        </td>
+                        <td className="px-4 py-2.5 text-slate-600 whitespace-nowrap">
+                          {formatDate(user.created_at)}
+                        </td>
+                        <td className="px-4 py-2.5 text-slate-600 whitespace-nowrap">
+                          {formatDate(user.last_login)}
+                        </td>
+                        <td className="px-4 py-2.5">
+                          {user.is_site_admin
+                            ? 'Administration'
+                            : user.roles.map((r) => r.name).join(', ')}
+                        </td>
                         {can('user_record', 'delete') && (
                           <td className="px-4 py-2.5 text-right">
                             {!user.is_site_admin && (
@@ -185,8 +267,7 @@ export default function UserList() {
               {/* Footer: count + Send Email */}
               <div className="mt-3 flex items-center justify-between">
                 <p className="text-sm text-slate-600">
-                  {sorted.length} user{sorted.length !== 1 ? 's' : ''}{' '}
-                  ({selected.size} selected)
+                  {sorted.length} user{sorted.length !== 1 ? 's' : ''} ({selected.size} selected)
                 </p>
                 {can('email', 'send') && selected.size > 0 && (
                   <button
@@ -198,8 +279,7 @@ export default function UserList() {
                 )}
               </div>
             </>
-          )
-        )}
+          ))}
       </div>
 
       <NavBar links={navLinks} />

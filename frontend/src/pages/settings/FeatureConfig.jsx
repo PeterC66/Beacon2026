@@ -17,68 +17,211 @@ import { useUnsavedChanges } from '../../hooks/useUnsavedChanges.js';
 const SECTIONS = [
   {
     title: 'Membership',
-    description: 'Core membership features are always available. These sub-features can be toggled.',
+    description:
+      'Core membership features are always available. These sub-features can be toggled.',
     master: null,
     toggles: [
-      { key: 'membershipCards',     label: 'Membership Cards',     defaultValue: true,  tip: 'Generate and download membership cards' },
-      { key: 'membershipRenewals',  label: 'Membership Renewals',  defaultValue: true,  tip: 'Process annual renewals and non-renewals' },
-      { key: 'giftAid',            label: 'Gift Aid',             defaultValue: false, tip: 'Gift Aid declarations, logging, and transaction fields' },
-      { key: 'customFields',       label: 'Custom Fields',        defaultValue: true,  tip: 'Up to 4 free-form fields on member records' },
-      { key: 'polls',              label: 'Polls',                defaultValue: true,  tip: 'Member polls for filtering and bulk actions' },
-      { key: 'memberPhotos',       label: 'Member Photos',        defaultValue: true,  tip: 'Photo upload on member records and portal; shown on cards and group PDFs' },
+      {
+        key: 'membershipCards',
+        label: 'Membership Cards',
+        defaultValue: true,
+        tip: 'Generate and download membership cards',
+      },
+      {
+        key: 'membershipRenewals',
+        label: 'Membership Renewals',
+        defaultValue: true,
+        tip: 'Process annual renewals and non-renewals',
+      },
+      {
+        key: 'giftAid',
+        label: 'Gift Aid',
+        defaultValue: false,
+        tip: 'Gift Aid declarations, logging, and transaction fields',
+      },
+      {
+        key: 'customFields',
+        label: 'Custom Fields',
+        defaultValue: true,
+        tip: 'Up to 4 free-form fields on member records',
+      },
+      {
+        key: 'polls',
+        label: 'Polls',
+        defaultValue: true,
+        tip: 'Member polls for filtering and bulk actions',
+      },
+      {
+        key: 'memberPhotos',
+        label: 'Member Photos',
+        defaultValue: true,
+        tip: 'Photo upload on member records and portal; shown on cards and group PDFs',
+      },
     ],
   },
   {
     title: 'Groups',
     description: 'Interest groups, venues, and faculties.',
-    master: { key: 'groups', label: 'Groups module', defaultValue: true, tip: 'Groups list, group records, and related features' },
+    master: {
+      key: 'groups',
+      label: 'Groups module',
+      defaultValue: true,
+      tip: 'Groups list, group records, and related features',
+    },
     toggles: [
-      { key: 'teams',       label: 'Teams',                  defaultValue: true,  dependsOn: 'groups', tip: 'Separate teams section (committees, working groups, etc.)' },
-      { key: 'venues',      label: 'Venues',                 defaultValue: true,  dependsOn: 'groups', tip: 'Venue management for group meetings' },
-      { key: 'faculties',   label: 'Faculties',              defaultValue: true,  dependsOn: 'groups', tip: 'Organise groups into subject categories' },
-      { key: 'groupLedger', label: 'Group Ledger',           defaultValue: false, dependsOn: 'groups', tip: 'Per-group financial tracking (separate from main finance)' },
-      { key: 'siteworks',   label: 'SiteWorks Integration',  defaultValue: false, dependsOn: 'groups', tip: 'When enabled, scheduling is managed in SiteWorks instead of Beacon2' },
+      {
+        key: 'teams',
+        label: 'Teams',
+        defaultValue: true,
+        dependsOn: 'groups',
+        tip: 'Separate teams section (committees, working groups, etc.)',
+      },
+      {
+        key: 'venues',
+        label: 'Venues',
+        defaultValue: true,
+        dependsOn: 'groups',
+        tip: 'Venue management for group meetings',
+      },
+      {
+        key: 'faculties',
+        label: 'Faculties',
+        defaultValue: true,
+        dependsOn: 'groups',
+        tip: 'Organise groups into subject categories',
+      },
+      {
+        key: 'groupLedger',
+        label: 'Group Ledger',
+        defaultValue: false,
+        dependsOn: 'groups',
+        tip: 'Per-group financial tracking (separate from main finance)',
+      },
+      {
+        key: 'siteworks',
+        label: 'SiteWorks Integration',
+        defaultValue: false,
+        dependsOn: 'groups',
+        tip: 'When enabled, scheduling is managed in SiteWorks instead of Beacon2',
+      },
     ],
   },
   {
     title: 'Events & Calendar',
     description: 'Calendar views and non-group event types.',
-    master: { key: 'events', label: 'Events & Calendar module', defaultValue: true, tip: 'Calendar page and event management' },
+    master: {
+      key: 'events',
+      label: 'Events & Calendar module',
+      defaultValue: true,
+      tip: 'Calendar page and event management',
+    },
     toggles: [
-      { key: 'eventTypes',      label: 'Event Types',       defaultValue: true, dependsOn: 'events', tip: 'Non-group event types (Open Meetings, etc.)' },
-      { key: 'eventAttendance', label: 'Event Attendance',  defaultValue: true, dependsOn: 'events', tip: 'Track members registered for each event' },
+      {
+        key: 'eventTypes',
+        label: 'Event Types',
+        defaultValue: true,
+        dependsOn: 'events',
+        tip: 'Non-group event types (Open Meetings, etc.)',
+      },
+      {
+        key: 'eventAttendance',
+        label: 'Event Attendance',
+        defaultValue: true,
+        dependsOn: 'events',
+        tip: 'Track members registered for each event',
+      },
     ],
   },
   {
     title: 'Finance',
     description: 'Financial ledger, transactions, statements, and accounts.',
-    master: { key: 'finance', label: 'Finance module', defaultValue: true, sysAdminOnly: true, tip: 'Full finance module — requires careful setup' },
+    master: {
+      key: 'finance',
+      label: 'Finance module',
+      defaultValue: true,
+      sysAdminOnly: true,
+      tip: 'Full finance module — requires careful setup',
+    },
     toggles: [
-      { key: 'creditBatches',      label: 'Credit Batches',      defaultValue: true, dependsOn: 'finance', tip: 'Group incoming transactions into batches' },
-      { key: 'reconciliation',     label: 'Reconciliation',      defaultValue: true, dependsOn: 'finance', tip: 'Match transactions against bank statements' },
-      { key: 'financialStatement', label: 'Financial Statement',  defaultValue: true, dependsOn: 'finance', tip: 'Summary of income and expenditure' },
-      { key: 'groupsStatement',    label: 'Groups Statement',    defaultValue: true, dependsOn: 'finance', tip: 'Financial summary broken down by group' },
-      { key: 'transferMoney',      label: 'Transfer Money',      defaultValue: true, dependsOn: 'finance', tip: 'Transfer funds between accounts' },
+      {
+        key: 'creditBatches',
+        label: 'Credit Batches',
+        defaultValue: true,
+        dependsOn: 'finance',
+        tip: 'Group incoming transactions into batches',
+      },
+      {
+        key: 'reconciliation',
+        label: 'Reconciliation',
+        defaultValue: true,
+        dependsOn: 'finance',
+        tip: 'Match transactions against bank statements',
+      },
+      {
+        key: 'financialStatement',
+        label: 'Financial Statement',
+        defaultValue: true,
+        dependsOn: 'finance',
+        tip: 'Summary of income and expenditure',
+      },
+      {
+        key: 'groupsStatement',
+        label: 'Groups Statement',
+        defaultValue: true,
+        dependsOn: 'finance',
+        tip: 'Financial summary broken down by group',
+      },
+      {
+        key: 'transferMoney',
+        label: 'Transfer Money',
+        defaultValue: true,
+        dependsOn: 'finance',
+        tip: 'Transfer funds between accounts',
+      },
     ],
   },
   {
     title: 'Email & Letters',
-    description: 'Email sending (requires SendGrid) and letter generation (PDF, no external service).',
-    master: { key: 'email', label: 'Email module', defaultValue: true, sysAdminOnly: true, tip: 'Requires SendGrid setup by system administrator' },
+    description:
+      'Email sending (requires SendGrid) and letter generation (PDF, no external service).',
+    master: {
+      key: 'email',
+      label: 'Email module',
+      defaultValue: true,
+      sysAdminOnly: true,
+      tip: 'Requires SendGrid setup by system administrator',
+    },
     toggles: [
-      { key: 'letters', label: 'Letters', defaultValue: true, tip: 'Compose and download letters as PDF (does not require SendGrid)' },
+      {
+        key: 'letters',
+        label: 'Letters',
+        defaultValue: true,
+        tip: 'Compose and download letters as PDF (does not require SendGrid)',
+      },
     ],
   },
   {
     title: 'Members Portal',
     description: 'Online portal for members to view groups, renew, and manage their details.',
-    master: { key: 'portal', label: 'Members Portal', defaultValue: true, sysAdminOnly: true, tip: 'Requires infrastructure setup by system administrator' },
+    master: {
+      key: 'portal',
+      label: 'Members Portal',
+      defaultValue: true,
+      sysAdminOnly: true,
+      tip: 'Requires infrastructure setup by system administrator',
+    },
     toggles: [],
   },
   {
     title: 'Online Joining',
     description: 'Public online joining form for new members.',
-    master: { key: 'onlineJoining', label: 'Online Joining', defaultValue: true, sysAdminOnly: true, tip: 'Requires PayPal setup by system administrator' },
+    master: {
+      key: 'onlineJoining',
+      label: 'Online Joining',
+      defaultValue: true,
+      sysAdminOnly: true,
+      tip: 'Requires PayPal setup by system administrator',
+    },
     toggles: [],
   },
   {
@@ -86,8 +229,18 @@ const SECTIONS = [
     description: 'Additional features that do not belong to a specific module.',
     master: null,
     toggles: [
-      { key: 'reports',     label: 'SQL Reports',  defaultValue: true, tip: 'Saved parameterised reports and ad-hoc SQL editor (read-only)' },
-      { key: 'publicPages', label: 'Public Pages', defaultValue: true, tip: 'Public Groups and Public Calendar pages visible without login' },
+      {
+        key: 'reports',
+        label: 'SQL Reports',
+        defaultValue: true,
+        tip: 'Saved parameterised reports and ad-hoc SQL editor (read-only)',
+      },
+      {
+        key: 'publicPages',
+        label: 'Public Pages',
+        defaultValue: true,
+        tip: 'Public Groups and Public Calendar pages visible without login',
+      },
     ],
   },
 ];
@@ -103,8 +256,18 @@ function getVal(config, key, defaultValue) {
 
 function LockIcon() {
   return (
-    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-slate-400 inline ml-1" viewBox="0 0 20 20" fill="currentColor" title="System administrator only">
-      <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      className="h-4 w-4 text-slate-400 inline ml-1"
+      viewBox="0 0 20 20"
+      fill="currentColor"
+      title="System administrator only"
+    >
+      <path
+        fillRule="evenodd"
+        d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z"
+        clipRule="evenodd"
+      />
     </svg>
   );
 }
@@ -175,7 +338,11 @@ function FeatureSection({ section, config, isSysAdmin, onChange, onConfirmMaster
           viewBox="0 0 20 20"
           fill="currentColor"
         >
-          <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+          <path
+            fillRule="evenodd"
+            d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+            clipRule="evenodd"
+          />
         </svg>
       </button>
 
@@ -230,26 +397,33 @@ export default function FeatureConfig() {
   const { tenant, can, refreshFeatureConfig } = useAuth();
   const { markDirty, markClean } = useUnsavedChanges();
 
-  const [config,  setConfig]  = useState({});
-  const [saved,   setSaved]   = useState({});   // last-saved snapshot for dirty detection
+  const [config, setConfig] = useState({});
+  const [saved, setSaved] = useState({}); // last-saved snapshot for dirty detection
   const [loading, setLoading] = useState(true);
-  const [saving,  setSaving]  = useState(false);
-  const [error,   setError]   = useState(null);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState(null);
   const [success, setSuccess] = useState(false);
   const [confirmOff, setConfirmOff] = useState(null); // { key, title } when awaiting confirm
 
   useEffect(() => {
-    settingsApi.getFeatureConfig()
-      .then((c) => { setConfig(c); setSaved(c); })
+    settingsApi
+      .getFeatureConfig()
+      .then((c) => {
+        setConfig(c);
+        setSaved(c);
+      })
       .catch((e) => setError(e.message))
       .finally(() => setLoading(false));
   }, []);
 
-  const handleChange = useCallback((key, value) => {
-    setConfig((prev) => ({ ...prev, [key]: value }));
-    setSuccess(false);
-    markDirty();
-  }, [markDirty]);
+  const handleChange = useCallback(
+    (key, value) => {
+      setConfig((prev) => ({ ...prev, [key]: value }));
+      setSuccess(false);
+      markDirty();
+    },
+    [markDirty],
+  );
 
   /** Called when a master toggle is being turned off — show confirmation first. */
   const handleConfirmMasterOff = useCallback((key, title) => {
@@ -317,15 +491,14 @@ export default function FeatureConfig() {
       <div className="max-w-2xl mx-auto px-4 mt-6">
         <h1 className="text-2xl font-bold text-slate-800 mb-1">Feature Configuration</h1>
         <p className="text-sm text-slate-500 mb-4">
-          Choose which modules and features are available for your u3a.
-          Turning off a feature hides it from all users — existing data is preserved.
+          Choose which modules and features are available for your u3a. Turning off a feature hides
+          it from all users — existing data is preserved.
         </p>
 
         {loading && <p className="text-center text-slate-500 py-8">Loading...</p>}
 
         {!loading && (
           <form onSubmit={handleSave} noValidate className="space-y-4">
-
             {success && (
               <p className="rounded-md bg-green-50 border border-green-300 px-4 py-3 text-green-700 text-sm font-medium text-center mb-4">
                 Feature configuration saved.
@@ -375,8 +548,8 @@ export default function FeatureConfig() {
                     Turn off {confirmOff.title}?
                   </h3>
                   <p className="text-sm text-slate-600 mb-4">
-                    This will hide all {confirmOff.title} features from users.
-                    Existing data is preserved and will reappear if you turn it back on.
+                    This will hide all {confirmOff.title} features from users. Existing data is
+                    preserved and will reappear if you turn it back on.
                   </p>
                   <div className="flex justify-end gap-3">
                     <button
@@ -388,7 +561,10 @@ export default function FeatureConfig() {
                     </button>
                     <button
                       type="button"
-                      onClick={() => { handleChange(confirmOff.key, false); setConfirmOff(null); }}
+                      onClick={() => {
+                        handleChange(confirmOff.key, false);
+                        setConfirmOff(null);
+                      }}
                       className="px-4 py-2 text-sm text-white bg-red-600 hover:bg-red-700 rounded transition-colors"
                     >
                       Turn off

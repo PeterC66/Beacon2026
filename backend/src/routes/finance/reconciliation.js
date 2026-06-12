@@ -83,43 +83,51 @@ router.get('/reconcile', requirePrivilege('finance_reconcile', 'view'), async (r
     });
 
     res.json({ account, clearedBalance, uncleared });
-  } catch (err) { next(err); }
+  } catch (err) {
+    next(err);
+  }
 });
 
 const reconcileSchema = z.object({
-  accountId:      z.string().min(1),
-  statementDate:  z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  accountId: z.string().min(1),
+  statementDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
   transactionIds: z.array(z.string()),
-  batchIds:       z.array(z.string()).optional(),
+  batchIds: z.array(z.string()).optional(),
 });
 
 // POST /finance/reconcile — mark selected transactions (and batches) as cleared
-router.post('/reconcile', requirePrivilege('finance_reconcile', 'reconcile'), async (req, res, next) => {
-  try {
-    const data = reconcileSchema.parse(req.body);
+router.post(
+  '/reconcile',
+  requirePrivilege('finance_reconcile', 'reconcile'),
+  async (req, res, next) => {
+    try {
+      const data = reconcileSchema.parse(req.body);
 
-    // Clear individual transactions
-    if (data.transactionIds.length > 0) {
-      await tenantQuery(
-        req.user.tenantSlug,
-        `UPDATE transactions SET cleared_at = $1::date, updated_at = now()
+      // Clear individual transactions
+      if (data.transactionIds.length > 0) {
+        await tenantQuery(
+          req.user.tenantSlug,
+          `UPDATE transactions SET cleared_at = $1::date, updated_at = now()
          WHERE id = ANY($2::text[]) AND account_id = $3 AND cleared_at IS NULL`,
-        [data.statementDate, data.transactionIds, data.accountId],
-      );
-    }
+          [data.statementDate, data.transactionIds, data.accountId],
+        );
+      }
 
-    // Clear all transactions in selected batches
-    if (data.batchIds?.length > 0) {
-      await tenantQuery(
-        req.user.tenantSlug,
-        `UPDATE transactions SET cleared_at = $1::date, updated_at = now()
+      // Clear all transactions in selected batches
+      if (data.batchIds?.length > 0) {
+        await tenantQuery(
+          req.user.tenantSlug,
+          `UPDATE transactions SET cleared_at = $1::date, updated_at = now()
          WHERE batch_id = ANY($2::text[]) AND account_id = $3 AND cleared_at IS NULL`,
-        [data.statementDate, data.batchIds, data.accountId],
-      );
-    }
+          [data.statementDate, data.batchIds, data.accountId],
+        );
+      }
 
-    res.json({ message: 'Reconciliation saved.' });
-  } catch (err) { next(err); }
-});
+      res.json({ message: 'Reconciliation saved.' });
+    } catch (err) {
+      next(err);
+    }
+  },
+);
 
 export default router;

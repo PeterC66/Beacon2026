@@ -10,23 +10,29 @@ import PageHeader from '../../components/PageHeader.jsx';
 
 export default function MemberStatusList() {
   const { can, tenant } = useAuth();
-  const [statuses,  setStatuses]  = useState([]);
-  const [loading,   setLoading]   = useState(true);
-  const [error,     setError]     = useState(null);
-  const [newName,   setNewName]   = useState('');
-  const [adding,    setAdding]    = useState(false);
-  const [editId,    setEditId]    = useState(null);   // id of row being edited inline
-  const [editName,  setEditName]  = useState('');
-  const [saving,    setSaving]    = useState(false);
-  const [deleting,  setDeleting]  = useState(null);
+  const [statuses, setStatuses] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [newName, setNewName] = useState('');
+  const [adding, setAdding] = useState(false);
+  const [editId, setEditId] = useState(null); // id of row being edited inline
+  const [editName, setEditName] = useState('');
+  const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState(null);
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => {
+    load();
+  }, []);
 
   async function load() {
     setLoading(true);
-    try { setStatuses(await api.list()); }
-    catch (err) { setError(err.message); }
-    finally { setLoading(false); }
+    try {
+      setStatuses(await api.list());
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
   }
 
   async function handleAdd(e) {
@@ -56,7 +62,7 @@ export default function MemberStatusList() {
     setError(null);
     try {
       const updated = await api.update(id, { name: editName.trim() });
-      setStatuses((prev) => prev.map((s) => s.id === id ? { ...s, name: updated.name } : s));
+      setStatuses((prev) => prev.map((s) => (s.id === id ? { ...s, name: updated.name } : s)));
       setEditId(null);
     } catch (err) {
       setError(err.message);
@@ -103,7 +109,10 @@ export default function MemberStatusList() {
               </thead>
               <tbody>
                 {statuses.map((status, i) => (
-                  <tr key={status.id} className={`border-b border-slate-100 ${i % 2 === 0 ? 'bg-yellow-50' : 'bg-white'}`}>
+                  <tr
+                    key={status.id}
+                    className={`border-b border-slate-100 ${i % 2 === 0 ? 'bg-yellow-50' : 'bg-white'}`}
+                  >
                     <td className="px-4 py-2.5">
                       {editId === status.id ? (
                         <input
@@ -118,7 +127,9 @@ export default function MemberStatusList() {
                       ) : (
                         <>
                           {status.name}
-                          {status.locked && <span className="ml-2 text-xs text-slate-400 italic">locked</span>}
+                          {status.locked && (
+                            <span className="ml-2 text-xs text-slate-400 italic">locked</span>
+                          )}
                         </>
                       )}
                     </td>

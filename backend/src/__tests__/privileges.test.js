@@ -5,14 +5,14 @@ import request from 'supertest';
 import { makeAuthHeader } from './helpers.js';
 
 vi.mock('../utils/redis.js', () => ({
-  isSessionInvalidated:   vi.fn().mockResolvedValue(false),
+  isSessionInvalidated: vi.fn().mockResolvedValue(false),
   invalidateUserSessions: vi.fn().mockResolvedValue(undefined),
 }));
 
 vi.mock('../utils/db.js', () => ({
-  prisma:      { $disconnect: vi.fn() },
+  prisma: { $disconnect: vi.fn() },
   tenantQuery: vi.fn(),
-  withTenant:  vi.fn(),
+  withTenant: vi.fn(),
 }));
 
 const { default: app } = await import('../app.js');

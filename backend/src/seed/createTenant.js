@@ -23,15 +23,19 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
  *
  * @param {{ name, slug, adminEmail, adminName, adminPassword, adminUsername }} params
  */
-export async function createTenantSchema({ name, slug, adminEmail, adminName, adminPassword, adminUsername }) {
+export async function createTenantSchema({
+  name,
+  slug,
+  adminEmail,
+  adminName,
+  adminPassword,
+  adminUsername,
+}) {
   // 1. Create the tenant record
   const tenant = await prisma.sysTenant.create({ data: { name, slug } });
 
   // 2. Execute the schema SQL (replace :schema placeholder)
-  const schemaSQL = readFileSync(
-    resolve(__dirname, '../../prisma/tenant_schema.sql'),
-    'utf8',
-  );
+  const schemaSQL = readFileSync(resolve(__dirname, '../../prisma/tenant_schema.sql'), 'utf8');
   const schemaName = `u3a_${slug}`;
 
   // We use $executeRawUnsafe because DDL cannot be parameterised

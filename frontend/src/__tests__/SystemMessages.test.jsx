@@ -22,12 +22,20 @@ vi.mock('../lib/api.js', () => ({
 
 describe('SystemMessages page', () => {
   it('renders without crashing', () => {
-    const { container } = render(<MemoryRouter><SystemMessages /></MemoryRouter>);
+    const { container } = render(
+      <MemoryRouter>
+        <SystemMessages />
+      </MemoryRouter>,
+    );
     expect(container).toBeTruthy();
   });
 
   it('shows the System Messages heading', () => {
-    const { getAllByText } = render(<MemoryRouter><SystemMessages /></MemoryRouter>);
+    const { getAllByText } = render(
+      <MemoryRouter>
+        <SystemMessages />
+      </MemoryRouter>,
+    );
     expect(getAllByText('System Messages').length).toBeGreaterThan(0);
   });
 });

@@ -44,11 +44,16 @@ export default function MembershipCards() {
 
   // Load polls once
   useEffect(() => {
-    pollsApi.list().then(setPolls).catch(() => {});
+    pollsApi
+      .list()
+      .then(setPolls)
+      .catch(() => {});
   }, []);
 
   // Load members when filters change
-  useEffect(() => { load(); }, [showMode, selectedPoll]);
+  useEffect(() => {
+    load();
+  }, [showMode, selectedPoll]);
 
   async function load() {
     setLoading(true);
@@ -74,8 +79,12 @@ export default function MembershipCards() {
       return next;
     });
   }
-  function selectAll()  { setSelected(new Set(sorted.map((m) => m.id))); }
-  function clearAll()   { setSelected(new Set()); }
+  function selectAll() {
+    setSelected(new Set(sorted.map((m) => m.id)));
+  }
+  function clearAll() {
+    setSelected(new Set());
+  }
 
   // Action handlers
   async function handleDoAction() {
@@ -96,9 +105,12 @@ export default function MembershipCards() {
       } else if (bulkAction === 'send_card_email') {
         // Store member IDs and navigate to email compose with card attachment flag
         sessionStorage.setItem('emailComposeMemberIds', JSON.stringify(ids));
-        sessionStorage.setItem('emailComposeCardAttachment', JSON.stringify({
-          advanceYear,
-        }));
+        sessionStorage.setItem(
+          'emailComposeCardAttachment',
+          JSON.stringify({
+            advanceYear,
+          }),
+        );
         navigate('/email/compose');
         return;
       } else if (bulkAction === 'download_excel') {
@@ -114,7 +126,10 @@ export default function MembershipCards() {
   async function handleMarkPrinted() {
     try {
       await cardsApi.markPrinted(pendingMarkIds);
-      setActionResult({ type: 'success', msg: `${pendingMarkIds.length} card${pendingMarkIds.length !== 1 ? 's' : ''} marked as printed.` });
+      setActionResult({
+        type: 'success',
+        msg: `${pendingMarkIds.length} card${pendingMarkIds.length !== 1 ? 's' : ''} marked as printed.`,
+      });
       setShowMarkDialog(false);
       setPendingMarkIds([]);
       load(); // Refresh list
@@ -129,9 +144,7 @@ export default function MembershipCards() {
     setPendingMarkIds([]);
   }
 
-  const navLinks = [
-    { label: 'Home', to: '/' },
-  ];
+  const navLinks = [{ label: 'Home', to: '/' }];
 
   const needsSelection = bulkAction !== 'print_blank';
   const canDoAction = bulkAction && (needsSelection ? selected.size > 0 : true);
@@ -150,9 +163,9 @@ export default function MembershipCards() {
             <span className="text-sm font-medium text-slate-700">Show:</span>
             {[
               { value: 'outstanding', label: 'Outstanding only (new members and renewals)' },
-              { value: 'poll',        label: 'Poll' },
+              { value: 'poll', label: 'Poll' },
               { value: 'outstanding_and_poll', label: 'Outstanding and poll' },
-              { value: 'all',         label: 'All current members' },
+              { value: 'all', label: 'All current members' },
             ].map((opt) => (
               <label key={opt.value} className="flex items-center gap-1.5 text-sm cursor-pointer">
                 <input
@@ -166,19 +179,22 @@ export default function MembershipCards() {
                 {opt.label}
                 {/* Poll dropdown inline for poll-related modes */}
                 {(opt.value === 'poll' || opt.value === 'outstanding_and_poll') &&
-                  showMode === opt.value && polls.length > 0 && (
-                  <select
-                    name="selectedPoll"
-                    value={selectedPoll}
-                    onChange={(e) => setSelectedPoll(e.target.value)}
-                    className="ml-2 border border-slate-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  >
-                    <option value="">— select poll —</option>
-                    {polls.map((p) => (
-                      <option key={p.id} value={p.id}>{p.name}</option>
-                    ))}
-                  </select>
-                )}
+                  showMode === opt.value &&
+                  polls.length > 0 && (
+                    <select
+                      name="selectedPoll"
+                      value={selectedPoll}
+                      onChange={(e) => setSelectedPoll(e.target.value)}
+                      className="ml-2 border border-slate-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                      <option value="">— select poll —</option>
+                      {polls.map((p) => (
+                        <option key={p.id} value={p.id}>
+                          {p.name}
+                        </option>
+                      ))}
+                    </select>
+                  )}
               </label>
             ))}
           </div>
@@ -195,23 +211,32 @@ export default function MembershipCards() {
         </div>
 
         {/* ── Results ────────────────────────────────────────────── */}
-        {error   && <p className="text-center text-red-600 mb-3">Error: {error}</p>}
+        {error && <p className="text-center text-red-600 mb-3">Error: {error}</p>}
         {loading && <p className="text-center text-slate-500">Loading…</p>}
 
-        {!loading && !error && (
-          memberList.length === 0 ? (
+        {!loading &&
+          !error &&
+          (memberList.length === 0 ? (
             <p className="text-center text-slate-500 py-6">No members found.</p>
           ) : (
             <>
               {/* Select controls */}
               <div className="flex flex-wrap gap-2 items-center mb-2">
-                <span className="text-sm text-slate-500">{memberList.length} member{memberList.length !== 1 ? 's' : ''}</span>
+                <span className="text-sm text-slate-500">
+                  {memberList.length} member{memberList.length !== 1 ? 's' : ''}
+                </span>
                 <span className="text-slate-300">|</span>
                 <span className="text-sm font-medium text-slate-600">Select:</span>
-                <button onClick={selectAll} className="text-sm text-blue-700 hover:underline">All</button>
-                <button onClick={clearAll}  className="text-sm text-blue-700 hover:underline">Clear All</button>
+                <button onClick={selectAll} className="text-sm text-blue-700 hover:underline">
+                  All
+                </button>
+                <button onClick={clearAll} className="text-sm text-blue-700 hover:underline">
+                  Clear All
+                </button>
                 {selected.size > 0 && (
-                  <span className="text-sm font-medium text-blue-700 ml-2">{selected.size} selected</span>
+                  <span className="text-sm font-medium text-blue-700 ml-2">
+                    {selected.size} selected
+                  </span>
                 )}
               </div>
 
@@ -220,25 +245,67 @@ export default function MembershipCards() {
                   <thead>
                     <tr className="bg-slate-50 border-b border-slate-200 text-left text-slate-600 italic font-normal">
                       <th className="px-2 py-2"></th>
-                      <SortableHeader col="membership_number" label="No"       sortKey={sortKey} sortDir={sortDir} onSort={onSort} className="px-3 py-2 font-normal" />
+                      <SortableHeader
+                        col="membership_number"
+                        label="No"
+                        sortKey={sortKey}
+                        sortDir={sortDir}
+                        onSort={onSort}
+                        className="px-3 py-2 font-normal"
+                      />
                       <th className="px-3 py-2 font-normal">
-                        <span className="cursor-pointer select-none" onClick={() => onSort('forenames')}>
+                        <span
+                          className="cursor-pointer select-none"
+                          onClick={() => onSort('forenames')}
+                        >
                           Name
-                          <span className={`ml-1 text-xs ${sortKey === 'forenames' ? 'text-blue-600' : 'text-slate-300'}`}>
+                          <span
+                            className={`ml-1 text-xs ${sortKey === 'forenames' ? 'text-blue-600' : 'text-slate-300'}`}
+                          >
                             {sortKey === 'forenames' ? (sortDir === 'asc' ? '▲' : '▼') : '⇅'}
                           </span>
                         </span>
                         <span className="text-slate-300 mx-1">|</span>
-                        <span className="cursor-pointer select-none text-xs not-italic" onClick={() => onSort(SORT_SURNAME)}>
+                        <span
+                          className="cursor-pointer select-none text-xs not-italic"
+                          onClick={() => onSort(SORT_SURNAME)}
+                        >
                           by surname
-                          <span className={`ml-1 text-xs ${Array.isArray(sortKey) && sortKey[0] === 'surname' ? 'text-blue-600' : 'text-slate-300'}`}>
-                            {Array.isArray(sortKey) && sortKey[0] === 'surname' ? (sortDir === 'asc' ? '▲' : '▼') : '⇅'}
+                          <span
+                            className={`ml-1 text-xs ${Array.isArray(sortKey) && sortKey[0] === 'surname' ? 'text-blue-600' : 'text-slate-300'}`}
+                          >
+                            {Array.isArray(sortKey) && sortKey[0] === 'surname'
+                              ? sortDir === 'asc'
+                                ? '▲'
+                                : '▼'
+                              : '⇅'}
                           </span>
                         </span>
                       </th>
-                      <SortableHeader col="house_no"          label="Address"  sortKey={sortKey} sortDir={sortDir} onSort={onSort} className="px-3 py-2 font-normal" />
-                      <SortableHeader col="class_name"        label="Class"    sortKey={sortKey} sortDir={sortDir} onSort={onSort} className="px-3 py-2 font-normal" />
-                      <SortableHeader col="status_name"       label="Status"   sortKey={sortKey} sortDir={sortDir} onSort={onSort} className="px-3 py-2 font-normal" />
+                      <SortableHeader
+                        col="house_no"
+                        label="Address"
+                        sortKey={sortKey}
+                        sortDir={sortDir}
+                        onSort={onSort}
+                        className="px-3 py-2 font-normal"
+                      />
+                      <SortableHeader
+                        col="class_name"
+                        label="Class"
+                        sortKey={sortKey}
+                        sortDir={sortDir}
+                        onSort={onSort}
+                        className="px-3 py-2 font-normal"
+                      />
+                      <SortableHeader
+                        col="status_name"
+                        label="Status"
+                        sortKey={sortKey}
+                        sortDir={sortDir}
+                        onSort={onSort}
+                        className="px-3 py-2 font-normal"
+                      />
                     </tr>
                   </thead>
                   <tbody>
@@ -256,21 +323,41 @@ export default function MembershipCards() {
                           />
                           {!m.email && <NoEmailIcon className="ml-1" />}
                         </td>
-                        <td className={`px-3 py-2 tabular-nums ${isSubscriptionOverdue(m) ? 'text-red-600' : ''}`}>
+                        <td
+                          className={`px-3 py-2 tabular-nums ${isSubscriptionOverdue(m) ? 'text-red-600' : ''}`}
+                        >
                           {can('member_record', 'view') ? (
-                            <a href="#view" onClick={(e) => { e.preventDefault(); navigate(`/members/${m.id}`); }}
-                              className={`hover:underline ${isSubscriptionOverdue(m) ? 'text-red-600' : 'text-blue-700'}`}>
+                            <a
+                              href="#view"
+                              onClick={(e) => {
+                                e.preventDefault();
+                                navigate(`/members/${m.id}`);
+                              }}
+                              className={`hover:underline ${isSubscriptionOverdue(m) ? 'text-red-600' : 'text-blue-700'}`}
+                            >
                               {m.membership_number}
                             </a>
-                          ) : m.membership_number}
+                          ) : (
+                            m.membership_number
+                          )}
                         </td>
-                        <td className={`px-3 py-2 font-medium ${isSubscriptionOverdue(m) ? 'text-red-600' : ''}`}>
+                        <td
+                          className={`px-3 py-2 font-medium ${isSubscriptionOverdue(m) ? 'text-red-600' : ''}`}
+                        >
                           {can('member_record', 'view') ? (
-                            <a href="#view" onClick={(e) => { e.preventDefault(); navigate(`/members/${m.id}`); }}
-                              className={`hover:underline ${isSubscriptionOverdue(m) ? 'text-red-600' : 'text-blue-700'}`}>
+                            <a
+                              href="#view"
+                              onClick={(e) => {
+                                e.preventDefault();
+                                navigate(`/members/${m.id}`);
+                              }}
+                              className={`hover:underline ${isSubscriptionOverdue(m) ? 'text-red-600' : 'text-blue-700'}`}
+                            >
                               {formatMemberName(m)}
                             </a>
-                          ) : formatMemberName(m)}
+                          ) : (
+                            formatMemberName(m)
+                          )}
                         </td>
                         <td className="px-3 py-2">{formatShortAddress(m)}</td>
                         <td className="px-3 py-2">{m.class_name ?? ''}</td>
@@ -289,13 +376,19 @@ export default function MembershipCards() {
                     <select
                       name="bulkAction"
                       value={bulkAction}
-                      onChange={(e) => { setBulkAction(e.target.value); setActionResult(null); setActionError(null); }}
+                      onChange={(e) => {
+                        setBulkAction(e.target.value);
+                        setActionResult(null);
+                        setActionError(null);
+                      }}
                       className="border border-slate-300 rounded px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                     >
                       <option value="">— choose action —</option>
                       <option value="download_cards">Download cards</option>
                       <option value="print_blank">Print blank cards</option>
-                      {can('email', 'send') && <option value="send_card_email">Send card by email</option>}
+                      {can('email', 'send') && (
+                        <option value="send_card_email">Send card by email</option>
+                      )}
                       <option value="download_excel">Download Excel card data</option>
                     </select>
                   </div>
@@ -309,7 +402,9 @@ export default function MembershipCards() {
                   </button>
 
                   {actionResult && (
-                    <p className={`text-sm font-medium ${actionResult.type === 'success' ? 'text-green-700' : 'text-red-600'}`}>
+                    <p
+                      className={`text-sm font-medium ${actionResult.type === 'success' ? 'text-green-700' : 'text-red-600'}`}
+                    >
                       {actionResult.msg}
                     </p>
                   )}
@@ -317,8 +412,7 @@ export default function MembershipCards() {
                 </div>
               </div>
             </>
-          )
-        )}
+          ))}
       </div>
 
       <NavBar links={navLinks} />

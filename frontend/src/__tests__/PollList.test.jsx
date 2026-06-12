@@ -20,12 +20,20 @@ vi.mock('../lib/api.js', () => ({
 
 describe('PollList page', () => {
   it('renders without crashing', () => {
-    const { container } = render(<MemoryRouter><PollList /></MemoryRouter>);
+    const { container } = render(
+      <MemoryRouter>
+        <PollList />
+      </MemoryRouter>,
+    );
     expect(container).toBeTruthy();
   });
 
   it('shows the Poll Set Up heading', () => {
-    const { getByText } = render(<MemoryRouter><PollList /></MemoryRouter>);
+    const { getByText } = render(
+      <MemoryRouter>
+        <PollList />
+      </MemoryRouter>,
+    );
     expect(getByText('Poll Set Up')).toBeInTheDocument();
   });
 });

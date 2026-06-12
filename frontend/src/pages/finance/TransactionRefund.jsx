@@ -21,15 +21,15 @@ export default function TransactionRefund() {
   const navigate = useNavigate();
   const { tenant } = useAuth();
 
-  const [orig,       setOrig]       = useState(null);
-  const [loading,    setLoading]    = useState(true);
-  const [saving,     setSaving]     = useState(false);
-  const [error,      setError]      = useState(null);
-  const [date,       setDate]       = useState(today());
-  const [payMethod,  setPayMethod]  = useState('');
-  const [payRef,     setPayRef]     = useState('');
-  const [detail,     setDetail]     = useState('');
-  const [remarks,    setRemarks]    = useState('');
+  const [orig, setOrig] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState(null);
+  const [date, setDate] = useState(today());
+  const [payMethod, setPayMethod] = useState('');
+  const [payRef, setPayRef] = useState('');
+  const [detail, setDetail] = useState('');
+  const [remarks, setRemarks] = useState('');
   const [refAmounts, setRefAmounts] = useState({}); // { category_id: string_amount }
 
   useEffect(() => {
@@ -41,11 +41,16 @@ export default function TransactionRefund() {
         // Initialise refund amounts to empty for each category
         const amounts = {};
         if (Array.isArray(t.categories)) {
-          t.categories.forEach((c) => { amounts[c.category_id] = ''; });
+          t.categories.forEach((c) => {
+            amounts[c.category_id] = '';
+          });
         }
         setRefAmounts(amounts);
-      } catch (err) { setError(err.message); }
-      finally { setLoading(false); }
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
     }
     load();
   }, [id]);
@@ -62,7 +67,8 @@ export default function TransactionRefund() {
   function validate() {
     if (!date) return 'Please enter a date.';
     if (refundTotal <= 0) return 'Please enter a refund amount for at least one category.';
-    if (orig && refundTotal > orig.amount + 0.001) return `Refund total (${refundTotal.toFixed(2)}) cannot exceed original amount (${orig.amount.toFixed(2)}).`;
+    if (orig && refundTotal > orig.amount + 0.001)
+      return `Refund total (${refundTotal.toFixed(2)}) cannot exceed original amount (${orig.amount.toFixed(2)}).`;
     // Per-category validation
     if (orig && Array.isArray(orig.categories)) {
       for (const cat of orig.categories) {
@@ -78,7 +84,11 @@ export default function TransactionRefund() {
   async function handleSave(e) {
     e.preventDefault();
     const err = validate();
-    if (err) { setError(err); scrollToFormError(); return; }
+    if (err) {
+      setError(err);
+      scrollToFormError();
+      return;
+    }
     setSaving(true);
     setError(null);
     try {
@@ -105,10 +115,13 @@ export default function TransactionRefund() {
   const navLinks = [
     { label: 'Home', to: '/' },
     { label: 'Ledger', to: '/finance/ledger' },
-    ...(orig ? [{ label: `Transaction #${orig.transaction_number}`, to: `/finance/transactions/${id}` }] : []),
+    ...(orig
+      ? [{ label: `Transaction #${orig.transaction_number}`, to: `/finance/transactions/${id}` }]
+      : []),
   ];
 
-  const INP = 'border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 w-full';
+  const INP =
+    'border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 w-full';
   const LBL = 'block text-sm font-medium text-slate-700 mb-1';
 
   if (loading) {
@@ -141,7 +154,11 @@ export default function TransactionRefund() {
       <div className="max-w-4xl mx-auto px-4 py-5">
         <h1 className="text-xl font-bold text-center mb-4">Transaction Refund</h1>
 
-        {error && <p data-form-error className="text-center text-red-600 py-2 mb-2">Error: {error}</p>}
+        {error && (
+          <p data-form-error className="text-center text-red-600 py-2 mb-2">
+            Error: {error}
+          </p>
+        )}
 
         {/* Original transaction info */}
         <div className="bg-white/90 rounded-lg shadow-sm p-4 sm:p-6 mb-4">
@@ -149,7 +166,9 @@ export default function TransactionRefund() {
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm">
             <div>
               <span className="text-slate-500">Type:</span>{' '}
-              <span className="font-medium">{orig.type === 'in' ? 'Money received' : 'Payment'}</span>
+              <span className="font-medium">
+                {orig.type === 'in' ? 'Money received' : 'Payment'}
+              </span>
             </div>
             <div>
               <span className="text-slate-500">Transaction #:</span>{' '}
@@ -179,47 +198,101 @@ export default function TransactionRefund() {
             {/* Refund type (read-only) */}
             <div className="sm:col-span-2">
               <label className={LBL}>Transaction type</label>
-              <p className="text-sm font-medium text-slate-700 bg-slate-50 rounded px-3 py-2">{refundTypeLabel}</p>
+              <p className="text-sm font-medium text-slate-700 bg-slate-50 rounded px-3 py-2">
+                {refundTypeLabel}
+              </p>
             </div>
 
             {/* Date */}
             <div>
-              <label htmlFor="refund-date" className={LBL}>Refund date <RequiredMark /></label>
-              <DateInput id="refund-date" name="date" value={date} onChange={setDate} className={INP} />
+              <label htmlFor="refund-date" className={LBL}>
+                Refund date <RequiredMark />
+              </label>
+              <DateInput
+                id="refund-date"
+                name="date"
+                value={date}
+                onChange={setDate}
+                className={INP}
+              />
             </div>
 
             {/* Total refund amount (computed) */}
             <div>
               <label className={LBL}>Refund amount (£)</label>
-              <p className={`font-mono text-sm px-3 py-2 rounded ${refundOk ? 'bg-green-50 text-green-700' : 'bg-slate-50 text-slate-700'}`}>
+              <p
+                className={`font-mono text-sm px-3 py-2 rounded ${refundOk ? 'bg-green-50 text-green-700' : 'bg-slate-50 text-slate-700'}`}
+              >
                 £{refundTotal.toFixed(2)}
               </p>
             </div>
 
             {/* Payment method */}
             <div>
-              <label htmlFor="refund-payment-method" className={LBL}>Payment method</label>
-              <select id="refund-payment-method" name="payMethod" value={payMethod} onChange={(e) => setPayMethod(e.target.value)} className={INP}>
-                {PAYMENT_METHODS.map((m) => <option key={m} value={m}>{m || '— none —'}</option>)}
+              <label htmlFor="refund-payment-method" className={LBL}>
+                Payment method
+              </label>
+              <select
+                id="refund-payment-method"
+                name="payMethod"
+                value={payMethod}
+                onChange={(e) => setPayMethod(e.target.value)}
+                className={INP}
+              >
+                {PAYMENT_METHODS.map((m) => (
+                  <option key={m} value={m}>
+                    {m || '— none —'}
+                  </option>
+                ))}
               </select>
             </div>
 
             {/* Payment reference */}
             <div>
-              <label htmlFor="refund-payment-ref" className={LBL}>Payment reference</label>
-              <input id="refund-payment-ref" type="text" name="payRef" value={payRef} onChange={(e) => setPayRef(e.target.value)} className={INP} placeholder="Reference" />
+              <label htmlFor="refund-payment-ref" className={LBL}>
+                Payment reference
+              </label>
+              <input
+                id="refund-payment-ref"
+                type="text"
+                name="payRef"
+                value={payRef}
+                onChange={(e) => setPayRef(e.target.value)}
+                className={INP}
+                placeholder="Reference"
+              />
             </div>
 
             {/* Detail */}
             <div className="sm:col-span-2">
-              <label htmlFor="refund-detail" className={LBL}>Detail</label>
-              <input id="refund-detail" type="text" name="detail" value={detail} onChange={(e) => setDetail(e.target.value)} className={INP} placeholder="Reason for refund" />
+              <label htmlFor="refund-detail" className={LBL}>
+                Detail
+              </label>
+              <input
+                id="refund-detail"
+                type="text"
+                name="detail"
+                value={detail}
+                onChange={(e) => setDetail(e.target.value)}
+                className={INP}
+                placeholder="Reason for refund"
+              />
             </div>
 
             {/* Remarks */}
             <div className="sm:col-span-2">
-              <label htmlFor="refund-remarks" className={LBL}>Remarks</label>
-              <textarea id="refund-remarks" name="remarks" value={remarks} onChange={(e) => setRemarks(e.target.value)} rows={2} className={INP} placeholder="Additional notes" />
+              <label htmlFor="refund-remarks" className={LBL}>
+                Remarks
+              </label>
+              <textarea
+                id="refund-remarks"
+                name="remarks"
+                value={remarks}
+                onChange={(e) => setRemarks(e.target.value)}
+                rows={2}
+                className={INP}
+                placeholder="Additional notes"
+              />
             </div>
           </div>
 
@@ -239,30 +312,40 @@ export default function TransactionRefund() {
                   </tr>
                 </thead>
                 <tbody>
-                  {Array.isArray(orig.categories) && orig.categories.map((cat) => (
-                    <tr key={cat.category_id} className="border-b border-slate-100">
-                      <td className="py-1.5 pr-4">{cat.name}</td>
-                      <td className="py-1.5 text-right font-mono">{Number(cat.amount).toFixed(2)}</td>
-                      <td className="py-1.5">
-                        <input
-                          type="number"
-                          name="refundAmount"
-                          min="0"
-                          max={cat.amount}
-                          step="0.01"
-                          value={refAmounts[cat.category_id] ?? ''}
-                          onChange={(e) => setRefAmounts((prev) => ({ ...prev, [cat.category_id]: e.target.value }))}
-                          className="border border-slate-300 rounded px-2 py-1 text-sm w-32 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                          placeholder="0.00"
-                        />
-                      </td>
-                    </tr>
-                  ))}
+                  {Array.isArray(orig.categories) &&
+                    orig.categories.map((cat) => (
+                      <tr key={cat.category_id} className="border-b border-slate-100">
+                        <td className="py-1.5 pr-4">{cat.name}</td>
+                        <td className="py-1.5 text-right font-mono">
+                          {Number(cat.amount).toFixed(2)}
+                        </td>
+                        <td className="py-1.5">
+                          <input
+                            type="number"
+                            name="refundAmount"
+                            min="0"
+                            max={cat.amount}
+                            step="0.01"
+                            value={refAmounts[cat.category_id] ?? ''}
+                            onChange={(e) =>
+                              setRefAmounts((prev) => ({
+                                ...prev,
+                                [cat.category_id]: e.target.value,
+                              }))
+                            }
+                            className="border border-slate-300 rounded px-2 py-1 text-sm w-32 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            placeholder="0.00"
+                          />
+                        </td>
+                      </tr>
+                    ))}
                 </tbody>
                 <tfoot>
                   <tr className="border-t-2 border-slate-300 font-medium">
                     <td className="py-1.5 pr-4">Total</td>
-                    <td className="py-1.5 text-right font-mono">£{Number(orig.amount).toFixed(2)}</td>
+                    <td className="py-1.5 text-right font-mono">
+                      £{Number(orig.amount).toFixed(2)}
+                    </td>
                     <td className="py-1.5 font-mono px-2">£{refundTotal.toFixed(2)}</td>
                   </tr>
                 </tfoot>

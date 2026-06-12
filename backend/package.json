@@ -11,7 +11,11 @@
     "db:migrate": "prisma migrate dev",
     "db:seed": "node src/seed/index.js",
     "db:studio": "prisma studio",
-    "test": "vitest --run"
+    "test": "vitest --run",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write \"src/**/*.js\"",
+    "format:check": "prettier --check \"src/**/*.js\""
   },
   "engines": {
     "node": ">=20.0.0"
@@ -37,6 +41,11 @@
     "zod": "^3.22.4"
   },
   "devDependencies": {
+    "@eslint/js": "^9.39.4",
+    "eslint": "^9.39.4",
+    "eslint-config-prettier": "^10.1.8",
+    "globals": "^17.6.0",
+    "prettier": "^3.8.4",
     "prisma": "^5.0.0",
     "supertest": "^6.3.4",
     "vitest": "^4.1.4"

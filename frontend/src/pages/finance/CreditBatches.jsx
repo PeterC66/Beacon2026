@@ -8,10 +8,13 @@ import { useAuth } from '../../context/AuthContext.jsx';
 import NavBar from '../../components/NavBar.jsx';
 import PageHeader from '../../components/PageHeader.jsx';
 
-const inputCls   = 'border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500';
-const btnPrimary = 'bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white rounded px-5 py-2 text-sm font-medium transition-colors';
-const btnDanger  = 'border border-red-300 text-red-600 hover:bg-red-50 rounded px-5 py-2 text-sm';
-const btnSecondary = 'border border-slate-300 text-slate-700 hover:bg-slate-50 rounded px-4 py-1.5 text-sm transition-colors';
+const inputCls =
+  'border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500';
+const btnPrimary =
+  'bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white rounded px-5 py-2 text-sm font-medium transition-colors';
+const btnDanger = 'border border-red-300 text-red-600 hover:bg-red-50 rounded px-5 py-2 text-sm';
+const btnSecondary =
+  'border border-slate-300 text-slate-700 hover:bg-slate-50 rounded px-4 py-1.5 text-sm transition-colors';
 
 function fmtDate(d) {
   if (!d) return '';
@@ -36,41 +39,41 @@ export default function CreditBatches() {
   const initialBatchId = searchParams.get('batchId') ?? '';
 
   // ─── List mode state ────────────────────────────────────────────────────
-  const [accounts,  setAccounts]  = useState([]);
+  const [accounts, setAccounts] = useState([]);
   const [accountId, setAccountId] = useState('');
-  const [mode,      setMode]      = useState('uncleared'); // uncleared | since
+  const [mode, setMode] = useState('uncleared'); // uncleared | since
   const [sinceDate, setSinceDate] = useState('');
-  const [batches,   setBatches]   = useState([]);
-  const [loading,   setLoading]   = useState(true);
-  const [error,     setError]     = useState(null);
+  const [batches, setBatches] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   // ─── Detail mode state ──────────────────────────────────────────────────
   const [viewBatch, setViewBatch] = useState(null);
-  const [editRef,   setEditRef]   = useState('');
-  const [editDesc,  setEditDesc]  = useState('');
-  const [editDate,  setEditDate]  = useState('');
-  const [saving,    setSaving]    = useState(false);
+  const [editRef, setEditRef] = useState('');
+  const [editDesc, setEditDesc] = useState('');
+  const [editDate, setEditDate] = useState('');
+  const [saving, setSaving] = useState(false);
 
   // ─── Create/Add mode state ──────────────────────────────────────────────
-  const [showCreate,      setShowCreate]      = useState(false);
-  const [unbatched,       setUnbatched]       = useState([]);
-  const [selectedCreate,  setSelectedCreate]  = useState(new Set());
-  const [batchRef,        setBatchRef]        = useState('');
-  const [batchDesc,       setBatchDesc]       = useState('');
+  const [showCreate, setShowCreate] = useState(false);
+  const [unbatched, setUnbatched] = useState([]);
+  const [selectedCreate, setSelectedCreate] = useState(new Set());
+  const [batchRef, setBatchRef] = useState('');
+  const [batchDesc, setBatchDesc] = useState('');
   const [existingBatchId, setExistingBatchId] = useState('');
-  const [creating,        setCreating]        = useState(false);
+  const [creating, setCreating] = useState(false);
   const [loadingUnbatched, setLoadingUnbatched] = useState(false);
 
   // ─── Add-to-batch from detail view ─────────────────────────────────────
-  const [showAddTxns,      setShowAddTxns]      = useState(false);
-  const [addUnbatched,     setAddUnbatched]     = useState([]);
-  const [selectedAdd,      setSelectedAdd]      = useState(new Set());
-  const [loadingAddTxns,   setLoadingAddTxns]   = useState(false);
-  const [addingTxns,       setAddingTxns]       = useState(false);
+  const [showAddTxns, setShowAddTxns] = useState(false);
+  const [addUnbatched, setAddUnbatched] = useState([]);
+  const [selectedAdd, setSelectedAdd] = useState(new Set());
+  const [loadingAddTxns, setLoadingAddTxns] = useState(false);
+  const [addingTxns, setAddingTxns] = useState(false);
 
   // ─── Remove mode state ──────────────────────────────────────────────────
   const [selectedRemove, setSelectedRemove] = useState(new Set());
-  const [removing,       setRemoving]       = useState(false);
+  const [removing, setRemoving] = useState(false);
 
   // ─── Feedback ───────────────────────────────────────────────────────────
   const [saved, setSaved] = useState(false);
@@ -86,8 +89,11 @@ export default function CreditBatches() {
         const firstLocked = active.find((a) => a.locked);
         if (firstLocked) setAccountId(firstLocked.id);
         else if (active.length > 0) setAccountId(active[0].id);
-      } catch (err) { setError(err.message); }
-      finally { setLoading(false); }
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
     }
     init();
   }, []);
@@ -99,7 +105,10 @@ export default function CreditBatches() {
 
   // ─── Auto-load batches when account/mode/date changes ─────────────────
   const loadBatches = useCallback(async () => {
-    if (!accountId) { setBatches([]); return; }
+    if (!accountId) {
+      setBatches([]);
+      return;
+    }
     setLoading(true);
     setError(null);
     try {
@@ -107,8 +116,11 @@ export default function CreditBatches() {
       if (mode === 'since' && sinceDate) params.date = sinceDate;
       const rows = await financeApi.listBatches(params);
       setBatches(rows);
-    } catch (err) { setError(err.message); }
-    finally { setLoading(false); }
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
   }, [accountId, mode, sinceDate]);
 
   useEffect(() => {
@@ -128,19 +140,26 @@ export default function CreditBatches() {
       setEditDesc(detail.description ?? '');
       setEditDate(toISODate(detail.batch_date));
       setSelectedRemove(new Set());
-    } catch (err) { setError(err.message); }
-    finally { setLoading(false); }
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
   }
 
   async function handleSaveBatchDetails() {
     if (!viewBatch) return;
-    if (!editRef.trim()) { setError('Batch reference is required.'); return; }
+    if (!editRef.trim()) {
+      setError('Batch reference is required.');
+      return;
+    }
     setSaving(true);
     setError(null);
     try {
       const updates = {};
       if (editRef.trim() !== viewBatch.batch_ref) updates.batch_ref = editRef.trim();
-      if ((editDesc || null) !== (viewBatch.description || null)) updates.description = editDesc.trim() || null;
+      if ((editDesc || null) !== (viewBatch.description || null))
+        updates.description = editDesc.trim() || null;
       if (editDate !== toISODate(viewBatch.batch_date)) updates.batch_date = editDate;
 
       if (Object.keys(updates).length > 0) {
@@ -148,14 +167,20 @@ export default function CreditBatches() {
         setViewBatch((prev) => ({ ...prev, ...updated }));
         flashSaved();
       }
-    } catch (err) { setError(err.message); }
-    finally { setSaving(false); }
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setSaving(false);
+    }
   }
 
   // ─── Create / add to batch ─────────────────────────────────────────────
 
   async function openCreate() {
-    if (!accountId) { setError('Select an account first.'); return; }
+    if (!accountId) {
+      setError('Select an account first.');
+      return;
+    }
     setShowCreate(true);
     setLoadingUnbatched(true);
     setError(null);
@@ -166,21 +191,28 @@ export default function CreditBatches() {
       setBatchRef('');
       setBatchDesc('');
       setExistingBatchId('');
-    } catch (err) { setError(err.message); }
-    finally { setLoadingUnbatched(false); }
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoadingUnbatched(false);
+    }
   }
 
   function toggleCreate(id) {
     setSelectedCreate((prev) => {
       const next = new Set(prev);
-      if (next.has(id)) next.delete(id); else next.add(id);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
       return next;
     });
   }
 
   async function handleCreateBatch() {
     if (selectedCreate.size === 0) return;
-    if (!batchRef.trim()) { setError('Enter a batch reference.'); return; }
+    if (!batchRef.trim()) {
+      setError('Enter a batch reference.');
+      return;
+    }
     setCreating(true);
     setError(null);
     try {
@@ -192,8 +224,11 @@ export default function CreditBatches() {
       });
       flashSaved();
       setShowCreate(false);
-    } catch (err) { setError(err.message); }
-    finally { setCreating(false); }
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setCreating(false);
+    }
   }
 
   async function handleAddToExisting() {
@@ -204,8 +239,11 @@ export default function CreditBatches() {
       await financeApi.addToBatch(existingBatchId, [...selectedCreate]);
       flashSaved();
       setShowCreate(false);
-    } catch (err) { setError(err.message); }
-    finally { setCreating(false); }
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setCreating(false);
+    }
   }
 
   // ─── Add transactions from batch detail view ──────────────────────────
@@ -219,14 +257,18 @@ export default function CreditBatches() {
       const rows = await financeApi.getUnbatched(viewBatch.account_id);
       setAddUnbatched(rows);
       setSelectedAdd(new Set());
-    } catch (err) { setError(err.message); }
-    finally { setLoadingAddTxns(false); }
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoadingAddTxns(false);
+    }
   }
 
   function toggleAdd(id) {
     setSelectedAdd((prev) => {
       const next = new Set(prev);
-      if (next.has(id)) next.delete(id); else next.add(id);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
       return next;
     });
   }
@@ -240,8 +282,11 @@ export default function CreditBatches() {
       flashSaved();
       setShowAddTxns(false);
       await openBatch(viewBatch.id);
-    } catch (err) { setError(err.message); }
-    finally { setAddingTxns(false); }
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setAddingTxns(false);
+    }
   }
 
   // ─── Remove transactions from batch ────────────────────────────────────
@@ -249,7 +294,8 @@ export default function CreditBatches() {
   function toggleRemove(id) {
     setSelectedRemove((prev) => {
       const next = new Set(prev);
-      if (next.has(id)) next.delete(id); else next.add(id);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
       return next;
     });
   }
@@ -262,8 +308,11 @@ export default function CreditBatches() {
       await financeApi.removeFromBatch(viewBatch.id, [...selectedRemove]);
       flashSaved();
       await openBatch(viewBatch.id);
-    } catch (err) { setError(err.message); }
-    finally { setRemoving(false); }
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setRemoving(false);
+    }
   }
 
   // ─── Delete batch ──────────────────────────────────────────────────────
@@ -275,7 +324,9 @@ export default function CreditBatches() {
       await financeApi.deleteBatch(batchId);
       flashSaved();
       if (viewBatch?.id === batchId) setViewBatch(null);
-    } catch (err) { setError(err.message); }
+    } catch (err) {
+      setError(err.message);
+    }
   }
 
   function flashSaved() {
@@ -286,14 +337,22 @@ export default function CreditBatches() {
   }
 
   // ─── Derived ──────────────────────────────────────────────────────────
-  const unclearedBatches = batches.filter((b) => b.cleared_count < b.txn_count || b.txn_count === 0);
+  const unclearedBatches = batches.filter(
+    (b) => b.cleared_count < b.txn_count || b.txn_count === 0,
+  );
   const canCreate = can('finance_batches', 'create');
   const canDelete = can('finance_batches', 'delete');
 
   // Batch detail — totals for remove pattern
-  const currentBatchTotal = viewBatch ? viewBatch.transactions.reduce((s, t) => s + t.amount, 0) : 0;
-  const newBatchTotal     = viewBatch ? viewBatch.transactions.filter((t) => !selectedRemove.has(t.id)).reduce((s, t) => s + t.amount, 0) : 0;
-  const hasRemovable      = viewBatch ? viewBatch.transactions.some((t) => !t.cleared_at) : false;
+  const currentBatchTotal = viewBatch
+    ? viewBatch.transactions.reduce((s, t) => s + t.amount, 0)
+    : 0;
+  const newBatchTotal = viewBatch
+    ? viewBatch.transactions
+        .filter((t) => !selectedRemove.has(t.id))
+        .reduce((s, t) => s + t.amount, 0)
+    : 0;
+  const hasRemovable = viewBatch ? viewBatch.transactions.some((t) => !t.cleared_at) : false;
 
   const navLinks = [
     { label: 'Home', to: '/' },
@@ -324,14 +383,28 @@ export default function CreditBatches() {
           <div className="flex flex-wrap items-end gap-4 mb-4">
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">Account</label>
-              <select name="accountId" value={accountId} onChange={(e) => setAccountId(e.target.value)} className={inputCls}>
+              <select
+                name="accountId"
+                value={accountId}
+                onChange={(e) => setAccountId(e.target.value)}
+                className={inputCls}
+              >
                 <option value="">— select —</option>
-                {accounts.map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}
+                {accounts.map((a) => (
+                  <option key={a.id} value={a.id}>
+                    {a.name}
+                  </option>
+                ))}
               </select>
             </div>
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">Show</label>
-              <select name="mode" value={mode} onChange={(e) => setMode(e.target.value)} className={inputCls}>
+              <select
+                name="mode"
+                value={mode}
+                onChange={(e) => setMode(e.target.value)}
+                className={inputCls}
+              >
                 <option value="uncleared">Uncleared</option>
                 <option value="since">Since date</option>
               </select>
@@ -339,7 +412,13 @@ export default function CreditBatches() {
             {mode === 'since' && (
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">Since</label>
-                <input type="date" name="sinceDate" value={sinceDate} onChange={(e) => setSinceDate(e.target.value)} className={inputCls} />
+                <input
+                  type="date"
+                  name="sinceDate"
+                  value={sinceDate}
+                  onChange={(e) => setSinceDate(e.target.value)}
+                  className={inputCls}
+                />
               </div>
             )}
           </div>
@@ -370,25 +449,41 @@ export default function CreditBatches() {
                   return (
                     <tr key={b.id} className={i % 2 === 0 ? 'bg-yellow-50' : 'bg-white'}>
                       <td className="px-3 py-1 border-b border-slate-200">
-                        <button onClick={() => openBatch(b.id)} className="text-blue-700 hover:underline font-medium">
+                        <button
+                          onClick={() => openBatch(b.id)}
+                          className="text-blue-700 hover:underline font-medium"
+                        >
                           {b.batch_ref}
                         </button>
                       </td>
-                      <td className="px-3 py-1 border-b border-slate-200">{fmtDate(b.batch_date)}</td>
-                      <td className="px-3 py-1 border-b border-slate-200 text-right">{b.txn_count}</td>
-                      <td className="px-3 py-1 border-b border-slate-200 text-right font-mono">{fmtAmt(b.total_amount)}</td>
+                      <td className="px-3 py-1 border-b border-slate-200">
+                        {fmtDate(b.batch_date)}
+                      </td>
+                      <td className="px-3 py-1 border-b border-slate-200 text-right">
+                        {b.txn_count}
+                      </td>
+                      <td className="px-3 py-1 border-b border-slate-200 text-right font-mono">
+                        {fmtAmt(b.total_amount)}
+                      </td>
                       <td className="px-3 py-1 border-b border-slate-200">
                         {allCleared ? (
-                          <span className="text-xs text-green-700 bg-green-100 px-1.5 py-0.5 rounded">Cleared</span>
+                          <span className="text-xs text-green-700 bg-green-100 px-1.5 py-0.5 rounded">
+                            Cleared
+                          </span>
                         ) : partCleared ? (
-                          <span className="text-xs text-amber-700 bg-amber-100 px-1.5 py-0.5 rounded">Part cleared</span>
+                          <span className="text-xs text-amber-700 bg-amber-100 px-1.5 py-0.5 rounded">
+                            Part cleared
+                          </span>
                         ) : (
                           <span className="text-xs text-slate-500">Uncleared</span>
                         )}
                       </td>
                       <td className="px-3 py-1 border-b border-slate-200">
                         {canDelete && b.txn_count === 0 && (
-                          <button onClick={() => handleDeleteBatch(b.id)} className="text-red-600 hover:underline text-xs">
+                          <button
+                            onClick={() => handleDeleteBatch(b.id)}
+                            className="text-red-600 hover:underline text-xs"
+                          >
                             Delete
                           </button>
                         )}
@@ -425,7 +520,9 @@ export default function CreditBatches() {
               {canCreate ? (
                 <div className="flex flex-wrap items-end gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">Batch Reference</label>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">
+                      Batch Reference
+                    </label>
                     <input
                       type="text"
                       name="editRef"
@@ -435,7 +532,9 @@ export default function CreditBatches() {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">Batch Date</label>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">
+                      Batch Date
+                    </label>
                     <input
                       type="date"
                       name="editDate"
@@ -445,7 +544,9 @@ export default function CreditBatches() {
                     />
                   </div>
                   <div className="flex-1 min-w-[180px]">
-                    <label className="block text-sm font-medium text-slate-700 mb-1">Description</label>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">
+                      Description
+                    </label>
                     <input
                       type="text"
                       name="editDesc"
@@ -455,15 +556,27 @@ export default function CreditBatches() {
                       className={`${inputCls} w-full`}
                     />
                   </div>
-                  <button onClick={handleSaveBatchDetails} disabled={saving || !editRef.trim()} className={btnPrimary}>
+                  <button
+                    onClick={handleSaveBatchDetails}
+                    disabled={saving || !editRef.trim()}
+                    className={btnPrimary}
+                  >
                     {saving ? 'Saving…' : 'Save'}
                   </button>
                 </div>
               ) : (
                 <div className="flex flex-wrap gap-6 text-sm text-slate-600">
-                  <span><span className="font-medium">Reference:</span> {viewBatch.batch_ref}</span>
-                  <span><span className="font-medium">Date:</span> {fmtDate(viewBatch.batch_date)}</span>
-                  {viewBatch.description && <span><span className="font-medium">Description:</span> {viewBatch.description}</span>}
+                  <span>
+                    <span className="font-medium">Reference:</span> {viewBatch.batch_ref}
+                  </span>
+                  <span>
+                    <span className="font-medium">Date:</span> {fmtDate(viewBatch.batch_date)}
+                  </span>
+                  {viewBatch.description && (
+                    <span>
+                      <span className="font-medium">Description:</span> {viewBatch.description}
+                    </span>
+                  )}
                 </div>
               )}
             </div>
@@ -476,7 +589,9 @@ export default function CreditBatches() {
                     <th className="px-3 py-1 border-b border-slate-300 text-left">#</th>
                     <th className="px-3 py-1 border-b border-slate-300 text-left">Date</th>
                     <th className="px-3 py-1 border-b border-slate-300 text-left">Payment Ref</th>
-                    <th className="px-3 py-1 border-b border-slate-300 text-left">Payment Method</th>
+                    <th className="px-3 py-1 border-b border-slate-300 text-left">
+                      Payment Method
+                    </th>
                     <th className="px-3 py-1 border-b border-slate-300 text-left">From/To</th>
                     <th className="px-3 py-1 border-b border-slate-300 text-left">Detail</th>
                     <th className="px-3 py-1 border-b border-slate-300 text-right">Amount (£)</th>
@@ -488,32 +603,58 @@ export default function CreditBatches() {
                 </thead>
                 <tbody>
                   {viewBatch.transactions.length === 0 ? (
-                    <tr><td colSpan={hasRemovable && canCreate ? 9 : 8} className="px-3 py-3 text-center text-slate-400">No transactions in this batch.</td></tr>
-                  ) : viewBatch.transactions.map((t, i) => (
-                    <tr key={t.id} className={selectedRemove.has(t.id) ? 'bg-red-50' : i % 2 === 0 ? 'bg-yellow-50' : 'bg-white'}>
-                      <td className="px-3 py-1 border-b border-slate-200 font-mono text-xs text-slate-500">{t.transaction_number}</td>
-                      <td className="px-3 py-1 border-b border-slate-200">{fmtDate(t.date)}</td>
-                      <td className="px-3 py-1 border-b border-slate-200">{t.payment_ref ?? ''}</td>
-                      <td className="px-3 py-1 border-b border-slate-200">{t.payment_method ?? ''}</td>
-                      <td className="px-3 py-1 border-b border-slate-200">{t.from_to ?? ''}</td>
-                      <td className="px-3 py-1 border-b border-slate-200">{t.detail ?? ''}</td>
-                      <td className="px-3 py-1 border-b border-slate-200 text-right font-mono">{fmtAmt(t.amount)}</td>
-                      <td className="px-3 py-1 border-b border-slate-200">
-                        {t.cleared_at ? fmtDate(t.cleared_at) : ''}
+                    <tr>
+                      <td
+                        colSpan={hasRemovable && canCreate ? 9 : 8}
+                        className="px-3 py-3 text-center text-slate-400"
+                      >
+                        No transactions in this batch.
                       </td>
-                      {hasRemovable && canCreate && (
-                        <td className="px-2 py-1 border-b border-slate-200 text-center">
-                          {!t.cleared_at && (
-                            <input
-                              type="checkbox"
-                              checked={selectedRemove.has(t.id)}
-                              onChange={() => toggleRemove(t.id)}
-                            />
-                          )}
-                        </td>
-                      )}
                     </tr>
-                  ))}
+                  ) : (
+                    viewBatch.transactions.map((t, i) => (
+                      <tr
+                        key={t.id}
+                        className={
+                          selectedRemove.has(t.id)
+                            ? 'bg-red-50'
+                            : i % 2 === 0
+                              ? 'bg-yellow-50'
+                              : 'bg-white'
+                        }
+                      >
+                        <td className="px-3 py-1 border-b border-slate-200 font-mono text-xs text-slate-500">
+                          {t.transaction_number}
+                        </td>
+                        <td className="px-3 py-1 border-b border-slate-200">{fmtDate(t.date)}</td>
+                        <td className="px-3 py-1 border-b border-slate-200">
+                          {t.payment_ref ?? ''}
+                        </td>
+                        <td className="px-3 py-1 border-b border-slate-200">
+                          {t.payment_method ?? ''}
+                        </td>
+                        <td className="px-3 py-1 border-b border-slate-200">{t.from_to ?? ''}</td>
+                        <td className="px-3 py-1 border-b border-slate-200">{t.detail ?? ''}</td>
+                        <td className="px-3 py-1 border-b border-slate-200 text-right font-mono">
+                          {fmtAmt(t.amount)}
+                        </td>
+                        <td className="px-3 py-1 border-b border-slate-200">
+                          {t.cleared_at ? fmtDate(t.cleared_at) : ''}
+                        </td>
+                        {hasRemovable && canCreate && (
+                          <td className="px-2 py-1 border-b border-slate-200 text-center">
+                            {!t.cleared_at && (
+                              <input
+                                type="checkbox"
+                                checked={selectedRemove.has(t.id)}
+                                onChange={() => toggleRemove(t.id)}
+                              />
+                            )}
+                          </td>
+                        )}
+                      </tr>
+                    ))
+                  )}
                 </tbody>
                 {viewBatch.transactions.length > 0 && (
                   <tfoot>
@@ -593,8 +734,18 @@ export default function CreditBatches() {
             ) : (
               <>
                 <div className="flex flex-wrap gap-3 mb-3 items-center">
-                  <button onClick={() => setSelectedAdd(new Set(addUnbatched.map((t) => t.id)))} className="text-blue-700 hover:underline text-sm">Select All</button>
-                  <button onClick={() => setSelectedAdd(new Set())} className="text-blue-700 hover:underline text-sm">Clear</button>
+                  <button
+                    onClick={() => setSelectedAdd(new Set(addUnbatched.map((t) => t.id)))}
+                    className="text-blue-700 hover:underline text-sm"
+                  >
+                    Select All
+                  </button>
+                  <button
+                    onClick={() => setSelectedAdd(new Set())}
+                    className="text-blue-700 hover:underline text-sm"
+                  >
+                    Clear
+                  </button>
                   <span className="text-sm text-slate-500">{selectedAdd.size} selected</span>
                 </div>
 
@@ -605,8 +756,14 @@ export default function CreditBatches() {
                         <th className="px-2 py-1 border-b border-slate-300 w-8">
                           <input
                             type="checkbox"
-                            checked={selectedAdd.size === addUnbatched.length && addUnbatched.length > 0}
-                            onChange={() => selectedAdd.size === addUnbatched.length ? setSelectedAdd(new Set()) : setSelectedAdd(new Set(addUnbatched.map((t) => t.id)))}
+                            checked={
+                              selectedAdd.size === addUnbatched.length && addUnbatched.length > 0
+                            }
+                            onChange={() =>
+                              selectedAdd.size === addUnbatched.length
+                                ? setSelectedAdd(new Set())
+                                : setSelectedAdd(new Set(addUnbatched.map((t) => t.id)))
+                            }
                           />
                         </th>
                         <th className="px-3 py-1 border-b border-slate-300 text-left">#</th>
@@ -615,7 +772,9 @@ export default function CreditBatches() {
                         <th className="px-3 py-1 border-b border-slate-300 text-left">Detail</th>
                         <th className="px-3 py-1 border-b border-slate-300 text-left">Method</th>
                         <th className="px-3 py-1 border-b border-slate-300 text-left">Ref</th>
-                        <th className="px-3 py-1 border-b border-slate-300 text-right">Amount (£)</th>
+                        <th className="px-3 py-1 border-b border-slate-300 text-right">
+                          Amount (£)
+                        </th>
                       </tr>
                     </thead>
                     <tbody>
@@ -628,22 +787,39 @@ export default function CreditBatches() {
                           <td className="px-2 py-1 border-b border-slate-200 text-center">
                             <input type="checkbox" checked={selectedAdd.has(t.id)} readOnly />
                           </td>
-                          <td className="px-3 py-1 border-b border-slate-200 font-mono text-xs text-slate-500">{t.transaction_number}</td>
+                          <td className="px-3 py-1 border-b border-slate-200 font-mono text-xs text-slate-500">
+                            {t.transaction_number}
+                          </td>
                           <td className="px-3 py-1 border-b border-slate-200">{fmtDate(t.date)}</td>
                           <td className="px-3 py-1 border-b border-slate-200">{t.from_to ?? ''}</td>
                           <td className="px-3 py-1 border-b border-slate-200">{t.detail ?? ''}</td>
-                          <td className="px-3 py-1 border-b border-slate-200">{t.payment_method ?? ''}</td>
-                          <td className="px-3 py-1 border-b border-slate-200">{t.payment_ref ?? ''}</td>
-                          <td className="px-3 py-1 border-b border-slate-200 text-right font-mono">{fmtAmt(t.amount)}</td>
+                          <td className="px-3 py-1 border-b border-slate-200">
+                            {t.payment_method ?? ''}
+                          </td>
+                          <td className="px-3 py-1 border-b border-slate-200">
+                            {t.payment_ref ?? ''}
+                          </td>
+                          <td className="px-3 py-1 border-b border-slate-200 text-right font-mono">
+                            {fmtAmt(t.amount)}
+                          </td>
                         </tr>
                       ))}
                     </tbody>
                     {selectedAdd.size > 0 && (
                       <tfoot>
                         <tr className="bg-slate-50 font-medium">
-                          <td colSpan={7} className="px-3 py-1 border-t border-slate-300 text-right">Selected total:</td>
+                          <td
+                            colSpan={7}
+                            className="px-3 py-1 border-t border-slate-300 text-right"
+                          >
+                            Selected total:
+                          </td>
                           <td className="px-3 py-1 border-t border-slate-300 text-right font-mono">
-                            {fmtAmt(addUnbatched.filter((t) => selectedAdd.has(t.id)).reduce((s, t) => s + t.amount, 0))}
+                            {fmtAmt(
+                              addUnbatched
+                                .filter((t) => selectedAdd.has(t.id))
+                                .reduce((s, t) => s + t.amount, 0),
+                            )}
                           </td>
                         </tr>
                       </tfoot>
@@ -685,8 +861,18 @@ export default function CreditBatches() {
             ) : (
               <>
                 <div className="flex flex-wrap gap-3 mb-3 items-center">
-                  <button onClick={() => setSelectedCreate(new Set(unbatched.map((t) => t.id)))} className="text-blue-700 hover:underline text-sm">Select All</button>
-                  <button onClick={() => setSelectedCreate(new Set())} className="text-blue-700 hover:underline text-sm">Clear</button>
+                  <button
+                    onClick={() => setSelectedCreate(new Set(unbatched.map((t) => t.id)))}
+                    className="text-blue-700 hover:underline text-sm"
+                  >
+                    Select All
+                  </button>
+                  <button
+                    onClick={() => setSelectedCreate(new Set())}
+                    className="text-blue-700 hover:underline text-sm"
+                  >
+                    Clear
+                  </button>
                   <span className="text-sm text-slate-500">{selectedCreate.size} selected</span>
                 </div>
 
@@ -697,8 +883,14 @@ export default function CreditBatches() {
                         <th className="px-2 py-1 border-b border-slate-300 w-8">
                           <input
                             type="checkbox"
-                            checked={selectedCreate.size === unbatched.length && unbatched.length > 0}
-                            onChange={() => selectedCreate.size === unbatched.length ? setSelectedCreate(new Set()) : setSelectedCreate(new Set(unbatched.map((t) => t.id)))}
+                            checked={
+                              selectedCreate.size === unbatched.length && unbatched.length > 0
+                            }
+                            onChange={() =>
+                              selectedCreate.size === unbatched.length
+                                ? setSelectedCreate(new Set())
+                                : setSelectedCreate(new Set(unbatched.map((t) => t.id)))
+                            }
                           />
                         </th>
                         <th className="px-3 py-1 border-b border-slate-300 text-left">#</th>
@@ -707,7 +899,9 @@ export default function CreditBatches() {
                         <th className="px-3 py-1 border-b border-slate-300 text-left">Detail</th>
                         <th className="px-3 py-1 border-b border-slate-300 text-left">Method</th>
                         <th className="px-3 py-1 border-b border-slate-300 text-left">Ref</th>
-                        <th className="px-3 py-1 border-b border-slate-300 text-right">Amount (£)</th>
+                        <th className="px-3 py-1 border-b border-slate-300 text-right">
+                          Amount (£)
+                        </th>
                       </tr>
                     </thead>
                     <tbody>
@@ -720,22 +914,39 @@ export default function CreditBatches() {
                           <td className="px-2 py-1 border-b border-slate-200 text-center">
                             <input type="checkbox" checked={selectedCreate.has(t.id)} readOnly />
                           </td>
-                          <td className="px-3 py-1 border-b border-slate-200 font-mono text-xs text-slate-500">{t.transaction_number}</td>
+                          <td className="px-3 py-1 border-b border-slate-200 font-mono text-xs text-slate-500">
+                            {t.transaction_number}
+                          </td>
                           <td className="px-3 py-1 border-b border-slate-200">{fmtDate(t.date)}</td>
                           <td className="px-3 py-1 border-b border-slate-200">{t.from_to ?? ''}</td>
                           <td className="px-3 py-1 border-b border-slate-200">{t.detail ?? ''}</td>
-                          <td className="px-3 py-1 border-b border-slate-200">{t.payment_method ?? ''}</td>
-                          <td className="px-3 py-1 border-b border-slate-200">{t.payment_ref ?? ''}</td>
-                          <td className="px-3 py-1 border-b border-slate-200 text-right font-mono">{fmtAmt(t.amount)}</td>
+                          <td className="px-3 py-1 border-b border-slate-200">
+                            {t.payment_method ?? ''}
+                          </td>
+                          <td className="px-3 py-1 border-b border-slate-200">
+                            {t.payment_ref ?? ''}
+                          </td>
+                          <td className="px-3 py-1 border-b border-slate-200 text-right font-mono">
+                            {fmtAmt(t.amount)}
+                          </td>
                         </tr>
                       ))}
                     </tbody>
                     {selectedCreate.size > 0 && (
                       <tfoot>
                         <tr className="bg-slate-50 font-medium">
-                          <td colSpan={7} className="px-3 py-1 border-t border-slate-300 text-right">Selected total:</td>
+                          <td
+                            colSpan={7}
+                            className="px-3 py-1 border-t border-slate-300 text-right"
+                          >
+                            Selected total:
+                          </td>
                           <td className="px-3 py-1 border-t border-slate-300 text-right font-mono">
-                            {fmtAmt(unbatched.filter((t) => selectedCreate.has(t.id)).reduce((s, t) => s + t.amount, 0))}
+                            {fmtAmt(
+                              unbatched
+                                .filter((t) => selectedCreate.has(t.id))
+                                .reduce((s, t) => s + t.amount, 0),
+                            )}
                           </td>
                         </tr>
                       </tfoot>
@@ -748,7 +959,9 @@ export default function CreditBatches() {
                     {/* Create new batch */}
                     <div className="flex flex-wrap items-end gap-3">
                       <div>
-                        <label className="block text-sm font-medium text-slate-700 mb-1">Batch Reference</label>
+                        <label className="block text-sm font-medium text-slate-700 mb-1">
+                          Batch Reference
+                        </label>
                         <input
                           type="text"
                           name="batchRef"
@@ -759,7 +972,9 @@ export default function CreditBatches() {
                         />
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-slate-700 mb-1">Description</label>
+                        <label className="block text-sm font-medium text-slate-700 mb-1">
+                          Description
+                        </label>
                         <input
                           type="text"
                           name="batchDesc"
@@ -782,7 +997,9 @@ export default function CreditBatches() {
                     {unclearedBatches.length > 0 && (
                       <div className="flex flex-wrap items-end gap-3 border-t border-slate-200 pt-4">
                         <div>
-                          <label className="block text-sm font-medium text-slate-700 mb-1">Or add to existing batch</label>
+                          <label className="block text-sm font-medium text-slate-700 mb-1">
+                            Or add to existing batch
+                          </label>
                           <select
                             name="existingBatchId"
                             value={existingBatchId}

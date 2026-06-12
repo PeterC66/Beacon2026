@@ -7,12 +7,12 @@ import { hasOptionalCookieConsent } from './useCookieConsent.js';
 const KEY = 'beacon2_prefs';
 
 const DEFAULTS = {
-  sortBy:            'surname',       // 'surname' | 'forename'
-  displayFormat:     'surname_first', // 'surname_first' | 'forename_first'
-  inactivityTimeout: 20,              // minutes (5–99)
-  textSize:          'normal',        // 'small' | 'normal' | 'large' | 'xlarge'
-  colorTheme:        'default',       // 'default' | 'high-contrast'
-  upcomingEventsExpanded: false,      // collapsed state of the Home upcoming-events widget
+  sortBy: 'surname', // 'surname' | 'forename'
+  displayFormat: 'surname_first', // 'surname_first' | 'forename_first'
+  inactivityTimeout: 20, // minutes (5–99)
+  textSize: 'normal', // 'small' | 'normal' | 'large' | 'xlarge'
+  colorTheme: 'default', // 'default' | 'high-contrast'
+  upcomingEventsExpanded: false, // collapsed state of the Home upcoming-events widget
 };
 
 function load() {
@@ -31,14 +31,18 @@ function save(prefs) {
   try {
     localStorage.setItem(KEY, JSON.stringify(prefs));
     window.dispatchEvent(new Event('beacon2-prefs-changed'));
-  } catch { /* ignore */ }
+  } catch {
+    /* ignore */
+  }
 }
 
 /**
  * Returns current preferences (plain object, not reactive).
  * Call getPreferences() at component mount if you need a snapshot.
  */
-export function getPreferences() { return load(); }
+export function getPreferences() {
+  return load();
+}
 
 /**
  * Save updated preferences. Pass a partial object; unrecognised keys are ignored.
@@ -46,11 +50,11 @@ export function getPreferences() { return load(); }
 export function savePreferences(updates) {
   const current = load();
   const next = { ...current };
-  if (updates.sortBy           !== undefined) next.sortBy           = updates.sortBy;
-  if (updates.displayFormat    !== undefined) next.displayFormat    = updates.displayFormat;
+  if (updates.sortBy !== undefined) next.sortBy = updates.sortBy;
+  if (updates.displayFormat !== undefined) next.displayFormat = updates.displayFormat;
   if (updates.inactivityTimeout !== undefined) {
     const n = parseInt(updates.inactivityTimeout, 10);
-    next.inactivityTimeout = (!isNaN(n) && n >= 5 && n <= 99) ? n : DEFAULTS.inactivityTimeout;
+    next.inactivityTimeout = !isNaN(n) && n >= 5 && n <= 99 ? n : DEFAULTS.inactivityTimeout;
   }
   if (updates.textSize !== undefined) {
     const valid = ['small', 'normal', 'large', 'xlarge'];
@@ -77,9 +81,9 @@ export function savePreferences(updates) {
  */
 export function formatMemberName(member) {
   const prefs = load();
-  const fore    = member.forenames ?? member.member_forenames ?? '';
-  const sur     = member.surname   ?? member.member_surname   ?? '';
-  const knownAs = member.known_as  ?? member.member_known_as  ?? '';
+  const fore = member.forenames ?? member.member_forenames ?? '';
+  const sur = member.surname ?? member.member_surname ?? '';
+  const knownAs = member.known_as ?? member.member_known_as ?? '';
   const forePart = knownAs ? `${fore} (${knownAs})` : fore;
   if (prefs.displayFormat === 'forename_first') return `${forePart} ${sur}`.trim();
   return `${sur}, ${forePart}`.trim();

@@ -27,7 +27,9 @@ router.get('/', requirePrivilege('offices', 'view'), async (req, res, next) => {
        ORDER BY o.name`,
     );
     res.json(rows);
-  } catch (err) { next(err); }
+  } catch (err) {
+    next(err);
+  }
 });
 
 // ─── GET /offices/members ─────────────────────────────────────────────────
@@ -44,15 +46,17 @@ router.get('/members', requirePrivilege('offices', 'view'), async (req, res, nex
        ORDER BY m.surname, m.forenames`,
     );
     res.json(rows);
-  } catch (err) { next(err); }
+  } catch (err) {
+    next(err);
+  }
 });
 
 // ─── POST /offices ────────────────────────────────────────────────────────
 
 const officeSchema = z.object({
-  name:             z.string().min(1).max(100),
-  memberId:         z.string().min(1).nullable().optional(),
-  officeEmail:      z.string().email().nullable().optional().or(z.literal('')),
+  name: z.string().min(1).max(100),
+  memberId: z.string().min(1).nullable().optional(),
+  officeEmail: z.string().email().nullable().optional().or(z.literal('')),
   notifyOnlineJoin: z.boolean().default(false),
 });
 
@@ -67,7 +71,9 @@ router.post('/', requirePrivilege('offices', 'create'), async (req, res, next) =
       [data.name, data.memberId ?? null, data.officeEmail || null, data.notifyOnlineJoin],
     );
     res.status(201).json(row);
-  } catch (err) { next(err); }
+  } catch (err) {
+    next(err);
+  }
 });
 
 // ─── PATCH /offices/:id ───────────────────────────────────────────────────
@@ -75,7 +81,9 @@ router.post('/', requirePrivilege('offices', 'create'), async (req, res, next) =
 router.patch('/:id', requirePrivilege('offices', 'change'), async (req, res, next) => {
   try {
     const slug = req.user.tenantSlug;
-    const [existing] = await tenantQuery(slug, `SELECT id FROM offices WHERE id = $1`, [req.params.id]);
+    const [existing] = await tenantQuery(slug, `SELECT id FROM offices WHERE id = $1`, [
+      req.params.id,
+    ]);
     if (!existing) throw AppError('Office not found.', 404);
 
     const data = officeSchema.parse(req.body);
@@ -85,10 +93,18 @@ router.patch('/:id', requirePrivilege('offices', 'change'), async (req, res, nex
               notify_online_join = $4, updated_at = now()
        WHERE id = $5
        RETURNING id, name, member_id, office_email, notify_online_join`,
-      [data.name, data.memberId ?? null, data.officeEmail || null, data.notifyOnlineJoin, req.params.id],
+      [
+        data.name,
+        data.memberId ?? null,
+        data.officeEmail || null,
+        data.notifyOnlineJoin,
+        req.params.id,
+      ],
     );
     res.json(row);
-  } catch (err) { next(err); }
+  } catch (err) {
+    next(err);
+  }
 });
 
 // ─── DELETE /offices/:id ──────────────────────────────────────────────────
@@ -96,11 +112,15 @@ router.patch('/:id', requirePrivilege('offices', 'change'), async (req, res, nex
 router.delete('/:id', requirePrivilege('offices', 'delete'), async (req, res, next) => {
   try {
     const slug = req.user.tenantSlug;
-    const [existing] = await tenantQuery(slug, `SELECT id FROM offices WHERE id = $1`, [req.params.id]);
+    const [existing] = await tenantQuery(slug, `SELECT id FROM offices WHERE id = $1`, [
+      req.params.id,
+    ]);
     if (!existing) throw AppError('Office not found.', 404);
     await tenantQuery(slug, `DELETE FROM offices WHERE id = $1`, [req.params.id]);
     res.json({ message: 'Office deleted.' });
-  } catch (err) { next(err); }
+  } catch (err) {
+    next(err);
+  }
 });
 
 export default router;

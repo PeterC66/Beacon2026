@@ -6,7 +6,7 @@
 //   router.get('/finance', requireAuth, requireFeature('finance'), handler)
 
 import { tenantQuery } from '../utils/db.js';
-import { FEATURE_DEPS, FEATURE_DEFAULTS_OFF, isOn } from '../../../shared/constants.js';
+import { FEATURE_DEPS, isOn } from '../../../shared/constants.js';
 
 /**
  * Check whether a feature is enabled for a tenant (non-middleware version).

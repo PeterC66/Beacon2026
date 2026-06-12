@@ -7,12 +7,14 @@ import RoleEditor from '../pages/roles/RoleEditor.jsx';
 vi.mock('../context/AuthContext.jsx', () => ({
   useAuth: () => ({
     tenant: 'test-u3a',
-    can:    vi.fn().mockReturnValue(true),
+    can: vi.fn().mockReturnValue(true),
   }),
 }));
 
 vi.mock('../lib/api.js', () => ({
-  roles:      { get: vi.fn().mockResolvedValue({ name: '', is_committee: false, notes: '', privileges: [] }) },
+  roles: {
+    get: vi.fn().mockResolvedValue({ name: '', is_committee: false, notes: '', privileges: [] }),
+  },
   privileges: { resources: vi.fn().mockResolvedValue([]) },
 }));
 
@@ -23,12 +25,20 @@ vi.mock('react-router-dom', async (importOriginal) => {
 
 describe('RoleEditor page (new role)', () => {
   it('renders without crashing', () => {
-    const { container } = render(<MemoryRouter><RoleEditor /></MemoryRouter>);
+    const { container } = render(
+      <MemoryRouter>
+        <RoleEditor />
+      </MemoryRouter>,
+    );
     expect(container).toBeTruthy();
   });
 
   it('shows the Role Record heading', () => {
-    const { getByText } = render(<MemoryRouter><RoleEditor /></MemoryRouter>);
+    const { getByText } = render(
+      <MemoryRouter>
+        <RoleEditor />
+      </MemoryRouter>,
+    );
     expect(getByText('Role Record')).toBeInTheDocument();
   });
 });

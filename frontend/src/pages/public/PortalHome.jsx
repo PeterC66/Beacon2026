@@ -11,8 +11,20 @@ function fmtDate(d) {
   const s = String(d).slice(0, 10);
   const [y, m, day] = s.split('-');
   if (!y || !m || !day) return '';
-  const months = ['January','February','March','April','May','June',
-                  'July','August','September','October','November','December'];
+  const months = [
+    'January',
+    'February',
+    'March',
+    'April',
+    'May',
+    'June',
+    'July',
+    'August',
+    'September',
+    'October',
+    'November',
+    'December',
+  ];
   return `${parseInt(day)} ${months[parseInt(m) - 1]} ${y}`;
 }
 
@@ -28,7 +40,8 @@ export default function PortalHome() {
       navigate(`/public/${slug}/portal`, { replace: true });
       return;
     }
-    portalApi.getHome(slug)
+    portalApi
+      .getHome(slug)
       .then(setData)
       .catch((err) => {
         if (err.message.includes('expired') || err.message.includes('401')) {
@@ -109,9 +122,7 @@ export default function PortalHome() {
           <p className="text-lg font-semibold text-slate-800">
             {greeting}, {member.displayName}
           </p>
-          {renewalText && (
-            <p className="text-sm text-slate-600 mt-1">{renewalText}</p>
-          )}
+          {renewalText && <p className="text-sm text-slate-600 mt-1">{renewalText}</p>}
         </div>
 
         <h2 className="text-sm font-semibold text-slate-500 uppercase tracking-wide mb-3">
@@ -137,10 +148,7 @@ export default function PortalHome() {
         )}
 
         <div className="mt-6 pt-4 border-t border-slate-200 text-center">
-          <button
-            onClick={handleLogout}
-            className="text-sm text-blue-700 hover:underline"
-          >
+          <button onClick={handleLogout} className="text-sm text-blue-700 hover:underline">
             Logout and return to {u3aName} website
           </button>
         </div>

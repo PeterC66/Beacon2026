@@ -8,13 +8,15 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 vi.doUnmock('../middleware/requireFeature.js');
 
 vi.mock('../utils/db.js', () => ({
-  prisma:      { $disconnect: vi.fn() },
+  prisma: { $disconnect: vi.fn() },
   tenantQuery: vi.fn(),
-  withTenant:  vi.fn(),
+  withTenant: vi.fn(),
 }));
 
 // Import the real middleware after unmocking
-const { requireFeature, isFeatureEnabled } = await vi.importActual('../middleware/requireFeature.js');
+const { requireFeature, isFeatureEnabled } = await vi.importActual(
+  '../middleware/requireFeature.js',
+);
 const { tenantQuery } = await import('../utils/db.js');
 
 function runMiddleware(mw, req = {}) {
@@ -22,8 +24,15 @@ function runMiddleware(mw, req = {}) {
     const res = {
       statusCode: null,
       body: null,
-      status(code) { this.statusCode = code; return this; },
-      json(b)      { this.body = b; resolve({ status: this.statusCode, body: b, called: 'res' }); return this; },
+      status(code) {
+        this.statusCode = code;
+        return this;
+      },
+      json(b) {
+        this.body = b;
+        resolve({ status: this.statusCode, body: b, called: 'res' });
+        return this;
+      },
     };
     const next = (err) => resolve({ status: 200, body: null, called: 'next', err });
     mw(req, res, next);

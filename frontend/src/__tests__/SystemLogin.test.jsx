@@ -15,12 +15,20 @@ vi.mock('react-router-dom', async (importOriginal) => {
 
 describe('SystemLogin page', () => {
   it('renders without crashing', () => {
-    const { container } = render(<MemoryRouter><SystemLogin /></MemoryRouter>);
+    const { container } = render(
+      <MemoryRouter>
+        <SystemLogin />
+      </MemoryRouter>,
+    );
     expect(container).toBeTruthy();
   });
 
   it('shows a Sign in button', () => {
-    const { getByRole } = render(<MemoryRouter><SystemLogin /></MemoryRouter>);
+    const { getByRole } = render(
+      <MemoryRouter>
+        <SystemLogin />
+      </MemoryRouter>,
+    );
     expect(getByRole('button', { name: /sign in/i })).toBeInTheDocument();
   });
 });

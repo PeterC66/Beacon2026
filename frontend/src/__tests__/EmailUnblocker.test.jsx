@@ -7,7 +7,7 @@ import EmailUnblocker from '../pages/email/EmailUnblocker.jsx';
 vi.mock('../context/AuthContext.jsx', () => ({
   useAuth: () => ({
     tenant: 'test-u3a',
-    can:    vi.fn().mockReturnValue(true),
+    can: vi.fn().mockReturnValue(true),
   }),
 }));
 
@@ -19,12 +19,20 @@ vi.mock('../lib/api.js', () => ({
 
 describe('EmailUnblocker page', () => {
   it('renders without crashing', () => {
-    const { container } = render(<MemoryRouter><EmailUnblocker /></MemoryRouter>);
+    const { container } = render(
+      <MemoryRouter>
+        <EmailUnblocker />
+      </MemoryRouter>,
+    );
     expect(container).toBeTruthy();
   });
 
   it('shows the Email Unblocker heading', () => {
-    render(<MemoryRouter><EmailUnblocker /></MemoryRouter>);
+    render(
+      <MemoryRouter>
+        <EmailUnblocker />
+      </MemoryRouter>,
+    );
     expect(screen.getByText('Email Unblocker')).toBeTruthy();
   });
 });

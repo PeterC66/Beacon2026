@@ -1,7 +1,7 @@
 // beacon2/frontend/src/pages/public/PortalPersonalDetails.jsx
 // Members Portal — view and update personal details (doc 10.2.4).
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { portalApi, clearPortalToken } from '../../lib/api.js';
 import PortalVersion from '../../components/PortalVersion.jsx';
@@ -26,13 +26,18 @@ export default function PortalPersonalDetails() {
 
   // Password change
   const [showPassword, setShowPassword] = useState(false);
-  const [pwForm, setPwForm] = useState({ currentPassword: '', newPassword: '', confirmPassword: '' });
+  const [pwForm, setPwForm] = useState({
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: '',
+  });
   const [pwError, setPwError] = useState('');
   const [pwSaved, setPwSaved] = useState('');
   const [pwSaving, setPwSaving] = useState(false);
 
   useEffect(() => {
-    portalApi.getPersonalDetails(slug)
+    portalApi
+      .getPersonalDetails(slug)
       .then((data) => {
         setForm(data);
         setHasPhoto(!!data.hasPhoto);
@@ -51,7 +56,10 @@ export default function PortalPersonalDetails() {
       })
       .finally(() => setLoading(false));
     return () => {
-      setPhotoBlobUrl((prev) => { if (prev) URL.revokeObjectURL(prev); return null; });
+      setPhotoBlobUrl((prev) => {
+        if (prev) URL.revokeObjectURL(prev);
+        return null;
+      });
     };
   }, [slug, navigate]);
 
@@ -203,7 +211,11 @@ export default function PortalPersonalDetails() {
       setPwError('Password must be at least 10 characters.');
       return;
     }
-    if (!/[a-z]/.test(pwForm.newPassword) || !/[A-Z]/.test(pwForm.newPassword) || !/[0-9]/.test(pwForm.newPassword)) {
+    if (
+      !/[a-z]/.test(pwForm.newPassword) ||
+      !/[A-Z]/.test(pwForm.newPassword) ||
+      !/[0-9]/.test(pwForm.newPassword)
+    ) {
       setPwError('Password must contain uppercase, lowercase, and a number.');
       return;
     }
@@ -246,7 +258,8 @@ export default function PortalPersonalDetails() {
     );
   }
 
-  const inputCls = 'w-full border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500';
+  const inputCls =
+    'w-full border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500';
   const labelCls = 'block text-sm font-medium text-slate-700 mb-1';
   const errCls = 'text-xs text-red-600 mt-0.5';
 
@@ -255,7 +268,10 @@ export default function PortalPersonalDetails() {
       <PortalVersion />
       <div className="max-w-2xl mx-auto">
         <div className="flex items-center justify-between mb-4">
-          <Link to={`/public/${slug}/portal/home`} className="text-sm text-blue-700 hover:underline">
+          <Link
+            to={`/public/${slug}/portal/home`}
+            className="text-sm text-blue-700 hover:underline"
+          >
             &larr; Members Portal
           </Link>
         </div>
@@ -276,49 +292,128 @@ export default function PortalPersonalDetails() {
           </div>
         )}
 
-        <form onSubmit={handleSave} noValidate className="bg-white rounded-lg shadow-sm p-6 space-y-6">
+        <form
+          onSubmit={handleSave}
+          noValidate
+          className="bg-white rounded-lg shadow-sm p-6 space-y-6"
+        >
           {/* About Yourself */}
           <fieldset>
-            <legend className="text-sm font-semibold text-blue-700 uppercase tracking-wide mb-3">About Yourself</legend>
+            <legend className="text-sm font-semibold text-blue-700 uppercase tracking-wide mb-3">
+              About Yourself
+            </legend>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label htmlFor="portal-title" className={labelCls}>Title</label>
-                <input id="portal-title" name="title" className={inputCls} value={form.title} onChange={(e) => handleChange('title', e.target.value)} />
+                <label htmlFor="portal-title" className={labelCls}>
+                  Title
+                </label>
+                <input
+                  id="portal-title"
+                  name="title"
+                  className={inputCls}
+                  value={form.title}
+                  onChange={(e) => handleChange('title', e.target.value)}
+                />
               </div>
               <div>
-                <label htmlFor="portal-forenames" className={labelCls}>Forenames <span className="text-red-500">*</span></label>
-                <input id="portal-forenames" name="forenames" className={inputCls} value={form.forenames} onChange={(e) => handleChange('forenames', e.target.value)} />
+                <label htmlFor="portal-forenames" className={labelCls}>
+                  Forenames <span className="text-red-500">*</span>
+                </label>
+                <input
+                  id="portal-forenames"
+                  name="forenames"
+                  className={inputCls}
+                  value={form.forenames}
+                  onChange={(e) => handleChange('forenames', e.target.value)}
+                />
                 {fieldErrors.forenames && <p className={errCls}>{fieldErrors.forenames}</p>}
               </div>
               <div>
-                <label htmlFor="portal-surname" className={labelCls}>Surname <span className="text-red-500">*</span></label>
-                <input id="portal-surname" name="surname" className={inputCls} value={form.surname} onChange={(e) => handleChange('surname', e.target.value)} />
+                <label htmlFor="portal-surname" className={labelCls}>
+                  Surname <span className="text-red-500">*</span>
+                </label>
+                <input
+                  id="portal-surname"
+                  name="surname"
+                  className={inputCls}
+                  value={form.surname}
+                  onChange={(e) => handleChange('surname', e.target.value)}
+                />
                 {fieldErrors.surname && <p className={errCls}>{fieldErrors.surname}</p>}
               </div>
               <div>
-                <label htmlFor="portal-known-as" className={labelCls}>Known as</label>
-                <input id="portal-known-as" name="knownAs" className={inputCls} value={form.knownAs} onChange={(e) => handleChange('knownAs', e.target.value)} />
+                <label htmlFor="portal-known-as" className={labelCls}>
+                  Known as
+                </label>
+                <input
+                  id="portal-known-as"
+                  name="knownAs"
+                  className={inputCls}
+                  value={form.knownAs}
+                  onChange={(e) => handleChange('knownAs', e.target.value)}
+                />
               </div>
               <div>
-                <label htmlFor="portal-suffix" className={labelCls}>Suffix</label>
-                <input id="portal-suffix" name="suffix" className={inputCls} value={form.suffix} onChange={(e) => handleChange('suffix', e.target.value)} />
+                <label htmlFor="portal-suffix" className={labelCls}>
+                  Suffix
+                </label>
+                <input
+                  id="portal-suffix"
+                  name="suffix"
+                  className={inputCls}
+                  value={form.suffix}
+                  onChange={(e) => handleChange('suffix', e.target.value)}
+                />
               </div>
               <div>
-                <label htmlFor="portal-initials" className={labelCls}>Initials</label>
-                <input id="portal-initials" name="initials" className={inputCls} value={form.initials} onChange={(e) => handleChange('initials', e.target.value)} />
+                <label htmlFor="portal-initials" className={labelCls}>
+                  Initials
+                </label>
+                <input
+                  id="portal-initials"
+                  name="initials"
+                  className={inputCls}
+                  value={form.initials}
+                  onChange={(e) => handleChange('initials', e.target.value)}
+                />
               </div>
               <div>
-                <label htmlFor="portal-mobile" className={labelCls}>Mobile</label>
-                <input id="portal-mobile" name="mobile" className={inputCls} value={form.mobile} onChange={(e) => handleChange('mobile', e.target.value)} />
+                <label htmlFor="portal-mobile" className={labelCls}>
+                  Mobile
+                </label>
+                <input
+                  id="portal-mobile"
+                  name="mobile"
+                  className={inputCls}
+                  value={form.mobile}
+                  onChange={(e) => handleChange('mobile', e.target.value)}
+                />
               </div>
               <div>
-                <label htmlFor="portal-email" className={labelCls}>Email <span className="text-red-500">*</span></label>
-                <input id="portal-email" name="email" type="email" className={inputCls} value={form.email} onChange={(e) => handleChange('email', e.target.value)} />
+                <label htmlFor="portal-email" className={labelCls}>
+                  Email <span className="text-red-500">*</span>
+                </label>
+                <input
+                  id="portal-email"
+                  name="email"
+                  type="email"
+                  className={inputCls}
+                  value={form.email}
+                  onChange={(e) => handleChange('email', e.target.value)}
+                />
                 {fieldErrors.email && <p className={errCls}>{fieldErrors.email}</p>}
               </div>
               <div className="sm:col-span-2">
-                <label htmlFor="portal-emergency-contact" className={labelCls}>Emergency Contact</label>
-                <input id="portal-emergency-contact" name="emergencyContact" className={inputCls} value={form.emergencyContact} onChange={(e) => handleChange('emergencyContact', e.target.value)} />
+                <label htmlFor="portal-emergency-contact" className={labelCls}>
+                  Emergency Contact
+                </label>
+                <input
+                  id="portal-emergency-contact"
+                  name="emergencyContact"
+                  className={inputCls}
+                  value={form.emergencyContact}
+                  onChange={(e) => handleChange('emergencyContact', e.target.value)}
+                />
               </div>
               <div className="sm:col-span-2">
                 <label className="flex items-center gap-2 text-sm">
@@ -337,7 +432,10 @@ export default function PortalPersonalDetails() {
                 <div className="flex items-start gap-4">
                   <div
                     onDrop={handlePhotoDrop}
-                    onDragOver={(e) => { e.preventDefault(); setPhotoDragOver(true); }}
+                    onDragOver={(e) => {
+                      e.preventDefault();
+                      setPhotoDragOver(true);
+                    }}
                     onDragLeave={() => setPhotoDragOver(false)}
                     className={`w-20 h-20 rounded border-2 flex items-center justify-center transition-colors ${
                       photoDragOver
@@ -348,8 +446,11 @@ export default function PortalPersonalDetails() {
                     }`}
                   >
                     {photoBlobUrl ? (
-                      <img src={photoBlobUrl} alt="Your photo"
-                        className="w-full h-full object-cover rounded" />
+                      <img
+                        src={photoBlobUrl}
+                        alt="Your photo"
+                        className="w-full h-full object-cover rounded"
+                      />
                     ) : (
                       <span className="text-slate-400 text-xs text-center px-1">
                         {photoDragOver ? 'Drop here' : 'No photo'}
@@ -357,23 +458,33 @@ export default function PortalPersonalDetails() {
                     )}
                   </div>
                   <div className="flex flex-col gap-2">
-                    <input type="file" accept="image/jpeg,image/png,image/gif"
+                    <input
+                      type="file"
+                      accept="image/jpeg,image/png,image/gif"
                       onChange={handlePhotoSelect}
-                      className="hidden" id="portal-photo-upload" />
-                    <label htmlFor="portal-photo-upload"
-                      className="inline-flex items-center px-3 py-1.5 border border-blue-300 text-blue-600 hover:bg-blue-50 rounded text-sm cursor-pointer transition-colors">
-                      {photoUploading ? 'Uploading...' : (hasPhoto ? 'Change Photo' : 'Choose File')}
+                      className="hidden"
+                      id="portal-photo-upload"
+                    />
+                    <label
+                      htmlFor="portal-photo-upload"
+                      className="inline-flex items-center px-3 py-1.5 border border-blue-300 text-blue-600 hover:bg-blue-50 rounded text-sm cursor-pointer transition-colors"
+                    >
+                      {photoUploading ? 'Uploading...' : hasPhoto ? 'Change Photo' : 'Choose File'}
                     </label>
                     {hasPhoto && (
-                      <button type="button" onClick={handlePhotoRemove}
+                      <button
+                        type="button"
+                        onClick={handlePhotoRemove}
                         disabled={photoUploading}
-                        className="inline-flex items-center px-3 py-1.5 border border-red-300 text-red-600 hover:bg-red-50 rounded text-sm transition-colors">
+                        className="inline-flex items-center px-3 py-1.5 border border-red-300 text-red-600 hover:bg-red-50 rounded text-sm transition-colors"
+                      >
                         Remove
                       </button>
                     )}
                     <p className="text-xs text-slate-500">
                       jpg, png, or gif — max 2 MB. Drag and drop or click.
-                      <br />Square format (1:1) recommended for membership cards.
+                      <br />
+                      Square format (1:1) recommended for membership cards.
                     </p>
                     {photoError && <p className="text-xs text-red-600 font-medium">{photoError}</p>}
                   </div>
@@ -384,36 +495,96 @@ export default function PortalPersonalDetails() {
 
           {/* Address */}
           <fieldset>
-            <legend className="text-sm font-semibold text-blue-700 uppercase tracking-wide mb-3">Where You Live</legend>
+            <legend className="text-sm font-semibold text-blue-700 uppercase tracking-wide mb-3">
+              Where You Live
+            </legend>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label htmlFor="portal-house-no" className={labelCls}>House Number/Name</label>
-                <input id="portal-house-no" name="houseNo" className={inputCls} value={form.address.houseNo} onChange={(e) => handleAddressChange('houseNo', e.target.value)} />
+                <label htmlFor="portal-house-no" className={labelCls}>
+                  House Number/Name
+                </label>
+                <input
+                  id="portal-house-no"
+                  name="houseNo"
+                  className={inputCls}
+                  value={form.address.houseNo}
+                  onChange={(e) => handleAddressChange('houseNo', e.target.value)}
+                />
               </div>
               <div>
-                <label htmlFor="portal-street" className={labelCls}>Street</label>
-                <input id="portal-street" name="street" className={inputCls} value={form.address.street} onChange={(e) => handleAddressChange('street', e.target.value)} />
+                <label htmlFor="portal-street" className={labelCls}>
+                  Street
+                </label>
+                <input
+                  id="portal-street"
+                  name="street"
+                  className={inputCls}
+                  value={form.address.street}
+                  onChange={(e) => handleAddressChange('street', e.target.value)}
+                />
               </div>
               <div>
-                <label htmlFor="portal-add-line-1" className={labelCls}>Additional line</label>
-                <input id="portal-add-line-1" name="addLine1" className={inputCls} value={form.address.addLine1} onChange={(e) => handleAddressChange('addLine1', e.target.value)} />
+                <label htmlFor="portal-add-line-1" className={labelCls}>
+                  Additional line
+                </label>
+                <input
+                  id="portal-add-line-1"
+                  name="addLine1"
+                  className={inputCls}
+                  value={form.address.addLine1}
+                  onChange={(e) => handleAddressChange('addLine1', e.target.value)}
+                />
               </div>
               <div>
-                <label htmlFor="portal-town" className={labelCls}>Town</label>
-                <input id="portal-town" name="town" className={inputCls} value={form.address.town} onChange={(e) => handleAddressChange('town', e.target.value)} />
+                <label htmlFor="portal-town" className={labelCls}>
+                  Town
+                </label>
+                <input
+                  id="portal-town"
+                  name="town"
+                  className={inputCls}
+                  value={form.address.town}
+                  onChange={(e) => handleAddressChange('town', e.target.value)}
+                />
               </div>
               <div>
-                <label htmlFor="portal-county" className={labelCls}>County</label>
-                <input id="portal-county" name="county" className={inputCls} value={form.address.county} onChange={(e) => handleAddressChange('county', e.target.value)} />
+                <label htmlFor="portal-county" className={labelCls}>
+                  County
+                </label>
+                <input
+                  id="portal-county"
+                  name="county"
+                  className={inputCls}
+                  value={form.address.county}
+                  onChange={(e) => handleAddressChange('county', e.target.value)}
+                />
               </div>
               <div>
-                <label htmlFor="portal-postcode" className={labelCls}>Postcode <span className="text-red-500">*</span></label>
-                <input id="portal-postcode" name="postcode" className={inputCls} value={form.address.postcode} onChange={(e) => handleAddressChange('postcode', e.target.value)} />
-                {fieldErrors['address.postcode'] && <p className={errCls}>{fieldErrors['address.postcode']}</p>}
+                <label htmlFor="portal-postcode" className={labelCls}>
+                  Postcode <span className="text-red-500">*</span>
+                </label>
+                <input
+                  id="portal-postcode"
+                  name="postcode"
+                  className={inputCls}
+                  value={form.address.postcode}
+                  onChange={(e) => handleAddressChange('postcode', e.target.value)}
+                />
+                {fieldErrors['address.postcode'] && (
+                  <p className={errCls}>{fieldErrors['address.postcode']}</p>
+                )}
               </div>
               <div>
-                <label htmlFor="portal-telephone" className={labelCls}>Home Phone</label>
-                <input id="portal-telephone" name="telephone" className={inputCls} value={form.address.telephone} onChange={(e) => handleAddressChange('telephone', e.target.value)} />
+                <label htmlFor="portal-telephone" className={labelCls}>
+                  Home Phone
+                </label>
+                <input
+                  id="portal-telephone"
+                  name="telephone"
+                  className={inputCls}
+                  value={form.address.telephone}
+                  onChange={(e) => handleAddressChange('telephone', e.target.value)}
+                />
               </div>
             </div>
           </fieldset>
@@ -453,27 +624,44 @@ export default function PortalPersonalDetails() {
               )}
 
               <div>
-                <label htmlFor="portal-current-password" className={labelCls}>Current Password</label>
+                <label htmlFor="portal-current-password" className={labelCls}>
+                  Current Password
+                </label>
                 <PasswordInput
-                  id="portal-current-password" name="currentPassword" className={inputCls}
-                  value={pwForm.currentPassword} autoComplete="current-password"
+                  id="portal-current-password"
+                  name="currentPassword"
+                  className={inputCls}
+                  value={pwForm.currentPassword}
+                  autoComplete="current-password"
                   onChange={(e) => setPwForm((p) => ({ ...p, currentPassword: e.target.value }))}
                 />
               </div>
               <div>
-                <label htmlFor="portal-new-password" className={labelCls}>New Password</label>
+                <label htmlFor="portal-new-password" className={labelCls}>
+                  New Password
+                </label>
                 <PasswordInput
-                  id="portal-new-password" name="newPassword" className={inputCls}
-                  value={pwForm.newPassword} autoComplete="new-password"
+                  id="portal-new-password"
+                  name="newPassword"
+                  className={inputCls}
+                  value={pwForm.newPassword}
+                  autoComplete="new-password"
                   onChange={(e) => setPwForm((p) => ({ ...p, newPassword: e.target.value }))}
                 />
-                <p className="text-xs text-slate-500 mt-1">10-72 characters, must include uppercase, lowercase, and number</p>
+                <p className="text-xs text-slate-500 mt-1">
+                  10-72 characters, must include uppercase, lowercase, and number
+                </p>
               </div>
               <div>
-                <label htmlFor="portal-confirm-password" className={labelCls}>Confirm New Password</label>
+                <label htmlFor="portal-confirm-password" className={labelCls}>
+                  Confirm New Password
+                </label>
                 <PasswordInput
-                  id="portal-confirm-password" name="confirmPassword" className={inputCls}
-                  value={pwForm.confirmPassword} autoComplete="new-password"
+                  id="portal-confirm-password"
+                  name="confirmPassword"
+                  className={inputCls}
+                  value={pwForm.confirmPassword}
+                  autoComplete="new-password"
                   onChange={(e) => setPwForm((p) => ({ ...p, confirmPassword: e.target.value }))}
                 />
               </div>

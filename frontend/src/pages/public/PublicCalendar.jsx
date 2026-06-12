@@ -12,7 +12,7 @@ function fmtDateUK(d) {
   if (!d) return '';
   const s = String(d).slice(0, 10);
   const [y, m, day] = s.split('-');
-  const days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
   const dt = new Date(parseInt(y), parseInt(m) - 1, parseInt(day));
   return `${days[dt.getDay()]} ${parseInt(day)}/${m}/${y}`;
 }
@@ -69,10 +69,10 @@ export default function PublicCalendar() {
   }
 
   // Determine which optional columns have data
-  const hasTopic = events.some(e => e.topic);
-  const hasVenue = events.some(e => e.venue);
-  const hasContact = events.some(e => e.contact);
-  const hasDetails = events.some(e => e.details);
+  const hasTopic = events.some((e) => e.topic);
+  const hasVenue = events.some((e) => e.venue);
+  const hasContact = events.some((e) => e.contact);
+  const hasDetails = events.some((e) => e.details);
 
   return (
     <div className="relative min-h-screen bg-gradient-to-br from-blue-50 to-slate-100 px-4 py-8">
@@ -98,7 +98,9 @@ export default function PublicCalendar() {
                 <th className="px-3 py-2 font-semibold text-slate-600">Group</th>
                 {hasTopic && <th className="px-3 py-2 font-semibold text-slate-600">Topic</th>}
                 {hasVenue && <th className="px-3 py-2 font-semibold text-slate-600">Venue</th>}
-                {hasContact && <th className="px-3 py-2 font-semibold text-slate-600">Enquiries</th>}
+                {hasContact && (
+                  <th className="px-3 py-2 font-semibold text-slate-600">Enquiries</th>
+                )}
                 {hasDetails && <th className="px-3 py-2 font-semibold text-slate-600">Details</th>}
               </tr>
             </thead>
@@ -106,8 +108,7 @@ export default function PublicCalendar() {
               {events.map((ev) => (
                 <tr key={ev.id} className="border-t border-slate-100 hover:bg-slate-50">
                   <td className="px-3 py-2 whitespace-nowrap">
-                    {fmtDateUK(ev.eventDate)}{' '}
-                    {ev.startTime && fmtTime(ev.startTime)}
+                    {fmtDateUK(ev.eventDate)} {ev.startTime && fmtTime(ev.startTime)}
                   </td>
                   <td className="px-3 py-2">{ev.groupName}</td>
                   {hasTopic && <td className="px-3 py-2">{ev.topic || ''}</td>}

@@ -7,11 +7,11 @@ import { resolveTokens } from '../utils/emailTokens.js';
 
 const member = {
   forenames: '<script>alert(1)</script>',
-  surname:   "O'Brien",
-  email:     'a@example.com',
+  surname: "O'Brien",
+  email: 'a@example.com',
   partner: {
     forenames: '<img src=x onerror=evil()>',
-    surname:   'Partner',
+    surname: 'Partner',
   },
 };
 
@@ -33,7 +33,10 @@ describe('resolveTokens', () => {
 
   it("doesn't escape the surrounding admin-authored markup", () => {
     const { bodyHtml } = resolveTokens(
-      'Hi', '<a href="https://example.com">click</a> #FORENAME', member, 'u3a',
+      'Hi',
+      '<a href="https://example.com">click</a> #FORENAME',
+      member,
+      'u3a',
     );
     expect(bodyHtml).toBe(
       '<a href="https://example.com">click</a> &lt;script&gt;alert(1)&lt;/script&gt;',

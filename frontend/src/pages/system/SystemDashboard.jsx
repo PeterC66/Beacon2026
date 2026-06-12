@@ -8,7 +8,14 @@ import SortableHeader from '../../components/SortableHeader.jsx';
 import PasswordInput from '../../components/PasswordInput.jsx';
 import { useSortedData } from '../../hooks/useSortedData.js';
 
-const EMPTY_FORM = { name: '', slug: '', adminEmail: '', adminName: '', adminPassword: '', adminUsername: '' };
+const EMPTY_FORM = {
+  name: '',
+  slug: '',
+  adminEmail: '',
+  adminName: '',
+  adminPassword: '',
+  adminUsername: '',
+};
 
 // ─── Feature toggle definitions (same structure as FeatureConfig.jsx) ────────
 const SECTIONS = [
@@ -16,43 +23,53 @@ const SECTIONS = [
     title: 'Membership',
     master: null,
     toggles: [
-      { key: 'membershipCards',     label: 'Membership Cards',     defaultValue: true },
-      { key: 'membershipRenewals',  label: 'Membership Renewals',  defaultValue: true },
-      { key: 'addressesExport',     label: 'Addresses Export',     defaultValue: true },
-      { key: 'giftAid',            label: 'Gift Aid',             defaultValue: false },
-      { key: 'customFields',       label: 'Custom Fields',        defaultValue: true },
-      { key: 'polls',              label: 'Polls',                defaultValue: true },
-      { key: 'statistics',         label: 'Membership Statistics', defaultValue: true },
+      { key: 'membershipCards', label: 'Membership Cards', defaultValue: true },
+      { key: 'membershipRenewals', label: 'Membership Renewals', defaultValue: true },
+      { key: 'addressesExport', label: 'Addresses Export', defaultValue: true },
+      { key: 'giftAid', label: 'Gift Aid', defaultValue: false },
+      { key: 'customFields', label: 'Custom Fields', defaultValue: true },
+      { key: 'polls', label: 'Polls', defaultValue: true },
+      { key: 'statistics', label: 'Membership Statistics', defaultValue: true },
     ],
   },
   {
     title: 'Groups',
     master: { key: 'groups', label: 'Groups module', defaultValue: true },
     toggles: [
-      { key: 'teams',       label: 'Teams',         defaultValue: true,  dependsOn: 'groups' },
-      { key: 'venues',      label: 'Venues',        defaultValue: true,  dependsOn: 'groups' },
-      { key: 'faculties',   label: 'Faculties',     defaultValue: true,  dependsOn: 'groups' },
-      { key: 'groupLedger', label: 'Group Ledger',  defaultValue: false, dependsOn: 'groups' },
-      { key: 'siteworks',   label: 'SiteWorks',     defaultValue: false, dependsOn: 'groups' },
+      { key: 'teams', label: 'Teams', defaultValue: true, dependsOn: 'groups' },
+      { key: 'venues', label: 'Venues', defaultValue: true, dependsOn: 'groups' },
+      { key: 'faculties', label: 'Faculties', defaultValue: true, dependsOn: 'groups' },
+      { key: 'groupLedger', label: 'Group Ledger', defaultValue: false, dependsOn: 'groups' },
+      { key: 'siteworks', label: 'SiteWorks', defaultValue: false, dependsOn: 'groups' },
     ],
   },
   {
     title: 'Events & Calendar',
     master: { key: 'events', label: 'Events & Calendar module', defaultValue: true },
     toggles: [
-      { key: 'calendar',   label: 'Calendar',    defaultValue: true, dependsOn: 'events' },
-      { key: 'eventTypes', label: 'Event Types',  defaultValue: true, dependsOn: 'events' },
+      { key: 'calendar', label: 'Calendar', defaultValue: true, dependsOn: 'events' },
+      { key: 'eventTypes', label: 'Event Types', defaultValue: true, dependsOn: 'events' },
     ],
   },
   {
     title: 'Finance',
     master: { key: 'finance', label: 'Finance module', defaultValue: true },
     toggles: [
-      { key: 'creditBatches',      label: 'Credit Batches',      defaultValue: true, dependsOn: 'finance' },
-      { key: 'reconciliation',     label: 'Reconciliation',      defaultValue: true, dependsOn: 'finance' },
-      { key: 'financialStatement', label: 'Financial Statement',  defaultValue: true, dependsOn: 'finance' },
-      { key: 'groupsStatement',    label: 'Groups Statement',    defaultValue: true, dependsOn: 'finance' },
-      { key: 'transferMoney',      label: 'Transfer Money',      defaultValue: true, dependsOn: 'finance' },
+      { key: 'creditBatches', label: 'Credit Batches', defaultValue: true, dependsOn: 'finance' },
+      { key: 'reconciliation', label: 'Reconciliation', defaultValue: true, dependsOn: 'finance' },
+      {
+        key: 'financialStatement',
+        label: 'Financial Statement',
+        defaultValue: true,
+        dependsOn: 'finance',
+      },
+      {
+        key: 'groupsStatement',
+        label: 'Groups Statement',
+        defaultValue: true,
+        dependsOn: 'finance',
+      },
+      { key: 'transferMoney', label: 'Transfer Money', defaultValue: true, dependsOn: 'finance' },
     ],
   },
   {
@@ -78,43 +95,46 @@ function getVal(config, key, defaultValue) {
 }
 
 export default function SystemDashboard() {
-  const navigate  = useNavigate();
-  const token     = getSysToken();
+  const navigate = useNavigate();
+  const token = getSysToken();
 
-  const [tenants,  setTenants]  = useState([]);
+  const [tenants, setTenants] = useState([]);
   const { sorted: sortedTenants, sortKey, sortDir, onSort } = useSortedData(tenants);
-  const [loadErr,  setLoadErr]  = useState(null);
+  const [loadErr, setLoadErr] = useState(null);
   const [showForm, setShowForm] = useState(false);
-  const [form,     setForm]     = useState(EMPTY_FORM);
-  const [saving,   setSaving]   = useState(false);
-  const [formErr,  setFormErr]  = useState(null);
-  const [success,  setSuccess]  = useState(null);
+  const [form, setForm] = useState(EMPTY_FORM);
+  const [saving, setSaving] = useState(false);
+  const [formErr, setFormErr] = useState(null);
+  const [success, setSuccess] = useState(null);
 
   // System message state
-  const [sysMessage,      setSysMessage]     = useState('');
-  const [sysMessageOrig,  setSysMessageOrig] = useState('');
+  const [sysMessage, setSysMessage] = useState('');
+  const [sysMessageOrig, setSysMessageOrig] = useState('');
   const [sysMessageSaving, setSysMessageSaving] = useState(false);
-  const [sysMessageSaved,  setSysMessageSaved]  = useState(false);
+  const [sysMessageSaved, setSysMessageSaved] = useState(false);
 
   // Feature config modal state
-  const [fcTenant,  setFcTenant]  = useState(null);  // { slug, name } of tenant being edited
-  const [fcConfig,  setFcConfig]  = useState({});
-  const [fcSaved,   setFcSaved]   = useState({});
+  const [fcTenant, setFcTenant] = useState(null); // { slug, name } of tenant being edited
+  const [fcConfig, setFcConfig] = useState({});
+  const [fcSaved, setFcSaved] = useState({});
   const [fcLoading, setFcLoading] = useState(false);
-  const [fcSaving,  setFcSaving]  = useState(false);
-  const [fcError,   setFcError]   = useState(null);
+  const [fcSaving, setFcSaving] = useState(false);
+  const [fcError, setFcError] = useState(null);
   const [fcSuccess, setFcSuccess] = useState(false);
 
   // Restore state
   const restoreFileRef = useRef(null);
-  const [restoreTenant,  setRestoreTenant]  = useState('');
-  const [restoreFile,    setRestoreFile]    = useState(null);
-  const [restoring,      setRestoring]      = useState(false);
-  const [restoreResult,  setRestoreResult]  = useState(null);
-  const [restoreError,   setRestoreError]   = useState('');
-  const [confirmOpen,    setConfirmOpen]    = useState(false);
+  const [restoreTenant, setRestoreTenant] = useState('');
+  const [restoreFile, setRestoreFile] = useState(null);
+  const [restoring, setRestoring] = useState(false);
+  const [restoreResult, setRestoreResult] = useState(null);
+  const [restoreError, setRestoreError] = useState('');
+  const [confirmOpen, setConfirmOpen] = useState(false);
 
-  const logout = () => { clearSysToken(); navigate('/system/login'); };
+  const logout = () => {
+    clearSysToken();
+    navigate('/system/login');
+  };
 
   const loadTenants = useCallback(async () => {
     setLoadErr(null);
@@ -130,15 +150,21 @@ export default function SystemDashboard() {
   }, [token]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
-    if (!token) { navigate('/system/login'); return; }
+    if (!token) {
+      navigate('/system/login');
+      return;
+    }
     loadTenants();
-    system.getSettings(token)
-      .then((s) => { setSysMessage(s.systemMessage ?? ''); setSysMessageOrig(s.systemMessage ?? ''); })
+    system
+      .getSettings(token)
+      .then((s) => {
+        setSysMessage(s.systemMessage ?? '');
+        setSysMessageOrig(s.systemMessage ?? '');
+      })
       .catch(() => {});
   }, [token, navigate, loadTenants]);
 
-  const handleChange = (e) =>
-    setForm((f) => ({ ...f, [e.target.name]: e.target.value }));
+  const handleChange = (e) => setForm((f) => ({ ...f, [e.target.name]: e.target.value }));
 
   const handleCreate = async (e) => {
     e.preventDefault();
@@ -191,10 +217,15 @@ export default function SystemDashboard() {
       `Set a temporary password for ALL users in "${tenant.name}".\n\nEnter the temporary password (min 6 chars):`,
     );
     if (!pw) return;
-    if (pw.length < 6) { alert('Password must be at least 6 characters.'); return; }
+    if (pw.length < 6) {
+      alert('Password must be at least 6 characters.');
+      return;
+    }
     try {
       const result = await system.setTempPassword(token, tenant.id, pw);
-      setSuccess(`Temporary password set for ${result.updated} user(s) in "${tenant.name}": ${result.users.join(', ')}`);
+      setSuccess(
+        `Temporary password set for ${result.updated} user(s) in "${tenant.name}": ${result.users.join(', ')}`,
+      );
     } catch (err) {
       setLoadErr(err.message);
     }
@@ -320,7 +351,6 @@ export default function SystemDashboard() {
       </header>
 
       <main className="max-w-3xl mx-auto px-4 py-8 space-y-6">
-
         {/* Success banner */}
         {success && (
           <div className="p-4 bg-green-50 border border-green-200 rounded-lg text-green-800 text-sm">
@@ -333,16 +363,17 @@ export default function SystemDashboard() {
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-semibold text-slate-700">u3a Tenants</h2>
             <button
-              onClick={() => { setShowForm((v) => !v); setFormErr(null); }}
+              onClick={() => {
+                setShowForm((v) => !v);
+                setFormErr(null);
+              }}
               className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors"
             >
               {showForm ? 'Cancel' : '+ New tenant'}
             </button>
           </div>
 
-          {loadErr && (
-            <p className="text-red-600 text-sm mb-3">{loadErr}</p>
-          )}
+          {loadErr && <p className="text-red-600 text-sm mb-3">{loadErr}</p>}
 
           {tenants.length === 0 && !loadErr ? (
             <p className="text-slate-400 text-sm">No tenants yet.</p>
@@ -350,9 +381,30 @@ export default function SystemDashboard() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="text-left text-slate-500 border-b">
-                  <SortableHeader col="name"   label="Name"   sortKey={sortKey} sortDir={sortDir} onSort={onSort} className="pb-2 font-medium" />
-                  <SortableHeader col="slug"   label="Slug"   sortKey={sortKey} sortDir={sortDir} onSort={onSort} className="pb-2 font-medium" />
-                  <SortableHeader col="active" label="Status" sortKey={sortKey} sortDir={sortDir} onSort={onSort} className="pb-2 font-medium" />
+                  <SortableHeader
+                    col="name"
+                    label="Name"
+                    sortKey={sortKey}
+                    sortDir={sortDir}
+                    onSort={onSort}
+                    className="pb-2 font-medium"
+                  />
+                  <SortableHeader
+                    col="slug"
+                    label="Slug"
+                    sortKey={sortKey}
+                    sortDir={sortDir}
+                    onSort={onSort}
+                    className="pb-2 font-medium"
+                  />
+                  <SortableHeader
+                    col="active"
+                    label="Status"
+                    sortKey={sortKey}
+                    sortDir={sortDir}
+                    onSort={onSort}
+                    className="pb-2 font-medium"
+                  />
                   <th className="pb-2"></th>
                 </tr>
               </thead>
@@ -362,7 +414,9 @@ export default function SystemDashboard() {
                     <td className="py-3">{t.name}</td>
                     <td className="py-3 font-mono text-slate-600">{t.slug}</td>
                     <td className="py-3">
-                      <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${t.active ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-500'}`}>
+                      <span
+                        className={`px-2 py-0.5 rounded-full text-xs font-medium ${t.active ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-500'}`}
+                      >
                         {t.active ? 'Active' : 'Disabled'}
                       </span>
                     </td>
@@ -416,18 +470,30 @@ export default function SystemDashboard() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">u3a name</label>
-                  <input name="name" value={form.name} onChange={handleChange} required
+                  <input
+                    name="name"
+                    value={form.name}
+                    onChange={handleChange}
+                    required
                     placeholder="e.g. Oxfordshire u3a"
-                    className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                    className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">Slug</label>
-                  <input name="slug" value={form.slug} onChange={handleChange} required
+                  <input
+                    name="slug"
+                    value={form.slug}
+                    onChange={handleChange}
+                    required
                     placeholder="e.g. oxfordshire"
                     pattern="[a-z0-9_]+"
                     title="Lowercase letters, numbers and underscores only"
-                    className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-blue-500" />
-                  <p className="text-xs text-slate-400 mt-1">Lowercase, no spaces. Users will type this at login.</p>
+                    className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                  <p className="text-xs text-slate-400 mt-1">
+                    Lowercase, no spaces. Users will type this at login.
+                  </p>
                 </div>
               </div>
 
@@ -437,38 +503,69 @@ export default function SystemDashboard() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">Name</label>
-                  <input name="adminName" value={form.adminName} onChange={handleChange} required
+                  <input
+                    name="adminName"
+                    value={form.adminName}
+                    onChange={handleChange}
+                    required
                     placeholder="e.g. Jane Smith"
-                    className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                    className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">Email</label>
-                  <input name="adminEmail" type="email" value={form.adminEmail} onChange={handleChange} required
-                    className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                  <input
+                    name="adminEmail"
+                    type="email"
+                    value={form.adminEmail}
+                    onChange={handleChange}
+                    required
+                    className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
                 </div>
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">Username</label>
-                <input name="adminUsername" value={form.adminUsername}
-                  onChange={(e) => setForm((f) => ({ ...f, adminUsername: e.target.value.toLowerCase().replace(/[^a-z0-9]/g, '') }))}
-                  required pattern="[a-z0-9]+"
+                <input
+                  name="adminUsername"
+                  value={form.adminUsername}
+                  onChange={(e) =>
+                    setForm((f) => ({
+                      ...f,
+                      adminUsername: e.target.value.toLowerCase().replace(/[^a-z0-9]/g, ''),
+                    }))
+                  }
+                  required
+                  pattern="[a-z0-9]+"
                   title="Lowercase letters and numbers only"
                   placeholder="e.g. jsmith"
-                  className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-blue-500" />
-                <p className="text-xs text-slate-400 mt-1">Used to log in. Lowercase letters and numbers only.</p>
+                  className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+                <p className="text-xs text-slate-400 mt-1">
+                  Used to log in. Lowercase letters and numbers only.
+                </p>
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">Password</label>
-                <PasswordInput name="adminPassword" value={form.adminPassword} onChange={handleChange}
-                  required minLength={8} autoComplete="new-password"
-                  className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                <PasswordInput
+                  name="adminPassword"
+                  value={form.adminPassword}
+                  onChange={handleChange}
+                  required
+                  minLength={8}
+                  autoComplete="new-password"
+                  className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
                 <p className="text-xs text-slate-400 mt-1">At least 8 characters.</p>
               </div>
 
-              <button type="submit" disabled={saving}
-                className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white font-medium py-2 rounded-lg text-sm transition-colors">
+              <button
+                type="submit"
+                disabled={saving}
+                className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white font-medium py-2 rounded-lg text-sm transition-colors"
+              >
                 {saving ? 'Creating…' : 'Create tenant'}
               </button>
             </form>
@@ -479,7 +576,8 @@ export default function SystemDashboard() {
         <section className="bg-white rounded-xl shadow-sm p-6">
           <h2 className="text-lg font-semibold text-slate-700 mb-1">System Message</h2>
           <p className="text-sm text-slate-500 mb-4">
-            This message is displayed on the Home page of every tenant. Use it for system-wide announcements.
+            This message is displayed on the Home page of every tenant. Use it for system-wide
+            announcements.
           </p>
           <textarea
             value={sysMessage}
@@ -496,9 +594,7 @@ export default function SystemDashboard() {
             >
               {sysMessageSaving ? 'Saving…' : 'Save'}
             </button>
-            {sysMessageSaved && (
-              <span className="text-green-600 text-sm font-medium">Saved</span>
-            )}
+            {sysMessageSaved && <span className="text-green-600 text-sm font-medium">Saved</span>}
           </div>
         </section>
 
@@ -507,12 +603,14 @@ export default function SystemDashboard() {
           <h2 className="text-lg font-semibold text-slate-700 mb-1">Restore from Backup</h2>
           <p className="text-sm text-slate-500 mb-4">
             Upload a Beacon2 backup or a legacy Beacon export file to restore a tenant&apos;s data.
-            The format is detected automatically. User accounts and roles are included in the restore.
+            The format is detected automatically. User accounts and roles are included in the
+            restore.
           </p>
 
           <div className="rounded-md bg-amber-50 border border-amber-300 px-4 py-3 text-amber-800 text-sm mb-5">
-            <strong>Warning:</strong> Restoring will <strong>permanently delete all current data</strong> for
-            the selected tenant and replace it with the contents of the uploaded file. This cannot be undone.
+            <strong>Warning:</strong> Restoring will{' '}
+            <strong>permanently delete all current data</strong> for the selected tenant and replace
+            it with the contents of the uploaded file. This cannot be undone.
           </div>
 
           {restoreError && (
@@ -533,12 +631,18 @@ export default function SystemDashboard() {
               <select
                 name="restoreTenant"
                 value={restoreTenant}
-                onChange={(e) => { setRestoreTenant(e.target.value); setRestoreResult(null); setRestoreError(''); }}
+                onChange={(e) => {
+                  setRestoreTenant(e.target.value);
+                  setRestoreResult(null);
+                  setRestoreError('');
+                }}
                 className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 <option value="">— choose a tenant —</option>
                 {tenants.map((t) => (
-                  <option key={t.id} value={t.slug}>{t.name} ({t.slug})</option>
+                  <option key={t.id} value={t.slug}>
+                    {t.name} ({t.slug})
+                  </option>
                 ))}
               </select>
             </div>
@@ -558,7 +662,9 @@ export default function SystemDashboard() {
                   hover:file:bg-blue-100"
               />
               {restoreFile && (
-                <p className="text-xs text-slate-500 mt-1">{restoreFile.name} ({(restoreFile.size / 1024).toFixed(0)} KB)</p>
+                <p className="text-xs text-slate-500 mt-1">
+                  {restoreFile.name} ({(restoreFile.size / 1024).toFixed(0)} KB)
+                </p>
               )}
             </div>
 
@@ -578,7 +684,6 @@ export default function SystemDashboard() {
             </button>
           </div>
         </section>
-
       </main>
 
       {/* Restore confirmation modal */}
@@ -589,15 +694,13 @@ export default function SystemDashboard() {
             <p className="text-sm text-slate-600 mb-1">
               Tenant: <strong>{restoreTenant}</strong>
             </p>
-            <p className="text-sm text-slate-600 mb-2">
-              File:
-            </p>
+            <p className="text-sm text-slate-600 mb-2">File:</p>
             <p className="text-sm font-medium text-slate-800 bg-slate-100 rounded px-3 py-2 mb-4 break-all">
               {restoreFile?.name}
             </p>
             <p className="text-sm text-red-700 font-medium mb-5">
-              All current data for this tenant will be permanently deleted and replaced.
-              This cannot be undone.
+              All current data for this tenant will be permanently deleted and replaced. This cannot
+              be undone.
             </p>
             <div className="flex gap-3 justify-end">
               <button
@@ -623,10 +726,10 @@ export default function SystemDashboard() {
           <div className="bg-white rounded-lg shadow-xl max-w-lg mx-4 w-full max-h-[85vh] flex flex-col">
             {/* Header */}
             <div className="px-6 py-4 border-b border-slate-200">
-              <h3 className="text-lg font-bold text-slate-800">
-                Feature Configuration
-              </h3>
-              <p className="text-sm text-slate-500">{fcTenant.name} ({fcTenant.slug})</p>
+              <h3 className="text-lg font-bold text-slate-800">Feature Configuration</h3>
+              <p className="text-sm text-slate-500">
+                {fcTenant.name} ({fcTenant.slug})
+              </p>
             </div>
 
             {/* Scrollable content */}
@@ -645,54 +748,62 @@ export default function SystemDashboard() {
                 </p>
               )}
 
-              {!fcLoading && SECTIONS.map((section) => {
-                const masterOn = section.master
-                  ? getVal(fcConfig, section.master.key, section.master.defaultValue)
-                  : true;
-                return (
-                  <div key={section.title} className="border border-slate-200 rounded-lg overflow-hidden">
-                    <div className="bg-gradient-to-r from-amber-50 to-amber-100 px-4 py-2 font-semibold text-sm text-slate-800">
-                      {section.title}
+              {!fcLoading &&
+                SECTIONS.map((section) => {
+                  const masterOn = section.master
+                    ? getVal(fcConfig, section.master.key, section.master.defaultValue)
+                    : true;
+                  return (
+                    <div
+                      key={section.title}
+                      className="border border-slate-200 rounded-lg overflow-hidden"
+                    >
+                      <div className="bg-gradient-to-r from-amber-50 to-amber-100 px-4 py-2 font-semibold text-sm text-slate-800">
+                        {section.title}
+                      </div>
+                      <div className="px-4 py-2 space-y-1">
+                        {section.master && (
+                          <label className="flex items-center gap-3 py-1 text-sm cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={masterOn}
+                              onChange={(e) => handleFcChange(section.master.key, e.target.checked)}
+                              className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                            />
+                            <span className="font-medium text-slate-700">
+                              {section.master.label}
+                            </span>
+                          </label>
+                        )}
+                        {section.toggles.length > 0 && (
+                          <div className="pl-6 space-y-1">
+                            {section.toggles.map((t) => {
+                              const parentOff = t.dependsOn && !getVal(fcConfig, t.dependsOn, true);
+                              const checked = parentOff
+                                ? false
+                                : getVal(fcConfig, t.key, t.defaultValue);
+                              return (
+                                <label
+                                  key={t.key}
+                                  className={`flex items-center gap-3 py-0.5 text-sm ${parentOff ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer'}`}
+                                >
+                                  <input
+                                    type="checkbox"
+                                    checked={checked}
+                                    disabled={parentOff}
+                                    onChange={(e) => handleFcChange(t.key, e.target.checked)}
+                                    className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                                  />
+                                  <span className="text-slate-700">{t.label}</span>
+                                </label>
+                              );
+                            })}
+                          </div>
+                        )}
+                      </div>
                     </div>
-                    <div className="px-4 py-2 space-y-1">
-                      {section.master && (
-                        <label className="flex items-center gap-3 py-1 text-sm cursor-pointer">
-                          <input
-                            type="checkbox"
-                            checked={masterOn}
-                            onChange={(e) => handleFcChange(section.master.key, e.target.checked)}
-                            className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
-                          />
-                          <span className="font-medium text-slate-700">{section.master.label}</span>
-                        </label>
-                      )}
-                      {section.toggles.length > 0 && (
-                        <div className="pl-6 space-y-1">
-                          {section.toggles.map((t) => {
-                            const parentOff = t.dependsOn && !getVal(fcConfig, t.dependsOn, true);
-                            const checked = parentOff ? false : getVal(fcConfig, t.key, t.defaultValue);
-                            return (
-                              <label
-                                key={t.key}
-                                className={`flex items-center gap-3 py-0.5 text-sm ${parentOff ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer'}`}
-                              >
-                                <input
-                                  type="checkbox"
-                                  checked={checked}
-                                  disabled={parentOff}
-                                  onChange={(e) => handleFcChange(t.key, e.target.checked)}
-                                  className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
-                                />
-                                <span className="text-slate-700">{t.label}</span>
-                              </label>
-                            );
-                          })}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
+                  );
+                })}
             </div>
 
             {/* Footer */}

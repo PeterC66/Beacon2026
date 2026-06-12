@@ -13,8 +13,20 @@ function fmtDate(d) {
   const s = String(d).slice(0, 10);
   const [y, m, day] = s.split('-');
   if (!y || !m || !day) return '';
-  const months = ['January','February','March','April','May','June',
-                  'July','August','September','October','November','December'];
+  const months = [
+    'January',
+    'February',
+    'March',
+    'April',
+    'May',
+    'June',
+    'July',
+    'August',
+    'September',
+    'October',
+    'November',
+    'December',
+  ];
   return `${parseInt(day)} ${months[parseInt(m) - 1]} ${y}`;
 }
 
@@ -100,7 +112,9 @@ export default function PortalRenewal() {
       });
       if (result.redirectUrl) {
         if (!isSafePaymentRedirect(result.redirectUrl)) {
-          setError('The payment provider returned an unexpected redirect. Please contact your u3a.');
+          setError(
+            'The payment provider returned an unexpected redirect. Please contact your u3a.',
+          );
           setSubmitting(false);
           return;
         }
@@ -133,21 +147,28 @@ export default function PortalRenewal() {
         <PortalVersion />
         <div className="bg-white rounded-lg shadow-md p-8 max-w-md w-full">
           <div className="mb-4">
-            <Link to={`/public/${slug}/portal/home`} className="text-sm text-blue-700 hover:underline">
+            <Link
+              to={`/public/${slug}/portal/home`}
+              className="text-sm text-blue-700 hover:underline"
+            >
               &larr; Members Portal
             </Link>
           </div>
-          <h1 className="text-xl font-bold text-center text-green-700 mb-4">
-            Renewal Complete
-          </h1>
+          <h1 className="text-xl font-bold text-center text-green-700 mb-4">Renewal Complete</h1>
           <div className="bg-green-50 border border-green-200 rounded-md p-4 mb-4">
             <p className="text-sm text-green-800">
               Thank you! Your membership has been renewed successfully.
             </p>
           </div>
           <div className="bg-slate-50 rounded-md p-4 text-sm space-y-1">
-            <p><span className="font-medium text-slate-700">Membership number:</span> {completedData.membershipNumber}</p>
-            <p><span className="font-medium text-slate-700">Membership continues until:</span> {fmtDate(completedData.newNextRenewal)}</p>
+            <p>
+              <span className="font-medium text-slate-700">Membership number:</span>{' '}
+              {completedData.membershipNumber}
+            </p>
+            <p>
+              <span className="font-medium text-slate-700">Membership continues until:</span>{' '}
+              {fmtDate(completedData.newNextRenewal)}
+            </p>
           </div>
           <div className="text-center mt-6">
             <Link
@@ -169,13 +190,14 @@ export default function PortalRenewal() {
         <PortalVersion />
         <div className="bg-white rounded-lg shadow-md p-8 max-w-md w-full">
           <div className="mb-4">
-            <Link to={`/public/${slug}/portal/home`} className="text-sm text-blue-700 hover:underline">
+            <Link
+              to={`/public/${slug}/portal/home`}
+              className="text-sm text-blue-700 hover:underline"
+            >
               &larr; Members Portal
             </Link>
           </div>
-          <h1 className="text-xl font-bold text-center text-slate-800 mb-4">
-            Membership Renewal
-          </h1>
+          <h1 className="text-xl font-bold text-center text-slate-800 mb-4">Membership Renewal</h1>
           <div className="rounded-md bg-amber-50 border border-amber-200 px-4 py-3 text-amber-800 text-sm text-center">
             {error}
           </div>
@@ -191,14 +213,15 @@ export default function PortalRenewal() {
       <PortalVersion />
       <div className="bg-white rounded-lg shadow-md p-6 sm:p-8 max-w-lg w-full">
         <div className="mb-4">
-          <Link to={`/public/${slug}/portal/home`} className="text-sm text-blue-700 hover:underline">
+          <Link
+            to={`/public/${slug}/portal/home`}
+            className="text-sm text-blue-700 hover:underline"
+          >
             &larr; Members Portal
           </Link>
         </div>
 
-        <h1 className="text-xl font-bold text-center text-slate-800 mb-6">
-          Membership Renewal
-        </h1>
+        <h1 className="text-xl font-bold text-center text-slate-800 mb-6">Membership Renewal</h1>
 
         {error && (
           <div className="rounded-md bg-red-50 border border-red-300 px-4 py-3 text-red-700 text-sm text-center mb-4">
@@ -209,20 +232,19 @@ export default function PortalRenewal() {
         {/* Renewal summary */}
         <div className="bg-slate-50 rounded-md p-4 mb-6 text-sm space-y-2">
           <p>
-            <span className="font-medium text-slate-700">Member:</span>{' '}
-            {member.forenames} {member.surname} (No. {member.membershipNumber})
+            <span className="font-medium text-slate-700">Member:</span> {member.forenames}{' '}
+            {member.surname} (No. {member.membershipNumber})
           </p>
           <p>
-            <span className="font-medium text-slate-700">Class:</span>{' '}
-            {member.className}
+            <span className="font-medium text-slate-700">Class:</span> {member.className}
           </p>
           <p>
             <span className="font-medium text-slate-700">Current renewal date:</span>{' '}
             {fmtDate(member.nextRenewal)}
           </p>
           <p>
-            <span className="font-medium text-slate-700">Subscription:</span>{' '}
-            &pound;{Number(member.fee).toFixed(2)}
+            <span className="font-medium text-slate-700">Subscription:</span> &pound;
+            {Number(member.fee).toFixed(2)}
           </p>
 
           {partner && (
@@ -233,8 +255,8 @@ export default function PortalRenewal() {
                 {partner.forenames} {partner.surname} (No. {partner.membershipNumber})
               </p>
               <p>
-                <span className="font-medium text-slate-700">Partner subscription:</span>{' '}
-                &pound;{Number(partner.fee).toFixed(2)}
+                <span className="font-medium text-slate-700">Partner subscription:</span> &pound;
+                {Number(partner.fee).toFixed(2)}
               </p>
             </>
           )}
@@ -247,7 +269,8 @@ export default function PortalRenewal() {
 
         {partner && (
           <div className="bg-blue-50 border border-blue-200 rounded-md p-3 mb-6 text-xs text-blue-800">
-            Joint memberships must be renewed together. Both subscriptions are included in the total above.
+            Joint memberships must be renewed together. Both subscriptions are included in the total
+            above.
           </div>
         )}
 
@@ -256,8 +279,8 @@ export default function PortalRenewal() {
           <fieldset className="mb-6">
             <legend className="text-sm font-bold text-slate-700 mb-2">Gift Aid</legend>
             <p className="text-xs text-slate-500 mb-3">
-              If you are a UK taxpayer, your u3a can claim Gift Aid on your subscription
-              at no extra cost to you.
+              If you are a UK taxpayer, your u3a can claim Gift Aid on your subscription at no extra
+              cost to you.
             </p>
             <label className="flex items-start gap-2 text-sm mb-2">
               <input
@@ -268,7 +291,9 @@ export default function PortalRenewal() {
               />
               <span>
                 I ({member.displayName}) would like Gift Aid claimed on my subscription
-                {member.giftAidFrom && <span className="text-slate-400 ml-1">(currently opted in)</span>}
+                {member.giftAidFrom && (
+                  <span className="text-slate-400 ml-1">(currently opted in)</span>
+                )}
               </span>
             </label>
             {partner && (
@@ -281,7 +306,9 @@ export default function PortalRenewal() {
                 />
                 <span>
                   I ({partner.displayName}) would like Gift Aid claimed on my subscription
-                  {partner.giftAidFrom && <span className="text-slate-400 ml-1">(currently opted in)</span>}
+                  {partner.giftAidFrom && (
+                    <span className="text-slate-400 ml-1">(currently opted in)</span>
+                  )}
                 </span>
               </label>
             )}
@@ -291,7 +318,10 @@ export default function PortalRenewal() {
         {onlineRenewEmail && (
           <p className="text-xs text-slate-500 mb-4">
             For enquiries about renewal, please contact{' '}
-            <a href={`mailto:${onlineRenewEmail}`} className="text-blue-700 hover:underline">{onlineRenewEmail}</a>.
+            <a href={`mailto:${onlineRenewEmail}`} className="text-blue-700 hover:underline">
+              {onlineRenewEmail}
+            </a>
+            .
           </p>
         )}
 
@@ -301,9 +331,7 @@ export default function PortalRenewal() {
           disabled={submitting}
           className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white rounded px-5 py-3 text-sm font-medium transition-colors"
         >
-          {submitting
-            ? 'Processing...'
-            : `Make Payment — \u00A3${Number(totalFee).toFixed(2)}`}
+          {submitting ? 'Processing...' : `Make Payment — \u00A3${Number(totalFee).toFixed(2)}`}
         </button>
       </div>
     </div>

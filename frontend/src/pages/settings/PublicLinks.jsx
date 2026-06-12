@@ -37,7 +37,16 @@ function renderFeatureOffBanner(featureName) {
   );
 }
 
-function renderToggleGrid(title, rows, config, audience1, audience2, onChange, disabled, audience1Disabled) {
+function renderToggleGrid(
+  title,
+  rows,
+  config,
+  audience1,
+  audience2,
+  onChange,
+  disabled,
+  audience1Disabled,
+) {
   return (
     <div className="bg-white/90 rounded-lg shadow-sm p-4 sm:p-6 mb-4">
       <h2 className="font-bold text-sm mb-3">{title}</h2>
@@ -46,7 +55,11 @@ function renderToggleGrid(title, rows, config, audience1, audience2, onChange, d
         <thead>
           <tr className="border-b border-slate-200">
             <th className="text-left py-2 pr-4 font-medium text-slate-700">Show:</th>
-            <th className={`text-center py-2 px-4 font-medium ${audience1Disabled ? 'text-slate-400' : 'text-slate-700'}`}>{audience1}</th>
+            <th
+              className={`text-center py-2 px-4 font-medium ${audience1Disabled ? 'text-slate-400' : 'text-slate-700'}`}
+            >
+              {audience1}
+            </th>
             <th className="text-center py-2 px-4 font-medium text-slate-700">{audience2}</th>
           </tr>
         </thead>
@@ -100,15 +113,18 @@ export default function PublicLinks() {
   const { markDirty, markClean } = useUnsavedChanges();
 
   useEffect(() => {
-    api.get().then((d) => {
-      setData(d);
-      setForm({
-        privacyPolicyUrl: d.privacyPolicyUrl || '',
-        portalConfig: d.portalConfig || {},
-        groupInfoConfig: d.groupInfoConfig || {},
-        calendarConfig: d.calendarConfig || {},
-      });
-    }).catch((e) => setError(e.message));
+    api
+      .get()
+      .then((d) => {
+        setData(d);
+        setForm({
+          privacyPolicyUrl: d.privacyPolicyUrl || '',
+          portalConfig: d.portalConfig || {},
+          groupInfoConfig: d.groupInfoConfig || {},
+          calendarConfig: d.calendarConfig || {},
+        });
+      })
+      .catch((e) => setError(e.message));
   }, []);
 
   function handleChange(field, value) {
@@ -157,20 +173,24 @@ export default function PublicLinks() {
   const slug = data?.tenantSlug || '';
 
   const GROUP_INFO_ROWS = [
-    { key: 'status',    label: 'Status' },
-    { key: 'venue',     label: 'Venue' },
-    { key: 'contact',   label: 'Contact' },
-    { key: 'detail',    label: 'Detail' },
+    { key: 'status', label: 'Status' },
+    { key: 'venue', label: 'Venue' },
+    { key: 'contact', label: 'Contact' },
+    { key: 'detail', label: 'Detail' },
     { key: 'enquiries', label: 'Enquiries' },
-    { key: 'joinGroup', label: 'Join Group', note: 'Individual groups must enable members to join on-line' },
+    {
+      key: 'joinGroup',
+      label: 'Join Group',
+      note: 'Individual groups must enable members to join on-line',
+    },
   ];
 
   const CALENDAR_ROWS = [
-    { key: 'venue',     label: 'Venue' },
-    { key: 'topic',     label: 'Topic' },
+    { key: 'venue', label: 'Venue' },
+    { key: 'topic', label: 'Topic' },
     { key: 'enquiries', label: 'Enquiries' },
-    { key: 'detail',    label: 'Detail' },
-    { key: 'download',  label: 'Download' },
+    { key: 'detail', label: 'Detail' },
+    { key: 'download', label: 'Download' },
   ];
 
   return (
@@ -182,12 +202,13 @@ export default function PublicLinks() {
         <h1 className="text-xl font-bold mb-4">Public Links</h1>
 
         <p className="text-sm text-slate-600 mb-4">
-          Set the parameters for your public links. These may be used in your u3a website
-          to provide access to services and information.
+          Set the parameters for your public links. These may be used in your u3a website to provide
+          access to services and information.
         </p>
         <p className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded px-3 py-2 mb-4">
-          The Trust states that a Privacy Policy is essential and is part of the Beacon Terms and Conditions.
-          Both new people joining your u3a and existing members renewing must be reminded of this.
+          The Trust states that a Privacy Policy is essential and is part of the Beacon Terms and
+          Conditions. Both new people joining your u3a and existing members renewing must be
+          reminded of this.
         </p>
 
         {error && (
@@ -211,11 +232,19 @@ export default function PublicLinks() {
           <div className="space-y-3">
             <div className={!joiningOn ? 'opacity-50' : ''}>
               {!joiningOn && renderFeatureOffBanner('Online Joining')}
-              {renderCopyableUrl('New membership application', slug ? `${frontendBase}/public/${slug}/join` : '', 'joinUrl')}
+              {renderCopyableUrl(
+                'New membership application',
+                slug ? `${frontendBase}/public/${slug}/join` : '',
+                'joinUrl',
+              )}
             </div>
             <div className={!portalOn ? 'opacity-50' : ''}>
               {!portalOn && renderFeatureOffBanner('Members Portal')}
-              {renderCopyableUrl('Members Portal', slug ? `${frontendBase}/public/${slug}/portal` : '', 'portalUrl')}
+              {renderCopyableUrl(
+                'Members Portal',
+                slug ? `${frontendBase}/public/${slug}/portal` : '',
+                'portalUrl',
+              )}
             </div>
           </div>
         </div>
@@ -224,17 +253,28 @@ export default function PublicLinks() {
         <div className="bg-white/90 rounded-lg shadow-sm p-4 sm:p-6 mb-4">
           <h2 className="font-bold text-sm mb-3">Public Information</h2>
           <p className="text-sm text-slate-600 mb-3">
-            Copy these URLs to create links to the public groups list and calendar.
-            Adding <code className="bg-slate-100 px-1 rounded text-xs">&amp;hdr=0</code> to the URL suppresses the page header.
+            Copy these URLs to create links to the public groups list and calendar. Adding{' '}
+            <code className="bg-slate-100 px-1 rounded text-xs">&amp;hdr=0</code> to the URL
+            suppresses the page header.
           </p>
           <div className="space-y-3">
-            {renderCopyableUrl('Groups list', slug ? `${frontendBase}/public/${slug}/groups` : '', 'groupsUrl')}
-            {renderCopyableUrl('Calendar', slug ? `${frontendBase}/public/${slug}/calendar` : '', 'calendarUrl')}
+            {renderCopyableUrl(
+              'Groups list',
+              slug ? `${frontendBase}/public/${slug}/groups` : '',
+              'groupsUrl',
+            )}
+            {renderCopyableUrl(
+              'Calendar',
+              slug ? `${frontendBase}/public/${slug}/calendar` : '',
+              'calendarUrl',
+            )}
           </div>
         </div>
 
         {/* Online Joining Configuration */}
-        <div className={`bg-white/90 rounded-lg shadow-sm p-4 sm:p-6 mb-4${!joiningOn ? ' opacity-50' : ''}`}>
+        <div
+          className={`bg-white/90 rounded-lg shadow-sm p-4 sm:p-6 mb-4${!joiningOn ? ' opacity-50' : ''}`}
+        >
           <h2 className="font-bold text-sm mb-3">Online Joining</h2>
           {!joiningOn && renderFeatureOffBanner('Online Joining')}
 
@@ -258,9 +298,7 @@ export default function PublicLinks() {
             </div>
 
             {data?.paypalEmail ? (
-              <p className="text-sm text-green-700">
-                PayPal account: {data.paypalEmail}
-              </p>
+              <p className="text-sm text-green-700">PayPal account: {data.paypalEmail}</p>
             ) : (
               <p className="text-sm text-amber-600">
                 No PayPal account configured. Set it in System Settings to enable online payments.
@@ -270,17 +308,20 @@ export default function PublicLinks() {
         </div>
 
         {/* (c) Configure Members Portal */}
-        <div className={`bg-white/90 rounded-lg shadow-sm p-4 sm:p-6 mb-4${!portalOn ? ' opacity-50' : ''}`}>
+        <div
+          className={`bg-white/90 rounded-lg shadow-sm p-4 sm:p-6 mb-4${!portalOn ? ' opacity-50' : ''}`}
+        >
           <h2 className="font-bold text-sm mb-3">Configure Members Portal</h2>
           {!portalOn && renderFeatureOffBanner('Members Portal')}
           <p className="text-sm text-slate-600 mb-3">
-            Tick boxes control the options available to members when they log in to the Members Portal.
+            Tick boxes control the options available to members when they log in to the Members
+            Portal.
           </p>
           <div className="space-y-2">
             {[
-              { key: 'renewals',        label: 'Membership renewals' },
-              { key: 'groups',          label: 'Groups' },
-              { key: 'calendar',        label: 'Calendar' },
+              { key: 'renewals', label: 'Membership renewals' },
+              { key: 'groups', label: 'Groups' },
+              { key: 'calendar', label: 'Calendar' },
               { key: 'personalDetails', label: 'Change Personal Details' },
               { key: 'replacementCard', label: 'Email Replacement membership card' },
             ].map(({ key, label }) => (
@@ -303,8 +344,10 @@ export default function PublicLinks() {
           'Configure Group Information',
           GROUP_INFO_ROWS,
           form.groupInfoConfig,
-          'to members', 'to public',
-          (rowKey, audience, checked) => handleGridToggle('groupInfoConfig', rowKey, audience, checked),
+          'to members',
+          'to public',
+          (rowKey, audience, checked) =>
+            handleGridToggle('groupInfoConfig', rowKey, audience, checked),
           !canChange,
           !portalOn,
         )}
@@ -314,8 +357,10 @@ export default function PublicLinks() {
           'Configure Calendar',
           CALENDAR_ROWS,
           form.calendarConfig,
-          'to members', 'to public',
-          (rowKey, audience, checked) => handleGridToggle('calendarConfig', rowKey, audience, checked),
+          'to members',
+          'to public',
+          (rowKey, audience, checked) =>
+            handleGridToggle('calendarConfig', rowKey, audience, checked),
           !canChange,
           !portalOn,
         )}
