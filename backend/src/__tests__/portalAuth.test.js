@@ -32,7 +32,7 @@ const { default: app } = await import('../app.js');
 const { tenantQuery, prisma } = await import('../utils/db.js');
 const { verifyPassword } = await import('../utils/password.js');
 
-const TENANT = 'test-u3a';
+const TENANT = 'test_u3a';
 
 function mockTenantExists() {
   prisma.sysTenant.findUnique.mockResolvedValue({ slug: TENANT, active: true, name: 'Test u3a' });
@@ -134,6 +134,29 @@ describe('POST /public/:slug/portal/login lockout', () => {
     expect(update[2][0]).toBe(0); // count reset on lock
     expect(update[2][1]).toBeInstanceOf(Date); // locked_until set
     expect(update[2][1].getTime()).toBeGreaterThan(Date.now());
+  });
+
+  it('runs a dummy comparison and returns generic 401 for an unknown email', async () => {
+    // No matching member rows
+    tenantQuery.mockResolvedValueOnce([]);
+
+    const res = await request(app)
+      .post(`/public/${TENANT}/portal/login`)
+      .send({ email: 'nobody@b.com', password: 'whatever' });
+
+    expect(res.status).toBe(401);
+    expect(res.body.error).toBe('Invalid email or password.');
+    // The throwaway bcrypt comparison runs so timing matches a wrong-password hit
+    expect(verifyPassword).toHaveBeenCalled();
+  });
+
+  it('rejects a slug containing a hyphen with 400 (matches db.js guard)', async () => {
+    const res = await request(app)
+      .post('/public/bad-slug/portal/login')
+      .send({ email: 'a@b.com', password: 'x' });
+
+    expect(res.status).toBe(400);
+    expect(res.body.error).toMatch(/Invalid tenant slug/i);
   });
 
   it('resets counter on successful login', async () => {

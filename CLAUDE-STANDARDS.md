@@ -56,6 +56,15 @@ Every item below applies to every new feature — no exceptions.
   follow their own rules; this rule is specifically for
   random-bytes-hex tokens looked up by equality.
 
+- [ ] **Any user-chosen password is validated with `passwordSchema`** from
+  `backend/src/utils/passwordPolicy.js` (10–72 chars, upper+lower+digit).
+  Never re-declare an ad-hoc `min(8)`/`min(10)` password rule on a route —
+  import the shared schema so every flow enforces the same policy. Generate
+  temporary passwords with `generateTempPassword()` from the same module
+  (uses `crypto.randomInt`, no modulo bias). This module is deliberately
+  separate from `password.js` because several test files mock the latter
+  wholesale.
+
 - [ ] **Role grant/revoke routes call `assertActorHoldsRolePrivileges`**
   in `backend/src/routes/users.js`. Any new endpoint that mutates
   `user_roles` (assign, remove, bulk-update) must run the

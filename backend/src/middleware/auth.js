@@ -4,6 +4,7 @@
 
 import { verifyAccessToken } from '../utils/jwt.js';
 import { isSessionInvalidated } from '../utils/redis.js';
+import { prisma } from '../utils/db.js';
 
 /**
  * Standard user auth middleware.
@@ -48,14 +49,29 @@ export async function requireSysAdmin(req, res, next) {
 
   const token = authHeader.slice(7);
 
+  let payload;
   try {
-    const payload = verifyAccessToken(token);
-    if (!payload.isSysAdmin) {
-      return res.status(403).json({ error: 'Access denied.' });
-    }
-    req.sysAdmin = payload;
-    next();
+    payload = verifyAccessToken(token);
   } catch {
     return res.status(401).json({ error: 'Invalid token.' });
   }
+
+  if (!payload.isSysAdmin) {
+    return res.status(403).json({ error: 'Access denied.' });
+  }
+
+  try {
+    // Re-check account state on every request. Unlike a tenant user, a sys-admin
+    // token carries no Redis invalidation marker, so without this a deactivated
+    // (or deleted) sys-admin would keep full access until the token expires.
+    const admin = await prisma.sysAdmin.findUnique({ where: { id: payload.sysAdminId } });
+    if (!admin || !admin.active) {
+      return res.status(401).json({ error: 'Session expired. Please log in again.' });
+    }
+  } catch (err) {
+    return next(err);
+  }
+
+  req.sysAdmin = payload;
+  next();
 }
