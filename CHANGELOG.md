@@ -40,6 +40,29 @@ Format: `## [version] — YYYY-MM-DD` with bullet points per change.
   slugs), plus tenant-scope assertions in `letters.test.js` and a new
   `email.test.js` confirming queries are scoped to the caller's tenant.
 
+### Docs & repo hygiene (ImprovementPlan Chunk 2)
+- **`CONTRIBUTING.md`** added — setup, branching, coding conventions, tests,
+  and the human entry point alongside `README.md`.
+- **`backend/.env.example` and `frontend/.env.example`** added — every env var
+  enumerated with required/optional status, so the README's `cp .env.example
+  .env` step now works.
+- **`docs/BeaconUG/README.md`** added — marks the original-Beacon User Guide as
+  legacy reference-only and points to the Beacon2 guide.
+- **README quickstart corrected** to match reality: `npm run build`
+  (prisma generate) then `npm run dev` (which runs `prisma db push` + seeds the
+  first admin automatically); fixed the stale `pages/misc/*` reference.
+- **KNOWN-ISSUES.md** items now carry `[OPEN]`/`[ACCEPTED]`/`[DEFERRED]` status
+  tags with a legend, and cross-link `docs/ImprovementPlan.md` /
+  `CODEBASE-RECOMMENDATIONS.md`; the latter now cross-links back.
+- **Placeholder credentials neutralised** — `render.yaml` `SEED_ADMIN_EMAIL`
+  is now `sync: false` (no `admin@beacon2.local` default); `e2e/.env.example`
+  no longer ships `ChangeMe123!` / `TestAdmin99!`.
+- **CLAUDE.md** now opens with a note that the `CLAUDE-*.md` files are
+  AI-session tooling and humans should start at `README.md`/`CONTRIBUTING.md`;
+  Project Definition version line bumped 0.9.9 → 0.11.0.
+- **Deferred (owner decision):** repository `LICENSE` and a `docs/FromBeacon/`
+  provenance README — both logged in `KNOWN-ISSUES.md`.
+
 ## [Unreleased] — 2026-06-10
 
 ### Security

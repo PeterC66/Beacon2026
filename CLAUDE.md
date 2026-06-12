@@ -1,5 +1,10 @@
 # Beacon2 — Claude Code Instructions
 
+> **For humans:** this file and the other `CLAUDE-*.md` files are tooling for
+> Claude Code sessions, not the project's primary documentation. If you are a
+> human contributor, start with [`README.md`](README.md) and
+> [`CONTRIBUTING.md`](CONTRIBUTING.md).
+
 ## Documentation structure
 
 | File | Purpose | When to read |

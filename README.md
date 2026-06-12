@@ -29,8 +29,8 @@ beacon2/
 │   │   ├── components/        PageHeader  NavBar  SortableHeader  DateInput
 │   │   ├── hooks/             useSortedData  usePreferences  useUnsavedChanges
 │   │   ├── pages/             Login  Home  members/*  groups/*  finance/*
-│   │   │                      email/*  settings/*  admin/*  misc/*
-│   │   │                      public/*  calendar/*  ...
+│   │   │                      email/*  settings/*  admin/*  audit/*
+│   │   │                      officers/*  public/*  calendar/*  ...
 │   │   └── __tests__/        vitest + React Testing Library smoke tests
 │   └── vite.config.js         also used as vitest config
 │
@@ -61,17 +61,22 @@ beacon2/
 
 ```bash
 cd backend
-cp .env.example .env          # fill in your values
+cp .env.example .env          # fill in DATABASE_URL, JWT secrets, SEED_ADMIN_*
 npm install
-npx prisma migrate dev        # creates system-level tables
-npm run db:seed               # creates first system admin
-npm run dev                   # starts on http://localhost:3001
+npm run build                 # prisma generate — creates the Prisma client
+npm run dev                   # pushes schema + seeds first admin, then serves on :3001
 ```
+
+On startup the server runs `prisma db push` and seeds the first system admin
+automatically (from `SEED_ADMIN_EMAIL` / `SEED_ADMIN_PASSWORD`) — no separate
+migrate/seed step is needed. To run those manually instead, use
+`npm run db:migrate` and `npm run db:seed`.
 
 ### Frontend
 
 ```bash
 cd frontend
+cp .env.example .env          # optional — VITE_API_URL defaults to :3001
 npm install
 npm run dev                   # starts on http://localhost:5173
 ```
