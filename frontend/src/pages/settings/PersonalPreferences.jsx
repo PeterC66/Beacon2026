@@ -9,6 +9,7 @@ import PageHeader from '../../components/PageHeader.jsx';
 import { getPreferences, savePreferences } from '../../hooks/usePreferences.js';
 import { useUnsavedChanges } from '../../hooks/useUnsavedChanges.js';
 import PasswordInput from '../../components/PasswordInput.jsx';
+import FormError from '../../components/FormError.jsx';
 
 // ── Helpers ──────────────────────────────────────────────────────────────
 
@@ -172,7 +173,6 @@ export default function PersonalPreferences() {
     'w-full border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500';
   const errInCls =
     'w-full border border-red-400 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-400';
-  const errMsgCls = 'text-sm text-red-600 mt-1 font-medium';
   const sectionCls = 'bg-white/90 rounded-lg shadow-sm p-5 mb-5';
 
   return (
@@ -371,7 +371,7 @@ export default function PersonalPreferences() {
                 }}
                 className={pwErr.current ? errInCls : inputCls}
               />
-              {pwErr.current && <p className={errMsgCls}>{pwErr.current}</p>}
+              <FormError error={pwErr.current} />
             </div>
 
             <div>
@@ -410,7 +410,7 @@ export default function PersonalPreferences() {
                   )}
                 </div>
               )}
-              {pwErr.newPw && <p className={errMsgCls}>{pwErr.newPw}</p>}
+              <FormError error={pwErr.newPw} />
             </div>
 
             <div>
@@ -431,7 +431,7 @@ export default function PersonalPreferences() {
                 }}
                 className={pwErr.confirm ? errInCls : inputCls}
               />
-              {pwErr.confirm && <p className={errMsgCls}>{pwErr.confirm}</p>}
+              <FormError error={pwErr.confirm} />
               {!pwErr.confirm && pwForm.confirm && pwForm.newPw === pwForm.confirm && (
                 <p className="text-sm text-green-700 mt-1">Passwords match ✓</p>
               )}
@@ -483,7 +483,7 @@ export default function PersonalPreferences() {
                 }}
                 className={qaErr.question ? errInCls : inputCls}
               />
-              {qaErr.question && <p className={errMsgCls}>{qaErr.question}</p>}
+              <FormError error={qaErr.question} />
             </div>
 
             <div>
@@ -506,7 +506,7 @@ export default function PersonalPreferences() {
                 }}
                 className={qaErr.answer ? errInCls : inputCls}
               />
-              {qaErr.answer && <p className={errMsgCls}>{qaErr.answer}</p>}
+              <FormError error={qaErr.answer} />
             </div>
 
             {qaMsg && (

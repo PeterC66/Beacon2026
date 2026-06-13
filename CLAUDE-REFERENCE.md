@@ -844,6 +844,40 @@ Design decisions:
 Existing files still use local `const inputCls` / `const btnCls` definitions — adopt
 the shared versions incrementally when touching a file for other reasons.
 
+### Shared hooks & helpers (deduplication, ImprovementPlan Chunk 8)
+
+**Prefer these over re-implementing the same boilerplate inline:**
+
+- `useAsyncLoad(loader, deps, { initialData, immediate })` — `hooks/useAsyncLoad.js`.
+  Replaces the `data`/`loading`/`error` + `useEffect`/`load()` pattern. Returns
+  `{ data, setData, loading, setLoading, error, setError, reload }`. `reload()` is
+  memoised on `deps` and safe to call from handlers; it also returns the resolved
+  value. Use `{ immediate: false }` for token-gated/on-demand loads. **Note:** it
+  only suits *single-payload* loaders — pages that fan out several `Promise.all`
+  loads into different state, or that re-fetch on a button using current filter
+  values (e.g. `EmailDelivery`, `FinanceLedger`, `MemberList`), are deliberately
+  left as hand-rolled effects because the memoised `reload` would capture stale
+  filter state.
+- `lib/dateFormatters.js` — all date/time display formatters. `fmtDate` (dd/mm/yyyy,
+  optional `empty` placeholder), `fmtDateLong` ("Sun 5 Jan 2026"), `fmtDateMonth`,
+  `fmtDateFullMonth`, `fmtDateUTC`, `fmtDateWeekdayNumeric`, `fmtTime` (HH:MM),
+  `fmtTime12` ("2.30 pm"), `fmtTimestamp`, `fmtDateTime`, `fmtDateTimeSeconds`, plus
+  `MONTHS_SHORT`/`MONTHS_FULL`/`WEEKDAYS_SHORT`. Pages alias on import where the
+  local name differs (e.g. `import { fmtDateLong as fmtDate }`). `AuditRecord`'s
+  short-month-with-seconds format is intentionally still local (unique, not a dup).
+- `components/FormError.jsx` — `<FormError error={fieldErrors.x} />` (default) or
+  `size="xs"`. Renders nothing when `error` is falsy. Errors are flat
+  `{ field: 'msg' }` objects; pairs with `lib/scrollToError.js`.
+- `lib/storageKeys.js` — every sessionStorage/localStorage key (`SS_*` / `LS_*`).
+  Import the constant rather than the literal — several keys are written and read
+  across different files. `CONSENT_GATED_LOCAL_KEYS` lists the consent-gated
+  localStorage keys for cookie-withdrawal cleanup.
+- `lib/routes.js` — `ROUTES` for the handful of frequently cross-referenced
+  navigation targets (`EMAIL_COMPOSE`, `LETTERS_COMPOSE`, `FINANCE_ACCOUNTS`,
+  `MEMBERS`, `HOME`). The full route table stays in `App.jsx`. Privilege strings
+  are deliberately **not** centralised — `can('resource', 'action')` reads fine and
+  hoisting ~90 call sites adds indirection for no real safety gain.
+
 ### Common Tailwind patterns
 
 - Input: `border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500` (or `inputCls` from `components/ui/Input.jsx`)
@@ -877,6 +911,8 @@ Themes: `default`, `high-contrast`.
 - `SortableHeader` + `useSortedData` — sortable columns with ▲/▼/⇅ indicator
 - `DateInput` — UK dd/mm/yyyy display, ISO value, calendar picker button
 - `RequiredMark` — red asterisk for mandatory form fields (`<span className="text-red-500 ml-0.5">*</span>`)
+- `FormError` — inline field validation message (`<FormError error={errors.x} />`, `size="sm"`/`"xs"`)
+- `RecordTimestamp` — "created / last changed" line (uses `fmtTimestamp` from `lib/dateFormatters.js`)
 - `NavBar` — glass-effect backdrop, blue links, `–` separator. Accepts `links` prop (not `items`).
   Each link: `{ label, to, disabled? }`. When `disabled: true`, shown as greyed-out non-clickable
   text — use for privilege-gated links (e.g. `{ label: 'Add New', to: '/members/new', disabled: !can('member_record', 'create') }`).

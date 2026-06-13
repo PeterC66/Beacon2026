@@ -14,13 +14,14 @@ import { formatMemberName } from '../../hooks/usePreferences.js';
 import { isSubscriptionOverdue } from '../../lib/memberFormatters.js';
 import NoEmailIcon from '../../components/NoEmailIcon.jsx';
 import { SETTINGS_PAYMENT_METHODS as PAYMENT_METHODS } from '../../lib/constants.js';
+import {
+  SS_EMAIL_COMPOSE_MEMBER_IDS,
+  SS_LETTER_COMPOSE_MEMBER_IDS,
+} from '../../lib/storageKeys.js';
+import { ROUTES } from '../../lib/routes.js';
+import { fmtDate as fmtDateRaw } from '../../lib/dateFormatters.js';
+const fmtDate = (d) => fmtDateRaw(d, '—');
 
-function fmtDate(d) {
-  if (!d) return '—';
-  const s = String(d).slice(0, 10);
-  const [y, m, day] = s.split('-');
-  return `${day}/${m}/${y}`;
-}
 function fmtAmount(n) {
   if (n == null || n === '') return '—';
   return `£${Number(n).toFixed(2)}`;
@@ -165,13 +166,13 @@ export default function MembershipRenewals() {
       return;
     }
     if (action === 'send_email') {
-      sessionStorage.setItem('emailComposeMemberIds', JSON.stringify([...selected]));
-      navigate('/email/compose');
+      sessionStorage.setItem(SS_EMAIL_COMPOSE_MEMBER_IDS, JSON.stringify([...selected]));
+      navigate(ROUTES.EMAIL_COMPOSE);
       return;
     }
     if (action === 'send_letter') {
-      sessionStorage.setItem('letterComposeMemberIds', JSON.stringify([...selected]));
-      navigate('/letters/compose');
+      sessionStorage.setItem(SS_LETTER_COMPOSE_MEMBER_IDS, JSON.stringify([...selected]));
+      navigate(ROUTES.LETTERS_COMPOSE);
       return;
     }
     if (action === 'add_to_poll') {

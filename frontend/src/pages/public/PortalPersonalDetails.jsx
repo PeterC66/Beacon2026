@@ -6,6 +6,8 @@ import { useParams, Link, useNavigate } from 'react-router-dom';
 import { portalApi, clearPortalToken } from '../../lib/api.js';
 import PortalVersion from '../../components/PortalVersion.jsx';
 import PasswordInput from '../../components/PasswordInput.jsx';
+import { SS_PORTAL_MEMBER } from '../../lib/storageKeys.js';
+import FormError from '../../components/FormError.jsx';
 
 export default function PortalPersonalDetails() {
   const { slug } = useParams();
@@ -182,7 +184,7 @@ export default function PortalPersonalDetails() {
         // Log out — they need to re-verify
         setTimeout(() => {
           clearPortalToken();
-          sessionStorage.removeItem('portalMember');
+          sessionStorage.removeItem(SS_PORTAL_MEMBER);
           navigate(`/public/${slug}/portal`);
         }, 3000);
       }
@@ -261,7 +263,6 @@ export default function PortalPersonalDetails() {
   const inputCls =
     'w-full border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500';
   const labelCls = 'block text-sm font-medium text-slate-700 mb-1';
-  const errCls = 'text-xs text-red-600 mt-0.5';
 
   return (
     <div className="relative min-h-screen bg-gradient-to-br from-blue-50 to-slate-100 px-4 py-8">
@@ -326,7 +327,7 @@ export default function PortalPersonalDetails() {
                   value={form.forenames}
                   onChange={(e) => handleChange('forenames', e.target.value)}
                 />
-                {fieldErrors.forenames && <p className={errCls}>{fieldErrors.forenames}</p>}
+                <FormError error={fieldErrors.forenames} size="xs" />
               </div>
               <div>
                 <label htmlFor="portal-surname" className={labelCls}>
@@ -339,7 +340,7 @@ export default function PortalPersonalDetails() {
                   value={form.surname}
                   onChange={(e) => handleChange('surname', e.target.value)}
                 />
-                {fieldErrors.surname && <p className={errCls}>{fieldErrors.surname}</p>}
+                <FormError error={fieldErrors.surname} size="xs" />
               </div>
               <div>
                 <label htmlFor="portal-known-as" className={labelCls}>
@@ -401,7 +402,7 @@ export default function PortalPersonalDetails() {
                   value={form.email}
                   onChange={(e) => handleChange('email', e.target.value)}
                 />
-                {fieldErrors.email && <p className={errCls}>{fieldErrors.email}</p>}
+                <FormError error={fieldErrors.email} size="xs" />
               </div>
               <div className="sm:col-span-2">
                 <label htmlFor="portal-emergency-contact" className={labelCls}>
@@ -570,9 +571,7 @@ export default function PortalPersonalDetails() {
                   value={form.address.postcode}
                   onChange={(e) => handleAddressChange('postcode', e.target.value)}
                 />
-                {fieldErrors['address.postcode'] && (
-                  <p className={errCls}>{fieldErrors['address.postcode']}</p>
-                )}
+                <FormError error={fieldErrors['address.postcode']} size="xs" />
               </div>
               <div>
                 <label htmlFor="portal-telephone" className={labelCls}>

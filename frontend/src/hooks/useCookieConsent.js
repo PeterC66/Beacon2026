@@ -3,6 +3,8 @@
 // essential cookie (beacon2_cookie_consent) — this is permitted because it
 // records the user's preference about cookies, not optional data.
 
+import { CONSENT_GATED_LOCAL_KEYS } from '../lib/storageKeys.js';
+
 const CONSENT_COOKIE = 'beacon2_cookie_consent';
 const CONSENT_DAYS = 365;
 
@@ -46,10 +48,7 @@ export function setConsent(accepted) {
     deleteCookie('beacon_last_u3a');
     // Remove optional localStorage
     try {
-      localStorage.removeItem('beacon2_prefs');
-      localStorage.removeItem('beacon2_label_settings');
-      localStorage.removeItem('beacon2_last_export_class');
-      localStorage.removeItem('beacon2_email_compose_prefs');
+      for (const key of CONSENT_GATED_LOCAL_KEYS) localStorage.removeItem(key);
     } catch {
       /* ignore */
     }

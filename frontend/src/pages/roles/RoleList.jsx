@@ -1,6 +1,6 @@
 // beacon2/frontend/src/pages/roles/RoleList.jsx
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { roles as rolesApi } from '../../lib/api.js';
 import { useAuth } from '../../context/AuthContext.jsx';
@@ -9,32 +9,21 @@ import PageHeader from '../../components/PageHeader.jsx';
 import SortableHeader from '../../components/SortableHeader.jsx';
 import ScrollButtons from '../../components/ScrollButtons.jsx';
 import { useSortedData } from '../../hooks/useSortedData.js';
+import { useAsyncLoad } from '../../hooks/useAsyncLoad.js';
 
 export default function RoleList() {
   const { can, tenant } = useAuth();
   const navigate = useNavigate();
-  const [roleList, setRoleList] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const {
+    data: roleList,
+    setData: setRoleList,
+    loading,
+    error,
+  } = useAsyncLoad(() => rolesApi.list(), [], { initialData: [] });
   const [deleting, setDeleting] = useState(null);
   const tableRef = useRef(null);
 
   const { sorted, sortKey, sortDir, onSort } = useSortedData(roleList);
-
-  useEffect(() => {
-    load();
-  }, []);
-
-  async function load() {
-    setLoading(true);
-    try {
-      setRoleList(await rolesApi.list());
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  }
 
   async function handleDelete(role) {
     if (!confirm(`Delete role "${role.name}"? This cannot be undone.`)) return;

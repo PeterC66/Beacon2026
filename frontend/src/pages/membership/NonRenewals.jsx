@@ -12,13 +12,13 @@ import SortableHeader from '../../components/SortableHeader.jsx';
 import NoEmailIcon from '../../components/NoEmailIcon.jsx';
 import { formatMemberName } from '../../hooks/usePreferences.js';
 import { formatShortAddress } from '../../lib/memberFormatters.js';
-
-function fmtDate(d) {
-  if (!d) return '—';
-  const s = String(d).slice(0, 10);
-  const [y, m, day] = s.split('-');
-  return `${day}/${m}/${y}`;
-}
+import {
+  SS_EMAIL_COMPOSE_MEMBER_IDS,
+  SS_LETTER_COMPOSE_MEMBER_IDS,
+} from '../../lib/storageKeys.js';
+import { ROUTES } from '../../lib/routes.js';
+import { fmtDate as fmtDateRaw } from '../../lib/dateFormatters.js';
+const fmtDate = (d) => fmtDateRaw(d, '—');
 
 export default function NonRenewals() {
   const { can, hasFeature } = useAuth();
@@ -108,13 +108,13 @@ export default function NonRenewals() {
   function handleDoWithSelected() {
     if (selected.size === 0) return;
     if (action === 'send_email') {
-      sessionStorage.setItem('emailComposeMemberIds', JSON.stringify([...selected]));
-      navigate('/email/compose');
+      sessionStorage.setItem(SS_EMAIL_COMPOSE_MEMBER_IDS, JSON.stringify([...selected]));
+      navigate(ROUTES.EMAIL_COMPOSE);
       return;
     }
     if (action === 'send_letter') {
-      sessionStorage.setItem('letterComposeMemberIds', JSON.stringify([...selected]));
-      navigate('/letters/compose');
+      sessionStorage.setItem(SS_LETTER_COMPOSE_MEMBER_IDS, JSON.stringify([...selected]));
+      navigate(ROUTES.LETTERS_COMPOSE);
       return;
     }
     if (action === 'lapse') {

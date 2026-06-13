@@ -7,6 +7,8 @@ import {
   faculties as facultiesApi,
   polls as pollsApi,
 } from '../../lib/api.js';
+import { SS_EMAIL_COMPOSE_MEMBER_IDS } from '../../lib/storageKeys.js';
+import { ROUTES } from '../../lib/routes.js';
 import { useAuth } from '../../context/AuthContext.jsx';
 import NavBar from '../../components/NavBar.jsx';
 import PageHeader from '../../components/PageHeader.jsx';
@@ -124,8 +126,8 @@ export default function GroupList() {
         setBulkResult({ type: 'error', msg: 'No leaders found for the selected groups.' });
         return;
       }
-      sessionStorage.setItem('emailComposeMemberIds', JSON.stringify([...leaderMemberIds]));
-      navigate('/email/compose');
+      sessionStorage.setItem(SS_EMAIL_COMPOSE_MEMBER_IDS, JSON.stringify([...leaderMemberIds]));
+      navigate(ROUTES.EMAIL_COMPOSE);
       return;
     }
     if (bulkAction === 'add_members_to_poll') {

@@ -13,6 +13,8 @@ import ScrollButtons from '../../components/ScrollButtons.jsx';
 import NoEmailIcon from '../../components/NoEmailIcon.jsx';
 import { formatMemberName } from '../../hooks/usePreferences.js';
 import { formatShortAddress, isSubscriptionOverdue } from '../../lib/memberFormatters.js';
+import { SS_EMAIL_COMPOSE_MEMBER_IDS } from '../../lib/storageKeys.js';
+import { ROUTES } from '../../lib/routes.js';
 
 export default function MembershipCards() {
   const { can, tenant } = useAuth();
@@ -104,14 +106,14 @@ export default function MembershipCards() {
         await cardsApi.downloadBlank(advanceYear);
       } else if (bulkAction === 'send_card_email') {
         // Store member IDs and navigate to email compose with card attachment flag
-        sessionStorage.setItem('emailComposeMemberIds', JSON.stringify(ids));
+        sessionStorage.setItem(SS_EMAIL_COMPOSE_MEMBER_IDS, JSON.stringify(ids));
         sessionStorage.setItem(
           'emailComposeCardAttachment',
           JSON.stringify({
             advanceYear,
           }),
         );
-        navigate('/email/compose');
+        navigate(ROUTES.EMAIL_COMPOSE);
         return;
       } else if (bulkAction === 'download_excel') {
         await cardsApi.downloadExcel(ids, advanceYear);

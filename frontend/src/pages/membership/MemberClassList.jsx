@@ -1,6 +1,7 @@
 // beacon2/frontend/src/pages/membership/MemberClassList.jsx
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
+import { useAsyncLoad } from '../../hooks/useAsyncLoad.js';
 import { useNavigate } from 'react-router-dom';
 import { memberClasses as api } from '../../lib/api.js';
 import { useAuth } from '../../context/AuthContext.jsx';
@@ -12,27 +13,15 @@ import { useSortedData } from '../../hooks/useSortedData.js';
 export default function MemberClassList() {
   const { can, tenant } = useAuth();
   const navigate = useNavigate();
-  const [classList, setClassList] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const {
+    data: classList,
+    setData: setClassList,
+    loading,
+    error,
+  } = useAsyncLoad(() => api.list(), [], { initialData: [] });
   const [deleting, setDeleting] = useState(null);
 
   const { sorted, sortKey, sortDir, onSort } = useSortedData(classList);
-
-  useEffect(() => {
-    load();
-  }, []);
-
-  async function load() {
-    setLoading(true);
-    try {
-      setClassList(await api.list());
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  }
 
   async function handleDelete(mc) {
     if (!confirm(`Delete membership class "${mc.name}"? This cannot be undone.`)) return;

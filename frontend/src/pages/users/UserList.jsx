@@ -10,16 +10,10 @@ import PageHeader from '../../components/PageHeader.jsx';
 import SortableHeader from '../../components/SortableHeader.jsx';
 import ScrollButtons from '../../components/ScrollButtons.jsx';
 import { useSortedData } from '../../hooks/useSortedData.js';
-
-function formatDate(iso) {
-  if (!iso) return 'NEVER';
-  const d = new Date(iso);
-  return (
-    d.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' }) +
-    ' ' +
-    d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })
-  );
-}
+import { SS_EMAIL_COMPOSE_MEMBER_IDS } from '../../lib/storageKeys.js';
+import { ROUTES } from '../../lib/routes.js';
+import { fmtDateTime } from '../../lib/dateFormatters.js';
+const formatDate = (iso) => fmtDateTime(iso, 'NEVER');
 
 export default function UserList() {
   const { can, tenant } = useAuth();
@@ -98,8 +92,8 @@ export default function UserList() {
       alert('No selected users are linked to members. Cannot send email.');
       return;
     }
-    sessionStorage.setItem('emailComposeMemberIds', JSON.stringify(memberIds));
-    navigate('/email/compose');
+    sessionStorage.setItem(SS_EMAIL_COMPOSE_MEMBER_IDS, JSON.stringify(memberIds));
+    navigate(ROUTES.EMAIL_COMPOSE);
   }
 
   const TH = 'px-4 py-2.5 font-normal';

@@ -7,6 +7,7 @@ import { useParams, Link } from 'react-router-dom';
 import { publicApi } from '../../lib/api.js';
 import { isSafePaymentRedirect } from '../../lib/safeRedirect.js';
 import PortalVersion from '../../components/PortalVersion.jsx';
+import { SS_JOIN_RESULT } from '../../lib/storageKeys.js';
 
 export default function ResumePayment() {
   const { slug, token } = useParams();
@@ -35,7 +36,7 @@ export default function ResumePayment() {
     }
     // Store result for the completion page (same as JoinForm flow)
     sessionStorage.setItem(
-      'joinResult',
+      SS_JOIN_RESULT,
       JSON.stringify({
         memberId: data.memberId,
       }),

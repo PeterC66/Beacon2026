@@ -7,6 +7,7 @@ import { email as emailApi } from '../../lib/api.js';
 import { useAuth } from '../../context/AuthContext.jsx';
 import NavBar from '../../components/NavBar.jsx';
 import PageHeader from '../../components/PageHeader.jsx';
+import { fmtDateTime } from '../../lib/dateFormatters.js';
 
 const STATUS_COLOURS = {
   Despatched: 'text-blue-600',
@@ -19,16 +20,6 @@ const STATUS_COLOURS = {
   Invalid: 'text-red-500',
   'Reported as SPAM': 'text-red-800',
 };
-
-function fmtDateTime(ts) {
-  if (!ts) return '';
-  const d = new Date(ts);
-  return (
-    d.toLocaleDateString('en-GB') +
-    ' ' +
-    d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })
-  );
-}
 
 export default function EmailDeliveryDetail() {
   const { id } = useParams();

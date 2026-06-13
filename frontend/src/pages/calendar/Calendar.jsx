@@ -16,6 +16,7 @@ import PageHeader from '../../components/PageHeader.jsx';
 import RequiredMark from '../../components/RequiredMark.jsx';
 import SortableHeader from '../../components/SortableHeader.jsx';
 import { useSortedData } from '../../hooks/useSortedData.js';
+import { fmtDateLong as fmtDate, fmtTime } from '../../lib/dateFormatters.js';
 
 function defaultFrom() {
   return new Date().toISOString().slice(0, 10);
@@ -25,37 +26,6 @@ function defaultTo() {
   const d = new Date();
   d.setMonth(d.getMonth() + 3);
   return d.toISOString().slice(0, 10);
-}
-
-function fmtDate(d) {
-  if (!d) return '';
-  const s = String(d).slice(0, 10);
-  const [y, m, day] = s.split('-');
-  const dt = new Date(+y, +m - 1, +day);
-  const dayName = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][dt.getDay()];
-  const monthName = [
-    'Jan',
-    'Feb',
-    'Mar',
-    'Apr',
-    'May',
-    'Jun',
-    'Jul',
-    'Aug',
-    'Sep',
-    'Oct',
-    'Nov',
-    'Dec',
-  ][dt.getMonth()];
-  return `${dayName} ${+day} ${monthName} ${y}`;
-}
-
-function fmtTime(t) {
-  if (!t) return '';
-  const s = String(t);
-  const idx = s.indexOf('T');
-  if (idx !== -1) return s.slice(idx + 1, idx + 6);
-  return s.slice(0, 5);
 }
 
 function googleMapsUrl(postcode) {
@@ -241,14 +211,6 @@ export default function Calendar() {
     } finally {
       setAddSaving(false);
     }
-  }
-
-  function normaliseTime(t) {
-    if (!t) return '';
-    const s = String(t);
-    const tIdx = s.indexOf('T');
-    if (tIdx !== -1) return s.slice(tIdx + 1, tIdx + 6);
-    return s.slice(0, 5);
   }
 
   function toggleOtherSelect(id) {
@@ -990,13 +952,11 @@ export default function Calendar() {
               className="text-blue-700 hover:underline whitespace-nowrap"
             >
               {fmtDate(ev.event_date)}
-              {ev.start_time ? ` ${normaliseTime(ev.start_time)}` : ''}
+              {ev.start_time ? ` ${fmtTime(ev.start_time)}` : ''}
             </Link>
             {ev.is_private && <span className="ml-2 text-xs text-slate-400">(private)</span>}
           </td>
-          <td className="px-3 py-2 text-slate-600 whitespace-nowrap">
-            {normaliseTime(ev.end_time)}
-          </td>
+          <td className="px-3 py-2 text-slate-600 whitespace-nowrap">{fmtTime(ev.end_time)}</td>
           <td className="px-3 py-2 text-slate-600">{ev.venue_name ?? ''}</td>
           <td className="px-3 py-2 text-slate-700">{ev.topic ?? ''}</td>
           <td className="px-3 py-2 text-slate-600">{ev.contact ?? ''}</td>
