@@ -342,11 +342,15 @@ sub-router precedent. Pure moves — no behaviour change, tests green before/aft
 - `members.js` (1,970 lines) → `routes/members/` (`list.js`, `lifecycle.js`,
   `crud.js`, shared `helpers.js`, `index.js`). `index.js` mounts literal-path
   routers before the `/:id` CRUD router to preserve Express match order.
+- `portal.js` (1,798 lines) → `routes/portal/` (`profile.js`, `groups.js`,
+  `calendar.js`, `renewals.js`, shared `helpers.js`, `index.js`). `index.js`
+  owns the portal-auth middleware + feature gate, then mounts the four
+  concern-specific sub-routers. `public.js` import updated to `portal/index.js`.
 - Route registrations verified identical before/after; backend suite green
   (593 tests), lint + Prettier clean.
 
-**Still to do (follow-up sessions, one file each):** `portal.js` (1,798),
-`groups.js` (1,464), `public.js` (1,455), `teams.js` (1,267), `calendar.js` (945).
+**Still to do (follow-up sessions, one file each):** `groups.js` (1,464),
+`public.js` (1,455), `teams.js` (1,267), `calendar.js` (945).
 
 ### Chunk 10 — Split oversized frontend pages (M2)
 Start with `MemberEditor.jsx` (form / groups / financials / photo sections) and
