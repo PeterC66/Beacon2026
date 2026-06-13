@@ -409,13 +409,16 @@ only, no behaviour change.
   their own files: `groups/GroupDetails.jsx` + `groups/GroupLedger.jsx` and
   `teams/TeamDetails.jsx` + `teams/TeamLedger.jsx`. The page files now own only
   tab routing and render the sub-components.
+- `Calendar.jsx` (1,125 → 861 lines). The two read-only event tables moved to
+  `calendar/CalendarMonthTable.jsx` and `calendar/CalendarFlatTable.jsx`; the
+  pure helpers to `calendar/calendarUtils.js`. The page keeps the filter form,
+  the "other" event-management section, and the add-event form.
 - Pure extraction, no behaviour change. Frontend suite green (53 files, 140 tests);
   lint 0 errors, Prettier clean.
-- **Remaining M2 pages deferred:** `Calendar.jsx` (1,125),
-  `TransactionEditor.jsx` (1,097), `CreditBatches.jsx` (1,028),
-  `MemberList.jsx` (921), `FinanceLedger.jsx` (892), `SystemDashboard.jsx`
-  (832) are still oversized. Logged in `KNOWN-ISSUES.md` for a follow-up session
-  (same extraction-only approach).
+- **Remaining M2 pages deferred:** `TransactionEditor.jsx` (1,097),
+  `CreditBatches.jsx` (1,028), `MemberList.jsx` (921), `FinanceLedger.jsx`
+  (892), `SystemDashboard.jsx` (832) are still oversized. Logged in
+  `KNOWN-ISSUES.md` for a follow-up session (same extraction-only approach).
 
 ### Chunk 11 — Frontend test quality & accessibility (C2, O5, M4 frontend half)
 - Shared mock factories; interaction tests (form submit, validation error,

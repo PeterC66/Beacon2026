@@ -167,10 +167,16 @@ Format: `## [version] — YYYY-MM-DD` with bullet points per change.
     now just owns tab routing and renders the sub-components.
   - `pages/teams/TeamRecord.jsx` (889 → 125 lines). Likewise: `teams/TeamDetails.jsx`
     and `teams/TeamLedger.jsx`.
+  - `pages/calendar/Calendar.jsx` (1,125 → 861 lines). The two read-only event
+    tables moved to `calendar/CalendarMonthTable.jsx` (the "calendar" view) and
+    `calendar/CalendarFlatTable.jsx` (the sortable flat-list view); the pure
+    helpers (`defaultFrom`, `defaultTo`, `googleMapsUrl`) to
+    `calendar/calendarUtils.js`. The page still owns the filter form, the "other"
+    event-management section, and the add-event form.
   - Frontend suite green (53 files, 140 tests), lint 0 errors, Prettier clean.
-    The remaining M2 pages (Calendar, TransactionEditor, CreditBatches,
-    MemberList, FinanceLedger, SystemDashboard) are deferred to a follow-up
-    session and tracked in `KNOWN-ISSUES.md`.
+    The remaining M2 pages (TransactionEditor, CreditBatches, MemberList,
+    FinanceLedger, SystemDashboard) are deferred to a follow-up session and
+    tracked in `KNOWN-ISSUES.md`.
 
 ### Fixed
 - **Duplicated security findings in `KNOWN-ISSUES.md`** — the Chunk 4 and Chunk 5

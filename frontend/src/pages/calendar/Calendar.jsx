@@ -14,23 +14,11 @@ import { useAuth } from '../../context/AuthContext.jsx';
 import NavBar from '../../components/NavBar.jsx';
 import PageHeader from '../../components/PageHeader.jsx';
 import RequiredMark from '../../components/RequiredMark.jsx';
-import SortableHeader from '../../components/SortableHeader.jsx';
 import { useSortedData } from '../../hooks/useSortedData.js';
 import { fmtDateLong as fmtDate, fmtTime } from '../../lib/dateFormatters.js';
-
-function defaultFrom() {
-  return new Date().toISOString().slice(0, 10);
-}
-
-function defaultTo() {
-  const d = new Date();
-  d.setMonth(d.getMonth() + 3);
-  return d.toISOString().slice(0, 10);
-}
-
-function googleMapsUrl(postcode) {
-  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(postcode)}`;
-}
+import { defaultFrom, defaultTo } from './calendarUtils.js';
+import CalendarMonthTable from './CalendarMonthTable.jsx';
+import CalendarFlatTable from './CalendarFlatTable.jsx';
 
 export default function Calendar() {
   const { can, tenant } = useAuth();
@@ -625,272 +613,20 @@ export default function Calendar() {
         )}
 
         {/* ── Calendar table (all/member/venue/group modes) ────────── */}
-        {filterMode !== 'other' &&
-          viewMode === 'calendar' &&
-          (loading ? (
-            <p className="text-center text-slate-500 py-8">Loading...</p>
-          ) : events.length === 0 ? (
-            <p className="text-slate-500 text-sm text-center py-4">
-              No events found for the selected period.
-            </p>
-          ) : (
-            <div className="overflow-x-auto rounded-lg shadow-sm">
-              <table className="w-full text-sm bg-white min-w-max">
-                <thead>
-                  <tr className="bg-slate-50 border-b border-slate-200 text-left text-slate-600 italic font-normal">
-                    <th className="px-3 py-2 font-normal">Date &amp; Time</th>
-                    <th className="px-3 py-2 font-normal">Until</th>
-                    <th className="px-3 py-2 font-normal">Group</th>
-                    <th className="px-3 py-2 font-normal">Venue</th>
-                    <th className="px-3 py-2 font-normal">Topic</th>
-                    <th className="px-3 py-2 font-normal">Enquiries</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {events.map((ev, i) => {
-                    const rowBg = i % 2 === 0 ? 'bg-yellow-50' : 'bg-white';
-                    return (
-                      <>
-                        <tr key={ev.id} className={`border-b border-slate-100 ${rowBg}`}>
-                          <td className="px-3 py-2 whitespace-nowrap">
-                            <Link
-                              to={`/calendar/events/${ev.id}`}
-                              className="text-blue-700 hover:underline"
-                            >
-                              {fmtDate(ev.event_date)}
-                              {ev.start_time ? ` ${fmtTime(ev.start_time)}` : ''}
-                            </Link>
-                          </td>
-                          <td className="px-3 py-2 text-slate-600 whitespace-nowrap">
-                            {fmtTime(ev.end_time)}
-                          </td>
-                          <td className="px-3 py-2">
-                            {ev.group_id ? (
-                              <Link
-                                to={`/groups/${ev.group_id}`}
-                                className="text-blue-700 hover:underline"
-                              >
-                                {ev.group_name}
-                              </Link>
-                            ) : (
-                              <span className="italic text-slate-500">
-                                {ev.event_type_name || 'Open Meeting'}
-                              </span>
-                            )}
-                          </td>
-                          <td className="px-3 py-2 text-slate-600">
-                            {ev.venue_name && ev.venue_id ? (
-                              <>
-                                <Link
-                                  to={`/venues/${ev.venue_id}`}
-                                  className="text-blue-700 hover:underline"
-                                >
-                                  {ev.venue_name}
-                                </Link>
-                                {ev.venue_postcode && (
-                                  <>
-                                    {' - '}
-                                    <a
-                                      href={googleMapsUrl(ev.venue_postcode)}
-                                      target="_blank"
-                                      rel="noopener noreferrer"
-                                      className="text-blue-600 hover:underline text-xs"
-                                    >
-                                      map
-                                    </a>
-                                  </>
-                                )}
-                              </>
-                            ) : (
-                              ''
-                            )}
-                          </td>
-                          <td className="px-3 py-2 text-slate-700">{ev.topic ?? ''}</td>
-                          <td className="px-3 py-2 text-slate-600">{ev.contact ?? ''}</td>
-                        </tr>
-                        {showDetail && ev.details && (
-                          <tr key={`${ev.id}-detail`} className={rowBg}>
-                            <td
-                              colSpan={6}
-                              className="px-3 pb-2 pt-0 text-xs text-slate-500 italic"
-                            >
-                              {ev.details}
-                            </td>
-                          </tr>
-                        )}
-                      </>
-                    );
-                  })}
-                </tbody>
-                <tfoot>
-                  <tr className="bg-slate-50 border-t border-slate-200 text-left text-slate-600 italic font-normal">
-                    <th className="px-3 py-2 font-normal">Date &amp; Time</th>
-                    <th className="px-3 py-2 font-normal">Until</th>
-                    <th className="px-3 py-2 font-normal">Group</th>
-                    <th className="px-3 py-2 font-normal">Venue</th>
-                    <th className="px-3 py-2 font-normal">Topic</th>
-                    <th className="px-3 py-2 font-normal">Enquiries</th>
-                  </tr>
-                </tfoot>
-              </table>
-            </div>
-          ))}
+        {filterMode !== 'other' && viewMode === 'calendar' && (
+          <CalendarMonthTable events={events} loading={loading} showDetail={showDetail} />
+        )}
 
         {/* ── Table view (sortable, flat list) ────────────────────────── */}
-        {filterMode !== 'other' &&
-          viewMode === 'table' &&
-          (loading ? (
-            <p className="text-center text-slate-500 py-8">Loading...</p>
-          ) : events.length === 0 ? (
-            <p className="text-slate-500 text-sm text-center py-4">
-              No events found for the selected period.
-            </p>
-          ) : (
-            <div className="overflow-x-auto rounded-lg shadow-sm">
-              <table className="w-full text-sm bg-white min-w-max">
-                <thead>
-                  <tr className="bg-slate-50 border-b border-slate-200 text-left text-slate-600 italic font-normal">
-                    <SortableHeader
-                      col="event_date"
-                      label="Date"
-                      sortKey={tblSortKey}
-                      sortDir={tblSortDir}
-                      onSort={onTblSort}
-                      className="px-3 py-2 font-normal"
-                    />
-                    <SortableHeader
-                      col="start_time"
-                      label="Start"
-                      sortKey={tblSortKey}
-                      sortDir={tblSortDir}
-                      onSort={onTblSort}
-                      className="px-3 py-2 font-normal"
-                    />
-                    <SortableHeader
-                      col="end_time"
-                      label="End"
-                      sortKey={tblSortKey}
-                      sortDir={tblSortDir}
-                      onSort={onTblSort}
-                      className="px-3 py-2 font-normal"
-                    />
-                    <SortableHeader
-                      col="_group_label"
-                      label="Group/Type"
-                      sortKey={tblSortKey}
-                      sortDir={tblSortDir}
-                      onSort={onTblSort}
-                      className="px-3 py-2 font-normal"
-                    />
-                    <SortableHeader
-                      col="topic"
-                      label="Topic"
-                      sortKey={tblSortKey}
-                      sortDir={tblSortDir}
-                      onSort={onTblSort}
-                      className="px-3 py-2 font-normal"
-                    />
-                    <SortableHeader
-                      col="venue_name"
-                      label="Venue"
-                      sortKey={tblSortKey}
-                      sortDir={tblSortDir}
-                      onSort={onTblSort}
-                      className="px-3 py-2 font-normal"
-                    />
-                    <SortableHeader
-                      col="venue_postcode"
-                      label="Postcode"
-                      sortKey={tblSortKey}
-                      sortDir={tblSortDir}
-                      onSort={onTblSort}
-                      className="px-3 py-2 font-normal"
-                    />
-                    <SortableHeader
-                      col="contact"
-                      label="Enquiries"
-                      sortKey={tblSortKey}
-                      sortDir={tblSortDir}
-                      onSort={onTblSort}
-                      className="px-3 py-2 font-normal"
-                    />
-                    <th className="px-3 py-2 font-normal">Details</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {sortedTable.map((ev, i) => {
-                    const rowBg = i % 2 === 0 ? 'bg-yellow-50' : 'bg-white';
-                    return (
-                      <tr key={ev.id} className={`border-b border-slate-100 ${rowBg}`}>
-                        <td className="px-3 py-2 whitespace-nowrap">
-                          <Link
-                            to={`/calendar/events/${ev.id}`}
-                            className="text-blue-700 hover:underline"
-                          >
-                            {fmtDate(ev.event_date)}
-                          </Link>
-                        </td>
-                        <td className="px-3 py-2 text-slate-600 whitespace-nowrap">
-                          {fmtTime(ev.start_time)}
-                        </td>
-                        <td className="px-3 py-2 text-slate-600 whitespace-nowrap">
-                          {fmtTime(ev.end_time)}
-                        </td>
-                        <td className="px-3 py-2">
-                          {ev.group_id ? (
-                            <Link
-                              to={`/groups/${ev.group_id}`}
-                              className="text-blue-700 hover:underline"
-                            >
-                              {ev.group_name}
-                            </Link>
-                          ) : (
-                            <span className="italic text-slate-500">
-                              {ev.event_type_name || 'Open Meeting'}
-                            </span>
-                          )}
-                        </td>
-                        <td className="px-3 py-2 text-slate-700">{ev.topic ?? ''}</td>
-                        <td className="px-3 py-2 text-slate-600">
-                          {ev.venue_name && ev.venue_id ? (
-                            <Link
-                              to={`/venues/${ev.venue_id}`}
-                              className="text-blue-700 hover:underline"
-                            >
-                              {ev.venue_name}
-                            </Link>
-                          ) : (
-                            ev.venue_name || ''
-                          )}
-                        </td>
-                        <td className="px-3 py-2 text-slate-600 whitespace-nowrap">
-                          {ev.venue_postcode ? (
-                            <a
-                              href={googleMapsUrl(ev.venue_postcode)}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-blue-600 hover:underline"
-                            >
-                              {ev.venue_postcode}
-                            </a>
-                          ) : (
-                            ''
-                          )}
-                        </td>
-                        <td className="px-3 py-2 text-slate-600">{ev.contact ?? ''}</td>
-                        <td
-                          className="px-3 py-2 text-slate-500 text-xs italic max-w-[24rem] truncate"
-                          title={ev.details || ''}
-                        >
-                          {ev.details || ''}
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          ))}
+        {filterMode !== 'other' && viewMode === 'table' && (
+          <CalendarFlatTable
+            rows={sortedTable}
+            loading={loading}
+            sortKey={tblSortKey}
+            sortDir={tblSortDir}
+            onSort={onTblSort}
+          />
+        )}
 
         {/* Bottom actions */}
         {!loading &&

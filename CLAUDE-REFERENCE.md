@@ -956,6 +956,16 @@ loading; props are just `groupId`/`teamId` and `onSaved`/`onDeleted` callbacks):
 The Members tab still uses the shared `EntityMembers`, and Group events use the shared
 `Schedule` component.
 
+### Calendar extracted modules (Chunk 10)
+
+`pages/calendar/Calendar.jsx` keeps the filter form and "other"-mode event management,
+but the two big read-only event tables are now their own components, each handling its
+own loading/empty/populated states:
+- `calendar/CalendarMonthTable.jsx` — props `{ events, loading, showDetail }`.
+- `calendar/CalendarFlatTable.jsx` — props `{ rows, loading, sortKey, sortDir, onSort }`
+  (the parent still computes the sort via `useSortedData`).
+- `calendar/calendarUtils.js` — pure `defaultFrom`/`defaultTo`/`googleMapsUrl`.
+
 ### Mandatory field indicator (`RequiredMark`)
 
 Standard: `<RequiredMark />` from `frontend/src/components/RequiredMark.jsx`.
