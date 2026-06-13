@@ -287,8 +287,20 @@ These are catalogued and re-verified in `docs/ImprovementPlan.md` (Chunks 4–5)
    `getByLabel()` and hurts screen-reader accessibility. The highest-traffic pages
    have been fixed (April 2026): MemberEditor, TransactionEditor, GroupRecord,
    SystemSettings, JoinForm, PortalPersonalDetails, UserEditor, TransferMoney,
-   TransactionRefund, PersonalPreferences, and DateInput. Remaining lower-traffic
-   pages should be fixed incrementally as E2E tests are written for each page.
+   TransactionRefund, PersonalPreferences, and DateInput. Further pages fixed in
+   ImprovementPlan Chunk 11 (June 2026): VenueEditor, MemberClassEditor (incl.
+   `aria-label` on the monthly-fee grid inputs), ChangePassword, and RoleEditor.
+   Remaining lower-traffic pages should be fixed incrementally as E2E tests are
+   written for each page.
+
+2. `[FIXED]` **Sortable column headers not keyboard-accessible** (June 2026,
+   ImprovementPlan Chunk 11, finding O5) — sortable `<th>`/`<span>` headers were
+   `onClick`-only. The shared `SortableHeader` component and the inline
+   forename/surname split headers are now focusable and activate on Enter/Space
+   via `lib/a11y.js` (`clickableKeyProps`); `SortableHeader` also exposes
+   `aria-sort`. Note: the RoleEditor privilege-matrix toggle-all headers (a
+   non-sortable bulk-toggle affordance) remain `onClick`-only — out of scope for
+   the sortable-header fix; fix incrementally if revisited.
 
 ---
 

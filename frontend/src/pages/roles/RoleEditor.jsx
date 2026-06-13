@@ -279,13 +279,14 @@ export default function RoleEditor() {
         {/* Role details card */}
         <div className="bg-white/90 rounded-lg shadow-sm p-4 sm:p-6 mb-6 space-y-4">
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">
+            <label htmlFor="role-name" className="block text-sm font-medium text-slate-700 mb-1">
               Name
               {isNew && (
                 <span className="ml-2 text-xs text-slate-400 italic font-normal">New Role</span>
               )}
             </label>
             <input
+              id="role-name"
               type="text"
               name="name"
               value={name}
@@ -299,8 +300,11 @@ export default function RoleEditor() {
           </div>
 
           <div className="flex items-center gap-3">
-            <label className="text-sm font-medium text-slate-700">Committee role</label>
+            <label htmlFor="role-committee" className="text-sm font-medium text-slate-700">
+              Committee role
+            </label>
             <input
+              id="role-committee"
               type="checkbox"
               checked={isCommittee}
               onChange={(e) => {
@@ -313,8 +317,11 @@ export default function RoleEditor() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Notes</label>
+            <label htmlFor="role-notes" className="block text-sm font-medium text-slate-700 mb-1">
+              Notes
+            </label>
             <textarea
+              id="role-notes"
               name="notes"
               value={notes}
               onChange={(e) => {

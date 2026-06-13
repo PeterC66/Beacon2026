@@ -159,10 +159,11 @@ export default function VenueEditor() {
           <form onSubmit={handleSave} noValidate className="space-y-4">
             {/* Venue name */}
             <div>
-              <label className={labelCls}>
+              <label htmlFor="venue-name" className={labelCls}>
                 Venue <RequiredMark />
               </label>
               <input
+                id="venue-name"
                 name="name"
                 className={`${inputCls} w-full`}
                 required
@@ -174,8 +175,11 @@ export default function VenueEditor() {
 
             {/* Address */}
             <div>
-              <label className={labelCls}>Address</label>
+              <label htmlFor="venue-address" className={labelCls}>
+                Address
+              </label>
               <input
+                id="venue-address"
                 name="address"
                 className={`${inputCls} w-full`}
                 value={form.address}
@@ -186,8 +190,11 @@ export default function VenueEditor() {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className={labelCls}>Postcode</label>
+                <label htmlFor="venue-postcode" className={labelCls}>
+                  Postcode
+                </label>
                 <input
+                  id="venue-postcode"
                   name="postcode"
                   className={`${inputCls} w-full`}
                   value={form.postcode}
@@ -196,8 +203,11 @@ export default function VenueEditor() {
                 />
               </div>
               <div>
-                <label className={labelCls}>Contact</label>
+                <label htmlFor="venue-contact" className={labelCls}>
+                  Contact
+                </label>
                 <input
+                  id="venue-contact"
                   name="contact"
                   className={`${inputCls} w-full`}
                   value={form.contact}
@@ -208,8 +218,11 @@ export default function VenueEditor() {
             </div>
 
             <div>
-              <label className={labelCls}>Telephone</label>
+              <label htmlFor="venue-telephone" className={labelCls}>
+                Telephone
+              </label>
               <input
+                id="venue-telephone"
                 name="telephone"
                 className={`${inputCls} w-full`}
                 type="tel"
@@ -221,9 +234,12 @@ export default function VenueEditor() {
 
             {/* Email with send button */}
             <div>
-              <label className={labelCls}>Email</label>
+              <label htmlFor="venue-email" className={labelCls}>
+                Email
+              </label>
               <div className="flex gap-2 items-start">
                 <input
+                  id="venue-email"
                   name="email"
                   className={`${inputCls} flex-1`}
                   type="email"
@@ -245,9 +261,12 @@ export default function VenueEditor() {
 
             {/* Website with open button */}
             <div>
-              <label className={labelCls}>Website</label>
+              <label htmlFor="venue-website" className={labelCls}>
+                Website
+              </label>
               <div className="flex gap-2 items-start">
                 <input
+                  id="venue-website"
                   name="website"
                   className={`${inputCls} flex-1`}
                   type="url"
@@ -285,8 +304,11 @@ export default function VenueEditor() {
 
             {/* Notes */}
             <div>
-              <label className={labelCls}>Notes</label>
+              <label htmlFor="venue-notes" className={labelCls}>
+                Notes
+              </label>
               <textarea
+                id="venue-notes"
                 name="notes"
                 rows={3}
                 className={`${inputCls} w-full resize-y`}

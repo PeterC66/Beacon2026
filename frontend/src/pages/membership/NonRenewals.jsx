@@ -9,6 +9,7 @@ import PageHeader from '../../components/PageHeader.jsx';
 import NavBar from '../../components/NavBar.jsx';
 import { useSortedData } from '../../hooks/useSortedData.js';
 import SortableHeader from '../../components/SortableHeader.jsx';
+import { clickableKeyProps } from '../../lib/a11y.js';
 import NoEmailIcon from '../../components/NoEmailIcon.jsx';
 import { formatMemberName } from '../../hooks/usePreferences.js';
 import { formatShortAddress } from '../../lib/memberFormatters.js';
@@ -312,7 +313,7 @@ export default function NonRenewals() {
                     <th className={thCls}>
                       <span
                         className="cursor-pointer select-none"
-                        onClick={() => onSort('forenames')}
+                        {...clickableKeyProps(() => onSort('forenames'))}
                       >
                         Name
                         <span
@@ -324,7 +325,7 @@ export default function NonRenewals() {
                       <span className="text-slate-300 mx-1">|</span>
                       <span
                         className="cursor-pointer select-none text-xs"
-                        onClick={() => onSort(SORT_SURNAME)}
+                        {...clickableKeyProps(() => onSort(SORT_SURNAME))}
                       >
                         by surname
                         <span

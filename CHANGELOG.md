@@ -53,6 +53,17 @@ Format: `## [version] — YYYY-MM-DD` with bullet points per change.
   Chunk 5) — shared image magic-byte sniffer, attachment-filename sanitiser,
   and a reusable multer MIME `fileFilter` with spreadsheet/attachment
   whitelists, with unit coverage in `__tests__/uploads.test.js`.
+- **Frontend test quality (ImprovementPlan Chunk 11, findings C2/M4)** — added
+  behaviour/interaction tests (form fill, submit, validation, and API-call
+  assertions) modelled on `CookieConsent.test.jsx` for eight critical pages:
+  Login, ChangePassword, VenueEditor, MemberClassEditor, RoleEditor, UserEditor,
+  TransferMoney, and JoinForm. Added unit tests for the shared components and
+  helpers that previously had none: `Button`, `FormError`, `DateInput`,
+  `SortableHeader`, and the new `lib/a11y.js`. New shared `__tests__/testUtils.jsx`
+  (router-render helpers + `authValue` factory) reduces per-file boilerplate
+  (M4, frontend half), and `__tests__/setup.js` now stubs `window.scrollTo` /
+  `scrollIntoView` so form-submit tests run without jsdom "Not implemented"
+  noise. Frontend suite: 53 → 59 files, 140 → 196 tests.
 
 ### Changed
 - **Backend consistency cleanup (ImprovementPlan Chunk 6, findings N2/N6)** —
@@ -201,6 +212,17 @@ Format: `## [version] — YYYY-MM-DD` with bullet points per change.
     now split.
 
 ### Fixed
+- **Keyboard-accessible sortable column headers (ImprovementPlan Chunk 11,
+  finding O5)** — the shared `SortableHeader` component (used by ~17 list pages)
+  and the inline forename/surname split headers (MemberList, EntityMembers,
+  MembershipCards, MembershipRenewals, NonRenewals, RecentMembers) are now
+  focusable and activate on Enter/Space, and `SortableHeader` exposes `aria-sort`
+  reflecting the current sort state. New shared helper `lib/a11y.js`
+  (`clickableKeyProps`) provides the role/tabIndex/onKeyDown bundle.
+- **Form-label associations (ImprovementPlan Chunk 11, finding O5)** — continued
+  the `htmlFor`/`id` sweep across VenueEditor, MemberClassEditor (incl. `aria-label`
+  on the monthly-fee grid inputs), ChangePassword, and RoleEditor, so their fields
+  are programmatically labelled for screen readers and `getByLabelText`.
 - **Duplicated security findings in `KNOWN-ISSUES.md`** — the Chunk 4 and Chunk 5
   edits had appended a second copy of findings #8–#22, leaving two contradictory
   blocks (each showing only one chunk's fixes). Consolidated back to a single,

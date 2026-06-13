@@ -9,6 +9,7 @@ import PageHeader from '../../components/PageHeader.jsx';
 import NavBar from '../../components/NavBar.jsx';
 import ScrollButtons from '../../components/ScrollButtons.jsx';
 import SortableHeader from '../../components/SortableHeader.jsx';
+import { clickableKeyProps } from '../../lib/a11y.js';
 import { useSortedData } from '../../hooks/useSortedData.js';
 import { formatMemberName } from '../../hooks/usePreferences.js';
 import { isSubscriptionOverdue } from '../../lib/memberFormatters.js';
@@ -488,7 +489,7 @@ export default function MembershipRenewals() {
                       <th className="px-4 py-2.5 font-normal">
                         <span
                           className="cursor-pointer select-none"
-                          onClick={() => onSort('forenames')}
+                          {...clickableKeyProps(() => onSort('forenames'))}
                         >
                           Name
                           <span
@@ -500,7 +501,7 @@ export default function MembershipRenewals() {
                         <span className="text-slate-300 mx-1">|</span>
                         <span
                           className="cursor-pointer select-none text-xs"
-                          onClick={() => onSort(SORT_SURNAME)}
+                          {...clickableKeyProps(() => onSort(SORT_SURNAME))}
                         >
                           by surname
                           <span
