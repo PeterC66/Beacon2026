@@ -103,9 +103,19 @@ Format: `## [version] — YYYY-MM-DD` with bullet points per change.
     stubbed email helpers), and `index.js` (owns the portal-auth middleware and
     feature gate, then mounts the four sub-routers). `public.js` now imports
     `portal/index.js`.
+  - `routes/groups.js` (1,464 lines) → `routes/groups/` with `list.js`
+    (group listing plus list-level Excel/PDF download, `groups_list` privilege),
+    `crud.js` (single-group fetch/create/update/delete, `group_records_all`),
+    `members.js` (membership listing, member download, add/remove and bulk ops),
+    `events.js` (the schedule sub-resource), `ledger.js` (the group-ledger
+    sub-resource with its `hasLedgerAccess` helper), and `index.js` (owns the
+    shared `requireAuth` + `requireFeature('groups')` middleware, then mounts the
+    list router before the `/:id` CRUD router so route matching order is
+    preserved). No shared `helpers.js` was needed — each field-def/schema/access
+    helper is local to one sub-router. `app.js` now imports `groups/index.js`.
   - Route registrations verified identical before/after; backend suite green
     (45 files, 593 tests), lint and Prettier clean. The remaining oversized
-    routes (`public.js`, `groups.js`, `teams.js`, `calendar.js`) are deferred to
+    routes (`public.js`, `teams.js`, `calendar.js`) are deferred to
     follow-up sessions per the chunk's "one file per session" note.
 
 ### Fixed
