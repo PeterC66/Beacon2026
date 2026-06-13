@@ -174,9 +174,31 @@ Format: `## [version] — YYYY-MM-DD` with bullet points per change.
     `calendar/calendarUtils.js`. The page still owns the filter form, the "other"
     event-management section, and the add-event form.
   - Frontend suite green (53 files, 140 tests), lint 0 errors, Prettier clean.
-    The remaining M2 pages (TransactionEditor, CreditBatches, MemberList,
-    FinanceLedger, SystemDashboard) are deferred to a follow-up session and
-    tracked in `KNOWN-ISSUES.md`.
+- **Split oversized frontend pages — remaining five (ImprovementPlan Chunk 10,
+  finding M2)** — extraction only, no behaviour change:
+  - `pages/finance/TransactionEditor.jsx` (1,097 → 792 lines).
+    `finance/transactionEditorUtils.js` (today/BLANK/PAYMENT_METHODS + INP/LBL
+    class strings); `TransactionAssociations.jsx` (member/group/team/event
+    pickers); `TransactionGiftAidSection.jsx`; `TransactionCategories.jsx`.
+  - `pages/finance/CreditBatches.jsx` (1,028 → 446 lines).
+    `finance/creditBatchesUtils.js` (style strings + fmtAmt/toISODate);
+    `CreditBatchPicker.jsx` (shared unbatched-transaction selection table,
+    deduplicating the near-identical create + add-to-batch tables);
+    `CreditBatchList.jsx`; `CreditBatchDetail.jsx`; `CreditBatchAddTxns.jsx`;
+    `CreditBatchCreate.jsx`.
+  - `pages/members/MemberList.jsx` (921 → 453 lines). `members/memberListConstants.js`
+    (DOWNLOAD_FIELDS, ALPHABET); `MemberListFilters.jsx`; `MemberListTable.jsx`
+    (select controls + sortable table); `MemberListBulkActions.jsx`.
+  - `pages/finance/FinanceLedger.jsx` (892 → 395 lines). `finance/financeLedgerUtils.js`
+    (VIEWS/VIEW_LABELS/YEARS + fmtDate/fmtAmount/isEligible); `FinanceLedgerControls.jsx`;
+    `FinanceLedgerTable.jsx`.
+  - `pages/system/SystemDashboard.jsx` (832 → 458 lines). `system/systemDashboardConstants.js`
+    (EMPTY_FORM, SECTIONS, getVal); `CreateTenantForm.jsx`; `RestoreBackupSection.jsx`;
+    `RestoreConfirmModal.jsx`; `FeatureConfigModal.jsx`.
+  - All extracted parts are presentation-only with state/handlers passed in from
+    the parent. Frontend suite green (53 files, 140 tests), lint 0 errors,
+    Prettier clean. This completes Chunk 10 — every M2 page originally flagged is
+    now split.
 
 ### Fixed
 - **Duplicated security findings in `KNOWN-ISSUES.md`** — the Chunk 4 and Chunk 5

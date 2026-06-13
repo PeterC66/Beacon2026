@@ -7,24 +7,11 @@ import { finance as financeApi } from '../../lib/api.js';
 import { useAuth } from '../../context/AuthContext.jsx';
 import NavBar from '../../components/NavBar.jsx';
 import PageHeader from '../../components/PageHeader.jsx';
-import { fmtDate } from '../../lib/dateFormatters.js';
-
-const inputCls =
-  'border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500';
-const btnPrimary =
-  'bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white rounded px-5 py-2 text-sm font-medium transition-colors';
-const btnDanger = 'border border-red-300 text-red-600 hover:bg-red-50 rounded px-5 py-2 text-sm';
-const btnSecondary =
-  'border border-slate-300 text-slate-700 hover:bg-slate-50 rounded px-4 py-1.5 text-sm transition-colors';
-
-function fmtAmt(n) {
-  return Number(n).toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-}
-
-function toISODate(d) {
-  if (!d) return '';
-  return String(d).slice(0, 10);
-}
+import { toISODate } from './creditBatchesUtils.js';
+import CreditBatchList from './CreditBatchList.jsx';
+import CreditBatchDetail from './CreditBatchDetail.jsx';
+import CreditBatchAddTxns from './CreditBatchAddTxns.jsx';
+import CreditBatchCreate from './CreditBatchCreate.jsx';
 
 export default function CreditBatches() {
   const { can, tenant } = useAuth();
@@ -371,656 +358,87 @@ export default function CreditBatches() {
           </div>
         )}
 
-        {/* ─── Account selector & filter ───────────────────────────────── */}
+        {/* ─── List view (filter bar + batch table) ────────────────────── */}
         {!viewBatch && !showCreate && (
-          <div className="flex flex-wrap items-end gap-4 mb-4">
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Account</label>
-              <select
-                name="accountId"
-                value={accountId}
-                onChange={(e) => setAccountId(e.target.value)}
-                className={inputCls}
-              >
-                <option value="">— select —</option>
-                {accounts.map((a) => (
-                  <option key={a.id} value={a.id}>
-                    {a.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Show</label>
-              <select
-                name="mode"
-                value={mode}
-                onChange={(e) => setMode(e.target.value)}
-                className={inputCls}
-              >
-                <option value="uncleared">Uncleared</option>
-                <option value="since">Since date</option>
-              </select>
-            </div>
-            {mode === 'since' && (
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Since</label>
-                <input
-                  type="date"
-                  name="sinceDate"
-                  value={sinceDate}
-                  onChange={(e) => setSinceDate(e.target.value)}
-                  className={inputCls}
-                />
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* ─── Batch list ──────────────────────────────────────────────── */}
-        {!viewBatch && !showCreate && loading && (
-          <p className="text-center text-slate-500 py-8">Loading…</p>
-        )}
-
-        {!viewBatch && !showCreate && !loading && batches.length > 0 && (
-          <div className="overflow-x-auto">
-            <table className="min-w-max w-full text-sm border border-slate-300">
-              <thead>
-                <tr className="bg-slate-50">
-                  <th className="px-3 py-1 border-b border-slate-300 text-left">Batch Ref</th>
-                  <th className="px-3 py-1 border-b border-slate-300 text-left">Batch Date</th>
-                  <th className="px-3 py-1 border-b border-slate-300 text-right">Transactions</th>
-                  <th className="px-3 py-1 border-b border-slate-300 text-right">Total (£)</th>
-                  <th className="px-3 py-1 border-b border-slate-300 text-left">Status</th>
-                  <th className="px-3 py-1 border-b border-slate-300" />
-                </tr>
-              </thead>
-              <tbody>
-                {batches.map((b, i) => {
-                  const allCleared = b.cleared_count === b.txn_count && b.txn_count > 0;
-                  const partCleared = b.cleared_count > 0 && b.cleared_count < b.txn_count;
-                  return (
-                    <tr key={b.id} className={i % 2 === 0 ? 'bg-yellow-50' : 'bg-white'}>
-                      <td className="px-3 py-1 border-b border-slate-200">
-                        <button
-                          onClick={() => openBatch(b.id)}
-                          className="text-blue-700 hover:underline font-medium"
-                        >
-                          {b.batch_ref}
-                        </button>
-                      </td>
-                      <td className="px-3 py-1 border-b border-slate-200">
-                        {fmtDate(b.batch_date)}
-                      </td>
-                      <td className="px-3 py-1 border-b border-slate-200 text-right">
-                        {b.txn_count}
-                      </td>
-                      <td className="px-3 py-1 border-b border-slate-200 text-right font-mono">
-                        {fmtAmt(b.total_amount)}
-                      </td>
-                      <td className="px-3 py-1 border-b border-slate-200">
-                        {allCleared ? (
-                          <span className="text-xs text-green-700 bg-green-100 px-1.5 py-0.5 rounded">
-                            Cleared
-                          </span>
-                        ) : partCleared ? (
-                          <span className="text-xs text-amber-700 bg-amber-100 px-1.5 py-0.5 rounded">
-                            Part cleared
-                          </span>
-                        ) : (
-                          <span className="text-xs text-slate-500">Uncleared</span>
-                        )}
-                      </td>
-                      <td className="px-3 py-1 border-b border-slate-200">
-                        {canDelete && b.txn_count === 0 && (
-                          <button
-                            onClick={() => handleDeleteBatch(b.id)}
-                            className="text-red-600 hover:underline text-xs"
-                          >
-                            Delete
-                          </button>
-                        )}
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        )}
-
-        {!viewBatch && !showCreate && !loading && batches.length === 0 && accountId && (
-          <p className="text-sm text-slate-500">No batches found.</p>
+          <CreditBatchList
+            accounts={accounts}
+            accountId={accountId}
+            setAccountId={setAccountId}
+            mode={mode}
+            setMode={setMode}
+            sinceDate={sinceDate}
+            setSinceDate={setSinceDate}
+            loading={loading}
+            batches={batches}
+            canDelete={canDelete}
+            openBatch={openBatch}
+            handleDeleteBatch={handleDeleteBatch}
+          />
         )}
 
         {/* ─── Batch detail view ───────────────────────────────────────── */}
         {viewBatch && !showAddTxns && (
-          <div>
-            <div className="flex items-center gap-4 mb-4">
-              <button onClick={() => setViewBatch(null)} className={btnSecondary}>
-                &larr; Back to list
-              </button>
-              <h2 className="text-lg font-bold">Edit Credit Batch</h2>
-            </div>
-
-            {/* Batch details */}
-            <div className="bg-white/90 rounded-lg shadow-sm p-4 mb-4 space-y-3">
-              <div className="flex flex-wrap items-end gap-4">
-                <div className="text-sm text-slate-600">
-                  <span className="font-medium">Batch Number:</span> {viewBatch.batch_number}
-                </div>
-              </div>
-              {canCreate ? (
-                <div className="flex flex-wrap items-end gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">
-                      Batch Reference
-                    </label>
-                    <input
-                      type="text"
-                      name="editRef"
-                      value={editRef}
-                      onChange={(e) => setEditRef(e.target.value)}
-                      className={inputCls}
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">
-                      Batch Date
-                    </label>
-                    <input
-                      type="date"
-                      name="editDate"
-                      value={editDate}
-                      onChange={(e) => setEditDate(e.target.value)}
-                      className={inputCls}
-                    />
-                  </div>
-                  <div className="flex-1 min-w-[180px]">
-                    <label className="block text-sm font-medium text-slate-700 mb-1">
-                      Description
-                    </label>
-                    <input
-                      type="text"
-                      name="editDesc"
-                      value={editDesc}
-                      onChange={(e) => setEditDesc(e.target.value)}
-                      placeholder="Optional"
-                      className={`${inputCls} w-full`}
-                    />
-                  </div>
-                  <button
-                    onClick={handleSaveBatchDetails}
-                    disabled={saving || !editRef.trim()}
-                    className={btnPrimary}
-                  >
-                    {saving ? 'Saving…' : 'Save'}
-                  </button>
-                </div>
-              ) : (
-                <div className="flex flex-wrap gap-6 text-sm text-slate-600">
-                  <span>
-                    <span className="font-medium">Reference:</span> {viewBatch.batch_ref}
-                  </span>
-                  <span>
-                    <span className="font-medium">Date:</span> {fmtDate(viewBatch.batch_date)}
-                  </span>
-                  {viewBatch.description && (
-                    <span>
-                      <span className="font-medium">Description:</span> {viewBatch.description}
-                    </span>
-                  )}
-                </div>
-              )}
-            </div>
-
-            {/* Batch transactions table */}
-            <div className="overflow-x-auto mb-4">
-              <table className="min-w-max w-full text-sm border border-slate-300">
-                <thead>
-                  <tr className="bg-slate-50">
-                    <th className="px-3 py-1 border-b border-slate-300 text-left">#</th>
-                    <th className="px-3 py-1 border-b border-slate-300 text-left">Date</th>
-                    <th className="px-3 py-1 border-b border-slate-300 text-left">Payment Ref</th>
-                    <th className="px-3 py-1 border-b border-slate-300 text-left">
-                      Payment Method
-                    </th>
-                    <th className="px-3 py-1 border-b border-slate-300 text-left">From/To</th>
-                    <th className="px-3 py-1 border-b border-slate-300 text-left">Detail</th>
-                    <th className="px-3 py-1 border-b border-slate-300 text-right">Amount (£)</th>
-                    <th className="px-3 py-1 border-b border-slate-300 text-left">Cleared</th>
-                    {hasRemovable && canCreate && (
-                      <th className="px-3 py-1 border-b border-slate-300 text-center">Remove?</th>
-                    )}
-                  </tr>
-                </thead>
-                <tbody>
-                  {viewBatch.transactions.length === 0 ? (
-                    <tr>
-                      <td
-                        colSpan={hasRemovable && canCreate ? 9 : 8}
-                        className="px-3 py-3 text-center text-slate-400"
-                      >
-                        No transactions in this batch.
-                      </td>
-                    </tr>
-                  ) : (
-                    viewBatch.transactions.map((t, i) => (
-                      <tr
-                        key={t.id}
-                        className={
-                          selectedRemove.has(t.id)
-                            ? 'bg-red-50'
-                            : i % 2 === 0
-                              ? 'bg-yellow-50'
-                              : 'bg-white'
-                        }
-                      >
-                        <td className="px-3 py-1 border-b border-slate-200 font-mono text-xs text-slate-500">
-                          {t.transaction_number}
-                        </td>
-                        <td className="px-3 py-1 border-b border-slate-200">{fmtDate(t.date)}</td>
-                        <td className="px-3 py-1 border-b border-slate-200">
-                          {t.payment_ref ?? ''}
-                        </td>
-                        <td className="px-3 py-1 border-b border-slate-200">
-                          {t.payment_method ?? ''}
-                        </td>
-                        <td className="px-3 py-1 border-b border-slate-200">{t.from_to ?? ''}</td>
-                        <td className="px-3 py-1 border-b border-slate-200">{t.detail ?? ''}</td>
-                        <td className="px-3 py-1 border-b border-slate-200 text-right font-mono">
-                          {fmtAmt(t.amount)}
-                        </td>
-                        <td className="px-3 py-1 border-b border-slate-200">
-                          {t.cleared_at ? fmtDate(t.cleared_at) : ''}
-                        </td>
-                        {hasRemovable && canCreate && (
-                          <td className="px-2 py-1 border-b border-slate-200 text-center">
-                            {!t.cleared_at && (
-                              <input
-                                type="checkbox"
-                                checked={selectedRemove.has(t.id)}
-                                onChange={() => toggleRemove(t.id)}
-                              />
-                            )}
-                          </td>
-                        )}
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-                {viewBatch.transactions.length > 0 && (
-                  <tfoot>
-                    <tr className="bg-slate-100 border-t-2 border-slate-300">
-                      <td colSpan={6} className="px-3 py-1.5 text-right font-medium text-sm">
-                        Current Batch Total:
-                      </td>
-                      <td className="px-3 py-1.5 text-right font-mono font-medium">
-                        £{fmtAmt(currentBatchTotal)}
-                      </td>
-                      <td colSpan={hasRemovable && canCreate ? 2 : 1} />
-                    </tr>
-                    {selectedRemove.size > 0 && (
-                      <tr className="bg-slate-100">
-                        <td colSpan={6} className="px-3 py-1.5 text-right font-medium text-sm">
-                          New Batch Total:
-                        </td>
-                        <td className="px-3 py-1.5 text-right font-mono font-medium">
-                          £{fmtAmt(newBatchTotal)}
-                        </td>
-                        <td colSpan={hasRemovable && canCreate ? 2 : 1} />
-                      </tr>
-                    )}
-                  </tfoot>
-                )}
-              </table>
-            </div>
-
-            {/* Action buttons below the table */}
-            <div className="flex flex-wrap gap-3">
-              {canCreate && hasRemovable && (
-                <>
-                  <button
-                    onClick={handleRemoveFromBatch}
-                    disabled={removing || selectedRemove.size === 0}
-                    className={btnPrimary}
-                  >
-                    {removing ? 'Removing…' : 'Update Transaction'}
-                  </button>
-                  <button
-                    onClick={() => setSelectedRemove(new Set())}
-                    disabled={removing || selectedRemove.size === 0}
-                    className={btnSecondary}
-                  >
-                    Cancel
-                  </button>
-                </>
-              )}
-              {canCreate && (
-                <button onClick={openAddTxns} className={btnPrimary}>
-                  Add transactions
-                </button>
-              )}
-              {canDelete && viewBatch.transactions.length === 0 && (
-                <button onClick={() => handleDeleteBatch(viewBatch.id)} className={btnDanger}>
-                  Delete batch
-                </button>
-              )}
-            </div>
-          </div>
+          <CreditBatchDetail
+            viewBatch={viewBatch}
+            setViewBatch={setViewBatch}
+            canCreate={canCreate}
+            canDelete={canDelete}
+            editRef={editRef}
+            setEditRef={setEditRef}
+            editDate={editDate}
+            setEditDate={setEditDate}
+            editDesc={editDesc}
+            setEditDesc={setEditDesc}
+            saving={saving}
+            handleSaveBatchDetails={handleSaveBatchDetails}
+            selectedRemove={selectedRemove}
+            setSelectedRemove={setSelectedRemove}
+            toggleRemove={toggleRemove}
+            removing={removing}
+            handleRemoveFromBatch={handleRemoveFromBatch}
+            openAddTxns={openAddTxns}
+            handleDeleteBatch={handleDeleteBatch}
+            currentBatchTotal={currentBatchTotal}
+            newBatchTotal={newBatchTotal}
+            hasRemovable={hasRemovable}
+          />
         )}
 
         {/* ─── Add transactions to existing batch (from detail view) ──── */}
         {viewBatch && showAddTxns && (
-          <div>
-            <div className="flex items-center gap-4 mb-4">
-              <button onClick={() => setShowAddTxns(false)} className={btnSecondary}>
-                &larr; Back to batch
-              </button>
-              <h2 className="text-lg font-bold">Add transactions to: {viewBatch.batch_ref}</h2>
-            </div>
-
-            {loadingAddTxns ? (
-              <p className="text-center text-slate-500 py-8">Loading unbatched transactions…</p>
-            ) : addUnbatched.length === 0 ? (
-              <p className="text-sm text-slate-500">No unbatched credit transactions available.</p>
-            ) : (
-              <>
-                <div className="flex flex-wrap gap-3 mb-3 items-center">
-                  <button
-                    onClick={() => setSelectedAdd(new Set(addUnbatched.map((t) => t.id)))}
-                    className="text-blue-700 hover:underline text-sm"
-                  >
-                    Select All
-                  </button>
-                  <button
-                    onClick={() => setSelectedAdd(new Set())}
-                    className="text-blue-700 hover:underline text-sm"
-                  >
-                    Clear
-                  </button>
-                  <span className="text-sm text-slate-500">{selectedAdd.size} selected</span>
-                </div>
-
-                <div className="overflow-x-auto mb-4">
-                  <table className="min-w-max w-full text-sm border border-slate-300">
-                    <thead>
-                      <tr className="bg-slate-50">
-                        <th className="px-2 py-1 border-b border-slate-300 w-8">
-                          <input
-                            type="checkbox"
-                            checked={
-                              selectedAdd.size === addUnbatched.length && addUnbatched.length > 0
-                            }
-                            onChange={() =>
-                              selectedAdd.size === addUnbatched.length
-                                ? setSelectedAdd(new Set())
-                                : setSelectedAdd(new Set(addUnbatched.map((t) => t.id)))
-                            }
-                          />
-                        </th>
-                        <th className="px-3 py-1 border-b border-slate-300 text-left">#</th>
-                        <th className="px-3 py-1 border-b border-slate-300 text-left">Date</th>
-                        <th className="px-3 py-1 border-b border-slate-300 text-left">From/To</th>
-                        <th className="px-3 py-1 border-b border-slate-300 text-left">Detail</th>
-                        <th className="px-3 py-1 border-b border-slate-300 text-left">Method</th>
-                        <th className="px-3 py-1 border-b border-slate-300 text-left">Ref</th>
-                        <th className="px-3 py-1 border-b border-slate-300 text-right">
-                          Amount (£)
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {addUnbatched.map((t, i) => (
-                        <tr
-                          key={t.id}
-                          className={`cursor-pointer ${selectedAdd.has(t.id) ? 'bg-blue-50' : i % 2 === 0 ? 'bg-yellow-50' : 'bg-white'}`}
-                          onClick={() => toggleAdd(t.id)}
-                        >
-                          <td className="px-2 py-1 border-b border-slate-200 text-center">
-                            <input type="checkbox" checked={selectedAdd.has(t.id)} readOnly />
-                          </td>
-                          <td className="px-3 py-1 border-b border-slate-200 font-mono text-xs text-slate-500">
-                            {t.transaction_number}
-                          </td>
-                          <td className="px-3 py-1 border-b border-slate-200">{fmtDate(t.date)}</td>
-                          <td className="px-3 py-1 border-b border-slate-200">{t.from_to ?? ''}</td>
-                          <td className="px-3 py-1 border-b border-slate-200">{t.detail ?? ''}</td>
-                          <td className="px-3 py-1 border-b border-slate-200">
-                            {t.payment_method ?? ''}
-                          </td>
-                          <td className="px-3 py-1 border-b border-slate-200">
-                            {t.payment_ref ?? ''}
-                          </td>
-                          <td className="px-3 py-1 border-b border-slate-200 text-right font-mono">
-                            {fmtAmt(t.amount)}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                    {selectedAdd.size > 0 && (
-                      <tfoot>
-                        <tr className="bg-slate-50 font-medium">
-                          <td
-                            colSpan={7}
-                            className="px-3 py-1 border-t border-slate-300 text-right"
-                          >
-                            Selected total:
-                          </td>
-                          <td className="px-3 py-1 border-t border-slate-300 text-right font-mono">
-                            {fmtAmt(
-                              addUnbatched
-                                .filter((t) => selectedAdd.has(t.id))
-                                .reduce((s, t) => s + t.amount, 0),
-                            )}
-                          </td>
-                        </tr>
-                      </tfoot>
-                    )}
-                  </table>
-                </div>
-
-                <div className="flex gap-3">
-                  <button
-                    onClick={handleAddTxnsToBatch}
-                    disabled={addingTxns || selectedAdd.size === 0}
-                    className={btnPrimary}
-                  >
-                    {addingTxns ? 'Adding…' : `Add ${selectedAdd.size} to batch`}
-                  </button>
-                  <button onClick={() => setShowAddTxns(false)} className={btnSecondary}>
-                    Cancel
-                  </button>
-                </div>
-              </>
-            )}
-          </div>
+          <CreditBatchAddTxns
+            viewBatch={viewBatch}
+            setShowAddTxns={setShowAddTxns}
+            loadingAddTxns={loadingAddTxns}
+            addUnbatched={addUnbatched}
+            selectedAdd={selectedAdd}
+            setSelectedAdd={setSelectedAdd}
+            toggleAdd={toggleAdd}
+            addingTxns={addingTxns}
+            handleAddTxnsToBatch={handleAddTxnsToBatch}
+          />
         )}
 
         {/* ─── Create new batch ────────────────────────────────────────── */}
         {showCreate && (
-          <div>
-            <div className="flex items-center gap-4 mb-4">
-              <button onClick={() => setShowCreate(false)} className={btnSecondary}>
-                &larr; Back
-              </button>
-              <h2 className="text-lg font-bold">Select transactions for batch</h2>
-            </div>
-
-            {loadingUnbatched ? (
-              <p className="text-sm text-slate-500">Loading unbatched transactions...</p>
-            ) : unbatched.length === 0 ? (
-              <p className="text-sm text-slate-500">No unbatched credit transactions available.</p>
-            ) : (
-              <>
-                <div className="flex flex-wrap gap-3 mb-3 items-center">
-                  <button
-                    onClick={() => setSelectedCreate(new Set(unbatched.map((t) => t.id)))}
-                    className="text-blue-700 hover:underline text-sm"
-                  >
-                    Select All
-                  </button>
-                  <button
-                    onClick={() => setSelectedCreate(new Set())}
-                    className="text-blue-700 hover:underline text-sm"
-                  >
-                    Clear
-                  </button>
-                  <span className="text-sm text-slate-500">{selectedCreate.size} selected</span>
-                </div>
-
-                <div className="overflow-x-auto mb-4">
-                  <table className="min-w-max w-full text-sm border border-slate-300">
-                    <thead>
-                      <tr className="bg-slate-50">
-                        <th className="px-2 py-1 border-b border-slate-300 w-8">
-                          <input
-                            type="checkbox"
-                            checked={
-                              selectedCreate.size === unbatched.length && unbatched.length > 0
-                            }
-                            onChange={() =>
-                              selectedCreate.size === unbatched.length
-                                ? setSelectedCreate(new Set())
-                                : setSelectedCreate(new Set(unbatched.map((t) => t.id)))
-                            }
-                          />
-                        </th>
-                        <th className="px-3 py-1 border-b border-slate-300 text-left">#</th>
-                        <th className="px-3 py-1 border-b border-slate-300 text-left">Date</th>
-                        <th className="px-3 py-1 border-b border-slate-300 text-left">From/To</th>
-                        <th className="px-3 py-1 border-b border-slate-300 text-left">Detail</th>
-                        <th className="px-3 py-1 border-b border-slate-300 text-left">Method</th>
-                        <th className="px-3 py-1 border-b border-slate-300 text-left">Ref</th>
-                        <th className="px-3 py-1 border-b border-slate-300 text-right">
-                          Amount (£)
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {unbatched.map((t, i) => (
-                        <tr
-                          key={t.id}
-                          className={`cursor-pointer ${selectedCreate.has(t.id) ? 'bg-blue-50' : i % 2 === 0 ? 'bg-yellow-50' : 'bg-white'}`}
-                          onClick={() => toggleCreate(t.id)}
-                        >
-                          <td className="px-2 py-1 border-b border-slate-200 text-center">
-                            <input type="checkbox" checked={selectedCreate.has(t.id)} readOnly />
-                          </td>
-                          <td className="px-3 py-1 border-b border-slate-200 font-mono text-xs text-slate-500">
-                            {t.transaction_number}
-                          </td>
-                          <td className="px-3 py-1 border-b border-slate-200">{fmtDate(t.date)}</td>
-                          <td className="px-3 py-1 border-b border-slate-200">{t.from_to ?? ''}</td>
-                          <td className="px-3 py-1 border-b border-slate-200">{t.detail ?? ''}</td>
-                          <td className="px-3 py-1 border-b border-slate-200">
-                            {t.payment_method ?? ''}
-                          </td>
-                          <td className="px-3 py-1 border-b border-slate-200">
-                            {t.payment_ref ?? ''}
-                          </td>
-                          <td className="px-3 py-1 border-b border-slate-200 text-right font-mono">
-                            {fmtAmt(t.amount)}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                    {selectedCreate.size > 0 && (
-                      <tfoot>
-                        <tr className="bg-slate-50 font-medium">
-                          <td
-                            colSpan={7}
-                            className="px-3 py-1 border-t border-slate-300 text-right"
-                          >
-                            Selected total:
-                          </td>
-                          <td className="px-3 py-1 border-t border-slate-300 text-right font-mono">
-                            {fmtAmt(
-                              unbatched
-                                .filter((t) => selectedCreate.has(t.id))
-                                .reduce((s, t) => s + t.amount, 0),
-                            )}
-                          </td>
-                        </tr>
-                      </tfoot>
-                    )}
-                  </table>
-                </div>
-
-                {selectedCreate.size > 0 && (
-                  <div className="bg-white/90 rounded-lg shadow-sm p-4 space-y-4">
-                    {/* Create new batch */}
-                    <div className="flex flex-wrap items-end gap-3">
-                      <div>
-                        <label className="block text-sm font-medium text-slate-700 mb-1">
-                          Batch Reference
-                        </label>
-                        <input
-                          type="text"
-                          name="batchRef"
-                          value={batchRef}
-                          onChange={(e) => setBatchRef(e.target.value)}
-                          placeholder="e.g. 12 Mar 2026"
-                          className={inputCls}
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-slate-700 mb-1">
-                          Description
-                        </label>
-                        <input
-                          type="text"
-                          name="batchDesc"
-                          value={batchDesc}
-                          onChange={(e) => setBatchDesc(e.target.value)}
-                          placeholder="Optional description"
-                          className={inputCls}
-                        />
-                      </div>
-                      <button
-                        onClick={handleCreateBatch}
-                        disabled={creating || !batchRef.trim()}
-                        className={btnPrimary}
-                      >
-                        {creating ? 'Creating...' : 'Create Batch'}
-                      </button>
-                    </div>
-
-                    {/* Add to existing batch */}
-                    {unclearedBatches.length > 0 && (
-                      <div className="flex flex-wrap items-end gap-3 border-t border-slate-200 pt-4">
-                        <div>
-                          <label className="block text-sm font-medium text-slate-700 mb-1">
-                            Or add to existing batch
-                          </label>
-                          <select
-                            name="existingBatchId"
-                            value={existingBatchId}
-                            onChange={(e) => setExistingBatchId(e.target.value)}
-                            className={inputCls}
-                          >
-                            <option value="">— select batch —</option>
-                            {unclearedBatches.map((b) => (
-                              <option key={b.id} value={b.id}>
-                                {b.batch_ref} ({b.txn_count} txns, £{fmtAmt(b.total_amount)})
-                              </option>
-                            ))}
-                          </select>
-                        </div>
-                        <button
-                          onClick={handleAddToExisting}
-                          disabled={creating || !existingBatchId}
-                          className={btnPrimary}
-                        >
-                          Add to Existing
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                )}
-              </>
-            )}
-          </div>
+          <CreditBatchCreate
+            setShowCreate={setShowCreate}
+            loadingUnbatched={loadingUnbatched}
+            unbatched={unbatched}
+            selectedCreate={selectedCreate}
+            setSelectedCreate={setSelectedCreate}
+            toggleCreate={toggleCreate}
+            batchRef={batchRef}
+            setBatchRef={setBatchRef}
+            batchDesc={batchDesc}
+            setBatchDesc={setBatchDesc}
+            creating={creating}
+            handleCreateBatch={handleCreateBatch}
+            unclearedBatches={unclearedBatches}
+            existingBatchId={existingBatchId}
+            setExistingBatchId={setExistingBatchId}
+            handleAddToExisting={handleAddToExisting}
+          />
         )}
       </div>
     </div>
