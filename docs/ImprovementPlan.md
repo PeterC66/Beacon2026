@@ -385,10 +385,32 @@ sub-router precedent. Pure moves — no behaviour change, tests green before/aft
   oversized backend route files (`backup.js`, `members.js`, `portal.js`,
   `groups.js`, `public.js`) plus `teams.js` and `calendar.js` are now split.
 
-### Chunk 10 — Split oversized frontend pages (M2)
+### Chunk 10 — Split oversized frontend pages (M2) ✅ Done (2026-06-13)
 Start with `MemberEditor.jsx` (form / groups / financials / photo sections) and
 `EntityMembers.jsx` (list / bulk actions / downloads). Same rule: extraction
 only, no behaviour change.
+
+**Notes:** the two named files were split this session.
+- `MemberEditor.jsx` (2,317 → 1,994 lines). Extracted the pure helpers/constants
+  (`todayIso`, `computeNextRenewal`, `BLANK_FORM`, `TITLES`) to
+  `members/memberEditorUtils.js`; the shared Tailwind class strings to
+  `members/memberEditorStyles.js` (the parent keeps its `inputCls`/`labelCls`/etc.
+  local aliases pointing at the exported constants, so the ~100 JSX references were
+  untouched); the read-only Groups/Teams/Ledger block to
+  `members/MemberLedgerSection.jsx`; and the photo upload/preview block to
+  `members/MemberPhotoSection.jsx` (upload state + handlers stay in the parent and
+  are passed as props).
+- `EntityMembers.jsx` (722 → 583 lines). Extracted the "Do with selected"
+  bulk-action bar + download field-picker to `components/EntityBulkActions.jsx` and
+  the "Add a member" panel to `components/EntityAddMembers.jsx`; both are
+  presentation-only, with all state/handlers passed in from the parent.
+- Pure extraction, no behaviour change. Frontend suite green (53 files, 140 tests);
+  lint 0 errors, Prettier clean.
+- **Remaining M2 pages deferred:** `GroupRecord.jsx` (1,128), `Calendar.jsx`
+  (1,125), `TransactionEditor.jsx` (1,097), `CreditBatches.jsx` (1,028),
+  `MemberList.jsx` (921), `FinanceLedger.jsx` (892), `TeamRecord.jsx` (889),
+  `SystemDashboard.jsx` (832) are still oversized. Logged in `KNOWN-ISSUES.md`
+  for a follow-up session (same extraction-only approach).
 
 ### Chunk 11 — Frontend test quality & accessibility (C2, O5, M4 frontend half)
 - Shared mock factories; interaction tests (form submit, validation error,

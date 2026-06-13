@@ -13,6 +13,8 @@ import { useSortedData } from '../hooks/useSortedData.js';
 import SortableHeader from './SortableHeader.jsx';
 import NoEmailIcon from './NoEmailIcon.jsx';
 import ScrollButtons from './ScrollButtons.jsx';
+import EntityBulkActions from './EntityBulkActions.jsx';
+import EntityAddMembers from './EntityAddMembers.jsx';
 import { formatShortAddress, isSubscriptionOverdue } from '../lib/memberFormatters.js';
 import { formatMemberName } from '../hooks/usePreferences.js';
 import { SS_EMAIL_COMPOSE_MEMBER_IDS } from '../lib/storageKeys.js';
@@ -536,184 +538,43 @@ export default function EntityMembers({ entityId, api, entityType = 'group' }) {
 
       {/* ── Bulk actions (Do with selected) ─────────────────────── */}
       {selected.size > 0 && (
-        <div className="bg-white/90 rounded-lg shadow-sm p-3 space-y-3">
-          <div className="flex flex-wrap gap-3 items-end">
-            <div>
-              <label
-                htmlFor={`${entityType}-bulk-action`}
-                className="block text-sm font-medium text-slate-700 mb-1"
-              >
-                Do with {selected.size} selected member{selected.size !== 1 ? 's' : ''}
-              </label>
-              <select
-                id={`${entityType}-bulk-action`}
-                name="bulkAction"
-                value={bulkAction}
-                onChange={(e) => {
-                  setBulkAction(e.target.value);
-                  setBulkResult(null);
-                  setTargetEntityId('');
-                }}
-                className="border border-slate-300 rounded px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="">— choose action —</option>
-                {can('email', 'send') && <option value="send_email">Send email</option>}
-                <option value="download_excel">Download Excel</option>
-                <option value="download_pdf">Download PDF</option>
-                {canManage && <option value="remove_members">Remove members</option>}
-                {canManage && <option value={addToAction}>Add to another {entityType}</option>}
-              </select>
-            </div>
-
-            {bulkAction === addToAction && (
-              <div>
-                <label
-                  htmlFor={`${entityType}-target-entity`}
-                  className="block text-sm font-medium text-slate-700 mb-1"
-                >
-                  Target {entityType}
-                </label>
-                <select
-                  id={`${entityType}-target-entity`}
-                  name="targetEntityId"
-                  value={targetEntityId}
-                  onChange={(e) => setTargetEntityId(e.target.value)}
-                  className="border border-slate-300 rounded px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  <option value="">— select {entityType} —</option>
-                  {allEntities
-                    .filter((e) => e.id !== entityId)
-                    .map((e) => (
-                      <option key={e.id} value={e.id}>
-                        {e.name}
-                      </option>
-                    ))}
-                </select>
-              </div>
-            )}
-
-            {(bulkAction === 'send_email' ||
-              bulkAction === 'remove_members' ||
-              bulkAction === addToAction) && (
-              <button
-                onClick={handleBulkDo}
-                disabled={bulkWorking || (bulkAction === addToAction && !targetEntityId)}
-                className="bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white rounded px-4 py-1.5 text-sm font-medium transition-colors"
-              >
-                {bulkWorking ? 'Working…' : 'Do with selected'}
-              </button>
-            )}
-
-            {bulkResult && (
-              <p
-                className={`text-sm font-medium ${bulkResult.type === 'success' ? 'text-green-700' : 'text-red-600'}`}
-              >
-                {bulkResult.msg}
-              </p>
-            )}
-          </div>
-
-          {/* Field picker for Excel / PDF downloads */}
-          {(bulkAction === 'download_excel' || bulkAction === 'download_pdf') && (
-            <div className="border border-slate-200 rounded p-3 bg-slate-50">
-              <p className="text-sm font-medium text-slate-700 mb-2">Fields to include:</p>
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-x-4 gap-y-1 mb-3">
-                {DL_FIELDS.map((f) => (
-                  <label key={f.key} className="flex items-center gap-1.5 text-sm cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={dlFields.has(f.key)}
-                      onChange={() => toggleDlField(f.key)}
-                      className="rounded border-slate-300 text-blue-600 focus:ring-blue-500"
-                    />
-                    {f.label}
-                  </label>
-                ))}
-              </div>
-              <button
-                onClick={() => handleDownload(bulkAction === 'download_excel' ? 'excel' : 'pdf')}
-                disabled={bulkWorking || dlFields.size === 0}
-                className="bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white rounded px-4 py-1.5 text-sm font-medium transition-colors"
-              >
-                {bulkWorking
-                  ? 'Downloading…'
-                  : `Download ${bulkAction === 'download_excel' ? 'Excel' : 'PDF'}`}
-              </button>
-            </div>
-          )}
-        </div>
+        <EntityBulkActions
+          entityType={entityType}
+          entityId={entityId}
+          selectedSize={selected.size}
+          bulkAction={bulkAction}
+          setBulkAction={setBulkAction}
+          setBulkResult={setBulkResult}
+          setTargetEntityId={setTargetEntityId}
+          targetEntityId={targetEntityId}
+          allEntities={allEntities}
+          bulkWorking={bulkWorking}
+          bulkResult={bulkResult}
+          handleBulkDo={handleBulkDo}
+          addToAction={addToAction}
+          canManage={canManage}
+          can={can}
+          DL_FIELDS={DL_FIELDS}
+          dlFields={dlFields}
+          toggleDlField={toggleDlField}
+          handleDownload={handleDownload}
+        />
       )}
 
       {/* ── Add members ───────────────────────────────────────────── */}
       {canManage && (
-        <div className="bg-white/90 rounded-lg shadow-sm p-4 space-y-3">
-          <h3 className="text-sm font-semibold text-slate-700">Add a member</h3>
-
-          {addError && <p className="text-red-600 text-sm">{addError}</p>}
-
-          {/* By name */}
-          <div className="flex gap-2 items-end">
-            <div className="flex-1">
-              <label
-                htmlFor={`${entityType}-add-by-name`}
-                className="block text-sm font-medium text-slate-700 mb-1"
-              >
-                Add member by name
-              </label>
-              <select
-                id={`${entityType}-add-by-name`}
-                name="addByName"
-                value={addByName}
-                onChange={(e) => setAddByName(e.target.value)}
-                className="border border-slate-300 rounded px-3 py-2 text-sm w-full focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="">— select member —</option>
-                {availableToAdd.map((m) => (
-                  <option key={m.id} value={m.id}>
-                    {m.surname}, {m.forenames}
-                    {m.known_as ? ` (${m.known_as})` : ''} — #{m.membership_number}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <button
-              onClick={handleAddByName}
-              disabled={!addByName || addLoading}
-              className="bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white rounded px-4 py-2 text-sm font-medium"
-            >
-              Add
-            </button>
-          </div>
-
-          {/* By membership number */}
-          <div className="flex gap-2 items-end">
-            <div>
-              <label
-                htmlFor={`${entityType}-add-by-number`}
-                className="block text-sm font-medium text-slate-700 mb-1"
-              >
-                Add member by membership number
-              </label>
-              <input
-                id={`${entityType}-add-by-number`}
-                type="number"
-                min="1"
-                name="addByNumber"
-                value={addByNumber}
-                onChange={(e) => setAddByNumber(e.target.value)}
-                placeholder="e.g. 42"
-                className="border border-slate-300 rounded px-3 py-2 text-sm w-36 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-            <button
-              onClick={handleAddByNumber}
-              disabled={!addByNumber || addLoading}
-              className="bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white rounded px-4 py-2 text-sm font-medium"
-            >
-              Add
-            </button>
-          </div>
-        </div>
+        <EntityAddMembers
+          entityType={entityType}
+          addError={addError}
+          addByName={addByName}
+          setAddByName={setAddByName}
+          availableToAdd={availableToAdd}
+          handleAddByName={handleAddByName}
+          addLoading={addLoading}
+          addByNumber={addByNumber}
+          setAddByNumber={setAddByNumber}
+          handleAddByNumber={handleAddByNumber}
+        />
       )}
 
       <ScrollButtons containerRef={tableRef} />
