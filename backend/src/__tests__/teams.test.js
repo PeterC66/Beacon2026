@@ -1,5 +1,5 @@
 // beacon2/backend/src/__tests__/teams.test.js
-// Coverage for the teams router (routes/teams.js), added in Chunk 7 of
+// Coverage for the teams router (routes/teams/), added in Chunk 7 of
 // docs/ImprovementPlan.md. Teams reuse the `groups` table (type = 'team').
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
