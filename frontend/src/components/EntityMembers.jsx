@@ -15,6 +15,8 @@ import NoEmailIcon from './NoEmailIcon.jsx';
 import ScrollButtons from './ScrollButtons.jsx';
 import { formatShortAddress, isSubscriptionOverdue } from '../lib/memberFormatters.js';
 import { formatMemberName } from '../hooks/usePreferences.js';
+import { SS_EMAIL_COMPOSE_MEMBER_IDS } from '../lib/storageKeys.js';
+import { ROUTES } from '../lib/routes.js';
 
 const BASE_DL_FIELDS = [
   { key: 'membership_number', label: 'Membership No', default: true },
@@ -189,8 +191,8 @@ export default function EntityMembers({ entityId, api, entityType = 'group' }) {
   async function handleBulkDo() {
     if (selected.size === 0) return;
     if (bulkAction === 'send_email') {
-      sessionStorage.setItem('emailComposeMemberIds', JSON.stringify([...selected]));
-      navigate('/email/compose');
+      sessionStorage.setItem(SS_EMAIL_COMPOSE_MEMBER_IDS, JSON.stringify([...selected]));
+      navigate(ROUTES.EMAIL_COMPOSE);
       return;
     }
     if (bulkAction === 'remove_members') {

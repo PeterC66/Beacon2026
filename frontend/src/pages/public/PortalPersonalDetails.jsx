@@ -6,6 +6,7 @@ import { useParams, Link, useNavigate } from 'react-router-dom';
 import { portalApi, clearPortalToken } from '../../lib/api.js';
 import PortalVersion from '../../components/PortalVersion.jsx';
 import PasswordInput from '../../components/PasswordInput.jsx';
+import { SS_PORTAL_MEMBER } from '../../lib/storageKeys.js';
 
 export default function PortalPersonalDetails() {
   const { slug } = useParams();
@@ -182,7 +183,7 @@ export default function PortalPersonalDetails() {
         // Log out — they need to re-verify
         setTimeout(() => {
           clearPortalToken();
-          sessionStorage.removeItem('portalMember');
+          sessionStorage.removeItem(SS_PORTAL_MEMBER);
           navigate(`/public/${slug}/portal`);
         }, 3000);
       }

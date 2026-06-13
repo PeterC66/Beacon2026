@@ -11,6 +11,8 @@ import {
   settings as settingsApi,
   publicApi,
 } from '../../lib/api.js';
+import { SS_EMAIL_COMPOSE_MEMBER_IDS } from '../../lib/storageKeys.js';
+import { ROUTES } from '../../lib/routes.js';
 import { MEMBER_PAYMENT_METHODS as PAYMENT_METHODS } from '../../lib/constants.js';
 import { isValidUKPostcode, validatePhone } from '../../lib/validation.js';
 import { useAuth } from '../../context/AuthContext.jsx';
@@ -858,7 +860,7 @@ export default function MemberEditor() {
     setDeleting(true);
     try {
       await membersApi.delete(id);
-      navigate('/members');
+      navigate(ROUTES.MEMBERS);
     } catch (err) {
       setError(err.message);
       setDeleting(false);
@@ -1212,8 +1214,8 @@ export default function MemberEditor() {
                       <button
                         type="button"
                         onClick={() => {
-                          sessionStorage.setItem('emailComposeMemberIds', JSON.stringify([id]));
-                          navigate('/email/compose');
+                          sessionStorage.setItem(SS_EMAIL_COMPOSE_MEMBER_IDS, JSON.stringify([id]));
+                          navigate(ROUTES.EMAIL_COMPOSE);
                         }}
                         className="border border-blue-300 text-blue-600 hover:bg-blue-50 rounded px-3 py-2 text-sm transition-colors whitespace-nowrap"
                         title="Press to send an email to this member"

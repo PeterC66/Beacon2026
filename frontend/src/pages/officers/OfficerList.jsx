@@ -8,6 +8,8 @@ import { useAuth } from '../../context/AuthContext.jsx';
 import NavBar from '../../components/NavBar.jsx';
 import PageHeader from '../../components/PageHeader.jsx';
 import ScrollButtons from '../../components/ScrollButtons.jsx';
+import { SS_EMAIL_COMPOSE_MEMBER_IDS } from '../../lib/storageKeys.js';
+import { ROUTES } from '../../lib/routes.js';
 
 const BLANK = { name: '', memberId: '', officeEmail: '', notifyOnlineJoin: false };
 
@@ -67,8 +69,8 @@ export default function OfficerList() {
 
   function sendEmail() {
     const memberIds = list.filter((o) => selected.has(o.id) && o.member_id).map((o) => o.member_id);
-    sessionStorage.setItem('emailComposeMemberIds', JSON.stringify(memberIds));
-    navigate('/email/compose');
+    sessionStorage.setItem(SS_EMAIL_COMPOSE_MEMBER_IDS, JSON.stringify(memberIds));
+    navigate(ROUTES.EMAIL_COMPOSE);
   }
 
   useEffect(() => {

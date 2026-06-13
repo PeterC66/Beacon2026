@@ -6,6 +6,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useSearchParams, Link } from 'react-router-dom';
 import { publicApi } from '../../lib/api.js';
 import PortalVersion from '../../components/PortalVersion.jsx';
+import { SS_JOIN_RESULT } from '../../lib/storageKeys.js';
 
 export default function JoinComplete() {
   const { slug } = useParams();
@@ -16,7 +17,7 @@ export default function JoinComplete() {
 
   useEffect(() => {
     const paymentId = searchParams.get('paymentId');
-    const joinData = sessionStorage.getItem('joinResult');
+    const joinData = sessionStorage.getItem(SS_JOIN_RESULT);
     let memberId = null;
 
     if (joinData) {
@@ -24,7 +25,7 @@ export default function JoinComplete() {
         const parsed = JSON.parse(joinData);
         memberId = parsed.memberId;
       } catch {}
-      sessionStorage.removeItem('joinResult');
+      sessionStorage.removeItem(SS_JOIN_RESULT);
     }
 
     if (!paymentId || !memberId) {

@@ -9,8 +9,11 @@ import { useAuth } from '../../context/AuthContext.jsx';
 import { hasOptionalCookieConsent } from '../../hooks/useCookieConsent.js';
 import NavBar from '../../components/NavBar.jsx';
 import PageHeader from '../../components/PageHeader.jsx';
-
-const EMAIL_PREFS_KEY = 'beacon2_email_compose_prefs';
+import {
+  SS_EMAIL_COMPOSE_MEMBER_IDS,
+  SS_EMAIL_GIFT_AID_DATES,
+  LS_EMAIL_COMPOSE_PREFS as EMAIL_PREFS_KEY,
+} from '../../lib/storageKeys.js';
 
 function loadEmailPrefs() {
   if (!hasOptionalCookieConsent()) return {};
@@ -86,20 +89,20 @@ export default function EmailCompose() {
   useEffect(() => {
     // Read member IDs from sessionStorage
     try {
-      const stored = sessionStorage.getItem('emailComposeMemberIds');
+      const stored = sessionStorage.getItem(SS_EMAIL_COMPOSE_MEMBER_IDS);
       if (stored) {
         const ids = JSON.parse(stored);
         setMemberIds(ids);
-        sessionStorage.removeItem('emailComposeMemberIds');
+        sessionStorage.removeItem(SS_EMAIL_COMPOSE_MEMBER_IDS);
       }
     } catch {}
 
     // Read Gift Aid dates from sessionStorage (set by GA declaration page)
     try {
-      const gaDates = sessionStorage.getItem('emailGiftAidDates');
+      const gaDates = sessionStorage.getItem(SS_EMAIL_GIFT_AID_DATES);
       if (gaDates) {
         setGiftAidDates(JSON.parse(gaDates));
-        sessionStorage.removeItem('emailGiftAidDates');
+        sessionStorage.removeItem(SS_EMAIL_GIFT_AID_DATES);
       }
     } catch {}
 

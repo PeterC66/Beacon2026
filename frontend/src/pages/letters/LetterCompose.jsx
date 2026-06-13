@@ -15,6 +15,8 @@ import { letters as lettersApi, members as membersApi } from '../../lib/api.js';
 import { useAuth } from '../../context/AuthContext.jsx';
 import NavBar from '../../components/NavBar.jsx';
 import PageHeader from '../../components/PageHeader.jsx';
+import { SS_LETTER_COMPOSE_MEMBER_IDS } from '../../lib/storageKeys.js';
+import { ROUTES } from '../../lib/routes.js';
 
 // ── Font size extension ──────────────────────────────────────────────────
 
@@ -197,11 +199,11 @@ export default function LetterCompose() {
   // Read member IDs from sessionStorage on mount
   useEffect(() => {
     try {
-      const stored = sessionStorage.getItem('letterComposeMemberIds');
+      const stored = sessionStorage.getItem(SS_LETTER_COMPOSE_MEMBER_IDS);
       if (stored) {
         const ids = JSON.parse(stored);
         setMemberIds(ids);
-        sessionStorage.removeItem('letterComposeMemberIds');
+        sessionStorage.removeItem(SS_LETTER_COMPOSE_MEMBER_IDS);
       }
     } catch {
       /* ignore */
@@ -319,7 +321,7 @@ export default function LetterCompose() {
                 Compose another
               </button>
               <span className="text-slate-400">|</span>
-              <Link to="/members" className="text-blue-700 hover:underline text-sm">
+              <Link to={ROUTES.MEMBERS} className="text-blue-700 hover:underline text-sm">
                 Members
               </Link>
               <span className="text-slate-400">|</span>
@@ -450,7 +452,7 @@ export default function LetterCompose() {
             {/* Download button */}
             <div className="flex gap-3 justify-end">
               <Link
-                to="/members"
+                to={ROUTES.MEMBERS}
                 className="border border-slate-300 text-slate-700 hover:bg-slate-50 rounded px-5 py-2 text-sm"
               >
                 Cancel

@@ -5,6 +5,7 @@ import { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { portalApi, hasPortalToken, clearPortalToken } from '../../lib/api.js';
 import PortalVersion from '../../components/PortalVersion.jsx';
+import { SS_PORTAL_MEMBER, SS_PORTAL_SLUG } from '../../lib/storageKeys.js';
 
 function fmtDate(d) {
   if (!d) return '';
@@ -46,7 +47,7 @@ export default function PortalHome() {
       .catch((err) => {
         if (err.message.includes('expired') || err.message.includes('401')) {
           clearPortalToken();
-          sessionStorage.removeItem('portalMember');
+          sessionStorage.removeItem(SS_PORTAL_MEMBER);
           navigate(`/public/${slug}/portal`, { replace: true });
         } else {
           setError(err.message);
@@ -57,8 +58,8 @@ export default function PortalHome() {
 
   function handleLogout() {
     clearPortalToken();
-    sessionStorage.removeItem('portalMember');
-    sessionStorage.removeItem('portalSlug');
+    sessionStorage.removeItem(SS_PORTAL_MEMBER);
+    sessionStorage.removeItem(SS_PORTAL_SLUG);
     navigate(`/public/${slug}/portal`);
   }
 
