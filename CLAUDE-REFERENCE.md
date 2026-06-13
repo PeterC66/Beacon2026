@@ -927,6 +927,23 @@ Themes: `default`, `high-contrast`.
 - `GoToMemberButton` — small "..." button that navigates to a member's record; renders
   `null` when no `memberId` provided. Used for quick navigation from contexts like partner
   linking.
+- `EntityBulkActions` / `EntityAddMembers` — the "Do with selected" bulk-action bar
+  (+ download field picker) and the "Add a member" panel, extracted from
+  `EntityMembers.jsx` (ImprovementPlan Chunk 10). Presentation only — all state and
+  handlers are passed in as props; the data and logic still live in `EntityMembers`.
+
+### MemberEditor extracted modules (Chunk 10)
+
+`pages/members/MemberEditor.jsx` was split (extraction only):
+- `memberEditorUtils.js` — pure helpers/constants (`todayIso`, `computeNextRenewal`,
+  `BLANK_FORM`, `TITLES`).
+- `memberEditorStyles.js` — shared Tailwind class strings (`INPUT_CLS`, `INPUT_ERR_CLS`,
+  `LABEL_CLS`, `SECTION_CLS`). The parent keeps its local `inputCls`/`labelCls`/etc.
+  aliases pointing at these so existing JSX references were untouched.
+- `MemberLedgerSection.jsx` — the read-only Groups/Teams/Ledger block (props:
+  `ledgerLoading`, `memberGroups`, `memberTxns`, `can`).
+- `MemberPhotoSection.jsx` — the photo upload/preview block; upload state and handlers
+  stay in the parent and are passed as props.
 
 ### Mandatory field indicator (`RequiredMark`)
 
