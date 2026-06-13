@@ -13,21 +13,7 @@ import { Link } from 'react-router-dom';
 import { venues as venuesApi } from '../lib/api.js';
 import { useAuth } from '../context/AuthContext.jsx';
 import RequiredMark from './RequiredMark.jsx';
-
-function normaliseTime(t) {
-  if (!t) return '';
-  const s = String(t);
-  const tIdx = s.indexOf('T');
-  if (tIdx !== -1) return s.slice(tIdx + 1, tIdx + 6);
-  return s.slice(0, 5);
-}
-
-function fmtDate(d) {
-  if (!d) return '';
-  const s = String(d).slice(0, 10);
-  const [y, m, day] = s.split('-');
-  return `${day}/${m}/${y}`;
-}
+import { fmtDate, fmtTime } from '../lib/dateFormatters.js';
 
 export default function Schedule({ entityId, api, privilege = 'group_records_all' }) {
   const { can } = useAuth();
@@ -232,14 +218,14 @@ export default function Schedule({ entityId, api, privilege = 'group_records_all
                           className="text-blue-700 hover:underline whitespace-nowrap"
                         >
                           {fmtDate(ev.event_date)}
-                          {ev.start_time ? ` ${normaliseTime(ev.start_time)}` : ''}
+                          {ev.start_time ? ` ${fmtTime(ev.start_time)}` : ''}
                         </Link>
                         {ev.is_private && (
                           <span className="ml-2 text-xs text-slate-400">(private)</span>
                         )}
                       </td>
                       <td className="px-3 py-2 text-slate-600 whitespace-nowrap">
-                        {normaliseTime(ev.end_time)}
+                        {fmtTime(ev.end_time)}
                       </td>
                       <td className="px-3 py-2 text-slate-600">{ev.venue_name ?? ''}</td>
                       <td className="px-3 py-2 text-slate-700">{ev.topic ?? ''}</td>

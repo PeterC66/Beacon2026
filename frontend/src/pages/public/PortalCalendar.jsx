@@ -5,27 +5,10 @@ import { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { portalApi } from '../../lib/api.js';
 import PortalVersion from '../../components/PortalVersion.jsx';
-
-function fmtDateUK(d) {
-  if (!d) return '';
-  const s = String(d).slice(0, 10);
-  const [y, m, day] = s.split('-');
-  const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-  const dt = new Date(parseInt(y), parseInt(m) - 1, parseInt(day));
-  return `${days[dt.getDay()]} ${parseInt(day)}/${m}/${y}`;
-}
-
-function fmtTime(t) {
-  if (!t) return '';
-  const s = String(t);
-  const idx = s.indexOf('T');
-  const raw = idx !== -1 ? s.slice(idx + 1, idx + 6) : s.slice(0, 5);
-  const [h, min] = raw.split(':');
-  const hr = parseInt(h);
-  const ampm = hr >= 12 ? 'pm' : 'am';
-  const hr12 = hr === 0 ? 12 : hr > 12 ? hr - 12 : hr;
-  return `${hr12}.${min} ${ampm}`;
-}
+import {
+  fmtDateWeekdayNumeric as fmtDateUK,
+  fmtTime12 as fmtTime,
+} from '../../lib/dateFormatters.js';
 
 export default function PortalCalendar() {
   const { slug } = useParams();

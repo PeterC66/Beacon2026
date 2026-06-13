@@ -8,6 +8,7 @@ import { useAuth } from '../../context/AuthContext.jsx';
 import NavBar from '../../components/NavBar.jsx';
 import PageHeader from '../../components/PageHeader.jsx';
 import DateInput from '../../components/DateInput.jsx';
+import { fmtDateTimeSeconds } from '../../lib/dateFormatters.js';
 
 function isoToday() {
   return new Date().toISOString().slice(0, 10);
@@ -68,19 +69,6 @@ export default function GiftAidLog() {
       return;
     }
     load();
-  }
-
-  function formatDate(iso) {
-    if (!iso) return '';
-    const d = new Date(iso);
-    return d.toLocaleString('en-GB', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit',
-    });
   }
 
   function parseDetail(detail) {
@@ -200,7 +188,7 @@ export default function GiftAidLog() {
                           className={`border-b border-slate-100 ${i % 2 === 0 ? 'bg-yellow-50' : 'bg-white'}`}
                         >
                           <td className="px-3 py-2 whitespace-nowrap tabular-nums text-xs">
-                            {formatDate(e.created_at)}
+                            {fmtDateTimeSeconds(e.created_at)}
                           </td>
                           <td className="px-3 py-2 whitespace-nowrap">{e.user_name}</td>
                           <td className="px-3 py-2 whitespace-nowrap">{e.entity_name ?? ''}</td>

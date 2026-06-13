@@ -6,6 +6,7 @@ import { finance as financeApi, requestBlob } from '../../lib/api.js';
 import { useAuth } from '../../context/AuthContext.jsx';
 import NavBar from '../../components/NavBar.jsx';
 import PageHeader from '../../components/PageHeader.jsx';
+import { fmtDate } from '../../lib/dateFormatters.js';
 
 const inputCls =
   'border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500';
@@ -15,13 +16,6 @@ const btnPrimary =
 const thisYear = new Date().getFullYear();
 const defaultFrom = `${thisYear}-01-01`;
 const defaultTo = `${thisYear}-12-31`;
-
-function fmtDate(d) {
-  if (!d) return '';
-  const s = String(d).slice(0, 10);
-  const [y, m, day] = s.split('-');
-  return `${day}/${m}/${y}`;
-}
 
 function fmtAmt(n) {
   return Number(n).toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 });

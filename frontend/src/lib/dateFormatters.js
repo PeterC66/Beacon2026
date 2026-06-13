@@ -40,10 +40,11 @@ export const WEEKDAYS_SHORT = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
  * "05/01/2026" — UK numeric date from an ISO/date string, preserving the
  * ISO zero-padding. The most common formatter in the app.
  */
-export function fmtDate(d) {
-  if (!d) return '';
+export function fmtDate(d, empty = '') {
+  if (!d) return empty;
   const s = String(d).slice(0, 10);
   const [y, m, day] = s.split('-');
+  if (!y || !m || !day) return empty;
   return `${day}/${m}/${y}`;
 }
 
@@ -57,6 +58,18 @@ export function fmtDateLong(d) {
   const [y, m, day] = s.split('-');
   const dt = new Date(+y, +m - 1, +day);
   return `${WEEKDAYS_SHORT[dt.getDay()]} ${+day} ${MONTHS_SHORT[dt.getMonth()]} ${y}`;
+}
+
+/**
+ * "Sun 5/01/2026" — weekday + UK numeric date. Used by the public/portal
+ * calendars.
+ */
+export function fmtDateWeekdayNumeric(d) {
+  if (!d) return '';
+  const s = String(d).slice(0, 10);
+  const [y, m, day] = s.split('-');
+  const dt = new Date(+y, +m - 1, +day);
+  return `${WEEKDAYS_SHORT[dt.getDay()]} ${+day}/${m}/${y}`;
 }
 
 /**

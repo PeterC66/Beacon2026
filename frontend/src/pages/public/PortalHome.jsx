@@ -6,28 +6,7 @@ import { useParams, Link, useNavigate } from 'react-router-dom';
 import { portalApi, hasPortalToken, clearPortalToken } from '../../lib/api.js';
 import PortalVersion from '../../components/PortalVersion.jsx';
 import { SS_PORTAL_MEMBER, SS_PORTAL_SLUG } from '../../lib/storageKeys.js';
-
-function fmtDate(d) {
-  if (!d) return '';
-  const s = String(d).slice(0, 10);
-  const [y, m, day] = s.split('-');
-  if (!y || !m || !day) return '';
-  const months = [
-    'January',
-    'February',
-    'March',
-    'April',
-    'May',
-    'June',
-    'July',
-    'August',
-    'September',
-    'October',
-    'November',
-    'December',
-  ];
-  return `${parseInt(day)} ${months[parseInt(m) - 1]} ${y}`;
-}
+import { fmtDateFullMonth as fmtDate } from '../../lib/dateFormatters.js';
 
 export default function PortalHome() {
   const { slug } = useParams();

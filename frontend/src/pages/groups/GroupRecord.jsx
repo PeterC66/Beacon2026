@@ -19,6 +19,7 @@ import RequiredMark from '../../components/RequiredMark.jsx';
 import PageHeader from '../../components/PageHeader.jsx';
 import { useUnsavedChanges } from '../../hooks/useUnsavedChanges.js';
 import RecordTimestamp from '../../components/RecordTimestamp.jsx';
+import { fmtDate } from '../../lib/dateFormatters.js';
 
 // ─── Details sub-component ────────────────────────────────────────────────
 
@@ -531,13 +532,6 @@ function GroupLedger({ groupId }) {
     } finally {
       setLoading(false);
     }
-  }
-
-  function fmtDate(d) {
-    if (!d) return '';
-    const s = String(d).slice(0, 10);
-    const [y, m, day] = s.split('-');
-    return `${day}/${m}/${y}`;
   }
 
   function fmtAmt(v) {

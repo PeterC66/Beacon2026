@@ -7,15 +7,11 @@ import { useAuth } from '../../context/AuthContext.jsx';
 import PageHeader from '../../components/PageHeader.jsx';
 import NavBar from '../../components/NavBar.jsx';
 import DateInput from '../../components/DateInput.jsx';
+import { fmtDate as fmtDateRaw } from '../../lib/dateFormatters.js';
+const fmtDate = (d) => fmtDateRaw(d, '—');
 
 function isoToday() {
   return new Date().toISOString().slice(0, 10);
-}
-function fmtDate(d) {
-  if (!d) return '—';
-  const s = String(d).slice(0, 10);
-  const [y, m, day] = s.split('-');
-  return `${day}/${m}/${y}`;
 }
 function pct(n, total) {
   if (!total) return '0%';

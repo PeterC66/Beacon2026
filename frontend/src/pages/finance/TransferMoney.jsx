@@ -9,6 +9,7 @@ import NavBar from '../../components/NavBar.jsx';
 import RequiredMark from '../../components/RequiredMark.jsx';
 import PageHeader from '../../components/PageHeader.jsx';
 import { scrollToFormError } from '../../lib/scrollToError.js';
+import { fmtDate } from '../../lib/dateFormatters.js';
 
 const inputCls =
   'border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 w-full';
@@ -31,13 +32,6 @@ const EMPTY_FORM = {
   remarks: '',
   group_id: '',
 };
-
-function fmtDate(d) {
-  if (!d) return '';
-  const s = String(d).slice(0, 10);
-  const [y, m, day] = s.split('-');
-  return `${day}/${m}/${y}`;
-}
 
 function fmtAmt(n) {
   return Number(n).toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
