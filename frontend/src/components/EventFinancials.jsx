@@ -1,10 +1,10 @@
 // beacon2/frontend/src/components/EventFinancials.jsx
 // Event Financials tab — summary cards + transaction lists for an event.
 
-import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { calendar } from '../lib/api.js';
 import { useAuth } from '../context/AuthContext.jsx';
+import { useAsyncLoad } from '../hooks/useAsyncLoad.js';
 import { fmtDate } from '../lib/dateFormatters.js';
 
 function fmtMoney(n) {
@@ -15,26 +15,10 @@ function fmtMoney(n) {
 export default function EventFinancials({ eventId }) {
   const { can } = useAuth();
   const navigate = useNavigate();
-  const [data, setData] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-
-  useEffect(() => {
-    load();
-  }, [eventId]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  async function load() {
-    setLoading(true);
-    setError(null);
-    try {
-      const result = await calendar.getEventFinancials(eventId);
-      setData(result);
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  }
+  const { data, loading, error } = useAsyncLoad(
+    () => calendar.getEventFinancials(eventId),
+    [eventId],
+  );
 
   if (loading) return <p className="text-slate-500 text-sm">Loading financials...</p>;
   if (error) return <p className="text-red-600 text-sm">{error}</p>;

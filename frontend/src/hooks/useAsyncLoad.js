@@ -8,7 +8,7 @@
 // boilerplate found across ~30 pages.
 //
 // Usage:
-//   const { data, loading, error, reload, setData } = useAsyncLoad(
+//   const { data, loading, error, reload, setData, setError } = useAsyncLoad(
 //     () => membersApi.list({ filter }),
 //     [filter],
 //   );
@@ -48,5 +48,5 @@ export function useAsyncLoad(loader, deps = [], { initialData = null, immediate 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [reload]);
 
-  return { data, setData, loading, error, reload };
+  return { data, setData, loading, setLoading, error, setError, reload };
 }
