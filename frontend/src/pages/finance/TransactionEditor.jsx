@@ -18,30 +18,10 @@ import PageHeader from '../../components/PageHeader.jsx';
 import DateInput from '../../components/DateInput.jsx';
 import { useUnsavedChanges } from '../../hooks/useUnsavedChanges.js';
 import { scrollToFormError } from '../../lib/scrollToError.js';
-import { FINANCE_PAYMENT_METHODS } from '../../lib/constants.js';
-
-const PAYMENT_METHODS = ['', ...FINANCE_PAYMENT_METHODS];
-
-const today = () => new Date().toISOString().slice(0, 10);
-
-const BLANK = {
-  account_id: '',
-  date: today(),
-  type: 'in',
-  from_to: '',
-  amount: '',
-  payment_method: '',
-  payment_ref: '',
-  detail: '',
-  remarks: '',
-  member_id_1: '',
-  member_id_2: '',
-  group_id: '',
-  event_id: '',
-  pending: false,
-  gift_aid_amount: '',
-  gift_aid_amount_2: '',
-};
+import { PAYMENT_METHODS, today, BLANK, INP_CLS, LBL_CLS } from './transactionEditorUtils.js';
+import TransactionAssociations from './TransactionAssociations.jsx';
+import TransactionGiftAidSection from './TransactionGiftAidSection.jsx';
+import TransactionCategories from './TransactionCategories.jsx';
 
 export default function TransactionEditor() {
   const { id } = useParams();
@@ -420,9 +400,8 @@ export default function TransactionEditor() {
       : []),
   ];
 
-  const INP =
-    'border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 w-full';
-  const LBL = 'block text-sm font-medium text-slate-700 mb-1';
+  const INP = INP_CLS;
+  const LBL = LBL_CLS;
 
   if (loading) {
     return (
@@ -689,342 +668,52 @@ export default function TransactionEditor() {
             </div>
           </div>
 
-          {/* Associate with members / group */}
-          <div className="bg-white/90 rounded-lg shadow-sm p-4 sm:p-6 mb-4">
-            <h2 className="text-sm font-semibold text-slate-700 mb-3">
-              Associate transaction with
-            </h2>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              {/* Member 1 */}
-              <div>
-                <label htmlFor="txn-member1" className={LBL}>
-                  Member 1
-                </label>
-                <input
-                  id="txn-member1-filter"
-                  type="text"
-                  name="m1Filter"
-                  value={m1Filter}
-                  onChange={(e) => setM1Filter(e.target.value)}
-                  disabled={cleared}
-                  className={`${INP} mb-1`}
-                  placeholder="Search name / number…"
-                />
-                <select
-                  id="txn-member1"
-                  name="member_id_1"
-                  value={form.member_id_1}
-                  onChange={(e) => set('member_id_1', e.target.value)}
-                  disabled={cleared}
-                  className={INP}
-                  size={4}
-                >
-                  <option value="">— none —</option>
-                  {filteredM1.map((m) => (
-                    <option key={m.id} value={m.id}>
-                      {m.membership_number} {m.forenames} {m.surname}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Member 2 */}
-              <div>
-                <label htmlFor="txn-member2" className={LBL}>
-                  Member 2
-                </label>
-                {!form.member_id_1 && (
-                  <p className="text-xs text-slate-400 mb-1">Select Member 1 first</p>
-                )}
-                <input
-                  id="txn-member2-filter"
-                  type="text"
-                  name="m2Filter"
-                  value={m2Filter}
-                  onChange={(e) => setM2Filter(e.target.value)}
-                  disabled={cleared || !form.member_id_1}
-                  className={`${INP} mb-1`}
-                  placeholder="Search name / number…"
-                />
-                <select
-                  id="txn-member2"
-                  name="member_id_2"
-                  value={form.member_id_2}
-                  onChange={(e) => set('member_id_2', e.target.value)}
-                  disabled={cleared || !form.member_id_1}
-                  className={INP}
-                  size={4}
-                >
-                  <option value="">— none —</option>
-                  {filteredM2.map((m) => (
-                    <option key={m.id} value={m.id}>
-                      {m.membership_number} {m.forenames} {m.surname}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Group / Team */}
-              <div>
-                <label htmlFor="txn-group-filter" className={LBL}>
-                  Group / Team
-                </label>
-                <input
-                  id="txn-group-filter"
-                  type="text"
-                  placeholder="Search name / abbreviation…"
-                  value={groupFilter}
-                  onChange={(e) => setGroupFilter(e.target.value)}
-                  disabled={cleared}
-                  className={`${INP} mb-1`}
-                />
-                <select
-                  id="txn-group"
-                  name="group_id"
-                  value={form.group_id}
-                  onChange={(e) => set('group_id', e.target.value)}
-                  disabled={cleared}
-                  className={INP}
-                  size={5}
-                >
-                  <option value="">— none —</option>
-                  {filteredGroups.length > 0 && (
-                    <optgroup label="Groups">
-                      {filteredGroups.map((g) => (
-                        <option
-                          key={g.id}
-                          value={g.id}
-                          style={g.status === 'inactive' ? { color: '#dc2626' } : {}}
-                        >
-                          {g.short_name || g.name}
-                          {g.status === 'inactive' ? ' (inactive)' : ''}
-                        </option>
-                      ))}
-                    </optgroup>
-                  )}
-                  {filteredTeams.length > 0 && (
-                    <optgroup label="Teams">
-                      {filteredTeams.map((t) => (
-                        <option
-                          key={t.id}
-                          value={t.id}
-                          style={t.status === 'inactive' ? { color: '#dc2626' } : {}}
-                        >
-                          {t.short_name || t.name}
-                          {t.status === 'inactive' ? ' (inactive)' : ''}
-                        </option>
-                      ))}
-                    </optgroup>
-                  )}
-                </select>
-              </div>
-
-              {/* Event */}
-              <div>
-                <label htmlFor="txn-event-search" className={LBL}>
-                  Event
-                </label>
-                {form.event_id ? (
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm text-slate-700">{eventLabel || form.event_id}</span>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        set('event_id', '');
-                        setEventLabel('');
-                        setEventSearch('');
-                      }}
-                      disabled={cleared}
-                      className="text-red-600 hover:underline text-xs"
-                    >
-                      Clear
-                    </button>
-                  </div>
-                ) : (
-                  <>
-                    <input
-                      id="txn-event-search"
-                      type="text"
-                      placeholder="Search by topic, group name, or date…"
-                      value={eventSearch}
-                      onChange={(e) => setEventSearch(e.target.value)}
-                      disabled={cleared}
-                      className={`${INP} mb-1`}
-                    />
-                    {eventResults.length > 0 && (
-                      <ul className="border border-slate-200 rounded max-h-40 overflow-y-auto text-sm">
-                        {eventResults.map((ev) => {
-                          const lbl = ev.topic || ev.group_name || ev.event_type_name || 'Event';
-                          const d = ev.event_date ? String(ev.event_date).slice(0, 10) : '';
-                          return (
-                            <li key={ev.id}>
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  set('event_id', ev.id);
-                                  setEventLabel(`${lbl} (${d})`);
-                                  setEventSearch('');
-                                  setEventResults([]);
-                                }}
-                                className="block w-full text-left px-2 py-1 hover:bg-blue-50"
-                              >
-                                {lbl}
-                                {d ? ` — ${d}` : ''}
-                              </button>
-                            </li>
-                          );
-                        })}
-                      </ul>
-                    )}
-                  </>
-                )}
-              </div>
-            </div>
-          </div>
+          {/* Associate with members / group / event */}
+          <TransactionAssociations
+            form={form}
+            set={set}
+            cleared={cleared}
+            m1Filter={m1Filter}
+            setM1Filter={setM1Filter}
+            filteredM1={filteredM1}
+            m2Filter={m2Filter}
+            setM2Filter={setM2Filter}
+            filteredM2={filteredM2}
+            groupFilter={groupFilter}
+            setGroupFilter={setGroupFilter}
+            filteredGroups={filteredGroups}
+            filteredTeams={filteredTeams}
+            eventLabel={eventLabel}
+            setEventLabel={setEventLabel}
+            eventSearch={eventSearch}
+            setEventSearch={setEventSearch}
+            eventResults={eventResults}
+            setEventResults={setEventResults}
+          />
 
           {/* Gift Aid */}
           {form.type === 'in' && (form.member_id_1 || form.member_id_2) && (
-            <div className="bg-white/90 rounded-lg shadow-sm p-4 sm:p-6 mb-4">
-              <h2 className="text-sm font-semibold text-slate-700 mb-3">Gift Aid</h2>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {form.member_id_1 && (
-                  <div>
-                    <label htmlFor="txn-ga-amount1" className={LBL}>
-                      Gift aid eligible (Member 1)
-                    </label>
-                    <div className="flex items-center gap-1">
-                      <span className="text-slate-400 text-sm">£</span>
-                      <input
-                        id="txn-ga-amount1"
-                        type="number"
-                        name="gift_aid_amount"
-                        min="0"
-                        step="0.01"
-                        value={form.gift_aid_amount}
-                        onChange={(e) => set('gift_aid_amount', e.target.value)}
-                        disabled={readOnly || !!giftAidClaimedAt}
-                        className="border border-slate-300 rounded px-2 py-1 text-sm w-32 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        placeholder="0.00"
-                        title="Enter the amount (if any) that is eligible for Gift Aid"
-                      />
-                    </div>
-                    {giftAidClaimedAt && (
-                      <div className="mt-2">
-                        <label htmlFor="txn-ga-claimed1" className={LBL}>
-                          Gift aid claimed
-                        </label>
-                        <input
-                          id="txn-ga-claimed1"
-                          type="text"
-                          value={new Date(giftAidClaimedAt).toLocaleDateString('en-GB')}
-                          readOnly
-                          className="border border-slate-200 bg-slate-50 rounded px-2 py-1 text-sm w-32 text-slate-600"
-                          title="The date on which Gift Aid was claimed. This field is normally entered automatically."
-                        />
-                      </div>
-                    )}
-                  </div>
-                )}
-                {form.member_id_2 && (
-                  <div>
-                    <label htmlFor="txn-ga-amount2" className={LBL}>
-                      Gift aid eligible (Member 2)
-                    </label>
-                    <div className="flex items-center gap-1">
-                      <span className="text-slate-400 text-sm">£</span>
-                      <input
-                        id="txn-ga-amount2"
-                        type="number"
-                        name="gift_aid_amount_2"
-                        min="0"
-                        step="0.01"
-                        value={form.gift_aid_amount_2}
-                        onChange={(e) => set('gift_aid_amount_2', e.target.value)}
-                        disabled={readOnly || !!giftAidClaimedAt2}
-                        className="border border-slate-300 rounded px-2 py-1 text-sm w-32 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        placeholder="0.00"
-                        title="Enter the amount (if any) that is eligible for Gift Aid"
-                      />
-                    </div>
-                    {giftAidClaimedAt2 && (
-                      <div className="mt-2">
-                        <label htmlFor="txn-ga-claimed2" className={LBL}>
-                          Gift aid claimed
-                        </label>
-                        <input
-                          id="txn-ga-claimed2"
-                          type="text"
-                          value={new Date(giftAidClaimedAt2).toLocaleDateString('en-GB')}
-                          readOnly
-                          className="border border-slate-200 bg-slate-50 rounded px-2 py-1 text-sm w-32 text-slate-600"
-                          title="The date on which Gift Aid was claimed. This field is normally entered automatically."
-                        />
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-            </div>
+            <TransactionGiftAidSection
+              form={form}
+              set={set}
+              readOnly={readOnly}
+              giftAidClaimedAt={giftAidClaimedAt}
+              giftAidClaimedAt2={giftAidClaimedAt2}
+            />
           )}
 
           {/* Categories */}
-          <div className="bg-white/90 rounded-lg shadow-sm p-4 sm:p-6 mb-4">
-            <h2 className="text-sm font-semibold text-slate-700 mb-1">
-              Category allocation <RequiredMark />
-            </h2>
-            <p className="text-xs text-slate-500 mb-3">
-              Amounts must add up to the transaction amount.
-              {amountOk && (
-                <span
-                  className={catOk ? ' text-green-700 font-medium' : ' text-red-600 font-medium'}
-                >
-                  {' '}
-                  Total: £{catTotal.toFixed(2)} / £{amountNum.toFixed(2)}
-                  {!catOk && ` — difference £${Math.abs(catTotal - amountNum).toFixed(2)}`}
-                </span>
-              )}
-            </p>
-
-            {categories.length === 0 ? (
-              <p className="text-sm text-slate-400">
-                No active categories. Add categories in Finance set-up.
-              </p>
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="border-b border-slate-200 text-left text-slate-600">
-                      <th className="py-1.5 pr-4 font-medium">Category</th>
-                      <th className="py-1.5 w-36 font-medium">Amount (£)</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {categories.map((cat) => (
-                      <tr key={cat.id} className="border-b border-slate-100">
-                        <td className="py-1.5 pr-4">{cat.name}</td>
-                        <td className="py-1.5">
-                          <input
-                            type="number"
-                            name="categoryAmount"
-                            min="0"
-                            step="0.01"
-                            value={catAmounts[cat.id] ?? ''}
-                            onChange={(e) => {
-                              markDirty();
-                              setCatAmounts((prev) => ({ ...prev, [cat.id]: e.target.value }));
-                            }}
-                            disabled={readOnly}
-                            className="border border-slate-300 rounded px-2 py-1 text-sm w-32 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            placeholder="0.00"
-                          />
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </div>
+          <TransactionCategories
+            categories={categories}
+            catAmounts={catAmounts}
+            setCatAmounts={setCatAmounts}
+            markDirty={markDirty}
+            readOnly={readOnly}
+            amountOk={amountOk}
+            catOk={catOk}
+            catTotal={catTotal}
+            amountNum={amountNum}
+          />
 
           {/* Credit Batch membership */}
           {!isNew && batchId && (

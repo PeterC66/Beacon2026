@@ -415,10 +415,26 @@ only, no behaviour change.
   the "other" event-management section, and the add-event form.
 - Pure extraction, no behaviour change. Frontend suite green (53 files, 140 tests);
   lint 0 errors, Prettier clean.
-- **Remaining M2 pages deferred:** `TransactionEditor.jsx` (1,097),
-  `CreditBatches.jsx` (1,028), `MemberList.jsx` (921), `FinanceLedger.jsx`
-  (892), `SystemDashboard.jsx` (832) are still oversized. Logged in
-  `KNOWN-ISSUES.md` for a follow-up session (same extraction-only approach).
+- **Remaining M2 pages (2026-06-13, follow-up session):** the five deferred pages
+  were split, same extraction-only approach:
+  - `TransactionEditor.jsx` (1,097 → 792) → `finance/transactionEditorUtils.js`
+    (today/BLANK/PAYMENT_METHODS + INP/LBL class strings), `TransactionAssociations.jsx`
+    (member/group/team/event pickers), `TransactionGiftAidSection.jsx`,
+    `TransactionCategories.jsx`.
+  - `CreditBatches.jsx` (1,028 → 446) → `finance/creditBatchesUtils.js`
+    (styles + fmtAmt/toISODate), `CreditBatchPicker.jsx` (shared selection table that
+    deduplicates the near-identical create + add-to-batch tables), `CreditBatchList.jsx`,
+    `CreditBatchDetail.jsx`, `CreditBatchAddTxns.jsx`, `CreditBatchCreate.jsx`.
+  - `MemberList.jsx` (921 → 453) → `members/memberListConstants.js` (DOWNLOAD_FIELDS,
+    ALPHABET), `MemberListFilters.jsx`, `MemberListTable.jsx` (select controls + sortable
+    table), `MemberListBulkActions.jsx`.
+  - `FinanceLedger.jsx` (892 → 395) → `finance/financeLedgerUtils.js` (VIEWS/VIEW_LABELS/
+    YEARS + fmtDate/fmtAmount/isEligible), `FinanceLedgerControls.jsx`, `FinanceLedgerTable.jsx`.
+  - `SystemDashboard.jsx` (832 → 458) → `system/systemDashboardConstants.js` (EMPTY_FORM,
+    SECTIONS, getVal), `CreateTenantForm.jsx`, `RestoreBackupSection.jsx`,
+    `RestoreConfirmModal.jsx`, `FeatureConfigModal.jsx`.
+  - All presentation-only with state/handlers passed in from the parent; frontend suite
+    green (53 files, 140 tests); lint 0 errors, Prettier clean. M2 is now fully addressed.
 
 ### Chunk 11 — Frontend test quality & accessibility (C2, O5, M4 frontend half)
 - Shared mock factories; interaction tests (form submit, validation error,
