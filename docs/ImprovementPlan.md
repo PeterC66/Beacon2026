@@ -268,12 +268,32 @@ resolved — `eventAttendance: 'events'` is present in `shared/constants.js`
 group and team create/update/delete handlers (entity-level CRUD).
 New unit tests: `__tests__/eventFilters.test.js`.
 
-### Chunk 7 — Backend tests for untested routes (C1, M4 backend half, T4)
+### Chunk 7 — Backend tests for untested routes (C1, M4 backend half, T4) ✅ Done (2026-06-13)
 - Shared mock-setup helper to replace the per-file boilerplate.
 - New test files: `portal.test.js`, `public.test.js`, `teams.test.js`,
   `system.test.js`, and per-file tests for `finance/` sub-routes.
 - Document (CLAUDE-REFERENCE §12) that Prisma mocks mean SQL is exercised only
   by E2E. Likely 2 sessions — split portal/public vs teams/system/finance.
+
+**Notes:** done in one session. New shared `backend/src/__tests__/mocks.js`
+exports `dbMock`/`redisMock`/`auditMock`/`passwordMock` factories (vitest hoists
+the import above the `vi.mock` factory that calls them, so this is safe); they
+replace the copy-pasted db/redis mock blocks for new files and are available for
+incremental adoption by existing ones. New suites: `system.test.js` (19 tests),
+`teams.test.js` (21), `public.test.js` (13), `portal.test.js` (10),
+`financeTransfers.test.js` (12), `financeReconciliation.test.js` (8),
+`financeStatements.test.js` (8). Scoping decisions: portal *auth* (login/lockout/
+forgot/reset) was already covered by `portalAuth.test.js`, so `public.test.js`/
+`portal.test.js` cover the *other* public + authenticated-portal endpoints
+(joining, register/verify, public pages, home/groups/personal-details) rather
+than re-testing auth. For `finance/`, accounts/categories/transactions are
+covered by the existing umbrella `finance.test.js` and batches by
+`creditBatches.test.js`, so the new per-file suites fill the genuine gaps:
+transfers, reconciliation, statements. The `system/restore` route and
+feature-config PATCH remain covered by `restoreBeacon.test.js`. T4 (SQL only
+exercised by E2E) is now stated explicitly in CLAUDE-REFERENCE §12. Backend suite:
+45 → 52 files, 593 tests green; lint + format clean. This completes the R12
+remainder, so CODEBASE-RECOMMENDATIONS can be marked fully done.
 
 ### Chunk 8 — Frontend deduplication (M3, M5, M6, N4, N5)
 - `useAsyncLoad()` hook; `lib/dateFormatters.js`; constants modules for

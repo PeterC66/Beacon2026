@@ -965,11 +965,37 @@ CI: `.github/workflows/ci.yml` on every push to `claude/**` branches.
 
 ### Backend test pattern
 
+Prefer the shared factory helpers in `__tests__/mocks.js` (added in Chunk 7 of
+`docs/ImprovementPlan.md`) over re-writing the db/redis/audit mock objects by
+hand. vitest hoists `vi.mock(...)` *and* the imports it references, so calling a
+factory inside the mock factory is safe:
+
 ```js
-vi.mock('../utils/db.js', () => ({ prisma: { $disconnect: vi.fn() }, tenantQuery: vi.fn(), withTenant: vi.fn() }));
-vi.mock('../utils/redis.js', () => ({ isSessionInvalidated: vi.fn().mockResolvedValue(false) }));
+import { dbMock, redisMock, auditMock } from './mocks.js';
+
+vi.mock('../utils/redis.js', () => redisMock());
+vi.mock('../utils/db.js', () => dbMock());          // add prisma models via dbMock({ prisma: {...} })
+vi.mock('../utils/audit.js', () => auditMock());
+
 tenantQuery.mockResolvedValueOnce([...]); // mock each DB call in order
 ```
+
+`dbMock({ prisma: { sysTenant: { findUnique: vi.fn() } } })` merges extra prisma
+models into the default stub; pass top-level extras (e.g. `$queryRawUnsafe`) the
+same way. `passwordMock()` covers `hashPassword`/`verifyPassword`/`generateToken`/
+`hashOpaqueToken`. The older hand-written `vi.mock('../utils/db.js', () => ({ ... }))`
+form still works and remains in many files — there is no need to migrate them all.
+
+### SQL is exercised only by E2E (T4)
+
+Because backend unit tests mock `tenantQuery`/`prisma` wholesale, **no SQL is
+ever executed against a real database in CI** — the unit suite verifies routing,
+auth/privilege guards, Zod validation, status codes, and response shaping, but
+the SQL strings themselves are never run. Real SQL regressions (column renames,
+cast errors, join mistakes) are caught only by the Playwright E2E suite running
+against staging. When changing a query in a way the unit mocks can't see, lean on
+E2E (or a manual check against a real backend) rather than assuming green unit
+tests mean the query is correct.
 
 ### Frontend tests
 
