@@ -63,6 +63,22 @@ Format: `## [version] — YYYY-MM-DD` with bullet points per change.
   `AppError(…, 404)`, and hoisted scattered pagination limits to named constants
   (`EVENT_SEARCH_DEFAULT_LIMIT`/`EVENT_SEARCH_MAX_LIMIT` in `calendar.js`,
   `CONSENT_HISTORY_MAX_ROWS` in `giftAid.js`).
+- **Frontend deduplication (ImprovementPlan Chunk 8, findings M3/M5/M6/N4/N5)** —
+  added shared modules `hooks/useAsyncLoad.js`, `lib/dateFormatters.js`,
+  `lib/storageKeys.js`, `lib/routes.js` and `components/FormError.jsx`
+  (documented in CLAUDE-REFERENCE §11):
+  - Replaced ~25 inline `fmtDate`/`fmtTime`/`fmtTimestamp`/`formatDate` helpers
+    across pages and components with the shared formatters (N4).
+  - Hoisted all sessionStorage/localStorage keys into `storageKeys.js` and the
+    frequently cross-referenced route targets into `ROUTES` (N5). Privilege
+    strings left inline by owner decision.
+  - Adopted the shared `FormError` across all 8 form pages with inline
+    field-error rendering (~50 sites), and `useAsyncLoad` in the 8 clean
+    single-payload pages/components (M3).
+  - Confirmed the three named nested-component definitions (M5) and the
+    derived-state-to-`useMemo` case (M6) were already resolved in earlier work.
+  - No behaviour change; frontend suite green (53 files, 140 tests), lint and
+    Prettier clean.
 
 ### Fixed
 - **Duplicated security findings in `KNOWN-ISSUES.md`** — the Chunk 4 and Chunk 5

@@ -171,6 +171,22 @@ These are catalogued and re-verified in `docs/ImprovementPlan.md` (Chunks 4–5)
 
 ---
 
+## Frontend deduplication (ImprovementPlan Chunk 8)
+
+1. `[ACCEPTED]` **Privilege strings not centralised** — owner decision: hoisting
+   the ~90 `can('resource','action')` call sites into a constants module adds
+   indirection without a real safety gain. `storageKeys.js` and `routes.js`
+   (frequent targets) were created; privilege strings stay inline.
+2. `[OPEN]` **`useAsyncLoad` not adopted on multi-load / filter pages** — the
+   shared hook only fits single-payload loaders. Pages that fan several
+   `Promise.all` loads into different state (e.g. `MembershipRenewals`,
+   `Calendar`) or re-fetch on a button using current filter values (e.g.
+   `EmailDelivery`, `FinanceLedger`, `MemberList`, `GroupList`, `AuditLog`) were
+   left as hand-rolled effects, because the memoised `reload` would capture
+   stale filter state. Revisit if the hook grows a "manual-args" mode.
+
+---
+
 ## UI Terminology
 
 1. `[OPEN]` **Group/Team Cash — "Central Ledger" vs "Finance Ledger" wording** — The
