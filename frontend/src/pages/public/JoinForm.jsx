@@ -9,6 +9,7 @@ import RequiredMark from '../../components/RequiredMark.jsx';
 import { scrollToFirstFieldError } from '../../lib/scrollToError.js';
 import PortalVersion from '../../components/PortalVersion.jsx';
 import { UK_POSTCODE_RE } from '../../lib/constants.js';
+import FormError from '../../components/FormError.jsx';
 
 export default function JoinForm() {
   const { slug } = useParams();
@@ -233,9 +234,7 @@ export default function JoinForm() {
                   </option>
                 ))}
               </select>
-              {fieldErrors.classId && (
-                <p className="text-sm text-red-600 mt-1 font-medium">{fieldErrors.classId}</p>
-              )}
+              <FormError error={fieldErrors.classId} />
               {selectedClass?.explanation && (
                 <p className="text-xs text-slate-500 mt-1">{selectedClass.explanation}</p>
               )}
@@ -269,9 +268,7 @@ export default function JoinForm() {
                     placeholder="Mr, Mrs, Ms, Dr..."
                     className="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
-                  {fieldErrors.title && (
-                    <p className="text-sm text-red-600 mt-1 font-medium">{fieldErrors.title}</p>
-                  )}
+                  <FormError error={fieldErrors.title} />
                 </div>
                 <div>
                   <label
@@ -288,9 +285,7 @@ export default function JoinForm() {
                     onChange={(e) => handleChange('forenames', e.target.value)}
                     className="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
-                  {fieldErrors.forenames && (
-                    <p className="text-sm text-red-600 mt-1 font-medium">{fieldErrors.forenames}</p>
-                  )}
+                  <FormError error={fieldErrors.forenames} />
                 </div>
                 <div>
                   <label
@@ -307,9 +302,7 @@ export default function JoinForm() {
                     onChange={(e) => handleChange('surname', e.target.value)}
                     className="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
-                  {fieldErrors.surname && (
-                    <p className="text-sm text-red-600 mt-1 font-medium">{fieldErrors.surname}</p>
-                  )}
+                  <FormError error={fieldErrors.surname} />
                 </div>
                 <div>
                   <label
@@ -326,9 +319,7 @@ export default function JoinForm() {
                     onChange={(e) => handleChange('email', e.target.value)}
                     className="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
-                  {fieldErrors.email && (
-                    <p className="text-sm text-red-600 mt-1 font-medium">{fieldErrors.email}</p>
-                  )}
+                  <FormError error={fieldErrors.email} />
                 </div>
                 <div>
                   <label
@@ -370,9 +361,7 @@ export default function JoinForm() {
                       placeholder="Mr, Mrs, Ms, Dr..."
                       className="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
-                    {fieldErrors.p2Title && (
-                      <p className="text-sm text-red-600 mt-1 font-medium">{fieldErrors.p2Title}</p>
-                    )}
+                    <FormError error={fieldErrors.p2Title} />
                   </div>
                   <div>
                     <label
@@ -389,11 +378,7 @@ export default function JoinForm() {
                       onChange={(e) => handleChange('p2Forenames', e.target.value)}
                       className="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
-                    {fieldErrors.p2Forenames && (
-                      <p className="text-sm text-red-600 mt-1 font-medium">
-                        {fieldErrors.p2Forenames}
-                      </p>
-                    )}
+                    <FormError error={fieldErrors.p2Forenames} />
                   </div>
                   <div>
                     <label
@@ -410,11 +395,7 @@ export default function JoinForm() {
                       onChange={(e) => handleChange('p2Surname', e.target.value)}
                       className="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
-                    {fieldErrors.p2Surname && (
-                      <p className="text-sm text-red-600 mt-1 font-medium">
-                        {fieldErrors.p2Surname}
-                      </p>
-                    )}
+                    <FormError error={fieldErrors.p2Surname} />
                   </div>
                   <div>
                     <label
@@ -431,9 +412,7 @@ export default function JoinForm() {
                       onChange={(e) => handleChange('p2Email', e.target.value)}
                       className="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
-                    {fieldErrors.p2Email && (
-                      <p className="text-sm text-red-600 mt-1 font-medium">{fieldErrors.p2Email}</p>
-                    )}
+                    <FormError error={fieldErrors.p2Email} />
                   </div>
                   <div>
                     <label
@@ -476,9 +455,7 @@ export default function JoinForm() {
                     onChange={(e) => handleChange('houseNo', e.target.value)}
                     className={`w-full border rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${fieldErrors.houseNo ? 'border-red-400 ring-2 ring-red-200' : 'border-slate-300'}`}
                   />
-                  {fieldErrors.houseNo && (
-                    <p className="text-red-600 text-xs mt-1">{fieldErrors.houseNo}</p>
-                  )}
+                  <FormError error={fieldErrors.houseNo} size="xs" />
                 </div>
                 <div>
                   <label
@@ -543,9 +520,7 @@ export default function JoinForm() {
                     onChange={(e) => handleChange('postcode', e.target.value.toUpperCase())}
                     className="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
-                  {fieldErrors.postcode && (
-                    <p className="text-sm text-red-600 mt-1 font-medium">{fieldErrors.postcode}</p>
-                  )}
+                  <FormError error={fieldErrors.postcode} />
                 </div>
                 <div>
                   <label
