@@ -404,13 +404,18 @@ only, no behaviour change.
   bulk-action bar + download field-picker to `components/EntityBulkActions.jsx` and
   the "Add a member" panel to `components/EntityAddMembers.jsx`; both are
   presentation-only, with all state/handlers passed in from the parent.
+- `GroupRecord.jsx` (1,128 → 152 lines) and `TeamRecord.jsx` (889 → 125 lines).
+  Each had two top-level sub-components already defined in-file; moved them to
+  their own files: `groups/GroupDetails.jsx` + `groups/GroupLedger.jsx` and
+  `teams/TeamDetails.jsx` + `teams/TeamLedger.jsx`. The page files now own only
+  tab routing and render the sub-components.
 - Pure extraction, no behaviour change. Frontend suite green (53 files, 140 tests);
   lint 0 errors, Prettier clean.
-- **Remaining M2 pages deferred:** `GroupRecord.jsx` (1,128), `Calendar.jsx`
-  (1,125), `TransactionEditor.jsx` (1,097), `CreditBatches.jsx` (1,028),
-  `MemberList.jsx` (921), `FinanceLedger.jsx` (892), `TeamRecord.jsx` (889),
-  `SystemDashboard.jsx` (832) are still oversized. Logged in `KNOWN-ISSUES.md`
-  for a follow-up session (same extraction-only approach).
+- **Remaining M2 pages deferred:** `Calendar.jsx` (1,125),
+  `TransactionEditor.jsx` (1,097), `CreditBatches.jsx` (1,028),
+  `MemberList.jsx` (921), `FinanceLedger.jsx` (892), `SystemDashboard.jsx`
+  (832) are still oversized. Logged in `KNOWN-ISSUES.md` for a follow-up session
+  (same extraction-only approach).
 
 ### Chunk 11 — Frontend test quality & accessibility (C2, O5, M4 frontend half)
 - Shared mock factories; interaction tests (form submit, validation error,

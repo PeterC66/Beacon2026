@@ -161,10 +161,16 @@ Format: `## [version] — YYYY-MM-DD` with bullet points per change.
     `components/EntityBulkActions.jsx`; the "Add a member" panel to
     `components/EntityAddMembers.jsx` — both presentation-only, with all state
     and handlers passed in from the parent.
+  - `pages/groups/GroupRecord.jsx` (1,128 → 152 lines). The two existing
+    top-level sub-components moved to their own files: `groups/GroupDetails.jsx`
+    (the Details tab) and `groups/GroupLedger.jsx` (the Group Cash tab). The page
+    now just owns tab routing and renders the sub-components.
+  - `pages/teams/TeamRecord.jsx` (889 → 125 lines). Likewise: `teams/TeamDetails.jsx`
+    and `teams/TeamLedger.jsx`.
   - Frontend suite green (53 files, 140 tests), lint 0 errors, Prettier clean.
-    The remaining M2 pages (GroupRecord, Calendar, TransactionEditor,
-    CreditBatches, MemberList, FinanceLedger, TeamRecord, SystemDashboard) are
-    deferred to a follow-up session and tracked in `KNOWN-ISSUES.md`.
+    The remaining M2 pages (Calendar, TransactionEditor, CreditBatches,
+    MemberList, FinanceLedger, SystemDashboard) are deferred to a follow-up
+    session and tracked in `KNOWN-ISSUES.md`.
 
 ### Fixed
 - **Duplicated security findings in `KNOWN-ISSUES.md`** — the Chunk 4 and Chunk 5
