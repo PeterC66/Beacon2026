@@ -95,10 +95,18 @@ Format: `## [version] — YYYY-MM-DD` with bullet points per change.
     `helpers.js` (`resolveGiftAidAmount`, `deriveInitials`), and `index.js`
     (mounts the literal-path routers before the `/:id` CRUD router so route
     matching order is preserved).
+  - `routes/portal.js` (1,798 lines) → `routes/portal/` with `profile.js`
+    (the `/home` dashboard, personal-details GET/PATCH, photo upload/delete/get,
+    change-password, request-card), `groups.js` (browse plus join/leave),
+    `calendar.js` (event list and PDF download), `renewals.js` (renewal-info,
+    renew, renewal-confirm), a shared `helpers.js` (date formatters and the
+    stubbed email helpers), and `index.js` (owns the portal-auth middleware and
+    feature gate, then mounts the four sub-routers). `public.js` now imports
+    `portal/index.js`.
   - Route registrations verified identical before/after; backend suite green
     (45 files, 593 tests), lint and Prettier clean. The remaining oversized
-    routes (`portal.js`, `public.js`, `groups.js`) are deferred to follow-up
-    sessions per the chunk's "one file per session" note.
+    routes (`public.js`, `groups.js`, `teams.js`, `calendar.js`) are deferred to
+    follow-up sessions per the chunk's "one file per session" note.
 
 ### Fixed
 - **Duplicated security findings in `KNOWN-ISSUES.md`** — the Chunk 4 and Chunk 5
