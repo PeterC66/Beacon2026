@@ -27,6 +27,18 @@ Format: `## [version] — YYYY-MM-DD` with bullet points per change.
     freshly-restored users' sessions are no longer treated as pre-revoked.
 
 ### Added
+- **Backend tests for previously-untested routes (ImprovementPlan Chunk 7,
+  findings C1/M4/T4)** — new unit suites covering the routes that had no
+  coverage: `system.test.js` (sys-admin tenant CRUD, set-temp-password,
+  settings, feature-config), `teams.test.js` (team CRUD, members, events),
+  `public.test.js` (tenant resolution, join-config, portal register/verify,
+  public groups/calendar), `portal.test.js` (portal auth guard plus
+  home/groups/personal-details), and per-file finance suites
+  `financeTransfers.test.js`, `financeReconciliation.test.js`,
+  `financeStatements.test.js`. A new shared `__tests__/mocks.js` provides
+  `dbMock`/`redisMock`/`auditMock`/`passwordMock` factories that remove the
+  copy-pasted mock boilerplate (M4, backend half). CLAUDE-REFERENCE §12 now
+  documents these helpers and records that SQL is exercised only by E2E (T4).
 - **Shared event-filter builders `backend/src/utils/eventFilters.js`**
   (ImprovementPlan Chunk 6, findings N1/N3) — `buildCalendarEventFilters()` and
   `buildPortalCalendarFilters()` replace five byte-identical inline WHERE-clause
