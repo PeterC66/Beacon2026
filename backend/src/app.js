@@ -21,7 +21,7 @@ import memberStatusRoutes from './routes/memberStatuses.js';
 import memberRoutes from './routes/members/index.js';
 import facultyRoutes from './routes/faculties.js';
 import venueRoutes from './routes/venues.js';
-import groupRoutes from './routes/groups.js';
+import groupRoutes from './routes/groups/index.js';
 import teamRoutes from './routes/teams.js';
 import settingsRoutes from './routes/settings.js';
 import financeRoutes from './routes/finance/index.js';
