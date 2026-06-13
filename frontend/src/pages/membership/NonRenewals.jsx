@@ -17,13 +17,8 @@ import {
   SS_LETTER_COMPOSE_MEMBER_IDS,
 } from '../../lib/storageKeys.js';
 import { ROUTES } from '../../lib/routes.js';
-
-function fmtDate(d) {
-  if (!d) return '—';
-  const s = String(d).slice(0, 10);
-  const [y, m, day] = s.split('-');
-  return `${day}/${m}/${y}`;
-}
+import { fmtDate as fmtDateRaw } from '../../lib/dateFormatters.js';
+const fmtDate = (d) => fmtDateRaw(d, '—');
 
 export default function NonRenewals() {
   const { can, hasFeature } = useAuth();

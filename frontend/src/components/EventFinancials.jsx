@@ -5,17 +5,11 @@ import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { calendar } from '../lib/api.js';
 import { useAuth } from '../context/AuthContext.jsx';
+import { fmtDate } from '../lib/dateFormatters.js';
 
 function fmtMoney(n) {
   if (n == null) return '—';
   return `£${Number(n).toFixed(2)}`;
-}
-
-function fmtDate(d) {
-  if (!d) return '';
-  const s = String(d).slice(0, 10);
-  const [y, m, day] = s.split('-');
-  return `${day}/${m}/${y}`;
 }
 
 export default function EventFinancials({ eventId }) {

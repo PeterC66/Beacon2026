@@ -17,52 +17,7 @@ import { ROUTES } from '../../lib/routes.js';
 import { useAuth } from '../../context/AuthContext.jsx';
 import NavBar from '../../components/NavBar.jsx';
 import PageHeader from '../../components/PageHeader.jsx';
-
-function fmtDate(iso) {
-  if (!iso) return '—';
-  const d = new Date(iso);
-  const day = d.getUTCDate();
-  const months = [
-    'Jan',
-    'Feb',
-    'Mar',
-    'Apr',
-    'May',
-    'Jun',
-    'Jul',
-    'Aug',
-    'Sep',
-    'Oct',
-    'Nov',
-    'Dec',
-  ];
-  return `${String(day).padStart(2, '0')} ${months[d.getUTCMonth()]} ${d.getUTCFullYear()}`;
-}
-
-function fmtTimestamp(ts) {
-  if (!ts) return '';
-  const d = new Date(ts);
-  const months = [
-    'Jan',
-    'Feb',
-    'Mar',
-    'Apr',
-    'May',
-    'Jun',
-    'Jul',
-    'Aug',
-    'Sep',
-    'Oct',
-    'Nov',
-    'Dec',
-  ];
-  const day = d.getDate();
-  const mon = months[d.getMonth()];
-  const yr = d.getFullYear();
-  const hh = String(d.getHours()).padStart(2, '0');
-  const mm = String(d.getMinutes()).padStart(2, '0');
-  return `${day} ${mon} ${yr} ${hh}:${mm}`;
-}
+import { fmtDateUTC as fmtDate, fmtTimestamp } from '../../lib/dateFormatters.js';
 
 // Inline field: label beside value, compact
 function Field({ label, value, className = '' }) {

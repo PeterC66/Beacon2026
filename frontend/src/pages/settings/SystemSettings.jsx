@@ -7,46 +7,7 @@ import NavBar from '../../components/NavBar.jsx';
 import { settings as settingsApi } from '../../lib/api.js';
 import { useUnsavedChanges } from '../../hooks/useUnsavedChanges.js';
 import { SETTINGS_PAYMENT_METHODS as PAYMENT_METHODS } from '../../lib/constants.js';
-
-function fmtTimestamp(ts) {
-  if (!ts) return '';
-  const d = new Date(ts);
-  const months = [
-    'Jan',
-    'Feb',
-    'Mar',
-    'Apr',
-    'May',
-    'Jun',
-    'Jul',
-    'Aug',
-    'Sep',
-    'Oct',
-    'Nov',
-    'Dec',
-  ];
-  const day = d.getDate();
-  const mon = months[d.getMonth()];
-  const yr = d.getFullYear();
-  const hh = String(d.getHours()).padStart(2, '0');
-  const mm = String(d.getMinutes()).padStart(2, '0');
-  return `${day} ${mon} ${yr} ${hh}:${mm}`;
-}
-
-const MONTHS = [
-  'January',
-  'February',
-  'March',
-  'April',
-  'May',
-  'June',
-  'July',
-  'August',
-  'September',
-  'October',
-  'November',
-  'December',
-];
+import { fmtTimestamp, MONTHS_FULL as MONTHS } from '../../lib/dateFormatters.js';
 
 const DEFAULTS = {
   card_colour: '#0066cc',

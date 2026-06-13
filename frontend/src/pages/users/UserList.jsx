@@ -12,16 +12,8 @@ import ScrollButtons from '../../components/ScrollButtons.jsx';
 import { useSortedData } from '../../hooks/useSortedData.js';
 import { SS_EMAIL_COMPOSE_MEMBER_IDS } from '../../lib/storageKeys.js';
 import { ROUTES } from '../../lib/routes.js';
-
-function formatDate(iso) {
-  if (!iso) return 'NEVER';
-  const d = new Date(iso);
-  return (
-    d.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' }) +
-    ' ' +
-    d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })
-  );
-}
+import { fmtDateTime } from '../../lib/dateFormatters.js';
+const formatDate = (iso) => fmtDateTime(iso, 'NEVER');
 
 export default function UserList() {
   const { can, tenant } = useAuth();

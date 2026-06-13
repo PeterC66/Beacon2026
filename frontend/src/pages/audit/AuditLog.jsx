@@ -10,6 +10,7 @@ import PageHeader from '../../components/PageHeader.jsx';
 import DateInput from '../../components/DateInput.jsx';
 import ScrollButtons from '../../components/ScrollButtons.jsx';
 import { ENTITY_ROUTES } from '../../lib/auditHelpers.js';
+import { fmtDateTimeSeconds } from '../../lib/dateFormatters.js';
 
 function isoToday() {
   return new Date().toISOString().slice(0, 10);
@@ -93,19 +94,6 @@ export default function AuditLog() {
     } finally {
       setDeleting(false);
     }
-  }
-
-  function formatDate(iso) {
-    if (!iso) return '';
-    const d = new Date(iso);
-    return d.toLocaleString('en-GB', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit',
-    });
   }
 
   const navLinks = [{ label: 'Home', to: '/' }];
@@ -192,7 +180,7 @@ export default function AuditLog() {
                               className="text-blue-700 hover:underline"
                               onClick={() => navigate(`/audit/${e.id}`)}
                             >
-                              {formatDate(e.created_at)}
+                              {fmtDateTimeSeconds(e.created_at)}
                             </button>
                           </td>
                           <td className="px-3 py-2 whitespace-nowrap">{e.user_name}</td>
