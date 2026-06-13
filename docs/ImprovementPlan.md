@@ -436,12 +436,34 @@ only, no behaviour change.
   - All presentation-only with state/handlers passed in from the parent; frontend suite
     green (53 files, 140 tests); lint 0 errors, Prettier clean. M2 is now fully addressed.
 
-### Chunk 11 — Frontend test quality & accessibility (C2, O5, M4 frontend half)
+### Chunk 11 — Frontend test quality & accessibility (C2, O5, M4 frontend half) ✅ Done (2026-06-13)
 - Shared mock factories; interaction tests (form submit, validation error,
   API call assertions) for ~10 critical pages using CookieConsent.test.jsx as
   the model; unit tests for shared components.
 - Keyboard accessibility for sortable headers (`<button>` or role/tabIndex/
   onKeyDown); continue the `htmlFor`/`id` label sweep.
+
+**Notes:** new shared helper `lib/a11y.js` (`clickableKeyProps`) bundles
+`role="button"` + `tabIndex={0}` + an Enter/Space `onKeyDown`. Applied to the
+shared `SortableHeader` (used by ~17 list pages; also given `aria-sort`) and to
+the six inline forename/surname split headers (MemberList, EntityMembers,
+MembershipCards, MembershipRenewals, NonRenewals, RecentMembers) — so all
+sortable headers are now keyboard-operable. `htmlFor`/`id` label sweep continued
+on VenueEditor, MemberClassEditor (with `aria-label` on the monthly-fee grid
+inputs), ChangePassword, and RoleEditor; the remaining lower-traffic pages stay
+tracked in KNOWN-ISSUES → Accessibility #1. **Test quality (C2):**
+behaviour/interaction tests added for eight critical pages — Login,
+ChangePassword (new file), VenueEditor, MemberClassEditor, RoleEditor,
+UserEditor, TransferMoney, JoinForm — covering form fill, submit→API-call
+assertions, and validation paths. **Shared-component units:** `Button`,
+`FormError`, `DateInput`, `SortableHeader`, and `lib/a11y.js` (previously
+untested). **M4 (frontend half):** new `__tests__/testUtils.jsx`
+(`renderWithRouter`/`renderAtRoute`/`authValue`) for render boilerplate — note
+`vi.mock` itself can't be centralised (hoisted per module path); `setup.js` now
+stubs `window.scrollTo`/`scrollIntoView` to silence jsdom noise on submit paths.
+Frontend suite: 53 → 59 files, 140 → 196 tests; lint 0 errors, Prettier clean.
+The RoleEditor privilege-matrix toggle-all `<th onClick>` (a non-sortable
+bulk-toggle) was left as-is — outside the sortable-header scope.
 
 ### Chunk 12 — CI & E2E improvements (T2 rest, P1, P2)
 - Coverage reporting (`@vitest/coverage-v8`) surfaced in CI.

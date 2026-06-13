@@ -9,6 +9,7 @@ import PageHeader from '../../components/PageHeader.jsx';
 import NavBar from '../../components/NavBar.jsx';
 import DateInput from '../../components/DateInput.jsx';
 import SortableHeader from '../../components/SortableHeader.jsx';
+import { clickableKeyProps } from '../../lib/a11y.js';
 import { useSortedData } from '../../hooks/useSortedData.js';
 import {
   formatShortAddress,
@@ -368,7 +369,7 @@ export default function RecentMembers() {
                     <th className={TH}>
                       <span
                         className="cursor-pointer select-none"
-                        onClick={() => onSort('forenames')}
+                        {...clickableKeyProps(() => onSort('forenames'))}
                       >
                         Name
                         <span
@@ -380,7 +381,7 @@ export default function RecentMembers() {
                       <span className="text-slate-300 mx-1">|</span>
                       <span
                         className="cursor-pointer select-none text-xs"
-                        onClick={() => onSort(SORT_SURNAME)}
+                        {...clickableKeyProps(() => onSort(SORT_SURNAME))}
                       >
                         by surname
                         <span

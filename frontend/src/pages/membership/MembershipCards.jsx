@@ -8,6 +8,7 @@ import { useAuth } from '../../context/AuthContext.jsx';
 import NavBar from '../../components/NavBar.jsx';
 import PageHeader from '../../components/PageHeader.jsx';
 import SortableHeader from '../../components/SortableHeader.jsx';
+import { clickableKeyProps } from '../../lib/a11y.js';
 import { useSortedData } from '../../hooks/useSortedData.js';
 import ScrollButtons from '../../components/ScrollButtons.jsx';
 import NoEmailIcon from '../../components/NoEmailIcon.jsx';
@@ -258,7 +259,7 @@ export default function MembershipCards() {
                       <th className="px-3 py-2 font-normal">
                         <span
                           className="cursor-pointer select-none"
-                          onClick={() => onSort('forenames')}
+                          {...clickableKeyProps(() => onSort('forenames'))}
                         >
                           Name
                           <span
@@ -270,7 +271,7 @@ export default function MembershipCards() {
                         <span className="text-slate-300 mx-1">|</span>
                         <span
                           className="cursor-pointer select-none text-xs not-italic"
-                          onClick={() => onSort(SORT_SURNAME)}
+                          {...clickableKeyProps(() => onSort(SORT_SURNAME))}
                         >
                           by surname
                           <span

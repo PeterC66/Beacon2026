@@ -101,9 +101,15 @@ export default function ChangePassword() {
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* New password */}
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">New password</label>
+            <label
+              htmlFor="cp-newPassword"
+              className="block text-sm font-medium text-slate-700 mb-1"
+            >
+              New password
+            </label>
             <div className="relative">
               <input
+                id="cp-newPassword"
                 type={showPw ? 'text' : 'password'}
                 name="newPassword"
                 value={form.newPassword}
@@ -131,9 +137,12 @@ export default function ChangePassword() {
 
           {/* Confirm */}
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Confirm</label>
+            <label htmlFor="cp-confirm" className="block text-sm font-medium text-slate-700 mb-1">
+              Confirm
+            </label>
             <div className="relative">
               <input
+                id="cp-confirm"
                 type={showConfirm ? 'text' : 'password'}
                 name="confirm"
                 value={form.confirm}
@@ -168,8 +177,11 @@ export default function ChangePassword() {
 
           {/* Question */}
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Question</label>
+            <label htmlFor="cp-question" className="block text-sm font-medium text-slate-700 mb-1">
+              Question
+            </label>
             <input
+              id="cp-question"
               type="text"
               name="question"
               value={form.question}
@@ -181,8 +193,11 @@ export default function ChangePassword() {
 
           {/* Answer */}
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Answer</label>
+            <label htmlFor="cp-answer" className="block text-sm font-medium text-slate-700 mb-1">
+              Answer
+            </label>
             <input
+              id="cp-answer"
               type="text"
               name="answer"
               value={form.answer}

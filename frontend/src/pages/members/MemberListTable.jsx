@@ -6,6 +6,7 @@
 
 import SortableHeader from '../../components/SortableHeader.jsx';
 import NoEmailIcon from '../../components/NoEmailIcon.jsx';
+import { clickableKeyProps } from '../../lib/a11y.js';
 import { formatShortAddress, isSubscriptionOverdue } from '../../lib/memberFormatters.js';
 import { formatMemberName } from '../../hooks/usePreferences.js';
 
@@ -79,7 +80,10 @@ export default function MemberListTable({
                 className="px-3 py-2 font-normal"
               />
               <th className="px-3 py-2 font-normal">
-                <span className="cursor-pointer select-none" onClick={() => onSort('forenames')}>
+                <span
+                  className="cursor-pointer select-none"
+                  {...clickableKeyProps(() => onSort('forenames'))}
+                >
                   Name
                   <span
                     className={`ml-1 text-xs ${sortKey === 'forenames' ? 'text-blue-600' : 'text-slate-300'}`}
@@ -90,7 +94,7 @@ export default function MemberListTable({
                 <span className="text-slate-300 mx-1">|</span>
                 <span
                   className="cursor-pointer select-none text-xs not-italic"
-                  onClick={() => onSort(sortSurname)}
+                  {...clickableKeyProps(() => onSort(sortSurname))}
                 >
                   by surname
                   <span

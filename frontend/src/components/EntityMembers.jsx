@@ -19,6 +19,7 @@ import { formatShortAddress, isSubscriptionOverdue } from '../lib/memberFormatte
 import { formatMemberName } from '../hooks/usePreferences.js';
 import { SS_EMAIL_COMPOSE_MEMBER_IDS } from '../lib/storageKeys.js';
 import { ROUTES } from '../lib/routes.js';
+import { clickableKeyProps } from '../lib/a11y.js';
 
 const BASE_DL_FIELDS = [
   { key: 'membership_number', label: 'Membership No', default: true },
@@ -365,7 +366,10 @@ export default function EntityMembers({ entityId, api, entityType = 'group' }) {
                   className="px-3 py-2 font-normal"
                 />
                 <th className="px-3 py-2 font-normal">
-                  <span className="cursor-pointer select-none" onClick={() => onSort('forenames')}>
+                  <span
+                    className="cursor-pointer select-none"
+                    {...clickableKeyProps(() => onSort('forenames'))}
+                  >
                     Name
                     <span
                       className={`ml-1 text-xs ${sortKey === 'forenames' ? 'text-blue-600' : 'text-slate-300'}`}
@@ -376,7 +380,7 @@ export default function EntityMembers({ entityId, api, entityType = 'group' }) {
                   <span className="text-slate-300 mx-1">|</span>
                   <span
                     className="cursor-pointer select-none text-xs not-italic"
-                    onClick={() => onSort(SORT_SURNAME)}
+                    {...clickableKeyProps(() => onSort(SORT_SURNAME))}
                   >
                     by surname
                     <span
