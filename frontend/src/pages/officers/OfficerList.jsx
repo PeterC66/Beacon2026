@@ -8,6 +8,9 @@ import { useAuth } from '../../context/AuthContext.jsx';
 import NavBar from '../../components/NavBar.jsx';
 import PageHeader from '../../components/PageHeader.jsx';
 import ScrollButtons from '../../components/ScrollButtons.jsx';
+import { SS_EMAIL_COMPOSE_MEMBER_IDS } from '../../lib/storageKeys.js';
+import { ROUTES } from '../../lib/routes.js';
+import FormError from '../../components/FormError.jsx';
 
 const BLANK = { name: '', memberId: '', officeEmail: '', notifyOnlineJoin: false };
 
@@ -67,8 +70,8 @@ export default function OfficerList() {
 
   function sendEmail() {
     const memberIds = list.filter((o) => selected.has(o.id) && o.member_id).map((o) => o.member_id);
-    sessionStorage.setItem('emailComposeMemberIds', JSON.stringify(memberIds));
-    navigate('/email/compose');
+    sessionStorage.setItem(SS_EMAIL_COMPOSE_MEMBER_IDS, JSON.stringify(memberIds));
+    navigate(ROUTES.EMAIL_COMPOSE);
   }
 
   useEffect(() => {
@@ -180,7 +183,7 @@ export default function OfficerList() {
             maxLength={100}
             className={formErr.name ? errCls : inputCls}
           />
-          {formErr.name && <p className="text-xs text-red-600 mt-0.5">{formErr.name}</p>}
+          <FormError error={formErr.name} size="xs" />
         </td>
         <td className="px-3 py-2">
           <select
@@ -207,9 +210,7 @@ export default function OfficerList() {
             maxLength={200}
             className={formErr.officeEmail ? errCls : inputCls}
           />
-          {formErr.officeEmail && (
-            <p className="text-xs text-red-600 mt-0.5">{formErr.officeEmail}</p>
-          )}
+          <FormError error={formErr.officeEmail} size="xs" />
         </td>
         <td className="px-3 py-2 text-center">
           <input

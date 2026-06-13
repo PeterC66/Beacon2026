@@ -9,6 +9,7 @@ import { useAuth } from '../../context/AuthContext.jsx';
 import NavBar from '../../components/NavBar.jsx';
 import PageHeader from '../../components/PageHeader.jsx';
 import { FINANCE_PAYMENT_METHODS } from '../../lib/constants.js';
+import { ROUTES } from '../../lib/routes.js';
 
 const PAYMENT_METHODS = ['', ...FINANCE_PAYMENT_METHODS];
 
@@ -53,7 +54,7 @@ export default function PaymentMethodDefaults() {
     setError(null);
     try {
       await financeApi.setPaymentMethodDefaults({ defaultMethod, mappings });
-      navigate('/finance/accounts');
+      navigate(ROUTES.FINANCE_ACCOUNTS);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -158,7 +159,7 @@ export default function PaymentMethodDefaults() {
               </button>
               <button
                 type="button"
-                onClick={() => navigate('/finance/accounts')}
+                onClick={() => navigate(ROUTES.FINANCE_ACCOUNTS)}
                 className="border border-slate-300 text-slate-700 hover:bg-slate-50 rounded px-5 py-2 text-sm transition-colors"
               >
                 Cancel
@@ -168,7 +169,7 @@ export default function PaymentMethodDefaults() {
           {!canChange && (
             <button
               type="button"
-              onClick={() => navigate('/finance/accounts')}
+              onClick={() => navigate(ROUTES.FINANCE_ACCOUNTS)}
               className="border border-slate-300 text-slate-700 hover:bg-slate-50 rounded px-5 py-2 text-sm transition-colors"
             >
               Back

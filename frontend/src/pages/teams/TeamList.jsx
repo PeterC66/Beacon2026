@@ -9,6 +9,8 @@ import PageHeader from '../../components/PageHeader.jsx';
 import SortableHeader from '../../components/SortableHeader.jsx';
 import ScrollButtons from '../../components/ScrollButtons.jsx';
 import { useSortedData } from '../../hooks/useSortedData.js';
+import { SS_EMAIL_COMPOSE_MEMBER_IDS } from '../../lib/storageKeys.js';
+import { ROUTES } from '../../lib/routes.js';
 
 const ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
 
@@ -109,8 +111,8 @@ export default function TeamList() {
         setBulkResult({ type: 'error', msg: 'No leaders found for the selected teams.' });
         return;
       }
-      sessionStorage.setItem('emailComposeMemberIds', JSON.stringify([...leaderMemberIds]));
-      navigate('/email/compose');
+      sessionStorage.setItem(SS_EMAIL_COMPOSE_MEMBER_IDS, JSON.stringify([...leaderMemberIds]));
+      navigate(ROUTES.EMAIL_COMPOSE);
       return;
     }
     if (bulkAction === 'add_members_to_poll') {

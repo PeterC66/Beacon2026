@@ -11,6 +11,8 @@ import {
   settings as settingsApi,
   publicApi,
 } from '../../lib/api.js';
+import { SS_EMAIL_COMPOSE_MEMBER_IDS } from '../../lib/storageKeys.js';
+import { ROUTES } from '../../lib/routes.js';
 import { MEMBER_PAYMENT_METHODS as PAYMENT_METHODS } from '../../lib/constants.js';
 import { isValidUKPostcode, validatePhone } from '../../lib/validation.js';
 import { useAuth } from '../../context/AuthContext.jsx';
@@ -22,6 +24,7 @@ import GoToMemberButton from '../../components/GoToMemberButton.jsx';
 import RecordTimestamp from '../../components/RecordTimestamp.jsx';
 import { useUnsavedChanges } from '../../hooks/useUnsavedChanges.js';
 import { scrollToFirstFieldError } from '../../lib/scrollToError.js';
+import FormError from '../../components/FormError.jsx';
 
 function todayIso() {
   return new Date().toISOString().slice(0, 10);
@@ -858,7 +861,7 @@ export default function MemberEditor() {
     setDeleting(true);
     try {
       await membersApi.delete(id);
-      navigate('/members');
+      navigate(ROUTES.MEMBERS);
     } catch (err) {
       setError(err.message);
       setDeleting(false);
@@ -976,7 +979,6 @@ export default function MemberEditor() {
     'w-full border border-red-400 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-400';
   const labelCls = 'block text-sm font-medium text-slate-700 mb-1';
   const sectionCls = 'bg-white/90 rounded-lg shadow-sm p-4 sm:p-6';
-  const errMsgCls = 'text-sm text-red-600 mt-1 font-medium';
 
   function ic(field) {
     return fieldErrors[field] ? inputErrCls : inputCls;
@@ -1033,7 +1035,7 @@ export default function MemberEditor() {
                       </option>
                     ))}
                   </select>
-                  {fieldErrors.statusId && <p className={errMsgCls}>{fieldErrors.statusId}</p>}
+                  <FormError error={fieldErrors.statusId} />
                 </div>
               )}
               <div>
@@ -1055,7 +1057,7 @@ export default function MemberEditor() {
                     </option>
                   ))}
                 </select>
-                {fieldErrors.classId && <p className={errMsgCls}>{fieldErrors.classId}</p>}
+                <FormError error={fieldErrors.classId} />
               </div>
               {!isNew && (
                 <div>
@@ -1070,7 +1072,7 @@ export default function MemberEditor() {
                     onBlur={() => handleBlur('joinedOn')}
                     className={ic('joinedOn')}
                   />
-                  {fieldErrors.joinedOn && <p className={errMsgCls}>{fieldErrors.joinedOn}</p>}
+                  <FormError error={fieldErrors.joinedOn} />
                 </div>
               )}
               {!isNew && (
@@ -1116,7 +1118,7 @@ export default function MemberEditor() {
                     </option>
                   ))}
                 </select>
-                {fieldErrors.title && <p className={errMsgCls}>{fieldErrors.title}</p>}
+                <FormError error={fieldErrors.title} />
               </div>
               <div>
                 <label htmlFor="member-forenames" className={labelCls}>
@@ -1131,7 +1133,7 @@ export default function MemberEditor() {
                   onBlur={() => handleBlur('forenames')}
                   className={ic('forenames')}
                 />
-                {fieldErrors.forenames && <p className={errMsgCls}>{fieldErrors.forenames}</p>}
+                <FormError error={fieldErrors.forenames} />
               </div>
               <div>
                 <label htmlFor="member-surname" className={labelCls}>
@@ -1146,7 +1148,7 @@ export default function MemberEditor() {
                   onBlur={() => handleBlur('surname')}
                   className={ic('surname')}
                 />
-                {fieldErrors.surname && <p className={errMsgCls}>{fieldErrors.surname}</p>}
+                <FormError error={fieldErrors.surname} />
               </div>
               <div>
                 <label htmlFor="member-known-as" className={labelCls}>
@@ -1212,8 +1214,8 @@ export default function MemberEditor() {
                       <button
                         type="button"
                         onClick={() => {
-                          sessionStorage.setItem('emailComposeMemberIds', JSON.stringify([id]));
-                          navigate('/email/compose');
+                          sessionStorage.setItem(SS_EMAIL_COMPOSE_MEMBER_IDS, JSON.stringify([id]));
+                          navigate(ROUTES.EMAIL_COMPOSE);
                         }}
                         className="border border-blue-300 text-blue-600 hover:bg-blue-50 rounded px-3 py-2 text-sm transition-colors whitespace-nowrap"
                         title="Press to send an email to this member"
@@ -1237,7 +1239,7 @@ export default function MemberEditor() {
                   onBlur={() => handleBlur('mobile')}
                   className={ic('mobile')}
                 />
-                {fieldErrors.mobile && <p className={errMsgCls}>{fieldErrors.mobile}</p>}
+                <FormError error={fieldErrors.mobile} />
               </div>
               {isAssociate && (
                 <div>
@@ -1564,9 +1566,7 @@ export default function MemberEditor() {
                       onChange={(e) => setNp('forenames', e.target.value)}
                       className={fieldErrors.npForenames ? inputErrCls : inputCls}
                     />
-                    {fieldErrors.npForenames && (
-                      <p className={errMsgCls}>{fieldErrors.npForenames}</p>
-                    )}
+                    <FormError error={fieldErrors.npForenames} />
                   </div>
                   <div>
                     <label htmlFor="np-surname" className={labelCls}>
@@ -1580,7 +1580,7 @@ export default function MemberEditor() {
                       onChange={(e) => setNp('surname', e.target.value)}
                       className={fieldErrors.npSurname ? inputErrCls : inputCls}
                     />
-                    {fieldErrors.npSurname && <p className={errMsgCls}>{fieldErrors.npSurname}</p>}
+                    <FormError error={fieldErrors.npSurname} />
                   </div>
                   <div>
                     <label htmlFor="np-known-as" className={labelCls}>
@@ -1682,9 +1682,7 @@ export default function MemberEditor() {
                       onChange={(v) => setNp('nextRenewal', v)}
                       className={fieldErrors.npNextRenewal ? ic('npNextRenewal') : inputCls}
                     />
-                    {fieldErrors.npNextRenewal && (
-                      <p className={errMsgCls}>{fieldErrors.npNextRenewal}</p>
-                    )}
+                    <FormError error={fieldErrors.npNextRenewal} />
                   </div>
                   <div>
                     <label htmlFor="np-gift-aid-from" className={labelCls}>
@@ -1722,7 +1720,7 @@ export default function MemberEditor() {
                   onBlur={() => handleBlur('houseNo')}
                   className={ic('houseNo')}
                 />
-                {fieldErrors.houseNo && <p className={errMsgCls}>{fieldErrors.houseNo}</p>}
+                <FormError error={fieldErrors.houseNo} />
               </div>
               <div>
                 <label htmlFor="member-street" className={labelCls}>
@@ -1805,7 +1803,7 @@ export default function MemberEditor() {
                   className={ic('postcode')}
                   maxLength={10}
                 />
-                {fieldErrors.postcode && <p className={errMsgCls}>{fieldErrors.postcode}</p>}
+                <FormError error={fieldErrors.postcode} />
               </div>
               <div>
                 <label htmlFor="member-telephone" className={labelCls}>
@@ -1820,7 +1818,7 @@ export default function MemberEditor() {
                   onBlur={() => handleBlur('telephone')}
                   className={ic('telephone')}
                 />
-                {fieldErrors.telephone && <p className={errMsgCls}>{fieldErrors.telephone}</p>}
+                <FormError error={fieldErrors.telephone} />
               </div>
             </div>
             {!isNew && (

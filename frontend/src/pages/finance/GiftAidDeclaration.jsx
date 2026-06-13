@@ -9,6 +9,9 @@ import NavBar from '../../components/NavBar.jsx';
 import PageHeader from '../../components/PageHeader.jsx';
 import SortableHeader from '../../components/SortableHeader.jsx';
 import { useSortedData } from '../../hooks/useSortedData.js';
+import { SS_EMAIL_COMPOSE_MEMBER_IDS, SS_EMAIL_GIFT_AID_DATES } from '../../lib/storageKeys.js';
+import { ROUTES } from '../../lib/routes.js';
+import { fmtDate } from '../../lib/dateFormatters.js';
 
 const inputCls =
   'border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500';
@@ -17,14 +20,6 @@ const btnPrimary =
 const btnDanger = 'border border-red-300 text-red-600 hover:bg-red-50 rounded px-5 py-2 text-sm';
 
 const CURRENT_YEAR = new Date().getFullYear();
-
-function fmtDate(d) {
-  if (!d) return '';
-  const s = String(d).slice(0, 10);
-  const [y, m, day] = s.split('-');
-  if (!y || !m || !day) return '';
-  return `${day}/${m}/${y}`;
-}
 
 function fmtAmt(n) {
   return Number(n).toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -157,9 +152,12 @@ export default function GiftAidDeclaration() {
       ...new Set(rows.filter((r) => selected.has(rowKey(r))).map((r) => r.member_id)),
     ];
     // Store member IDs and GA context for email tokens
-    sessionStorage.setItem('emailComposeMemberIds', JSON.stringify(memberIds));
-    sessionStorage.setItem('emailGiftAidDates', JSON.stringify({ from: yearStart, to: yearEnd }));
-    navigate('/email/compose');
+    sessionStorage.setItem(SS_EMAIL_COMPOSE_MEMBER_IDS, JSON.stringify(memberIds));
+    sessionStorage.setItem(
+      SS_EMAIL_GIFT_AID_DATES,
+      JSON.stringify({ from: yearStart, to: yearEnd }),
+    );
+    navigate(ROUTES.EMAIL_COMPOSE);
   }
 
   // ─── Sorted data ────────────────────────────────────────────────────────

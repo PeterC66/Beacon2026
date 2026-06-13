@@ -7,6 +7,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext.jsx';
 import { auth as authApi } from '../lib/api.js';
 import BeaconLogo from '../components/BeaconLogo.jsx';
+import FormError from '../components/FormError.jsx';
 
 const inputCls =
   'w-full border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500';
@@ -125,9 +126,7 @@ export default function ChangePassword() {
             {form.newPassword && passwordValid && (
               <p className="text-xs text-green-700 mt-1">Password meets requirements</p>
             )}
-            {errors.newPassword && (
-              <p className="text-xs text-red-600 mt-1">{errors.newPassword}</p>
-            )}
+            <FormError error={errors.newPassword} size="xs" />
           </div>
 
           {/* Confirm */}
@@ -151,7 +150,7 @@ export default function ChangePassword() {
                 {showConfirm ? '\u{1F648}' : '\u{1F441}'}
               </button>
             </div>
-            {errors.confirm && <p className="text-xs text-red-600 mt-1">{errors.confirm}</p>}
+            <FormError error={errors.confirm} size="xs" />
             {!errors.confirm && passwordsMatch && (
               <p className="text-xs text-green-700 mt-1">Passwords match</p>
             )}
@@ -191,7 +190,7 @@ export default function ChangePassword() {
               maxLength={200}
               className={errors.answer ? errInCls : inputCls}
             />
-            {errors.answer && <p className="text-xs text-red-600 mt-1">{errors.answer}</p>}
+            <FormError error={errors.answer} size="xs" />
           </div>
 
           <button

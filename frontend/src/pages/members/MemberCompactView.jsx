@@ -13,55 +13,11 @@ import {
   polls as pollsApi,
   settings as settingsApi,
 } from '../../lib/api.js';
+import { ROUTES } from '../../lib/routes.js';
 import { useAuth } from '../../context/AuthContext.jsx';
 import NavBar from '../../components/NavBar.jsx';
 import PageHeader from '../../components/PageHeader.jsx';
-
-function fmtDate(iso) {
-  if (!iso) return '—';
-  const d = new Date(iso);
-  const day = d.getUTCDate();
-  const months = [
-    'Jan',
-    'Feb',
-    'Mar',
-    'Apr',
-    'May',
-    'Jun',
-    'Jul',
-    'Aug',
-    'Sep',
-    'Oct',
-    'Nov',
-    'Dec',
-  ];
-  return `${String(day).padStart(2, '0')} ${months[d.getUTCMonth()]} ${d.getUTCFullYear()}`;
-}
-
-function fmtTimestamp(ts) {
-  if (!ts) return '';
-  const d = new Date(ts);
-  const months = [
-    'Jan',
-    'Feb',
-    'Mar',
-    'Apr',
-    'May',
-    'Jun',
-    'Jul',
-    'Aug',
-    'Sep',
-    'Oct',
-    'Nov',
-    'Dec',
-  ];
-  const day = d.getDate();
-  const mon = months[d.getMonth()];
-  const yr = d.getFullYear();
-  const hh = String(d.getHours()).padStart(2, '0');
-  const mm = String(d.getMinutes()).padStart(2, '0');
-  return `${day} ${mon} ${yr} ${hh}:${mm}`;
-}
+import { fmtDateUTC as fmtDate, fmtTimestamp } from '../../lib/dateFormatters.js';
 
 // Inline field: label beside value, compact
 function Field({ label, value, className = '' }) {
@@ -430,7 +386,7 @@ export default function MemberCompactView() {
             Edit Member
           </Link>
           <Link
-            to="/members"
+            to={ROUTES.MEMBERS}
             className="border border-slate-300 text-slate-600 hover:bg-slate-50 rounded px-4 py-1.5 text-sm transition-colors"
           >
             Back to List

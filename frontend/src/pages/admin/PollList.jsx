@@ -6,6 +6,7 @@ import { polls as pollsApi } from '../../lib/api.js';
 import { useAuth } from '../../context/AuthContext.jsx';
 import NavBar from '../../components/NavBar.jsx';
 import PageHeader from '../../components/PageHeader.jsx';
+import FormError from '../../components/FormError.jsx';
 
 const BLANK = { name: '', description: '', memberCanSet: false };
 
@@ -145,7 +146,7 @@ export default function PollList() {
             maxLength={100}
             autoFocus
           />
-          {formErr.name && <p className="text-sm text-red-600 mt-1">{formErr.name}</p>}
+          <FormError error={formErr.name} />
         </td>
         <td className="px-3 py-2">
           <input
@@ -157,9 +158,7 @@ export default function PollList() {
             className={formErr.description ? errCls : inputCls}
             maxLength={500}
           />
-          {formErr.description && (
-            <p className="text-sm text-red-600 mt-1">{formErr.description}</p>
-          )}
+          <FormError error={formErr.description} />
         </td>
         <td className="px-3 py-2 text-center">
           <input

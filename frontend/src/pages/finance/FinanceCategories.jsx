@@ -1,7 +1,8 @@
 // beacon2/frontend/src/pages/finance/FinanceCategories.jsx
 // Finance categories management — 8.6 Finance Set-up, section 2.
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
+import { useAsyncLoad } from '../../hooks/useAsyncLoad.js';
 import { finance as financeApi } from '../../lib/api.js';
 import { useAuth } from '../../context/AuthContext.jsx';
 import NavBar from '../../components/NavBar.jsx';
@@ -18,29 +19,17 @@ const btnDanger =
 
 export default function FinanceCategories() {
   const { can, tenant } = useAuth();
-  const [categories, setCategories] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const {
+    data: categories,
+    setData: setCategories,
+    loading,
+    error,
+  } = useAsyncLoad(() => financeApi.listCategories(), [], { initialData: [] });
   const [newName, setNewName] = useState('');
   const [adding, setAdding] = useState(false);
   const [editId, setEditId] = useState(null);
   const [editName, setEditName] = useState('');
   const [saving, setSaving] = useState(false);
-
-  useEffect(() => {
-    load();
-  }, []);
-
-  async function load() {
-    setLoading(true);
-    try {
-      setCategories(await financeApi.listCategories());
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  }
 
   async function handleAdd(e) {
     e.preventDefault();

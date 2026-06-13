@@ -11,6 +11,11 @@ import {
   teams as teamsApi,
   settings as settingsApi,
 } from '../../lib/api.js';
+import {
+  SS_EMAIL_COMPOSE_MEMBER_IDS,
+  SS_LETTER_COMPOSE_MEMBER_IDS,
+} from '../../lib/storageKeys.js';
+import { ROUTES } from '../../lib/routes.js';
 
 const DOWNLOAD_FIELDS = [
   { key: 'membership_number', label: 'Membership No', default: true },
@@ -233,13 +238,13 @@ export default function MemberList() {
   async function handleBulkDo() {
     if (selected.size === 0) return;
     if (bulkAction === 'send_email') {
-      sessionStorage.setItem('emailComposeMemberIds', JSON.stringify([...selected]));
-      navigate('/email/compose');
+      sessionStorage.setItem(SS_EMAIL_COMPOSE_MEMBER_IDS, JSON.stringify([...selected]));
+      navigate(ROUTES.EMAIL_COMPOSE);
       return;
     }
     if (bulkAction === 'send_letter') {
-      sessionStorage.setItem('letterComposeMemberIds', JSON.stringify([...selected]));
-      navigate('/letters/compose');
+      sessionStorage.setItem(SS_LETTER_COMPOSE_MEMBER_IDS, JSON.stringify([...selected]));
+      navigate(ROUTES.LETTERS_COMPOSE);
       return;
     }
     if (bulkAction === 'add_to_poll') {

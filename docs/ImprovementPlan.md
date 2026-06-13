@@ -295,13 +295,40 @@ exercised by E2E) is now stated explicitly in CLAUDE-REFERENCE §12. Backend sui
 45 → 52 files, 593 tests green; lint + format clean. This completes the R12
 remainder, so CODEBASE-RECOMMENDATIONS can be marked fully done.
 
-### Chunk 8 — Frontend deduplication (M3, M5, M6, N4, N5)
+### Chunk 8 — Frontend deduplication (M3, M5, M6, N4, N5) ✅ Done (2026-06-13)
 - `useAsyncLoad()` hook; `lib/dateFormatters.js`; constants modules for
   sessionStorage keys, routes, and privilege strings; shared `FormError`.
 - Move the three nested component definitions out of their parents
   (LetterCompose, EventFinancials, GroupRecord).
 - Convert derived-state `useState` to `useMemo` where found.
 - Adopt incrementally — start with the worst 10 pages, don't churn all 85.
+
+**Notes:** New shared modules: `hooks/useAsyncLoad.js`, `lib/dateFormatters.js`,
+`lib/storageKeys.js`, `lib/routes.js`, `components/FormError.jsx` (all documented
+in CLAUDE-REFERENCE §11).
+- **N4 (date formatters):** ~25 inline `fmtDate`/`fmtTime`/`fmtTimestamp`/
+  `formatDate` helpers across pages and components replaced with faithfully-matched
+  shared formatters (call sites unchanged via aliased imports). `AuditRecord`'s
+  unique short-month-with-seconds format left local (not a duplicate).
+- **N5 (magic strings):** all sessionStorage/localStorage keys hoisted to
+  `lib/storageKeys.js`; the frequently cross-referenced route targets to
+  `lib/routes.js` (`ROUTES`). **Privilege strings deliberately not centralised**
+  (owner decision via AskUserQuestion): `can('resource','action')` reads fine and
+  hoisting ~90 sites adds indirection for no safety gain.
+- **M3 (`useAsyncLoad` + `FormError`):** `FormError` adopted across all 8 form
+  pages with the inline field-error pattern (~50 sites). `useAsyncLoad` adopted in
+  the 8 clean single-payload pages (RoleList, FinanceCategories, EventTypeList,
+  MemberClassList, MemberStatusList, FacultyList, VenueList, EventFinancials);
+  multi-load and filter-on-button pages left as hand-rolled effects because the
+  memoised `reload` would capture stale state (see CLAUDE-REFERENCE §11).
+- **M5 (nested components):** already resolved in an earlier session —
+  `GroupDetails`, `ToolbarButton`/`EditorToolbar` and `TransactionSection` are all
+  already module-top-level, not nested. No change needed.
+- **M6 (derived `useState` → `useMemo`):** also already resolved — `MemberList`'s
+  derived values (`hasCfLabels`, `cfLabelNames`) are computed inline as plain
+  `const`s and the sorted list goes through `useSortedData`'s internal `useMemo`.
+  No remaining derived-state-set-in-`useEffect` anti-pattern was found.
+- Frontend suite green throughout (53 files, 140 tests); lint 0 errors, Prettier clean.
 
 ### Chunk 9 — Split oversized backend routes (M1)
 One file per session if needed, starting with `backup.js` (export vs restore)

@@ -8,6 +8,7 @@ import RequiredMark from '../../components/RequiredMark.jsx';
 import { scrollToFirstFieldError } from '../../lib/scrollToError.js';
 import PortalVersion from '../../components/PortalVersion.jsx';
 import PasswordInput from '../../components/PasswordInput.jsx';
+import FormError from '../../components/FormError.jsx';
 
 export default function PortalRegister() {
   const { slug } = useParams();
@@ -128,11 +129,7 @@ export default function PortalRegister() {
                 onChange={(e) => handleChange('membershipNumber', e.target.value)}
                 className={fieldCss}
               />
-              {fieldErrors.membershipNumber && (
-                <p className="text-sm text-red-600 mt-1 font-medium">
-                  {fieldErrors.membershipNumber}
-                </p>
-              )}
+              <FormError error={fieldErrors.membershipNumber} />
             </div>
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">
@@ -145,9 +142,7 @@ export default function PortalRegister() {
                 onChange={(e) => handleChange('forename', e.target.value)}
                 className={fieldCss}
               />
-              {fieldErrors.forename && (
-                <p className="text-sm text-red-600 mt-1 font-medium">{fieldErrors.forename}</p>
-              )}
+              <FormError error={fieldErrors.forename} />
             </div>
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">
@@ -160,9 +155,7 @@ export default function PortalRegister() {
                 onChange={(e) => handleChange('surname', e.target.value)}
                 className={fieldCss}
               />
-              {fieldErrors.surname && (
-                <p className="text-sm text-red-600 mt-1 font-medium">{fieldErrors.surname}</p>
-              )}
+              <FormError error={fieldErrors.surname} />
             </div>
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">
@@ -175,9 +168,7 @@ export default function PortalRegister() {
                 onChange={(e) => handleChange('postcode', e.target.value.toUpperCase())}
                 className={fieldCss}
               />
-              {fieldErrors.postcode && (
-                <p className="text-sm text-red-600 mt-1 font-medium">{fieldErrors.postcode}</p>
-              )}
+              <FormError error={fieldErrors.postcode} />
             </div>
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">
@@ -191,9 +182,7 @@ export default function PortalRegister() {
                 className={fieldCss}
                 autoComplete="email"
               />
-              {fieldErrors.email && (
-                <p className="text-sm text-red-600 mt-1 font-medium">{fieldErrors.email}</p>
-              )}
+              <FormError error={fieldErrors.email} />
             </div>
           </div>
 
@@ -214,9 +203,7 @@ export default function PortalRegister() {
                   className={fieldCss}
                   autoComplete="new-password"
                 />
-                {fieldErrors.password && (
-                  <p className="text-sm text-red-600 mt-1 font-medium">{fieldErrors.password}</p>
-                )}
+                <FormError error={fieldErrors.password} />
               </div>
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">
@@ -229,11 +216,7 @@ export default function PortalRegister() {
                   className={fieldCss}
                   autoComplete="new-password"
                 />
-                {fieldErrors.confirmPassword && (
-                  <p className="text-sm text-red-600 mt-1 font-medium">
-                    {fieldErrors.confirmPassword}
-                  </p>
-                )}
+                <FormError error={fieldErrors.confirmPassword} />
               </div>
             </div>
           </fieldset>

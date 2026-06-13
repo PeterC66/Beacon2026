@@ -8,16 +8,7 @@ import { useAuth } from '../../context/AuthContext.jsx';
 import NavBar from '../../components/NavBar.jsx';
 import PageHeader from '../../components/PageHeader.jsx';
 import ScrollButtons from '../../components/ScrollButtons.jsx';
-
-function fmtDateTime(ts) {
-  if (!ts) return '';
-  const d = new Date(ts);
-  return (
-    d.toLocaleDateString('en-GB') +
-    ' ' +
-    d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })
-  );
-}
+import { fmtDateTime } from '../../lib/dateFormatters.js';
 
 export default function EmailDelivery() {
   const { tenant } = useAuth();

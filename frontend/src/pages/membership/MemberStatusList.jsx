@@ -2,7 +2,8 @@
 // Membership statuses — locked system statuses shown read-only;
 // custom statuses can be added, edited inline, and deleted.
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
+import { useAsyncLoad } from '../../hooks/useAsyncLoad.js';
 import { memberStatuses as api } from '../../lib/api.js';
 import { useAuth } from '../../context/AuthContext.jsx';
 import NavBar from '../../components/NavBar.jsx';
@@ -10,30 +11,19 @@ import PageHeader from '../../components/PageHeader.jsx';
 
 export default function MemberStatusList() {
   const { can, tenant } = useAuth();
-  const [statuses, setStatuses] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const {
+    data: statuses,
+    setData: setStatuses,
+    loading,
+    error,
+    setError,
+  } = useAsyncLoad(() => api.list(), [], { initialData: [] });
   const [newName, setNewName] = useState('');
   const [adding, setAdding] = useState(false);
   const [editId, setEditId] = useState(null); // id of row being edited inline
   const [editName, setEditName] = useState('');
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(null);
-
-  useEffect(() => {
-    load();
-  }, []);
-
-  async function load() {
-    setLoading(true);
-    try {
-      setStatuses(await api.list());
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  }
 
   async function handleAdd(e) {
     e.preventDefault();
