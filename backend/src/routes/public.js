@@ -17,7 +17,7 @@ import { generateSingleCardPdf } from './membershipCards.js';
 import { initiatePayment, verifyPaymentNotification } from '../utils/paypal.js';
 import { isFeatureEnabled } from '../middleware/requireFeature.js';
 import { logAudit } from '../utils/audit.js';
-import portalRoutes from './portal.js';
+import portalRoutes from './portal/index.js';
 
 const router = Router();
 
