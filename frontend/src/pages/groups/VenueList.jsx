@@ -1,7 +1,8 @@
 // beacon2/frontend/src/pages/groups/VenueList.jsx
 // List of group venues (5.7)
 
-import { useState, useEffect, useRef } from 'react';
+import { useRef } from 'react';
+import { useAsyncLoad } from '../../hooks/useAsyncLoad.js';
 import { Link } from 'react-router-dom';
 import { venues as venuesApi } from '../../lib/api.js';
 import { useAuth } from '../../context/AuthContext.jsx';
@@ -13,31 +14,16 @@ import { useSortedData } from '../../hooks/useSortedData.js';
 
 export default function VenueList() {
   const { can, tenant } = useAuth();
-  const [list, setList] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const {
+    data: list,
+    loading,
+    error,
+  } = useAsyncLoad(() => venuesApi.list(), [], { initialData: [] });
   const tableRef = useRef(null);
 
   const { sorted, sortKey, sortDir, onSort } = useSortedData(list, 'name');
 
   const canCreate = can('group_venues', 'create');
-
-  useEffect(() => {
-    load();
-  }, []);
-
-  async function load() {
-    setLoading(true);
-    setError(null);
-    try {
-      const data = await venuesApi.list();
-      setList(data);
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  }
 
   const navLinks = [
     { label: 'Home', to: '/' },

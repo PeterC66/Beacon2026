@@ -1,7 +1,8 @@
 // beacon2/frontend/src/pages/settings/EventTypeList.jsx
 // Manage event types for non-group events (e.g. Open Meetings, Social Events).
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
+import { useAsyncLoad } from '../../hooks/useAsyncLoad.js';
 import { eventTypes as eventTypesApi } from '../../lib/api.js';
 import { useAuth } from '../../context/AuthContext.jsx';
 import NavBar from '../../components/NavBar.jsx';
@@ -10,9 +11,13 @@ import PageHeader from '../../components/PageHeader.jsx';
 export default function EventTypeList() {
   const { can, tenant } = useAuth();
 
-  const [list, setList] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const {
+    data: list,
+    setData: setList,
+    loading,
+    error,
+    setError,
+  } = useAsyncLoad(() => eventTypesApi.list(), [], { initialData: [] });
 
   // Inline edit
   const [editingId, setEditingId] = useState(null);
@@ -30,22 +35,6 @@ export default function EventTypeList() {
   const canChange = can('event_types', 'change');
   const canCreate = can('event_types', 'create');
   const canDelete = can('event_types', 'delete');
-
-  useEffect(() => {
-    load();
-  }, []);
-
-  async function load() {
-    setLoading(true);
-    setError(null);
-    try {
-      setList(await eventTypesApi.list());
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  }
 
   function startEdit(et) {
     setEditingId(et.id);

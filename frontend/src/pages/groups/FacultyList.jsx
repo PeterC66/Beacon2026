@@ -1,7 +1,8 @@
 // beacon2/frontend/src/pages/groups/FacultyList.jsx
 // Manage group faculties (5.8)
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
+import { useAsyncLoad } from '../../hooks/useAsyncLoad.js';
 import { faculties as facultiesApi } from '../../lib/api.js';
 import { useAuth } from '../../context/AuthContext.jsx';
 import NavBar from '../../components/NavBar.jsx';
@@ -12,9 +13,13 @@ import { useSortedData } from '../../hooks/useSortedData.js';
 export default function FacultyList() {
   const { can, tenant } = useAuth();
 
-  const [list, setList] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const {
+    data: list,
+    setData: setList,
+    loading,
+    error,
+    setError,
+  } = useAsyncLoad(() => facultiesApi.list(), [], { initialData: [] });
 
   // Inline edit state
   const [editingId, setEditingId] = useState(null);
@@ -32,23 +37,6 @@ export default function FacultyList() {
   const canChange = can('group_faculties', 'change');
   const canCreate = can('group_faculties', 'create');
   const canDelete = can('group_faculties', 'delete');
-
-  useEffect(() => {
-    load();
-  }, []);
-
-  async function load() {
-    setLoading(true);
-    setError(null);
-    try {
-      const data = await facultiesApi.list();
-      setList(data);
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  }
 
   function startEdit(f) {
     setEditingId(f.id);
