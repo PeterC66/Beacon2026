@@ -2,8 +2,8 @@
 // Shared WHERE-clause builders for calendar / group-event queries.
 //
 // The same filter-building block was previously duplicated verbatim across the
-// three calendar.js endpoints (events / events/pdf / events/excel) and the two
-// portal.js calendar endpoints (calendar / calendar/pdf). These helpers are the
+// three calendar events endpoints (events / events/pdf / events/excel) and the
+// two portal calendar endpoints (calendar / calendar/pdf). These helpers are the
 // single source of truth for that logic, and they validate the incoming query
 // string with Zod so a malformed date 400s at the edge instead of 500-ing on
 // the `::date` cast inside Postgres.
@@ -22,7 +22,7 @@ const optDate = z.preprocess(
 
 const optStr = z.preprocess((v) => (v === '' ? undefined : v), z.string().optional());
 
-// ── Staff calendar (routes/calendar.js) ─────────────────────────────────────
+// ── Staff calendar (routes/calendar/events.js) ──────────────────────────────
 // Query: from, to, venueId, groupId, groupsOnly, eventTypeId, memberId
 
 const calendarSchema = z.object({
