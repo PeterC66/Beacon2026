@@ -5,94 +5,12 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { system, getSysToken, clearSysToken } from '../../lib/api.js';
 import SortableHeader from '../../components/SortableHeader.jsx';
-import PasswordInput from '../../components/PasswordInput.jsx';
 import { useSortedData } from '../../hooks/useSortedData.js';
-
-const EMPTY_FORM = {
-  name: '',
-  slug: '',
-  adminEmail: '',
-  adminName: '',
-  adminPassword: '',
-  adminUsername: '',
-};
-
-// ─── Feature toggle definitions (same structure as FeatureConfig.jsx) ────────
-const SECTIONS = [
-  {
-    title: 'Membership',
-    master: null,
-    toggles: [
-      { key: 'membershipCards', label: 'Membership Cards', defaultValue: true },
-      { key: 'membershipRenewals', label: 'Membership Renewals', defaultValue: true },
-      { key: 'addressesExport', label: 'Addresses Export', defaultValue: true },
-      { key: 'giftAid', label: 'Gift Aid', defaultValue: false },
-      { key: 'customFields', label: 'Custom Fields', defaultValue: true },
-      { key: 'polls', label: 'Polls', defaultValue: true },
-      { key: 'statistics', label: 'Membership Statistics', defaultValue: true },
-    ],
-  },
-  {
-    title: 'Groups',
-    master: { key: 'groups', label: 'Groups module', defaultValue: true },
-    toggles: [
-      { key: 'teams', label: 'Teams', defaultValue: true, dependsOn: 'groups' },
-      { key: 'venues', label: 'Venues', defaultValue: true, dependsOn: 'groups' },
-      { key: 'faculties', label: 'Faculties', defaultValue: true, dependsOn: 'groups' },
-      { key: 'groupLedger', label: 'Group Ledger', defaultValue: false, dependsOn: 'groups' },
-      { key: 'siteworks', label: 'SiteWorks', defaultValue: false, dependsOn: 'groups' },
-    ],
-  },
-  {
-    title: 'Events & Calendar',
-    master: { key: 'events', label: 'Events & Calendar module', defaultValue: true },
-    toggles: [
-      { key: 'calendar', label: 'Calendar', defaultValue: true, dependsOn: 'events' },
-      { key: 'eventTypes', label: 'Event Types', defaultValue: true, dependsOn: 'events' },
-    ],
-  },
-  {
-    title: 'Finance',
-    master: { key: 'finance', label: 'Finance module', defaultValue: true },
-    toggles: [
-      { key: 'creditBatches', label: 'Credit Batches', defaultValue: true, dependsOn: 'finance' },
-      { key: 'reconciliation', label: 'Reconciliation', defaultValue: true, dependsOn: 'finance' },
-      {
-        key: 'financialStatement',
-        label: 'Financial Statement',
-        defaultValue: true,
-        dependsOn: 'finance',
-      },
-      {
-        key: 'groupsStatement',
-        label: 'Groups Statement',
-        defaultValue: true,
-        dependsOn: 'finance',
-      },
-      { key: 'transferMoney', label: 'Transfer Money', defaultValue: true, dependsOn: 'finance' },
-    ],
-  },
-  {
-    title: 'Email & Letters',
-    master: { key: 'email', label: 'Email & Letters module', defaultValue: true },
-    toggles: [],
-  },
-  {
-    title: 'Members Portal',
-    master: { key: 'portal', label: 'Members Portal', defaultValue: true },
-    toggles: [],
-  },
-  {
-    title: 'Online Joining',
-    master: { key: 'onlineJoining', label: 'Online Joining', defaultValue: true },
-    toggles: [],
-  },
-];
-
-function getVal(config, key, defaultValue) {
-  if (key in config) return config[key];
-  return defaultValue;
-}
+import { EMPTY_FORM, SECTIONS } from './systemDashboardConstants.js';
+import CreateTenantForm from './CreateTenantForm.jsx';
+import RestoreBackupSection from './RestoreBackupSection.jsx';
+import RestoreConfirmModal from './RestoreConfirmModal.jsx';
+import FeatureConfigModal from './FeatureConfigModal.jsx';
 
 export default function SystemDashboard() {
   const navigate = useNavigate();
@@ -457,119 +375,14 @@ export default function SystemDashboard() {
 
         {/* Create tenant form */}
         {showForm && (
-          <section className="bg-white rounded-xl shadow-sm p-6">
-            <h2 className="text-lg font-semibold text-slate-700 mb-4">Create new tenant</h2>
-
-            {formErr && (
-              <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
-                {formErr}
-              </div>
-            )}
-
-            <form onSubmit={handleCreate} className="space-y-4">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">u3a name</label>
-                  <input
-                    name="name"
-                    value={form.name}
-                    onChange={handleChange}
-                    required
-                    placeholder="e.g. Oxfordshire u3a"
-                    className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Slug</label>
-                  <input
-                    name="slug"
-                    value={form.slug}
-                    onChange={handleChange}
-                    required
-                    placeholder="e.g. oxfordshire"
-                    pattern="[a-z0-9_]+"
-                    title="Lowercase letters, numbers and underscores only"
-                    className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                  <p className="text-xs text-slate-400 mt-1">
-                    Lowercase, no spaces. Users will type this at login.
-                  </p>
-                </div>
-              </div>
-
-              <hr className="border-slate-100" />
-              <p className="text-sm font-medium text-slate-600">First admin user</p>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Name</label>
-                  <input
-                    name="adminName"
-                    value={form.adminName}
-                    onChange={handleChange}
-                    required
-                    placeholder="e.g. Jane Smith"
-                    className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Email</label>
-                  <input
-                    name="adminEmail"
-                    type="email"
-                    value={form.adminEmail}
-                    onChange={handleChange}
-                    required
-                    className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Username</label>
-                <input
-                  name="adminUsername"
-                  value={form.adminUsername}
-                  onChange={(e) =>
-                    setForm((f) => ({
-                      ...f,
-                      adminUsername: e.target.value.toLowerCase().replace(/[^a-z0-9]/g, ''),
-                    }))
-                  }
-                  required
-                  pattern="[a-z0-9]+"
-                  title="Lowercase letters and numbers only"
-                  placeholder="e.g. jsmith"
-                  className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-                <p className="text-xs text-slate-400 mt-1">
-                  Used to log in. Lowercase letters and numbers only.
-                </p>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Password</label>
-                <PasswordInput
-                  name="adminPassword"
-                  value={form.adminPassword}
-                  onChange={handleChange}
-                  required
-                  minLength={8}
-                  autoComplete="new-password"
-                  className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-                <p className="text-xs text-slate-400 mt-1">At least 8 characters.</p>
-              </div>
-
-              <button
-                type="submit"
-                disabled={saving}
-                className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white font-medium py-2 rounded-lg text-sm transition-colors"
-              >
-                {saving ? 'Creating…' : 'Create tenant'}
-              </button>
-            </form>
-          </section>
+          <CreateTenantForm
+            form={form}
+            setForm={setForm}
+            handleChange={handleChange}
+            handleCreate={handleCreate}
+            saving={saving}
+            formErr={formErr}
+          />
         )}
 
         {/* System Message */}
@@ -599,233 +412,46 @@ export default function SystemDashboard() {
         </section>
 
         {/* Restore from Backup */}
-        <section className="bg-white rounded-xl shadow-sm p-6">
-          <h2 className="text-lg font-semibold text-slate-700 mb-1">Restore from Backup</h2>
-          <p className="text-sm text-slate-500 mb-4">
-            Upload a Beacon2 backup or a legacy Beacon export file to restore a tenant&apos;s data.
-            The format is detected automatically. User accounts and roles are included in the
-            restore.
-          </p>
-
-          <div className="rounded-md bg-amber-50 border border-amber-300 px-4 py-3 text-amber-800 text-sm mb-5">
-            <strong>Warning:</strong> Restoring will{' '}
-            <strong>permanently delete all current data</strong> for the selected tenant and replace
-            it with the contents of the uploaded file. This cannot be undone.
-          </div>
-
-          {restoreError && (
-            <div className="mb-4 rounded-md bg-red-50 border border-red-300 px-4 py-3 text-red-700 text-sm font-medium">
-              {restoreError}
-            </div>
-          )}
-
-          {restoreResult && (
-            <div className="mb-4 rounded-md bg-green-50 border border-green-300 px-4 py-3 text-green-800 text-sm font-medium whitespace-pre-line">
-              ✓ {restoreResult.message}
-            </div>
-          )}
-
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Select tenant</label>
-              <select
-                name="restoreTenant"
-                value={restoreTenant}
-                onChange={(e) => {
-                  setRestoreTenant(e.target.value);
-                  setRestoreResult(null);
-                  setRestoreError('');
-                }}
-                className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="">— choose a tenant —</option>
-                {tenants.map((t) => (
-                  <option key={t.id} value={t.slug}>
-                    {t.name} ({t.slug})
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">
-                Select backup file (.xlsx)
-              </label>
-              <input
-                ref={restoreFileRef}
-                type="file"
-                accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-                onChange={handleRestoreFileChange}
-                className="block text-sm text-slate-600
-                  file:mr-3 file:py-2 file:px-4 file:rounded file:border-0
-                  file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700
-                  hover:file:bg-blue-100"
-              />
-              {restoreFile && (
-                <p className="text-xs text-slate-500 mt-1">
-                  {restoreFile.name} ({(restoreFile.size / 1024).toFixed(0)} KB)
-                </p>
-              )}
-            </div>
-
-            <button
-              onClick={handleRestoreClick}
-              disabled={!restoreTenant || !restoreFile || restoring}
-              className="inline-flex items-center gap-2 rounded px-4 py-2 text-sm font-medium transition-colors bg-red-600 hover:bg-red-700 text-white disabled:bg-red-300 disabled:cursor-not-allowed"
-            >
-              {restoring ? (
-                <>
-                  <span className="animate-spin inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full" />
-                  Restoring…
-                </>
-              ) : (
-                'Restore from this file'
-              )}
-            </button>
-          </div>
-        </section>
+        <RestoreBackupSection
+          tenants={tenants}
+          restoreFileRef={restoreFileRef}
+          restoreTenant={restoreTenant}
+          setRestoreTenant={setRestoreTenant}
+          restoreFile={restoreFile}
+          restoring={restoring}
+          restoreResult={restoreResult}
+          setRestoreResult={setRestoreResult}
+          restoreError={restoreError}
+          setRestoreError={setRestoreError}
+          handleRestoreFileChange={handleRestoreFileChange}
+          handleRestoreClick={handleRestoreClick}
+        />
       </main>
 
       {/* Restore confirmation modal */}
       {confirmOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-          <div className="bg-white rounded-lg shadow-xl p-6 max-w-md mx-4">
-            <h3 className="text-lg font-bold text-slate-800 mb-3">Confirm restore</h3>
-            <p className="text-sm text-slate-600 mb-1">
-              Tenant: <strong>{restoreTenant}</strong>
-            </p>
-            <p className="text-sm text-slate-600 mb-2">File:</p>
-            <p className="text-sm font-medium text-slate-800 bg-slate-100 rounded px-3 py-2 mb-4 break-all">
-              {restoreFile?.name}
-            </p>
-            <p className="text-sm text-red-700 font-medium mb-5">
-              All current data for this tenant will be permanently deleted and replaced. This cannot
-              be undone.
-            </p>
-            <div className="flex gap-3 justify-end">
-              <button
-                onClick={() => setConfirmOpen(false)}
-                className="border border-slate-300 text-slate-700 hover:bg-slate-50 rounded px-5 py-2 text-sm"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleConfirmRestore}
-                className="bg-red-600 hover:bg-red-700 text-white rounded px-5 py-2 text-sm font-medium"
-              >
-                Yes, restore now
-              </button>
-            </div>
-          </div>
-        </div>
+        <RestoreConfirmModal
+          restoreTenant={restoreTenant}
+          restoreFile={restoreFile}
+          setConfirmOpen={setConfirmOpen}
+          handleConfirmRestore={handleConfirmRestore}
+        />
       )}
 
       {/* Feature config modal */}
       {fcTenant && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-          <div className="bg-white rounded-lg shadow-xl max-w-lg mx-4 w-full max-h-[85vh] flex flex-col">
-            {/* Header */}
-            <div className="px-6 py-4 border-b border-slate-200">
-              <h3 className="text-lg font-bold text-slate-800">Feature Configuration</h3>
-              <p className="text-sm text-slate-500">
-                {fcTenant.name} ({fcTenant.slug})
-              </p>
-            </div>
-
-            {/* Scrollable content */}
-            <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4">
-              {fcLoading && <p className="text-center text-slate-500 py-4">Loading...</p>}
-
-              {fcError && (
-                <p className="rounded-md bg-red-50 border border-red-300 px-3 py-2 text-red-700 text-sm">
-                  {fcError}
-                </p>
-              )}
-
-              {fcSuccess && (
-                <p className="rounded-md bg-green-50 border border-green-300 px-3 py-2 text-green-700 text-sm font-medium">
-                  Feature configuration saved.
-                </p>
-              )}
-
-              {!fcLoading &&
-                SECTIONS.map((section) => {
-                  const masterOn = section.master
-                    ? getVal(fcConfig, section.master.key, section.master.defaultValue)
-                    : true;
-                  return (
-                    <div
-                      key={section.title}
-                      className="border border-slate-200 rounded-lg overflow-hidden"
-                    >
-                      <div className="bg-gradient-to-r from-amber-50 to-amber-100 px-4 py-2 font-semibold text-sm text-slate-800">
-                        {section.title}
-                      </div>
-                      <div className="px-4 py-2 space-y-1">
-                        {section.master && (
-                          <label className="flex items-center gap-3 py-1 text-sm cursor-pointer">
-                            <input
-                              type="checkbox"
-                              checked={masterOn}
-                              onChange={(e) => handleFcChange(section.master.key, e.target.checked)}
-                              className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
-                            />
-                            <span className="font-medium text-slate-700">
-                              {section.master.label}
-                            </span>
-                          </label>
-                        )}
-                        {section.toggles.length > 0 && (
-                          <div className="pl-6 space-y-1">
-                            {section.toggles.map((t) => {
-                              const parentOff = t.dependsOn && !getVal(fcConfig, t.dependsOn, true);
-                              const checked = parentOff
-                                ? false
-                                : getVal(fcConfig, t.key, t.defaultValue);
-                              return (
-                                <label
-                                  key={t.key}
-                                  className={`flex items-center gap-3 py-0.5 text-sm ${parentOff ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer'}`}
-                                >
-                                  <input
-                                    type="checkbox"
-                                    checked={checked}
-                                    disabled={parentOff}
-                                    onChange={(e) => handleFcChange(t.key, e.target.checked)}
-                                    className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
-                                  />
-                                  <span className="text-slate-700">{t.label}</span>
-                                </label>
-                              );
-                            })}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })}
-            </div>
-
-            {/* Footer */}
-            <div className="px-6 py-4 border-t border-slate-200 flex justify-end gap-3">
-              <button
-                onClick={() => setFcTenant(null)}
-                className="border border-slate-300 text-slate-700 hover:bg-slate-50 rounded px-5 py-2 text-sm"
-              >
-                {fcDirty ? 'Cancel' : 'Close'}
-              </button>
-              {fcDirty && (
-                <button
-                  onClick={handleFcSave}
-                  disabled={fcSaving}
-                  className="bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white rounded px-5 py-2 text-sm font-medium"
-                >
-                  {fcSaving ? 'Saving...' : 'Save'}
-                </button>
-              )}
-            </div>
-          </div>
-        </div>
+        <FeatureConfigModal
+          fcTenant={fcTenant}
+          fcConfig={fcConfig}
+          fcLoading={fcLoading}
+          fcSaving={fcSaving}
+          fcError={fcError}
+          fcSuccess={fcSuccess}
+          fcDirty={fcDirty}
+          handleFcChange={handleFcChange}
+          handleFcSave={handleFcSave}
+          setFcTenant={setFcTenant}
+        />
       )}
     </div>
   );
