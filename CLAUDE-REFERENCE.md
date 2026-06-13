@@ -945,6 +945,17 @@ Themes: `default`, `high-contrast`.
 - `MemberPhotoSection.jsx` — the photo upload/preview block; upload state and handlers
   stay in the parent and are passed as props.
 
+### GroupRecord / TeamRecord tab components (Chunk 10)
+
+`GroupRecord.jsx` and `TeamRecord.jsx` are now thin tab-routing shells. Their Details
+and Ledger tabs live in their own files and are self-contained (own state/data
+loading; props are just `groupId`/`teamId` and `onSaved`/`onDeleted` callbacks):
+- `groups/GroupDetails.jsx`, `groups/GroupLedger.jsx`
+- `teams/TeamDetails.jsx`, `teams/TeamLedger.jsx`
+
+The Members tab still uses the shared `EntityMembers`, and Group events use the shared
+`Schedule` component.
+
 ### Mandatory field indicator (`RequiredMark`)
 
 Standard: `<RequiredMark />` from `frontend/src/components/RequiredMark.jsx`.
