@@ -128,7 +128,11 @@ These are catalogued and re-verified in `docs/ImprovementPlan.md` (Chunks 4–5)
     of clean reports, change `Content-Security-Policy-Report-Only` to
     `Content-Security-Policy` in `frontend/vercel.json` to enforce.
     Consider tightening `connect-src 'self' https:` to the concrete
-    backend host once known.
+    backend host once known. (ImprovementPlan Chunk 12 reviewed this and
+    **deliberately left it report-only**: the "clean report window" cannot be
+    verified from a dev environment, and enforcing an untested policy risks
+    breaking the live frontend. The flip is now documented as the remaining step
+    in DEPLOYMENT.md.)
 26. `[OPEN]` **Stale comment in `App.jsx:132`** — "auth handled inside pages via
     sessionStorage" no longer reflects the in-memory sys-token model.
     Tidy when next touching the file.

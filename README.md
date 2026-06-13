@@ -83,15 +83,34 @@ npm run dev                   # starts on http://localhost:5173
 
 The frontend expects the API at `VITE_API_URL` (defaults to `http://localhost:3001`).
 
+### Run the whole stack with Docker (optional)
+
+Instead of installing Postgres/Redis and running each service by hand, the repo
+ships a `docker-compose.yml` that brings up Postgres, Redis, the backend, and the
+frontend together — handy for a quick demo or for running the E2E suite locally:
+
+```bash
+docker compose up --build       # http://localhost:5173 (frontend), :3001 (API)
+docker compose down -v          # stop and wipe the database volume
+```
+
+All credentials in `docker-compose.yml` are throwaway local-only values; the
+stack is for development only and is never used to deploy a real instance.
+
 ## Tests
 
 ```bash
-cd backend  && npm test   # vitest — no real DB required (fully mocked)
-cd frontend && npm test   # vitest + React Testing Library smoke tests
-cd e2e      && npm test   # Playwright against staging (needs .env)
+cd backend  && npm test            # vitest — no real DB required (fully mocked)
+cd frontend && npm test            # vitest + React Testing Library smoke tests
+cd e2e      && npm test            # Playwright (staging, or the local docker stack)
 ```
 
-CI runs backend + frontend tests automatically on every push to a `claude/**` branch.
+Add coverage with `npm run test:coverage` in `backend/` or `frontend/` — it writes
+an HTML report to `coverage/` and prints a summary. The E2E suite can target
+staging or the local docker stack above (see `e2e/.env.example`).
+
+CI runs backend + frontend lint, format check, and tests (with coverage uploaded
+as an artifact) on every push to a `claude/**` branch and on PRs to `main`.
 
 ## Creating a u3a tenant
 
