@@ -5,6 +5,9 @@ node_modules/
 dist/
 build/
 
+# Test coverage reports
+coverage/
+
 # Environment files
 .env
 .env.local
