@@ -79,6 +79,26 @@ Format: `## [version] — YYYY-MM-DD` with bullet points per change.
     derived-state-to-`useMemo` case (M6) were already resolved in earlier work.
   - No behaviour change; frontend suite green (53 files, 140 tests), lint and
     Prettier clean.
+- **Split oversized backend route files (ImprovementPlan Chunk 9, finding M1)** —
+  refactored the two largest route files into sub-router directories following
+  the `finance/` precedent. Pure moves, no behaviour change:
+  - `routes/backup.js` (2,353 lines) → `routes/backup/` with `export.js`
+    (the `/export` route plus all sheet builders), `restore.js` (the
+    `clearTenantData`/`resetSequences`/`restoreBeacon2`/`restoreBeacon`
+    helpers consumed by `system.js`), a shared `helpers.js` (the `str` cell
+    coercer used by both), and `index.js` (applies `requireAuth`, mounts the
+    export router, re-exports the restore helpers).
+  - `routes/members.js` (1,970 lines) → `routes/members/` with `list.js`
+    (read-only listings, statistics, validation, download/export),
+    `lifecycle.js` (renewals/renew/non-renewals/lapse), `crud.js`
+    (single-member fetch/create/update/delete/photo/groups), a shared
+    `helpers.js` (`resolveGiftAidAmount`, `deriveInitials`), and `index.js`
+    (mounts the literal-path routers before the `/:id` CRUD router so route
+    matching order is preserved).
+  - Route registrations verified identical before/after; backend suite green
+    (45 files, 593 tests), lint and Prettier clean. The remaining oversized
+    routes (`portal.js`, `public.js`, `groups.js`) are deferred to follow-up
+    sessions per the chunk's "one file per session" note.
 
 ### Fixed
 - **Duplicated security findings in `KNOWN-ISSUES.md`** — the Chunk 4 and Chunk 5

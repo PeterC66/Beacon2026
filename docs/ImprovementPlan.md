@@ -330,10 +330,23 @@ in CLAUDE-REFERENCE §11).
   No remaining derived-state-set-in-`useEffect` anti-pattern was found.
 - Frontend suite green throughout (53 files, 140 tests); lint 0 errors, Prettier clean.
 
-### Chunk 9 — Split oversized backend routes (M1)
+### Chunk 9 — Split oversized backend routes (M1) 🟡 In progress (2026-06-13)
 One file per session if needed, starting with `backup.js` (export vs restore)
 and `members.js` (CRUD vs exports vs bulk ops), following the `finance/`
 sub-router precedent. Pure moves — no behaviour change, tests green before/after.
+
+**Done so far (2026-06-13):**
+- `backup.js` (2,353 lines) → `routes/backup/` (`export.js`, `restore.js`,
+  shared `helpers.js`, `index.js`). `system.js` and `restoreBeacon.test.js`
+  updated to import restore helpers from `backup/restore.js`.
+- `members.js` (1,970 lines) → `routes/members/` (`list.js`, `lifecycle.js`,
+  `crud.js`, shared `helpers.js`, `index.js`). `index.js` mounts literal-path
+  routers before the `/:id` CRUD router to preserve Express match order.
+- Route registrations verified identical before/after; backend suite green
+  (593 tests), lint + Prettier clean.
+
+**Still to do (follow-up sessions, one file each):** `portal.js` (1,798),
+`groups.js` (1,464), `public.js` (1,455), `teams.js` (1,267), `calendar.js` (945).
 
 ### Chunk 10 — Split oversized frontend pages (M2)
 Start with `MemberEditor.jsx` (form / groups / financials / photo sections) and
