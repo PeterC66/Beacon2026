@@ -330,7 +330,7 @@ in CLAUDE-REFERENCE §11).
   No remaining derived-state-set-in-`useEffect` anti-pattern was found.
 - Frontend suite green throughout (53 files, 140 tests); lint 0 errors, Prettier clean.
 
-### Chunk 9 — Split oversized backend routes (M1) 🟡 In progress (2026-06-13)
+### Chunk 9 — Split oversized backend routes (M1) ✅ Done (2026-06-13)
 One file per session if needed, starting with `backup.js` (export vs restore)
 and `members.js` (CRUD vs exports vs bulk ops), following the `finance/`
 sub-router precedent. Pure moves — no behaviour change, tests green before/after.
@@ -362,11 +362,28 @@ sub-router precedent. Pure moves — no behaviour change, tests green before/aft
   `portalAuthLimiter`, lockout helper, and reset/verification email senders in
   `portalAuth.js`), so no shared `helpers.js` was needed. `app.js` import
   updated to `public/index.js`.
+- `teams.js` (1,267 lines) → `routes/teams/` (`list.js`, `crud.js`,
+  `members.js`, `events.js`, `ledger.js`, `index.js`). `index.js` owns the
+  shared `requireAuth` + `requireFeature('teams')` middleware, then mounts the
+  sub-routers with the list router (literal `/download`) before the CRUD router
+  (`/:id`) to preserve Express match order. The `hasLedgerAccess` helper lives
+  in `ledger.js` (its only consumer); no shared `helpers.js` was needed.
+  `app.js` import updated to `teams/index.js`.
+- `calendar.js` (945 lines) → `routes/calendar/` (`events.js`, `openEvents.js`,
+  `eventMembers.js`, shared `helpers.js`, `index.js`). `index.js` owns the
+  shared `requireAuth` + `requireFeature('events')` middleware. `events.js`
+  holds the read side (aggregate view, PDF/Excel exports, member/event-type
+  lookups, event search, single-event lookup, financials) and defines its
+  literal `/events/pdf`, `/events/excel`, and `/events/search` routes before
+  `/events/:eventId` so the param does not capture them. `openEvents.js` owns
+  the non-group `/open-events` CRUD; `eventMembers.js` owns the attendance
+  sub-resource. `helpers.js` holds the `fmtDateUK`/`fmtTime` formatters shared
+  by `events.js` and `eventMembers.js`. `app.js` import updated to
+  `calendar/index.js`.
 - Route registrations verified identical before/after; backend suite green
-  (593 tests), lint + Prettier clean.
-
-**Still to do (follow-up sessions, one file each):** `teams.js` (1,267),
-`calendar.js` (945).
+  (593 tests), lint + Prettier clean. This completes Chunk 9 — all five
+  oversized backend route files (`backup.js`, `members.js`, `portal.js`,
+  `groups.js`, `public.js`) plus `teams.js` and `calendar.js` are now split.
 
 ### Chunk 10 — Split oversized frontend pages (M2)
 Start with `MemberEditor.jsx` (form / groups / financials / photo sections) and

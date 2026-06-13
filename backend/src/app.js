@@ -35,7 +35,7 @@ import giftAidRoutes from './routes/giftAid.js';
 import systemMessageRoutes from './routes/systemMessages.js';
 import publicLinksRoutes from './routes/publicLinks.js';
 import publicRoutes from './routes/public/index.js';
-import calendarRoutes from './routes/calendar.js';
+import calendarRoutes from './routes/calendar/index.js';
 import eventTypeRoutes from './routes/eventTypes.js';
 import membershipCardRoutes from './routes/membershipCards.js';
 import letterRoutes from './routes/letters.js';

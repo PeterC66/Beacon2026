@@ -80,8 +80,8 @@ Format: `## [version] — YYYY-MM-DD` with bullet points per change.
   - No behaviour change; frontend suite green (53 files, 140 tests), lint and
     Prettier clean.
 - **Split oversized backend route files (ImprovementPlan Chunk 9, finding M1)** —
-  refactored the two largest route files into sub-router directories following
-  the `finance/` precedent. Pure moves, no behaviour change:
+  refactored the seven oversized route files into sub-router directories
+  following the `finance/` precedent. Pure moves, no behaviour change:
   - `routes/backup.js` (2,353 lines) → `routes/backup/` with `export.js`
     (the `/export` route plus all sheet builders), `restore.js` (the
     `clearTenantData`/`resetSequences`/`restoreBeacon2`/`restoreBeacon`
@@ -124,10 +124,29 @@ Format: `## [version] — YYYY-MM-DD` with bullet points per change.
     middleware, mounts the three sub-routers, then mounts the authenticated
     portal app router at `/:slug/portal/app`). `app.js` now imports
     `public/index.js`.
+  - `routes/teams.js` (1,267 lines) → `routes/teams/` with `list.js` (team
+    listing plus list-level Excel/PDF download, `groups_list` privilege),
+    `crud.js` (single-team fetch/create/update/delete, `group_records_all`),
+    `members.js` (membership listing, member download, add/remove and bulk ops),
+    `events.js` (the schedule sub-resource), `ledger.js` (the team-ledger
+    sub-resource with its `hasLedgerAccess` helper), and `index.js` (owns the
+    shared `requireAuth` + `requireFeature('teams')` middleware, then mounts the
+    list router before the `/:id` CRUD router so route matching order is
+    preserved). `app.js` now imports `teams/index.js`.
+  - `routes/calendar.js` (945 lines) → `routes/calendar/` with `events.js` (the
+    read side: aggregate view, PDF/Excel exports, member/event-type lookups,
+    event search, single-event lookup, financials — with the literal
+    `/events/pdf`, `/events/excel`, and `/events/search` routes defined before
+    `/events/:eventId` so the param does not capture them), `openEvents.js` (the
+    non-group `/open-events` CRUD), `eventMembers.js` (the attendance
+    sub-resource), a shared `helpers.js` (the `fmtDateUK`/`fmtTime` formatters
+    used by both `events.js` and `eventMembers.js`), and `index.js` (owns the
+    shared `requireAuth` + `requireFeature('events')` middleware, then mounts the
+    three sub-routers). `app.js` now imports `calendar/index.js`.
   - Route registrations verified identical before/after; backend suite green
-    (45 files, 593 tests), lint and Prettier clean. The remaining oversized
-    routes (`teams.js`, `calendar.js`) are deferred to follow-up sessions per
-    the chunk's "one file per session" note.
+    (45 files, 593 tests), lint and Prettier clean. This completes Chunk 9 —
+    all seven oversized backend route files are now split into sub-router
+    directories.
 
 ### Fixed
 - **Duplicated security findings in `KNOWN-ISSUES.md`** — the Chunk 4 and Chunk 5
