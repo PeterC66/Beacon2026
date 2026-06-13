@@ -9,6 +9,8 @@ import NavBar from '../../components/NavBar.jsx';
 import PageHeader from '../../components/PageHeader.jsx';
 import SortableHeader from '../../components/SortableHeader.jsx';
 import { useSortedData } from '../../hooks/useSortedData.js';
+import { SS_EMAIL_COMPOSE_MEMBER_IDS, SS_EMAIL_GIFT_AID_DATES } from '../../lib/storageKeys.js';
+import { ROUTES } from '../../lib/routes.js';
 
 const inputCls =
   'border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500';
@@ -157,9 +159,12 @@ export default function GiftAidDeclaration() {
       ...new Set(rows.filter((r) => selected.has(rowKey(r))).map((r) => r.member_id)),
     ];
     // Store member IDs and GA context for email tokens
-    sessionStorage.setItem('emailComposeMemberIds', JSON.stringify(memberIds));
-    sessionStorage.setItem('emailGiftAidDates', JSON.stringify({ from: yearStart, to: yearEnd }));
-    navigate('/email/compose');
+    sessionStorage.setItem(SS_EMAIL_COMPOSE_MEMBER_IDS, JSON.stringify(memberIds));
+    sessionStorage.setItem(
+      SS_EMAIL_GIFT_AID_DATES,
+      JSON.stringify({ from: yearStart, to: yearEnd }),
+    );
+    navigate(ROUTES.EMAIL_COMPOSE);
   }
 
   // ─── Sorted data ────────────────────────────────────────────────────────

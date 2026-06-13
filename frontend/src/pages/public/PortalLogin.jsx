@@ -6,6 +6,7 @@ import { useParams, Link, useNavigate } from 'react-router-dom';
 import { publicApi, setPortalToken } from '../../lib/api.js';
 import PortalVersion from '../../components/PortalVersion.jsx';
 import PasswordInput from '../../components/PasswordInput.jsx';
+import { SS_PORTAL_MEMBER, SS_PORTAL_SLUG } from '../../lib/storageKeys.js';
 
 export default function PortalLogin() {
   const { slug } = useParams();
@@ -26,8 +27,8 @@ export default function PortalLogin() {
     try {
       const result = await publicApi.portalLogin(slug, email.trim(), password);
       setPortalToken(result.token);
-      sessionStorage.setItem('portalMember', JSON.stringify(result.member));
-      sessionStorage.setItem('portalSlug', slug);
+      sessionStorage.setItem(SS_PORTAL_MEMBER, JSON.stringify(result.member));
+      sessionStorage.setItem(SS_PORTAL_SLUG, slug);
       navigate(`/public/${slug}/portal/home`);
     } catch (err) {
       setError(err.message);

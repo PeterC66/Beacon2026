@@ -13,6 +13,7 @@ import {
   polls as pollsApi,
   settings as settingsApi,
 } from '../../lib/api.js';
+import { ROUTES } from '../../lib/routes.js';
 import { useAuth } from '../../context/AuthContext.jsx';
 import NavBar from '../../components/NavBar.jsx';
 import PageHeader from '../../components/PageHeader.jsx';
@@ -430,7 +431,7 @@ export default function MemberCompactView() {
             Edit Member
           </Link>
           <Link
-            to="/members"
+            to={ROUTES.MEMBERS}
             className="border border-slate-300 text-slate-600 hover:bg-slate-50 rounded px-4 py-1.5 text-sm transition-colors"
           >
             Back to List

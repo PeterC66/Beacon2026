@@ -16,12 +16,11 @@ import {
   requestBlob,
 } from '../../lib/api.js';
 import { hasOptionalCookieConsent } from '../../hooks/useCookieConsent.js';
-
-// ── Label settings localStorage key ─────────────────────────────────────────
-
-const LABEL_PREFS_KEY = 'beacon2_label_settings';
-const LAST_CLASS_KEY = 'beacon2_last_export_class';
-const TAM_PREFS_KEY = 'beacon2_tam_submission';
+import {
+  LS_LABEL_SETTINGS as LABEL_PREFS_KEY,
+  LS_LAST_EXPORT_CLASS as LAST_CLASS_KEY,
+  LS_TAM_SUBMISSION as TAM_PREFS_KEY,
+} from '../../lib/storageKeys.js';
 
 function loadLabelPrefs() {
   if (!hasOptionalCookieConsent()) return defaultLabelSettings();

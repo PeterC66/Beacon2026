@@ -15,6 +15,11 @@ import {
   formatPhone,
   isSubscriptionOverdue,
 } from '../../lib/memberFormatters.js';
+import {
+  SS_EMAIL_COMPOSE_MEMBER_IDS,
+  SS_LETTER_COMPOSE_MEMBER_IDS,
+} from '../../lib/storageKeys.js';
+import { ROUTES } from '../../lib/routes.js';
 import { formatMemberName } from '../../hooks/usePreferences.js';
 import NoEmailIcon from '../../components/NoEmailIcon.jsx';
 
@@ -172,13 +177,13 @@ export default function RecentMembers() {
   async function handleBulkDo() {
     if (selected.size === 0) return;
     if (bulkAction === 'send_email') {
-      sessionStorage.setItem('emailComposeMemberIds', JSON.stringify([...selected]));
-      navigate('/email/compose');
+      sessionStorage.setItem(SS_EMAIL_COMPOSE_MEMBER_IDS, JSON.stringify([...selected]));
+      navigate(ROUTES.EMAIL_COMPOSE);
       return;
     }
     if (bulkAction === 'send_letter') {
-      sessionStorage.setItem('letterComposeMemberIds', JSON.stringify([...selected]));
-      navigate('/letters/compose');
+      sessionStorage.setItem(SS_LETTER_COMPOSE_MEMBER_IDS, JSON.stringify([...selected]));
+      navigate(ROUTES.LETTERS_COMPOSE);
       return;
     }
     if (bulkAction === 'download_names') {

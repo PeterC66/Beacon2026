@@ -10,6 +10,8 @@ import PageHeader from '../../components/PageHeader.jsx';
 import SortableHeader from '../../components/SortableHeader.jsx';
 import ScrollButtons from '../../components/ScrollButtons.jsx';
 import { useSortedData } from '../../hooks/useSortedData.js';
+import { SS_EMAIL_COMPOSE_MEMBER_IDS } from '../../lib/storageKeys.js';
+import { ROUTES } from '../../lib/routes.js';
 
 function formatDate(iso) {
   if (!iso) return 'NEVER';
@@ -98,8 +100,8 @@ export default function UserList() {
       alert('No selected users are linked to members. Cannot send email.');
       return;
     }
-    sessionStorage.setItem('emailComposeMemberIds', JSON.stringify(memberIds));
-    navigate('/email/compose');
+    sessionStorage.setItem(SS_EMAIL_COMPOSE_MEMBER_IDS, JSON.stringify(memberIds));
+    navigate(ROUTES.EMAIL_COMPOSE);
   }
 
   const TH = 'px-4 py-2.5 font-normal';

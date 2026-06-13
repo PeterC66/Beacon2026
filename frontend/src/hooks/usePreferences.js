@@ -3,8 +3,7 @@
 // Mirrors the "Personal Preferences" settings from Beacon doc 9.1(a).
 
 import { hasOptionalCookieConsent } from './useCookieConsent.js';
-
-const KEY = 'beacon2_prefs';
+import { LS_PREFS as KEY } from '../lib/storageKeys.js';
 
 const DEFAULTS = {
   sortBy: 'surname', // 'surname' | 'forename'
