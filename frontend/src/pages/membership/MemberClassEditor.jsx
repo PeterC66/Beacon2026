@@ -245,8 +245,11 @@ export default function MemberClassEditor() {
           className="bg-white/90 rounded-lg shadow-sm p-4 sm:p-6 space-y-4"
         >
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Class name</label>
+            <label htmlFor="mc-name" className="block text-sm font-medium text-slate-700 mb-1">
+              Class name
+            </label>
             <input
+              id="mc-name"
               type="text"
               name="name"
               value={form.name}
@@ -261,11 +264,15 @@ export default function MemberClassEditor() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">
+            <label
+              htmlFor="mc-explanation"
+              className="block text-sm font-medium text-slate-700 mb-1"
+            >
               Explanation{' '}
               <span className="text-slate-400 font-normal">(shown to members joining online)</span>
             </label>
             <textarea
+              id="mc-explanation"
               name="explanation"
               value={form.explanation}
               onChange={(e) => set('explanation', e.target.value)}
@@ -278,10 +285,11 @@ export default function MemberClassEditor() {
           {feeVariation === 'same_all_year' && (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">
+                <label htmlFor="mc-fee" className="block text-sm font-medium text-slate-700 mb-1">
                   Fee per person (£)
                 </label>
                 <input
+                  id="mc-fee"
                   type="number"
                   min="0"
                   step="0.01"
@@ -293,10 +301,14 @@ export default function MemberClassEditor() {
               </div>
               {giftAidEnabled && (
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">
+                  <label
+                    htmlFor="mc-giftAidFee"
+                    className="block text-sm font-medium text-slate-700 mb-1"
+                  >
                     Gift Aid eligible (£)
                   </label>
                   <input
+                    id="mc-giftAidFee"
                     type="number"
                     min="0"
                     step="0.01"
@@ -420,6 +432,7 @@ export default function MemberClassEditor() {
                           min="0"
                           step="0.01"
                           name={`fee_${row.monthIndex}`}
+                          aria-label={`Fee per person for ${MONTH_LABELS[row.monthIndex]}`}
                           value={row.fee}
                           onChange={(e) => setMonthFee(row.monthIndex, 'fee', e.target.value)}
                           className="w-28 border border-slate-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -432,6 +445,7 @@ export default function MemberClassEditor() {
                             min="0"
                             step="0.01"
                             name={`giftAidFee_${row.monthIndex}`}
+                            aria-label={`Gift Aid eligible fee for ${MONTH_LABELS[row.monthIndex]}`}
                             value={row.giftAidFee}
                             onChange={(e) =>
                               setMonthFee(row.monthIndex, 'giftAidFee', e.target.value)

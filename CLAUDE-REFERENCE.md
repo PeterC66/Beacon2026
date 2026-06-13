@@ -877,6 +877,31 @@ the shared versions incrementally when touching a file for other reasons.
   `MEMBERS`, `HOME`). The full route table stays in `App.jsx`. Privilege strings
   are deliberately **not** centralised — `can('resource', 'action')` reads fine and
   hoisting ~90 call sites adds indirection for no real safety gain.
+- `lib/a11y.js` — `clickableKeyProps(onActivate)` returns the
+  `{ role:'button', tabIndex:0, onClick, onKeyDown }` bundle that makes a
+  non-button element (a `<th>` or `<span>` used as a sort control) keyboard
+  operable: it activates on Enter/Space and `preventDefault`s the Space-scroll.
+  Used by `SortableHeader` (which also sets `aria-sort`) and the inline
+  forename/surname split headers. Reach for this instead of a bare `onClick` on
+  any clickable non-button.
+
+### Frontend test patterns (Chunk 11)
+
+- `__tests__/testUtils.jsx` — shared render boilerplate: `renderWithRouter(ui, { route })`,
+  `renderAtRoute(ui, { path, route })` (for `useParams` editor pages), and an
+  `authValue(overrides)` factory for `useAuth` mocks. **`vi.mock(...)` itself
+  cannot be centralised** — Vitest hoists each `vi.mock` to the top of its own
+  test file and scopes it per module path, so the per-file `vi.mock('../lib/api.js', …)`
+  blocks stay in each test. To assert on a mocked API call, declare a top-level
+  `const api = { create: vi.fn(), … }` and have the `vi.mock` factory delegate to
+  it (`create: (...a) => api.create(...a)`) — the factory may not reference
+  outer `vi.fn()`s directly, but it may call through at runtime.
+- Interaction tests follow `CookieConsent.test.jsx`: render → `fireEvent.change`
+  the labelled inputs (use `getByLabelText` now that the label sweep associates
+  them) → click the submit button → `await waitFor(() => expect(api.x).toHaveBeenCalledWith(…))`.
+- `__tests__/setup.js` stubs `window.scrollTo` and `Element.prototype.scrollIntoView`
+  (unimplemented in jsdom) so form-submit handlers that scroll-to-top/error don't
+  emit "Not implemented" noise.
 
 ### Common Tailwind patterns
 
