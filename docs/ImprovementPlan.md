@@ -346,11 +346,27 @@ sub-router precedent. Pure moves — no behaviour change, tests green before/aft
   `calendar.js`, `renewals.js`, shared `helpers.js`, `index.js`). `index.js`
   owns the portal-auth middleware + feature gate, then mounts the four
   concern-specific sub-routers. `public.js` import updated to `portal/index.js`.
+- `groups.js` (1,464 lines) → `routes/groups/` (`list.js`, `crud.js`,
+  `members.js`, `events.js`, `ledger.js`, `index.js`). `index.js` owns the
+  shared `requireAuth` + `requireFeature('groups')` middleware, then mounts the
+  sub-routers with the list router (literal `/download`) before the CRUD router
+  (`/:id`) to preserve Express match order. No shared `helpers.js` was needed —
+  each field-def/schema/access helper is local to a single concern. `app.js`
+  import updated to `groups/index.js`.
+- `public.js` (1,455 lines) → `routes/public/` (`join.js`, `portalAuth.js`,
+  `read.js`, `index.js`). `index.js` owns the `resolveTenant` tenant-resolution
+  middleware (mounted on `/:slug` first so every sub-route inherits it), then
+  mounts the join/payment router, portal-auth router, public-info router, and
+  finally the authenticated portal app router at `/:slug/portal/app`. Each
+  concern keeps its own helpers local (join email stubs in `join.js`; the
+  `portalAuthLimiter`, lockout helper, and reset/verification email senders in
+  `portalAuth.js`), so no shared `helpers.js` was needed. `app.js` import
+  updated to `public/index.js`.
 - Route registrations verified identical before/after; backend suite green
   (593 tests), lint + Prettier clean.
 
-**Still to do (follow-up sessions, one file each):** `groups.js` (1,464),
-`public.js` (1,455), `teams.js` (1,267), `calendar.js` (945).
+**Still to do (follow-up sessions, one file each):** `teams.js` (1,267),
+`calendar.js` (945).
 
 ### Chunk 10 — Split oversized frontend pages (M2)
 Start with `MemberEditor.jsx` (form / groups / financials / photo sections) and
