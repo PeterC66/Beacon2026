@@ -945,6 +945,27 @@ Themes: `default`, `high-contrast`.
 - `MemberPhotoSection.jsx` — the photo upload/preview block; upload state and handlers
   stay in the parent and are passed as props.
 
+### GroupRecord / TeamRecord tab components (Chunk 10)
+
+`GroupRecord.jsx` and `TeamRecord.jsx` are now thin tab-routing shells. Their Details
+and Ledger tabs live in their own files and are self-contained (own state/data
+loading; props are just `groupId`/`teamId` and `onSaved`/`onDeleted` callbacks):
+- `groups/GroupDetails.jsx`, `groups/GroupLedger.jsx`
+- `teams/TeamDetails.jsx`, `teams/TeamLedger.jsx`
+
+The Members tab still uses the shared `EntityMembers`, and Group events use the shared
+`Schedule` component.
+
+### Calendar extracted modules (Chunk 10)
+
+`pages/calendar/Calendar.jsx` keeps the filter form and "other"-mode event management,
+but the two big read-only event tables are now their own components, each handling its
+own loading/empty/populated states:
+- `calendar/CalendarMonthTable.jsx` — props `{ events, loading, showDetail }`.
+- `calendar/CalendarFlatTable.jsx` — props `{ rows, loading, sortKey, sortDir, onSort }`
+  (the parent still computes the sort via `useSortedData`).
+- `calendar/calendarUtils.js` — pure `defaultFrom`/`defaultTo`/`googleMapsUrl`.
+
 ### Mandatory field indicator (`RequiredMark`)
 
 Standard: `<RequiredMark />` from `frontend/src/components/RequiredMark.jsx`.
