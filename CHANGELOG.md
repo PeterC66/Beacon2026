@@ -147,6 +147,24 @@ Format: `## [version] — YYYY-MM-DD` with bullet points per change.
     (45 files, 593 tests), lint and Prettier clean. This completes Chunk 9 —
     all seven oversized backend route files are now split into sub-router
     directories.
+- **Split oversized frontend pages — first two (ImprovementPlan Chunk 10,
+  finding M2)** — extraction only, no behaviour change:
+  - `pages/members/MemberEditor.jsx` (2,317 → 1,994 lines). Pure helpers and
+    constants (`todayIso`, `computeNextRenewal`, `BLANK_FORM`, `TITLES`) moved to
+    `members/memberEditorUtils.js`; the shared Tailwind class strings to
+    `members/memberEditorStyles.js`; the read-only Groups/Teams/Ledger block to
+    `members/MemberLedgerSection.jsx`; and the photo upload/preview block to
+    `members/MemberPhotoSection.jsx` (upload state and handlers stay in the
+    parent and are passed as props).
+  - `components/EntityMembers.jsx` (722 → 583 lines). The "Do with selected"
+    bulk-action bar and download field-picker moved to
+    `components/EntityBulkActions.jsx`; the "Add a member" panel to
+    `components/EntityAddMembers.jsx` — both presentation-only, with all state
+    and handlers passed in from the parent.
+  - Frontend suite green (53 files, 140 tests), lint 0 errors, Prettier clean.
+    The remaining M2 pages (GroupRecord, Calendar, TransactionEditor,
+    CreditBatches, MemberList, FinanceLedger, TeamRecord, SystemDashboard) are
+    deferred to a follow-up session and tracked in `KNOWN-ISSUES.md`.
 
 ### Fixed
 - **Duplicated security findings in `KNOWN-ISSUES.md`** — the Chunk 4 and Chunk 5

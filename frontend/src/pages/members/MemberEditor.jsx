@@ -25,82 +25,10 @@ import RecordTimestamp from '../../components/RecordTimestamp.jsx';
 import { useUnsavedChanges } from '../../hooks/useUnsavedChanges.js';
 import { scrollToFirstFieldError } from '../../lib/scrollToError.js';
 import FormError from '../../components/FormError.jsx';
-
-function todayIso() {
-  return new Date().toISOString().slice(0, 10);
-}
-
-const BLANK_FORM = {
-  title: '',
-  forenames: '',
-  surname: '',
-  knownAs: '',
-  initials: '',
-  suffix: '',
-  email: '',
-  mobile: '',
-  statusId: '',
-  classId: '',
-  joinedOn: '',
-  nextRenewal: '',
-  giftAidFrom: '',
-  homeU3a: '',
-  notes: '',
-  hideContact: false,
-  emergencyContact: '',
-  customField1: '',
-  customField2: '',
-  customField3: '',
-  customField4: '',
-  // address
-  houseNo: '',
-  street: '',
-  addLine1: '',
-  addLine2: '',
-  town: '',
-  county: '',
-  postcode: '',
-  telephone: '',
-  // partner
-  existingPartnerId: '',
-  // payment (new member only)
-  payAmount: '',
-  payMethod: '',
-  payAccountId: '',
-  payRef: '',
-};
-
-const TITLES = ['', 'Mr', 'Mrs', 'Ms', 'Miss', 'Dr', 'Prof', 'Rev', 'Sir', 'Lady'];
-
-/**
- * Compute next renewal date from joined date and year-config settings.
- * Returns an ISO date string (YYYY-MM-DD) or '' if inputs are missing.
- *
- * Formula:
- *   1. Find the next occurrence of (yearStartMonth/yearStartDay) after joinedOn.
- *   2. If extendedMembershipMonth is set and join calendar-month >= that month,
- *      add one extra year (member's first term covers the following year too).
- */
-function computeNextRenewal(joinedOnIso, config) {
-  if (!joinedOnIso || !config) return '';
-  const { yearStartMonth, yearStartDay, extendedMembershipMonth } = config;
-  // Parse in local time to avoid UTC-offset surprises on the date boundary
-  const [jy, jm, jd] = joinedOnIso.split('-').map(Number);
-  const joinDate = new Date(jy, jm - 1, jd);
-  const joinMonth = jm; // calendar month 1-12
-
-  // First occurrence of year-start on or after the join date
-  const thisYrStart = new Date(jy, yearStartMonth - 1, yearStartDay);
-  let renewalYear = joinDate >= thisYrStart ? jy + 1 : jy;
-
-  // Extended membership: if joined in month >= extendedMembershipMonth, skip one more year
-  if (extendedMembershipMonth != null && joinMonth >= extendedMembershipMonth) {
-    renewalYear += 1;
-  }
-
-  const d = new Date(renewalYear, yearStartMonth - 1, yearStartDay);
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-}
+import MemberLedgerSection from './MemberLedgerSection.jsx';
+import MemberPhotoSection from './MemberPhotoSection.jsx';
+import { INPUT_CLS, INPUT_ERR_CLS, LABEL_CLS, SECTION_CLS } from './memberEditorStyles.js';
+import { todayIso, BLANK_FORM, TITLES, computeNextRenewal } from './memberEditorUtils.js';
 
 export default function MemberEditor() {
   const { id } = useParams();
@@ -973,12 +901,10 @@ export default function MemberEditor() {
     );
 
   // ── Shared classes ──────────────────────────────────────────────────────
-  const inputCls =
-    'w-full border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500';
-  const inputErrCls =
-    'w-full border border-red-400 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-400';
-  const labelCls = 'block text-sm font-medium text-slate-700 mb-1';
-  const sectionCls = 'bg-white/90 rounded-lg shadow-sm p-4 sm:p-6';
+  const inputCls = INPUT_CLS;
+  const inputErrCls = INPUT_ERR_CLS;
+  const labelCls = LABEL_CLS;
+  const sectionCls = SECTION_CLS;
 
   function ic(field) {
     return fieldErrors[field] ? inputErrCls : inputCls;
@@ -1342,66 +1268,18 @@ export default function MemberEditor() {
 
             {/* ── Member Photo ───────────────────────────────────────── */}
             {photosEnabled && (
-              <div className="mt-4">
-                <label className={labelCls}>Member Photo</label>
-                <div className="flex items-start gap-4">
-                  <div
-                    onDrop={handlePhotoDrop}
-                    onDragOver={handlePhotoDragOver}
-                    onDragLeave={handlePhotoDragLeave}
-                    className={`w-24 h-24 rounded border-2 flex items-center justify-center transition-colors ${
-                      photoDragOver
-                        ? 'border-blue-400 bg-blue-50'
-                        : photoBlobUrl
-                          ? 'border-slate-300'
-                          : 'border-dashed border-slate-300'
-                    }`}
-                  >
-                    {photoBlobUrl ? (
-                      <img
-                        src={photoBlobUrl}
-                        alt="Member photo"
-                        className="w-full h-full object-cover rounded"
-                      />
-                    ) : (
-                      <span className="text-slate-400 text-xs text-center px-1">
-                        {photoDragOver ? 'Drop here' : 'No photo'}
-                      </span>
-                    )}
-                  </div>
-                  <div className="flex flex-col gap-2">
-                    <input
-                      type="file"
-                      accept="image/jpeg,image/png,image/gif"
-                      onChange={handlePhotoSelect}
-                      className="hidden"
-                      id="photo-upload"
-                    />
-                    <label
-                      htmlFor="photo-upload"
-                      className="inline-flex items-center px-3 py-1.5 border border-blue-300 text-blue-600 hover:bg-blue-50 rounded text-sm cursor-pointer transition-colors"
-                    >
-                      {photoUploading ? 'Uploading…' : hasPhoto ? 'Change Photo' : 'Choose File'}
-                    </label>
-                    {hasPhoto && (
-                      <button
-                        type="button"
-                        onClick={handlePhotoRemove}
-                        disabled={photoUploading}
-                        className="inline-flex items-center px-3 py-1.5 border border-red-300 text-red-600 hover:bg-red-50 rounded text-sm transition-colors"
-                      >
-                        Remove
-                      </button>
-                    )}
-                    <p className="text-xs text-slate-500">
-                      jpg, png, or gif — max 2 MB. Drag and drop or click.
-                      <br />
-                      Square format (1:1) recommended for membership cards.
-                    </p>
-                    {photoError && <p className="text-sm text-red-600 font-medium">{photoError}</p>}
-                  </div>
-                </div>
-              </div>
+              <MemberPhotoSection
+                photoBlobUrl={photoBlobUrl}
+                photoDragOver={photoDragOver}
+                hasPhoto={hasPhoto}
+                photoUploading={photoUploading}
+                photoError={photoError}
+                onDrop={handlePhotoDrop}
+                onDragOver={handlePhotoDragOver}
+                onDragLeave={handlePhotoDragLeave}
+                onSelect={handlePhotoSelect}
+                onRemove={handlePhotoRemove}
+              />
             )}
           </div>
 
@@ -2032,213 +1910,12 @@ export default function MemberEditor() {
 
           {/* ── Groups, Teams & Ledger ────────────────────────────────── */}
           {!isNew && (
-            <div className={sectionCls}>
-              <h2 className="text-base font-semibold text-slate-700 mb-3">
-                Groups, Teams and Ledger
-              </h2>
-              {ledgerLoading ? (
-                <p className="text-sm text-slate-400">Loading…</p>
-              ) : (
-                <>
-                  {/* Groups */}
-                  <div className="mb-4">
-                    <h3 className="text-sm font-medium text-slate-600 mb-2">Groups</h3>
-                    {memberGroups.filter((g) => g.type === 'group').length === 0 ? (
-                      <p className="text-sm text-slate-400 italic">Not a member of any groups.</p>
-                    ) : (
-                      <div className="overflow-x-auto">
-                        <table className="w-full text-sm min-w-max">
-                          <thead>
-                            <tr className="bg-slate-50 border-b border-slate-200 text-left text-slate-600 italic">
-                              <th className="px-3 py-2 font-normal">Group name</th>
-                              <th className="px-3 py-2 font-normal">Status</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {memberGroups
-                              .filter((g) => g.type === 'group')
-                              .map((g, i) => (
-                                <tr
-                                  key={g.id}
-                                  className={`border-b border-slate-100 ${i % 2 === 0 ? 'bg-yellow-50' : 'bg-white'}`}
-                                >
-                                  <td className="px-3 py-1.5">
-                                    {can('group_records_all', 'view') ? (
-                                      <a
-                                        href={`/groups/${g.id}`}
-                                        className="text-blue-700 hover:underline"
-                                        title={
-                                          g.short_name ? g.name : 'Press to access the group record'
-                                        }
-                                      >
-                                        {g.short_name || g.name}
-                                      </a>
-                                    ) : (
-                                      <span
-                                        className={g.status === 'inactive' ? 'text-red-600' : ''}
-                                        title={g.short_name ? g.name : undefined}
-                                      >
-                                        {g.short_name || g.name}
-                                      </span>
-                                    )}
-                                    {g.is_leader && (
-                                      <span className="ml-1.5 text-amber-500" title="Leader">
-                                        ★
-                                      </span>
-                                    )}
-                                    {g.waiting_since && (
-                                      <span className="ml-1.5 text-slate-400" title="Waiting list">
-                                        ⏳
-                                      </span>
-                                    )}
-                                  </td>
-                                  <td className="px-3 py-1.5">
-                                    {g.status === 'inactive' ? (
-                                      <span className="text-red-600 font-medium">Inactive</span>
-                                    ) : (
-                                      <span className="text-slate-500">Active</span>
-                                    )}
-                                  </td>
-                                </tr>
-                              ))}
-                          </tbody>
-                        </table>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Teams */}
-                  <div className="mb-4">
-                    <h3 className="text-sm font-medium text-slate-600 mb-2">Teams</h3>
-                    {memberGroups.filter((g) => g.type === 'team').length === 0 ? (
-                      <p className="text-sm text-slate-400 italic">Not a member of any teams.</p>
-                    ) : (
-                      <div className="overflow-x-auto">
-                        <table className="w-full text-sm min-w-max">
-                          <thead>
-                            <tr className="bg-slate-50 border-b border-slate-200 text-left text-slate-600 italic">
-                              <th className="px-3 py-2 font-normal">Team name</th>
-                              <th className="px-3 py-2 font-normal">Status</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {memberGroups
-                              .filter((g) => g.type === 'team')
-                              .map((t, i) => (
-                                <tr
-                                  key={t.id}
-                                  className={`border-b border-slate-100 ${i % 2 === 0 ? 'bg-yellow-50' : 'bg-white'}`}
-                                >
-                                  <td className="px-3 py-1.5">
-                                    {can('group_records_all', 'view') ? (
-                                      <a
-                                        href={`/teams/${t.id}`}
-                                        className="text-blue-700 hover:underline"
-                                        title={
-                                          t.short_name ? t.name : 'Press to access the team record'
-                                        }
-                                      >
-                                        {t.short_name || t.name}
-                                      </a>
-                                    ) : (
-                                      <span
-                                        className={t.status === 'inactive' ? 'text-red-600' : ''}
-                                        title={t.short_name ? t.name : undefined}
-                                      >
-                                        {t.short_name || t.name}
-                                      </span>
-                                    )}
-                                    {t.is_leader && (
-                                      <span className="ml-1.5 text-amber-500" title="Leader">
-                                        ★
-                                      </span>
-                                    )}
-                                  </td>
-                                  <td className="px-3 py-1.5">
-                                    {t.status === 'inactive' ? (
-                                      <span className="text-red-600 font-medium">Inactive</span>
-                                    ) : (
-                                      <span className="text-slate-500">Active</span>
-                                    )}
-                                  </td>
-                                </tr>
-                              ))}
-                          </tbody>
-                        </table>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Transactions */}
-                  {can('finance_ledger', 'view') && (
-                    <div>
-                      <h3 className="text-sm font-medium text-slate-600 mb-2">Transactions</h3>
-                      {memberTxns.length === 0 ? (
-                        <p className="text-sm text-slate-400 italic">
-                          No transactions linked to this member.
-                        </p>
-                      ) : (
-                        <div className="overflow-x-auto">
-                          <table className="w-full text-sm min-w-max">
-                            <thead>
-                              <tr className="bg-slate-50 border-b border-slate-200 text-left text-slate-600 italic">
-                                <th className="px-3 py-2 font-normal">#</th>
-                                <th className="px-3 py-2 font-normal">Date</th>
-                                <th className="px-3 py-2 font-normal">Detail</th>
-                                <th className="px-3 py-2 font-normal">Account</th>
-                                <th
-                                  className="px-3 py-2 font-normal text-right"
-                                  title="+/- means the member paid/received"
-                                >
-                                  Amount
-                                </th>
-                              </tr>
-                            </thead>
-                            <tbody>
-                              {memberTxns.map((t, i) => (
-                                <tr
-                                  key={t.id}
-                                  className={`border-b border-slate-100 ${i % 2 === 0 ? 'bg-yellow-50' : 'bg-white'}`}
-                                >
-                                  <td className="px-3 py-1.5">
-                                    {can('finance_transactions', 'view') ? (
-                                      <a
-                                        href={`/finance/transactions/${t.id}`}
-                                        className="text-blue-700 hover:underline font-mono"
-                                        title="Press to access the transaction record"
-                                      >
-                                        {t.transaction_number}
-                                      </a>
-                                    ) : (
-                                      <span className="font-mono">{t.transaction_number}</span>
-                                    )}
-                                  </td>
-                                  <td className="px-3 py-1.5 whitespace-nowrap">
-                                    {t.date ? new Date(t.date).toLocaleDateString('en-GB') : ''}
-                                  </td>
-                                  <td
-                                    className="px-3 py-1.5 max-w-[200px] truncate"
-                                    title={t.detail}
-                                  >
-                                    {t.detail}
-                                  </td>
-                                  <td className="px-3 py-1.5 text-slate-600">{t.account_name}</td>
-                                  <td
-                                    className={`px-3 py-1.5 text-right font-medium ${t.type === 'in' ? 'text-green-700' : 'text-red-700'}`}
-                                  >
-                                    {t.type === 'in' ? '+' : '−'}£{Number(t.amount).toFixed(2)}
-                                  </td>
-                                </tr>
-                              ))}
-                            </tbody>
-                          </table>
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </>
-              )}
-            </div>
+            <MemberLedgerSection
+              ledgerLoading={ledgerLoading}
+              memberGroups={memberGroups}
+              memberTxns={memberTxns}
+              can={can}
+            />
           )}
 
           {/* ── Buttons ─────────────────────────────────────────────── */}
