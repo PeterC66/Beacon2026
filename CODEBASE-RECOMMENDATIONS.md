@@ -197,7 +197,7 @@ Already done as part of R6 (lazy loading). The component was named
 
 ---
 
-### ~~R12. Add missing backend tests~~ ✓ Partially completed
+### ~~R12. Add missing backend tests~~ ✓ Completed
 
 Implemented in v0.9.3 for the 6 low-risk routes (69 new tests):
 - `settings.test.js` (20 tests) — all `/settings` endpoints + feature config
@@ -207,16 +207,23 @@ Implemented in v0.9.3 for the 6 low-risk routes (69 new tests):
 - `addressExport.test.js` (12 tests) — view, download (CSV/TSV/Excel), labels (PDF)
 - `privileges.test.js` (3 tests) — GET /privileges/resources
 
-**Still missing** (high/medium risk, future sessions):
+Completed by **ImprovementPlan Chunk 7 (2026-06-13)** for the remaining
+high/medium-risk routes:
+- `portal.test.js` — portal auth guard + home/groups/personal-details
+  (portal login/lockout/forgot already in `portalAuth.test.js`)
+- `public.test.js` — tenant resolution, join-config, register/verify-email,
+  public groups/calendar
+- `teams.test.js` — team CRUD, members, events
+- `system.test.js` — tenant CRUD, set-temp-password, settings, feature-config
+  (restore + feature-config PATCH already in `restoreBeacon.test.js`)
+- `financeTransfers.test.js`, `financeReconciliation.test.js`,
+  `financeStatements.test.js` — the `finance/` sub-routes not already covered by
+  `finance.test.js` / `creditBatches.test.js`
+- shared `__tests__/mocks.js` factories remove per-file mock boilerplate (M4)
 
-| Route file | Lines | Risk |
-|-----------|-------|------|
-| `backup.js` | 1,663 | **High** — backup/restore is critical |
-| `portal.js` | 1,545 | **High** — member-facing portal |
-| `public.js` | 1,153 | **High** — public joining flow |
-| `teams.js` | 1,033 | **Medium** — largely mirrors groups.js |
-| `email.js` | 499 | **Medium** — SendGrid integration |
-| `system.js` | ~200 | **Low** — system admin only |
+`backup.js` and `email.js` have focused regression suites (`restoreBeacon.test.js`,
+`email.test.js`) rather than exhaustive coverage; `backup.js` is slated to be
+split and more fully tested under ImprovementPlan Chunk 9.
 
 ---
 
