@@ -30,7 +30,7 @@ vi.mock('../utils/audit.js', () => ({
 }));
 
 const { ALL_FEATURE_KEYS, STANDARD_IMPLEMENTATIONS } = await import('../../../shared/constants.js');
-const { restoreBeacon } = await import('../routes/backup.js');
+const { restoreBeacon } = await import('../routes/backup/restore.js');
 const { default: app } = await import('../app.js');
 const { tenantQuery, prisma } = await import('../utils/db.js');
 
