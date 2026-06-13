@@ -189,18 +189,18 @@ These are catalogued and re-verified in `docs/ImprovementPlan.md` (Chunks 4–5)
 
 ## Oversized frontend pages (ImprovementPlan Chunk 10, finding M2)
 
-1. `[OPEN]` **Remaining oversized pages not yet split** — Chunk 10 split
+1. `[OPEN]` **A few pages still over the ~700-line guideline** — Chunk 10 split
+   all the originally-flagged M2 pages (extraction only, no behaviour change):
    `MemberEditor.jsx` (2,317 → 1,994), `EntityMembers.jsx` (722 → 583),
-   `GroupRecord.jsx` (1,128 → 152), `TeamRecord.jsx` (889 → 125) and
-   `Calendar.jsx` (1,125 → 861). These pages are still over the ~700-line
-   guideline and should be split the same way (extraction only, no behaviour
-   change) in a follow-up session: `TransactionEditor.jsx` (1,097),
-   `CreditBatches.jsx` (1,028), `MemberList.jsx` (921), `FinanceLedger.jsx`
-   (892), `SystemDashboard.jsx` (832). `Calendar.jsx` is still 861 — its filter
-   form and "other"-mode event management could be split further if revisited.
-   `MemberEditor.jsx` itself is still ~1,994 lines — the address/partner
-   section (the largest remaining block) is a candidate for a further pass but is
-   heavily intertwined with shared form state, so it was left for now.
+   `GroupRecord.jsx` (1,128 → 152), `TeamRecord.jsx` (889 → 125),
+   `Calendar.jsx` (1,125 → 861), and (2026-06-13 follow-up) `TransactionEditor.jsx`
+   (1,097 → 792), `CreditBatches.jsx` (1,028 → 446), `MemberList.jsx` (921 → 453),
+   `FinanceLedger.jsx` (892 → 395), `SystemDashboard.jsx` (832 → 458). Two parents
+   remain over the guideline and could take a further extraction pass if revisited:
+   `MemberEditor.jsx` (~1,994 — the address/partner block is the largest remaining
+   chunk but is heavily intertwined with shared form state) and `Calendar.jsx`
+   (~861 — its filter form and "other"-mode event management). `TransactionEditor.jsx`
+   (792) is close to the line and is mostly the flat top-level field grid.
 
 ---
 
