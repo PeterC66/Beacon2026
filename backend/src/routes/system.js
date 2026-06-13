@@ -18,7 +18,7 @@ import {
   restoreBeacon2,
   restoreBeacon,
   BEACON_DEFAULT_PASSWORD,
-} from './backup.js';
+} from './backup/restore.js';
 import { syncDefaultRolePrivileges } from '../utils/migrate.js';
 import { logAudit } from '../utils/audit.js';
 import { ALL_FEATURE_KEYS } from '../../../shared/constants.js';
