@@ -212,6 +212,15 @@ Every item below applies to every new feature — no exceptions.
 
 - [ ] **Zod validation** on all request bodies before processing.
 
+- [ ] **Zod schema location — inline by default; extract only when shared.**
+  Define a route's schemas *inline* in the route file (the common case — ~35
+  route modules do this). Extract a schema to `backend/src/schemas/` **only when
+  it is genuinely shared by two or more route modules** — the way
+  `schemas/common.js`, `schemas/groups.js`, and `schemas/teams.js` factor out the
+  member/event/ledger schemas reused by both the groups and teams routes. Do not
+  pre-emptively extract single-use schemas to `schemas/`; the split should be a
+  deliberate DRY decision, not a default.
+
 - [ ] **Access token in memory only** — never localStorage or sessionStorage.
 
 - [ ] **Shared constants** — feature toggles (`FEATURE_DEPS`, `FEATURE_DEFAULTS_OFF`,
@@ -289,6 +298,25 @@ Every item below applies to every new feature — no exceptions.
   when `AppError` will do; the existing inline `res.status(400).json({ error })`
   guards (e.g. "Nothing to update.") are acceptable but `AppError` is preferred
   for new code.
+
+- [ ] **Error-message wording — generic before auth, specific after.** The
+  audience for the message decides how much it may reveal:
+  - **Unauthenticated / account-recovery endpoints** (tenant + portal login,
+    forgotten-password, magic-link/verification): use a **generic** message that
+    does not reveal whether an account exists. Login → `Invalid credentials.`
+    (tenant) / `Invalid email or password.` (portal); forgotten-password → the
+    "If an account exists with that email, a reset link has been sent." form;
+    expired/invalid links → `Invalid or expired …`. Never return "user not
+    found", "no account with that email", or distinguish wrong-password from
+    no-such-user. (Registration is the one allowed exception: it must first
+    match member details, then may say "an account already exists" — see
+    `routes/public/portalAuth.js`.)
+  - **Authenticated / authorised endpoints** (admin CRUD, self-service profile,
+    change-password for the logged-in user): be **specific and helpful** —
+    `User not found.`, `Invalid membership class.`, `Nothing to update.` are fine
+    because the caller is already trusted and the message aids debugging.
+  When adding an endpoint, decide which side of this line it sits on before
+  choosing the wording.
 
 ## List pages
 

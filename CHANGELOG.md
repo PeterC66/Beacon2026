@@ -45,6 +45,20 @@ Format: `## [version] — YYYY-MM-DD` with bullet points per change.
 - Reworded the stale system-admin auth comment in `frontend/src/App.jsx`
   (KI #26): it no longer claims `sessionStorage` and now points at the
   in-memory sys-token in `lib/api/system.js`.
+- **Validation & error-message conventions documented (2026-06-14 review,
+  Chunk 4)** — added two house rules to `CLAUDE-STANDARDS.md` so existing,
+  already-consistent patterns are intentional rather than accidental:
+  - **Zod schema location** — inline by default; extract to
+    `backend/src/schemas/` only when a schema is genuinely shared by two or more
+    route modules (as `schemas/common|groups|teams.js` already do). No mass
+    extraction of the ~35 single-use inline schemas.
+  - **Error-message wording** — generic, non-enumerating messages on
+    unauthenticated/recovery endpoints (login, forgotten-password, verification
+    links); specific, helpful messages on authenticated/authorised endpoints.
+    Verified the codebase already follows this (tenant + portal login,
+    sys-admin login, and forgotten-password are all generic; `User not
+    found.`/`Tenant not found.` appear only on authenticated routes), so no code
+    changes were required.
 
 ### Security
 - **Removed PII from operational logs (2026-06-14 review, Chunk 2)** — replaced
