@@ -1,8 +1,11 @@
-# Beacon2 — Project Definition (Updated April 2026)
+# Beacon2 — Project Definition (last reviewed June 2026)
 
-> **Note:** This document describes the *current* state of the project as of April 2026.
-> Read it alongside `CLAUDE.md`, `CLAUDE-STANDARDS.md`, and `CLAUDE-REFERENCE.md` in the
-> repository root, which contain coding conventions and implementation details.
+> **Note:** This document describes the *current* state of the project as of
+> June 2026 (version 0.11.0). It is the canonical inventory of modules, routes,
+> and pages; for a contributor-oriented repo map and quickstart see
+> [`README.md`](README.md). Read it alongside `CLAUDE.md`, `CLAUDE-STANDARDS.md`,
+> and `CLAUDE-REFERENCE.md` in the repository root, which contain coding
+> conventions and implementation details.
 
 ---
 
@@ -288,6 +291,10 @@ startup. All DDL uses `IF NOT EXISTS`; seed INSERTs use `ON CONFLICT DO NOTHING`
 
 ### Project layout
 
+This is the authoritative, detailed layout. `README.md` carries a shorter
+repo-orientation tree (including root tooling files) for newcomers — keep the
+two in sync at the level of detail each provides.
+
 ```
 backend/
   prisma/
@@ -349,12 +356,14 @@ frontend/
                            PortalRenewal  PortalRequestCard
                            PublicGroups  PublicCalendar
 
-e2e/                       Playwright E2E tests against staging
+e2e/                       Playwright E2E tests (staging or local docker stack)
+shared/                    constants.js shared by backend and frontend
 docs/
   Beacon2UG/               Beacon2 User Guide (64 sections + index, Markdown)
   BeaconUG/                Beacon User Guide pages (Markdown + images)
   BeaconUG-Comparison.md   Feature comparison: Beacon2 vs original Beacon
   FromBeacon/              Selected files from original Beacon codebase
+  history/                 Archived 2026-06 review docs (point-in-time, read-only)
 ```
 
 ---

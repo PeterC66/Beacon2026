@@ -91,6 +91,10 @@ Format: `## [version] — YYYY-MM-DD` with bullet points per change.
   explaining their provenance). `KNOWN-ISSUES.md` is now stated explicitly as the
   single living backlog and its cross-links point at the archived copies. No open
   items were lost — all deferred work was already tracked in `KNOWN-ISSUES.md`.
+  `Beacon2 Project Definition.md` had its stale "April 2026" header refreshed to
+  June 2026 / v0.11.0 and is now cross-referenced with `README.md` as the
+  canonical module/route/page inventory (README being the shorter repo-orientation
+  map), removing the ambiguity over which layout tree is authoritative.
 - **Backend consistency cleanup (ImprovementPlan Chunk 6, findings N2/N6)** —
   documented a single response-shape + status-code convention in
   `CLAUDE-STANDARDS.md` (`{ error }` for all error bodies via `AppError`;
