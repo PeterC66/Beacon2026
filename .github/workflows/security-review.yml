@@ -13,6 +13,10 @@ on:
 jobs:
   security-review:
     name: Claude security review
+    # Dependabot PRs run with a read-only token and do not receive repository
+    # secrets, so ANTHROPIC_API_KEY is empty and the action fails. They only
+    # touch dependency manifests/lockfiles, so skip the AI security review.
+    if: github.actor != 'dependabot[bot]'
     runs-on: ubuntu-latest
     permissions:
       contents: read
