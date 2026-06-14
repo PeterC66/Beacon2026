@@ -21,7 +21,7 @@ beacon2/
 │   ├── prisma/                system schema + tenant DDL
 │   └── vitest.config.js
 │
-├── frontend/                  React 18 + Vite 5 + Tailwind CSS 3
+├── frontend/                  React 18 + Vite + Tailwind CSS 3
 │   ├── src/
 │   │   ├── App.jsx            Route tree
 │   │   ├── context/           AuthContext (in-memory token)
@@ -39,15 +39,21 @@ beacon2/
 ├── docs/
 │   ├── Beacon2UG/             Beacon2 User Guide (64 sections, Markdown)
 │   ├── BeaconUG/              Beacon User Guide pages (Markdown + images)
-│   └── FromBeacon/            Selected files from the original Beacon codebase
+│   ├── FromBeacon/            Selected files from the original Beacon codebase
+│   └── history/              Archived 2026-06 review docs (read-only)
 │
-├── .github/workflows/ci.yml   Runs backend + frontend tests on every push
+├── docker-compose.yml         Local full-stack (Postgres + Redis + apps)
+├── .github/workflows/ci.yml   Runs backend + frontend lint, format, tests
 ├── render.yaml                Render blueprint (backend + Postgres)
 ├── DEPLOYMENT.md              Step-by-step deployment guide (Render + Vercel)
 ├── CLAUDE.md                  Instructions for Claude Code (session workflow)
 ├── CLAUDE-STANDARDS.md        Cross-cutting development checklist
 └── CLAUDE-REFERENCE.md        Detailed implementation notes by module
 ```
+
+> For the full module/route/page inventory, see
+> [`Beacon2 Project Definition.md`](Beacon2%20Project%20Definition.md) — this tree
+> is a quick orientation map; that document is the authoritative detail.
 
 ## Quick start (local development)
 
