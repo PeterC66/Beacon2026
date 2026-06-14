@@ -12,18 +12,29 @@ import { requireFeature } from '../middleware/requireFeature.js';
 import { buildTokenMap, applyTokens } from '../utils/emailTokens.js';
 
 const require = createRequire(import.meta.url);
-const PdfPrinter = require('pdfmake/src/printer');
+// pdfmake 0.3 exposes a singleton on the server build (the old
+// `pdfmake/src/printer` class was removed). Fonts are registered into its
+// virtual file system and referenced by filename rather than passed as Buffers.
+const pdfmake = require('pdfmake');
 const vfsFonts = require('pdfmake/build/vfs_fonts');
 
-const fonts = {
+// Load the bundled Roboto font files into pdfmake's virtual file system, then
+// declare the Roboto family by referencing those filenames.
+for (const [filename, base64] of Object.entries(vfsFonts)) {
+  pdfmake.virtualfs.writeFileSync(filename, Buffer.from(base64, 'base64'));
+}
+pdfmake.addFonts({
   Roboto: {
-    normal: Buffer.from(vfsFonts['Roboto-Regular.ttf'], 'base64'),
-    bold: Buffer.from(vfsFonts['Roboto-Medium.ttf'], 'base64'),
-    italics: Buffer.from(vfsFonts['Roboto-Italic.ttf'], 'base64'),
-    bolditalics: Buffer.from(vfsFonts['Roboto-MediumItalic.ttf'], 'base64'),
+    normal: 'Roboto-Regular.ttf',
+    bold: 'Roboto-Medium.ttf',
+    italics: 'Roboto-Italic.ttf',
+    bolditalics: 'Roboto-MediumItalic.ttf',
   },
-};
-const printer = new PdfPrinter(fonts);
+});
+// Server-side rendering never needs to fetch remote URLs or read local files,
+// so deny both access policies (this also silences pdfmake's startup warnings).
+pdfmake.setUrlAccessPolicy(() => false);
+pdfmake.setLocalAccessPolicy(() => false);
 
 const router = Router();
 router.use(requireAuth);
@@ -284,17 +295,11 @@ router.post('/download', requirePrivilege('letters', 'download'), async (req, re
       defaultStyle: { font: 'Roboto', fontSize: 12 },
     };
 
-    const pdfDoc = printer.createPdfKitDocument(docDefinition);
-    const chunks = [];
-    pdfDoc.on('data', (chunk) => chunks.push(chunk));
-    pdfDoc.on('end', () => {
-      const buffer = Buffer.concat(chunks);
-      const filename = `${displayName.replace(/[^a-zA-Z0-9]/g, '_')}_Letters.pdf`;
-      res.set('Content-Type', 'application/pdf');
-      res.set('Content-Disposition', `attachment; filename="${filename}"`);
-      res.send(buffer);
-    });
-    pdfDoc.end();
+    const buffer = await pdfmake.createPdf(docDefinition).getBuffer();
+    const filename = `${displayName.replace(/[^a-zA-Z0-9]/g, '_')}_Letters.pdf`;
+    res.set('Content-Type', 'application/pdf');
+    res.set('Content-Disposition', `attachment; filename="${filename}"`);
+    res.send(buffer);
   } catch (err) {
     next(err);
   }

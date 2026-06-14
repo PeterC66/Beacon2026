@@ -13,6 +13,9 @@
     "format": "prettier --write \"src/**/*.{js,jsx}\"",
     "format:check": "prettier --check \"src/**/*.{js,jsx}\""
   },
+  "engines": {
+    "node": ">=20.0.0"
+  },
   "dependencies": {
     "@tiptap/extension-text-align": "^3.26.1",
     "@tiptap/extension-text-style": "^3.26.1",
