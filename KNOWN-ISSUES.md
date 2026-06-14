@@ -203,16 +203,24 @@ These are catalogued and re-verified in `docs/history/ImprovementPlan.md` (Chunk
    deliberate (mount-only effects) and can take an inline disable with a note.
 3. `[ACCEPTED]` **`react/no-unescaped-entities` disabled** — apostrophes and
    quotes in JSX text render correctly; escaping them is noise.
-4. `[OPEN]` **`shared/constants.js` not covered by either package's `lint` /
-   `format:check`** — it lives outside `backend/src` and `frontend/src`, so CI
-   does not enforce its style. It was Prettier-formatted once during Chunk 3.
-   Add a dedicated lint/format target for `shared/` if it grows.
-5. `[DEFERRED]` **`pdfmake` pinned to 0.2.x — 0.3 migration needed** — pdfmake
-   0.3 is a breaking rewrite: it drops `pdfmake/src/printer`, which
-   `backend/src/routes/letters.js` imports, so the backend fails to load under
-   0.3 (`Cannot find module 'pdfmake/src/printer'`). Dependabot is configured to
-   ignore pdfmake minor bumps until the import is migrated to the 0.3 API.
-   Surfaced 2026-06-14 when a grouped Dependabot PR (#429) broke backend tests.
+4. `[PARTIAL]` **`shared/constants.js` lint/format coverage** — Chunk 10
+   (2026-06-14) brought `shared/` under **Prettier** via the backend's
+   `format` / `format:check` scripts (`prettier ... "../shared/**/*.js"`), so CI
+   now enforces its formatting. **ESLint** is not yet applied: ESLint 9 flat
+   config refuses files outside the config file's base path, so a sibling
+   package cannot lint `../shared` without root-level tooling (a root
+   `package.json` + `eslint.config.js` + a CI job). That is disproportionate for
+   a single 182-line constants file; add it only if `shared/` grows into
+   multiple modules with real logic.
+5. `[FIXED]` **`pdfmake` migrated 0.2.x → 0.3.x** — Chunk 10 (2026-06-14)
+   migrated `backend/src/routes/letters.js` off the removed
+   `pdfmake/src/printer` class to the 0.3 server singleton (`require('pdfmake')`
+   → register Roboto fonts into `pdfmake.virtualfs`, declare the family with
+   `addFonts`, lock the URL/local access policies, then
+   `await pdfmake.createPdf(doc).getBuffer()`). The Dependabot ignore rule for
+   pdfmake minor bumps was removed. Verified by the existing
+   `letters.test.js` PDF-download test (asserts an `application/pdf` body).
+   (Was surfaced 2026-06-14 when grouped Dependabot PR #429 broke backend tests.)
 
 ---
 

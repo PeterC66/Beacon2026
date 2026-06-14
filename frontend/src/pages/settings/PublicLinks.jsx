@@ -9,6 +9,7 @@ import { useAuth } from '../../context/AuthContext.jsx';
 import { publicLinks as api } from '../../lib/api.js';
 import PageHeader from '../../components/PageHeader.jsx';
 import NavBar from '../../components/NavBar.jsx';
+import { inputCls, labelCls } from '../../components/ui/Input.jsx';
 import { useUnsavedChanges } from '../../hooks/useUnsavedChanges.js';
 
 // ── Render helpers (plain functions, not components) ─────────────────────
@@ -16,8 +17,11 @@ import { useUnsavedChanges } from '../../hooks/useUnsavedChanges.js';
 function renderCopyableUrl(label, value, name) {
   return (
     <div>
-      <label className="block text-sm font-medium text-slate-700 mb-1">{label}</label>
+      <label htmlFor={name} className={labelCls}>
+        {label}
+      </label>
       <input
+        id={name}
         type="text"
         readOnly
         name={name}
@@ -280,17 +284,18 @@ export default function PublicLinks() {
 
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">
+              <label htmlFor="privacyPolicyUrl" className={labelCls}>
                 Privacy policy URL
               </label>
               <input
+                id="privacyPolicyUrl"
                 type="url"
                 name="privacyPolicyUrl"
                 value={form.privacyPolicyUrl}
                 onChange={(e) => handleChange('privacyPolicyUrl', e.target.value)}
                 disabled={!canChange || !joiningOn}
                 placeholder="https://your-u3a.org.uk/privacy"
-                className="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className={`w-full ${inputCls}`}
               />
               <p className="text-xs text-slate-500 mt-1">
                 Shown to new members on the joining form. Required by the Trust.
