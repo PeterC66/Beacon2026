@@ -1,6 +1,9 @@
 # Dependabot keeps dependencies patched across the three npm packages and the
 # GitHub Actions workflows. Updates are grouped to keep PR noise low and are
-# capped so they never overwhelm the review queue.
+# capped so they never overwhelm the review queue. Major-version bumps are
+# ignored for the npm packages — they tend to be breaking and several versions
+# are deliberately pinned (e.g. eslint-plugin-react-hooks v5); take majors by
+# hand when there's budget for the refactor.
 version: 2
 updates:
   - package-ecosystem: npm
@@ -15,6 +18,9 @@ updates:
         update-types:
           - minor
           - patch
+    ignore:
+      - dependency-name: '*'
+        update-types: ['version-update:semver-major']
 
   - package-ecosystem: npm
     directory: /frontend
@@ -28,6 +34,9 @@ updates:
         update-types:
           - minor
           - patch
+    ignore:
+      - dependency-name: '*'
+        update-types: ['version-update:semver-major']
 
   - package-ecosystem: npm
     directory: /e2e
@@ -41,6 +50,9 @@ updates:
         update-types:
           - minor
           - patch
+    ignore:
+      - dependency-name: '*'
+        update-types: ['version-update:semver-major']
 
   - package-ecosystem: github-actions
     directory: /
