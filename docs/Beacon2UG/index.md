@@ -44,7 +44,7 @@ their u3a using Beacon2.
 - [20. Group Record — Ledger](20-group-record-ledger.md)
 - [21. Venues](21-venues.md)
 - [22. Faculties](22-faculties.md)
-- [23. The Calendar](23-calendar.md)
+- [23. Events](23-calendar.md)
 - [24. Open Meetings](24-open-meetings.md)
 
 ### Finance

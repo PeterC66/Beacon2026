@@ -133,4 +133,4 @@ tick or untick columns to tailor the output to your needs.
 
 ---
 
-[Contents](index.md) | [Previous: Group Record -- Details](17-group-record-details.md) | [Next: Group Record -- Schedule](19-group-record-schedule.md)
+[← 17. Group Record — Details](17-group-record-details.md) | [Contents](index.md) | [19. Group Record — Schedule →](19-group-record-schedule.md)

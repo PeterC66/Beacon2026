@@ -103,4 +103,4 @@ associations, schedule events, and ledger entries.
 
 ---
 
-[Contents](index.md) | [Previous: The Groups List](16-groups-list.md) | [Next: Group Record -- Members](18-group-record-members.md)
+[← 16. The Groups List](16-groups-list.md) | [Contents](index.md) | [18. Group Record — Members →](18-group-record-members.md)

@@ -69,4 +69,4 @@ If no messages have been set, this area will not appear.
 
 ---
 
-[← Previous: Changing Your Password](3-changing-password.md) | [Contents](index.md) | [Next: Cookies and Privacy →](5-cookies-privacy.md)
+[← 3. Changing Your Password](3-changing-password.md) | [Contents](index.md) | [5. Cookies and Privacy →](5-cookies-privacy.md)

@@ -84,4 +84,4 @@ group ledger is simply a convenient notebook for the group itself.
 
 ---
 
-[Contents](index.md) | [Previous: Group Record -- Schedule](19-group-record-schedule.md) | [Next: Venues](21-venues.md)
+[← 19. Group Record — Schedule](19-group-record-schedule.md) | [Contents](index.md) | [21. Venues →](21-venues.md)

@@ -65,7 +65,7 @@ beacon2/
 
 ### Prerequisites
 
-- Node.js 20+
+- Node.js 20+ *(CI builds and tests on Node 22)*
 - PostgreSQL 15+
 - Redis 7+ *(optional — only needed if `USE_REDIS=true`)*
 

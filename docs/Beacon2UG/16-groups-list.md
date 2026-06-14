@@ -74,4 +74,4 @@ filters -- for example, "24 groups".
 
 ---
 
-[Contents](index.md) | [Previous: Validate Member Data](15-validate-member-data.md) | [Next: Group Record -- Details](17-group-record-details.md)
+[← 15. Validate Member Data](15-validate-member-data.md) | [Contents](index.md) | [17. Group Record — Details →](17-group-record-details.md)

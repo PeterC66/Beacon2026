@@ -55,4 +55,4 @@ page (see [Section 60](60-personal-preferences.md)), accessible from the
 
 ---
 
-[← Previous: Logging In](2-logging-in.md) | [Contents](index.md) | [Next: The Home Page →](4-home-page.md)
+[← 2. Logging In](2-logging-in.md) | [Contents](index.md) | [4. The Home Page →](4-home-page.md)

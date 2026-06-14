@@ -112,4 +112,4 @@ your data is clean.
 
 ---
 
-[← Previous: Membership Statistics](14-membership-statistics.md) | [Contents](index.md) | [Next: The Groups List →](16-groups-list.md)
+[← 14. Membership Statistics](14-membership-statistics.md) | [Contents](index.md) | [16. The Groups List →](16-groups-list.md)

@@ -76,4 +76,4 @@ to set a new password (see [Section 3](3-changing-password.md)).
 
 ---
 
-[← Previous: Introduction](1-introduction.md) | [Contents](index.md) | [Next: Changing Your Password →](3-changing-password.md)
+[← 1. Introduction](1-introduction.md) | [Contents](index.md) | [3. Changing Your Password →](3-changing-password.md)
