@@ -47,6 +47,20 @@ All work goes on a branch whose name starts with `claude/`. Never push directly 
 
 ---
 
+## Reviewing the codebase (lessons from past reviews)
+
+When doing a full code/documentation review, **verify every subagent finding by
+hand before reporting or acting on it.** Past reviews using Explore subagents
+produced confident-sounding *false positives* — e.g. "function X is undefined →
+runtime crash" (it was a hoisted declaration later in the same file) and "most
+routes lack Zod validation" (they all validate; the schemas were just inline).
+Grep for the symbol / read the file before trusting a "missing" or "broken"
+claim. The codebase is more mature than a surface scan implies, so headline
+alarms deserve extra scepticism. The most recent independent review and its
+chunked work plan live in `docs/ImprovementPlan-2026-06-14.md`.
+
+---
+
 ## Key conventions
 
 - **Challenge the user's approach** if an implementation would be difficult, fragile,
