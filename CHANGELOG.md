@@ -7,6 +7,17 @@ Format: `## [version] — YYYY-MM-DD` with bullet points per change.
 
 ## [Unreleased] — 2026-06-14
 
+### Changed
+- **Frontend polish — public pages (2026-06-14 review, Chunk 9)** —
+  - Migrated the six public pages (`PortalLogin`, `PortalRegister`,
+    `PortalResetPassword`, `PortalForgotPassword`, `JoinForm`,
+    `PortalPersonalDetails`) from inline Tailwind input/label strings to the
+    shared `inputCls` / `labelCls` constants (`components/ui/Input.jsx`),
+    removing two duplicated local style definitions.
+  - Added `htmlFor`/`id` label associations to every field on the four public
+    auth pages (`PortalLogin`, `PortalForgotPassword`, `PortalResetPassword`,
+    `PortalRegister`) for screen-reader and Playwright `getByLabel` support.
+
 ### Added
 - **Licensing & legal hygiene (2026-06-14 review, Chunk 1)** —
   - Root `LICENSE` declaring Beacon2 **proprietary / all rights reserved**

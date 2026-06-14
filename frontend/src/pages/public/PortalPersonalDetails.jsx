@@ -8,6 +8,7 @@ import PortalVersion from '../../components/PortalVersion.jsx';
 import PasswordInput from '../../components/PasswordInput.jsx';
 import { SS_PORTAL_MEMBER } from '../../lib/storageKeys.js';
 import FormError from '../../components/FormError.jsx';
+import { inputCls as sharedInputCls, labelCls } from '../../components/ui/Input.jsx';
 
 export default function PortalPersonalDetails() {
   const { slug } = useParams();
@@ -260,9 +261,7 @@ export default function PortalPersonalDetails() {
     );
   }
 
-  const inputCls =
-    'w-full border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500';
-  const labelCls = 'block text-sm font-medium text-slate-700 mb-1';
+  const inputCls = `${sharedInputCls} w-full`;
 
   return (
     <div className="relative min-h-screen bg-gradient-to-br from-blue-50 to-slate-100 px-4 py-8">

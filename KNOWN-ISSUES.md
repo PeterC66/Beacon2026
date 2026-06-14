@@ -369,6 +369,10 @@ These are catalogued and re-verified in `docs/history/ImprovementPlan.md` (Chunk
    TransactionRefund, PersonalPreferences, and DateInput. Further pages fixed in
    ImprovementPlan Chunk 11 (June 2026): VenueEditor, MemberClassEditor (incl.
    `aria-label` on the monthly-fee grid inputs), ChangePassword, and RoleEditor.
+   Further pages fixed in ImprovementPlan Chunk 9 (2026-06-14): the public auth
+   pages PortalLogin, PortalForgotPassword, PortalResetPassword, and
+   PortalRegister now associate every `<label>` with its input via
+   `htmlFor`/`id`.
    Remaining lower-traffic pages should be fixed incrementally as E2E tests are
    written for each page.
 

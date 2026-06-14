@@ -246,10 +246,17 @@ UX, system-wide hide-address) remain deferred.
   Claude-tooling-docs separation is obvious from the top of each file.
 - Fix the stale `App.jsx:132` comment (KI #26).
 
-### Chunk 9 — Frontend polish *(small; incremental)*
+### Chunk 9 — Frontend polish *(small; incremental)* — **IN PROGRESS (2026-06-14)**
 - Migrate a batch of pages from inline Tailwind to `inputCls`/`labelCls`
   constants; audit `react-hooks/exhaustive-deps` warnings (fix or annotate);
   add `htmlFor`/`id` to a batch of remaining lower-traffic pages.
+
+**Increment 1 (2026-06-14):** migrated the six **public** pages to the shared
+`inputCls`/`labelCls` constants (removing two local style dupes) and added
+`htmlFor`/`id` to the four public auth pages. Still open for future increments:
+the ~40 remaining pages on inline Tailwind, the ~30 `react-hooks/exhaustive-deps`
+warnings (KI Linting #2 — risky per-effect judgement, deferred), and the
+remaining lower-traffic pages lacking `htmlFor`/`id` (KI Accessibility #1).
 
 ### Chunk 10 — Tooling & dependency hygiene *(small/medium)*
 - Add `.nvmrc` / `engines` Node pin; bring `shared/` under lint/format.
