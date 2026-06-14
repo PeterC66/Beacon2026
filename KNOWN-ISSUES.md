@@ -158,6 +158,15 @@ These are catalogued and re-verified in `docs/history/ImprovementPlan.md` (Chunk
     matched the in-memory sys-token model (`frontend/src/lib/api/system.js`).
     Reworded to point at the in-memory token. Resolved in the 2026-06-14 review
     (ImprovementPlan Chunk 8).
+27. `[OPEN]` **`POST /users` runs the role-escalation guard after inserting the
+    user row** (`routes/users.js` ~141–158). The user `INSERT` happens before
+    the per-`roleId` `assertActorHoldsRolePrivileges` loop, and each
+    `tenantQuery` is its own transaction, so a blocked escalation attempt leaves
+    an orphaned user account (no role is assigned, so **no privilege escalation
+    occurs** — this is a data-hygiene wart, not a security hole). Found while
+    adding the Chunk 6 escalation test. Fix: validate every requested role
+    against the actor's privileges *before* the `INSERT`, or wrap the create +
+    role assignment in a single `withTenant` transaction. Low priority.
 
 ---
 
@@ -237,6 +246,21 @@ These are catalogued and re-verified in `docs/history/ImprovementPlan.md` (Chunk
    chunk but is heavily intertwined with shared form state) and `Calendar.jsx`
    (~861 — its filter form and "other"-mode event management). `TransactionEditor.jsx`
    (792) is close to the line and is mostly the flat top-level field grid.
+
+---
+
+## Backend service-layer extraction (ImprovementPlan-2026-06-14 Chunk 3)
+
+1. `[OPEN]` **Largest route files still carry their business logic.** Chunk 3
+   established the service-layer pattern end-to-end on one route:
+   `routes/finance/transactions.js` (747 → 179) now delegates all logic and data
+   access to the new `services/transactionService.js`, with Zod validation kept
+   at the route boundary (mirrors `services/authService.js`). The two larger
+   offenders remain to be extracted the same way in follow-up sessions:
+   `routes/backup/restore.js` (~1,512) and `routes/members/crud.js` (~1,037).
+   Each is a behaviour-preserving extraction — the route's existing tests must
+   pass unchanged. `routes/public/join.js` (~768) and the rest of
+   `routes/finance/*` are lower priority.
 
 ---
 
