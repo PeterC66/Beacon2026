@@ -85,6 +85,12 @@ Format: `## [version] — YYYY-MM-DD` with bullet points per change.
   noise. Frontend suite: 53 → 59 files, 140 → 196 tests.
 
 ### Changed
+- **Documentation rationalisation** — the 2026-06 review effort is complete, so
+  its three driver documents (`ImprovementPlan.md`, `CODEBASE-RECOMMENDATIONS.md`,
+  `SECURITY-REVIEW.md`) were archived under `docs/history/` (with a README
+  explaining their provenance). `KNOWN-ISSUES.md` is now stated explicitly as the
+  single living backlog and its cross-links point at the archived copies. No open
+  items were lost — all deferred work was already tracked in `KNOWN-ISSUES.md`.
 - **Backend consistency cleanup (ImprovementPlan Chunk 6, findings N2/N6)** —
   documented a single response-shape + status-code convention in
   `CLAUDE-STANDARDS.md` (`{ error }` for all error bodies via `AppError`;

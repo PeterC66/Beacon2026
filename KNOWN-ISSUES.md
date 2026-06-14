@@ -8,12 +8,17 @@ Items noted during development that need addressing in future sessions.
 - `[ACCEPTED]` — understood and deliberately not changing (rationale given).
 - `[DEFERRED]` — worth doing but parked for a later phase / dependency.
 - `[FIXED]` — resolved; kept here (not deleted) so the numbered cross-references
-  from `docs/ImprovementPlan.md` stay stable. See CHANGELOG for the date.
+  from the historical work plan stay stable. See CHANGELOG for the date.
 
-**Related documents:** the consolidated, chunked work plan is
-[`docs/ImprovementPlan.md`](docs/ImprovementPlan.md); pure code-rationalisation
-items live in [`CODEBASE-RECOMMENDATIONS.md`](CODEBASE-RECOMMENDATIONS.md);
-fixed security findings are in [`SECURITY-REVIEW.md`](SECURITY-REVIEW.md).
+**This is the single living backlog.** Anything still to do lives here. The
+full-codebase review and chunked work plan that drove the 2026-06 improvement
+work is now **complete** and archived for reference under
+[`docs/history/`](docs/history/) — see
+[`docs/history/ImprovementPlan.md`](docs/history/ImprovementPlan.md) (the work
+plan), [`docs/history/CODEBASE-RECOMMENDATIONS.md`](docs/history/CODEBASE-RECOMMENDATIONS.md)
+(code-rationalisation findings), and
+[`docs/history/SECURITY-REVIEW.md`](docs/history/SECURITY-REVIEW.md) (fixed
+security findings). Those are point-in-time snapshots and are no longer updated.
 
 ---
 
@@ -21,7 +26,7 @@ fixed security findings are in [`SECURITY-REVIEW.md`](SECURITY-REVIEW.md).
 
 Items identified during the chunk 1 + chunk 2 security sweep that were not
 fixed in the same session. See CHANGELOG 2026-06-10 for what was fixed.
-These are catalogued and re-verified in `docs/ImprovementPlan.md` (Chunks 4–5).
+These are catalogued and re-verified in `docs/history/ImprovementPlan.md` (Chunks 4–5).
 
 1. `[FIXED]` **Account-enumeration via response timing on `/auth/recover`**
    (`routes/auth.js:248`). `sendRecoveryEmail` (and the verify variant) are now
