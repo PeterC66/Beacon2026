@@ -158,6 +158,15 @@ These are catalogued and re-verified in `docs/history/ImprovementPlan.md` (Chunk
     matched the in-memory sys-token model (`frontend/src/lib/api/system.js`).
     Reworded to point at the in-memory token. Resolved in the 2026-06-14 review
     (ImprovementPlan Chunk 8).
+27. `[OPEN]` **`POST /users` runs the role-escalation guard after inserting the
+    user row** (`routes/users.js` ~141–158). The user `INSERT` happens before
+    the per-`roleId` `assertActorHoldsRolePrivileges` loop, and each
+    `tenantQuery` is its own transaction, so a blocked escalation attempt leaves
+    an orphaned user account (no role is assigned, so **no privilege escalation
+    occurs** — this is a data-hygiene wart, not a security hole). Found while
+    adding the Chunk 6 escalation test. Fix: validate every requested role
+    against the actor's privileges *before* the `INSERT`, or wrap the create +
+    role assignment in a single `withTenant` transaction. Low priority.
 
 ---
 
