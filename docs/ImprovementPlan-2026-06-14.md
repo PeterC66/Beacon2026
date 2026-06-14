@@ -258,10 +258,24 @@ the ~40 remaining pages on inline Tailwind, the ~30 `react-hooks/exhaustive-deps
 warnings (KI Linting #2 — risky per-effect judgement, deferred), and the
 remaining lower-traffic pages lacking `htmlFor`/`id` (KI Accessibility #1).
 
-### Chunk 10 — Tooling & dependency hygiene *(small/medium)*
+### Chunk 10 — Tooling & dependency hygiene *(small/medium)* — **DONE (2026-06-14)**
 - Add `.nvmrc` / `engines` Node pin; bring `shared/` under lint/format.
 - Plan (and, if feasible, execute) the `pdfmake` 0.2->0.3 migration for
   `routes/letters.js` so Dependabot can resume bumps (KI).
+
+**Outcome:** Added a root `.nvmrc` pinning Node `22` (matching CI) and
+`engines: { node: ">=20.0.0" }` to the `frontend` and `e2e` packages (the
+backend already declared it). Brought `shared/` under **Prettier** via the
+backend's `format` / `format:check` scripts so CI enforces its formatting;
+**ESLint** coverage was *not* added — flat-config base-path rules make a sibling
+package lint `../shared` only via disproportionate root tooling for one trivial
+constants file (recorded as `[PARTIAL]` in KNOWN-ISSUES). Executed the
+`pdfmake` 0.2→0.3 migration: a feasibility spike confirmed the new server
+singleton API generates a valid PDF, then `routes/letters.js` was migrated
+(`pdfmake.virtualfs` font registration + `addFonts` + access policies +
+`await createPdf(doc).getBuffer()`), `package.json`/lockfile bumped to `^0.3.11`,
+and the Dependabot pdfmake-minor ignore rule removed. Verified by the existing
+`letters.test.js` PDF-download test (608 backend tests green).
 
 **Suggested ordering for "experienced devs see nothing objectionable":**
 1 -> 2 -> 8 -> 4 -> 5 -> 3 -> 6 -> 7 -> 9 -> 10. (Cheap, visible standards/docs

@@ -21,12 +21,6 @@ updates:
     ignore:
       - dependency-name: '*'
         update-types: ['version-update:semver-major']
-      # pdfmake 0.3 is a breaking rewrite (drops pdfmake/src/printer, used by
-      # routes/letters.js). For a 0.x package that arrives as a "minor", so the
-      # major rule above doesn't catch it — pin to 0.2.x patches until the
-      # migration is done (see KNOWN-ISSUES).
-      - dependency-name: 'pdfmake'
-        update-types: ['version-update:semver-minor']
 
   - package-ecosystem: npm
     directory: /frontend
