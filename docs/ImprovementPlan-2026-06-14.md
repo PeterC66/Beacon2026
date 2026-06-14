@@ -253,10 +253,17 @@ UX, system-wide hide-address) remain deferred.
 
 **Increment 1 (2026-06-14):** migrated the six **public** pages to the shared
 `inputCls`/`labelCls` constants (removing two local style dupes) and added
-`htmlFor`/`id` to the four public auth pages. Still open for future increments:
-the ~40 remaining pages on inline Tailwind, the ~30 `react-hooks/exhaustive-deps`
-warnings (KI Linting #2 — risky per-effect judgement, deferred), and the
-remaining lower-traffic pages lacking `htmlFor`/`id` (KI Accessibility #1).
+`htmlFor`/`id` to the four public auth pages.
+
+**Increment 2 (2026-06-14):** migrated four **settings** pages
+(`SystemMessages`, `PublicLinks`, `CustomFields`, `EventTypeList`) to the shared
+`inputCls`/`labelCls` constants — removing two more local `inputCls` dupes
+(`CustomFields`, `EventTypeList`) — and added `htmlFor`/`id` label associations
+(plus `aria-label` on the label-less inline edit inputs in `EventTypeList`).
+Deliberately skipped the `react-hooks/exhaustive-deps` warnings (KI Linting #2 —
+risky per-effect judgement, stays deferred). Still open: the remaining inline-
+Tailwind pages and lower-traffic pages lacking `htmlFor`/`id` (KI Accessibility
+#1), to be picked up opportunistically.
 
 ### Chunk 10 — Tooling & dependency hygiene *(small/medium)* — **DONE (2026-06-14)**
 - Add `.nvmrc` / `engines` Node pin; bring `shared/` under lint/format.

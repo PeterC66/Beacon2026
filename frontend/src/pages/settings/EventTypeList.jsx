@@ -7,6 +7,7 @@ import { eventTypes as eventTypesApi } from '../../lib/api.js';
 import { useAuth } from '../../context/AuthContext.jsx';
 import NavBar from '../../components/NavBar.jsx';
 import PageHeader from '../../components/PageHeader.jsx';
+import { inputCls, labelCls } from '../../components/ui/Input.jsx';
 
 export default function EventTypeList() {
   const { can, tenant } = useAuth();
@@ -103,9 +104,6 @@ export default function EventTypeList() {
     { label: 'Calendar', to: '/calendar' },
   ];
 
-  const inputCls =
-    'border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500';
-
   return (
     <div className="min-h-screen pb-10">
       <PageHeader tenant={tenant} />
@@ -145,6 +143,7 @@ export default function EventTypeList() {
                                 <input
                                   className={`${inputCls} w-full`}
                                   name="editName"
+                                  aria-label="Event type name"
                                   value={editName}
                                   onChange={(e) => setEditName(e.target.value)}
                                   autoFocus
@@ -158,6 +157,7 @@ export default function EventTypeList() {
                                 <input
                                   className={`${inputCls} w-full`}
                                   name="editDesc"
+                                  aria-label="Event type description"
                                   value={editDesc}
                                   placeholder="Description"
                                   onChange={(e) => setEditDesc(e.target.value)}
@@ -236,8 +236,11 @@ export default function EventTypeList() {
             {addError && <p className="text-red-600 text-sm mb-2">{addError}</p>}
             <form onSubmit={handleAdd} className="flex gap-2 items-end">
               <div className="flex-1">
-                <label className="block text-sm font-medium text-slate-700 mb-1">Name</label>
+                <label htmlFor="newName" className={labelCls}>
+                  Name
+                </label>
                 <input
+                  id="newName"
                   className={`${inputCls} w-full`}
                   name="newName"
                   placeholder="Event type name"
@@ -247,8 +250,11 @@ export default function EventTypeList() {
                 />
               </div>
               <div className="flex-1">
-                <label className="block text-sm font-medium text-slate-700 mb-1">Description</label>
+                <label htmlFor="newDesc" className={labelCls}>
+                  Description
+                </label>
                 <input
+                  id="newDesc"
                   className={`${inputCls} w-full`}
                   name="newDesc"
                   placeholder="Optional description"

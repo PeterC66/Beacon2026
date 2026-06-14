@@ -29,6 +29,14 @@ Format: `## [version] — YYYY-MM-DD` with bullet points per change.
   to the `frontend` and `e2e` packages (the backend already declared one).
 
 ### Changed
+- **Frontend polish — settings pages (2026-06-14 review, Chunk 9 increment 2)** —
+  - Migrated four settings pages (`SystemMessages`, `PublicLinks`,
+    `CustomFields`, `EventTypeList`) from inline Tailwind input/label strings to
+    the shared `inputCls` / `labelCls` constants, removing two more duplicated
+    local `inputCls` definitions (`CustomFields`, `EventTypeList`).
+  - Added `htmlFor`/`id` label associations to the labelled fields on those
+    pages, plus `aria-label`s on the label-less inline edit inputs in
+    `EventTypeList`, for screen-reader and Playwright `getByLabel` support.
 - **Frontend polish — public pages (2026-06-14 review, Chunk 9)** —
   - Migrated the six public pages (`PortalLogin`, `PortalRegister`,
     `PortalResetPassword`, `PortalForgotPassword`, `JoinForm`,
