@@ -8,6 +8,27 @@ Format: `## [version] — YYYY-MM-DD` with bullet points per change.
 ## [Unreleased] — 2026-06-14
 
 ### Changed
+- **Tooling & dependency hygiene (2026-06-14 review, Chunk 10)** —
+  - Migrated `pdfmake` from `0.2.x` to `0.3.x` (now `^0.3.11`). pdfmake 0.3
+    removed the server `pdfmake/src/printer` class, so `routes/letters.js` now
+    uses the 0.3 server singleton: Roboto fonts are loaded into
+    `pdfmake.virtualfs` and declared via `addFonts`, the URL/local access
+    policies are locked down, and the PDF is produced with
+    `await pdfmake.createPdf(doc).getBuffer()`. Behaviour-preserving — the
+    existing `letters.test.js` PDF-download test passes unchanged.
+  - Removed the Dependabot rule that ignored `pdfmake` minor bumps now that the
+    0.3 migration is done.
+  - Brought `shared/constants.js` under **Prettier** by extending the backend's
+    `format` / `format:check` scripts to include `../shared/**/*.js`, so CI now
+    enforces its formatting (ESLint coverage remains out of scope — see
+    KNOWN-ISSUES).
+
+### Added
+- **Node version pin (2026-06-14 review, Chunk 10)** — added a root `.nvmrc`
+  pinning Node `22` (matching CI) and an `engines: { node: ">=20.0.0" }` field
+  to the `frontend` and `e2e` packages (the backend already declared one).
+
+### Changed
 - **Frontend polish — public pages (2026-06-14 review, Chunk 9)** —
   - Migrated the six public pages (`PortalLogin`, `PortalRegister`,
     `PortalResetPassword`, `PortalForgotPassword`, `JoinForm`,
