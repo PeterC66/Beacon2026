@@ -89,6 +89,11 @@ Beacon2 keeps several living documents up to date alongside code:
 
 ## Licensing
 
-A repository LICENSE has not yet been finalised (see `KNOWN-ISSUES.md`). Until
-one is added, treat the code as **all rights reserved** by the project owner and
-check before reusing it outside this project.
+This project is **proprietary** — see the root [`LICENSE`](LICENSE). The code is
+**all rights reserved** by the project owner; do not reuse it outside this
+project without prior written consent.
+
+Original Beacon reference material under [`docs/FromBeacon/`](docs/FromBeacon/)
+is third-party copyright and is included for reference only — see
+[`docs/FromBeacon/README.md`](docs/FromBeacon/README.md). To report a security
+issue, see [`SECURITY.md`](SECURITY.md).
