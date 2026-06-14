@@ -60,4 +60,4 @@ this faculty will become unassigned.
 
 ---
 
-[Contents](index.md) | [Previous: Venues](21-venues.md) | [Next: The Calendar](23-calendar.md)
+[← 21. Venues](21-venues.md) | [Contents](index.md) | [23. Events →](23-calendar.md)

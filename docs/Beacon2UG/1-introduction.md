@@ -49,4 +49,4 @@ features.
 
 ---
 
-[Contents](index.md) | [Next: Logging In →](2-logging-in.md)
+[Contents](index.md) | [2. Logging In →](2-logging-in.md)

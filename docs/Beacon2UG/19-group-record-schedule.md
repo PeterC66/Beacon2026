@@ -117,4 +117,4 @@ meeting.
 
 ---
 
-[Contents](index.md) | [Previous: Group Record -- Members](18-group-record-members.md) | [Next: Group Record -- Ledger](20-group-record-ledger.md)
+[← 18. Group Record — Members](18-group-record-members.md) | [Contents](index.md) | [20. Group Record — Ledger →](20-group-record-ledger.md)

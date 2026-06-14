@@ -101,4 +101,4 @@ Once you have chosen your format, applied filters, and selected members:
 
 ---
 
-[← Previous: Membership Cards](12-membership-cards.md) | [Contents](index.md) | [Next: Membership Statistics →](14-membership-statistics.md)
+[← 12. Membership Cards](12-membership-cards.md) | [Contents](index.md) | [14. Membership Statistics →](14-membership-statistics.md)

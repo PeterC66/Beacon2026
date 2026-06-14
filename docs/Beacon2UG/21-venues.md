@@ -106,4 +106,4 @@ editor. Fill in the details and click **Save** to create the record.
 
 ---
 
-[Contents](index.md) | [Previous: Group Record -- Ledger](20-group-record-ledger.md) | [Next: Faculties](22-faculties.md)
+[← 20. Group Record — Ledger](20-group-record-ledger.md) | [Contents](index.md) | [22. Faculties →](22-faculties.md)

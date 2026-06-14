@@ -95,4 +95,4 @@ account (for example, if you forget your password).
 
 ---
 
-[← Previous: Payment Method Defaults](59-payment-method-defaults.md) | [Contents](index.md) | [Next: Audit Log →](61-audit-log.md)
+[← 59. Payment Method Defaults](59-payment-method-defaults.md) | [Contents](index.md) | [61. Audit Log →](61-audit-log.md)

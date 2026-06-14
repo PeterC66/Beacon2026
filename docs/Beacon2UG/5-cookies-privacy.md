@@ -77,4 +77,4 @@ declining optional cookies.
 
 ---
 
-[← Previous: The Home Page](4-home-page.md) | [Contents](index.md) | [Next: The Members List →](6-members-list.md)
+[← 4. The Home Page](4-home-page.md) | [Contents](index.md) | [6. The Members List →](6-members-list.md)
