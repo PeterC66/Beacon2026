@@ -9,7 +9,7 @@
 > - **Not started** — feature not yet implemented
 > - **Beacon2 extra** — functionality in Beacon2 that is not in the original Beacon
 >
-> **Last updated:** 2026-04-13
+> **Last updated:** 2026-06-14
 
 ---
 
@@ -143,9 +143,18 @@
 
 | Aspect | Status | Notes |
 |--------|--------|-------|
-| Per-member "hide contact details" checkbox | Built | `hide_contact` field on member record; hides email/phone in group members list |
-| Per-group "show addresses to group leader" toggle | Partial | `show_addresses` field stored on group record, but **not yet wired into visibility logic** — currently only `hide_contact` is checked |
+| Per-member "hide contact details" checkbox | Partial | `hide_contact` field stored/editable, but **not yet enforced** in the group members view — see note below |
+| Per-group "show addresses to group leader" toggle | Partial | `show_addresses` field stored on group record, but **not yet wired into visibility logic** — see note below |
 | System-wide "hide address from group leaders" | Not started | Global setting from doc 4.2.4(b) not yet implemented |
+
+> **Why contact-hiding is deferred:** correct enforcement needs to distinguish a
+> *group leader* viewer from a *membership-admin* viewer (UG 4.2.4 hides contact
+> from leaders only). In Beacon2 the scoped privileges `group_records_as_leader` /
+> `group_records_as_member` are **seeded but not enforced anywhere** — every group
+> members view is gated solely by `group_records_all`, so there is no runtime
+> signal for "this viewer is a leader". Wiring `hide_contact`/`show_addresses`
+> therefore depends first on implementing the scoped group-leader access model.
+> Tracked in `KNOWN-ISSUES.md` → Group / Member Contact Hiding.
 
 ---
 
@@ -763,7 +772,7 @@
 | Aspect | Status | Notes |
 |--------|--------|-------|
 | All fields from Beacon doc 8.3 | Built | Stored and editable |
-| public_phone, public_email, home_page | Partial | Stored but not yet displayed to members (portal, joining form) |
+| public_phone, public_email, home_page | Built | Displayed as a "Need help? Contact us" block on the Members Portal sign-in page and the online Join form (shared `PublicContact` component, fed by the public `/:slug/info` and join-config endpoints) |
 | email_cards | Partial | Stored but auto-attach logic not wired |
 | gift_aid_online_renewals | Built | Controls Gift Aid checkboxes on portal renewal page |
 | online_renew_email | Built | Shown on portal renewal page as contact email |
@@ -1106,7 +1115,7 @@ These are features or architectural aspects of Beacon2 that have no counterpart 
 ### Key differences from Beacon
 
 1. **Login**: Both use username-based login; Beacon2 adds email fallback for legacy users
-2. **Hide address**: Beacon2 has both per-member `hide_contact` checkbox AND per-group `show_addresses` toggle (but `show_addresses` is stored, not yet wired into visibility logic — see KNOWN-ISSUES.md)
+2. **Hide address**: Beacon2 has both a per-member `hide_contact` checkbox AND a per-group `show_addresses` toggle, but **neither is yet enforced** in the group members view — enforcement depends first on implementing the scoped group-leader access model (`group_records_as_leader`), which is seeded but unused. See KNOWN-ISSUES.md → Group / Member Contact Hiding.
 3. **Financial year**: Configurable via `year_start_month` / `year_start_day` (default January = calendar year); same concept as Beacon
 4. **Architecture**: Both are multi-tenant; Beacon2 uses schema-per-tenant PostgreSQL; the UG describes a single tenant's view
 5. **Auth**: JWT + refresh token (vs Beacon's session-based auth)

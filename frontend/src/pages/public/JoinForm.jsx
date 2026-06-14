@@ -10,6 +10,7 @@ import { scrollToFirstFieldError } from '../../lib/scrollToError.js';
 import PortalVersion from '../../components/PortalVersion.jsx';
 import { UK_POSTCODE_RE } from '../../lib/constants.js';
 import FormError from '../../components/FormError.jsx';
+import PublicContact from '../../components/PublicContact.jsx';
 
 export default function JoinForm() {
   const { slug } = useParams();
@@ -612,6 +613,13 @@ export default function JoinForm() {
                 : `Make Payment${displayFee ? ` — £${displayFee.toFixed(2)}` : ''}`}
             </button>
           </form>
+
+          <PublicContact
+            phone={config?.publicPhone}
+            email={config?.publicEmail}
+            homePage={config?.homePage}
+            className="mt-6 pt-4 border-t border-slate-200"
+          />
         </div>
       </div>
     </div>

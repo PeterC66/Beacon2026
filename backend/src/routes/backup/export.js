@@ -453,7 +453,10 @@ export async function buildGroupsSheets(wb, slug) {
 export async function buildCalendarSheet(wb) {
   const ws = wb.addWorksheet('Calendar');
   ws.addRow(['note']);
-  ws.addRow(['Calendar is not yet implemented in Beacon2.']);
+  ws.addRow([
+    'Calendar events are exported with the Groups export (Group Events sheet), ' +
+      'not as a separate Calendar sheet.',
+  ]);
 }
 
 export async function buildSystemSheets(wb, slug) {
