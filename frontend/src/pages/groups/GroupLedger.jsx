@@ -163,7 +163,7 @@ export default function GroupLedger({ groupId }) {
     <div>
       <h2 className="text-lg font-semibold mb-1">Group Cash</h2>
       <p className="text-xs text-slate-600 mb-3">
-        The group's own cash record — not linked to the u3a's central accounts. The Finance Ledger
+        The group's own cash record — not linked to the u3a's central accounts. The central ledger
         shows different, complementary transactions.
       </p>
 

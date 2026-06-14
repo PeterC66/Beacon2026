@@ -1,11 +1,13 @@
 // beacon2/frontend/src/pages/public/PortalLogin.jsx
 // Members Portal sign-in page (public, unauthenticated).
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { publicApi, setPortalToken } from '../../lib/api.js';
 import PortalVersion from '../../components/PortalVersion.jsx';
 import PasswordInput from '../../components/PasswordInput.jsx';
+import PublicContact from '../../components/PublicContact.jsx';
+import { inputCls, labelCls } from '../../components/ui/Input.jsx';
 import { SS_PORTAL_MEMBER, SS_PORTAL_SLUG } from '../../lib/storageKeys.js';
 
 export default function PortalLogin() {
@@ -15,6 +17,14 @@ export default function PortalLogin() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [info, setInfo] = useState(null);
+
+  useEffect(() => {
+    publicApi
+      .getPublicInfo(slug)
+      .then(setInfo)
+      .catch(() => setInfo(null));
+  }, [slug]);
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -52,24 +62,30 @@ export default function PortalLogin() {
 
         <form onSubmit={handleSubmit} noValidate>
           <div className="mb-4">
-            <label className="block text-sm font-medium text-slate-700 mb-1">Email address</label>
+            <label htmlFor="portal-login-email" className={labelCls}>
+              Email address
+            </label>
             <input
+              id="portal-login-email"
               type="email"
               name="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className={`${inputCls} w-full`}
               autoComplete="email"
             />
           </div>
 
           <div className="mb-6">
-            <label className="block text-sm font-medium text-slate-700 mb-1">Password</label>
+            <label htmlFor="portal-login-password" className={labelCls}>
+              Password
+            </label>
             <PasswordInput
+              id="portal-login-password"
               name="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className={`${inputCls} w-full`}
               autoComplete="current-password"
             />
           </div>
@@ -100,6 +116,15 @@ export default function PortalLogin() {
             Not a member? Join online
           </Link>
         </div>
+
+        {info && (
+          <PublicContact
+            phone={info.publicPhone}
+            email={info.publicEmail}
+            homePage={info.homePage}
+            className="mt-6 pt-4 border-t border-slate-200"
+          />
+        )}
       </div>
     </div>
   );

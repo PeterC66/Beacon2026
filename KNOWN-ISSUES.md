@@ -266,14 +266,14 @@ These are catalogued and re-verified in `docs/history/ImprovementPlan.md` (Chunk
 
 ## UI Terminology
 
-1. `[OPEN]` **Group/Team Cash — "Central Ledger" vs "Finance Ledger" wording** — The
-   shortcut button on the Group Cash and Team Cash tabs now says
-   **"Central Ledger"** (tooltip: *"View this group's/team's other transactions -
-   in the central ledger"*), while the description line above it and the
-   destination page's title still use **"Finance Ledger"**. The two refer to the
-   same thing but the inconsistency may confuse some users. Revisit if feedback
-   warrants — options: align the description to "central ledger", or rename the
-   button back to "Finance Ledger" (giving up the shorter label).
+1. `[FIXED]` **Group/Team Cash — "Central Ledger" vs "Finance Ledger" wording** — The
+   shortcut button on the Group Cash and Team Cash tabs says **"Central Ledger"**
+   (tooltip: *"View this group's/team's other transactions - in the central ledger"*).
+   The description line above it previously called the same destination the "Finance
+   Ledger", which was inconsistent. Resolved 2026-06-14 (ImprovementPlan Chunk 7): the
+   description line now reads "The central ledger shows different, complementary
+   transactions", matching the button. The destination page keeps its "Finance Ledger"
+   menu/page title (its own name); the tooltip already bridges the two terms.
 
 ---
 
@@ -300,18 +300,25 @@ These are catalogued and re-verified in `docs/history/ImprovementPlan.md` (Chunk
 
 ## Documentation Typos
 
-1. `[OPEN]` **Doc 7.10.5 — Pending Transactions bulk action eligibility** — The document says
-   transactions are eligible for bulk pending actions if they "Are not in the Current
-   financial year". This should read "Are in the Current financial year" — only
-   current-year transactions should be eligible for bulk pending changes.
+1. `[FIXED]` **Doc 7.10.5 — Pending Transactions bulk action eligibility** — The original
+   Beacon manual bullet says transactions are eligible if they "Are not in the Current
+   financial year", which contradicts its own footnote (out-of-year transactions must be
+   opened individually). Beacon2's actual behaviour is correct — bulk checkboxes appear
+   only on in-year, non-cleared, non-batched transactions. Resolved 2026-06-14
+   (ImprovementPlan Chunk 7): added an editor's note to the faithful BeaconUG
+   transcription flagging the source error (rather than silently rewriting the original),
+   and documented the correct eligibility in `docs/Beacon2UG/34-pending-transactions.md`.
 
 ---
 
 ## System Settings (doc 8.3) — Deferred Items
 
-1. `[DEFERRED]` **public_phone, public_email, home_page** — Stored in tenant_settings and editable
-   on the System Settings page, but not yet displayed anywhere to members (e.g. portal
-   login page, online joining form, confirmation emails). Ref: doc 8.3.
+1. `[FIXED]` **public_phone, public_email, home_page** — Now displayed to members as a
+   "Need help? Contact us" block (shared `frontend/src/components/PublicContact.jsx`)
+   on the Members Portal sign-in page and the online Join form, fed by the new public
+   `GET /:slug/info` endpoint and the extended join-config response. Resolved in the
+   2026-06-14 review, ImprovementPlan Chunk 7. (Confirmation-email inclusion remains a
+   possible future enhancement but was out of scope.) Ref: doc 8.3.
 
 ---
 
@@ -326,12 +333,24 @@ These are catalogued and re-verified in `docs/history/ImprovementPlan.md` (Chunk
 
 ## Group / Member Contact Hiding (doc 4.2.4)
 
-1. `[DEFERRED]` **Per-group `show_addresses` not wired into visibility logic** — The `show_addresses`
-   boolean field exists on the group record and is stored/retrieved via the API, but the
-   group members table in GroupRecord.jsx unconditionally renders address, telephone, and
-   mobile for every row. Neither `show_addresses` nor the per-member `hide_contact` flag
-   is checked when deciding what to display. The backend also returns all contact data
-   without filtering. Ref: doc 4.2.4.
+1. `[DEFERRED]` **`hide_contact` / `show_addresses` not enforced in the group members view** —
+   The per-member `hide_contact` and per-group `show_addresses` fields are stored and
+   editable, but the shared `EntityMembers.jsx` table (used by GroupRecord/TeamRecord)
+   unconditionally renders address, telephone and mobile for every row, and the backend
+   (`routes/groups/members.js`, `routes/teams/members.js`) returns all contact data
+   without filtering.
+
+   **Real blocker (re-verified 2026-06-14, ImprovementPlan Chunk 7):** correct
+   enforcement must hide contact *from group leaders only*, not from membership
+   admins (UG 4.2.4). Beacon2 has no runtime signal for "this viewer is a leader":
+   the scoped privileges `group_records_as_leader` / `group_records_as_member` are
+   **seeded** (`seed/privilegeResources.js`, `seed/defaultRoles.js`) **but enforced
+   nowhere** — every group members route is gated solely by `group_records_all`. A
+   naive "hide for everyone holding `group_records_all`" would wrongly hide contact
+   from admins. So this depends first on implementing the scoped group-leader access
+   model (a separate, larger piece of work). The previous comparison-doc claim that
+   `hide_contact` "hides email/phone in group members list" was inaccurate and has been
+   corrected to Partial. Ref: doc 4.2.4.
 
 2. `[DEFERRED]` **System-wide "Hide Address from Group Leaders" setting** — Doc 4.2.4(b) describes a
    global system setting that hides addresses of ALL members from ALL group leaders (unless
@@ -350,6 +369,10 @@ These are catalogued and re-verified in `docs/history/ImprovementPlan.md` (Chunk
    TransactionRefund, PersonalPreferences, and DateInput. Further pages fixed in
    ImprovementPlan Chunk 11 (June 2026): VenueEditor, MemberClassEditor (incl.
    `aria-label` on the monthly-fee grid inputs), ChangePassword, and RoleEditor.
+   Further pages fixed in ImprovementPlan Chunk 9 (2026-06-14): the public auth
+   pages PortalLogin, PortalForgotPassword, PortalResetPassword, and
+   PortalRegister now associate every `<label>` with its input via
+   `htmlFor`/`id`.
    Remaining lower-traffic pages should be fixed incrementally as E2E tests are
    written for each page.
 
@@ -423,10 +446,13 @@ These are catalogued and re-verified in `docs/history/ImprovementPlan.md` (Chunk
    status). This is transient data that cannot be meaningfully restored, so it
    is deliberately excluded.
 
-3. `[OPEN]` **Calendar export type is a no-op** — the "Calendar" export button in Data Backup
-   currently just notes that events are in the Groups export. Consider removing the
-   Calendar export option entirely, or having it produce the same Group Events sheet
-   independently.
+3. `[ACCEPTED]` **Calendar export type is a placeholder** — the "Calendar" export in Data
+   Backup produces a single-row sheet noting that events are exported with the Groups
+   export (Group Events sheet). Owner decision (2026-06-14, ImprovementPlan Chunk 7):
+   **leave as-is** rather than removing the option or duplicating the events into a
+   second sheet. The placeholder message was reworded to state accurately where events
+   live (it previously said "Calendar is not yet implemented", which was misleading
+   since the calendar/events feature is fully built).
 
 4. `[DEFERRED]` **Beacon restore — group-tied calendar events not migrated** — `restoreBeacon()`
    now imports Open Meetings (Calendar rows with `gkey` empty) but skips group-tied

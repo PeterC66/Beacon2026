@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { publicApi } from '../../lib/api.js';
 import PortalVersion from '../../components/PortalVersion.jsx';
+import { inputCls, labelCls } from '../../components/ui/Input.jsx';
 
 export default function PortalForgotPassword() {
   const { slug } = useParams();
@@ -63,13 +64,16 @@ export default function PortalForgotPassword() {
         )}
         <form onSubmit={handleSubmit} noValidate>
           <div className="mb-4">
-            <label className="block text-sm font-medium text-slate-700 mb-1">Email address</label>
+            <label htmlFor="portal-forgot-email" className={labelCls}>
+              Email address
+            </label>
             <input
+              id="portal-forgot-email"
               type="email"
               name="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className={`${inputCls} w-full`}
               autoComplete="email"
             />
           </div>

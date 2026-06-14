@@ -7,6 +7,17 @@ Format: `## [version] — YYYY-MM-DD` with bullet points per change.
 
 ## [Unreleased] — 2026-06-14
 
+### Changed
+- **Frontend polish — public pages (2026-06-14 review, Chunk 9)** —
+  - Migrated the six public pages (`PortalLogin`, `PortalRegister`,
+    `PortalResetPassword`, `PortalForgotPassword`, `JoinForm`,
+    `PortalPersonalDetails`) from inline Tailwind input/label strings to the
+    shared `inputCls` / `labelCls` constants (`components/ui/Input.jsx`),
+    removing two duplicated local style definitions.
+  - Added `htmlFor`/`id` label associations to every field on the four public
+    auth pages (`PortalLogin`, `PortalForgotPassword`, `PortalResetPassword`,
+    `PortalRegister`) for screen-reader and Playwright `getByLabel` support.
+
 ### Added
 - **Licensing & legal hygiene (2026-06-14 review, Chunk 1)** —
   - Root `LICENSE` declaring Beacon2 **proprietary / all rights reserved**
@@ -47,7 +58,32 @@ Format: `## [version] — YYYY-MM-DD` with bullet points per change.
   Both new tests were confirmed to fail against a deliberately broken guard
   (they bite).
 
+### Added
+- **Public u3a contact details on unauthenticated pages (2026-06-14 review,
+  Chunk 7)** — the `public_phone` / `public_email` / `home_page` System Settings
+  fields (previously stored but shown nowhere) now appear as a shared
+  "Need help? Contact us" block (`frontend/src/components/PublicContact.jsx`) on
+  the Members Portal sign-in page and the online Join form. Backed by a new
+  public `GET /:slug/info` endpoint and three extra fields on the join-config
+  response. Ref: UG 8.3.
+
 ### Changed
+- **Completeness reconciliation (2026-06-14 review, Chunk 7)** —
+  - Aligned the Group/Team Cash description line to say "central ledger",
+    matching the "Central Ledger" shortcut button (KI UI Terminology).
+  - Reworded the no-op Calendar data-export placeholder to state accurately
+    that events are exported with the Groups export, rather than the misleading
+    "Calendar is not yet implemented" (owner decision: keep the placeholder).
+  - Corrected the `BeaconUG-Comparison.md` 4.2.4 row: the per-member
+    `hide_contact` flag is **not** actually enforced in the group members view
+    (was wrongly listed as "Built"). Re-verification found the scoped
+    group-leader privileges (`group_records_as_leader`/`as_member`) are seeded
+    but enforced nowhere, so correct contact-hiding depends first on that model
+    — captured as a clearer deferred note in `KNOWN-ISSUES.md`.
+  - Documented the correct pending-transaction bulk-action eligibility in
+    `docs/Beacon2UG/34-pending-transactions.md` (in-year, non-cleared,
+    non-batched), and added an editor's note to the faithful UG 7.10.5
+    transcription flagging the contradictory bullet in the original manual.
 - **Service-layer extraction for finance transactions (2026-06-14 review,
   Chunk 3)** — introduced the marquee maintainability pattern on one route
   end-to-end. New `backend/src/services/transactionService.js` now holds all

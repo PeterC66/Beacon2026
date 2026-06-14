@@ -33,7 +33,8 @@ router.get('/:slug/join-config', async (req, res, next) => {
     const [settings] = await tenantQuery(
       slug,
       `SELECT privacy_policy_url, paypal_email, default_town, default_county,
-              online_join_email, online_renew_email
+              online_join_email, online_renew_email,
+              public_phone, public_email, home_page
        FROM tenant_settings WHERE id = 'singleton'`,
     );
 
@@ -53,6 +54,9 @@ router.get('/:slug/join-config', async (req, res, next) => {
       defaultCounty: settings.default_county ?? '',
       onlineJoinEmail: settings.online_join_email ?? '',
       onlineRenewEmail: settings.online_renew_email ?? '',
+      publicPhone: settings.public_phone ?? '',
+      publicEmail: settings.public_email ?? '',
+      homePage: settings.home_page ?? '',
       classes,
     });
   } catch (err) {
