@@ -11,6 +11,7 @@ import PortalVersion from '../../components/PortalVersion.jsx';
 import { UK_POSTCODE_RE } from '../../lib/constants.js';
 import FormError from '../../components/FormError.jsx';
 import PublicContact from '../../components/PublicContact.jsx';
+import { inputCls, labelCls } from '../../components/ui/Input.jsx';
 
 export default function JoinForm() {
   const { slug } = useParams();
@@ -225,7 +226,7 @@ export default function JoinForm() {
                 name="classId"
                 value={form.classId}
                 onChange={(e) => handleChange('classId', e.target.value)}
-                className="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className={`${inputCls} w-full`}
               >
                 <option value="">— Select membership type —</option>
                 {config?.classes.map((c) => (
@@ -254,10 +255,7 @@ export default function JoinForm() {
               </legend>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label
-                    htmlFor="join-title"
-                    className="block text-sm font-medium text-slate-700 mb-1"
-                  >
+                  <label htmlFor="join-title" className={labelCls}>
                     Title
                   </label>
                   <input
@@ -267,15 +265,12 @@ export default function JoinForm() {
                     value={form.title}
                     onChange={(e) => handleChange('title', e.target.value)}
                     placeholder="Mr, Mrs, Ms, Dr..."
-                    className="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className={`${inputCls} w-full`}
                   />
                   <FormError error={fieldErrors.title} />
                 </div>
                 <div>
-                  <label
-                    htmlFor="join-forenames"
-                    className="block text-sm font-medium text-slate-700 mb-1"
-                  >
+                  <label htmlFor="join-forenames" className={labelCls}>
                     First name <RequiredMark />
                   </label>
                   <input
@@ -284,15 +279,12 @@ export default function JoinForm() {
                     name="forenames"
                     value={form.forenames}
                     onChange={(e) => handleChange('forenames', e.target.value)}
-                    className="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className={`${inputCls} w-full`}
                   />
                   <FormError error={fieldErrors.forenames} />
                 </div>
                 <div>
-                  <label
-                    htmlFor="join-surname"
-                    className="block text-sm font-medium text-slate-700 mb-1"
-                  >
+                  <label htmlFor="join-surname" className={labelCls}>
                     Surname <RequiredMark />
                   </label>
                   <input
@@ -301,15 +293,12 @@ export default function JoinForm() {
                     name="surname"
                     value={form.surname}
                     onChange={(e) => handleChange('surname', e.target.value)}
-                    className="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className={`${inputCls} w-full`}
                   />
                   <FormError error={fieldErrors.surname} />
                 </div>
                 <div>
-                  <label
-                    htmlFor="join-email"
-                    className="block text-sm font-medium text-slate-700 mb-1"
-                  >
+                  <label htmlFor="join-email" className={labelCls}>
                     Email <RequiredMark />
                   </label>
                   <input
@@ -318,15 +307,12 @@ export default function JoinForm() {
                     name="email"
                     value={form.email}
                     onChange={(e) => handleChange('email', e.target.value)}
-                    className="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className={`${inputCls} w-full`}
                   />
                   <FormError error={fieldErrors.email} />
                 </div>
                 <div>
-                  <label
-                    htmlFor="join-mobile"
-                    className="block text-sm font-medium text-slate-700 mb-1"
-                  >
+                  <label htmlFor="join-mobile" className={labelCls}>
                     Mobile
                   </label>
                   <input
@@ -335,7 +321,7 @@ export default function JoinForm() {
                     name="mobile"
                     value={form.mobile}
                     onChange={(e) => handleChange('mobile', e.target.value)}
-                    className="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className={`${inputCls} w-full`}
                   />
                 </div>
               </div>
@@ -347,10 +333,7 @@ export default function JoinForm() {
                 <legend className="text-sm font-bold text-slate-700 mb-2">Second Person</legend>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
-                    <label
-                      htmlFor="join2-title"
-                      className="block text-sm font-medium text-slate-700 mb-1"
-                    >
+                    <label htmlFor="join2-title" className={labelCls}>
                       Title
                     </label>
                     <input
@@ -360,15 +343,12 @@ export default function JoinForm() {
                       value={form.p2Title}
                       onChange={(e) => handleChange('p2Title', e.target.value)}
                       placeholder="Mr, Mrs, Ms, Dr..."
-                      className="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className={`${inputCls} w-full`}
                     />
                     <FormError error={fieldErrors.p2Title} />
                   </div>
                   <div>
-                    <label
-                      htmlFor="join2-forenames"
-                      className="block text-sm font-medium text-slate-700 mb-1"
-                    >
+                    <label htmlFor="join2-forenames" className={labelCls}>
                       First name <RequiredMark />
                     </label>
                     <input
@@ -377,15 +357,12 @@ export default function JoinForm() {
                       name="p2Forenames"
                       value={form.p2Forenames}
                       onChange={(e) => handleChange('p2Forenames', e.target.value)}
-                      className="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className={`${inputCls} w-full`}
                     />
                     <FormError error={fieldErrors.p2Forenames} />
                   </div>
                   <div>
-                    <label
-                      htmlFor="join2-surname"
-                      className="block text-sm font-medium text-slate-700 mb-1"
-                    >
+                    <label htmlFor="join2-surname" className={labelCls}>
                       Surname <RequiredMark />
                     </label>
                     <input
@@ -394,15 +371,12 @@ export default function JoinForm() {
                       name="p2Surname"
                       value={form.p2Surname}
                       onChange={(e) => handleChange('p2Surname', e.target.value)}
-                      className="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className={`${inputCls} w-full`}
                     />
                     <FormError error={fieldErrors.p2Surname} />
                   </div>
                   <div>
-                    <label
-                      htmlFor="join2-email"
-                      className="block text-sm font-medium text-slate-700 mb-1"
-                    >
+                    <label htmlFor="join2-email" className={labelCls}>
                       Email
                     </label>
                     <input
@@ -411,15 +385,12 @@ export default function JoinForm() {
                       name="p2Email"
                       value={form.p2Email}
                       onChange={(e) => handleChange('p2Email', e.target.value)}
-                      className="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className={`${inputCls} w-full`}
                     />
                     <FormError error={fieldErrors.p2Email} />
                   </div>
                   <div>
-                    <label
-                      htmlFor="join2-mobile"
-                      className="block text-sm font-medium text-slate-700 mb-1"
-                    >
+                    <label htmlFor="join2-mobile" className={labelCls}>
                       Mobile
                     </label>
                     <input
@@ -428,7 +399,7 @@ export default function JoinForm() {
                       name="p2Mobile"
                       value={form.p2Mobile}
                       onChange={(e) => handleChange('p2Mobile', e.target.value)}
-                      className="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className={`${inputCls} w-full`}
                     />
                   </div>
                 </div>
@@ -442,10 +413,7 @@ export default function JoinForm() {
               </legend>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label
-                    htmlFor="join-house-no"
-                    className="block text-sm font-medium text-slate-700 mb-1"
-                  >
+                  <label htmlFor="join-house-no" className={labelCls}>
                     House no / name
                   </label>
                   <input
@@ -459,10 +427,7 @@ export default function JoinForm() {
                   <FormError error={fieldErrors.houseNo} size="xs" />
                 </div>
                 <div>
-                  <label
-                    htmlFor="join-street"
-                    className="block text-sm font-medium text-slate-700 mb-1"
-                  >
+                  <label htmlFor="join-street" className={labelCls}>
                     Street
                   </label>
                   <input
@@ -471,14 +436,11 @@ export default function JoinForm() {
                     name="street"
                     value={form.street}
                     onChange={(e) => handleChange('street', e.target.value)}
-                    className="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className={`${inputCls} w-full`}
                   />
                 </div>
                 <div>
-                  <label
-                    htmlFor="join-town"
-                    className="block text-sm font-medium text-slate-700 mb-1"
-                  >
+                  <label htmlFor="join-town" className={labelCls}>
                     Town
                   </label>
                   <input
@@ -487,14 +449,11 @@ export default function JoinForm() {
                     name="town"
                     value={form.town}
                     onChange={(e) => handleChange('town', e.target.value)}
-                    className="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className={`${inputCls} w-full`}
                   />
                 </div>
                 <div>
-                  <label
-                    htmlFor="join-county"
-                    className="block text-sm font-medium text-slate-700 mb-1"
-                  >
+                  <label htmlFor="join-county" className={labelCls}>
                     County
                   </label>
                   <input
@@ -503,14 +462,11 @@ export default function JoinForm() {
                     name="county"
                     value={form.county}
                     onChange={(e) => handleChange('county', e.target.value)}
-                    className="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className={`${inputCls} w-full`}
                   />
                 </div>
                 <div>
-                  <label
-                    htmlFor="join-postcode"
-                    className="block text-sm font-medium text-slate-700 mb-1"
-                  >
+                  <label htmlFor="join-postcode" className={labelCls}>
                     Postcode <RequiredMark />
                   </label>
                   <input
@@ -519,15 +475,12 @@ export default function JoinForm() {
                     name="postcode"
                     value={form.postcode}
                     onChange={(e) => handleChange('postcode', e.target.value.toUpperCase())}
-                    className="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className={`${inputCls} w-full`}
                   />
                   <FormError error={fieldErrors.postcode} />
                 </div>
                 <div>
-                  <label
-                    htmlFor="join-telephone"
-                    className="block text-sm font-medium text-slate-700 mb-1"
-                  >
+                  <label htmlFor="join-telephone" className={labelCls}>
                     Telephone
                   </label>
                   <input
@@ -536,7 +489,7 @@ export default function JoinForm() {
                     name="telephone"
                     value={form.telephone}
                     onChange={(e) => handleChange('telephone', e.target.value)}
-                    className="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className={`${inputCls} w-full`}
                   />
                 </div>
               </div>
