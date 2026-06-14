@@ -240,6 +240,21 @@ These are catalogued and re-verified in `docs/history/ImprovementPlan.md` (Chunk
 
 ---
 
+## Backend service-layer extraction (ImprovementPlan-2026-06-14 Chunk 3)
+
+1. `[OPEN]` **Largest route files still carry their business logic.** Chunk 3
+   established the service-layer pattern end-to-end on one route:
+   `routes/finance/transactions.js` (747 → 179) now delegates all logic and data
+   access to the new `services/transactionService.js`, with Zod validation kept
+   at the route boundary (mirrors `services/authService.js`). The two larger
+   offenders remain to be extracted the same way in follow-up sessions:
+   `routes/backup/restore.js` (~1,512) and `routes/members/crud.js` (~1,037).
+   Each is a behaviour-preserving extraction — the route's existing tests must
+   pass unchanged. `routes/public/join.js` (~768) and the rest of
+   `routes/finance/*` are lower priority.
+
+---
+
 ## UI Terminology
 
 1. `[OPEN]` **Group/Team Cash — "Central Ledger" vs "Finance Ledger" wording** — The

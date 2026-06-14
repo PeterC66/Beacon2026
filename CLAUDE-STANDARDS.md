@@ -282,6 +282,17 @@ Every item below applies to every new feature — no exceptions.
   distinct from `logAudit` (durable audit trail) — `logger` is for operational
   app logs.
 
+- [ ] **Service layer for non-trivial logic** — keep routes thin. When a handler
+  carries real business logic (multi-step DB work, cross-entity rules, computed
+  results), put that logic in a `backend/src/services/<thing>Service.js` module
+  and have the route call it. The split: **validation (Zod) and HTTP concerns
+  (status codes, `req`/`res`) stay at the route boundary; tenant data access
+  (`tenantQuery`/`withTenant`), business rules and `AppError` throws live in the
+  service.** Services take `tenantSlug` (and an explicit `actor` `{ userId, name }`
+  when they audit) rather than touching `req`. Mirror `services/authService.js`
+  and `services/transactionService.js`. Small CRUD handlers can stay inline — the
+  goal is no large logic blocks in route files, not ceremony for one-liners.
+
 - [ ] **Response shape and status codes** — adopt one convention consistently:
 
   | Outcome | Status | Body |
