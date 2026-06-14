@@ -18,11 +18,30 @@ Format: `## [version] — YYYY-MM-DD` with bullet points per change.
   - `docs/FromBeacon/README.md` provenance statement: the original Beacon
     reference files (© John Franklin 2017) are retained **for reference only**,
     with all original copyright retained and no claim of redistribution rights.
+- **Structured logging baseline (2026-06-14 review, Chunk 2)** —
+  - New `backend/src/utils/logger.js`: a minimal, dependency-free leveled
+    logger (`error`/`warn`/`info`/`debug`) gated by `LOG_LEVEL` (default `info`
+    in production, `debug` otherwise). Each call emits one line —
+    timestamp, level, message, optional JSON context — backed by the matching
+    `console` method, with safe handling of non-serialisable context.
+  - Unit tests (`logger.test.js`) covering console routing, level gating,
+    line format, and circular-context safety.
+  - A `CLAUDE-STANDARDS.md` rule: use `logger`, never `console.*`, and never
+    log PII/secrets in app logs.
 
 ### Changed
 - `CONTRIBUTING.md` Licensing section now points at the new `LICENSE`,
   `SECURITY.md`, and `docs/FromBeacon/README.md` instead of saying a licence is
   undecided.
+
+### Security
+- **Removed PII from operational logs (2026-06-14 review, Chunk 2)** — replaced
+  all 60+ `console.*` call sites across backend non-test code (auth recovery,
+  portal auth/profile/renewals/helpers, online-join email helpers, migrate/seed,
+  redis, error handler, server startup) with the new `logger`. In the process,
+  log lines no longer include recipient/member email addresses, names, the
+  online-join payment link, or reset/verification tokens — only error messages,
+  ids, counts and booleans are logged now.
 
 ---
 

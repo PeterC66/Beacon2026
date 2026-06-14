@@ -11,6 +11,7 @@ import { isFeatureEnabled } from '../../middleware/requireFeature.js';
 import { logAudit } from '../../utils/audit.js';
 import { generateSingleCardPdf } from '../membershipCards.js';
 import { fmtDateISO } from './helpers.js';
+import { logger } from '../../utils/logger.js';
 
 const router = Router({ mergeParams: true });
 
@@ -499,7 +500,8 @@ router.post('/renewal-confirm', async (req, res, next) => {
 
       const emailAddr = member.email;
       if (emailAddr) {
-        const { subject } = resolveTokens(
+        // In production the resolved subject/body populate the SendGrid message.
+        resolveTokens(
           template.subject,
           template.body,
           { ...member, class_name: member.class_name },
@@ -518,21 +520,17 @@ router.post('/renewal-confirm', async (req, res, next) => {
               disposition: 'attachment',
             });
           } catch (cardErr) {
-            console.error('[Portal] Failed to generate renewal card PDF:', cardErr.message);
+            logger.error('[Portal] Failed to generate renewal card PDF', {
+              message: cardErr.message,
+            });
           }
         }
 
-        // const msg = {
-        //   to:          { email: emailAddr, name: `${member.forenames} ${member.surname}`.trim() },
-        //   from:        { email: FROM_ADDRESS, name: u3aName },
-        //   subject,
-        //   text:        body,
-        //   attachments: attachments.length > 0 ? attachments : undefined,
-        // };
-        // await sgMail.send(msg);
-        console.log(
-          `[Portal] Would send renewal confirmation to ${emailAddr}: "${subject}"${attachments.length ? ` [+card PDF: ${attachments[0].filename}]` : ''}`,
-        );
+        // In production this would call SendGrid with the resolved subject/body,
+        // emailAddr as recipient, and the card PDF. Log only non-PII metadata.
+        logger.info('[Portal] Renewal confirmation prepared (SendGrid not configured)', {
+          attachments: attachments.length,
+        });
       }
       // Also email partner if joint — partner gets their own card
       if (partnerMember?.email) {
@@ -542,7 +540,8 @@ router.post('/renewal-confirm', async (req, res, next) => {
               partnerMember.class_id,
             ])
           )[0]?.name ?? '';
-        const { subject } = resolveTokens(
+        // In production the resolved subject/body populate the SendGrid message.
+        resolveTokens(
           template.subject,
           template.body,
           { ...partnerMember, class_name: pClassName },
@@ -560,21 +559,16 @@ router.post('/renewal-confirm', async (req, res, next) => {
               disposition: 'attachment',
             });
           } catch (cardErr) {
-            console.error('[Portal] Failed to generate partner renewal card PDF:', cardErr.message);
+            logger.error('[Portal] Failed to generate partner renewal card PDF', {
+              message: cardErr.message,
+            });
           }
         }
 
-        // const msg = {
-        //   to:          { email: partnerMember.email, name: `${partnerMember.forenames} ${partnerMember.surname}`.trim() },
-        //   from:        { email: FROM_ADDRESS, name: u3aName },
-        //   subject,
-        //   text:        body,
-        //   attachments: partnerAttachments.length > 0 ? partnerAttachments : undefined,
-        // };
-        // await sgMail.send(msg);
-        console.log(
-          `[Portal] Would send renewal confirmation to ${partnerMember.email}: "${subject}"${partnerAttachments.length ? ` [+card PDF: ${partnerAttachments[0].filename}]` : ''}`,
-        );
+        // In production this would call SendGrid for the partner. Log only metadata.
+        logger.info('[Portal] Partner renewal confirmation prepared (SendGrid not configured)', {
+          attachments: partnerAttachments.length,
+        });
       }
     }
 

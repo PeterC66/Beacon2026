@@ -8,6 +8,7 @@
 // (up to 15 min) — acceptable for POC, dangerous unannounced in production.
 
 import { createClient } from 'redis';
+import { logger } from './logger.js';
 
 const USE_REDIS = process.env.USE_REDIS !== 'false' && !!process.env.REDIS_URL;
 const IS_PROD = process.env.NODE_ENV === 'production';
@@ -20,7 +21,7 @@ if (IS_PROD && process.env.USE_REDIS !== 'false' && !process.env.REDIS_URL) {
 }
 
 if (IS_PROD && process.env.USE_REDIS === 'false') {
-  console.warn(
+  logger.warn(
     '⚠ Redis is disabled in production (USE_REDIS=false). Session invalidation ' +
       'is OFF — revoked roles remain effective until the access token expires.',
   );
@@ -31,17 +32,17 @@ let client = null;
 // Wrapped in a function to avoid top-level await (compatibility with all Node versions)
 async function connectRedis() {
   if (!USE_REDIS) {
-    console.log('Redis disabled — running without session invalidation (POC mode).');
+    logger.info('Redis disabled — running without session invalidation (POC mode).');
     return;
   }
   client = createClient({ url: process.env.REDIS_URL });
-  client.on('error', (err) => console.error('Redis error:', err));
+  client.on('error', (err) => logger.error('Redis error', { message: err.message }));
   await client.connect();
-  console.log('Redis connected.');
+  logger.info('Redis connected.');
 }
 
 // Fire and forget on startup — errors are logged but do not crash the app
-connectRedis().catch((err) => console.error('Redis connection failed:', err));
+connectRedis().catch((err) => logger.error('Redis connection failed', { message: err.message }));
 
 export default client;
 

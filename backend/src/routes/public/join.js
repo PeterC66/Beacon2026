@@ -13,6 +13,7 @@ import { generateSingleCardPdf } from '../membershipCards.js';
 import { initiatePayment, verifyPaymentNotification } from '../../utils/paypal.js';
 import { isFeatureEnabled } from '../../middleware/requireFeature.js';
 import { logAudit } from '../../utils/audit.js';
+import { logger } from '../../utils/logger.js';
 
 const router = Router();
 
@@ -644,7 +645,8 @@ router.post('/:slug/email-payment-link', async (req, res, next) => {
     );
     const replyTo = settings?.online_join_email || null;
 
-    const { subject } = resolveTokens(
+    // In production the resolved subject/body populate the SendGrid message.
+    resolveTokens(
       template.subject,
       template.body,
       { ...member, class_name: member.class_name },
@@ -652,11 +654,11 @@ router.post('/:slug/email-payment-link', async (req, res, next) => {
       { '#PAYMENTLINK': paymentLink },
     );
 
-    // In production, this would call SendGrid
-    console.log(
-      `[Online Join] Would send payment link email to ${member.email}: "${subject}"${replyTo ? ` (reply-to: ${replyTo})` : ''}`,
-    );
-    console.log(`[Online Join] Payment link: ${paymentLink}`);
+    // In production, this would call SendGrid. We deliberately do NOT log the
+    // recipient email, resolved subject, or the payment link (a bearer token).
+    logger.info('[Online Join] Payment link email prepared (SendGrid not configured)', {
+      hasReplyTo: Boolean(replyTo),
+    });
 
     res.json({ message: 'Payment link has been sent to your email address.' });
   } catch (err) {
@@ -684,7 +686,8 @@ async function sendJoinConfirmationEmail(slug, member) {
     );
     const replyTo = settings?.online_join_email || null;
 
-    const { subject } = resolveTokens(
+    // In production the resolved subject/body populate the SendGrid message.
+    resolveTokens(
       template.subject,
       template.body,
       { ...member, class_name: member.class_name },
@@ -703,26 +706,21 @@ async function sendJoinConfirmationEmail(slug, member) {
           disposition: 'attachment',
         });
       } catch (cardErr) {
-        console.error('[Online Join] Failed to generate card PDF for attachment:', cardErr.message);
+        logger.error('[Online Join] Failed to generate card PDF for attachment', {
+          message: cardErr.message,
+        });
       }
     }
 
-    // In production, this would call SendGrid with the msg object below.
-    // For now, log the email that would be sent.
-    // const msg = {
-    //   to:          { email: member.email, name: `${member.forenames} ${member.surname}`.trim() },
-    //   from:        { email: FROM_ADDRESS, name: u3aName },
-    //   replyTo:     replyTo ? { email: replyTo, name: u3aName } : undefined,
-    //   subject,
-    //   text:        body,
-    //   attachments: attachments.length > 0 ? attachments : undefined,
-    // };
-    // await sgMail.send(msg);
-    console.log(
-      `[Online Join] Would send confirmation email to ${member.email}: "${subject}"${replyTo ? ` (reply-to: ${replyTo})` : ''}${attachments.length ? ` [+${attachments.length} attachment(s): ${attachments.map((a) => a.filename).join(', ')}]` : ''}`,
-    );
+    // In production, this would call SendGrid with the resolved subject/body,
+    // the member's email as recipient, replyTo, and the attachments below.
+    // We log only non-identifying metadata — never the recipient or subject.
+    logger.info('[Online Join] Confirmation email prepared (SendGrid not configured)', {
+      hasReplyTo: Boolean(replyTo),
+      attachments: attachments.length,
+    });
   } catch (err) {
-    console.error('[Online Join] Failed to send confirmation email:', err.message);
+    logger.error('[Online Join] Failed to send confirmation email', { message: err.message });
   }
 }
 
@@ -747,21 +745,22 @@ async function sendOfficerNotifications(slug, member) {
     const tenant = await prisma.sysTenant.findUnique({ where: { slug } });
     const u3aName = tenant?.name ?? '';
 
-    const { subject } = resolveTokens(
+    // In production the resolved subject/body populate the SendGrid message.
+    resolveTokens(
       template.subject,
       template.body,
       { ...member, class_name: member.class_name },
       u3aName,
     );
 
-    for (const officer of officers) {
-      const email = officer.office_email || officer.email;
-      if (email) {
-        console.log(`[Online Join] Would notify officer at ${email}: "${subject}"`);
-      }
+    const recipientCount = officers.filter((o) => o.office_email || o.email).length;
+    if (recipientCount > 0) {
+      logger.info('[Online Join] Officer notifications prepared (SendGrid not configured)', {
+        recipients: recipientCount,
+      });
     }
   } catch (err) {
-    console.error('[Online Join] Failed to send officer notifications:', err.message);
+    logger.error('[Online Join] Failed to send officer notifications', { message: err.message });
   }
 }
 

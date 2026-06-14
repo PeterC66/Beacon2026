@@ -1,11 +1,16 @@
 // beacon2/backend/src/middleware/errorHandler.js
 // Central error handler. Always returns JSON. Never exposes stack traces in production.
 
+import { logger } from '../utils/logger.js';
+
 export function errorHandler(err, req, res, _next) {
   const isDev = process.env.NODE_ENV === 'development';
 
   // Log all errors server-side
-  console.error(`[${new Date().toISOString()}] ${req.method} ${req.path}:`, err);
+  logger.error(`${req.method} ${req.path}`, {
+    message: err.message,
+    stack: err.stack,
+  });
 
   // Known application errors (thrown with a status property)
   if (err.status) {
