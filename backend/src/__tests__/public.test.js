@@ -64,6 +64,37 @@ describe('GET /:slug/join-config', () => {
   });
 });
 
+// ── GET /:slug/info ─────────────────────────────────────────────────────────
+
+describe('GET /:slug/info', () => {
+  it('returns the u3a name and public contact details', async () => {
+    tenantQuery.mockResolvedValueOnce([
+      {
+        public_phone: '01234 567890',
+        public_email: 'info@demo.example',
+        home_page: 'https://demo.example',
+      },
+    ]);
+    const res = await request(app).get(`/public/${SLUG}/info`);
+    expect(res.status).toBe(200);
+    expect(res.body.u3aName).toBe('Demo u3a');
+    expect(res.body.publicPhone).toBe('01234 567890');
+    expect(res.body.publicEmail).toBe('info@demo.example');
+    expect(res.body.homePage).toBe('https://demo.example');
+  });
+
+  it('returns empty strings when contact details are unset', async () => {
+    tenantQuery.mockResolvedValueOnce([
+      { public_phone: null, public_email: null, home_page: null },
+    ]);
+    const res = await request(app).get(`/public/${SLUG}/info`);
+    expect(res.status).toBe(200);
+    expect(res.body.publicPhone).toBe('');
+    expect(res.body.publicEmail).toBe('');
+    expect(res.body.homePage).toBe('');
+  });
+});
+
 // ── POST /:slug/portal/register ─────────────────────────────────────────────
 
 describe('POST /:slug/portal/register', () => {

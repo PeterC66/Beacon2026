@@ -9,6 +9,28 @@ import { isFeatureEnabled } from '../../middleware/requireFeature.js';
 
 const router = Router();
 
+// GET /:slug/info — public u3a contact details (name + public phone/email/home
+// page from System Settings). Unauthenticated; used by the Members Portal sign-in
+// and online joining pages so prospective/returning members can make contact.
+router.get('/:slug/info', async (req, res, next) => {
+  try {
+    const slug = req.tenantSlug;
+    const [settings] = await tenantQuery(
+      slug,
+      `SELECT public_phone, public_email, home_page
+       FROM tenant_settings WHERE id = 'singleton'`,
+    );
+    res.json({
+      u3aName: req.tenant.name || slug,
+      publicPhone: settings?.public_phone ?? '',
+      publicEmail: settings?.public_email ?? '',
+      homePage: settings?.home_page ?? '',
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
 // GET /:slug/groups — public groups list
 router.get('/:slug/groups', async (req, res, next) => {
   try {
