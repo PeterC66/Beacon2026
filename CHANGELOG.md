@@ -27,6 +27,25 @@ Format: `## [version] — YYYY-MM-DD` with bullet points per change.
     freshly-restored users' sessions are no longer treated as pre-revoked.
 
 ### Added
+- **CI & E2E improvements (ImprovementPlan Chunk 12, findings T2/P1/P2)** —
+  - Test coverage reporting via `@vitest/coverage-v8` in both packages: a new
+    `test:coverage` script and a `coverage` config block (v8 provider;
+    `text-summary` + `html` + `lcov` reporters). CI now runs the suites with
+    coverage and uploads the `backend-coverage` / `frontend-coverage` HTML
+    reports as build artifacts. No coverage threshold gates CI — surfacing only.
+  - A root `docker-compose.yml` plus `backend/Dockerfile` and
+    `frontend/Dockerfile` (and a root `.dockerignore`) bring up Postgres +
+    Redis + backend + frontend locally, so the app — and the Playwright E2E
+    suite — can run without a deployed staging instance. The compose backend
+    seeds the system-admin the E2E suite expects by default, so local E2E runs
+    with no extra configuration (documented in `e2e/.env.example`, `e2e/README.md`,
+    `README.md`, and `DEPLOYMENT.md`).
+  - `.github/dependabot.yml` — weekly grouped minor/patch updates for the
+    `/backend`, `/frontend`, and `/e2e` npm packages and for GitHub Actions.
+  - Decisions recorded: the E2E suite stays **non-gating** (manual / post-deploy)
+    and the frontend CSP stays **report-only** for now — both with the rationale
+    captured in `docs/ImprovementPlan.md` and `KNOWN-ISSUES.md` #25, and the CSP
+    enforce-mode flip documented as the remaining step in `DEPLOYMENT.md`.
 - **Backend tests for previously-untested routes (ImprovementPlan Chunk 7,
   findings C1/M4/T4)** — new unit suites covering the routes that had no
   coverage: `system.test.js` (sys-admin tenant CRUD, set-temp-password,
@@ -66,6 +85,16 @@ Format: `## [version] — YYYY-MM-DD` with bullet points per change.
   noise. Frontend suite: 53 → 59 files, 140 → 196 tests.
 
 ### Changed
+- **Documentation rationalisation** — the 2026-06 review effort is complete, so
+  its three driver documents (`ImprovementPlan.md`, `CODEBASE-RECOMMENDATIONS.md`,
+  `SECURITY-REVIEW.md`) were archived under `docs/history/` (with a README
+  explaining their provenance). `KNOWN-ISSUES.md` is now stated explicitly as the
+  single living backlog and its cross-links point at the archived copies. No open
+  items were lost — all deferred work was already tracked in `KNOWN-ISSUES.md`.
+  `Beacon2 Project Definition.md` had its stale "April 2026" header refreshed to
+  June 2026 / v0.11.0 and is now cross-referenced with `README.md` as the
+  canonical module/route/page inventory (README being the shorter repo-orientation
+  map), removing the ambiguity over which layout tree is authoritative.
 - **Backend consistency cleanup (ImprovementPlan Chunk 6, findings N2/N6)** —
   documented a single response-shape + status-code convention in
   `CLAUDE-STANDARDS.md` (`{ error }` for all error bodies via `AppError`;

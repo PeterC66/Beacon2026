@@ -1,0 +1,86 @@
+# Beacon2 — local full-stack environment.
+#
+# Brings up Postgres, Redis, the backend API, and the frontend so the whole
+# application (and the Playwright E2E suite) can run on a laptop without a
+# deployed staging instance.
+#
+#   docker compose up --build         # start the stack (first run builds images)
+#   docker compose down -v            # stop and wipe the database volume
+#
+# Then run the E2E suite against the local stack:
+#   cd e2e && cp .env.example .env    # the defaults already target localhost
+#   npm install && npx playwright install chromium
+#   npm test
+#
+# IMPORTANT: every credential below is a throwaway LOCAL-ONLY value. This file
+# is for development only and must never be used to deploy a real instance —
+# production runs on Render/Vercel via render.yaml and vercel.json.
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: beacon2
+      POSTGRES_PASSWORD: beacon2
+      POSTGRES_DB: beacon2
+    ports:
+      - '5432:5432'
+    volumes:
+      - beacon2-db:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U beacon2']
+      interval: 5s
+      timeout: 5s
+      retries: 12
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - '6379:6379'
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 5s
+      timeout: 5s
+      retries: 12
+
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://beacon2:beacon2@postgres:5432/beacon2
+      JWT_ACCESS_SECRET: local-dev-access-secret-0000000000000000000000000000000000000000
+      JWT_REFRESH_SECRET: local-dev-refresh-secret-1111111111111111111111111111111111111111
+      # Matches the E2E suite's default system-admin credentials
+      # (see e2e/global-setup.js), so local E2E needs no extra config.
+      SEED_ADMIN_EMAIL: admin@beacon2.local
+      SEED_ADMIN_PASSWORD: ChangeMe123!
+      SEED_ADMIN_NAME: System Administrator
+      CORS_ORIGIN: http://localhost:5173
+      USE_REDIS: 'true'
+      REDIS_URL: redis://redis:6379
+      NODE_ENV: development
+      PORT: '3001'
+      PAYPAL_STUB_ALLOW: 'true'
+    ports:
+      - '3001:3001'
+
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+      args:
+        # The browser talks to the published backend port on localhost.
+        VITE_API_URL: http://localhost:3001
+    depends_on:
+      - backend
+    ports:
+      - '5173:5173'
+
+volumes:
+  beacon2-db:

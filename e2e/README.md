@@ -10,8 +10,13 @@ test can be traced back to documented user behaviour.
 ## Prerequisites
 
 - Node.js 18+
-- A running Beacon2 **staging** instance (frontend + backend + database)
-- A system-admin account on that instance (to create the test tenant)
+- A running Beacon2 instance (frontend + backend + database). Either:
+  - a deployed **staging** instance, **or**
+  - the **local docker stack** — run `docker compose up --build` from the repo
+    root, then use the localhost values documented at the top of `.env.example`
+    (this needs no separate staging environment)
+- A system-admin account on that instance (to create the test tenant). The local
+  docker stack seeds one automatically (`admin@beacon2.local` / `ChangeMe123!`).
 
 ---
 

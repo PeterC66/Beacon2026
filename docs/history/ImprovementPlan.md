@@ -465,12 +465,49 @@ Frontend suite: 53 → 59 files, 140 → 196 tests; lint 0 errors, Prettier clea
 The RoleEditor privilege-matrix toggle-all `<th onClick>` (a non-sortable
 bulk-toggle) was left as-is — outside the sortable-header scope.
 
-### Chunk 12 — CI & E2E improvements (T2 rest, P1, P2)
+### Chunk 12 — CI & E2E improvements (T2 rest, P1, P2) ✅ Done (2026-06-13)
 - Coverage reporting (`@vitest/coverage-v8`) surfaced in CI.
 - docker-compose for local backend+Postgres so E2E can run locally; decide
   whether E2E should gate merges; consider Dependabot.
 - Optional: single "deployment limitations" section in DEPLOYMENT.md; flip CSP
   to enforce mode after a clean report window (S15).
+
+**Notes:**
+- **Coverage:** `@vitest/coverage-v8` added to both packages with a `coverage`
+  block in `backend/vitest.config.js` and `frontend/vite.config.js`
+  (provider v8; `text-summary` + `html` + `lcov` reporters; sensible excludes).
+  New `test:coverage` script in each package. CI's "Run tests" step now runs
+  `npm run test:coverage` and uploads the `coverage/` report as a build
+  artifact for backend and frontend. No coverage **threshold** was set —
+  surfacing only, so CI is not gated on a number (baseline today: backend
+  ~53% lines, frontend ~25% lines). `coverage/` added to `.gitignore`.
+- **Local stack (P1/P2):** root `docker-compose.yml` brings up Postgres + Redis
+  + backend + frontend; new `backend/Dockerfile` and `frontend/Dockerfile`
+  (repo-root build context, since both import `shared/constants.js`) plus a root
+  `.dockerignore`. The compose backend seeds the same system-admin the E2E suite
+  expects by default (`admin@beacon2.local` / `ChangeMe123!`), so
+  `cd e2e && npm test` runs against `http://localhost:5173` with no extra config.
+  `e2e/.env.example`, `e2e/README.md`, `README.md`, and `DEPLOYMENT.md` document
+  the local path. Compose schema validated (`docker compose config`); a full
+  image build could not be exercised in the dev sandbox (its network policy
+  blocks pulling base-image layers from Docker's CDN).
+- **E2E gating (decision):** E2E stays **non-gating** — manual `workflow_dispatch`
+  plus the optional post-deploy hooks already in `e2e.yml`. Rationale: it needs a
+  live instance, has Render cold-start flakiness, and this is a POC; gating merges
+  on it adds friction for little gain. The new local docker stack means it can be
+  run on demand without staging. (Owner-confirmed via AskUserQuestion.)
+- **Dependabot:** new `.github/dependabot.yml` — weekly, grouped minor/patch
+  updates for `/backend`, `/frontend`, `/e2e` npm packages and for
+  `github-actions`, capped at 5 open PRs each.
+- **CSP (S15):** reviewed and **deliberately kept report-only** (owner-confirmed).
+  The "clean report window" can't be verified from a dev environment and enforcing
+  an untested policy risks breaking the live frontend. The flip is documented as
+  the remaining step in DEPLOYMENT.md and stays tracked as KNOWN-ISSUES #25.
+- **Deployment limitations:** consolidated in DEPLOYMENT.md (added no-automated-
+  backups and the CSP report-only note) plus a "Running locally without a
+  deployment" pointer.
+- Node already aligned to 22 across `ci.yml`/`e2e.yml` (Chunk 3). Backend suite
+  593 tests green under coverage; frontend 196 tests green under coverage.
 
 ---
 
