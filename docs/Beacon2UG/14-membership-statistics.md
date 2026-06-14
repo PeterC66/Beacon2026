@@ -86,4 +86,4 @@ You can download or print the statistics for use in committee reports:
 
 ---
 
-[← Previous: Addresses Export](13-addresses-export.md) | [Contents](index.md) | [Next: Validate Member Data →](15-validate-member-data.md)
+[← 13. Addresses Export](13-addresses-export.md) | [Contents](index.md) | [15. Validate Member Data →](15-validate-member-data.md)

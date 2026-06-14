@@ -3,11 +3,37 @@
 All notable changes are documented here.
 Format: `## [version] — YYYY-MM-DD` with bullet points per change.
 
+**How this file is organised:** the newest changes are at the top. Entries still
+heading for the next release sit under dated `## [Unreleased]` headings; released
+versions follow as `## [x.y.z] — date`. Entries for **0.9.7 and earlier** live in
+[`docs/history/CHANGELOG-archive.md`](docs/history/CHANGELOG-archive.md). The most
+recent released version is **[0.10.8](#0108--2026-04-21)** (later work is staged
+under the Unreleased headings below).
+
 ---
 
 ## [Unreleased] — 2026-06-14
 
 ### Changed
+- **Documentation review (2026-06-14)** — full consistency/accuracy pass over the
+  core docs and the Beacon2 User Guide, verified against the code:
+  - Corrected the stale version in `Beacon2 Project Definition.md` (0.11.0 → 0.11.1)
+    and documented the account-lockout mechanism.
+  - Refreshed `docs/data-model.md` with the `saved_reports` and
+    `session_invalidations` tables and the account-lockout columns.
+  - Documented the `LOG_LEVEL` and `PORTAL_AUTH_RATE_LIMIT_MAX` environment
+    variables (`backend/.env.example`, `DEPLOYMENT.md`).
+  - Rewrote the **Online Renewals** user-guide section (the feature is
+    implemented; the page previously said "not yet implemented"), fixed the
+    section 23 title (Events), and standardised the footer navigation across all
+    64 guide sections (which also fixed a skipped link in section 23).
+  - Added a plain-language overview and status table to `README.md`, a security
+    status + GDPR/data-protection section to `SECURITY.md`, and a
+    production-readiness checklist + operations guidance to `DEPLOYMENT.md`.
+  - Moved the new-page privilege process into `CONTRIBUTING.md`, added a
+    Project-Definition update step to the `CLAUDE.md` session wrap-up, and added a
+    top-of-file orientation note to this changelog.
+  - Logged the outstanding Beacon2 User Guide screenshots in `KNOWN-ISSUES.md`.
 - **Tooling & dependency hygiene (2026-06-14 review, Chunk 10)** —
   - Migrated `pdfmake` from `0.2.x` to `0.3.x` (now `^0.3.11`). pdfmake 0.3
     removed the server `pdfmake/src/printer` class, so `routes/letters.js` now

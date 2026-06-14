@@ -121,4 +121,4 @@ Two download buttons appear at the bottom of the page once events are listed:
 
 ---
 
-[Contents](index.md) | [Previous: Faculties](22-faculties.md) | [Next: Financial Ledger](25-financial-ledger.md)
+[← 22. Faculties](22-faculties.md) | [Contents](index.md) | [24. Open Meetings →](24-open-meetings.md)

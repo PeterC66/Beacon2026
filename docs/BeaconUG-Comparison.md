@@ -890,9 +890,9 @@
 | Online joining toggle | Built | Now controlled via Feature Configuration page (onlineJoining toggle) |
 | Privacy policy URL | Built | — |
 | Copyable member services URLs | Built | Join URL and Members Portal URL |
-| Copyable public information URLs | Built | Groups list and Calendar URLs (public pages not yet built) |
+| Copyable public information URLs | Built | Groups list and Calendar URLs (public pages built) |
 | PayPal status indicator | Built | — |
-| Members Portal feature toggles | Built | Configure renewals, groups, calendar, personal details, replacement card toggles (stored in `portal_config` JSONB; portal features themselves not yet built) |
+| Members Portal feature toggles | Built | Configure renewals, groups, calendar, personal details, replacement card toggles (stored in `portal_config` JSONB; the portal features themselves are built — see 10.2.x) |
 | Group Information display options | Built | Grid of to-members/to-public toggles for status, venue, contact, detail, enquiries, join group (stored in `group_info_config` JSONB) |
 | Calendar display options | Built | Grid of to-members/to-public toggles for venue, topic, enquiries, detail, download (stored in `calendar_config` JSONB) |
 | Feature-aware sections | Built | Sections grey out with explanatory banner when Members Portal or Online Joining is disabled in Feature Configuration |

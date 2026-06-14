@@ -73,9 +73,18 @@ implementation notes.
 
 ## New pages & privileges
 
-Every new page must use its own named privilege resource (never reuse
-`settings:view`). The four-step process is documented in `CLAUDE.md` under
-"Privileges for new functionality".
+Every new page must use its own named privilege resource — never reuse
+`settings:view`. The four steps are:
+
+1. Add the resource to `backend/src/seed/privilegeResources.js`.
+2. Grant it to roles in `backend/src/seed/defaultRoles.js` (Administration always
+   gets it).
+3. Add it to `ALL_PRIVS` in `backend/src/__tests__/helpers.js`.
+4. Enforce it: `requirePrivilege` on the backend route, `can` in the frontend
+   guard.
+
+Privileges are auto-seeded on every startup, so no manual migration step is
+needed.
 
 ## Documentation
 

@@ -58,6 +58,12 @@ If you haven't already:
 
 6. Click **Apply** — Render will now build and start your backend (takes 3–5 minutes)
 
+> **Optional settings:** everything above is all you need for the POC. The backend
+> also accepts a number of optional variables (all with sensible defaults) — for
+> example `LOG_LEVEL` to control log verbosity and `PORTAL_AUTH_RATE_LIMIT_MAX` to
+> tune the members-portal rate limit. The full, commented list is in
+> [`backend/.env.example`](backend/.env.example).
+
 **What happens automatically on first start:**
 - The database tables are created
 - Your admin account is created using the email and password you provided above
@@ -179,13 +185,47 @@ then `pg_restore` into the new database after creating it.
 
 ## When you're ready to move beyond POC
 
-Three things to do, in order:
+The POC setup above is deliberately minimal. Before running Beacon2 with **real
+member data**, work through this checklist.
 
-1. Upgrade the Render `beacon2-backend` and `beacon2-db` services to the **Starter** plan
-   (~£6/month each) — this removes the sleep behaviour and adds automated backups
-2. Add **Upstash Redis** (free tier at upstash.com, EU region) and set
-   `USE_REDIS=true` and `REDIS_URL` in Render's environment variables
-3. Buy a domain name (e.g. at namecheap.com) and point it at your Render and Vercel URLs
+### Production-readiness checklist
+
+- [ ] **Remove free-tier sleep & add backups** — upgrade the Render
+      `beacon2-backend` and `beacon2-db` services to the **Starter** plan
+      (~£6/month each). Starter adds automated daily database backups.
+- [ ] **Enable Redis** — add **Upstash Redis** (free tier, EU region) and set
+      `USE_REDIS=true` and `REDIS_URL` in Render. This makes role/password
+      changes invalidate sessions immediately rather than on next request.
+- [ ] **Custom domain & TLS** — buy a domain and point it at your Render and
+      Vercel URLs. Both platforms issue and renew TLS certificates automatically.
+      Update `CORS_ORIGIN` (Render) and `VITE_API_URL` (Vercel) to the new URLs.
+- [ ] **Enforce the Content-Security-Policy** — follow
+      "[Enforcing the Content-Security-Policy](#enforcing-the-content-security-policy)"
+      after a clean report-only window.
+- [ ] **Email sender reputation** — if sending member emails at volume, configure
+      SPF/DKIM for your domain in SendGrid and set `EMAIL_FROM_ADDRESS`.
+- [ ] **Data protection** — review GDPR obligations and put data-processing
+      agreements in place with Render, Vercel, and SendGrid (see
+      [SECURITY.md](SECURITY.md)).
+- [ ] **Test a restore** — confirm you can restore from a backup *before* you
+      rely on it (see "Replacing the database" above).
+
+### Operating it day-to-day
+
+- **Monitoring & logs** — use the Render dashboard for backend health and the
+  **Logs** tab for errors; Vercel's dashboard covers the frontend. Set
+  `LOG_LEVEL=info` (the production default) and raise to `debug` temporarily when
+  diagnosing an issue.
+- **Backups & recovery** — on the Starter plan Render takes automated daily
+  backups you can download from the database dashboard. The manual
+  `pg_dump`/`pg_restore` procedure under "Replacing the database" still applies
+  for ad-hoc snapshots and migrations.
+- **Updates** — Dependabot raises dependency-update PRs; merge them after CI is
+  green. Schema changes apply automatically on deploy (the backend runs
+  `prisma db push` on startup), so a normal deploy is just "Deploy latest commit".
+- **Platform end-of-life** — watch for Render/Vercel notices about Node or
+  PostgreSQL version end-of-life and plan upgrades in good time; the app targets
+  Node 20+ and PostgreSQL 15+.
 
 ---
 

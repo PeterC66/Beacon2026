@@ -26,4 +26,4 @@ Portal or website) but still appear in the administrative Events list.
 
 ---
 
-[Contents](index.md) | [Previous: Events](23-calendar.md) | [Next: Financial Ledger](25-financial-ledger.md)
+[← 23. Events](23-calendar.md) | [Contents](index.md) | [25. The Financial Ledger →](25-financial-ledger.md)

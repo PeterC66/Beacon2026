@@ -60,4 +60,4 @@ than a given date to keep the log manageable.
 
 ---
 
-[← Previous: Personal Preferences](60-personal-preferences.md) | [Contents](index.md) | [Next: u3a Officers →](62-officers.md)
+[← 60. Personal Preferences](60-personal-preferences.md) | [Contents](index.md) | [62. u3a Officers →](62-officers.md)

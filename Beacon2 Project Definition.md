@@ -1,7 +1,7 @@
-# Beacon2 — Project Definition (last reviewed June 2026)
+# Beacon2 — Project Definition (last reviewed 2026-06-14)
 
 > **Note:** This document describes the *current* state of the project as of
-> June 2026 (version 0.11.0). It is the canonical inventory of modules, routes,
+> 2026-06-14 (version 0.11.1). It is the canonical inventory of modules, routes,
 > and pages; for a contributor-oriented repo map and quickstart see
 > [`README.md`](README.md). Read it alongside `CLAUDE.md`, `CLAUDE-STANDARDS.md`,
 > and `CLAUDE-REFERENCE.md` in the repository root, which contain coding
@@ -26,7 +26,7 @@ Beacon2 is a ground-up rebuild with these goals:
 
 ---
 
-## What has been built (as of version 0.11.0)
+## What has been built (as of version 0.11.1)
 
 ### Infrastructure and platform
 - Full multi-tenant architecture (PostgreSQL schema-per-tenant)
@@ -45,6 +45,11 @@ Beacon2 is a ground-up rebuild with these goals:
   blocked for site administrators
 - **Temporary passwords** (doc 9.7): `must_change_password` flag enforced on login;
   set automatically on user creation and set-temp-password
+- **Account lockout**: consecutive failed logins are tracked
+  (`failed_login_count`, `locked_until` on users; `portal_failed_login_count`,
+  `portal_locked_until` on members for the portal). After `MAX_FAILED_LOGINS`
+  attempts the account is locked for `LOCKOUT_MINUTES`. Auth endpoints are also
+  IP rate-limited (`AUTH_RATE_LIMIT_MAX`; `PORTAL_AUTH_RATE_LIMIT_MAX` for the portal)
 - **Force change password** (doc 4): dedicated `/change-password` route; requires
   new password (min 10 chars, no spaces, upper+lower+number) plus security Q&A;
   blocks all other navigation until completed

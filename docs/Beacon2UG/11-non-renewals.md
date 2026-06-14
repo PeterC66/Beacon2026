@@ -101,4 +101,4 @@ guidance on which to use:
 
 ---
 
-[← Previous: Membership Renewals](10-membership-renewals.md) | [Contents](index.md) | [Next: Membership Cards →](12-membership-cards.md)
+[← 10. Membership Renewals](10-membership-renewals.md) | [Contents](index.md) | [12. Membership Cards →](12-membership-cards.md)
