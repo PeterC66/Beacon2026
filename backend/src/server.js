@@ -7,6 +7,7 @@ import { createRequire } from 'module';
 import app from './app.js';
 import { prisma } from './utils/db.js';
 import { migrateAndSeed } from './utils/migrate.js';
+import { logger } from './utils/logger.js';
 
 const require = createRequire(import.meta.url);
 const { version } = require('../package.json');
@@ -16,11 +17,13 @@ const PORT = process.env.PORT ?? 3001;
 migrateAndSeed()
   .then(() => {
     app.listen(PORT, () => {
-      console.log(`Beacon2 API v${version} running on port ${PORT} [${process.env.NODE_ENV}]`);
+      logger.info(`Beacon2 API v${version} running on port ${PORT}`, {
+        env: process.env.NODE_ENV,
+      });
     });
   })
   .catch((err) => {
-    console.error('Startup failed:', err);
+    logger.error('Startup failed', { message: err.message, stack: err.stack });
     process.exit(1);
   });
 

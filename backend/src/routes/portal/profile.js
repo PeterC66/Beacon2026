@@ -17,6 +17,7 @@ import { resolveTokens } from '../../utils/emailTokens.js';
 import { logAudit } from '../../utils/audit.js';
 import { generateSingleCardPdf } from '../membershipCards.js';
 import { decodeAndValidateImage } from '../../utils/uploads.js';
+import { logger } from '../../utils/logger.js';
 import { sendDetailsUpdateEmail, sendPortalVerificationEmail } from './helpers.js';
 
 const router = Router({ mergeParams: true });
@@ -269,7 +270,9 @@ router.patch('/personal-details', async (req, res, next) => {
       // Send the link by email. Fire-and-forget; never log the token (a leaked
       // verification token lets an attacker confirm a changed email address).
       void sendPortalVerificationEmail(data.email.toLowerCase(), verifyLink).catch((err) =>
-        console.error('[Portal] Background email-verification send failed:', err.message),
+        logger.error('[Portal] Background email-verification send failed', {
+          message: err.message,
+        }),
       );
     }
 
@@ -537,7 +540,8 @@ router.post('/request-card', async (req, res, next) => {
     const u3aName = tenant?.name ?? slug;
 
     if (template) {
-      const { subject } = resolveTokens(template.subject, template.body, { ...member }, u3aName);
+      // In production the resolved subject/body populate the SendGrid message.
+      resolveTokens(template.subject, template.body, { ...member }, u3aName);
 
       // Generate the membership card PDF to attach to the email
       const attachments = [];
@@ -550,21 +554,16 @@ router.post('/request-card', async (req, res, next) => {
           disposition: 'attachment',
         });
       } catch (cardErr) {
-        console.error('[Portal] Failed to generate card PDF for attachment:', cardErr.message);
+        logger.error('[Portal] Failed to generate card PDF for attachment', {
+          message: cardErr.message,
+        });
       }
 
-      // In production, this would call SendGrid with the msg object below.
-      // const msg = {
-      //   to:          { email: emailAddr, name: `${member.forenames} ${member.surname}`.trim() },
-      //   from:        { email: FROM_ADDRESS, name: u3aName },
-      //   subject,
-      //   text:        body,
-      //   attachments: attachments.length > 0 ? attachments : undefined,
-      // };
-      // await sgMail.send(msg);
-      console.log(
-        `[Portal] Would send card replacement email to ${emailAddr}: "${subject}"${attachments.length ? ` [+card PDF: ${attachments[0].filename}]` : ''}`,
-      );
+      // In production, this would call SendGrid with the resolved subject/body,
+      // emailAddr as recipient, and the card PDF attachment. Log only metadata.
+      logger.info('[Portal] Card replacement email prepared (SendGrid not configured)', {
+        attachments: attachments.length,
+      });
     }
 
     // Mark card as not printed so admin knows to reprint

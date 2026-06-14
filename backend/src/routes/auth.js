@@ -12,6 +12,7 @@ import { passwordSchema, generateTempPassword } from '../utils/passwordPolicy.js
 import { invalidateUserSessions } from '../utils/redis.js';
 import { AppError } from '../middleware/errorHandler.js';
 import { logAudit } from '../utils/audit.js';
+import { logger } from '../utils/logger.js';
 
 const router = Router();
 
@@ -300,7 +301,7 @@ router.post('/recover', async (req, res, next) => {
     // sendRecoveryEmail (which would otherwise leak account existence by
     // timing — a matched account responds noticeably slower than a miss).
     void sendRecoveryEmail(data.tenantSlug, user).catch((err) =>
-      console.error('[Recovery] Background recovery email failed:', err.message),
+      logger.error('[Recovery] Background recovery email failed', { message: err.message }),
     );
     res.json({ message: RECOVER_GENERIC });
   } catch (err) {
@@ -345,7 +346,7 @@ router.post('/recover/verify', async (req, res, next) => {
     }
 
     void sendRecoveryEmail(data.tenantSlug, user).catch((err) =>
-      console.error('[Recovery] Background recovery email failed:', err.message),
+      logger.error('[Recovery] Background recovery email failed', { message: err.message }),
     );
     res.json({ message: RECOVER_GENERIC });
   } catch (err) {
@@ -432,9 +433,9 @@ async function sendRecoveryEmail(tenantSlug, user) {
   const body = `Your username is: ${user.username}\n\nA temporary password has been set: ${tempPassword}\n\nYou will be required to change this password when you next log in.`;
 
   if (!process.env.SENDGRID_API_KEY) {
-    console.warn(
-      `[Recovery] SendGrid not configured — cannot deliver recovery email to ${user.email}. ` +
-        `Set SENDGRID_API_KEY to enable account recovery emails.`,
+    logger.warn(
+      '[Recovery] SendGrid not configured — cannot deliver recovery email. ' +
+        'Set SENDGRID_API_KEY to enable account recovery emails.',
     );
     return;
   }
@@ -447,8 +448,8 @@ async function sendRecoveryEmail(tenantSlug, user) {
       text: body,
     });
   } catch (err) {
-    // Never include the body/password in the error log.
-    console.error(`[Recovery] Failed to send recovery email to ${user.email}:`, err.message);
+    // Never include the recipient email or the body/password in the error log.
+    logger.error('[Recovery] Failed to send recovery email', { message: err.message });
   }
 }
 
