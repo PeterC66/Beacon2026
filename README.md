@@ -3,6 +3,12 @@
 Modern rebuild of the [Beacon](https://www.u3abeacon.org.uk/) u3a management system —
 a multi-tenant web app for running u3a groups across the UK.
 
+> **For human contributors:** this `README.md` and [`CONTRIBUTING.md`](CONTRIBUTING.md)
+> are the entry points for people. The `CLAUDE*.md` files (`CLAUDE.md`,
+> `CLAUDE-STANDARDS.md`, `CLAUDE-REFERENCE.md`, `CLAUDE-E2E.md`) are tooling for
+> Claude Code sessions, not primary documentation — read them only if you want to
+> understand how the AI-assisted workflow operates.
+
 ## Project structure
 
 ```

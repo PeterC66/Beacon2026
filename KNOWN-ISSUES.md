@@ -138,9 +138,11 @@ These are catalogued and re-verified in `docs/history/ImprovementPlan.md` (Chunk
     verified from a dev environment, and enforcing an untested policy risks
     breaking the live frontend. The flip is now documented as the remaining step
     in DEPLOYMENT.md.)
-26. `[OPEN]` **Stale comment in `App.jsx:132`** — "auth handled inside pages via
-    sessionStorage" no longer reflects the in-memory sys-token model.
-    Tidy when next touching the file.
+26. `[FIXED]` **Stale comment in `App.jsx:132`** — the comment claimed system
+    admin auth was "handled inside pages via sessionStorage", which no longer
+    matched the in-memory sys-token model (`frontend/src/lib/api/system.js`).
+    Reworded to point at the in-memory token. Resolved in the 2026-06-14 review
+    (ImprovementPlan Chunk 8).
 
 ---
 
