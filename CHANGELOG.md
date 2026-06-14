@@ -14,6 +14,13 @@ under the Unreleased headings below).
 
 ## [Unreleased] — 2026-06-14
 
+### Fixed
+- **`CLAUDE-REFERENCE.md` navigability** — corrected the section-8 Contents anchor
+  (`#8-email-module-docs-6165` → `#8-email-module-docs-61615`, which was the only
+  broken link) and added a `[↑ Back to top]` affordance at the end of every one of
+  the 26 sections. Also added the missing `---` separator at the section 20→21
+  boundary so all section breaks are consistent. (Docs-only; no content restructure.)
+
 ### Changed
 - **Documentation review (2026-06-14)** — full consistency/accuracy pass over the
   core docs and the Beacon2 User Guide, verified against the code:
