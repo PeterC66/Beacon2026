@@ -6,6 +6,7 @@ import { useAuth } from '../../context/AuthContext.jsx';
 import { systemMessages as api } from '../../lib/api.js';
 import PageHeader from '../../components/PageHeader.jsx';
 import NavBar from '../../components/NavBar.jsx';
+import { inputCls, labelCls } from '../../components/ui/Input.jsx';
 
 export default function SystemMessages() {
   const { tenant, can } = useAuth();
@@ -94,23 +95,29 @@ export default function SystemMessages() {
               {editing === msg.id ? (
                 <div className="space-y-3">
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">Subject</label>
+                    <label htmlFor={`sm-subject-${msg.id}`} className={labelCls}>
+                      Subject
+                    </label>
                     <input
+                      id={`sm-subject-${msg.id}`}
                       type="text"
                       name="subject"
                       value={form.subject}
                       onChange={(e) => setForm({ ...form, subject: e.target.value })}
-                      className="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className={`w-full ${inputCls}`}
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">Body</label>
+                    <label htmlFor={`sm-body-${msg.id}`} className={labelCls}>
+                      Body
+                    </label>
                     <textarea
+                      id={`sm-body-${msg.id}`}
                       name="body"
                       value={form.body}
                       onChange={(e) => setForm({ ...form, body: e.target.value })}
                       rows={8}
-                      className="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono"
+                      className={`w-full ${inputCls} font-mono`}
                     />
                   </div>
                   <div className="flex gap-2">

@@ -6,9 +6,8 @@ import { customFields as api } from '../../lib/api.js';
 import { useAuth } from '../../context/AuthContext.jsx';
 import NavBar from '../../components/NavBar.jsx';
 import PageHeader from '../../components/PageHeader.jsx';
+import { inputCls, labelCls } from '../../components/ui/Input.jsx';
 
-const inputCls =
-  'w-full border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500';
 const btnPrimary =
   'bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white rounded px-5 py-2 text-sm font-medium transition-colors';
 
@@ -83,10 +82,11 @@ export default function CustomFields() {
               const key = `label${n}`;
               return (
                 <div key={n}>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">
+                  <label htmlFor={key} className={labelCls}>
                     Custom field {n} label
                   </label>
                   <input
+                    id={key}
                     type="text"
                     name={key}
                     value={labels[key]}
@@ -97,7 +97,7 @@ export default function CustomFields() {
                     disabled={!canChange}
                     placeholder="(not used)"
                     maxLength={60}
-                    className={inputCls}
+                    className={`w-full ${inputCls}`}
                   />
                 </div>
               );
