@@ -15,7 +15,7 @@ Read `CLAUDE-STANDARDS.md` first for the cross-cutting checklist that applies to
 5. [Members module](#5-members-module)
 6. [Groups module](#6-groups-module)
 7. [Finance module](#7-finance-module)
-8. [Email module (docs 6.1–6.1.5)](#8-email-module-docs-6165)
+8. [Email module (docs 6.1–6.1.5)](#8-email-module-docs-61615)
 9. [Data Export & Backup / Restore](#9-data-export--backup--restore)
 10. [Admin and Misc modules](#10-admin-and-misc-modules)
 11. [Frontend UI patterns](#11-frontend-ui-patterns)
@@ -77,6 +77,8 @@ Check server logs for `[timestamp] METHOD /path: Error: ...`. Common causes:
 - `relation "u3a_xxx.some_table" does not exist` — table missing
 - `function nextval(...)` error — sequence missing
 - FK violation — status_id/class_id not in referenced table
+
+[↑ Back to top](#contents)
 
 ---
 
@@ -162,6 +164,8 @@ Also blocks deletion of site administrator.
 
 `createTenantSchema()` requires `adminUsername` (lowercase alphanumeric).
 
+[↑ Back to top](#contents)
+
 ---
 
 ## 3. Prisma and PostgreSQL patterns
@@ -194,6 +198,8 @@ function fmtDate(d) {
   return `${day}/${m}/${y}`;
 }
 ```
+
+[↑ Back to top](#contents)
 
 ---
 
@@ -260,6 +266,8 @@ function fmtDate(d) {
 ### Test note
 
 "System Settings" appears in NavBar breadcrumb AND `<h1>` → use `getAllByText`.
+
+[↑ Back to top](#contents)
 
 ---
 
@@ -390,6 +398,8 @@ which requires categories). Users can categorize later.
   address and the user has `email:send` privilege
 - Uses the same `sessionStorage.emailComposeMemberIds` pattern as the member list
 
+[↑ Back to top](#contents)
+
 ---
 
 ## 6. Groups module
@@ -462,6 +472,8 @@ Entirely independent from the Finance Ledger.
 - `GET /groups/:id/members/download?format=excel|pdf&ids=...&fields=...`
 - Download field picker, same pattern as MemberList
 - Checkboxes + Send Email button (stores member IDs in sessionStorage)
+
+[↑ Back to top](#contents)
 
 ---
 
@@ -614,6 +626,8 @@ financeApi.listAccounts() / .createAccount(data) / .updateAccount(id, data) / .d
 // same for categories, transactions, transfers
 ```
 
+[↑ Back to top](#contents)
+
 ---
 
 ## 8. Email module (docs 6.1–6.1.5)
@@ -673,6 +687,8 @@ Multer passes non-multipart requests unchanged.
 ### Integration
 
 `MemberList.jsx` bulk "Send email" → stores IDs in sessionStorage → navigates to compose.
+
+[↑ Back to top](#contents)
 
 ---
 
@@ -813,6 +829,8 @@ the browser sees `null` and downloads as `download.xlsx`.
 - `$pGROUPLEDGER = 1510` → `group_ledger_all`
 - `$pGROUPLEDGERASLEADER = 1520` → `group_ledger_as_leader`
 
+[↑ Back to top](#contents)
+
 ---
 
 ## 10. Admin and Misc modules
@@ -841,6 +859,8 @@ the browser sees `null` and downloads as `download.xlsx`.
 - Frontend: `PollList.jsx` at `/polls`
 - Member list: poll filter with "Negate poll"; "Add to poll" bulk action
 - Member record: poll tick boxes, instant save
+
+[↑ Back to top](#contents)
 
 ---
 
@@ -1068,6 +1088,8 @@ RoleEditor matrix, UserEditor role checkboxes, MemberStatusList.
 `frontend/package.json` → `"version"` injected via Vite `define: { __APP_VERSION__ }`.
 Shown in PageHeader top-right. Bump before committing releases.
 
+[↑ Back to top](#contents)
+
 ---
 
 ## 12. Testing
@@ -1152,6 +1174,8 @@ Location: `e2e/`. Runs against live staging. `global-setup.js` creates test tena
 `fixtures/admin.js` logs in per test. Page Object Models in `pages/`.
 Tests numbered to match Beacon UG sections.
 
+[↑ Back to top](#contents)
+
 ---
 
 ## 13. Gift Aid module (doc 7.8)
@@ -1208,6 +1232,8 @@ These tokens only appear in the token panel when navigating from the GA page.
 
 - Joint/family membership GA logic is deferred (see `KNOWN-ISSUES.md`)
 
+[↑ Back to top](#contents)
+
 ---
 
 ## 14. Credit Batches module (doc 7.4)
@@ -1253,6 +1279,8 @@ avoid Express matching "unbatched" as an `:id` parameter.
 
 Only empty batches (zero transactions) can be deleted. Remove all transactions first.
 
+[↑ Back to top](#contents)
+
 ---
 
 ## 15. Reference documentation
@@ -1269,6 +1297,8 @@ Not the same as the System Settings screen (doc `8.3`).
 ### Legacy Beacon source — `docs/FromBeacon/`
 
 Selected files from original Beacon codebase. Ask user to add missing files.
+
+[↑ Back to top](#contents)
 
 ---
 
@@ -1427,6 +1457,8 @@ Currently generates fake paymentId and redirects to own confirmation endpoint.
   `getCalendar`, `downloadCalendarPdf`, `getPersonalDetails`, `updatePersonalDetails`,
   `changePassword`, `uploadPhoto`, `deletePhoto`, `getPhotoBlob`, `requestCard`
 
+[↑ Back to top](#contents)
+
 ---
 
 ## 17. Calendar module
@@ -1536,6 +1568,8 @@ to the default event type.
 - Real PayPal API integration
 - Shared email handling in portal registration
 
+[↑ Back to top](#contents)
+
 ---
 
 ## 18. Membership Cards (doc 4.7)
@@ -1584,6 +1618,8 @@ next `year_start_month/year_start_day`. "Advance expiry" adds one year.
 - ~~Members Portal "Order a replacement card" (doc 10.2.5)~~ — **Done.** Implemented as
   `PortalRequestCard.jsx`; backend route `POST /portal/request-card` in `portal.js`
 
+[↑ Back to top](#contents)
+
 ---
 
 ## 19. Letters module (docs 6.2, 6.2.1, 6.2.2)
@@ -1629,6 +1665,8 @@ and support standard letter templates for reuse.
 - **Backend**: `pdfmake@0.2.18`
 - **Frontend**: `@tiptap/react`, `@tiptap/starter-kit`, `@tiptap/extension-text-align`,
   `@tiptap/extension-underline`, `@tiptap/extension-text-style`, `@tiptap/pm`
+
+[↑ Back to top](#contents)
 
 ---
 
@@ -1677,6 +1715,10 @@ and support standard letter templates for reuse.
 Currently uses `console.log` (same pattern as portal password reset). The log includes
 username and temp password. Production deployment will send via SendGrid.
 
+[↑ Back to top](#contents)
+
+---
+
 ## 21. Cookie Consent
 
 ### Architecture
@@ -1720,6 +1762,8 @@ All keys are removed in `useCookieConsent.js → setConsent(false)`.
 All eight optional cookie items are now fully implemented — see `KNOWN-ISSUES.md`
 Cookie Consent section for confirmation.
 
+[↑ Back to top](#contents)
+
 ---
 
 ## 22. Custom Fields
@@ -1742,6 +1786,8 @@ Cookie Consent section for confirmation.
 - `CustomFields.jsx` at `/custom-fields` — admin page to define up to 4 free-form field labels
 - `MemberEditor.jsx` — renders custom fields dynamically when labels are set
 
+[↑ Back to top](#contents)
+
 ---
 
 ## 23. Gift Aid Log
@@ -1756,6 +1802,8 @@ Cookie Consent section for confirmation.
 
 - `GiftAidLog.jsx` at `/gift-aid-log` — date-filtered table showing when Gift Aid consent
   was given or withdrawn; member dropdown filter; columns: Date, Member, Action, By
+
+[↑ Back to top](#contents)
 
 ---
 
@@ -1788,6 +1836,8 @@ Cookie Consent section for confirmation.
 
 When adding a new page/route, add a corresponding entry to `ROUTE_HELP_TERMS` in
 `HelpWidget.jsx` with appropriate Zendesk search terms.
+
+[↑ Back to top](#contents)
 
 ---
 
@@ -1929,6 +1979,8 @@ changes the code, but treat it as a summary, not the authority.
 |---|------|-------------|-----------------------------|
 | 0 | Beacon Migration Default | All features enabled except SiteWorks Integration and Custom Fields — the recommended starting point for a u3a migrating from Beacon. | `siteworks: false`, `customFields: false` |
 
+[↑ Back to top](#contents)
+
 ---
 
 ## 26. Deployment and Infrastructure
@@ -1949,3 +2001,4 @@ Vercel dashboard (frontend: `VITE_API_URL`, `VITE_ZENDESK_KEY`).
 instance, update `DATABASE_URL` on the backend service, and save. Auto-migration
 on startup (see §1) handles the rest. Full instructions in `DEPLOYMENT.md`.
 
+[↑ Back to top](#contents)
