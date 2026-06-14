@@ -9,6 +9,38 @@ a multi-tenant web app for running u3a groups across the UK.
 > Claude Code sessions, not primary documentation — read them only if you want to
 > understand how the AI-assisted workflow operates.
 
+## What Beacon2 is (plain-language overview)
+
+Beacon2 is a web application that u3a organisations use to run their membership,
+groups, finances, and communications. Each u3a gets its own private, isolated
+area within one shared system ("multi-tenant"), so many u3as can be hosted
+together at low cost.
+
+- **Who uses it:** a u3a's own volunteers — membership secretary, treasurer,
+  group coordinators — through an ordinary web browser. There is nothing to
+  install. Members themselves can join and renew online through a self-service
+  portal.
+- **Where it runs / what it costs:** it deploys to low-cost cloud hosting. A
+  proof-of-concept runs on free tiers; a stable production setup is roughly
+  £12/month plus an optional domain name. See [DEPLOYMENT.md](DEPLOYMENT.md).
+- **Status:** feature-complete against the original Beacon and working end-to-end,
+  but currently a demonstration/proof-of-concept — see the table below and
+  [SECURITY.md](SECURITY.md) before putting real member data into it.
+
+### Status at a glance
+
+| Area | Status |
+|------|--------|
+| Membership, Groups, Finance, Email & Letters | Built |
+| Online joining, Members Portal, online renewals | Built |
+| Administration: roles & privileges, audit log, backup/restore | Built |
+| **Production readiness** | Proof-of-concept — works end-to-end; review [DEPLOYMENT.md](DEPLOYMENT.md) before real data |
+| **Independent security audit / penetration test** | Not yet done (see [SECURITY.md](SECURITY.md)) |
+| **User-guide screenshots** | Outstanding — guide text is complete |
+
+For the authoritative feature inventory, see
+[`Beacon2 Project Definition.md`](Beacon2%20Project%20Definition.md).
+
 ## Project structure
 
 ```
