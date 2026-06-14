@@ -90,6 +90,15 @@ CREATE TABLE IF NOT EXISTS :schema.refresh_tokens (
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
+-- Session-invalidation markers — the Postgres fallback for the Redis
+-- "invalidated:<slug>:<subject>" key, used only when Redis is disabled
+-- (USE_REDIS=false). One row per subject (a user id or a portal member id);
+-- a token issued before invalidated_at is treated as revoked. See utils/redis.js.
+CREATE TABLE IF NOT EXISTS :schema.session_invalidations (
+  subject_id     TEXT PRIMARY KEY,
+  invalidated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
 -- ─────────────────────────────────────────────
 -- MEMBERSHIP CLASSES
 -- ─────────────────────────────────────────────

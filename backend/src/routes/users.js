@@ -10,6 +10,7 @@ import { passwordSchema, generateTempPassword } from '../utils/passwordPolicy.js
 import { AppError } from '../middleware/errorHandler.js';
 import { invalidateUserSessions } from '../utils/redis.js';
 import { logAudit } from '../utils/audit.js';
+import { encodePrivilege } from '../../../shared/constants.js';
 
 const router = Router();
 
@@ -352,7 +353,7 @@ async function assertActorHoldsRolePrivileges(slug, actorPrivileges, roleId) {
     [roleId],
   );
   const have = new Set(actorPrivileges);
-  const missing = rows.map((r) => `${r.code}:${r.action}`).filter((p) => !have.has(p));
+  const missing = rows.map((r) => encodePrivilege(r.code, r.action)).filter((p) => !have.has(p));
   if (missing.length) {
     const sample = missing.slice(0, 3).join(', ') + (missing.length > 3 ? '…' : '');
     throw AppError(

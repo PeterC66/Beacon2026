@@ -6,6 +6,8 @@
 //   router.get('/roles', requireAuth, requirePrivilege('roles_list', 'view'), handler)
 //   router.post('/roles', requireAuth, requirePrivilege('role_record', 'create'), handler)
 
+import { encodePrivilege } from '../../../shared/constants.js';
+
 /**
  * Middleware factory.
  * @param {string} resource - privilege resource code, e.g. 'role_record'
@@ -16,7 +18,7 @@ export function requirePrivilege(resource, action) {
     const { privileges = [] } = req.user ?? {};
 
     // Privileges in the JWT are stored as "resource:action" strings
-    const required = `${resource}:${action}`;
+    const required = encodePrivilege(resource, action);
 
     if (privileges.includes(required)) {
       return next();
@@ -39,5 +41,5 @@ export function requirePrivilege(resource, action) {
  * @returns {boolean}
  */
 export function hasPrivilege(privileges, resource, action) {
-  return privileges.includes(`${resource}:${action}`);
+  return privileges.includes(encodePrivilege(resource, action));
 }
