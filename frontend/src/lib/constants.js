@@ -9,4 +9,5 @@ export {
   SETTINGS_PAYMENT_METHODS,
   ALL_PAYMENT_METHODS,
   UK_POSTCODE_RE,
+  encodePrivilege,
 } from '../../../shared/constants.js';

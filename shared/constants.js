@@ -156,3 +156,26 @@ export const ALL_PAYMENT_METHODS = [
 
 /** Standard UK postcode pattern (outward + optional space + inward). */
 export const UK_POSTCODE_RE = /^(GIR\s?0AA|[A-Z]{1,2}[0-9][0-9A-Z]?\s?[0-9][ABD-HJLNP-UW-Z]{2})$/i;
+
+// ── Privileges ──────────────────────────────────────────────────────────
+
+/**
+ * Encode a privilege as the canonical `resource:action` string stored in the
+ * JWT and matched by the backend (`requirePrivilege`) and frontend (`can`).
+ *
+ * Single source of truth so both ends always build the string identically.
+ * Resource codes MAY contain `:` (e.g. `finance:transactions`); actions must
+ * not — that invariant keeps the action as the unambiguous final segment and
+ * removes any risk of two distinct (resource, action) pairs colliding to the
+ * same string. The guard below enforces it.
+ *
+ * @param {string} resource - privilege resource code
+ * @param {string} action   - e.g. 'view' | 'create' | 'change' | 'delete' | 'download'
+ * @returns {string}
+ */
+export function encodePrivilege(resource, action) {
+  if (typeof action === 'string' && action.includes(':')) {
+    throw new Error(`Invalid privilege action "${action}": actions must not contain ':'`);
+  }
+  return `${resource}:${action}`;
+}

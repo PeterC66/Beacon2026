@@ -8,6 +8,7 @@ import { signAccessToken, signRefreshToken, verifyRefreshToken } from '../utils/
 import { invalidateUserSessions } from '../utils/redis.js';
 import { AppError } from '../middleware/errorHandler.js';
 import { logAudit } from '../utils/audit.js';
+import { encodePrivilege } from '../../../shared/constants.js';
 
 // ─── Account lockout config ───────────────────────────────────────────────
 // After MAX_FAILED_LOGINS consecutive failures, the account is locked for
@@ -262,7 +263,7 @@ export async function computePrivileges(tenantSlug, userId) {
     [userId],
   );
 
-  return rows.map((r) => `${r.code}:${r.action}`);
+  return rows.map((r) => encodePrivilege(r.code, r.action));
 }
 
 /**
@@ -275,7 +276,7 @@ export async function computeAllPrivileges(tenantSlug) {
     `SELECT pr.code, unnest(pr.actions) AS action
      FROM privilege_resources pr`,
   );
-  return rows.map((r) => `${r.code}:${r.action}`);
+  return rows.map((r) => encodePrivilege(r.code, r.action));
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────
