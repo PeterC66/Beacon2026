@@ -29,7 +29,36 @@ Format: `## [version] — YYYY-MM-DD` with bullet points per change.
   - A `CLAUDE-STANDARDS.md` rule: use `logger`, never `console.*`, and never
     log PII/secrets in app logs.
 
+### Added
+- **Security-critical test coverage (2026-06-14 review, Chunk 3 follow-on,
+  Chunk 6)** — re-verified the three paths the plan flagged as untested and
+  found most were *already* covered (account-lockout in `authService.test.js`,
+  refresh-token tenant-slug mismatch in `authService.test.js`, tenant-slug
+  guards in `db.test.js`, and the role-escalation guard via `POST/DELETE
+  /users/:id/roles` in `users.test.js`). Added the two genuinely-missing
+  branches:
+  - `POST /users` **escalation guard** — creating a user with a `roleIds` entry
+    whose role grants a privilege the actor does not hold is rejected (403) and
+    no `user_roles` row is written. This third `assertActorHoldsRolePrivileges`
+    call site was previously untested.
+  - `loginUser` **failure-counter reset** — a successful login clears
+    `failed_login_count`/`locked_until`, so a legitimate user is not
+    progressively locked out by past failures.
+  Both new tests were confirmed to fail against a deliberately broken guard
+  (they bite).
+
 ### Changed
+- **Service-layer extraction for finance transactions (2026-06-14 review,
+  Chunk 3)** — introduced the marquee maintainability pattern on one route
+  end-to-end. New `backend/src/services/transactionService.js` now holds all
+  transaction business logic and data access (`list`/`get`/`create`/
+  `bulkSetPending`/`update`/`delete`/`refund`), and
+  `routes/finance/transactions.js` (747 → 179 lines) is a thin controller that
+  validates input with Zod at the route boundary and delegates to the service,
+  mirroring `services/authService.js`. Behaviour-preserving: the existing
+  finance route tests pass unchanged. The two larger offenders
+  (`routes/backup/restore.js`, `routes/members/crud.js`) are recorded in
+  `KNOWN-ISSUES.md` for the same treatment in follow-up sessions.
 - `CONTRIBUTING.md` Licensing section now points at the new `LICENSE`,
   `SECURITY.md`, and `docs/FromBeacon/README.md` instead of saying a licence is
   undecided.

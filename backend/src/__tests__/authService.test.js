@@ -136,6 +136,27 @@ describe('loginUser — failed-login lockout (H2)', () => {
     );
   });
 
+  it('resets the failure counter and lockout on a successful login', async () => {
+    // A user mid-way to a lockout who now logs in with the correct password.
+    tenantQuery.mockResolvedValueOnce([userRow({ failed_login_count: 3 })]); // user lookup
+    verifyPassword.mockResolvedValueOnce(true);
+    tenantQuery.mockResolvedValue([]); // reset UPDATE, privileges, refresh insert, last_login
+
+    const result = await loginUser(TENANT, 'alice', 'correct');
+    expect(result.accessToken).toBeTruthy();
+
+    // The counter and lockout window are cleared so a legitimate user is not
+    // progressively locked out by past failures.
+    const resetCall = tenantQuery.mock.calls.find((c) =>
+      /failed_login_count = 0, locked_until = NULL/.test(c[1]),
+    );
+    expect(resetCall).toBeTruthy();
+    expect(resetCall[2]).toEqual(['u1']);
+
+    // A successful login is not an audit "failed/locked" event.
+    expect(logAudit).not.toHaveBeenCalled();
+  });
+
   it('does not touch the counter when the user does not exist', async () => {
     tenantQuery.mockResolvedValueOnce([]); // username lookup
     tenantQuery.mockResolvedValueOnce([]); // email-fallback lookup
