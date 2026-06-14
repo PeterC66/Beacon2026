@@ -177,6 +177,12 @@ These are catalogued and re-verified in `docs/history/ImprovementPlan.md` (Chunk
    `format:check`** — it lives outside `backend/src` and `frontend/src`, so CI
    does not enforce its style. It was Prettier-formatted once during Chunk 3.
    Add a dedicated lint/format target for `shared/` if it grows.
+5. `[DEFERRED]` **`pdfmake` pinned to 0.2.x — 0.3 migration needed** — pdfmake
+   0.3 is a breaking rewrite: it drops `pdfmake/src/printer`, which
+   `backend/src/routes/letters.js` imports, so the backend fails to load under
+   0.3 (`Cannot find module 'pdfmake/src/printer'`). Dependabot is configured to
+   ignore pdfmake minor bumps until the import is migrated to the 0.3 API.
+   Surfaced 2026-06-14 when a grouped Dependabot PR (#429) broke backend tests.
 
 ---
 
