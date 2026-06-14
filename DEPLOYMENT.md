@@ -108,15 +108,17 @@ These are all fine for a proof of concept — just be aware:
 - **Render free tier sleeps** after 15 minutes of inactivity. The first request after a quiet
   period can take 20–30 seconds to wake up. This is fine for a POC but would be
   resolved by upgrading to Render's Starter plan (~£6/month).
-- **Redis is disabled** — if you change a user's role, their existing login session keeps
-  its old permissions until their 15-minute token naturally expires. Fine for a POC.
+- **Redis is disabled** — session invalidation falls back to the Postgres
+  `session_invalidations` table, so a role/password change is still picked up on
+  the user's next request. Redis is only needed for scale (it avoids one
+  indexed lookup per request); fine to leave off for a POC.
 - **Database size** is limited to 1GB on the free tier — more than enough for a POC.
 - **No automated backups** on the free tier — see "Replacing the database" below for the
   manual `pg_dump`/`pg_restore` procedure. The Starter plan adds automated backups.
 - **Content-Security-Policy is in report-only mode** (`frontend/vercel.json`). The policy
-  is published but not enforced, so a violation is logged rather than blocked. Switch the
-  header from `Content-Security-Policy-Report-Only` to `Content-Security-Policy` to enforce
-  it once a clean report window confirms nothing legitimate is blocked.
+  is published but not enforced, so a violation is logged rather than blocked. See
+  "[Enforcing the Content-Security-Policy](#enforcing-the-content-security-policy)" below
+  for the step-by-step flip once a clean report window confirms nothing legitimate breaks.
 
 ### Running locally without a deployment
 
@@ -184,4 +186,38 @@ Three things to do, in order:
 2. Add **Upstash Redis** (free tier at upstash.com, EU region) and set
    `USE_REDIS=true` and `REDIS_URL` in Render's environment variables
 3. Buy a domain name (e.g. at namecheap.com) and point it at your Render and Vercel URLs
+
+---
+
+## Enforcing the Content-Security-Policy
+
+The frontend ships its CSP in **report-only** mode (`frontend/vercel.json`): the
+policy is published and violations are reported, but nothing is blocked. This is
+deliberate — the "clean report window" can only be observed against the real
+deployed frontend, so the policy is left non-enforcing until a live site confirms
+nothing legitimate trips it. Flip it to enforcing like this:
+
+1. **Deploy and use the site normally** for a representative window (a few days),
+   exercising every area — login, members, groups, finance, email, exports,
+   portal, online joining. Report-only CSP does not break anything, so this is
+   safe to do in production.
+2. **Collect violation reports.** Browsers log blocked-in-theory resources to the
+   DevTools console as `[Report Only]` CSP messages. For durable collection, add
+   a `report-uri`/`report-to` endpoint (e.g. a free report-collector service) to
+   the policy value and watch what arrives.
+3. **Resolve any genuine violations** by fixing the offending code (preferred) or,
+   only if unavoidable, widening the relevant directive. Repeat until a full
+   window passes with **no** legitimate violations.
+4. **Tighten `connect-src`** from `'self' https:` to the concrete backend origin
+   (e.g. `connect-src 'self' https://beacon2-backend.onrender.com`) so the policy
+   names exactly what the app talks to.
+5. **Flip the header to enforcing.** In `frontend/vercel.json`, rename the header
+   key from `Content-Security-Policy-Report-Only` to `Content-Security-Policy`
+   (keep the same `value`). Commit and redeploy via Vercel.
+6. **Verify enforcement.** Load the site and confirm in DevTools that the response
+   carries `Content-Security-Policy` (not `…-Report-Only`) and that the app still
+   works end-to-end.
+7. **Rollback plan.** If something legitimate breaks under enforcement, rename the
+   key back to `Content-Security-Policy-Report-Only` and redeploy — that instantly
+   returns to non-blocking while you investigate.
 

@@ -11,7 +11,7 @@ import {
 } from '../lib/api.js';
 import { getPreferences } from '../hooks/usePreferences.js';
 import { hasOptionalCookieConsent } from '../hooks/useCookieConsent.js';
-import { FEATURE_DEPS, isOn } from '../lib/constants.js';
+import { FEATURE_DEPS, isOn, encodePrivilege } from '../lib/constants.js';
 
 const AuthContext = createContext(null);
 
@@ -148,7 +148,7 @@ export function AuthProvider({ children }) {
   const can = useCallback(
     (resource, action) => {
       if (siteAdmin) return true;
-      return privs.includes(`${resource}:${action}`);
+      return privs.includes(encodePrivilege(resource, action));
     },
     [privs, siteAdmin],
   );

@@ -37,9 +37,15 @@ These are catalogued and re-verified in `docs/history/ImprovementPlan.md` (Chunk
    and applied to `PATCH /users`, `POST /system/tenants`, `/auth/change-password`,
    `/auth/force-change-password`, and all portal register/reset/change flows.
    (Chunk 4, 2026-06-12.)
-3. `[OPEN]` **Refresh-token reuse detection silently no-ops without Redis**
-   (`utils/redis.js:48`). Document this more prominently or persist
-   invalidation marks in Postgres as a fallback.
+3. `[FIXED]` **Refresh-token reuse detection silently no-ops without Redis** —
+   the session-invalidation marker now has a **Postgres fallback**. When Redis
+   is disabled (`USE_REDIS=false`), `invalidateUserSessions` /
+   `isSessionInvalidated` / `purgeTenantInvalidations` read and write the new
+   per-tenant `session_invalidations` table instead of no-opping, so a revoked
+   role/password is enforced on the next request rather than only after the
+   access token expires. (Refresh-token *reuse* itself was always DB-backed via
+   `refresh_tokens.revoked`.) New `redis.test.js` covers the fallback. Resolved
+   in the 2026-06-14 review (ImprovementPlan Chunk 5).
 4. `[FIXED]` **`requireSysAdmin` skips invalidation / `active` check**
    (`middleware/auth.js:47`). The middleware now re-loads the sys-admin via
    Prisma on every request and rejects (401) if the account is missing or
@@ -53,9 +59,15 @@ These are catalogued and re-verified in `docs/history/ImprovementPlan.md` (Chunk
    `CORS_ORIGIN` being set; a missing `Origin` header (non-browser caller) is
    always allowed and `NODE_ENV` no longer influences the decision.
    (Chunk 4, 2026-06-12.)
-7. `[OPEN]` **Privilege-string format collisions** — `${resource}:${action}` with
-   resources that may contain `:` (`finance:transactions:create`). Works
-   today, fragile if a future resource code includes `:create`.
+7. `[FIXED]` **Privilege-string format collisions** — privilege-string
+   construction is now centralised in `encodePrivilege(resource, action)` in
+   `shared/constants.js`, used by the backend (`requirePrivilege`,
+   `hasPrivilege`, `computePrivileges`) and the frontend (`can`). The helper
+   guards the invariant — actions must not contain `:`, so the action is always
+   the unambiguous final segment and two distinct (resource, action) pairs can
+   no longer alias to the same string. Format is unchanged, so no token
+   re-issue is needed. Resolved in the 2026-06-14 review (ImprovementPlan
+   Chunk 5).
 8. `[FIXED]` **No targeted rate limit on portal endpoints**. A dedicated
    `portalAuthLimiter` (20/15 min/IP, env `PORTAL_AUTH_RATE_LIMIT_MAX`) now
    guards `register`, `login`, `forgot-password`, `reset-password`, and
@@ -136,8 +148,11 @@ These are catalogued and re-verified in `docs/history/ImprovementPlan.md` (Chunk
     backend host once known. (ImprovementPlan Chunk 12 reviewed this and
     **deliberately left it report-only**: the "clean report window" cannot be
     verified from a dev environment, and enforcing an untested policy risks
-    breaking the live frontend. The flip is now documented as the remaining step
-    in DEPLOYMENT.md.)
+    breaking the live frontend. A full step-by-step enforce-flip runbook
+    (collect reports → resolve → tighten `connect-src` → rename the header →
+    verify → rollback) is now in DEPLOYMENT.md under "Enforcing the
+    Content-Security-Policy" (ImprovementPlan Chunk 5). The flip itself remains
+    a post-deploy step, so this stays OPEN.)
 26. `[FIXED]` **Stale comment in `App.jsx:132`** — the comment claimed system
     admin auth was "handled inside pages via sessionStorage", which no longer
     matched the in-memory sys-token model (`frontend/src/lib/api/system.js`).

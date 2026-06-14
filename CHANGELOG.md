@@ -61,6 +61,24 @@ Format: `## [version] — YYYY-MM-DD` with bullet points per change.
     changes were required.
 
 ### Security
+- **Security OPEN-item reconciliation (2026-06-14 review, Chunk 5)** —
+  - **Refresh-token / session invalidation without Redis (KI #3)** — added a
+    Postgres fallback. New per-tenant `session_invalidations` table; when
+    `USE_REDIS=false`, `invalidateUserSessions` / `isSessionInvalidated` /
+    `purgeTenantInvalidations` (in `utils/redis.js`) read and write that table
+    instead of no-opping, so a revoked role/password is enforced on the user's
+    next request rather than only after the access token expires. New
+    `redis.test.js` covers the fallback.
+  - **Privilege-string collision hardening (KI #7)** — centralised
+    `resource:action` construction in `encodePrivilege()` in
+    `shared/constants.js`, now used by `requirePrivilege`, `hasPrivilege`,
+    `computePrivileges` (backend) and `can` (frontend). The helper rejects an
+    action containing `:`, so the action is always the unambiguous final
+    segment; the string format is unchanged (no token re-issue needed).
+  - **CSP enforce-flip runbook (KI #25)** — `DEPLOYMENT.md` now has a
+    step-by-step "Enforcing the Content-Security-Policy" runbook (collect
+    reports → resolve → tighten `connect-src` → rename the header → verify →
+    rollback). The flip itself stays a post-deploy step.
 - **Removed PII from operational logs (2026-06-14 review, Chunk 2)** — replaced
   all 60+ `console.*` call sites across backend non-test code (auth recovery,
   portal auth/profile/renewals/helpers, online-join email helpers, migrate/seed,
