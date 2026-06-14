@@ -74,6 +74,8 @@ export const publicApi = {
     }),
 
   // Public information pages (unauthenticated)
+  getPublicInfo: (slug) => publicFetch(`${BASE}/public/${slug}/info`),
+
   getPublicGroups: (slug) => publicFetch(`${BASE}/public/${slug}/groups`),
 
   getPublicCalendar: (slug, params = {}) => {

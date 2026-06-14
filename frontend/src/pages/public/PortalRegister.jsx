@@ -9,6 +9,7 @@ import { scrollToFirstFieldError } from '../../lib/scrollToError.js';
 import PortalVersion from '../../components/PortalVersion.jsx';
 import PasswordInput from '../../components/PasswordInput.jsx';
 import FormError from '../../components/FormError.jsx';
+import { inputCls, labelCls } from '../../components/ui/Input.jsx';
 
 export default function PortalRegister() {
   const { slug } = useParams();
@@ -98,8 +99,7 @@ export default function PortalRegister() {
     );
   }
 
-  const fieldCss =
-    'w-full border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500';
+  const fieldCss = `${inputCls} w-full`;
 
   return (
     <div className="relative min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-slate-100 px-4 py-8">
@@ -119,10 +119,11 @@ export default function PortalRegister() {
         <form onSubmit={handleSubmit} noValidate>
           <div className="space-y-3 mb-6">
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">
+              <label htmlFor="pr-membership-number" className={labelCls}>
                 Membership number <RequiredMark />
               </label>
               <input
+                id="pr-membership-number"
                 type="number"
                 name="membershipNumber"
                 value={form.membershipNumber}
@@ -132,10 +133,11 @@ export default function PortalRegister() {
               <FormError error={fieldErrors.membershipNumber} />
             </div>
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">
+              <label htmlFor="pr-forename" className={labelCls}>
                 Forename <RequiredMark />
               </label>
               <input
+                id="pr-forename"
                 type="text"
                 name="forename"
                 value={form.forename}
@@ -145,10 +147,11 @@ export default function PortalRegister() {
               <FormError error={fieldErrors.forename} />
             </div>
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">
+              <label htmlFor="pr-surname" className={labelCls}>
                 Surname <RequiredMark />
               </label>
               <input
+                id="pr-surname"
                 type="text"
                 name="surname"
                 value={form.surname}
@@ -158,10 +161,11 @@ export default function PortalRegister() {
               <FormError error={fieldErrors.surname} />
             </div>
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">
+              <label htmlFor="pr-postcode" className={labelCls}>
                 Postcode <RequiredMark />
               </label>
               <input
+                id="pr-postcode"
                 type="text"
                 name="postcode"
                 value={form.postcode}
@@ -171,10 +175,11 @@ export default function PortalRegister() {
               <FormError error={fieldErrors.postcode} />
             </div>
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">
+              <label htmlFor="pr-email" className={labelCls}>
                 Email address <RequiredMark />
               </label>
               <input
+                id="pr-email"
                 type="email"
                 name="email"
                 value={form.email}
@@ -193,10 +198,11 @@ export default function PortalRegister() {
             </p>
             <div className="space-y-3">
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">
+                <label htmlFor="pr-password" className={labelCls}>
                   Password <RequiredMark />
                 </label>
                 <PasswordInput
+                  id="pr-password"
                   name="password"
                   value={form.password}
                   onChange={(e) => handleChange('password', e.target.value)}
@@ -206,10 +212,11 @@ export default function PortalRegister() {
                 <FormError error={fieldErrors.password} />
               </div>
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">
+                <label htmlFor="pr-confirm-password" className={labelCls}>
                   Confirm password <RequiredMark />
                 </label>
                 <PasswordInput
+                  id="pr-confirm-password"
                   name="confirmPassword"
                   value={form.confirmPassword}
                   onChange={(e) => handleChange('confirmPassword', e.target.value)}

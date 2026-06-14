@@ -92,6 +92,12 @@ Bulk action tick-boxes are only present on Transactions that are:
 >
 > Are not in the Current financial year \*
 
+> *[Editor's note — transcribed verbatim from the original Beacon manual. This
+> bullet contradicts its own footnote below: bulk tick-boxes are present for
+> transactions that **are in** the current financial year, while those outside
+> it must be opened individually. Beacon2 follows the corrected behaviour. See
+> `docs/Beacon2UG/34-pending-transactions.md`.]*
+
 **\*** **This** **means** **that** **the** **Treasurer** **needs**
 **to** **confirm** **Pending** **for** **Transactions** **that** **are**
 **outside** **the** **current** **financial** **year** **by**

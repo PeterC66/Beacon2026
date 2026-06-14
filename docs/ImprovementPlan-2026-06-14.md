@@ -220,12 +220,25 @@ and ends with the standard wrap-up (tests, lint, CHANGELOG, KNOWN-ISSUES).
   `assertActorHoldsRolePrivileges` escalation guard.
 - Reuse: `backend/src/__tests__/mocks.js`, existing setup patterns.
 
-### Chunk 7 — Completeness reconciliation *(medium; partly a decision task)*
+### Chunk 7 — Completeness reconciliation *(medium; partly a decision task)* — **DONE (2026-06-14)**
 - Build one authoritative parity-gap list; sync `docs/Beacon2UG-Comparison.md`.
 - Then pick the low-cost gaps to close now: wire `show_addresses`/`hide_contact`
   visibility, display `public_phone`/`public_email`, resolve the Calendar-export
   no-op, fix the doc 7.10.5 typo and the Ledger wording.
 - Larger gaps (PayPal, shared-email portal UX) stay deferred with explicit notes.
+
+**Outcome:** Closed: displayed `public_phone`/`public_email`/`home_page` on the
+Portal sign-in + Join form (new `PublicContact` component + `GET /:slug/info`);
+fixed the doc 7.10.5 eligibility wording (Beacon2 doc + editor's note on the UG
+transcription); aligned the "Central Ledger" wording. Owner decisions: Calendar
+export left as-is (placeholder message made accurate); `hide_contact`/
+`show_addresses` visibility **deferred with a clearer note** — re-verification
+showed it is bigger than assumed (the scoped group-leader privileges
+`group_records_as_leader`/`as_member` are seeded but enforced nowhere, so there
+is no runtime "viewer is a leader" signal; a naive version would wrongly hide
+contact from admins). Also corrected an inaccurate "Built" claim for
+`hide_contact` in the comparison doc. Larger gaps (PayPal, shared-email portal
+UX, system-wide hide-address) remain deferred.
 
 ### Chunk 8 — Documentation readability *(small)*
 - Add a TOC and/or split `CLAUDE-REFERENCE.md` by module; trim/archive old
@@ -233,10 +246,17 @@ and ends with the standard wrap-up (tests, lint, CHANGELOG, KNOWN-ISSUES).
   Claude-tooling-docs separation is obvious from the top of each file.
 - Fix the stale `App.jsx:132` comment (KI #26).
 
-### Chunk 9 — Frontend polish *(small; incremental)*
+### Chunk 9 — Frontend polish *(small; incremental)* — **IN PROGRESS (2026-06-14)**
 - Migrate a batch of pages from inline Tailwind to `inputCls`/`labelCls`
   constants; audit `react-hooks/exhaustive-deps` warnings (fix or annotate);
   add `htmlFor`/`id` to a batch of remaining lower-traffic pages.
+
+**Increment 1 (2026-06-14):** migrated the six **public** pages to the shared
+`inputCls`/`labelCls` constants (removing two local style dupes) and added
+`htmlFor`/`id` to the four public auth pages. Still open for future increments:
+the ~40 remaining pages on inline Tailwind, the ~30 `react-hooks/exhaustive-deps`
+warnings (KI Linting #2 — risky per-effect judgement, deferred), and the
+remaining lower-traffic pages lacking `htmlFor`/`id` (KI Accessibility #1).
 
 ### Chunk 10 — Tooling & dependency hygiene *(small/medium)*
 - Add `.nvmrc` / `engines` Node pin; bring `shared/` under lint/format.

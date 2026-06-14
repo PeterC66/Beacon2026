@@ -8,6 +8,12 @@ import PortalLogin from '../pages/public/PortalLogin.jsx';
 vi.mock('../lib/api.js', () => ({
   publicApi: {
     portalLogin: vi.fn(),
+    getPublicInfo: vi.fn().mockResolvedValue({
+      u3aName: 'Test u3a',
+      publicPhone: '',
+      publicEmail: '',
+      homePage: '',
+    }),
   },
 }));
 

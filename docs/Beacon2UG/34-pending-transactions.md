@@ -72,6 +72,11 @@ status. In the **Ledger (by account)** view:
 This is much faster when you need to confirm a batch of transactions at once —
 for example, after a bank deposit has cleared.
 
+The bulk checkboxes appear only on transactions that **are in the selected
+financial year** and are **not cleared** and **not part of a credit batch**.
+Transactions outside the selected year (or that are cleared or batched) must be
+opened individually to change their pending status.
+
 ---
 
 ## Tips for using pending transactions
