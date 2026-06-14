@@ -146,16 +146,20 @@ These are catalogued and re-verified in `docs/history/ImprovementPlan.md` (Chunk
 
 ## Repo hygiene & licensing (ImprovementPlan Chunk 2)
 
-1. `[DEFERRED]` **No repository LICENSE** — owner has not yet chosen a licence
-   (proprietary vs open-source). Until one is added, the code is treated as
-   "all rights reserved" by the project owner. Decide and add a `LICENSE` file.
-   Deferred during Chunk 2 (2026-06-12) pending the owner's choice.
-2. `[DEFERRED]` **`docs/FromBeacon/` provenance unconfirmed** — the directory
-   redistributes original Beacon source (`privileges.php`, `styles.css`)
-   carrying "© John Franklin 2017 — this copyright notice must be retained",
-   plus sample exports. Kept as-is for now (owner to confirm permission and
-   reference-only status, then add a provenance README or remove). Deferred
-   during Chunk 2 (2026-06-12).
+1. `[FIXED]` **No repository LICENSE** — owner chose **proprietary / all rights
+   reserved**. Added a root `LICENSE` (Copyright (c) 2026 Peter Cooper, all
+   rights reserved) and updated `CONTRIBUTING.md`. Resolved in the 2026-06-14
+   review, Chunk 1.
+2. `[FIXED]` **`docs/FromBeacon/` provenance unconfirmed** — added
+   `docs/FromBeacon/README.md` stating the directory is third-party reference
+   material only, with all original copyright (© John Franklin 2017) retained
+   and **no claim of redistribution rights** asserted. Files retained for
+   reference; removal offered on rights-holder request. Resolved in the
+   2026-06-14 review, Chunk 1.
+3. `[FIXED]` **No `SECURITY.md`** — added a vulnerability-disclosure policy
+   directing reports through GitHub private security advisories, with supported
+   scope and a do-not-include-real-PII note. Resolved in the 2026-06-14 review,
+   Chunk 1.
 
 ---
 

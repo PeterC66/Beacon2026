@@ -11,17 +11,18 @@ import { tenantQuery } from './db.js';
 import { hashPassword } from './password.js';
 import { PRIVILEGE_RESOURCES } from '../seed/privilegeResources.js';
 import { DEFAULT_ROLES } from '../seed/defaultRoles.js';
+import { logger } from './logger.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
 export async function migrateAndSeed() {
   // 1. Run Prisma migrations (creates system-level tables if they don't exist)
-  console.log('Pushing database schema...');
+  logger.info('Pushing database schema...');
   try {
     execSync('npx prisma db push --accept-data-loss', { stdio: 'inherit' });
-    console.log('Schema push complete.');
+    logger.info('Schema push complete.');
   } catch (err) {
-    console.error('Migration failed:', err.message);
+    logger.error('Migration failed', { message: err.message });
     throw err;
   }
 
@@ -44,12 +45,10 @@ export async function migrateAndSeed() {
     const passwordHash = await hashPassword(password);
     await prisma.sysAdmin.create({ data: { email, name, passwordHash, active: true } });
 
-    console.log('');
-    console.log('✓ System administrator created:');
-    console.log(`  Email:    ${email}`);
-    console.log(`  Password: (set via SEED_ADMIN_PASSWORD env var)`);
-    console.log('  IMPORTANT: Change this password immediately after first login.');
-    console.log('');
+    logger.info(
+      '✓ System administrator created (set via SEED_ADMIN env vars). ' +
+        'IMPORTANT: change this password immediately after first login.',
+    );
   }
 
   // 3. Bring all existing tenant schemas up to date
@@ -171,7 +170,7 @@ async function migrateTenantSchemas() {
   for (const tenant of tenants) {
     const slug = tenant.slug;
     const schemaName = `u3a_${slug}`;
-    console.log(`Migrating tenant schema: ${schemaName}`);
+    logger.info(`Migrating tenant schema: ${schemaName}`);
 
     let ddlErrors = 0;
 
@@ -185,7 +184,7 @@ async function migrateTenantSchemas() {
         await prisma.$executeRawUnsafe(stmt);
       } catch (err) {
         ddlErrors++;
-        console.error(`  ✗ DDL error [${schemaName}]: ${err.message}`);
+        logger.error(`  ✗ DDL error [${schemaName}]`, { message: err.message });
       }
     }
 
@@ -281,13 +280,13 @@ async function migrateTenantSchemas() {
         }
       }
     } catch (err) {
-      console.error(`  ✗ Seed error [${schemaName}]:`, err.message);
+      logger.error(`  ✗ Seed error [${schemaName}]`, { message: err.message });
     }
 
     if (ddlErrors > 0) {
-      console.warn(`  ⚠ ${schemaName}: ${ddlErrors} DDL statement(s) failed (see errors above)`);
+      logger.warn(`  ⚠ ${schemaName}: ${ddlErrors} DDL statement(s) failed (see errors above)`);
     } else {
-      console.log(`  ✓ ${schemaName} up to date`);
+      logger.info(`  ✓ ${schemaName} up to date`);
     }
   }
 }
@@ -323,7 +322,7 @@ export async function syncDefaultRolePrivileges(slug) {
       );
     }
   }
-  console.log(`  ✓ Default role privileges synced for ${slug}`);
+  logger.info(`  ✓ Default role privileges synced for ${slug}`);
 }
 
 /**
@@ -348,7 +347,7 @@ async function migrateDefaultRolePrivileges() {
     try {
       await syncDefaultRolePrivileges(slug);
     } catch (err) {
-      console.error(`  ✗ Privilege sync error [${slug}]:`, err.message);
+      logger.error(`  ✗ Privilege sync error [${slug}]`, { message: err.message });
     }
   }
 }

@@ -5,6 +5,7 @@
 import sgMail from '@sendgrid/mail';
 import { tenantQuery, prisma } from '../../utils/db.js';
 import { resolveTokens } from '../../utils/emailTokens.js';
+import { logger } from '../../utils/logger.js';
 
 if (process.env.SENDGRID_API_KEY) {
   sgMail.setApiKey(process.env.SENDGRID_API_KEY);
@@ -46,23 +47,18 @@ export async function notifyGroupLeaders(slug, groupId, memberId, action, groupN
       [groupId],
     );
 
-    const [member] = await tenantQuery(
-      slug,
-      `SELECT forenames, surname FROM members WHERE id = $1`,
-      [memberId],
-    );
-    const memberName = member ? `${member.forenames} ${member.surname}` : 'A member';
-
-    for (const leader of leaders) {
-      if (leader.email) {
-        const verb = action === 'join' ? 'joined' : 'left';
-        console.log(
-          `[Portal] Would notify leader ${leader.forenames} ${leader.surname} (${leader.email}): ${memberName} has ${verb} ${groupName}`,
-        );
-      }
+    // In production this would email each leader that a member joined/left.
+    // Log only the operational facts — never leader/member names or emails.
+    const recipientCount = leaders.filter((l) => l.email).length;
+    if (recipientCount > 0) {
+      logger.info('[Portal] Group-leader notifications prepared (SendGrid not configured)', {
+        action,
+        group: groupName,
+        recipients: recipientCount,
+      });
     }
   } catch (err) {
-    console.error('[Portal] Failed to notify group leaders:', err.message);
+    logger.error('[Portal] Failed to notify group leaders', { message: err.message });
   }
 }
 
@@ -88,15 +84,15 @@ export async function sendDetailsUpdateEmail(slug, memberId, emailChanged) {
     const u3aName = tenant?.name ?? slug;
 
     if (template) {
-      const { subject } = resolveTokens(template.subject, template.body, member, u3aName);
-      console.log(`[Portal] Would send details update confirmation to ${emailAddr}: "${subject}"`);
-    } else {
-      console.log(
-        `[Portal] Would send details update confirmation to ${emailAddr} (no template found for 'portal_details_updated')`,
-      );
+      // In production the resolved subject/body populate the SendGrid message.
+      resolveTokens(template.subject, template.body, member, u3aName);
     }
+    // Log only non-PII metadata — never the recipient email or resolved subject.
+    logger.info('[Portal] Details-update confirmation prepared (SendGrid not configured)', {
+      hasTemplate: Boolean(template),
+    });
   } catch (err) {
-    console.error('[Portal] Failed to send details update email:', err.message);
+    logger.error('[Portal] Failed to send details update email', { message: err.message });
   }
 }
 
@@ -114,9 +110,9 @@ ${verifyLink}
 If you did not request this, please contact your u3a.`;
 
   if (!process.env.SENDGRID_API_KEY) {
-    console.warn(
-      `[Portal] SendGrid not configured — cannot deliver email-verification message to ${toEmail}. ` +
-        `Set SENDGRID_API_KEY to enable portal verification emails.`,
+    logger.warn(
+      '[Portal] SendGrid not configured — cannot deliver email-verification message. ' +
+        'Set SENDGRID_API_KEY to enable portal verification emails.',
     );
     return;
   }
@@ -124,7 +120,7 @@ If you did not request this, please contact your u3a.`;
   try {
     await sgMail.send({ to: toEmail, from: PORTAL_FROM, subject, text: body });
   } catch (err) {
-    // Never include the verification link in the error log.
-    console.error(`[Portal] Failed to send email-verification message to ${toEmail}:`, err.message);
+    // Never include the recipient email or the verification link in the error log.
+    logger.error('[Portal] Failed to send email-verification message', { message: err.message });
   }
 }
