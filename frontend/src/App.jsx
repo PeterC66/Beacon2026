@@ -133,7 +133,7 @@ const router = createBrowserRouter([
     children: [
       { path: '/login', element: <Login /> },
 
-      // System admin routes (auth handled inside pages via sessionStorage)
+      // System admin routes (sys-token held in memory in lib/api/system.js)
       { path: '/system/login', element: <SystemLogin /> },
       { path: '/system', element: <SystemDashboard /> },
 

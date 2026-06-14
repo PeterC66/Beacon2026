@@ -6,6 +6,35 @@ Read `CLAUDE-STANDARDS.md` first for the cross-cutting checklist that applies to
 > Sections are grouped by functional area, not by date. Each section documents
 > the data model, backend routes, frontend pages, and gotchas for that module.
 
+## Contents
+
+1. [Multi-tenancy and schema migrations](#1-multi-tenancy-and-schema-migrations)
+2. [Authentication and users](#2-authentication-and-users)
+3. [Prisma and PostgreSQL patterns](#3-prisma-and-postgresql-patterns)
+4. [System settings (doc 8.3)](#4-system-settings-doc-83)
+5. [Members module](#5-members-module)
+6. [Groups module](#6-groups-module)
+7. [Finance module](#7-finance-module)
+8. [Email module (docs 6.1–6.1.5)](#8-email-module-docs-6165)
+9. [Data Export & Backup / Restore](#9-data-export--backup--restore)
+10. [Admin and Misc modules](#10-admin-and-misc-modules)
+11. [Frontend UI patterns](#11-frontend-ui-patterns)
+12. [Testing](#12-testing)
+13. [Gift Aid module (doc 7.8)](#13-gift-aid-module-doc-78)
+14. [Credit Batches module (doc 7.4)](#14-credit-batches-module-doc-74)
+15. [Reference documentation](#15-reference-documentation)
+16. [Online Joining and Portal Auth (docs 10.1, 10.2)](#16-online-joining-and-portal-auth-docs-101-102)
+17. [Calendar module](#17-calendar-module)
+18. [Membership Cards (doc 4.7)](#18-membership-cards-doc-47)
+19. [Letters module (docs 6.2, 6.2.1, 6.2.2)](#19-letters-module-docs-62-621-622)
+20. [Password recovery and temporary passwords](#20-password-recovery-and-temporary-passwords)
+21. [Cookie Consent](#21-cookie-consent)
+22. [Custom Fields](#22-custom-fields)
+23. [Gift Aid Log](#23-gift-aid-log)
+24. [Help Widget (Zendesk Web Widget)](#24-help-widget-zendesk-web-widget)
+25. [Feature Toggles](#25-feature-toggles)
+26. [Deployment and Infrastructure](#26-deployment-and-infrastructure)
+
 ---
 
 ## 1. Multi-tenancy and schema migrations
