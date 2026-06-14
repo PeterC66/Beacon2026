@@ -21,7 +21,7 @@ beacon2/
 │   ├── prisma/                system schema + tenant DDL
 │   └── vitest.config.js
 │
-├── frontend/                  React 18 + Vite 5 + Tailwind CSS 3
+├── frontend/                  React 18 + Vite + Tailwind CSS 3
 │   ├── src/
 │   │   ├── App.jsx            Route tree
 │   │   ├── context/           AuthContext (in-memory token)
@@ -39,15 +39,21 @@ beacon2/
 ├── docs/
 │   ├── Beacon2UG/             Beacon2 User Guide (64 sections, Markdown)
 │   ├── BeaconUG/              Beacon User Guide pages (Markdown + images)
-│   └── FromBeacon/            Selected files from the original Beacon codebase
+│   ├── FromBeacon/            Selected files from the original Beacon codebase
+│   └── history/              Archived 2026-06 review docs (read-only)
 │
-├── .github/workflows/ci.yml   Runs backend + frontend tests on every push
+├── docker-compose.yml         Local full-stack (Postgres + Redis + apps)
+├── .github/workflows/ci.yml   Runs backend + frontend lint, format, tests
 ├── render.yaml                Render blueprint (backend + Postgres)
 ├── DEPLOYMENT.md              Step-by-step deployment guide (Render + Vercel)
 ├── CLAUDE.md                  Instructions for Claude Code (session workflow)
 ├── CLAUDE-STANDARDS.md        Cross-cutting development checklist
 └── CLAUDE-REFERENCE.md        Detailed implementation notes by module
 ```
+
+> For the full module/route/page inventory, see
+> [`Beacon2 Project Definition.md`](Beacon2%20Project%20Definition.md) — this tree
+> is a quick orientation map; that document is the authoritative detail.
 
 ## Quick start (local development)
 
@@ -83,15 +89,34 @@ npm run dev                   # starts on http://localhost:5173
 
 The frontend expects the API at `VITE_API_URL` (defaults to `http://localhost:3001`).
 
+### Run the whole stack with Docker (optional)
+
+Instead of installing Postgres/Redis and running each service by hand, the repo
+ships a `docker-compose.yml` that brings up Postgres, Redis, the backend, and the
+frontend together — handy for a quick demo or for running the E2E suite locally:
+
+```bash
+docker compose up --build       # http://localhost:5173 (frontend), :3001 (API)
+docker compose down -v          # stop and wipe the database volume
+```
+
+All credentials in `docker-compose.yml` are throwaway local-only values; the
+stack is for development only and is never used to deploy a real instance.
+
 ## Tests
 
 ```bash
-cd backend  && npm test   # vitest — no real DB required (fully mocked)
-cd frontend && npm test   # vitest + React Testing Library smoke tests
-cd e2e      && npm test   # Playwright against staging (needs .env)
+cd backend  && npm test            # vitest — no real DB required (fully mocked)
+cd frontend && npm test            # vitest + React Testing Library smoke tests
+cd e2e      && npm test            # Playwright (staging, or the local docker stack)
 ```
 
-CI runs backend + frontend tests automatically on every push to a `claude/**` branch.
+Add coverage with `npm run test:coverage` in `backend/` or `frontend/` — it writes
+an HTML report to `coverage/` and prints a summary. The E2E suite can target
+staging or the local docker stack above (see `e2e/.env.example`).
+
+CI runs backend + frontend lint, format check, and tests (with coverage uploaded
+as an artifact) on every push to a `claude/**` branch and on PRs to `main`.
 
 ## Creating a u3a tenant
 

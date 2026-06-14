@@ -12,6 +12,7 @@
     "db:seed": "node src/seed/index.js",
     "db:studio": "prisma studio",
     "test": "vitest --run",
+    "test:coverage": "vitest --run --coverage",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "format": "prettier --write \"src/**/*.js\"",
@@ -42,6 +43,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.39.4",
+    "@vitest/coverage-v8": "^4.1.8",
     "eslint": "^9.39.4",
     "eslint-config-prettier": "^10.1.8",
     "globals": "^17.6.0",

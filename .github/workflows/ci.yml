@@ -42,8 +42,17 @@ jobs:
 
       # DB is fully mocked — no Postgres service container needed.
       # Secrets are set in vitest.config.js env block for tests.
-      - name: Run tests
-        run: npm test
+      # Coverage runs the full suite and prints a text-summary to the log.
+      - name: Run tests with coverage
+        run: npm run test:coverage
+
+      - name: Upload coverage report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-coverage
+          path: backend/coverage/
+          retention-days: 14
 
   # ── Frontend smoke tests ──────────────────────────────────────────────────
   frontend-test:
@@ -71,5 +80,13 @@ jobs:
       - name: Check formatting
         run: npm run format:check
 
-      - name: Run tests
-        run: npm test
+      - name: Run tests with coverage
+        run: npm run test:coverage
+
+      - name: Upload coverage report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-coverage
+          path: frontend/coverage/
+          retention-days: 14

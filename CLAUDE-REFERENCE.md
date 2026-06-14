@@ -1065,7 +1065,8 @@ CI: `.github/workflows/ci.yml` on every push to `claude/**` branches.
 ### Backend test pattern
 
 Prefer the shared factory helpers in `__tests__/mocks.js` (added in Chunk 7 of
-`docs/ImprovementPlan.md`) over re-writing the db/redis/audit mock objects by
+the 2026-06 improvement work, archived at `docs/history/ImprovementPlan.md`)
+over re-writing the db/redis/audit mock objects by
 hand. vitest hoists `vi.mock(...)` *and* the imports it references, so calling a
 factory inside the mock factory is safe:
 

@@ -111,6 +111,20 @@ These are all fine for a proof of concept — just be aware:
 - **Redis is disabled** — if you change a user's role, their existing login session keeps
   its old permissions until their 15-minute token naturally expires. Fine for a POC.
 - **Database size** is limited to 1GB on the free tier — more than enough for a POC.
+- **No automated backups** on the free tier — see "Replacing the database" below for the
+  manual `pg_dump`/`pg_restore` procedure. The Starter plan adds automated backups.
+- **Content-Security-Policy is in report-only mode** (`frontend/vercel.json`). The policy
+  is published but not enforced, so a violation is logged rather than blocked. Switch the
+  header from `Content-Security-Policy-Report-Only` to `Content-Security-Policy` to enforce
+  it once a clean report window confirms nothing legitimate is blocked.
+
+### Running locally without a deployment
+
+You don't need Render or Vercel to try Beacon2 or to run the E2E suite — the repo
+root has a `docker-compose.yml` that runs Postgres, Redis, the backend, and the
+frontend together on your machine (`docker compose up --build`). See `README.md`
+and `e2e/.env.example` for details. It is a development convenience only and is
+never used for a real deployment.
 
 ---
 
