@@ -5,6 +5,27 @@ Format: `## [version] — YYYY-MM-DD` with bullet points per change.
 
 ---
 
+## [Unreleased] — 2026-06-14
+
+### Added
+- **Licensing & legal hygiene (2026-06-14 review, Chunk 1)** —
+  - Root `LICENSE` declaring Beacon2 **proprietary / all rights reserved**
+    (Copyright (c) 2026 Peter Cooper), noting the project is a clean-room
+    reproduction not affiliated with the Third Age Trust.
+  - `SECURITY.md` vulnerability-disclosure policy directing reports through
+    GitHub private security advisories, with supported scope and a
+    do-not-include-real-PII note.
+  - `docs/FromBeacon/README.md` provenance statement: the original Beacon
+    reference files (© John Franklin 2017) are retained **for reference only**,
+    with all original copyright retained and no claim of redistribution rights.
+
+### Changed
+- `CONTRIBUTING.md` Licensing section now points at the new `LICENSE`,
+  `SECURITY.md`, and `docs/FromBeacon/README.md` instead of saying a licence is
+  undecided.
+
+---
+
 ## [Unreleased] — 2026-06-12
 
 ### Security
