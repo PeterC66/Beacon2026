@@ -58,6 +58,12 @@ If you haven't already:
 
 6. Click **Apply** — Render will now build and start your backend (takes 3–5 minutes)
 
+> **Optional settings:** everything above is all you need for the POC. The backend
+> also accepts a number of optional variables (all with sensible defaults) — for
+> example `LOG_LEVEL` to control log verbosity and `PORTAL_AUTH_RATE_LIMIT_MAX` to
+> tune the members-portal rate limit. The full, commented list is in
+> [`backend/.env.example`](backend/.env.example).
+
 **What happens automatically on first start:**
 - The database tables are created
 - Your admin account is created using the email and password you provided above

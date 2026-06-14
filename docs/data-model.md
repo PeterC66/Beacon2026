@@ -1,7 +1,8 @@
 # Beacon2 Data Model
 
-Generated 2026-04-14. Sources: `backend/prisma/schema.prisma` (public schema)
-and `backend/prisma/tenant_schema.sql` (per-tenant schema).
+Generated 2026-04-14, last revised 2026-06-14. Sources:
+`backend/prisma/schema.prisma` (public schema) and
+`backend/prisma/tenant_schema.sql` (per-tenant schema).
 
 ---
 
@@ -55,7 +56,9 @@ users                          roles                      privilege_resources
 | created_at        |  |     | role_id   FK-->|----->| resource_id  FK-->|---->privilege_resources
 | updated_at        |  |     | assigned_at    |      | action            |
 | last_login        |  |     | UQ(user,role)  |      | UQ(role,res,act)  |
-+-------------------+  |     +----------------+      +-------------------+
+| failed_login_count|  |     +----------------+      +-------------------+
+| locked_until      |  |       (account lockout: consecutive failures and
++-------------------+  |        the time the account is usable again)
                        |
                        |     refresh_tokens
                        |     +-------------------+
@@ -68,6 +71,13 @@ users                          roles                      privilege_resources
                        |     +-------------------+
                        |
                        v
+
+session_invalidations              (Postgres fallback for the Redis
++-------------------+               "invalidated:<slug>:<subject>" key, used
+| subject_id    PK  |               only when USE_REDIS=false. One row per
+| invalidated_at    |               subject — a user id or portal member id;
++-------------------+               tokens issued before invalidated_at are
+                                    treated as revoked. See utils/redis.js.)
 ```
 
 ### Members & Addresses
@@ -105,6 +115,8 @@ addresses                        members
                                 | portal_email_verified   |
                                 | portal_verification_*   |
                                 | portal_reset_*          |
+                                | portal_failed_login_count|
+                                | portal_locked_until     |
                                 | payment_token           |
                                 | created_at              |
                                 | updated_at              |
@@ -344,6 +356,17 @@ audit_log
 | entity_name       |
 | detail            |
 | created_at        |
++-------------------+
+
+saved_reports                    (saved parameterised SQL reports —
++-------------------+             site-admin only. sql_text is SELECT/WITH
+| id            PK  |             only; parameters is a JSONB array of
+| name          UQ  |             {name, label, type, required, default}.)
+| description       |
+| sql_text          |
+| parameters  JSONB |
+| created_at        |
+| updated_at        |
 +-------------------+
 ```
 
