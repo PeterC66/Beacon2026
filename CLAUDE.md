@@ -101,7 +101,8 @@ Defining a React component inside another component causes remount on every rend
 3. Add to `ALL_PRIVS` in `backend/src/__tests__/helpers.js`
 4. Use `requirePrivilege` on backend route, `can` in frontend guard
 
-The migration system auto-seeds privileges on every startup.
+The migration system auto-seeds privileges on every startup. (This process is also
+documented for human contributors in `CONTRIBUTING.md` → "New pages & privileges".)
 
 ---
 
@@ -184,6 +185,9 @@ At the end of every session:
    - **Workflow/session** changes → update this file (`CLAUDE.md`).
 3. If any features were added, changed, or fixed, update `docs/BeaconUG-Comparison.md`
    to reflect the new status of the relevant UG section(s).
+   - Also update **`Beacon2 Project Definition.md`** if the change altered the
+     module/route/page inventory, and bump its version line if `package.json`
+     version changed (keep them in step).
 4. **Update `CHANGELOG.md`** — add bullet points under the current version for any
    features added, changed, or fixed during this session. Group entries under
    `### Added`, `### Changed`, or `### Fixed` headings. If the current version

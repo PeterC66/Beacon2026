@@ -311,6 +311,21 @@ These are catalogued and re-verified in `docs/history/ImprovementPlan.md` (Chunk
 
 ---
 
+## User Guide — Screenshots
+
+1. `[OPEN]` **Beacon2 User Guide images are missing** — the 64-section guide under
+   `docs/Beacon2UG/` references screenshots (`![...](images/<name>.png)`) across
+   ~61 sections, but the `docs/Beacon2UG/images/` directory does not yet exist, so
+   every embedded image renders as a broken link. The guide *text* is complete and
+   accurate. Deferred because the screenshots must be captured from a running
+   Beacon2 instance — per `CLAUDE.md`, image content must not be guessed at, so the
+   user will supply (or approve) the screenshots. To resolve: capture each
+   referenced image, name it to match the existing `images/<name>.png` references,
+   and add the `images/` directory. Identified in the 2026-06-14 documentation
+   review.
+
+---
+
 ## System Settings (doc 8.3) — Deferred Items
 
 1. `[FIXED]` **public_phone, public_email, home_page** — Now displayed to members as a
