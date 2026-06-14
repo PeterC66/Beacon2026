@@ -138,6 +138,33 @@ describe('POST /users', () => {
 
     expect(res.status).toBe(422);
   });
+
+  it('blocks creating a user with a role granting a privilege the actor lacks', async () => {
+    // member lookup → exists; not-already-a-user → none; INSERT user → created
+    tenantQuery
+      .mockResolvedValueOnce([
+        { id: 'm1', forenames: 'Bob', surname: 'Smith', email: 'bob@example.com' },
+      ])
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([{ id: 'u2', name: 'Bob Smith' }])
+      // escalation guard: the requested role grants a privilege the actor lacks
+      .mockResolvedValueOnce([{ code: 'finance_accounts', action: 'delete' }]);
+
+    // Actor can create users but does NOT hold finance_accounts:delete
+    const limitedAuth = makeAuthHeader({ privileges: ['user_record:create'] });
+
+    const res = await request(app)
+      .post('/users')
+      .set('Authorization', limitedAuth)
+      .send({ memberId: 'm1', username: 'bsmith', roleIds: ['role-admin'] });
+
+    expect(res.status).toBe(403);
+    expect(res.body.error).toMatch(/finance_accounts:delete/);
+
+    // The role must NOT have been assigned — no INSERT into user_roles.
+    const assignedRole = tenantQuery.mock.calls.some((c) => /INSERT INTO user_roles/.test(c[1]));
+    expect(assignedRole).toBe(false);
+  });
 });
 
 // ── PATCH /users/:id ──────────────────────────────────────────────────────
