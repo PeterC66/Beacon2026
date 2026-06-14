@@ -9,6 +9,7 @@ import { z } from 'zod';
 import sgMail from '@sendgrid/mail';
 import { rateLimit } from 'express-rate-limit';
 import { tenantQuery } from '../../utils/db.js';
+import { logger } from '../../utils/logger.js';
 import {
   hashPassword,
   verifyPassword,
@@ -165,7 +166,7 @@ router.post('/:slug/portal/register', portalAuthLimiter, async (req, res, next) 
     const frontendBase = process.env.CORS_ORIGIN || 'http://localhost:5173';
     const verifyLink = `${frontendBase}/public/${slug}/portal/verify?token=${verificationToken}`;
     void sendPortalVerificationEmail(data.email.toLowerCase(), verifyLink).catch((err) =>
-      console.error('[Portal] Background verification email failed:', err.message),
+      logger.error('[Portal] Background verification email failed', { message: err.message }),
     );
 
     logAudit(slug, {
@@ -375,7 +376,7 @@ router.post('/:slug/portal/forgot-password', portalAuthLimiter, async (req, res,
     // Fire-and-forget so the response time does not depend on email delivery
     // (which only happens on a hit) and so cannot be used to enumerate accounts.
     void sendPortalResetEmail(email.toLowerCase(), resetLink).catch((err) =>
-      console.error('[Portal] Background reset email failed:', err.message),
+      logger.error('[Portal] Background reset email failed', { message: err.message }),
     );
 
     res.json({ message: 'If an account exists with that email, a reset link has been sent.' });
@@ -400,9 +401,9 @@ ${resetLink}
 If you did not request this, you can ignore this email.`;
 
   if (!process.env.SENDGRID_API_KEY) {
-    console.warn(
-      `[Portal] SendGrid not configured — cannot deliver password reset email to ${toEmail}. ` +
-        `Set SENDGRID_API_KEY to enable portal reset emails.`,
+    logger.warn(
+      '[Portal] SendGrid not configured — cannot deliver password reset email. ' +
+        'Set SENDGRID_API_KEY to enable portal reset emails.',
     );
     return;
   }
@@ -415,8 +416,8 @@ If you did not request this, you can ignore this email.`;
       text: body,
     });
   } catch (err) {
-    // Never include the reset link in the error log.
-    console.error(`[Portal] Failed to send password reset email to ${toEmail}:`, err.message);
+    // Never include the recipient email or the reset link in the error log.
+    logger.error('[Portal] Failed to send password reset email', { message: err.message });
   }
 }
 
@@ -435,9 +436,9 @@ ${verifyLink}
 If you did not request this, you can ignore this email.`;
 
   if (!process.env.SENDGRID_API_KEY) {
-    console.warn(
-      `[Portal] SendGrid not configured — cannot deliver verification email to ${toEmail}. ` +
-        `Set SENDGRID_API_KEY to enable portal verification emails.`,
+    logger.warn(
+      '[Portal] SendGrid not configured — cannot deliver verification email. ' +
+        'Set SENDGRID_API_KEY to enable portal verification emails.',
     );
     return;
   }
@@ -445,8 +446,8 @@ If you did not request this, you can ignore this email.`;
   try {
     await sgMail.send({ to: toEmail, from: PORTAL_FROM, subject, text: body });
   } catch (err) {
-    // Never include the verification link in the error log.
-    console.error(`[Portal] Failed to send verification email to ${toEmail}:`, err.message);
+    // Never include the recipient email or the verification link in the error log.
+    logger.error('[Portal] Failed to send verification email', { message: err.message });
   }
 }
 

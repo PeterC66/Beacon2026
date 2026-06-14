@@ -261,6 +261,18 @@ Every item below applies to every new feature — no exceptions.
   from `backend/src/utils/audit.js` for create/update/delete operations. `logAudit`
   never throws, so no try/catch needed around it.
 
+- [ ] **App logging — use the logger, never `console.*`.** Import
+  `{ logger }` from `backend/src/utils/logger.js` and call
+  `logger.error|warn|info|debug(message, context?)`. The diagnostic message is
+  the first arg; pass structured fields as a plain object in `context`
+  (e.g. `logger.error('…failed', { message: err.message })`). Levels are gated
+  by `LOG_LEVEL` (default `info` in production, `debug` otherwise). **Never log
+  PII or secrets** — no member/recipient email addresses, names, tokens, reset
+  or verification links, or payment links. Log error *messages* (`err.message`),
+  ids, counts and booleans, not the sensitive values themselves. This is
+  distinct from `logAudit` (durable audit trail) — `logger` is for operational
+  app logs.
+
 - [ ] **Response shape and status codes** — adopt one convention consistently:
 
   | Outcome | Status | Body |

@@ -10,6 +10,7 @@ import { hashPassword } from '../utils/password.js';
 import { splitSQL } from '../utils/migrate.js';
 import { PRIVILEGE_RESOURCES } from './privilegeResources.js';
 import { DEFAULT_ROLES } from './defaultRoles.js';
+import { logger } from '../utils/logger.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -114,6 +115,6 @@ export async function createTenantSchema({
     );
   }
 
-  console.log(`✓ Tenant created: ${name} (${schemaName})`);
+  logger.info(`✓ Tenant created: ${name} (${schemaName})`);
   return tenant;
 }
