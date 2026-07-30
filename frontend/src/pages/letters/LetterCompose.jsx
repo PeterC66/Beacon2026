@@ -1,4 +1,4 @@
-// beacon2/frontend/src/pages/letters/LetterCompose.jsx
+// beacon2026/frontend/src/pages/letters/LetterCompose.jsx
 // Compose and download letters for selected members.
 // Member IDs are passed via sessionStorage key 'letterComposeMemberIds'.
 // Docs 6.2, 6.2.1, 6.2.2

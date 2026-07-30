@@ -1,4 +1,4 @@
-// beacon2/frontend/src/pages/public/PublicGroups.jsx
+// beacon2026/frontend/src/pages/public/PublicGroups.jsx
 // Public (unauthenticated) groups list page.
 // Visible to anyone with the URL. Fields controlled by group_info_config public flags.
 

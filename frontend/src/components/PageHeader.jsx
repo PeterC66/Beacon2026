@@ -1,4 +1,4 @@
-// beacon2/frontend/src/components/PageHeader.jsx
+// beacon2026/frontend/src/components/PageHeader.jsx
 // Shared page header: u3a Beacon logo + tenant display name + app version.
 
 import BeaconLogo from './BeaconLogo.jsx';

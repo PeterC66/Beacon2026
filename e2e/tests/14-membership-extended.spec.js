@@ -1,4 +1,4 @@
-// beacon2/e2e/tests/14-membership-extended.spec.js
+// beacon2026/e2e/tests/14-membership-extended.spec.js
 // Extended membership tests: Renewals, Non-renewals, Membership Cards,
 // Addresses Export, Recent Members, Statistics.
 // Beacon UG §§4.4–4.9

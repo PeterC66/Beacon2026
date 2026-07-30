@@ -1,4 +1,4 @@
-// beacon2/frontend/src/pages/public/PortalLogin.jsx
+// beacon2026/frontend/src/pages/public/PortalLogin.jsx
 // Members Portal sign-in page (public, unauthenticated).
 
 import { useEffect, useState } from 'react';

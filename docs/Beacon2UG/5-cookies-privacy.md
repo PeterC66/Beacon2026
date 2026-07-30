@@ -1,31 +1,31 @@
 # 5. Cookies and Privacy
 
-The first time you visit Beacon2, a **cookie consent dialog** will appear
+The first time you visit beacon2026, a **cookie consent dialog** will appear
 asking whether you accept optional cookies. This section explains what cookies
-Beacon2 uses and how to manage your preferences.
+beacon2026 uses and how to manage your preferences.
 
 ![The cookie consent dialog](images/cookie-consent.png)
 
 ## What are cookies?
 
 Cookies are small pieces of data that a website stores on your computer so it
-can remember things between visits. Beacon2 uses cookies and similar browser
+can remember things between visits. beacon2026 uses cookies and similar browser
 storage to keep you logged in and to save your preferences.
 
-> **Important:** Beacon2 does not use third-party, tracking, or statistics
+> **Important:** beacon2026 does not use third-party, tracking, or statistics
 > cookies. Your data is never shared with advertisers or analytics services.
 
 ## Essential cookies
 
 These cookies are always used, regardless of your consent choice. They are
-strictly necessary for Beacon2 to function:
+strictly necessary for beacon2026 to function:
 
 | Cookie | Purpose |
 |--------|---------|
 | **Refresh token** | Keeps you logged in during your session |
 | **Cookie consent choice** | Remembers whether you accepted or declined optional cookies |
 
-You cannot turn off essential cookies -- without them, Beacon2 would not be
+You cannot turn off essential cookies -- without them, beacon2026 would not be
 able to log you in or remember your consent decision.
 
 ## Optional cookies
@@ -58,7 +58,7 @@ The optional cookies and preferences stored are:
 
 When the dialog appears [C], you have two choices:
 
-1. **I Accept optional cookies** [A] -- Beacon2 will store optional
+1. **I Accept optional cookies** [A] -- beacon2026 will store optional
    preferences on your computer.
 2. **I Do Not Accept** [B] -- only essential cookies will be used. Any
    previously stored optional cookies will be removed.
@@ -69,7 +69,7 @@ dialog to see a full list of what is stored before making your decision.
 ## Changing your preferences later
 
 You can change your cookie preferences at any time. Look for the small
-**gear icon** [E] in the bottom-left corner of any Beacon2 page. Clicking it
+**gear icon** [E] in the bottom-left corner of any beacon2026 page. Clicking it
 reopens the consent dialog, where you can switch between accepting and
 declining optional cookies.
 

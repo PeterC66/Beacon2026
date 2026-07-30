@@ -1,4 +1,4 @@
-// beacon2/backend/src/schemas/groups.js
+// beacon2026/backend/src/schemas/groups.js
 // Group-specific schema extensions.
 
 import { z } from 'zod';

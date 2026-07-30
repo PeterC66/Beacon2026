@@ -1,4 +1,4 @@
-// beacon2/backend/src/services/authService.js
+// beacon2026/backend/src/services/authService.js
 // Core authentication business logic.
 
 import crypto from 'crypto';

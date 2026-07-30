@@ -1,6 +1,6 @@
 # 49. System Users
 
-The System Users page lets you manage who can log into Beacon2 and what they
+The System Users page lets you manage who can log into beacon2026 and what they
 are allowed to do. Every person who needs to access the administration system
 must have a user account set up here.
 
@@ -47,7 +47,7 @@ user is linked to a member who has an email address).
 4. Optionally enter an **email address** (if different from the member's email).
 5. Click **Save**.
 
-Beacon2 will generate a **temporary password** and display it on screen. Make a
+beacon2026 will generate a **temporary password** and display it on screen. Make a
 note of it — you will need to give it to the new user. They will be asked to
 change this password the first time they log in.
 
@@ -79,7 +79,7 @@ their next login.
 
 ## Site Administrator [E]
 
-The **Site Administrator** is a special user who has all privileges in Beacon2,
+The **Site Administrator** is a special user who has all privileges in beacon2026,
 regardless of which roles are assigned. The Site Administrator account:
 
 - Is shown prominently in the user list

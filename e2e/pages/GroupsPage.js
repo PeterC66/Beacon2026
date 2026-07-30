@@ -1,4 +1,4 @@
-// beacon2/e2e/pages/GroupsPage.js
+// beacon2026/e2e/pages/GroupsPage.js
 // Page Object Models for Groups list and record.
 // Beacon UG §5 — "Groups"
 

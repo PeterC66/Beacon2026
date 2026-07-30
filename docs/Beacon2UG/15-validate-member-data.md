@@ -13,7 +13,7 @@ To open it, go to the Home page and click **Utilities**, then choose
 
 ## What gets checked
 
-When you run a validation, Beacon2 examines every member record and flags the
+When you run a validation, beacon2026 examines every member record and flags the
 following problems:
 
 ### Missing mandatory fields

@@ -1,9 +1,9 @@
 # `docs/FromBeacon/` — original Beacon reference material
 
 This directory holds selected artefacts from the original u3a **Beacon** system,
-kept **strictly as reference material** while building Beacon2. They are **not**
-part of the Beacon2 application, are not imported or executed by it, and are not
-covered by the Beacon2 `LICENSE`.
+kept **strictly as reference material** while building beacon2026. They are **not**
+part of the beacon2026 application, are not imported or executed by it, and are not
+covered by the beacon2026 `LICENSE`.
 
 ## Copyright and status
 
@@ -16,7 +16,7 @@ holders. In particular, the original Beacon source files carry the notice:
 > 7th February 2017. This copyright notice must be retained.*
 
 That notice is **retained in full** in the files themselves and is reproduced
-here. The Beacon2 project:
+here. The beacon2026 project:
 
 - makes **no claim of ownership** over any of this material;
 - makes **no claim of any right to redistribute** it;
@@ -39,7 +39,7 @@ contact).
 
 ## Why keep it here
 
-Beacon2 is an independent reproduction; these files document *what the original
+beacon2026 is an independent reproduction; these files document *what the original
 behaved like* so the reproduction can be faithful without copying the original
 implementation. Treat everything here as read-only reference, never as code to
-lift into Beacon2.
+lift into beacon2026.

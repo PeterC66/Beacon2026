@@ -60,7 +60,7 @@ columns:
 
 ### Status colours
 
-Beacon2 colour-codes the delivery status so you can spot problems at a glance:
+beacon2026 colour-codes the delivery status so you can spot problems at a glance:
 
 | Colour | Statuses | Meaning |
 |--------|----------|---------|

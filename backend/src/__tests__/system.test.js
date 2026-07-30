@@ -1,4 +1,4 @@
-// beacon2/backend/src/__tests__/system.test.js
+// beacon2026/backend/src/__tests__/system.test.js
 // Coverage for the system (sys-admin) tenant-management routes (routes/system.js),
 // added in Chunk 7 of docs/ImprovementPlan.md. The restore route and feature-config
 // PATCH are exercised separately by restoreBeacon.test.js.

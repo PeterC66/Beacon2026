@@ -1,4 +1,4 @@
-// beacon2/frontend/src/pages/public/PortalGroups.jsx
+// beacon2026/frontend/src/pages/public/PortalGroups.jsx
 // Members Portal — view interest groups, join/leave (doc 10.2.2).
 
 import { useState, useEffect } from 'react';

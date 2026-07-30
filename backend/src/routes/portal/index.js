@@ -1,4 +1,4 @@
-// beacon2/backend/src/routes/portal/index.js
+// beacon2026/backend/src/routes/portal/index.js
 // Authenticated Members Portal routes (docs 10.2.1–10.2.5).
 // All routes require a valid portal JWT (isPortal: true) and the portal feature
 // toggle. Mounted at /public/:slug/portal/app/* via the public router.

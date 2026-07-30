@@ -1,4 +1,4 @@
-// beacon2/frontend/src/pages/roles/RoleList.jsx
+// beacon2026/frontend/src/pages/roles/RoleList.jsx
 
 import { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';

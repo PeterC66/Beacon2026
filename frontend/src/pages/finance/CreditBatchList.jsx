@@ -1,4 +1,4 @@
-// beacon2/frontend/src/pages/finance/CreditBatchList.jsx
+// beacon2026/frontend/src/pages/finance/CreditBatchList.jsx
 //
 // List view of CreditBatches — account/mode/date filter bar and the batch table.
 // Presentation only: filter state and handlers are owned by the parent.

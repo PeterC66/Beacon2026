@@ -1,6 +1,6 @@
 # 57. System Messages
 
-System Messages lets you customise the automated emails that Beacon2 sends on
+System Messages lets you customise the automated emails that beacon2026 sends on
 your behalf — for example, the confirmation a new member receives after joining
 online, or the notification sent to an officer when a member updates their
 details through the portal.
@@ -36,7 +36,7 @@ when it is sent. Common templates include:
 
 ## Using tokens [C]
 
-Message templates support **tokens** — placeholders that Beacon2 replaces with
+Message templates support **tokens** — placeholders that beacon2026 replaces with
 actual member data when the email is sent. The available tokens are:
 
 | Token | Replaced with |

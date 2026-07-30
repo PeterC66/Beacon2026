@@ -39,7 +39,7 @@ Choose the type of transaction:
 | **Group** [L] | No | Link to an interest group, if the transaction relates to one |
 
 > **Tip:** The **Member 1** and **Member 2** fields are searchable — just start
-> typing a name or membership number and Beacon2 will show matching members.
+> typing a name or membership number and beacon2026 will show matching members.
 
 ---
 
@@ -54,7 +54,7 @@ across multiple categories.
 - Click **Add row** to add another category line if you need to split the
   transaction.
 - The **total of all category amounts must equal the transaction amount**. If
-  they do not match, Beacon2 will show a warning and prevent you from saving.
+  they do not match, beacon2026 will show a warning and prevent you from saving.
 
 For example, if a member pays £25 in total — £20 for their subscription and £5
 as a donation — you would create two category lines: one for "Subscriptions"

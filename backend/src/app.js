@@ -1,4 +1,4 @@
-// beacon2/backend/src/app.js
+// beacon2026/backend/src/app.js
 
 import 'dotenv/config';
 import express from 'express';
@@ -49,7 +49,7 @@ import { errorHandler } from './middleware/errorHandler.js';
 if (process.env.NODE_ENV === 'production' && !process.env.CORS_ORIGIN) {
   throw new Error(
     'CORS_ORIGIN must be set in production. Configure it to the frontend URL ' +
-      '(e.g. https://beacon2.vercel.app).',
+      '(e.g. https://beacon2026.vercel.app).',
   );
 }
 

@@ -1,4 +1,4 @@
-// beacon2/frontend/src/components/SortableHeader.jsx
+// beacon2026/frontend/src/components/SortableHeader.jsx
 // Renders a <th> that shows a sort indicator and calls onSort when clicked.
 // Keyboard accessible: focusable and activates on Enter/Space, with aria-sort
 // reflecting the current sort state for screen readers.

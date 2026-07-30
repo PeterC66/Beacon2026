@@ -1,4 +1,4 @@
-// beacon2/frontend/src/pages/public/PublicCalendar.jsx
+// beacon2026/frontend/src/pages/public/PublicCalendar.jsx
 // Public (unauthenticated) calendar page.
 // Visible to anyone with the URL. Fields controlled by calendar_config public flags.
 // Shows all non-private events from today to end of year. No filters or download.

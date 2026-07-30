@@ -1,6 +1,6 @@
 # 35. Sending Emails
 
-Beacon2 lets you send personalised emails to any selection of members. You reach
+beacon2026 lets you send personalised emails to any selection of members. You reach
 the email compose page by selecting members (from the Members List, Group Members,
 or other screens) and choosing **Send email** from the **Do with selected** menu.
 
@@ -25,7 +25,7 @@ The compose page opens with your selected members shown as recipients.
 Choose a **From** address from the dropdown. This list is populated from the email
 addresses held on your member record.
 
-> **Tip:** Beacon2 remembers your last-used From address in your browser, so you
+> **Tip:** beacon2026 remembers your last-used From address in your browser, so you
 > won't need to re-select it every time (provided you have accepted optional
 > cookies).
 
@@ -143,7 +143,7 @@ When you are happy with your message, click the **Send** button at the bottom of
 the page. The button shows the number of recipients who will receive the email
 (e.g. "Send to 42 recipients").
 
-Beacon2 validates that you have filled in the From address, subject, and message
+beacon2026 validates that you have filled in the From address, subject, and message
 body before sending.
 
 ---

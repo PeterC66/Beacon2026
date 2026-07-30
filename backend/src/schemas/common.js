@@ -1,4 +1,4 @@
-// beacon2/backend/src/schemas/common.js
+// beacon2026/backend/src/schemas/common.js
 // Shared Zod schemas used by both groups and teams routes.
 
 import { z } from 'zod';

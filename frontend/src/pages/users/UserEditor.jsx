@@ -1,4 +1,4 @@
-// beacon2/frontend/src/pages/users/UserEditor.jsx
+// beacon2026/frontend/src/pages/users/UserEditor.jsx
 // Create or edit a system user and their role assignments (doc 8.2).
 
 import { useState, useEffect, useRef } from 'react';

@@ -1,4 +1,4 @@
-# Beacon2 Data Model
+# beacon2026 Data Model
 
 Generated 2026-04-14, last revised 2026-06-14. Sources:
 `backend/prisma/schema.prisma` (public schema) and
@@ -8,7 +8,7 @@ Generated 2026-04-14, last revised 2026-06-14. Sources:
 
 ## Architecture
 
-Beacon2 uses a **multi-tenant PostgreSQL** design with schema-level isolation:
+beacon2026 uses a **multi-tenant PostgreSQL** design with schema-level isolation:
 
 - **Public schema** — system-level tables shared across all tenants
 - **Per-tenant schemas** (`u3a_<slug>`) — one complete set of tables per u3a

@@ -1,4 +1,4 @@
-// beacon2/backend/src/routes/backup/export.js
+// beacon2026/backend/src/routes/backup/export.js
 // Data export (doc 9.5) — 8 Excel options, tenant-scoped.
 
 import { Router } from 'express';
@@ -650,7 +650,7 @@ export async function buildSettingsSheets(wb, slug) {
 
   const ws2 = wb.addWorksheet('Site Settings 2');
   ws2.addRow(['note']);
-  ws2.addRow(['Beacon2 stores all settings in Site Settings 1.']);
+  ws2.addRow(['beacon2026 stores all settings in Site Settings 1.']);
 
   addSheet(
     wb,
@@ -802,7 +802,7 @@ router.get(
         : slug;
 
       const wb = new ExcelJS.Workbook();
-      wb.creator = 'Beacon2';
+      wb.creator = 'beacon2026';
       wb.created = new Date();
 
       const builders = {

@@ -1,4 +1,4 @@
-# Beacon2 — Known Issues and Deferred Items
+# beacon2026 — Known Issues and Deferred Items
 
 Items noted during development that need addressing in future sessions.
 
@@ -138,7 +138,7 @@ These are catalogued and re-verified in `docs/history/ImprovementPlan.md` (Chunk
 24. `[ACCEPTED]` **`uuid<11.1.1` buffer-bounds advisory remains** — backend `npm audit`
     shows 2 moderate findings against the `uuid` package (direct +
     transitive via `exceljs`). The advisory only affects v3/v5/v6 when a
-    `buf` argument is passed. Beacon2 imports only `v4` and never passes
+    `buf` argument is passed. beacon2026 imports only `v4` and never passes
     a buffer, so the runtime is unaffected. Major bump (`uuid@14`) is a
     breaking change for `exceljs` and should wait for an upstream release.
 25. `[OPEN]` **Frontend CSP shipped in report-only mode** — after a deploy window
@@ -311,22 +311,22 @@ These are catalogued and re-verified in `docs/history/ImprovementPlan.md` (Chunk
 1. `[FIXED]` **Doc 7.10.5 — Pending Transactions bulk action eligibility** — The original
    Beacon manual bullet says transactions are eligible if they "Are not in the Current
    financial year", which contradicts its own footnote (out-of-year transactions must be
-   opened individually). Beacon2's actual behaviour is correct — bulk checkboxes appear
+   opened individually). beacon2026's actual behaviour is correct — bulk checkboxes appear
    only on in-year, non-cleared, non-batched transactions. Resolved 2026-06-14
    (ImprovementPlan Chunk 7): added an editor's note to the faithful BeaconUG
    transcription flagging the source error (rather than silently rewriting the original),
-   and documented the correct eligibility in `docs/Beacon2UG/34-pending-transactions.md`.
+   and documented the correct eligibility in `docs/beacon2026UG/34-pending-transactions.md`.
 
 ---
 
 ## User Guide — Screenshots
 
-1. `[OPEN]` **Beacon2 User Guide images are missing** — the 64-section guide under
-   `docs/Beacon2UG/` references screenshots (`![...](images/<name>.png)`) across
-   ~61 sections, but the `docs/Beacon2UG/images/` directory does not yet exist, so
+1. `[OPEN]` **beacon2026 User Guide images are missing** — the 64-section guide under
+   `docs/beacon2026UG/` references screenshots (`![...](images/<name>.png)`) across
+   ~61 sections, but the `docs/beacon2026UG/images/` directory does not yet exist, so
    every embedded image renders as a broken link. The guide *text* is complete and
    accurate. Deferred because the screenshots must be captured from a running
-   Beacon2 instance — per `CLAUDE.md`, image content must not be guessed at, so the
+   beacon2026 instance — per `CLAUDE.md`, image content must not be guessed at, so the
    user will supply (or approve) the screenshots. To resolve: capture each
    referenced image, name it to match the existing `images/<name>.png` references,
    and add the `images/` directory. Identified in the 2026-06-14 documentation
@@ -365,7 +365,7 @@ These are catalogued and re-verified in `docs/history/ImprovementPlan.md` (Chunk
 
    **Real blocker (re-verified 2026-06-14, ImprovementPlan Chunk 7):** correct
    enforcement must hide contact *from group leaders only*, not from membership
-   admins (UG 4.2.4). Beacon2 has no runtime signal for "this viewer is a leader":
+   admins (UG 4.2.4). beacon2026 has no runtime signal for "this viewer is a leader":
    the scoped privileges `group_records_as_leader` / `group_records_as_member` are
    **seeded** (`seed/privilegeResources.js`, `seed/defaultRoles.js`) **but enforced
    nowhere** — every group members route is gated solely by `group_records_all`. A
@@ -377,7 +377,7 @@ These are catalogued and re-verified in `docs/history/ImprovementPlan.md` (Chunk
 
 2. `[DEFERRED]` **System-wide "Hide Address from Group Leaders" setting** — Doc 4.2.4(b) describes a
    global system setting that hides addresses of ALL members from ALL group leaders (unless
-   they have other privileges). This setting is not yet implemented in Beacon2.
+   they have other privileges). This setting is not yet implemented in beacon2026.
    Ref: doc 4.2.4, doc 8.3.
 
 ---

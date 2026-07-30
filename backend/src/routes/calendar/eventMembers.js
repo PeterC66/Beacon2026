@@ -1,4 +1,4 @@
-// beacon2/backend/src/routes/calendar/eventMembers.js
+// beacon2026/backend/src/routes/calendar/eventMembers.js
 // Event members — attendance/organiser tracking per event:
 // /calendar/events/:eventId/members. Gated by the `eventAttendance` feature and
 // guarded by the `event_attendance` privilege resource.

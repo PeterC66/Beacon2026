@@ -1,6 +1,6 @@
 # 42. The Members Portal
 
-The Members Portal is a separate area of Beacon2 designed for your u3a's members
+The Members Portal is a separate area of beacon2026 designed for your u3a's members
 — not the system users who administer the u3a. It gives members online access to
 view groups, the calendar, their personal details, and other features, all through
 a simple, friendly interface.
@@ -15,7 +15,7 @@ a simple, friendly interface.
 
 ## Logging in to the portal
 
-The portal has its own login page, separate from the main Beacon2 login used by
+The portal has its own login page, separate from the main beacon2026 login used by
 system users.
 
 To log in, the member enters their **Email** and **Password** [A], then clicks
@@ -43,7 +43,7 @@ existing membership record:
 | **Surname** | Must match the surname on their member record. |
 | **Postcode** | Must match the postcode on their member record. |
 
-If any of these do not match, Beacon2 will not allow registration to proceed.
+If any of these do not match, beacon2026 will not allow registration to proceed.
 This prevents someone from registering against another person's membership.
 
 ### Step 2 — Set your credentials [C]
@@ -68,7 +68,7 @@ registering.
 ## Forgot Password
 
 If a member forgets their portal password, they can use the **Forgot Password**
-link on the login page. Beacon2 will send a password reset email to the address
+link on the login page. beacon2026 will send a password reset email to the address
 associated with their portal account, allowing them to set a new password.
 
 ---
@@ -112,7 +112,7 @@ the member will need to log in again next time they visit.
   prompted to do so after [Online Joining](41-online-joining.md), but existing
   members may need a reminder.
 - If a member has trouble registering, check that their forenames, surname, and
-  postcode in Beacon2 match what they are entering. Common issues include extra
+  postcode in beacon2026 match what they are entering. Common issues include extra
   spaces, abbreviations, or an outdated postcode.
 
 ---

@@ -1,6 +1,6 @@
 # Security Policy
 
-Beacon2 is a multi-tenant web application that stores u3a member personal
+beacon2026 is a multi-tenant web application that stores u3a member personal
 data (names, contact details, membership and payment records). We take security
 reports seriously and appreciate responsible disclosure.
 
@@ -29,13 +29,13 @@ and remediate before any public disclosure.
 
 ## Supported scope
 
-Beacon2 is a demonstration / portfolio project and is **not yet running in
+beacon2026 is a demonstration / portfolio project and is **not yet running in
 production**. There is no released, supported version with a security-update
 guarantee; fixes are applied to the `main` branch.
 
 In scope:
 
-- The Beacon2 backend (`backend/`) and frontend (`frontend/`) application code
+- The beacon2026 backend (`backend/`) and frontend (`frontend/`) application code
   in this repository.
 - Authentication, authorisation/privilege, multi-tenant isolation, and member
   data handling.
@@ -50,7 +50,7 @@ Out of scope:
 
 ## Security status
 
-This summarises the security work done so far, so anyone evaluating Beacon2 for
+This summarises the security work done so far, so anyone evaluating beacon2026 for
 real use knows what has — and has not — been assured.
 
 **Completed:**
@@ -82,7 +82,7 @@ real use knows what has — and has not — been assured.
 
 ## Handling of personal data (GDPR)
 
-Beacon2 stores personal data about u3a members — names, contact details,
+beacon2026 stores personal data about u3a members — names, contact details,
 membership history, and payment records — so a u3a running it acts as a **data
 controller** under UK GDPR. The application provides the building blocks for
 compliance, but compliance itself is the operator's responsibility.

@@ -1,4 +1,4 @@
-// beacon2/frontend/src/pages/system/SystemLogin.jsx
+// beacon2026/frontend/src/pages/system/SystemLogin.jsx
 // System administrator login — separate from tenant user login.
 
 import { useState } from 'react';

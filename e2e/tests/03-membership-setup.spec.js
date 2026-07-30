@@ -1,4 +1,4 @@
-// beacon2/e2e/tests/03-membership-setup.spec.js
+// beacon2026/e2e/tests/03-membership-setup.spec.js
 // Membership classes and statuses tests.
 // Beacon UG §8.7 — "Membership Set-Up" (classes and statuses)
 //

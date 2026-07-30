@@ -1,4 +1,4 @@
-// beacon2/frontend/src/components/ScrollButtons.jsx
+// beacon2026/frontend/src/components/ScrollButtons.jsx
 // Dual floating buttons to scroll to the top/bottom of a table container.
 // Only visible when the container overflows the viewport.
 

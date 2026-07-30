@@ -1,29 +1,29 @@
 # 1. Introduction
 
-Welcome to **Beacon2** -- the modern replacement for the original Beacon system,
+Welcome to **beacon2026** -- the modern replacement for the original Beacon system,
 used by u3a organisations across the UK to manage their day-to-day operations.
 
-## What is Beacon2?
+## What is beacon2026?
 
-Beacon2 is a web-based management system designed specifically for u3a volunteers.
+beacon2026 is a web-based management system designed specifically for u3a volunteers.
 It helps you look after membership records, interest groups, finances, emails and
 letters, and online services such as joining and the members portal.
 
-Beacon2 is a **modern web application**. It runs entirely in your browser -- there
+beacon2026 is a **modern web application**. It runs entirely in your browser -- there
 is no software to install, no updates to download, and no special hardware needed.
-If you can browse the web, you can use Beacon2. It works on desktop computers,
+If you can browse the web, you can use beacon2026. It works on desktop computers,
 laptops, tablets, and smartphones.
 
 ## How is data kept separate?
 
-Beacon2 is a **multi-tenant** system. This means that many u3a organisations share
+beacon2026 is a **multi-tenant** system. This means that many u3a organisations share
 the same application, but each u3a has its own completely separate data. You will
 never see another u3a's members, groups, or financial records, and they will never
 see yours. Each u3a's sensitive data is encrypted with its own unique key.
 
 ## Main modules
 
-Beacon2 is organised into the following broad areas:
+beacon2026 is organised into the following broad areas:
 
 | Module | What it covers |
 |--------|----------------|
@@ -39,11 +39,11 @@ Each of these is covered in detail in later sections of this guide.
 
 ## Who is this guide for?
 
-This guide is written for **u3a volunteers** who use Beacon2 to administer their
+This guide is written for **u3a volunteers** who use beacon2026 to administer their
 u3a. You do not need any technical knowledge -- just a web browser, an internet
 connection, and a username and password provided by your Site Administrator.
 
-If you have used the original Beacon system before, you will find that Beacon2
+If you have used the original Beacon system before, you will find that beacon2026
 works in a very similar way, with a refreshed interface and some additional
 features.
 

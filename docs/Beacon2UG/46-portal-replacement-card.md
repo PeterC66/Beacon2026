@@ -22,7 +22,7 @@ their email address.
 
 ### Step 2 — Validation
 
-Before processing the request, Beacon2 checks that:
+Before processing the request, beacon2026 checks that:
 
 - The member's status is **Current** — only current members can request a
   replacement card.
@@ -34,7 +34,7 @@ cannot be completed.
 
 ### Step 3 — Confirmation [B]
 
-Once confirmed, Beacon2:
+Once confirmed, beacon2026:
 
 1. **Sends a replacement card email** to the member using the
    **card_replacement_confirm** system message template (see

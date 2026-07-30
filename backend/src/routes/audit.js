@@ -1,4 +1,4 @@
-// beacon2/backend/src/routes/audit.js
+// beacon2026/backend/src/routes/audit.js
 // Audit log viewer — doc 9.2(a)
 
 import { Router } from 'express';

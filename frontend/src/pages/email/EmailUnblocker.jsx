@@ -1,4 +1,4 @@
-// beacon2/frontend/src/pages/email/EmailUnblocker.jsx
+// beacon2026/frontend/src/pages/email/EmailUnblocker.jsx
 // Allows the Site Administrator to remove an email address from
 // SendGrid's bounce and spam report lists.
 

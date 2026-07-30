@@ -1,4 +1,4 @@
-// beacon2/frontend/src/components/EntityMembers.jsx
+// beacon2026/frontend/src/components/EntityMembers.jsx
 // Shared members sub-component used by both GroupRecord and TeamRecord.
 // Props:
 //   entityId   — the group or team ID

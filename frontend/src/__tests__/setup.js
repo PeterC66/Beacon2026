@@ -1,4 +1,4 @@
-// beacon2/frontend/src/__tests__/setup.js
+// beacon2026/frontend/src/__tests__/setup.js
 import '@testing-library/jest-dom';
 import { vi } from 'vitest';
 

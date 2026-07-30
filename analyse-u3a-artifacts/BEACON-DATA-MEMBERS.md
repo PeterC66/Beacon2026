@@ -27,7 +27,7 @@ The membership types a u3a offers — e.g. "Single", "Joint", "Associate", "Life
 |--------|------|----------|-------|
 | `mckey` | string | no | **Primary key** in this sheet |
 | `class` | string | no | Display name (e.g. "Single") — `Members.class` references this by name |
-| `status` | boolean (0/1) | no | Whether this class is currently offered (named "current" in Beacon2) |
+| `status` | boolean (0/1) | no | Whether this class is currently offered (named "current" in beacon2026) |
 | `fee` | decimal | yes | Default annual fee |
 | `family` | boolean (0/1) | no | Joint / family membership (counts more than one person) |
 | `associate` | boolean (0/1) | no | Associate of another u3a (typically reduced fee) |

@@ -1,4 +1,4 @@
-// beacon2/backend/src/schemas/teams.js
+// beacon2026/backend/src/schemas/teams.js
 // Team-specific schema extensions.
 
 import { z } from 'zod';

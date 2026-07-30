@@ -1,4 +1,4 @@
-// beacon2/frontend/src/pages/members/MemberEditor.jsx
+// beacon2026/frontend/src/pages/members/MemberEditor.jsx
 
 import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';

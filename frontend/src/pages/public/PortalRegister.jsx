@@ -1,4 +1,4 @@
-// beacon2/frontend/src/pages/public/PortalRegister.jsx
+// beacon2026/frontend/src/pages/public/PortalRegister.jsx
 // Members Portal registration page (public, unauthenticated).
 
 import { useState } from 'react';

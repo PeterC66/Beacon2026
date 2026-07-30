@@ -1,4 +1,4 @@
-// beacon2/backend/src/routes/systemMessages.js
+// beacon2026/backend/src/routes/systemMessages.js
 // CRUD for system message templates (pre-defined auto-sent emails).
 // System messages have well-known IDs and are seeded on tenant creation.
 // Admins can edit subject/body but not create/delete them.

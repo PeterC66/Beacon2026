@@ -1,4 +1,4 @@
-// beacon2/frontend/src/hooks/useAsyncLoad.js
+// beacon2026/frontend/src/hooks/useAsyncLoad.js
 // Standard data-fetching hook: replaces the repeated
 //   const [data, setData] = useState(...)
 //   const [loading, setLoading] = useState(true)

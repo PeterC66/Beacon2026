@@ -1,4 +1,4 @@
-// beacon2/frontend/src/pages/calendar/CalendarMonthTable.jsx
+// beacon2026/frontend/src/pages/calendar/CalendarMonthTable.jsx
 // Read-only "calendar" view table (all/member/venue/group filter modes).
 // Extracted from Calendar.jsx — no behaviour change.
 

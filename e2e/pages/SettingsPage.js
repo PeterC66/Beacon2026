@@ -1,4 +1,4 @@
-// beacon2/e2e/pages/SettingsPage.js
+// beacon2026/e2e/pages/SettingsPage.js
 // Page Object Models for System Settings, Roles, and Users pages.
 // Beacon UG §8 — "Set-Up Operations"
 

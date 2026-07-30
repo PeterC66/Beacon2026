@@ -1,4 +1,4 @@
-# Beacon2 — Implementation Reference
+# beacon2026 — Implementation Reference
 
 **This file contains detailed implementation notes organised by module.**
 Read `CLAUDE-STANDARDS.md` first for the cross-cutting checklist that applies to all work.
@@ -121,7 +121,7 @@ affected sessions via Redis, or expire naturally after 15 min.
 - Frontend only: `PersonalPreferences.jsx` at `/preferences`
 - Always visible (no privilege gate)
 - Three sections: display prefs + inactivity timeout, change password, security Q&A
-- Display prefs in `localStorage` via `usePreferences.js` (key `beacon2_prefs`)
+- Display prefs in `localStorage` via `usePreferences.js` (key `beacon2026_prefs`)
   - `getPreferences()` — snapshot (not reactive)
   - `savePreferences(updates)` — merges partial updates
   - `formatMemberName(member)` — respects `displayFormat` setting; includes `(known_as)` when present
@@ -383,7 +383,7 @@ which requires categories). Users can categorize later.
 - Privileges: `addresses_export` (view/download) and `address_labels` (download)
 - Filters: status, classId, pollId, negatePoll, groupId
 - Label PDF: PDFKit, A4, mm→points (`72/25.4`), partner combining, multi-page
-- Label settings saved in `localStorage` key `beacon2_label_settings`
+- Label settings saved in `localStorage` key `beacon2026_label_settings`
 
 ### Member list — select, email, download
 
@@ -758,9 +758,9 @@ group_info_config (JSON), calendar_config (JSON).
 ### Restore (system admin only)
 
 `POST /system/restore/:tenantSlug` — multipart upload, auto-detects format:
-- `Members` sheet first column `mkey` → Beacon; `id` → Beacon2
+- `Members` sheet first column `mkey` → Beacon; `id` → beacon2026
 
-**Beacon2 restore**: UUIDs preserved; FK-dependent tables inserted in order.
+**beacon2026 restore**: UUIDs preserved; FK-dependent tables inserted in order.
 **Beacon restore**: Maps `mkey`/`gkey`/`tkey` to new UUIDs. Partner detection via
 shared `akey`. Month `0` → month_index 13 (Renewals). Positive amounts = in,
 negative = out.
@@ -784,14 +784,14 @@ All helpers accept `tx` (Prisma transaction client), not tenant slug:
 await prisma.$transaction(async (tx) => {
   await tx.$executeRawUnsafe(`SET search_path TO ${schema}, public`);
   await clearTenantData(tx);
-  if (format === 'beacon2') await restoreBeacon2(tx, wb);
+  if (format === 'beacon2026') await restorebeacon2026(tx, wb);
   else { await restoreBeacon(tx, wb); await resetSequences(tx); }
 }, { timeout: 300_000 });
 ```
 
 ### Beacon restore: default password
 
-All imported users get `Beacon2!` (`BEACON_DEFAULT_PASSWORD` exported from `backup.js`).
+All imported users get `beacon2026!` (`BEACON_DEFAULT_PASSWORD` exported from `backup.js`).
 
 ### System admin "Set password"
 
@@ -813,7 +813,7 @@ the browser sees `null` and downloads as `download.xlsx`.
 
 ### Beacon Site Settings mapping
 
-| Beacon key | Beacon2 column |
+| Beacon key | beacon2026 column |
 |-----------|----------------|
 | `AdvRenewals` | `advance_renewals_weeks` |
 | `GraceLapse` | `grace_lapse_weeks` |
@@ -967,11 +967,11 @@ the shared versions incrementally when touching a file for other reasons.
 ### Display preferences — text size & colour theme
 
 User-selectable via Personal Preferences page (doc 9.1). Stored in localStorage
-(`beacon2_prefs`). Architecture:
+(`beacon2026_prefs`). Architecture:
 
 - `usePreferences.js` — `textSize` and `colorTheme` fields alongside existing prefs
 - `App.jsx` — `useEffect` sets `data-theme` and `data-text-size` on `<html>`;
-  listens for `beacon2-prefs-changed` custom event for same-tab updates
+  listens for `beacon2026-prefs-changed` custom event for same-tab updates
 - `index.css` — CSS rules scoped to `html[data-theme="..."]` / `html[data-text-size="..."]`
 
 Text sizes: `small` (0.875rem), `normal` (1rem), `large` (1.125rem), `xlarge` (1.25rem).
@@ -1734,9 +1734,9 @@ Cookie consent is a **frontend-only** feature. No backend changes needed.
 
 | Cookie | Type | Purpose |
 |--------|------|---------|
-| `beacon2_cookie_consent` | Essential | Records user's choice (`accepted` / `declined`). 365-day expiry. |
+| `beacon2026_cookie_consent` | Essential | Records user's choice (`accepted` / `declined`). 365-day expiry. |
 | `beacon_last_u3a` | Optional | Pre-fills u3a slug on login. Only set when consent accepted. |
-| `beacon2_refresh` | Essential | httpOnly refresh token, set by backend. Not gated by consent. |
+| `beacon2026_refresh` | Essential | httpOnly refresh token, set by backend. Not gated by consent. |
 
 ### localStorage
 
@@ -1746,11 +1746,11 @@ All keys are removed in `useCookieConsent.js → setConsent(false)`.
 
 | Key | Purpose |
 |-----|---------|
-| `beacon2_prefs` | Display preferences (sort, format, timeout, text size, theme) |
-| `beacon2_label_settings` | Label printing layout (cols, rows, dimensions, offsets, font size) |
-| `beacon2_last_export_class` | Last membership class selected on Addresses Export page |
-| `beacon2_email_compose_prefs` | Email compose From address and copy-to-self preference |
-| `beacon2_tam_submission` | TAM export: last selected Status and Class filters |
+| `beacon2026_prefs` | Display preferences (sort, format, timeout, text size, theme) |
+| `beacon2026_label_settings` | Label printing layout (cols, rows, dimensions, offsets, font size) |
+| `beacon2026_last_export_class` | Last membership class selected on Addresses Export page |
+| `beacon2026_email_compose_prefs` | Email compose From address and copy-to-self preference |
+| `beacon2026_tam_submission` | TAM export: last selected Status and Class filters |
 
 ### Integration points
 
@@ -1956,7 +1956,7 @@ component manages the `confirmOff` state and renders the modal.
 ### Backup / restore
 
 `feature_config` is included in the "Site Settings 1" sheet of the backup export
-and restored by the Beacon2 restore path. Legacy Beacon restores apply
+and restored by the beacon2026 restore path. Legacy Beacon restores apply
 `STANDARD_IMPLEMENTATIONS[0]` from `shared/constants.js` ("Beacon Migration
 Default" — all features on except SiteWorks Integration and Custom Fields),
 overriding whatever happened to be on the tenant before the restore.
@@ -1992,7 +1992,7 @@ Key facts for developers:
 |-----------|-----------|--------|
 | Frontend | Vercel | Static React build (Vite), `VITE_API_URL` points to backend |
 | Backend | Render (web service) | Node.js, `backend/` root dir, config in `render.yaml` |
-| Database | Render (PostgreSQL) | Schema-per-tenant, `beacon2` DB |
+| Database | Render (PostgreSQL) | Schema-per-tenant, `beacon2026` DB |
 
 **Environment variables** are listed in `render.yaml` (backend) and set in the
 Vercel dashboard (frontend: `VITE_API_URL`, `VITE_ZENDESK_KEY`).

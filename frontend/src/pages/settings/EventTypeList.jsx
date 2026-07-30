@@ -1,4 +1,4 @@
-// beacon2/frontend/src/pages/settings/EventTypeList.jsx
+// beacon2026/frontend/src/pages/settings/EventTypeList.jsx
 // Manage event types for non-group events (e.g. Open Meetings, Social Events).
 
 import { useState } from 'react';

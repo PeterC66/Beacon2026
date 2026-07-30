@@ -1,4 +1,4 @@
-// beacon2/frontend/src/components/HelpWidget.jsx
+// beacon2026/frontend/src/components/HelpWidget.jsx
 // Zendesk Web Widget integration for context-sensitive help
 
 import { useEffect, useRef } from 'react';

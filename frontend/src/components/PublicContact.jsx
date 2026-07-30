@@ -1,4 +1,4 @@
-// beacon2/frontend/src/components/PublicContact.jsx
+// beacon2026/frontend/src/components/PublicContact.jsx
 // Small footer block showing a u3a's public contact details (phone / email /
 // home page) on unauthenticated pages (Members Portal sign-in, online joining).
 // Renders nothing when none of the details are configured.

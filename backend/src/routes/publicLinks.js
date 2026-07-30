@@ -1,4 +1,4 @@
-// beacon2/backend/src/routes/publicLinks.js
+// beacon2026/backend/src/routes/publicLinks.js
 // Admin page for viewing/configuring public links and online joining settings.
 
 import { Router } from 'express';

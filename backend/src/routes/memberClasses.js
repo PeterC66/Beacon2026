@@ -1,4 +1,4 @@
-// beacon2/backend/src/routes/memberClasses.js
+// beacon2026/backend/src/routes/memberClasses.js
 
 import { Router } from 'express';
 import { z } from 'zod';

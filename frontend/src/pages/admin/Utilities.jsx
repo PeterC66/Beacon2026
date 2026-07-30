@@ -1,4 +1,4 @@
-// beacon2/frontend/src/pages/admin/Utilities.jsx
+// beacon2026/frontend/src/pages/admin/Utilities.jsx
 // Utilities menu — lists administrative utility tools.
 
 import { Link } from 'react-router-dom';

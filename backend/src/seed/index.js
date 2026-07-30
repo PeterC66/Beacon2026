@@ -1,4 +1,4 @@
-// beacon2/backend/src/seed/index.js
+// beacon2026/backend/src/seed/index.js
 // Run once after deployment to create the system administrator account.
 // Usage: node src/seed/index.js
 //

@@ -3,7 +3,7 @@
 Credit batches let you **group incoming transactions together** so they can be
 reconciled as a single item against your bank statement. This is especially
 useful when you pay in a bundle of cheques or cash — the bank shows one deposit,
-but Beacon2 has many individual transactions.
+but beacon2026 has many individual transactions.
 
 To open this screen, click **Credit batches** on the **Home** page.
 
@@ -45,7 +45,7 @@ Click a batch reference to see the individual transactions within that batch.
 1. In the **unbatched transactions** list below the batch list, tick the
    checkboxes next to the transactions you want to group together.
 2. Click **Create batch**.
-3. Beacon2 creates a new batch containing the selected transactions and assigns
+3. beacon2026 creates a new batch containing the selected transactions and assigns
    it a reference number.
 
 > **Tip:** Batches work best when they match real-world deposits. For example,

@@ -1,4 +1,4 @@
-// beacon2/backend/src/routes/public/index.js
+// beacon2026/backend/src/routes/public/index.js
 // Public (unauthenticated) routes for online joining and the Members Portal.
 // All routes are tenant-scoped via the :slug path parameter.
 //

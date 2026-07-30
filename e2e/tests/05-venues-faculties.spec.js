@@ -1,4 +1,4 @@
-// beacon2/e2e/tests/05-venues-faculties.spec.js
+// beacon2026/e2e/tests/05-venues-faculties.spec.js
 // Group Venues and Faculties tests.
 // Beacon UG §5.7 — "Group Venues"
 // Beacon UG §5.8 — "Group Faculties"

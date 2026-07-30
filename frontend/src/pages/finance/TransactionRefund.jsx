@@ -1,4 +1,4 @@
-// beacon2/frontend/src/pages/finance/TransactionRefund.jsx
+// beacon2026/frontend/src/pages/finance/TransactionRefund.jsx
 // Refund form for a transaction — implements Beacon doc 7.10.7.
 
 import { useState, useEffect, useMemo } from 'react';

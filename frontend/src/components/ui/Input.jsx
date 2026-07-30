@@ -1,4 +1,4 @@
-// beacon2/frontend/src/components/ui/Input.jsx
+// beacon2026/frontend/src/components/ui/Input.jsx
 // Shared input class string — use instead of redefining inputCls locally.
 // Export as a constant for use with plain <input className={inputCls} />.
 

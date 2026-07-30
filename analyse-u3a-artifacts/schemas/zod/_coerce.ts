@@ -3,7 +3,7 @@
  *
  * Excel cells reach JS as one of: string, number, boolean, Date, null, undefined.
  * These helpers normalise to the types we want to store. They follow the same
- * conventions as Beacon2's `restoreBeacon` import (see `backup.js`):
+ * conventions as beacon2026's `restoreBeacon` import (see `backup.js`):
  *
  *   - Empty strings become null.
  *   - Booleans accept 1, '1', true, 'true' (case-insensitive).

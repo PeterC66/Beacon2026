@@ -1,4 +1,4 @@
-// beacon2/frontend/src/pages/settings/FeatureConfig.jsx
+// beacon2026/frontend/src/pages/settings/FeatureConfig.jsx
 // Feature configuration page — toggle modules and sub-features on/off per u3a.
 
 import { useEffect, useState, useCallback } from 'react';
@@ -102,7 +102,7 @@ const SECTIONS = [
         label: 'SiteWorks Integration',
         defaultValue: false,
         dependsOn: 'groups',
-        tip: 'When enabled, scheduling is managed in SiteWorks instead of Beacon2',
+        tip: 'When enabled, scheduling is managed in SiteWorks instead of beacon2026',
       },
     ],
   },

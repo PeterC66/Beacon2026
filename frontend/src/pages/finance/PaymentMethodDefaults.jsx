@@ -1,4 +1,4 @@
-// beacon2/frontend/src/pages/finance/PaymentMethodDefaults.jsx
+// beacon2026/frontend/src/pages/finance/PaymentMethodDefaults.jsx
 // Membership Payment Method Defaults — doc 8.6c.
 // Sets default payment method and default account for each payment type.
 

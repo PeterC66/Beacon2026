@@ -1,4 +1,4 @@
-// beacon2/backend/src/routes/letters.js
+// beacon2026/backend/src/routes/letters.js
 // Letters: compose, standard letter template CRUD, and PDF download.
 // Docs 6.2, 6.2.1, 6.2.2
 

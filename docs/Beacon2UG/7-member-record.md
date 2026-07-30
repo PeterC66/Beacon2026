@@ -1,6 +1,6 @@
 # 7. The Member Record
 
-The Member Record holds everything Beacon2 knows about an individual member --
+The Member Record holds everything beacon2026 knows about an individual member --
 personal details, contact information, address, membership status, notes, and more.
 You can also see which groups the member belongs to, view their financial
 transactions, and manage their poll memberships.
@@ -11,7 +11,7 @@ transactions, and manage their poll memberships.
 
 ## Opening a Member Record
 
-Click on a member's **name** (shown as a blue link) anywhere in Beacon2 -- most
+Click on a member's **name** (shown as a blue link) anywhere in beacon2026 -- most
 commonly from the [Members List](6-members-list.md). The full Member Record opens
 for viewing and editing.
 
@@ -94,7 +94,7 @@ automatically.
 You can link a partner when adding a new member (see [Section 8](8-add-new-member.md))
 or from the Member Record itself.
 
-> **Note:** "Partner" in Beacon2 simply means two members who share an address.
+> **Note:** "Partner" in beacon2026 simply means two members who share an address.
 > It does not imply any particular membership class -- Individual members can be
 > partners just as Joint members can.
 

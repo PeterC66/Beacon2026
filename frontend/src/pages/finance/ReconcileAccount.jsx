@@ -1,4 +1,4 @@
-// beacon2/frontend/src/pages/finance/ReconcileAccount.jsx
+// beacon2026/frontend/src/pages/finance/ReconcileAccount.jsx
 // Bank account reconciliation (doc 7.5).
 
 import { useState, useEffect } from 'react';

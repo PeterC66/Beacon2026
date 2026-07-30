@@ -1,5 +1,5 @@
-// beacon2/e2e/playwright.config.js
-// Playwright configuration for Beacon2 user acceptance tests.
+// beacon2026/e2e/playwright.config.js
+// Playwright configuration for beacon2026 user acceptance tests.
 // Run with: npm test (from the e2e/ directory)
 
 import { defineConfig, devices } from '@playwright/test';
@@ -38,7 +38,7 @@ export default defineConfig({
 
   use: {
     // Frontend base URL — set in .env or environment
-    baseURL: process.env.BEACON2_BASE_URL || 'http://localhost:5173',
+    baseURL: process.env.beacon2026_BASE_URL || 'http://localhost:5173',
 
     // Pre-set cookie consent so the modal doesn't block tests.
     // The file is written by global-setup.js.

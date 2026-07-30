@@ -1,4 +1,4 @@
-// beacon2/frontend/src/hooks/useUnsavedChanges.js
+// beacon2026/frontend/src/hooks/useUnsavedChanges.js
 
 import { useContext, useEffect, useRef, useState } from 'react';
 import { useBlocker, UNSAFE_DataRouterContext as DataRouterContext } from 'react-router-dom';

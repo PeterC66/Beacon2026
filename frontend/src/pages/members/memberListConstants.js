@@ -1,4 +1,4 @@
-// beacon2/frontend/src/pages/members/memberListConstants.js
+// beacon2026/frontend/src/pages/members/memberListConstants.js
 //
 // Static constants shared by MemberList and its extracted sections.
 

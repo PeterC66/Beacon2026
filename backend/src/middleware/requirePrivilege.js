@@ -1,4 +1,4 @@
-// beacon2/backend/src/middleware/requirePrivilege.js
+// beacon2026/backend/src/middleware/requirePrivilege.js
 // Checks that the authenticated user holds a specific privilege.
 // Must be used AFTER requireAuth middleware.
 //

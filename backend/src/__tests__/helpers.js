@@ -1,4 +1,4 @@
-// beacon2/backend/src/__tests__/helpers.js
+// beacon2026/backend/src/__tests__/helpers.js
 // Shared test utilities.
 
 import { signAccessToken } from '../utils/jwt.js';

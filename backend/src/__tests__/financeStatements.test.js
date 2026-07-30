@@ -1,4 +1,4 @@
-// beacon2/backend/src/__tests__/financeStatements.test.js
+// beacon2026/backend/src/__tests__/financeStatements.test.js
 // Coverage for the statements sub-router (routes/finance/statements.js),
 // added in Chunk 7 of docs/ImprovementPlan.md.
 

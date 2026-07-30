@@ -1,4 +1,4 @@
-// beacon2/frontend/src/pages/roles/RoleEditor.jsx
+// beacon2026/frontend/src/pages/roles/RoleEditor.jsx
 // Edit a role's name, committee flag, and privilege matrix.
 
 import { useState, useEffect, useCallback, useRef } from 'react';

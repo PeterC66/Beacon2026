@@ -1,4 +1,4 @@
-// beacon2/frontend/src/pages/members/MemberList.jsx
+// beacon2026/frontend/src/pages/members/MemberList.jsx
 
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';

@@ -1,4 +1,4 @@
-// beacon2/frontend/src/pages/settings/PersonalPreferences.jsx
+// beacon2026/frontend/src/pages/settings/PersonalPreferences.jsx
 // Personal preferences — doc 9.1
 
 import { useState, useEffect } from 'react';

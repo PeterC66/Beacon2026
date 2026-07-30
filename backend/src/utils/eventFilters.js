@@ -1,4 +1,4 @@
-// beacon2/backend/src/utils/eventFilters.js
+// beacon2026/backend/src/utils/eventFilters.js
 // Shared WHERE-clause builders for calendar / group-event queries.
 //
 // The same filter-building block was previously duplicated verbatim across the

@@ -28,7 +28,7 @@ year from your u3a's financial year start date to its end date.
 ## Pending transactions warning [C]
 
 If there are any **pending transactions** in the selected accounts for the
-chosen year, Beacon2 displays a warning banner. Pending transactions are
+chosen year, beacon2026 displays a warning banner. Pending transactions are
 **excluded** from the statement figures.
 
 This is by design — pending transactions have not yet been confirmed, so they
@@ -56,7 +56,7 @@ row sums everything up.
 
 ### Net Surplus / Deficit
 
-At the bottom of the Receipts & Payments section, Beacon2 calculates the **Net
+At the bottom of the Receipts & Payments section, beacon2026 calculates the **Net
 Surplus** (if income exceeded expenditure) or **Net Deficit** (if expenditure
 exceeded income) for the year.
 

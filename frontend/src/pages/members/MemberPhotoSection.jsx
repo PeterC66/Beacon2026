@@ -1,4 +1,4 @@
-// beacon2/frontend/src/pages/members/MemberPhotoSection.jsx
+// beacon2026/frontend/src/pages/members/MemberPhotoSection.jsx
 //
 // Member photo upload / preview block. Extracted from MemberEditor; the upload
 // state and handlers still live in the parent and are passed in as props.

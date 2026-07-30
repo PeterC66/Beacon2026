@@ -1,4 +1,4 @@
-// beacon2/frontend/src/pages/finance/FinanceCategories.jsx
+// beacon2026/frontend/src/pages/finance/FinanceCategories.jsx
 // Finance categories management — 8.6 Finance Set-up, section 2.
 
 import { useState } from 'react';

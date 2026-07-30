@@ -1,4 +1,4 @@
-# Beacon2 — E2E Test Reference
+# beacon2026 — E2E Test Reference
 
 End-to-end tests live in `e2e/` and run via Playwright against a live
 staging deployment on Render.
@@ -39,7 +39,7 @@ sessionStorage, or any cookie the browser can read directly.
 
 **Consequence:** calling `page.goto()` from a page object causes a full page
 reload, which destroys the in-memory token. The app then tries to restore the
-session via the httpOnly `beacon2_refresh` cookie, but this is unreliable in CI
+session via the httpOnly `beacon2026_refresh` cookie, but this is unreliable in CI
 because:
 
 - The frontend and backend are on different origins (cross-origin cookie
@@ -95,7 +95,7 @@ all forms), `input[name="..."]` is the most reliable locator.
 
 ## Cookie-consent setup
 
-The `beacon2_cookie_consent` cookie must be pre-set to `'accepted'` in the
+The `beacon2026_cookie_consent` cookie must be pre-set to `'accepted'` in the
 Playwright storageState. Without it:
 
 - `setLastU3aCookie()` in Login.jsx is a no-op (cookie consent not given)

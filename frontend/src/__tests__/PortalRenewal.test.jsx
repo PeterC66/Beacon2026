@@ -1,4 +1,4 @@
-// beacon2/frontend/src/__tests__/PortalRenewal.test.jsx
+// beacon2026/frontend/src/__tests__/PortalRenewal.test.jsx
 
 import { describe, it, expect, vi } from 'vitest';
 import { render } from '@testing-library/react';

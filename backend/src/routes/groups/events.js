@@ -1,4 +1,4 @@
-// beacon2/backend/src/routes/groups/events.js
+// beacon2026/backend/src/routes/groups/events.js
 // Group events (schedule) sub-resource: /groups/:id/events. Guarded by the
 // `group_records_all` privilege.
 

@@ -1,4 +1,4 @@
-// beacon2/e2e/tests/16-email.spec.js
+// beacon2026/e2e/tests/16-email.spec.js
 // Email module tests: Compose (no send), Delivery, Unblocker.
 // Beacon UG §§6.1–6.1.5
 //

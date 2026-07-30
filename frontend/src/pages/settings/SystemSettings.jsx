@@ -1,4 +1,4 @@
-// beacon2/frontend/src/pages/settings/SystemSettings.jsx
+// beacon2026/frontend/src/pages/settings/SystemSettings.jsx
 
 import { useEffect, useState } from 'react';
 import { useAuth } from '../../context/AuthContext.jsx';

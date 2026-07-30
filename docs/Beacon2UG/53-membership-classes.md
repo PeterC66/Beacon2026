@@ -34,7 +34,7 @@ Click a class name to open the edit form. You can change:
 
 | Field | Purpose |
 |-------|---------|
-| **Name** | The name shown throughout Beacon2 and on the online joining form |
+| **Name** | The name shown throughout beacon2026 and on the online joining form |
 | **Explanation** | A short description shown to prospective members on the online joining page to help them choose the right class |
 | **Current** | Tick if this class represents active membership |
 | **Joint** | Tick if this is a joint (partner) membership class |

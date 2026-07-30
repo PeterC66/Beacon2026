@@ -14,7 +14,7 @@ To open it, click **Transfer money** on the **Home** page.
 
 A transfer creates **two linked transactions** — one taking money out of the
 source account and one putting money into the destination account. Both
-transactions share a **transfer ID** so Beacon2 knows they belong together.
+transactions share a **transfer ID** so beacon2026 knows they belong together.
 
 Because transfers are paired, you should never need to manually create separate
 "payment" and "receipt" transactions to move money between accounts.
@@ -38,7 +38,7 @@ Fill in the following fields to create a transfer:
 > **Note:** The **From account** and **To account** must be different — you
 > cannot transfer money to the same account.
 
-Click **Save** to create the transfer. Beacon2 will create both linked
+Click **Save** to create the transfer. beacon2026 will create both linked
 transactions automatically.
 
 ---

@@ -1,4 +1,4 @@
-// beacon2/frontend/src/pages/finance/TransactionAssociations.jsx
+// beacon2026/frontend/src/pages/finance/TransactionAssociations.jsx
 //
 // "Associate transaction with" section of TransactionEditor — member 1/2,
 // group/team, and event pickers. Presentation only: all state and handlers

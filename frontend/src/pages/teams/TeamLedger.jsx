@@ -1,4 +1,4 @@
-// beacon2/frontend/src/pages/teams/TeamLedger.jsx
+// beacon2026/frontend/src/pages/teams/TeamLedger.jsx
 // Ledger (cash) tab of the Team record. Extracted from TeamRecord.jsx — no behaviour change.
 
 import { useState, useEffect } from 'react';

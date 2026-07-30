@@ -1,4 +1,4 @@
-// beacon2/backend/src/routes/finance/statements.js
+// beacon2026/backend/src/routes/finance/statements.js
 // Financial statement and groups statement (JSON + Excel download).
 
 import { Router } from 'express';

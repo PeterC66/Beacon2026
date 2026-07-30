@@ -1,4 +1,4 @@
-// beacon2/backend/src/__tests__/email.test.js
+// beacon2026/backend/src/__tests__/email.test.js
 // Focused regression coverage for the S1 tenant-context bug. A fuller email
 // route suite is scheduled for Chunk 7 of docs/ImprovementPlan.md.
 

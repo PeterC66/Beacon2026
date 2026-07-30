@@ -1,4 +1,4 @@
-// beacon2/backend/src/routes/groups/crud.js
+// beacon2026/backend/src/routes/groups/crud.js
 // Group record CRUD (single group view, create, update, delete). Guarded by the
 // `group_records_all` privilege resource.
 

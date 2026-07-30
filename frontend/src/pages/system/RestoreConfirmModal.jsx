@@ -1,4 +1,4 @@
-// beacon2/frontend/src/pages/system/RestoreConfirmModal.jsx
+// beacon2026/frontend/src/pages/system/RestoreConfirmModal.jsx
 //
 // Confirmation modal for the destructive restore action in SystemDashboard.
 // Presentation only: state and handlers are owned by the parent.

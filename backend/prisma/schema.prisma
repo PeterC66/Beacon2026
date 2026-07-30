@@ -1,4 +1,4 @@
-// Beacon2 Prisma Schema
+// beacon2026 Prisma Schema
 // Run `prisma migrate dev` to apply changes
 // Note: per-tenant tables are created dynamically via raw SQL (see seed/createTenant.js)
 // This schema covers the PUBLIC (system-level) tables only.

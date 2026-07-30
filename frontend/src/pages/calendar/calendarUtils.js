@@ -1,4 +1,4 @@
-// beacon2/frontend/src/pages/calendar/calendarUtils.js
+// beacon2026/frontend/src/pages/calendar/calendarUtils.js
 // Pure helpers shared by Calendar and its extracted table components.
 
 export function defaultFrom() {

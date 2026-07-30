@@ -1,4 +1,4 @@
-// beacon2/backend/src/routes/finance/index.js
+// beacon2026/backend/src/routes/finance/index.js
 // Parent router that mounts all finance sub-route files.
 
 import { Router } from 'express';

@@ -1,4 +1,4 @@
-// beacon2/frontend/src/pages/reports/ReportRun.jsx
+// beacon2026/frontend/src/pages/reports/ReportRun.jsx
 // Run a saved SQL report — parameter inputs, Run button, results table, Excel download.
 
 import { useState, useEffect } from 'react';

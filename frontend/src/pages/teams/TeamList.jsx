@@ -1,4 +1,4 @@
-// beacon2/frontend/src/pages/teams/TeamList.jsx
+// beacon2026/frontend/src/pages/teams/TeamList.jsx
 
 import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';

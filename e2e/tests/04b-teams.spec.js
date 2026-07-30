@@ -1,4 +1,4 @@
-// beacon2/e2e/tests/04b-teams.spec.js
+// beacon2026/e2e/tests/04b-teams.spec.js
 // Team management tests — split from 04-groups.spec.js to match
 // the pages/teams/ directory created by R8.
 //

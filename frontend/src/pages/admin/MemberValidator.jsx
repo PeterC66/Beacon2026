@@ -1,4 +1,4 @@
-// beacon2/frontend/src/pages/admin/MemberValidator.jsx
+// beacon2026/frontend/src/pages/admin/MemberValidator.jsx
 // Data quality validation for all member records.
 // Re-fetches on every visit so results always reflect current data.
 

@@ -1,4 +1,4 @@
-// beacon2/backend/src/routes/teams/list.js
+// beacon2026/backend/src/routes/teams/list.js
 // Team listing and list-level downloads (Excel/PDF). Guarded by the
 // `groups_list` privilege resource (teams share group privileges).
 

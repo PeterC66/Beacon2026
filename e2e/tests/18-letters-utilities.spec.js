@@ -1,4 +1,4 @@
-// beacon2/e2e/tests/18-letters-utilities.spec.js
+// beacon2026/e2e/tests/18-letters-utilities.spec.js
 // Letters module and Utilities page tests.
 // Beacon UG §6.2 — "Letters"
 //

@@ -83,7 +83,7 @@ after the change.
 
 ## Changing your email address
 
-If a member changes their **Email** field and saves, Beacon2 treats this as a
+If a member changes their **Email** field and saves, beacon2026 treats this as a
 significant change because the email address is used for portal login.
 
 When the email is changed:

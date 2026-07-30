@@ -1,4 +1,4 @@
-// beacon2/e2e/pages/MemberListPage.js
+// beacon2026/e2e/pages/MemberListPage.js
 // Page Object Model for the member list (/members).
 // Beacon UG §4.1 — "The Membership List"
 

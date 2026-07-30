@@ -1,6 +1,6 @@
-// beacon2/backend/src/routes/backup/restore.js
+// beacon2026/backend/src/routes/backup/restore.js
 // Restore helpers — consumed by system.js (system-admin only) to rebuild a
-// tenant from a Beacon2 or legacy Beacon Excel workbook.
+// tenant from a beacon2026 or legacy Beacon Excel workbook.
 
 import { hashPassword } from '../../utils/password.js';
 import { v4 as uuid } from 'uuid';
@@ -121,9 +121,9 @@ export async function resetSequences(tx) {
   `);
 }
 
-// ── Restore: Beacon2 format ────────────────────────────────────────────────────
+// ── Restore: beacon2026 format ────────────────────────────────────────────────────
 
-export async function restoreBeacon2(tx, wb) {
+export async function restorebeacon2026(tx, wb) {
   const get = (name) => sheetRows(wb.getWorksheet(name));
 
   // 1. Member statuses
@@ -761,9 +761,9 @@ const BEACON_PAYMENT = {
   6: 'Other',
 };
 
-export const BEACON_DEFAULT_PASSWORD = 'Beacon2!';
+export const BEACON_DEFAULT_PASSWORD = 'beacon2026!';
 
-// ── Beacon privkey → Beacon2 (resource_code, action) mapping ─────────────────
+// ── Beacon privkey → beacon2026 (resource_code, action) mapping ─────────────────
 // Beacon stores privileges as  privkey = base + digit
 // where digit: 1=view 2=create 3=change 4=delete 5=extra(download/send/etc.)
 // Source: docs/FromBeacon/privileges.php
@@ -826,10 +826,10 @@ const BEACON_PRIV_BASE = {
   1650: { code: 'letters_standard_messages' },
   1660: { code: 'email_delivery', extra: 'all' },
   1670: { code: 'group_statement', extra: 'download' },
-  // 1680 ($pMEMNEWNOTIFY) has no Beacon2 equivalent
+  // 1680 ($pMEMNEWNOTIFY) has no beacon2026 equivalent
 };
 
-function beaconPrivkeyToBeacon2(privkey) {
+function beaconPrivkeyTobeacon2026(privkey) {
   const digit = privkey % 10; // 1–5
   const base = privkey - digit; // e.g. 1411 → base 1410
   const entry = BEACON_PRIV_BASE[base];
@@ -1431,14 +1431,14 @@ export async function restoreBeacon(tx, wb) {
   }
 
   // 19.5. Role privileges (from Beacon Privileges sheet — rkey + privkey)
-  // Each privkey is decoded to a Beacon2 (resource_code, action) pair via BEACON_PRIV_BASE.
+  // Each privkey is decoded to a beacon2026 (resource_code, action) pair via BEACON_PRIV_BASE.
   // The resource_id is resolved inline from privilege_resources; unknown privkeys are skipped.
   for (const r of get('Privileges')) {
     const rkey = String(r.rkey || '').trim();
     const privkey = parseInt(r.privkey) || 0;
     const roleId = roleMap[rkey];
     if (!roleId || !privkey) continue;
-    const mapped = beaconPrivkeyToBeacon2(privkey);
+    const mapped = beaconPrivkeyTobeacon2026(privkey);
     if (!mapped) continue;
     await tx.$executeRawUnsafe(
       `INSERT INTO role_privileges (id, role_id, resource_id, action)

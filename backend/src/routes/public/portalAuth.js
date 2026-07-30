@@ -1,4 +1,4 @@
-// beacon2/backend/src/routes/public/portalAuth.js
+// beacon2026/backend/src/routes/public/portalAuth.js
 // Members Portal authentication endpoints (register, verify-email, login,
 // forgot-password, reset-password). These are the unauthenticated entry points
 // that issue or reset portal credentials; the authenticated portal app lives

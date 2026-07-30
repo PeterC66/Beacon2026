@@ -1,4 +1,4 @@
-// beacon2/frontend/src/pages/public/PortalPersonalDetails.jsx
+// beacon2026/frontend/src/pages/public/PortalPersonalDetails.jsx
 // Members Portal — view and update personal details (doc 10.2.4).
 
 import { useState, useEffect } from 'react';

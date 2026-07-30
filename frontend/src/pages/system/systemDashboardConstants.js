@@ -1,4 +1,4 @@
-// beacon2/frontend/src/pages/system/systemDashboardConstants.js
+// beacon2026/frontend/src/pages/system/systemDashboardConstants.js
 //
 // Constants and a small helper shared by SystemDashboard and its extracted
 // sections.

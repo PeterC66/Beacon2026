@@ -1,4 +1,4 @@
-// beacon2/backend/src/routes/groups/ledger.js
+// beacon2026/backend/src/routes/groups/ledger.js
 // Group Ledger (doc 5.5) sub-resource: /groups/:id/ledger.
 // Access: group_ledger_all:* (any group) OR group_ledger_as_leader:* (own groups
 // only). requireAuth and the `groups` feature gate are applied by the parent

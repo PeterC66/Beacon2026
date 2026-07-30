@@ -1,4 +1,4 @@
-// beacon2/backend/src/routes/backup/helpers.js
+// beacon2026/backend/src/routes/backup/helpers.js
 // Shared cell helpers used by both the export and restore sub-modules.
 
 /** Coerce a value to a non-empty string, or null. */

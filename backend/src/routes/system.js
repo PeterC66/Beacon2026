@@ -1,4 +1,4 @@
-// beacon2/backend/src/routes/system.js
+// beacon2026/backend/src/routes/system.js
 // System-level routes for managing u3a tenants.
 // Protected by requireSysAdmin middleware.
 // In production, also restrict to internal IP addresses via a reverse proxy.
@@ -15,7 +15,7 @@ import { createTenantSchema } from '../seed/createTenant.js';
 import {
   clearTenantData,
   resetSequences,
-  restoreBeacon2,
+  restorebeacon2026,
   restoreBeacon,
   BEACON_DEFAULT_PASSWORD,
 } from './backup/restore.js';
@@ -222,7 +222,7 @@ router.patch('/settings', async (req, res, next) => {
 });
 
 // ─── POST /system/restore/:tenantSlug ────────────────────────────────────────
-// Restore a full tenant backup (Beacon2 or Beacon legacy format).
+// Restore a full tenant backup (beacon2026 or Beacon legacy format).
 // System-admin only (requireSysAdmin already applied above).
 
 const upload = multer({
@@ -249,21 +249,21 @@ router.post('/restore/:tenantSlug', upload.single('backup'), async (req, res, ne
     const wb = new ExcelJS.Workbook();
     await wb.xlsx.load(req.file.buffer);
 
-    // Detect format: Members sheet first column header 'mkey' → Beacon; 'id' → Beacon2
+    // Detect format: Members sheet first column header 'mkey' → Beacon; 'id' → beacon2026
     const membersWs = wb.getWorksheet('Members');
     if (!membersWs) return next(AppError('Invalid backup file: no Members sheet found.', 400));
     const firstHeader = String(membersWs.getRow(1).getCell(1).value ?? '')
       .trim()
       .toLowerCase();
-    const format = firstHeader === 'mkey' ? 'beacon' : 'beacon2';
+    const format = firstHeader === 'mkey' ? 'beacon' : 'beacon2026';
 
     const schema = `u3a_${tenantSlug}`;
     await prisma.$transaction(
       async (tx) => {
         await tx.$executeRawUnsafe(`SET search_path TO ${schema}, public`);
         await clearTenantData(tx);
-        if (format === 'beacon2') {
-          await restoreBeacon2(tx, wb);
+        if (format === 'beacon2026') {
+          await restorebeacon2026(tx, wb);
         } else {
           await restoreBeacon(tx, wb);
           await resetSequences(tx);
@@ -275,7 +275,7 @@ router.post('/restore/:tenantSlug', upload.single('backup'), async (req, res, ne
     // Ensure default-named roles (Administration, Treasurer, etc.) have their
     // canonical privileges.  For Beacon restores this is essential because the
     // Beacon export has no privileges sheet — roles are created but empty.
-    // For Beacon2 restores it fills any gaps from backups predating new resources.
+    // For beacon2026 restores it fills any gaps from backups predating new resources.
     await syncDefaultRolePrivileges(tenantSlug);
 
     // The old user set has been deleted, so any leftover session-invalidation
@@ -286,7 +286,7 @@ router.post('/restore/:tenantSlug', upload.single('backup'), async (req, res, ne
     const msg =
       format === 'beacon'
         ? `Restore complete (migrated from Beacon).\nImported users have been given the temporary password: ${BEACON_DEFAULT_PASSWORD}\nPlease ask each user to change their password after first login.`
-        : 'Restore complete (Beacon2 format).\nImported users have no password set — use "Set temporary password for all users" on the tenant before they can log in.';
+        : 'Restore complete (beacon2026 format).\nImported users have no password set — use "Set temporary password for all users" on the tenant before they can log in.';
     res.json({ ok: true, format, message: msg });
   } catch (err) {
     next(err);

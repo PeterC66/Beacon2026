@@ -1,4 +1,4 @@
-// beacon2/frontend/src/pages/system/FeatureConfigModal.jsx
+// beacon2026/frontend/src/pages/system/FeatureConfigModal.jsx
 //
 // Per-tenant feature-toggle modal of SystemDashboard. Presentation only: the
 // config map, dirty/saving state and handlers are owned by the parent.

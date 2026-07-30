@@ -1,4 +1,4 @@
-// beacon2/frontend/src/components/NavBar.jsx
+// beacon2026/frontend/src/components/NavBar.jsx
 // Navigation bar: centred links separated by " – ".
 // Each link: { label, to, disabled?, onClick? }
 // When disabled is true, the label is shown as greyed-out non-clickable text.

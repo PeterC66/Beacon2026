@@ -1,4 +1,4 @@
-// beacon2/backend/src/__tests__/redis.test.js
+// beacon2026/backend/src/__tests__/redis.test.js
 // Unit tests for the Postgres fallback in utils/redis.js — the path taken when
 // Redis is disabled (no REDIS_URL in the test env, so USE_REDIS resolves false
 // and the module-level client stays null). Verifies the session-invalidation

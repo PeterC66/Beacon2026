@@ -1,4 +1,4 @@
-// beacon2/frontend/src/pages/finance/GroupsStatement.jsx
+// beacon2026/frontend/src/pages/finance/GroupsStatement.jsx
 // Groups statement — summary of group ledgers (doc 7.7).
 
 import { useState } from 'react';

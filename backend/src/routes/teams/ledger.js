@@ -1,4 +1,4 @@
-// beacon2/backend/src/routes/teams/ledger.js
+// beacon2026/backend/src/routes/teams/ledger.js
 // Team ledger sub-resource: /teams/:id/ledger. Uses the same
 // group_ledger_entries table and privilege checks as group ledgers, gated by
 // the `groupLedger` feature.

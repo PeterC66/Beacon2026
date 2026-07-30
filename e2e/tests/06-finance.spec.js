@@ -1,4 +1,4 @@
-// beacon2/e2e/tests/06-finance.spec.js
+// beacon2026/e2e/tests/06-finance.spec.js
 // Finance module tests.
 // Beacon UG §7   — "Finance"
 // Beacon UG §7.1 — "The Finance Ledger"

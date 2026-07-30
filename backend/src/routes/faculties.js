@@ -1,4 +1,4 @@
-// beacon2/backend/src/routes/faculties.js
+// beacon2026/backend/src/routes/faculties.js
 
 import { Router } from 'express';
 import { z } from 'zod';

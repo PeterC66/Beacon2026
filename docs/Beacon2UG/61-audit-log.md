@@ -1,7 +1,7 @@
 # 61. Audit Log
 
 The **Audit Log** provides a date-filtered view of all activity that has taken
-place in your Beacon2 system. It is useful for checking who made a change, when
+place in your beacon2026 system. It is useful for checking who made a change, when
 they made it, and what was affected.
 
 To open it, click **Audit log** in the **Misc** section of the Home page.
@@ -44,7 +44,7 @@ entry. This shows all the fields that were changed, along with their before
 and after values where applicable.
 
 Click the **view** link in the **Record** column [H] to navigate directly to
-the affected record in Beacon2.
+the affected record in beacon2026.
 
 ---
 

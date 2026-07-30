@@ -1,4 +1,4 @@
-// beacon2/backend/src/__tests__/offices.test.js
+// beacon2026/backend/src/__tests__/offices.test.js
 // Tests for /offices endpoints.
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';

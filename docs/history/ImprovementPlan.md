@@ -1,4 +1,4 @@
-# Beacon2 Improvement Plan
+# beacon2026 Improvement Plan
 
 Produced 2026-06-12 from a full review of the codebase and documentation covering
 security, completeness, consistency, maintainability, readability, standards, and
@@ -7,7 +7,7 @@ consolidated with the still-open items in `SECURITY-REVIEW.md`, `KNOWN-ISSUES.md
 and `CODEBASE-RECOMMENDATIONS.md`.
 
 **Goal:** experienced developers reviewing the code or documentation should find
-nothing to object to. Beacon2 is not heading to production, so production-only
+nothing to object to. beacon2026 is not heading to production, so production-only
 concerns (ops tooling, backup strategy, paid hosting tiers) are noted but ranked
 below code quality.
 
@@ -138,7 +138,7 @@ still open where marked open, and added one new finding:
 |---|----------|---------|
 | P1 | Med | E2E suite can only run against a deployed staging instance — no local mode (docker-compose with Postgres would fix this and also help new developers). |
 | P2 | Low | No Dockerfile; no documented backup/restore or rollback procedure; Render free-tier caveats (Redis off → 15-min invalidation lag) documented but worth a single "deployment limitations" section. |
-| P3 | Low | `render.yaml` ships a default `SEED_ADMIN_EMAIL=admin@beacon2.local` while the password is `sync: false`; e2e `.env.example` uses well-known credentials (`ChangeMe123!`). Make both placeholders obviously non-real. |
+| P3 | Low | `render.yaml` ships a default `SEED_ADMIN_EMAIL=admin@beacon2026.local` while the password is `sync: false`; e2e `.env.example` uses well-known credentials (`ChangeMe123!`). Make both placeholders obviously non-real. |
 
 ### 8. Other (repo hygiene, licensing, accessibility)
 
@@ -147,7 +147,7 @@ still open where marked open, and added one new finding:
 | O1 | **High** | No LICENSE file; no CONTRIBUTING.md. |
 | O2 | **High** | `docs/FromBeacon/` redistributes original Beacon PHP source carrying "Copyright John Franklin" headers with no note on permission/scope. Needs a README clarifying provenance and reference-only status — or removal if permission is unclear. |
 | O3 | High | README points at `cp .env.example .env` but no `.env.example` exists in backend/ or frontend/; required env vars aren't enumerated anywhere outside DEPLOYMENT.md/render.yaml. |
-| O4 | Med | Root-level doc sprawl: four CLAUDE-*.md files read as project docs to an outsider; `Beacon2 Project Definition.md` says "as of version 0.9.9" while package.json is 0.11.0; KNOWN-ISSUES items lack status tags; CODEBASE-RECOMMENDATIONS doesn't cross-reference KNOWN-ISSUES. |
+| O4 | Med | Root-level doc sprawl: four CLAUDE-*.md files read as project docs to an outsider; `beacon2026 Project Definition.md` says "as of version 0.9.9" while package.json is 0.11.0; KNOWN-ISSUES items lack status tags; CODEBASE-RECOMMENDATIONS doesn't cross-reference KNOWN-ISSUES. |
 | O5 | Med | Accessibility: sortable column headers are `<span onClick>` without keyboard support in MemberList.jsx:489 and similar list pages; remaining lower-traffic pages still missing `htmlFor`/`id` label association (tracked in KNOWN-ISSUES). |
 | O6 | Low | No API reference or architecture diagram; docs/BeaconUG/ lacks a "legacy reference only" README. |
 
@@ -485,7 +485,7 @@ bulk-toggle) was left as-is — outside the sortable-header scope.
   + backend + frontend; new `backend/Dockerfile` and `frontend/Dockerfile`
   (repo-root build context, since both import `shared/constants.js`) plus a root
   `.dockerignore`. The compose backend seeds the same system-admin the E2E suite
-  expects by default (`admin@beacon2.local` / `ChangeMe123!`), so
+  expects by default (`admin@beacon2026.local` / `ChangeMe123!`), so
   `cd e2e && npm test` runs against `http://localhost:5173` with no extra config.
   `e2e/.env.example`, `e2e/README.md`, `README.md`, and `DEPLOYMENT.md` document
   the local path. Compose schema validated (`docker compose config`); a full

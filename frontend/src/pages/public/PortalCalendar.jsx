@@ -1,4 +1,4 @@
-// beacon2/frontend/src/pages/public/PortalCalendar.jsx
+// beacon2026/frontend/src/pages/public/PortalCalendar.jsx
 // Members Portal — view calendar of meetings and events (doc 10.2.3).
 
 import { useState, useEffect } from 'react';

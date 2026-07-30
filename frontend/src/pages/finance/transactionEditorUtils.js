@@ -1,4 +1,4 @@
-// beacon2/frontend/src/pages/finance/transactionEditorUtils.js
+// beacon2026/frontend/src/pages/finance/transactionEditorUtils.js
 //
 // Pure helpers, constants, and shared Tailwind class strings used by
 // TransactionEditor and its extracted sections.

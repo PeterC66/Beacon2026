@@ -1,4 +1,4 @@
-// beacon2/frontend/src/pages/ChangePassword.jsx
+// beacon2026/frontend/src/pages/ChangePassword.jsx
 // Force-change-password screen (doc 4 — Logging in with a new password).
 // Shown when must_change_password is true after login.
 

@@ -1,4 +1,4 @@
-// beacon2/e2e/tests/04-groups.spec.js
+// beacon2026/e2e/tests/04-groups.spec.js
 // Group management tests. Team tests are in 04b-teams.spec.js.
 // Beacon UG §5   — "Groups"
 // Beacon UG §5.1 — "The Group List"

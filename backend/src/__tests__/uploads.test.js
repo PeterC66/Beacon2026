@@ -1,4 +1,4 @@
-// beacon2/backend/src/__tests__/uploads.test.js
+// beacon2026/backend/src/__tests__/uploads.test.js
 // Unit tests for the upload-hardening helpers (ImprovementPlan Chunk 5):
 // image magic-byte sniffing, attachment filename sanitisation, and the
 // multer MIME fileFilter.

@@ -1,4 +1,4 @@
-// beacon2/backend/src/utils/password.js
+// beacon2026/backend/src/utils/password.js
 // Password hashing and verification using bcrypt
 
 import bcrypt from 'bcrypt';

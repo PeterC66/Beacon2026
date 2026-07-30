@@ -1,4 +1,4 @@
-// beacon2/backend/src/routes/giftAid.js
+// beacon2026/backend/src/routes/giftAid.js
 // Gift Aid declaration: list eligible transactions, download Excel, mark as claimed.
 
 import { Router } from 'express';

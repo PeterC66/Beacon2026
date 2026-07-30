@@ -1,4 +1,4 @@
-// beacon2/frontend/src/pages/email/EmailCompose.jsx
+// beacon2026/frontend/src/pages/email/EmailCompose.jsx
 // Compose and send an email to selected members.
 // Member IDs are passed via sessionStorage key 'emailComposeMemberIds'.
 

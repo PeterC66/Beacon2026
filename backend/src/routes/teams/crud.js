@@ -1,4 +1,4 @@
-// beacon2/backend/src/routes/teams/crud.js
+// beacon2026/backend/src/routes/teams/crud.js
 // Team record CRUD (single team view, create, update, delete). Guarded by the
 // `group_records_all` privilege resource (teams share group privileges).
 

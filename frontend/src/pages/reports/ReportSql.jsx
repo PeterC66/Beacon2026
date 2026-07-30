@@ -1,4 +1,4 @@
-// beacon2/frontend/src/pages/reports/ReportSql.jsx
+// beacon2026/frontend/src/pages/reports/ReportSql.jsx
 // Ad-hoc SQL editor (site admin only). Runs SELECT/WITH queries against the
 // tenant schema in a read-only transaction with a statement timeout.
 

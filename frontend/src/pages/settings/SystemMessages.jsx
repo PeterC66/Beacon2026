@@ -1,4 +1,4 @@
-// beacon2/frontend/src/pages/settings/SystemMessages.jsx
+// beacon2026/frontend/src/pages/settings/SystemMessages.jsx
 // Admin page for viewing and editing system message templates.
 
 import { useState, useEffect, useRef } from 'react';

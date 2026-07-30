@@ -1,4 +1,4 @@
-// beacon2/frontend/src/__tests__/a11y.test.js
+// beacon2026/frontend/src/__tests__/a11y.test.js
 import { describe, it, expect, vi } from 'vitest';
 import { clickableKeyProps } from '../lib/a11y.js';
 

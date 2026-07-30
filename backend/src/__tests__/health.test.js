@@ -1,4 +1,4 @@
-// beacon2/backend/src/__tests__/health.test.js
+// beacon2026/backend/src/__tests__/health.test.js
 // Sanity-check: the app wires up and the /health endpoint responds.
 
 import { describe, it, expect, vi } from 'vitest';

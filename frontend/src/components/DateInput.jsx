@@ -1,4 +1,4 @@
-// beacon2/frontend/src/components/DateInput.jsx
+// beacon2026/frontend/src/components/DateInput.jsx
 // Date field that accepts typed dd/mm/yyyy input and has a calendar-picker button.
 // value / onChange use ISO format (YYYY-MM-DD or empty string).
 

@@ -1,4 +1,4 @@
-// beacon2/frontend/src/pages/reports/ReportEditor.jsx
+// beacon2026/frontend/src/pages/reports/ReportEditor.jsx
 // Create / edit a saved SQL report (site admin only).
 // Users write parameterised SELECT/WITH queries using `:paramName` placeholders,
 // then declare each placeholder here as name/label/type.

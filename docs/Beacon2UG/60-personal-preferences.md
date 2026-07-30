@@ -1,6 +1,6 @@
 # 60. Personal Preferences
 
-The **Personal Preferences** page lets you customise how Beacon2 looks and
+The **Personal Preferences** page lets you customise how beacon2026 looks and
 behaves for you, change your password, and update your security question. Every
 user can access this page -- no special privilege is required.
 
@@ -13,13 +13,13 @@ Home page.
 
 ## Display Preferences
 
-The first section controls how Beacon2 appears on your screen.
+The first section controls how beacon2026 appears on your screen.
 
 1. **Text size** [A] -- choose from **Small**, **Normal**, **Large**, or
    **Extra Large**. The change takes effect immediately, so you can try each
    option and pick the one that is most comfortable for you.
 
-2. **Colour theme** [B] -- choose between **Default** (the standard Beacon2
+2. **Colour theme** [B] -- choose between **Default** (the standard beacon2026
    colours) and **High Contrast** (bolder colours and stronger outlines, which
    may be easier to read on some screens).
 
@@ -31,7 +31,7 @@ The first section controls how Beacon2 appears on your screen.
 ## Drop-down Name Lists & Timeout
 
 This section controls how member names are shown in drop-down lists throughout
-Beacon2, and how long your session lasts before you are automatically logged
+beacon2026, and how long your session lasts before you are automatically logged
 out.
 
 1. **Sort by** [C] -- choose whether name lists are sorted by **Surname** or
@@ -42,7 +42,7 @@ out.
    - **Forename Surname** (e.g. "Jane Smith")
 
 3. **Session timeout** [E] -- set the number of minutes of inactivity before
-   Beacon2 automatically logs you out. Enter any value between **5** and
+   beacon2026 automatically logs you out. Enter any value between **5** and
    **99** minutes. If you step away from your computer and the timeout period
    passes, you will need to log in again.
 
@@ -54,7 +54,7 @@ out.
 
 ## Change Password
 
-Use this section to update your Beacon2 password at any time.
+Use this section to update your beacon2026 password at any time.
 
 1. **Current password** [F] -- type your existing password to confirm it is
    really you making the change.

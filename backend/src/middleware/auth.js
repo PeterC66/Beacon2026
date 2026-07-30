@@ -1,4 +1,4 @@
-// beacon2/backend/src/middleware/auth.js
+// beacon2026/backend/src/middleware/auth.js
 // Validates the Bearer access token on every protected request.
 // Attaches req.user = { userId, tenantSlug, privileges, iat } on success.
 

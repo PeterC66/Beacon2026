@@ -1,4 +1,4 @@
-// beacon2/frontend/src/components/Schedule.jsx
+// beacon2026/frontend/src/components/Schedule.jsx
 // Shared schedule (events) component used by both GroupRecord and TeamRecord.
 // Props:
 //   entityId  — the group or team ID

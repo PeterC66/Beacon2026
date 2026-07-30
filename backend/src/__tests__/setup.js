@@ -1,4 +1,4 @@
-// beacon2/backend/src/__tests__/setup.js
+// beacon2026/backend/src/__tests__/setup.js
 // Global test setup: runs before every test file.
 
 import { vi, beforeEach } from 'vitest';

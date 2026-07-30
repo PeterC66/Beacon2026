@@ -1,4 +1,4 @@
-// beacon2/frontend/src/lib/scrollToError.js
+// beacon2026/frontend/src/lib/scrollToError.js
 // Scroll to the first validation error after a failed save.
 
 /**

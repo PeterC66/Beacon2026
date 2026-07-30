@@ -1,4 +1,4 @@
-// beacon2/backend/src/routes/finance/batches.js
+// beacon2026/backend/src/routes/finance/batches.js
 // Credit batch CRUD and transaction management.
 
 import { Router } from 'express';

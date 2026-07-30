@@ -1,7 +1,7 @@
 # 6. The Members List
 
 The Members List is your main membership directory -- the place you will visit most
-often in Beacon2. It shows every member in a sortable, filterable table, and gives
+often in beacon2026. It shows every member in a sortable, filterable table, and gives
 you tools to search, select, and take action on groups of members at once.
 
 ![The Members List page](images/members-list.png)
@@ -112,7 +112,7 @@ selected** dropdown below the table, then click the **Do with selected** button.
 
 ### Customising download columns
 
-When you choose one of the download options, Beacon2 lets you select which columns
+When you choose one of the download options, beacon2026 lets you select which columns
 to include in the output. Tick or untick columns to tailor the download to your
 needs -- for example, you might only need names and postcodes for a mailing list.
 

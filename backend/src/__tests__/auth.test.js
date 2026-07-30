@@ -1,4 +1,4 @@
-// beacon2/backend/src/__tests__/auth.test.js
+// beacon2026/backend/src/__tests__/auth.test.js
 // Tests for POST /auth/login, /auth/logout, /auth/refresh, /auth/system/login
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
@@ -112,7 +112,7 @@ describe('POST /auth/refresh', () => {
   });
 
   it('returns 400 when x-tenant-slug header is missing', async () => {
-    const res = await request(app).post('/auth/refresh').set('Cookie', 'beacon2_refresh=sometoken');
+    const res = await request(app).post('/auth/refresh').set('Cookie', 'beacon2026_refresh=sometoken');
 
     expect(res.status).toBe(400);
     expect(res.body.error).toBe('Tenant not specified.');
@@ -126,7 +126,7 @@ describe('POST /auth/refresh', () => {
 
     const res = await request(app)
       .post('/auth/refresh')
-      .set('Cookie', 'beacon2_refresh=valid-token')
+      .set('Cookie', 'beacon2026_refresh=valid-token')
       .set('x-tenant-slug', TEST_TENANT);
 
     expect(res.status).toBe(200);
@@ -136,7 +136,7 @@ describe('POST /auth/refresh', () => {
   it('returns 403 when Origin header does not match CORS_ORIGIN (CSRF)', async () => {
     const res = await request(app)
       .post('/auth/refresh')
-      .set('Cookie', 'beacon2_refresh=valid-token')
+      .set('Cookie', 'beacon2026_refresh=valid-token')
       .set('x-tenant-slug', TEST_TENANT)
       .set('Origin', 'https://evil.example.com');
 
@@ -153,7 +153,7 @@ describe('POST /auth/refresh', () => {
 
     const res = await request(app)
       .post('/auth/refresh')
-      .set('Cookie', 'beacon2_refresh=valid-token')
+      .set('Cookie', 'beacon2026_refresh=valid-token')
       .set('x-tenant-slug', TEST_TENANT)
       .set('Origin', 'http://localhost:5173');
 
@@ -170,12 +170,12 @@ describe('POST /auth/system/login', () => {
   it('returns 200 with accessToken on valid sysAdmin credentials', async () => {
     loginSysAdmin.mockResolvedValueOnce({
       accessToken: 'sys.acc.tok',
-      admin: { id: 'a1', name: 'Admin', email: 'admin@beacon2.local' },
+      admin: { id: 'a1', name: 'Admin', email: 'admin@beacon2026.local' },
     });
 
     const res = await request(app)
       .post('/auth/system/login')
-      .send({ email: 'admin@beacon2.local', password: 'supersecret' });
+      .send({ email: 'admin@beacon2026.local', password: 'supersecret' });
 
     expect(res.status).toBe(200);
     expect(res.body.accessToken).toBe('sys.acc.tok');
@@ -185,7 +185,7 @@ describe('POST /auth/system/login', () => {
   it('returns 422 on missing password', async () => {
     const res = await request(app)
       .post('/auth/system/login')
-      .send({ email: 'admin@beacon2.local' });
+      .send({ email: 'admin@beacon2026.local' });
 
     expect(res.status).toBe(422);
   });

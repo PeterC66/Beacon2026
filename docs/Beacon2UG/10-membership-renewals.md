@@ -79,7 +79,7 @@ You can sort the table by clicking any **column header**.
 ## Processing renewals [E]
 
 Once you have selected the members and confirmed the amounts, click
-**Renew selected**. Beacon2 will show a **confirmation dialog** summarising:
+**Renew selected**. beacon2026 will show a **confirmation dialog** summarising:
 
 - The number of members being renewed
 - The total amount being recorded
@@ -87,7 +87,7 @@ Once you have selected the members and confirmed the amounts, click
 
 Click **Confirm** to proceed, or **Cancel** to go back and make changes.
 
-When you confirm, Beacon2 will:
+When you confirm, beacon2026 will:
 
 1. Record a membership payment transaction in the financial ledger for each
    selected member.
@@ -107,7 +107,7 @@ renewal but has not yet paid — for example, a "Renewal reminder sent" poll.
 ## Gift Aid [G]
 
 The **Gift Aid** column shows whether each member has an active Gift Aid
-declaration. When you renew a member who has Gift Aid enabled, Beacon2
+declaration. When you renew a member who has Gift Aid enabled, beacon2026
 automatically flags their payment as eligible for a Gift Aid claim. You do not
 need to do anything extra — just make sure the member's Gift Aid status is
 correct on their [Member Record](7-member-record.md) before processing.

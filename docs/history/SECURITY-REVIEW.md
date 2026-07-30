@@ -1,11 +1,11 @@
-# Security Review — Beacon2 Codebase
+# Security Review — beacon2026 Codebase
 
 **Date:** 2026-04-15
 **Status:** Initial audit complete — fixes pending
 
 ## Context
 
-Full security audit of the Beacon2 multi-tenant SaaS application (Node.js/Express
+Full security audit of the beacon2026 multi-tenant SaaS application (Node.js/Express
 backend + React frontend). The codebase is pre-production, deployed on Render. This
 review identifies vulnerabilities, misconfigurations, and deviations from stated
 architecture requirements, triaged by severity.
@@ -21,7 +21,7 @@ fixes are implemented.
 
 #### C1 — Hardcoded default admin credentials in seed — `FIXED`
 - **File:** `backend/src/seed/index.js:9-11`
-- **Issue:** Default password `ChangeMe123!` and email `admin@beacon2.local` used when
+- **Issue:** Default password `ChangeMe123!` and email `admin@beacon2026.local` used when
   `SEED_ADMIN_PASSWORD` / `SEED_ADMIN_EMAIL` env vars are not set. The password is also
   logged to stdout (line 32).
 - **Risk:** If seed runs without env vars in production, the system admin account has a
@@ -29,7 +29,7 @@ fixes are implemented.
 - **Fix:** Make `SEED_ADMIN_PASSWORD` and `SEED_ADMIN_EMAIL` required — throw an error
   if not set. Remove the `?? 'ChangeMe123!'` fallback. Redact password from console
   output.
-- **Resolution:** Removed the `ChangeMe123!` and `admin@beacon2.local` fallbacks in
+- **Resolution:** Removed the `ChangeMe123!` and `admin@beacon2026.local` fallbacks in
   `backend/src/seed/index.js` and `backend/src/utils/migrate.js` (same defaults were
   duplicated there and run on every startup). Both now throw / exit with an error if
   `SEED_ADMIN_EMAIL` or `SEED_ADMIN_PASSWORD` is missing when no sysadmin exists.
@@ -208,7 +208,7 @@ fixes are implemented.
 
 #### M3 — Beacon migration default password — `OPEN`
 - **File:** `backend/src/routes/backup.js:1110`
-- **Issue:** `BEACON_DEFAULT_PASSWORD = 'Beacon2!'` is hardcoded and used for all
+- **Issue:** `BEACON_DEFAULT_PASSWORD = 'beacon2026!'` is hardcoded and used for all
   migrated users during a Beacon-format restore.
 - **Mitigation:** `must_change_password` is set to true, so users must change it on
   first login. The system admin can also use the set-temp-password endpoint.

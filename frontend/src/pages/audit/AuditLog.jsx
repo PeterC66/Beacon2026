@@ -1,4 +1,4 @@
-// beacon2/frontend/src/pages/audit/AuditLog.jsx
+// beacon2026/frontend/src/pages/audit/AuditLog.jsx
 // Audit log viewer — doc 9.2(a)
 
 import { useState, useEffect, useRef } from 'react';

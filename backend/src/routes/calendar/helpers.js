@@ -1,4 +1,4 @@
-// beacon2/backend/src/routes/calendar/helpers.js
+// beacon2026/backend/src/routes/calendar/helpers.js
 // Shared UK date/time formatters used by the calendar export (PDF/Excel) and
 // event-member download handlers.
 

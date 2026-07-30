@@ -1,4 +1,4 @@
-// beacon2/backend/src/routes/polls.js
+// beacon2026/backend/src/routes/polls.js
 // Poll set-up and poll-member management — doc 8.8
 
 import { Router } from 'express';

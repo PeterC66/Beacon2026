@@ -1,4 +1,4 @@
-// beacon2/frontend/src/pages/finance/FinanceLedgerTable.jsx
+// beacon2026/frontend/src/pages/finance/FinanceLedgerTable.jsx
 //
 // The ledger transactions table of FinanceLedger — sortable header, balance-
 // brought-forward rows, transaction rows with running balance, and the totals

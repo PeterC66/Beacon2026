@@ -1,4 +1,4 @@
-// beacon2/backend/src/__tests__/eventFilters.test.js
+// beacon2026/backend/src/__tests__/eventFilters.test.js
 // Unit tests for the shared calendar/event WHERE-clause builders
 // (ImprovementPlan Chunk 6, N1 + N3). These replaced five duplicated inline
 // filter blocks across calendar.js and portal.js.

@@ -55,7 +55,7 @@ Quick-selection buttons let you:
 
 ## Total Gift Aid amount [E]
 
-At the bottom of the table, Beacon2 displays the **total Gift Aid amount** for
+At the bottom of the table, beacon2026 displays the **total Gift Aid amount** for
 all currently selected transactions. This gives you a quick summary of the
 value of the claim you are about to make.
 

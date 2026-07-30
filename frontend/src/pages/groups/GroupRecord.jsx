@@ -1,4 +1,4 @@
-// beacon2/frontend/src/pages/groups/GroupRecord.jsx
+// beacon2026/frontend/src/pages/groups/GroupRecord.jsx
 // Group record page with Details, Members, and Schedule tabs.
 // Route /groups/new → create mode (Details only, no tabs)
 // Route /groups/:id → view/edit mode with Details + Members + Schedule tabs

@@ -1,4 +1,4 @@
-// beacon2/frontend/src/__tests__/CookieConsent.test.jsx
+// beacon2026/frontend/src/__tests__/CookieConsent.test.jsx
 
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { render, fireEvent } from '@testing-library/react';
@@ -44,20 +44,20 @@ describe('useCookieConsent', () => {
   it('clears optional cookies and localStorage on decline', () => {
     // Set up optional data
     document.cookie = 'beacon_last_u3a=test-slug; path=/';
-    localStorage.setItem('beacon2_prefs', JSON.stringify({ sortBy: 'forename' }));
-    localStorage.setItem('beacon2_label_settings', JSON.stringify({ cols: 2 }));
-    localStorage.setItem('beacon2_last_export_class', '5');
-    localStorage.setItem('beacon2_email_compose_prefs', JSON.stringify({ fromEmail: 'a@b.com' }));
+    localStorage.setItem('beacon2026_prefs', JSON.stringify({ sortBy: 'forename' }));
+    localStorage.setItem('beacon2026_label_settings', JSON.stringify({ cols: 2 }));
+    localStorage.setItem('beacon2026_last_export_class', '5');
+    localStorage.setItem('beacon2026_email_compose_prefs', JSON.stringify({ fromEmail: 'a@b.com' }));
 
     setConsent(false);
 
     // beacon_last_u3a should be deleted
     expect(document.cookie).not.toContain('beacon_last_u3a');
     // All optional localStorage should be removed
-    expect(localStorage.getItem('beacon2_prefs')).toBeNull();
-    expect(localStorage.getItem('beacon2_label_settings')).toBeNull();
-    expect(localStorage.getItem('beacon2_last_export_class')).toBeNull();
-    expect(localStorage.getItem('beacon2_email_compose_prefs')).toBeNull();
+    expect(localStorage.getItem('beacon2026_prefs')).toBeNull();
+    expect(localStorage.getItem('beacon2026_label_settings')).toBeNull();
+    expect(localStorage.getItem('beacon2026_last_export_class')).toBeNull();
+    expect(localStorage.getItem('beacon2026_email_compose_prefs')).toBeNull();
   });
 });
 

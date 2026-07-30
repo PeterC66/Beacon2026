@@ -1,4 +1,4 @@
-// beacon2/backend/src/__tests__/spreadsheet.test.js
+// beacon2026/backend/src/__tests__/spreadsheet.test.js
 // Regression tests for the spreadsheet formula-injection helper.
 
 import { describe, it, expect } from 'vitest';

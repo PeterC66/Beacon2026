@@ -1,4 +1,4 @@
-// beacon2/frontend/src/pages/email/EmailDeliveryDetail.jsx
+// beacon2026/frontend/src/pages/email/EmailDeliveryDetail.jsx
 // Detailed delivery status for a single email batch.
 
 import { useState, useEffect } from 'react';

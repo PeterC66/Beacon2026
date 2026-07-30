@@ -1,4 +1,4 @@
-// beacon2/e2e/pages/HomePage.js
+// beacon2026/e2e/pages/HomePage.js
 // Page Object Model for the home / administration menu page (/).
 // Beacon UG §3 — "The Beacon Home Page"
 

@@ -1,4 +1,4 @@
-// beacon2/backend/src/__tests__/portalAuth.test.js
+// beacon2026/backend/src/__tests__/portalAuth.test.js
 // Tests for portal login lockout (KNOWN-ISSUES #3) and portal
 // forgot-password email wiring (KNOWN-ISSUES #4).
 

@@ -1,7 +1,7 @@
 # 54. Member Statuses
 
 Member Statuses define the lifecycle states a member can be in — from active
-membership through to lapsed, resigned, or deceased. Beacon2 comes with a set of
+membership through to lapsed, resigned, or deceased. beacon2026 comes with a set of
 system statuses that cannot be changed, and you can add your own custom statuses
 if needed.
 
@@ -14,7 +14,7 @@ Home page.
 
 ## System statuses [A]
 
-The following statuses are built into Beacon2 and cannot be renamed or deleted:
+The following statuses are built into beacon2026 and cannot be renamed or deleted:
 
 | Status | Meaning |
 |--------|---------|

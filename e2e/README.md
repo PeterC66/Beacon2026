@@ -1,6 +1,6 @@
-# Beacon2 — End-to-End User Tests
+# beacon2026 — End-to-End User Tests
 
-Playwright-based user acceptance tests for the Beacon2 administration system.
+Playwright-based user acceptance tests for the beacon2026 administration system.
 
 Tests are organised to mirror the **Beacon User Guide** sections, so that each
 test can be traced back to documented user behaviour.
@@ -10,13 +10,13 @@ test can be traced back to documented user behaviour.
 ## Prerequisites
 
 - Node.js 18+
-- A running Beacon2 instance (frontend + backend + database). Either:
+- A running beacon2026 instance (frontend + backend + database). Either:
   - a deployed **staging** instance, **or**
   - the **local docker stack** — run `docker compose up --build` from the repo
     root, then use the localhost values documented at the top of `.env.example`
     (this needs no separate staging environment)
 - A system-admin account on that instance (to create the test tenant). The local
-  docker stack seeds one automatically (`admin@beacon2.local` / `ChangeMe123!`).
+  docker stack seeds one automatically (`admin@beacon2026.local` / `ChangeMe123!`).
 
 ---
 
@@ -50,16 +50,16 @@ npm run test:report
 
 | Variable | Description | Default |
 |----------|-------------|---------|
-| `BEACON2_BASE_URL` | Frontend URL | `http://localhost:5173` |
-| `BEACON2_API_URL` | Backend API URL (for setup calls) | `http://localhost:3001` |
-| `BEACON2_SYSADMIN_USERNAME` | System-admin username | `sysadmin` |
-| `BEACON2_SYSADMIN_PASSWORD` | System-admin password | `changeme` |
-| `BEACON2_TEST_TENANT_SLUG` | Slug for the dedicated test tenant | `e2etest` |
-| `BEACON2_TEST_TENANT_NAME` | Display name for the test tenant | `E2E Test u3a` |
-| `BEACON2_TEST_ADMIN_USERNAME` | Admin username inside the test tenant | `testadmin` |
-| `BEACON2_TEST_ADMIN_PASSWORD` | Admin password | `TestAdmin99!` |
-| `BEACON2_TEST_ADMIN_NAME` | Admin full name | `Test Administrator` |
-| `BEACON2_TEST_ADMIN_EMAIL` | Admin email (placeholder OK) | `testadmin@beacon2-e2e.invalid` |
+| `beacon2026_BASE_URL` | Frontend URL | `http://localhost:5173` |
+| `beacon2026_API_URL` | Backend API URL (for setup calls) | `http://localhost:3001` |
+| `beacon2026_SYSADMIN_USERNAME` | System-admin username | `sysadmin` |
+| `beacon2026_SYSADMIN_PASSWORD` | System-admin password | `changeme` |
+| `beacon2026_TEST_TENANT_SLUG` | Slug for the dedicated test tenant | `e2etest` |
+| `beacon2026_TEST_TENANT_NAME` | Display name for the test tenant | `E2E Test u3a` |
+| `beacon2026_TEST_ADMIN_USERNAME` | Admin username inside the test tenant | `testadmin` |
+| `beacon2026_TEST_ADMIN_PASSWORD` | Admin password | `TestAdmin99!` |
+| `beacon2026_TEST_ADMIN_NAME` | Admin full name | `Test Administrator` |
+| `beacon2026_TEST_ADMIN_EMAIL` | Admin email (placeholder OK) | `testadmin@beacon2026-e2e.invalid` |
 
 ---
 
@@ -70,13 +70,13 @@ npm run test:report
 Runs **once** before any test file.
 
 1. Logs in as system admin.
-2. Creates the test tenant (`BEACON2_TEST_TENANT_SLUG`) if it does not already exist.
+2. Creates the test tenant (`beacon2026_TEST_TENANT_SLUG`) if it does not already exist.
    If it does exist, resets the admin password to the known value (so tests always
    start from a known state even after a previous failed run).
 3. Logs in as the test-tenant admin.
 4. Seeds a **"Current Account"** finance account and a **"Joint"** member class
    (the four default member statuses and "Individual" class are created automatically
-   by the Beacon2 tenant-creation process).
+   by the beacon2026 tenant-creation process).
 
 ### Auth fixture (`fixtures/admin.js`)
 
@@ -85,7 +85,7 @@ Each test that needs a logged-in browser imports `{ test, expect }` from
 performs a fresh browser login before each test and provides the authenticated
 page.
 
-Because Beacon2 stores the access token **in memory only** (never cookies or
+Because beacon2026 stores the access token **in memory only** (never cookies or
 localStorage), there is no way to share a session via Playwright's `storageState`.
 A fresh login per test adds ~200 ms and keeps tests fully independent.
 
@@ -164,7 +164,7 @@ The tests are structured for **regression after deployment**:
 4. **Acceptance criteria** map directly to user-guide behaviour, not
    implementation details — so tests remain valid as the frontend evolves.
 
-When a new Beacon2 feature is implemented:
+When a new beacon2026 feature is implemented:
 - Add a new spec file (or extend an existing one) that covers the corresponding
   UG section.
 - If global-setup needs new seed data for those tests, add it to `global-setup.js`.
@@ -174,7 +174,7 @@ When a new Beacon2 feature is implemented:
 ## Troubleshooting
 
 **`global-setup` fails with "System-admin login failed"**
-→ Check `BEACON2_API_URL`, `BEACON2_SYSADMIN_USERNAME`, `BEACON2_SYSADMIN_PASSWORD`.
+→ Check `beacon2026_API_URL`, `beacon2026_SYSADMIN_USERNAME`, `beacon2026_SYSADMIN_PASSWORD`.
 
 **`global-setup` fails with "Tenant admin login failed"**
 → The tenant may have been left in a bad state from a previous run where teardown

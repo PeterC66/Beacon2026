@@ -1,4 +1,4 @@
-// beacon2/backend/src/routes/email.js
+// beacon2026/backend/src/routes/email.js
 
 import { Router } from 'express';
 import { z } from 'zod';
@@ -174,7 +174,7 @@ async function getUserFromAddresses(tenantSlug, userId, userName) {
 }
 
 /**
- * Map a SendGrid event type to a Beacon2 delivery status string.
+ * Map a SendGrid event type to a beacon2026 delivery status string.
  */
 function mapSgStatus(events) {
   if (!events || events.length === 0) return 'Despatched';

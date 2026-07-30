@@ -1,4 +1,4 @@
-// beacon2/frontend/src/pages/system/CreateTenantForm.jsx
+// beacon2026/frontend/src/pages/system/CreateTenantForm.jsx
 //
 // "Create new tenant" form section of SystemDashboard. Presentation only: form
 // state and handlers are owned by the parent.

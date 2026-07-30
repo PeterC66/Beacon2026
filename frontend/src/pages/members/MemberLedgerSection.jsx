@@ -1,4 +1,4 @@
-// beacon2/frontend/src/pages/members/MemberLedgerSection.jsx
+// beacon2026/frontend/src/pages/members/MemberLedgerSection.jsx
 //
 // Read-only "Groups, Teams and Ledger" block shown on an existing member's
 // record. Extracted from MemberEditor; presentation only, no local state.

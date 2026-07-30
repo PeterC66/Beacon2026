@@ -1,4 +1,4 @@
-// beacon2/backend/src/routes/eventTypes.js
+// beacon2026/backend/src/routes/eventTypes.js
 // Event types CRUD — manage event categories for non-group events.
 
 import { Router } from 'express';

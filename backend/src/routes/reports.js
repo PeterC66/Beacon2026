@@ -1,4 +1,4 @@
-// beacon2/backend/src/routes/reports.js
+// beacon2026/backend/src/routes/reports.js
 // SQL reports — library of saved parameterised queries plus an ad-hoc raw SQL
 // editor for site administrators.
 //

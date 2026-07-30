@@ -1,4 +1,4 @@
-// beacon2/frontend/src/pages/finance/TransferMoney.jsx
+// beacon2026/frontend/src/pages/finance/TransferMoney.jsx
 // Transfer money between finance accounts (doc 7.3).
 
 import { useState, useEffect, useRef } from 'react';

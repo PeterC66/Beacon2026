@@ -1,4 +1,4 @@
-// beacon2/backend/eslint.config.js
+// beacon2026/backend/eslint.config.js
 // Flat-config ESLint setup for the backend (ES modules, Node runtime).
 import js from '@eslint/js';
 import globals from 'globals';

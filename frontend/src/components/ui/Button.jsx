@@ -1,4 +1,4 @@
-// beacon2/frontend/src/components/ui/Button.jsx
+// beacon2026/frontend/src/components/ui/Button.jsx
 // Shared button primitive — use instead of repeating Tailwind button classes.
 // Adopt incrementally; no need to convert existing buttons all at once.
 

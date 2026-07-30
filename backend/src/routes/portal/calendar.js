@@ -1,4 +1,4 @@
-// beacon2/backend/src/routes/portal/calendar.js
+// beacon2026/backend/src/routes/portal/calendar.js
 // Members Portal — Calendar (doc 10.2.3): view upcoming events and download a
 // PDF of the calendar.
 

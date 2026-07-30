@@ -1,4 +1,4 @@
-# Beacon2 frontend image — for LOCAL development and running the E2E suite
+# beacon2026 frontend image — for LOCAL development and running the E2E suite
 # without a deployed staging instance. NOT used by the Vercel deployment
 # (Vercel builds from source via vercel.json). Build context is the repo root
 # because the frontend imports shared/constants.js from the repo root.

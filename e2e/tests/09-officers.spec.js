@@ -1,4 +1,4 @@
-// beacon2/e2e/tests/09-officers.spec.js
+// beacon2026/e2e/tests/09-officers.spec.js
 // u3a Officers tests.
 // Beacon UG §9.3 — "u3a Officers"
 //

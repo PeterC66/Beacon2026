@@ -1,4 +1,4 @@
-// beacon2/backend/src/__tests__/roles.test.js
+// beacon2026/backend/src/__tests__/roles.test.js
 // Tests for /roles endpoints.
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';

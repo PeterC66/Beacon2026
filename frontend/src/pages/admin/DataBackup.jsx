@@ -1,4 +1,4 @@
-// beacon2/frontend/src/pages/admin/DataBackup.jsx
+// beacon2026/frontend/src/pages/admin/DataBackup.jsx
 // Data Export & Backup (doc 9.5)
 // Provides 8 Excel export options. Restore is only available to system admins.
 

@@ -1,4 +1,4 @@
-// beacon2/frontend/src/__tests__/LetterCompose.test.jsx
+// beacon2026/frontend/src/__tests__/LetterCompose.test.jsx
 
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';

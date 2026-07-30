@@ -1,4 +1,4 @@
-// beacon2/backend/src/__tests__/splitSQL.test.js
+// beacon2026/backend/src/__tests__/splitSQL.test.js
 // Unit tests for splitSQL() in ../utils/migrate.js.  Written after a stray
 // semicolon in a line comment in tenant_schema.sql silently broke tenant
 // migrations on Render — the splitter now ignores semicolons inside

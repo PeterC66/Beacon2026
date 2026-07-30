@@ -1,4 +1,4 @@
-// beacon2/frontend/src/App.jsx
+// beacon2026/frontend/src/App.jsx
 
 import { useEffect, lazy, Suspense } from 'react';
 import { createBrowserRouter, RouterProvider, Navigate, Outlet } from 'react-router-dom';
@@ -774,10 +774,10 @@ function applyTheme() {
 export default function App() {
   useEffect(() => {
     applyTheme();
-    window.addEventListener('beacon2-prefs-changed', applyTheme);
+    window.addEventListener('beacon2026-prefs-changed', applyTheme);
     window.addEventListener('storage', applyTheme);
     return () => {
-      window.removeEventListener('beacon2-prefs-changed', applyTheme);
+      window.removeEventListener('beacon2026-prefs-changed', applyTheme);
       window.removeEventListener('storage', applyTheme);
     };
   }, []);

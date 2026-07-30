@@ -1,4 +1,4 @@
-// beacon2/backend/src/__tests__/restoreBeacon.test.js
+// beacon2026/backend/src/__tests__/restoreBeacon.test.js
 // Verifies the "Standard Beacon Implementation" preset is applied at the end
 // of a legacy Beacon restore, and that the shared feature-key constants are
 // used consistently by the sys-admin PATCH allowlist.

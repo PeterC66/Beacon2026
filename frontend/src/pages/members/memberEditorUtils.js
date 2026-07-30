@@ -1,4 +1,4 @@
-// beacon2/frontend/src/pages/members/memberEditorUtils.js
+// beacon2026/frontend/src/pages/members/memberEditorUtils.js
 //
 // Pure helpers and constants shared by MemberEditor and its extracted sections.
 

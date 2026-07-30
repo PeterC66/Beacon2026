@@ -1,4 +1,4 @@
-// beacon2/frontend/src/pages/groups/VenueList.jsx
+// beacon2026/frontend/src/pages/groups/VenueList.jsx
 // List of group venues (5.7)
 
 import { useRef } from 'react';

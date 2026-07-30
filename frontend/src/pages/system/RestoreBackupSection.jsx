@@ -1,4 +1,4 @@
-// beacon2/frontend/src/pages/system/RestoreBackupSection.jsx
+// beacon2026/frontend/src/pages/system/RestoreBackupSection.jsx
 //
 // "Restore from Backup" section of SystemDashboard. Presentation only: restore
 // state and handlers are owned by the parent.
@@ -21,7 +21,7 @@ export default function RestoreBackupSection({
     <section className="bg-white rounded-xl shadow-sm p-6">
       <h2 className="text-lg font-semibold text-slate-700 mb-1">Restore from Backup</h2>
       <p className="text-sm text-slate-500 mb-4">
-        Upload a Beacon2 backup or a legacy Beacon export file to restore a tenant&apos;s data. The
+        Upload a beacon2026 backup or a legacy Beacon export file to restore a tenant&apos;s data. The
         format is detected automatically. User accounts and roles are included in the restore.
       </p>
 

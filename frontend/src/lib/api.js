@@ -1,4 +1,4 @@
-// beacon2/frontend/src/lib/api.js
+// beacon2026/frontend/src/lib/api.js
 // Central API client. All backend calls go through here.
 //
 // Infrastructure (request, token management, blob helpers) lives in api/core.js.

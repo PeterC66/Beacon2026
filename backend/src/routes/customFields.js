@@ -1,4 +1,4 @@
-// beacon2/backend/src/routes/customFields.js
+// beacon2026/backend/src/routes/customFields.js
 // Custom field label configuration (doc 8.7).
 
 import { Router } from 'express';

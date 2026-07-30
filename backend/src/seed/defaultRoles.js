@@ -1,4 +1,4 @@
-// beacon2/backend/src/seed/defaultRoles.js
+// beacon2026/backend/src/seed/defaultRoles.js
 // Default roles seeded when a new u3a tenant is created.
 // Each role lists its default privileges as { code, action } pairs.
 // Source of truth: doc 8.4.1 "Privileges Map and default Privileges".

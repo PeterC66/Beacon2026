@@ -1,4 +1,4 @@
-// beacon2/backend/src/routes/members/helpers.js
+// beacon2026/backend/src/routes/members/helpers.js
 // Shared helpers used across the member sub-route files.
 
 import { tenantQuery } from '../../utils/db.js';
