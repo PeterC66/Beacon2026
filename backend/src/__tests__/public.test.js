@@ -1,4 +1,4 @@
-// beacon2/backend/src/__tests__/public.test.js
+// beacon2026/backend/src/__tests__/public.test.js
 // Coverage for the unauthenticated online-joining and public-page routes
 // (routes/public.js), added in Chunk 7 of docs/ImprovementPlan.md. The portal
 // login/forgot-password flows are covered separately by portalAuth.test.js.

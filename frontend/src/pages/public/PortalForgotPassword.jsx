@@ -1,4 +1,4 @@
-// beacon2/frontend/src/pages/public/PortalForgotPassword.jsx
+// beacon2026/frontend/src/pages/public/PortalForgotPassword.jsx
 
 import { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';

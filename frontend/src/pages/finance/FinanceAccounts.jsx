@@ -1,4 +1,4 @@
-// beacon2/frontend/src/pages/finance/FinanceAccounts.jsx
+// beacon2026/frontend/src/pages/finance/FinanceAccounts.jsx
 // Finance accounts management — 8.6 Finance Set-up, section 1.
 
 import { useState, useEffect } from 'react';

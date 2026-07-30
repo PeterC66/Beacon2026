@@ -1,4 +1,4 @@
-// beacon2/frontend/src/pages/public/JoinPending.jsx
+// beacon2026/frontend/src/pages/public/JoinPending.jsx
 // Shown after a joining application is submitted but BEFORE payment.
 // Displays the applicant's details and offers:
 //   - "Pay now" button → redirects to PayPal (or stub)

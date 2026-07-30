@@ -1,4 +1,4 @@
-// beacon2/frontend/src/pages/finance/financeLedgerUtils.js
+// beacon2026/frontend/src/pages/finance/financeLedgerUtils.js
 //
 // Pure helpers and constants shared by FinanceLedger and its extracted sections.
 

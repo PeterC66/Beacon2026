@@ -1,4 +1,4 @@
-// beacon2/backend/src/routes/finance/accounts.js
+// beacon2026/backend/src/routes/finance/accounts.js
 // Finance accounts, group B/F setting, and payment method defaults.
 
 import { Router } from 'express';

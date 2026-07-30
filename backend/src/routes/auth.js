@@ -1,4 +1,4 @@
-// beacon2/backend/src/routes/auth.js
+// beacon2026/backend/src/routes/auth.js
 // Authentication endpoints: login, logout, token refresh
 
 import { Router } from 'express';
@@ -22,7 +22,7 @@ if (process.env.SENDGRID_API_KEY) {
 
 const RECOVERY_FROM = process.env.RECOVERY_FROM_ADDRESS ?? 'noreply@u3abeacon.org.uk';
 
-const COOKIE_NAME = 'beacon2_refresh';
+const COOKIE_NAME = 'beacon2026_refresh';
 const cookieOptions = {
   httpOnly: true,
   secure: true,
@@ -429,7 +429,7 @@ async function sendRecoveryEmail(tenantSlug, user) {
     [hash, user.id],
   );
 
-  const subject = 'Your Beacon2 login credentials';
+  const subject = 'Your beacon2026 login credentials';
   const body = `Your username is: ${user.username}\n\nA temporary password has been set: ${tempPassword}\n\nYou will be required to change this password when you next log in.`;
 
   if (!process.env.SENDGRID_API_KEY) {

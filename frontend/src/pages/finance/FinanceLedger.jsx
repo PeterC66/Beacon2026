@@ -1,4 +1,4 @@
-// beacon2/frontend/src/pages/finance/FinanceLedger.jsx
+// beacon2026/frontend/src/pages/finance/FinanceLedger.jsx
 // Financial ledger — view transactions by account, category, or group.
 // Implements Beacon doc 7.1.
 

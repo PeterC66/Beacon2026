@@ -1,6 +1,6 @@
 # 3. Changing Your Password
 
-When you first log in to Beacon2 -- or after your password has been reset by a
+When you first log in to beacon2026 -- or after your password has been reset by a
 Site Administrator -- you will be taken to the **Change Password** screen before
 you can access any other part of the system. You must set a new password and a
 security question before continuing.
@@ -26,7 +26,7 @@ they are not required.
 
 ## Filling in the form
 
-1. **New password** [A] -- type your chosen password. As you type, Beacon2
+1. **New password** [A] -- type your chosen password. As you type, beacon2026
    will show hints telling you whether your password meets the requirements.
    A green message "Password meets requirements" confirms it is valid.
 
@@ -42,7 +42,7 @@ they are not required.
    type it the same way if you ever use the password recovery flow.
 
 5. Press **Submit** [E] to save your new password. You will then be taken to
-   the Beacon2 Home page.
+   the beacon2026 Home page.
 
 > If you do not want to proceed, you can click **Log out instead** below the
 > form to return to the login page.

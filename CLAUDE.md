@@ -1,4 +1,4 @@
-# Beacon2 — Claude Code Instructions
+# beacon2026 — Claude Code Instructions
 
 > **For humans:** this file and the other `CLAUDE-*.md` files are tooling for
 > Claude Code sessions, not the project's primary documentation. If you are a
@@ -13,9 +13,9 @@
 | **`CLAUDE-STANDARDS.md`** | Cross-cutting checklist for all new code | Before starting any implementation |
 | **`CLAUDE-REFERENCE.md`** | Detailed implementation notes by module | When working on a specific module |
 | **`CLAUDE-E2E.md`** | E2E test architecture, patterns, and gotchas | When writing or debugging E2E tests |
-| **`Beacon2 Project Definition.md`** | What has been built and what remains | Every session — living document |
-| **`docs/BeaconUG-Comparison.md`** | Beacon2 vs Beacon User Guide comparison | When building/changing features — update after each change |
-| **`docs/Beacon2UG/index.md`** | Beacon2 User Guide (64 sections) | When writing user-facing help or verifying feature descriptions |
+| **`beacon2026 Project Definition.md`** | What has been built and what remains | Every session — living document |
+| **`docs/BeaconUG-Comparison.md`** | beacon2026 vs Beacon User Guide comparison | When building/changing features — update after each change |
+| **`docs/beacon2026UG/index.md`** | beacon2026 User Guide (64 sections) | When writing user-facing help or verifying feature descriptions |
 | **`CHANGELOG.md`** | User-facing changelog of all notable changes | Update at end of every session |
 
 ---
@@ -32,7 +32,7 @@ git merge origin/main --no-edit
 This ensures that any files uploaded directly to `main` (design docs, prompts,
 reference material in `docs/`) are present in the working branch before starting work.
 
-Read `Beacon2 Project Definition.md` at the start of every session.
+Read `beacon2026 Project Definition.md` at the start of every session.
 
 ## If a document is not in your branch
 
@@ -67,7 +67,7 @@ chunked work plan live in `docs/ImprovementPlan-2026-06-14.md`.
   or over-engineered. Ask whether a simpler alternative would meet the requirement
   before building something complex — the user welcomes being pushed back on.
 - Always spell **u3a** in lowercase
-- The system is called **Beacon2**; the original system is **Beacon**
+- The system is called **beacon2026**; the original system is **Beacon**
 - Use ES modules (`import`/`export`) throughout — never `require()`
 - Frontend access token is stored **in memory only** — never localStorage or sessionStorage
 - All tenant database queries must go through `tenantQuery()` or `withTenant()` in `backend/src/utils/db.js`
@@ -185,7 +185,7 @@ At the end of every session:
    - **Workflow/session** changes → update this file (`CLAUDE.md`).
 3. If any features were added, changed, or fixed, update `docs/BeaconUG-Comparison.md`
    to reflect the new status of the relevant UG section(s).
-   - Also update **`Beacon2 Project Definition.md`** if the change altered the
+   - Also update **`beacon2026 Project Definition.md`** if the change altered the
      module/route/page inventory, and bump its version line if `package.json`
      version changed (keep them in step).
 4. **Update `CHANGELOG.md`** — add bullet points under the current version for any

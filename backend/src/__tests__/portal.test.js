@@ -1,4 +1,4 @@
-// beacon2/backend/src/__tests__/portal.test.js
+// beacon2026/backend/src/__tests__/portal.test.js
 // Coverage for the authenticated Members Portal routes (routes/portal.js),
 // mounted at /public/:slug/portal/app/*. Added in Chunk 7 of
 // docs/ImprovementPlan.md. Portal *auth* (login/lockout/forgot) lives in

@@ -1,4 +1,4 @@
-// beacon2/backend/src/__tests__/mocks.js
+// beacon2026/backend/src/__tests__/mocks.js
 // Shared vi.mock factory helpers, introduced in Chunk 7 of docs/ImprovementPlan.md
 // to remove the near-identical db/redis/audit mock boilerplate that was copy-pasted
 // into every backend test file (M4, backend half).

@@ -1,4 +1,4 @@
-// beacon2/frontend/src/pages/members/RecentMembers.jsx
+// beacon2026/frontend/src/pages/members/RecentMembers.jsx
 // Doc 4.4 — Recent Members
 
 import { useState, useEffect } from 'react';

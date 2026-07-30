@@ -1,4 +1,4 @@
-// beacon2/backend/vitest.config.js
+// beacon2026/backend/vitest.config.js
 import { defineConfig } from 'vitest/config';
 
 export default defineConfig({

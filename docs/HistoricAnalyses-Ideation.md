@@ -1,4 +1,4 @@
-# Historic analyses on Beacon2 data — ideation
+# Historic analyses on beacon2026 data — ideation
 
 > Scoping / ideation document. Covers **membership** and **finance** only.
 > Per-u3a focus, with a short section at the end on national / regional possibilities.
@@ -14,7 +14,7 @@ A few things shape what's realistic:
   short retention window unless they claim Gift Aid. That means long-run
   **retention and cohort analyses will be biased** towards GA-opted members and
   the few years of still-active lapsed records. Any analysis that needs "who left
-  and when" must either be done forward-only in Beacon2, or lean on aggregate
+  and when" must either be done forward-only in beacon2026, or lean on aggregate
   snapshots (see §5).
 - **Finance history is cleaner.** Transactions persist even when a member is
   deleted (member reference becomes a name on the row), so multi-year finance
@@ -24,7 +24,7 @@ A few things shape what's realistic:
   starting point is usually not a blank slate.
 - **Audit log** is another under-used historic source — it can tell you when
   statuses changed, who edited what, when Gift Aid was claimed, etc. — but only
-  from the Beacon2 era onwards.
+  from the beacon2026 era onwards.
 
 ---
 
@@ -198,14 +198,14 @@ practice, and it's cheap to build.
 
 ## 7. National / regional reporting possibilities
 
-Although out of primary scope, Beacon2's multi-tenant architecture makes
+Although out of primary scope, beacon2026's multi-tenant architecture makes
 national/regional reporting natural, provided each u3a opts in:
 
 - **Opt-in anonymised aggregate push** — each tenant periodically publishes a
   small aggregate document (member counts by class/status/age-band, income
   bands, group counts, GA uptake, retention rate) to a national endpoint. No PII
   leaves the tenant.
-- **National dashboard** — total u3a membership across Beacon2 tenants; growth
+- **National dashboard** — total u3a membership across beacon2026 tenants; growth
   rate; fee-range distribution; GA uptake rate; group-participation rates.
   Useful for the Third Age Trust and for comparative benchmarking ("your
   retention is 78% vs. national 82%").

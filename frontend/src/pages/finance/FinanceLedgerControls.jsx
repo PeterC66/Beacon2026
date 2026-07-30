@@ -1,4 +1,4 @@
-// beacon2/frontend/src/pages/finance/FinanceLedgerControls.jsx
+// beacon2026/frontend/src/pages/finance/FinanceLedgerControls.jsx
 //
 // Controls bar of FinanceLedger — the view selector, the account/category/group/
 // event picker, and the year selector. Presentation only: all state and handlers

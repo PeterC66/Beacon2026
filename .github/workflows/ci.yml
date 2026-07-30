@@ -1,4 +1,4 @@
-# beacon2/.github/workflows/ci.yml
+# beacon2026/.github/workflows/ci.yml
 # Runs backend and frontend tests on every push to a claude/* branch
 # and on every pull request targeting main.
 

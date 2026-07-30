@@ -1,4 +1,4 @@
-// beacon2/frontend/src/pages/users/UserList.jsx
+// beacon2026/frontend/src/pages/users/UserList.jsx
 // System Users list — doc 8.2 / 8.2.1
 
 import { useState, useEffect, useRef } from 'react';

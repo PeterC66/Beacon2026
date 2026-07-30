@@ -1,4 +1,4 @@
-// beacon2/backend/src/routes/teams/members.js
+// beacon2026/backend/src/routes/teams/members.js
 // Team membership sub-resource: /teams/:id/members. Listing, downloads, and
 // add/remove/bulk operations. Teams have no waiting list, so members are always
 // added directly. Guarded by the `group_records_all` privilege resource.

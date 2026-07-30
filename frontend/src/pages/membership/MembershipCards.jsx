@@ -1,4 +1,4 @@
-// beacon2/frontend/src/pages/membership/MembershipCards.jsx
+// beacon2026/frontend/src/pages/membership/MembershipCards.jsx
 // Membership Cards page (doc 4.7) — select members, download/email cards.
 
 import { useState, useEffect, useRef } from 'react';

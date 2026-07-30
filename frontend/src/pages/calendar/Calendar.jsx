@@ -1,4 +1,4 @@
-// beacon2/frontend/src/pages/calendar/Calendar.jsx
+// beacon2026/frontend/src/pages/calendar/Calendar.jsx
 // Calendar — chronological list of all group/team events + non-group events.
 
 import { useState, useEffect, useMemo } from 'react';

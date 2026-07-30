@@ -1,4 +1,4 @@
-// beacon2/frontend/src/__tests__/PublicLinks.test.jsx
+// beacon2026/frontend/src/__tests__/PublicLinks.test.jsx
 
 import { describe, it, expect, vi } from 'vitest';
 import { render, waitFor } from '@testing-library/react';

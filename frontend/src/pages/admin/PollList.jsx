@@ -1,4 +1,4 @@
-// beacon2/frontend/src/pages/admin/PollList.jsx
+// beacon2026/frontend/src/pages/admin/PollList.jsx
 // Poll set-up screen — doc 8.8
 
 import { useState, useEffect } from 'react';

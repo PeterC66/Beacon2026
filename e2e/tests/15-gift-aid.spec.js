@@ -1,4 +1,4 @@
-// beacon2/e2e/tests/15-gift-aid.spec.js
+// beacon2026/e2e/tests/15-gift-aid.spec.js
 // Gift Aid declaration and Gift Aid log tests.
 // Beacon UG §7.8 — "Gift Aid"
 //

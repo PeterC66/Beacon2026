@@ -1,4 +1,4 @@
-// beacon2/backend/src/__tests__/creditBatches.test.js
+// beacon2026/backend/src/__tests__/creditBatches.test.js
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import request from 'supertest';

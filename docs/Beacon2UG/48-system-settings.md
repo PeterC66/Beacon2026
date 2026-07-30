@@ -1,7 +1,7 @@
 # 48. System Settings
 
 System Settings is where you configure the organisation-wide options that affect
-how Beacon2 behaves for your u3a. From here you can set your membership year
+how beacon2026 behaves for your u3a. From here you can set your membership year
 dates, fees behaviour, contact details, and more.
 
 To open this page, click **System settings** in the **Set Up** section of the
@@ -34,7 +34,7 @@ Enter your u3a's public contact information:
 
 ## Membership Year & Fees [C]
 
-This is one of the most important sections — it controls how Beacon2 calculates
+This is one of the most important sections — it controls how beacon2026 calculates
 renewals, lapses, and fees.
 
 | Field | Purpose |
@@ -53,7 +53,7 @@ renewals, lapses, and fees.
 
 | Field | Purpose |
 |-------|---------|
-| **Enable Gift Aid** | Turns on Gift Aid tracking across Beacon2 |
+| **Enable Gift Aid** | Turns on Gift Aid tracking across beacon2026 |
 | **Show for online renewals** | Whether members see the Gift Aid option when renewing online |
 
 ---
@@ -98,14 +98,14 @@ has renewed but the other has lapsed.
 
 | Field | Purpose |
 |-------|---------|
-| **SiteWorks Activated** | Turn this on if your u3a uses SiteWorks for its website. When activated, Beacon2 hides the **Schedule** tab on group records and the scheduling fields, because scheduling is managed in SiteWorks instead. |
+| **SiteWorks Activated** | Turn this on if your u3a uses SiteWorks for its website. When activated, beacon2026 hides the **Schedule** tab on group records and the scheduling fields, because scheduling is managed in SiteWorks instead. |
 
 ---
 
 ## Saving your changes
 
 When you have finished making changes, click the **Update** button at the bottom
-of the page. Beacon2 will save all settings in one go.
+of the page. beacon2026 will save all settings in one go.
 
 > **Tip:** Some settings (such as year start date) affect calculations across
 > the whole system. Make sure you are confident before changing them, and

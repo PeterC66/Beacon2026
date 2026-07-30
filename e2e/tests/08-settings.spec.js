@@ -1,4 +1,4 @@
-// beacon2/e2e/tests/08-settings.spec.js
+// beacon2026/e2e/tests/08-settings.spec.js
 // System Settings tests.
 // Beacon UG §8.3 — "System Settings"
 //

@@ -1,4 +1,4 @@
-// beacon2/frontend/src/pages/calendar/EventRecord.jsx
+// beacon2026/frontend/src/pages/calendar/EventRecord.jsx
 // Event Record page — tabbed view for a single event (details / members / financials).
 // The Details tab is the single editor for any event, regardless of origin:
 //   - group event  (group_id set, group_type = 'group') → /groups/:gid/events/:id

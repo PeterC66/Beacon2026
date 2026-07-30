@@ -1,4 +1,4 @@
-// beacon2/backend/src/__tests__/requireFeature.test.js
+// beacon2026/backend/src/__tests__/requireFeature.test.js
 // Tests the requireFeature middleware itself.
 // Other test files get a pass-through mock of this middleware from setup.js;
 // here we unmock it so we can exercise the real behaviour.

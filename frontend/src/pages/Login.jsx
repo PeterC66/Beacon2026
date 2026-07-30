@@ -1,4 +1,4 @@
-// beacon2/frontend/src/pages/Login.jsx
+// beacon2026/frontend/src/pages/Login.jsx
 // Tenant user sign-in with inline password recovery (doc 9.6).
 
 import { useState } from 'react';

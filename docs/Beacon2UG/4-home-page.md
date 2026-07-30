@@ -1,9 +1,9 @@
 # 4. The Home Page
 
 After logging in (and changing your password if required), you arrive at the
-**Home page**. This is your main starting point for everything in Beacon2.
+**Home page**. This is your main starting point for everything in beacon2026.
 
-![The Beacon2 Home page](images/home-page.png)
+![The beacon2026 Home page](images/home-page.png)
 
 ## The Administration heading
 
@@ -57,7 +57,7 @@ been configured in your u3a's settings.
 
 ## Messages
 
-Below the links panel, Beacon2 may display one or two messages:
+Below the links panel, beacon2026 may display one or two messages:
 
 - **System-wide message** -- set by the Beacon support team and shown to all
   u3a organisations (for example, planned maintenance notices).

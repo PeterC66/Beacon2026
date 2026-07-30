@@ -1,4 +1,4 @@
-# Beacon2 — local full-stack environment.
+# beacon2026 — local full-stack environment.
 #
 # Brings up Postgres, Redis, the backend API, and the frontend so the whole
 # application (and the Playwright E2E suite) can run on a laptop without a
@@ -20,15 +20,15 @@ services:
   postgres:
     image: postgres:16-alpine
     environment:
-      POSTGRES_USER: beacon2
-      POSTGRES_PASSWORD: beacon2
-      POSTGRES_DB: beacon2
+      POSTGRES_USER: beacon2026
+      POSTGRES_PASSWORD: beacon2026
+      POSTGRES_DB: beacon2026
     ports:
       - '5432:5432'
     volumes:
-      - beacon2-db:/var/lib/postgresql/data
+      - beacon2026-db:/var/lib/postgresql/data
     healthcheck:
-      test: ['CMD-SHELL', 'pg_isready -U beacon2']
+      test: ['CMD-SHELL', 'pg_isready -U beacon2026']
       interval: 5s
       timeout: 5s
       retries: 12
@@ -53,12 +53,12 @@ services:
       redis:
         condition: service_healthy
     environment:
-      DATABASE_URL: postgresql://beacon2:beacon2@postgres:5432/beacon2
+      DATABASE_URL: postgresql://beacon2026:beacon2026@postgres:5432/beacon2026
       JWT_ACCESS_SECRET: local-dev-access-secret-0000000000000000000000000000000000000000
       JWT_REFRESH_SECRET: local-dev-refresh-secret-1111111111111111111111111111111111111111
       # Matches the E2E suite's default system-admin credentials
       # (see e2e/global-setup.js), so local E2E needs no extra config.
-      SEED_ADMIN_EMAIL: admin@beacon2.local
+      SEED_ADMIN_EMAIL: admin@beacon2026.local
       SEED_ADMIN_PASSWORD: ChangeMe123!
       SEED_ADMIN_NAME: System Administrator
       CORS_ORIGIN: http://localhost:5173
@@ -83,4 +83,4 @@ services:
       - '5173:5173'
 
 volumes:
-  beacon2-db:
+  beacon2026-db:

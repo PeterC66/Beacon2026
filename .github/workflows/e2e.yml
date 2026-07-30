@@ -1,4 +1,4 @@
-# beacon2/.github/workflows/e2e.yml
+# beacon2026/.github/workflows/e2e.yml
 # End-to-end user acceptance tests — run against a live staging deployment.
 #
 # Trigger options:
@@ -6,18 +6,18 @@
 #   • Automatically after the staging deploy succeeds (repository_dispatch)
 #
 # Required repository secrets (Settings → Secrets and variables → Actions):
-#   BEACON2_BASE_URL             — frontend URL  e.g. https://beacon2.onrender.com
-#   BEACON2_API_URL              — backend URL   e.g. https://beacon2-api.onrender.com
-#   BEACON2_SYSADMIN_EMAIL       — system-admin email address
-#   BEACON2_SYSADMIN_PASSWORD    — system-admin password
-#   BEACON2_TEST_ADMIN_PASSWORD  — password for the dedicated E2E test tenant admin
+#   beacon2026_BASE_URL             — frontend URL  e.g. https://beacon2026.onrender.com
+#   beacon2026_API_URL              — backend URL   e.g. https://beacon2026-api.onrender.com
+#   beacon2026_SYSADMIN_EMAIL       — system-admin email address
+#   beacon2026_SYSADMIN_PASSWORD    — system-admin password
+#   beacon2026_TEST_ADMIN_PASSWORD  — password for the dedicated E2E test tenant admin
 #
 # Optional secrets (defaults are fine for most setups):
-#   BEACON2_TEST_TENANT_SLUG     — default: e2etest
-#   BEACON2_TEST_TENANT_NAME     — default: E2E Test u3a
-#   BEACON2_TEST_ADMIN_USERNAME  — default: testadmin
-#   BEACON2_TEST_ADMIN_NAME      — default: Test Administrator
-#   BEACON2_TEST_ADMIN_EMAIL     — default: testadmin@beacon2-e2e.invalid
+#   beacon2026_TEST_TENANT_SLUG     — default: e2etest
+#   beacon2026_TEST_TENANT_NAME     — default: E2E Test u3a
+#   beacon2026_TEST_ADMIN_USERNAME  — default: testadmin
+#   beacon2026_TEST_ADMIN_NAME      — default: Test Administrator
+#   beacon2026_TEST_ADMIN_EMAIL     — default: testadmin@beacon2026-e2e.invalid
 
 name: E2E tests
 
@@ -62,17 +62,17 @@ jobs:
       - name: Run E2E tests
         working-directory: e2e
         env:
-          BEACON2_BASE_URL:             ${{ secrets.BEACON2_BASE_URL }}
-          BEACON2_API_URL:              ${{ secrets.BEACON2_API_URL }}
-          BEACON2_SYSADMIN_EMAIL:       ${{ secrets.BEACON2_SYSADMIN_EMAIL }}
-          BEACON2_SYSADMIN_PASSWORD:    ${{ secrets.BEACON2_SYSADMIN_PASSWORD }}
-          BEACON2_TEST_ADMIN_PASSWORD:  ${{ secrets.BEACON2_TEST_ADMIN_PASSWORD }}
+          beacon2026_BASE_URL:             ${{ secrets.beacon2026_BASE_URL }}
+          beacon2026_API_URL:              ${{ secrets.beacon2026_API_URL }}
+          beacon2026_SYSADMIN_EMAIL:       ${{ secrets.beacon2026_SYSADMIN_EMAIL }}
+          beacon2026_SYSADMIN_PASSWORD:    ${{ secrets.beacon2026_SYSADMIN_PASSWORD }}
+          beacon2026_TEST_ADMIN_PASSWORD:  ${{ secrets.beacon2026_TEST_ADMIN_PASSWORD }}
           # Optional overrides — leave unset to use the defaults in global-setup.js
-          BEACON2_TEST_TENANT_SLUG:     ${{ secrets.BEACON2_TEST_TENANT_SLUG }}
-          BEACON2_TEST_TENANT_NAME:     ${{ secrets.BEACON2_TEST_TENANT_NAME }}
-          BEACON2_TEST_ADMIN_USERNAME:  ${{ secrets.BEACON2_TEST_ADMIN_USERNAME }}
-          BEACON2_TEST_ADMIN_NAME:      ${{ secrets.BEACON2_TEST_ADMIN_NAME }}
-          BEACON2_TEST_ADMIN_EMAIL:     ${{ secrets.BEACON2_TEST_ADMIN_EMAIL }}
+          beacon2026_TEST_TENANT_SLUG:     ${{ secrets.beacon2026_TEST_TENANT_SLUG }}
+          beacon2026_TEST_TENANT_NAME:     ${{ secrets.beacon2026_TEST_TENANT_NAME }}
+          beacon2026_TEST_ADMIN_USERNAME:  ${{ secrets.beacon2026_TEST_ADMIN_USERNAME }}
+          beacon2026_TEST_ADMIN_NAME:      ${{ secrets.beacon2026_TEST_ADMIN_NAME }}
+          beacon2026_TEST_ADMIN_EMAIL:     ${{ secrets.beacon2026_TEST_ADMIN_EMAIL }}
         run: npm test
 
       # Always upload the HTML report so you can inspect failures even when

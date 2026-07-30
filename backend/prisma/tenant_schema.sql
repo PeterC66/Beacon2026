@@ -1,4 +1,4 @@
--- beacon2/backend/prisma/tenant_schema.sql
+-- beacon2026/backend/prisma/tenant_schema.sql
 -- This SQL is executed for each new u3a tenant AND re-run against every
 -- existing tenant on startup (to pick up new tables).
 -- All statements are idempotent: CREATE TABLE IF NOT EXISTS, etc.
@@ -510,7 +510,7 @@ ALTER TABLE :schema.transactions ADD COLUMN IF NOT EXISTS gift_aid_claimed_at DA
 ALTER TABLE :schema.transactions ADD COLUMN IF NOT EXISTS gift_aid_amount_2 NUMERIC(10,2);
 ALTER TABLE :schema.transactions ADD COLUMN IF NOT EXISTS gift_aid_claimed_at_2 DATE;
 
--- Balance brought forward per account (balance before Beacon2 started tracking)
+-- Balance brought forward per account (balance before beacon2026 started tracking)
 ALTER TABLE :schema.finance_accounts ADD COLUMN IF NOT EXISTS balance_brought_forward NUMERIC(10,2) NOT NULL DEFAULT 0;
 
 -- ─────────────────────────────────────────────

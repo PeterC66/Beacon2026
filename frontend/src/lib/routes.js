@@ -1,4 +1,4 @@
-// beacon2/frontend/src/lib/routes.js
+// beacon2026/frontend/src/lib/routes.js
 // Frequently cross-referenced route paths used as navigation targets in
 // multiple files (navigate(...) / <Link to=...>). Only the paths that recur
 // across several pages are hoisted here — the full route table lives in

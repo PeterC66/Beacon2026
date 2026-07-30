@@ -1,7 +1,7 @@
 # 25. The Financial Ledger
 
 The Financial Ledger is where you see all the money coming in and going out of
-your u3a's accounts. Beacon2 gives you **four different views** of exactly the
+your u3a's accounts. beacon2026 gives you **four different views** of exactly the
 same transaction data, so you can look at your finances from whichever angle is
 most useful.
 
@@ -49,7 +49,7 @@ an outing, open meeting or social event has broken even.
 ## Choosing a year
 
 Use the **Year** selector [D] at the top of the page to choose which financial
-year to display. Beacon2 keeps up to **six years** of history, so you can look
+year to display. beacon2026 keeps up to **six years** of history, so you can look
 back at previous years without needing a separate archive.
 
 ---

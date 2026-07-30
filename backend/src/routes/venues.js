@@ -1,4 +1,4 @@
-// beacon2/backend/src/routes/venues.js
+// beacon2026/backend/src/routes/venues.js
 
 import { Router } from 'express';
 import { z } from 'zod';

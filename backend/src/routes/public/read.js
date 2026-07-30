@@ -1,4 +1,4 @@
-// beacon2/backend/src/routes/public/read.js
+// beacon2026/backend/src/routes/public/read.js
 // Public (unauthenticated) information pages: the read-only groups list and
 // calendar exposed to non-members. Field visibility is governed by each
 // tenant's group_info_config / calendar_config and the publicPages feature.

@@ -1,4 +1,4 @@
-// beacon2/frontend/src/pages/finance/CreditBatchCreate.jsx
+// beacon2026/frontend/src/pages/finance/CreditBatchCreate.jsx
 //
 // "Create a new batch / add selection to an existing batch" view of
 // CreditBatches. Presentation only: state and handlers are owned by the parent;

@@ -1,4 +1,4 @@
-// beacon2/frontend/src/pages/finance/TransactionGiftAidSection.jsx
+// beacon2026/frontend/src/pages/finance/TransactionGiftAidSection.jsx
 //
 // Gift Aid section of TransactionEditor — per-member eligible amounts and the
 // read-only "claimed" dates. Presentation only: state and handlers are passed

@@ -1,4 +1,4 @@
-// beacon2/backend/src/routes/public/join.js
+// beacon2026/backend/src/routes/public/join.js
 // Online joining and PayPal payment flow: join-config, join, payment-confirm,
 // resume-payment, and email-payment-link, plus the join confirmation / officer
 // notification email helpers. All routes are tenant-scoped via :slug.

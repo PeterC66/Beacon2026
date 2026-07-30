@@ -1,4 +1,4 @@
-// beacon2/frontend/src/pages/reports/ReportResults.jsx
+// beacon2026/frontend/src/pages/reports/ReportResults.jsx
 // Shared results table + metadata line for the reports feature.
 
 export default function ReportResults({ result }) {

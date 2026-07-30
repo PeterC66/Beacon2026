@@ -1,4 +1,4 @@
-// beacon2/e2e/success-reporter.js
+// beacon2026/e2e/success-reporter.js
 // Minimal Playwright reporter that writes a marker file when all tests pass.
 // Used by global-teardown.js to decide whether to delete the test tenant.
 

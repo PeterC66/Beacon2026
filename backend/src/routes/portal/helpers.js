@@ -1,4 +1,4 @@
-// beacon2/backend/src/routes/portal/helpers.js
+// beacon2026/backend/src/routes/portal/helpers.js
 // Shared helpers used across the Members Portal sub-route files: date
 // formatters and the (currently stubbed) outbound email helpers.
 

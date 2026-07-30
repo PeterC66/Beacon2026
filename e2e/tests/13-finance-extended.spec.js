@@ -1,4 +1,4 @@
-// beacon2/e2e/tests/13-finance-extended.spec.js
+// beacon2026/e2e/tests/13-finance-extended.spec.js
 // Extended finance tests: Transfer Money, Reconcile Account, Financial
 // Statement, Groups Statement, Credit Batches.
 // Beacon UG §§7.3–7.7

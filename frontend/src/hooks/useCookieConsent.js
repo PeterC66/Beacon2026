@@ -1,11 +1,11 @@
-// beacon2/frontend/src/hooks/useCookieConsent.js
+// beacon2026/frontend/src/hooks/useCookieConsent.js
 // Manages cookie consent state. The consent choice itself is stored in an
-// essential cookie (beacon2_cookie_consent) — this is permitted because it
+// essential cookie (beacon2026_cookie_consent) — this is permitted because it
 // records the user's preference about cookies, not optional data.
 
 import { CONSENT_GATED_LOCAL_KEYS } from '../lib/storageKeys.js';
 
-const CONSENT_COOKIE = 'beacon2_cookie_consent';
+const CONSENT_COOKIE = 'beacon2026_cookie_consent';
 const CONSENT_DAYS = 365;
 
 function readCookie(name) {
@@ -55,5 +55,5 @@ export function setConsent(accepted) {
   }
 
   // Notify listeners (e.g. CookieConsent component)
-  window.dispatchEvent(new Event('beacon2-consent-changed'));
+  window.dispatchEvent(new Event('beacon2026-consent-changed'));
 }

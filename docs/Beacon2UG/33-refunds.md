@@ -2,7 +2,7 @@
 
 Sometimes you need to return money that your u3a has already received — for
 example, if a member overpays their subscription or a group event is cancelled.
-Beacon2 handles this through **refunds**, which create a new transaction linked
+beacon2026 handles this through **refunds**, which create a new transaction linked
 back to the original.
 
 Refunds are accessed from the ledger — there is no separate Home page link.
@@ -26,14 +26,14 @@ enabled, the refund option will not appear on transactions in that account.
    open the Transaction Record.
 3. Click the **Refund this transaction** link.
 
-Beacon2 opens the refund form, which shows a summary of the original
+beacon2026 opens the refund form, which shows a summary of the original
 transaction at the top for reference.
 
 ---
 
 ## Which transactions can be refunded?
 
-Not every transaction is eligible for a refund. Beacon2 **blocks refunds** on
+Not every transaction is eligible for a refund. beacon2026 **blocks refunds** on
 transactions that are:
 
 - **Cleared** (reconciled) — the transaction has already been matched to a bank
@@ -76,7 +76,7 @@ the full £25, or any amount up to the original in each category.
 
 ## What happens when you save [D]
 
-When you save the refund, Beacon2 creates a **reciprocal transaction** that is
+When you save the refund, beacon2026 creates a **reciprocal transaction** that is
 linked to the original. Both the original and the refund display references to
 each other in the ledger, so you can always trace the connection.
 

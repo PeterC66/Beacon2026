@@ -1,4 +1,4 @@
-// beacon2/frontend/src/pages/finance/creditBatchesUtils.js
+// beacon2026/frontend/src/pages/finance/creditBatchesUtils.js
 //
 // Pure helpers and shared Tailwind class strings used by CreditBatches and its
 // extracted sub-views.

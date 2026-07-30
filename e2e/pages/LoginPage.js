@@ -1,4 +1,4 @@
-// beacon2/e2e/pages/LoginPage.js
+// beacon2026/e2e/pages/LoginPage.js
 // Page Object Model for the tenant login page (/login).
 // Beacon UG §2 — "Logging in as a System User"
 

@@ -1,4 +1,4 @@
-// beacon2/backend/src/utils/migrate.js
+// beacon2026/backend/src/utils/migrate.js
 // Runs database migrations and seeds automatically on startup.
 // This means you never need shell access to set up the database.
 

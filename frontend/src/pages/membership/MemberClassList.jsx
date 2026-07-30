@@ -1,4 +1,4 @@
-// beacon2/frontend/src/pages/membership/MemberClassList.jsx
+// beacon2026/frontend/src/pages/membership/MemberClassList.jsx
 
 import { useState } from 'react';
 import { useAsyncLoad } from '../../hooks/useAsyncLoad.js';

@@ -1,4 +1,4 @@
-// beacon2/backend/src/routes/finance/helpers.js
+// beacon2026/backend/src/routes/finance/helpers.js
 // Shared helper functions used across multiple finance sub-route files.
 
 /** Compute financial year start and end date strings for a given named year. */

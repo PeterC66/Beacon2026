@@ -1,6 +1,6 @@
-# Beacon2 — Deployment Guide (Proof of Concept)
+# beacon2026 — Deployment Guide (Proof of Concept)
 
-This guide gets Beacon2 live on the internet using free hosting.
+This guide gets beacon2026 live on the internet using free hosting.
 No command line or server knowledge needed — everything is done through websites.
 
 ---
@@ -25,7 +25,7 @@ You'll need these during setup. Get them ready now.
 4. Keep both somewhere safe (e.g. a text file) — you'll paste them into Render shortly
 
 **SEED_ADMIN_PASSWORD**
-This is the password you'll use to log in to Beacon2 for the first time.
+This is the password you'll use to log in to beacon2026 for the first time.
 Choose something secure and make a note of it.
 
 ---
@@ -34,8 +34,8 @@ Choose something secure and make a note of it.
 
 If you haven't already:
 
-1. Go to github.com and create a new repository called `beacon2` (private is fine)
-2. Upload the Beacon2 code into it
+1. Go to github.com and create a new repository called `beacon2026` (private is fine)
+2. Upload the beacon2026 code into it
 3. Make sure `render.yaml` is in the root of the repo and `vercel.json` is inside the `frontend` folder
 
 ---
@@ -44,7 +44,7 @@ If you haven't already:
 
 1. Go to **render.com** and sign up with your GitHub account
 2. Click **New → Blueprint**
-3. Connect your `beacon2` GitHub repository
+3. Connect your `beacon2026` GitHub repository
 4. Render will find the `render.yaml` file and show you a list of environment variables to fill in
 5. Fill in the following — leave anything else as-is:
 
@@ -69,8 +69,8 @@ If you haven't already:
 - Your admin account is created using the email and password you provided above
 - The app starts and is ready to use
 
-7. Once it shows as **Live**, click on the `beacon2-backend` service and copy the URL at the top
-   (it looks like `https://beacon2-backend-xxxx.onrender.com`)
+7. Once it shows as **Live**, click on the `beacon2026-backend` service and copy the URL at the top
+   (it looks like `https://beacon2026-backend-xxxx.onrender.com`)
 
 ---
 
@@ -78,13 +78,13 @@ If you haven't already:
 
 1. Go to **vercel.com** and sign up with your GitHub account
 2. Click **Add New → Project**
-3. Find your `beacon2` repository and click **Import**
+3. Find your `beacon2026` repository and click **Import**
 4. Under **Root Directory**, click Edit and type: `frontend`
 5. Under **Environment Variables**, add one entry:
    - Name: `VITE_API_URL`
    - Value: paste the Render backend URL you copied in Step 2
 6. Click **Deploy** — takes about 1 minute
-7. Once done, copy the Vercel URL (looks like `https://beacon2-xxxx.vercel.app`)
+7. Once done, copy the Vercel URL (looks like `https://beacon2026-xxxx.vercel.app`)
 
 ---
 
@@ -92,7 +92,7 @@ If you haven't already:
 
 This step allows the backend to accept requests from the frontend.
 
-1. Go back to **Render**, open the `beacon2-backend` service
+1. Go back to **Render**, open the `beacon2026-backend` service
 2. Click **Environment** in the left menu
 3. Find `CORS_ORIGIN` and paste your Vercel URL from Step 3
 4. Click **Save Changes** — the backend restarts automatically (takes about a minute)
@@ -101,7 +101,7 @@ This step allows the backend to accept requests from the frontend.
 
 ## Step 5 — Test it
 
-Open your Vercel URL in a browser. You should see the Beacon2 login screen.
+Open your Vercel URL in a browser. You should see the beacon2026 login screen.
 
 Log in using the email and password you set in Step 2.
 
@@ -128,7 +128,7 @@ These are all fine for a proof of concept — just be aware:
 
 ### Running locally without a deployment
 
-You don't need Render or Vercel to try Beacon2 or to run the E2E suite — the repo
+You don't need Render or Vercel to try beacon2026 or to run the E2E suite — the repo
 root has a `docker-compose.yml` that runs Postgres, Redis, the backend, and the
 frontend together on your machine (`docker compose up --build`). See `README.md`
 and `e2e/.env.example` for details. It is a development convenience only and is
@@ -139,7 +139,7 @@ never used for a real deployment.
 ## Troubleshooting
 
 **The deploy failed on Render**
-Click on the `beacon2-backend` service, then click the **Logs** tab. The error message
+Click on the `beacon2026-backend` service, then click the **Logs** tab. The error message
 will be shown there. Copy it and share it — it will point directly to the problem.
 
 **I can't log in**
@@ -148,7 +148,7 @@ Also check that `VITE_API_URL` in Vercel exactly matches your Render backend URL
 
 **I've forgotten my admin password**
 In Render, go to Environment, change `SEED_ADMIN_PASSWORD` to a new value, and save.
-Then go to the `beacon2-backend` service and click **Manual Deploy → Deploy latest commit**.
+Then go to the `beacon2026-backend` service and click **Manual Deploy → Deploy latest commit**.
 The app will restart and, if no admin exists, create a new one. If one already exists,
 delete the user record from the database first via Render's database dashboard.
 
@@ -161,13 +161,13 @@ you need to create a new one and point the backend at it.
 
 1. In Render, click **New → PostgreSQL**
    - Region: **Frankfurt** (same as the backend)
-   - Database name: `beacon2`, User: `beacon2`
+   - Database name: `beacon2026`, User: `beacon2026`
    - Plan: choose as needed (free = another 90 days; Starter = $7/month, no expiry)
 
 2. Once the new database is ready, copy its **Internal Database URL**
-   (it starts with `postgresql://beacon2:…`)
+   (it starts with `postgresql://beacon2026:…`)
 
-3. Go to the `beacon2-backend` service → **Environment**
+3. Go to the `beacon2026-backend` service → **Environment**
    - Replace the `DATABASE_URL` value with the new Internal Database URL
    - Click **Save Changes** — the backend restarts automatically
 
@@ -185,13 +185,13 @@ then `pg_restore` into the new database after creating it.
 
 ## When you're ready to move beyond POC
 
-The POC setup above is deliberately minimal. Before running Beacon2 with **real
+The POC setup above is deliberately minimal. Before running beacon2026 with **real
 member data**, work through this checklist.
 
 ### Production-readiness checklist
 
 - [ ] **Remove free-tier sleep & add backups** — upgrade the Render
-      `beacon2-backend` and `beacon2-db` services to the **Starter** plan
+      `beacon2026-backend` and `beacon2026-db` services to the **Starter** plan
       (~£6/month each). Starter adds automated daily database backups.
 - [ ] **Enable Redis** — add **Upstash Redis** (free tier, EU region) and set
       `USE_REDIS=true` and `REDIS_URL` in Render. This makes role/password
@@ -249,7 +249,7 @@ nothing legitimate trips it. Flip it to enforcing like this:
    only if unavoidable, widening the relevant directive. Repeat until a full
    window passes with **no** legitimate violations.
 4. **Tighten `connect-src`** from `'self' https:` to the concrete backend origin
-   (e.g. `connect-src 'self' https://beacon2-backend.onrender.com`) so the policy
+   (e.g. `connect-src 'self' https://beacon2026-backend.onrender.com`) so the policy
    names exactly what the app talks to.
 5. **Flip the header to enforcing.** In `frontend/vercel.json`, rename the header
    key from `Content-Security-Policy-Report-Only` to `Content-Security-Policy`

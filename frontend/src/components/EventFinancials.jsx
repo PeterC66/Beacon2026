@@ -1,4 +1,4 @@
-// beacon2/frontend/src/components/EventFinancials.jsx
+// beacon2026/frontend/src/components/EventFinancials.jsx
 // Event Financials tab — summary cards + transaction lists for an event.
 
 import { Link, useNavigate } from 'react-router-dom';

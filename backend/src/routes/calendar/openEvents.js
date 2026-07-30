@@ -1,4 +1,4 @@
-// beacon2/backend/src/routes/calendar/openEvents.js
+// beacon2026/backend/src/routes/calendar/openEvents.js
 // Non-group events (open meetings) — events with group_id = NULL, filtered by
 // event type. Guarded by the `meetings` privilege resource.
 

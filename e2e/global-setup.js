@@ -1,4 +1,4 @@
-// beacon2/e2e/global-setup.js
+// beacon2026/e2e/global-setup.js
 // Runs once before all Playwright tests.
 // Creates (or resets) the dedicated E2E test tenant, then seeds the minimum
 // reference data that every test expects to find (finance account, etc.).
@@ -16,21 +16,21 @@ loadDotenv();
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const STATE_PATH = resolve(__dirname, '.e2e-state.json');
 
-const API   = process.env.BEACON2_API_URL             || 'http://localhost:3001';
+const API   = process.env.beacon2026_API_URL             || 'http://localhost:3001';
 // Generate a short unique suffix (last 6 hex chars of timestamp) so parallel or
 // repeated runs don't collide on the slug.  Override via env var if a fixed slug
 // is preferred.
 const RUN_ID = Date.now().toString(16).slice(-6);
-const SLUG  = process.env.BEACON2_TEST_TENANT_SLUG    || `e2e_${RUN_ID}`;
-const NAME  = process.env.BEACON2_TEST_TENANT_NAME    || `E2E Test u3a ${RUN_ID}`;
-const SADM_EMAIL = process.env.BEACON2_SYSADMIN_EMAIL    || 'admin@beacon2.local';
-const SADM_PASS  = process.env.BEACON2_SYSADMIN_PASSWORD || 'ChangeMe123!';
-const ADM_USER  = process.env.BEACON2_TEST_ADMIN_USERNAME || 'testadmin';
-const ADM_PASS  = process.env.BEACON2_TEST_ADMIN_PASSWORD || 'TestAdmin99!';
-const ADM_NAME  = process.env.BEACON2_TEST_ADMIN_NAME     || 'Test Administrator';
-const ADM_EMAIL = process.env.BEACON2_TEST_ADMIN_EMAIL    || 'testadmin@beacon2-e2e.invalid';
+const SLUG  = process.env.beacon2026_TEST_TENANT_SLUG    || `e2e_${RUN_ID}`;
+const NAME  = process.env.beacon2026_TEST_TENANT_NAME    || `E2E Test u3a ${RUN_ID}`;
+const SADM_EMAIL = process.env.beacon2026_SYSADMIN_EMAIL    || 'admin@beacon2026.local';
+const SADM_PASS  = process.env.beacon2026_SYSADMIN_PASSWORD || 'ChangeMe123!';
+const ADM_USER  = process.env.beacon2026_TEST_ADMIN_USERNAME || 'testadmin';
+const ADM_PASS  = process.env.beacon2026_TEST_ADMIN_PASSWORD || 'TestAdmin99!';
+const ADM_NAME  = process.env.beacon2026_TEST_ADMIN_NAME     || 'Test Administrator';
+const ADM_EMAIL = process.env.beacon2026_TEST_ADMIN_EMAIL    || 'testadmin@beacon2026-e2e.invalid';
 
-const BASE_URL = process.env.BEACON2_BASE_URL || 'http://localhost:5173';
+const BASE_URL = process.env.beacon2026_BASE_URL || 'http://localhost:5173';
 
 // ── Helpers ──────────────────────────────────────────────────────────────
 
@@ -230,7 +230,7 @@ async function enableTestFeatures(tenantToken) {
 // ── Main ──────────────────────────────────────────────────────────────────
 
 export default async function globalSetup() {
-  console.log('\n[setup] Beacon2 E2E global setup starting…');
+  console.log('\n[setup] beacon2026 E2E global setup starting…');
   console.log(`[setup]   API URL    : ${API}`);
   console.log(`[setup]   Tenant slug: ${SLUG}`);
   console.log(`[setup]   Admin user : ${ADM_USER}`);
@@ -265,7 +265,7 @@ export default async function globalSetup() {
   const baseURL = new URL(BASE_URL);
   const storageState = {
     cookies: [{
-      name: 'beacon2_cookie_consent',
+      name: 'beacon2026_cookie_consent',
       value: 'accepted',
       domain: baseURL.hostname,
       path: '/',

@@ -1,4 +1,4 @@
-// beacon2/frontend/src/pages/teams/TeamDetails.jsx
+// beacon2026/frontend/src/pages/teams/TeamDetails.jsx
 // Details tab of the Team record (create/edit team fields).
 // Extracted from TeamRecord.jsx — no behaviour change.
 

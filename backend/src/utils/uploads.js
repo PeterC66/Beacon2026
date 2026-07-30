@@ -1,4 +1,4 @@
-// beacon2/backend/src/utils/uploads.js
+// beacon2026/backend/src/utils/uploads.js
 // Shared helpers for hardening uploads: magic-byte sniffing for member photos,
 // attachment-filename sanitisation, and MIME whitelists for the multer-handled
 // uploads (tenant restore and email attachments). Keeping these in one place

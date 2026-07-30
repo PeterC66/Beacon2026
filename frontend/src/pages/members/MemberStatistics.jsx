@@ -1,4 +1,4 @@
-// beacon2/frontend/src/pages/members/MemberStatistics.jsx
+// beacon2026/frontend/src/pages/members/MemberStatistics.jsx
 // Doc 4.9 — Membership Statistics
 
 import { useState, useEffect } from 'react';

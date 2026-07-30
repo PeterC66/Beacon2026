@@ -1,4 +1,4 @@
-// beacon2/backend/src/utils/jwt.js
+// beacon2026/backend/src/utils/jwt.js
 // JWT creation and verification helpers.
 //
 // We pin the algorithm to HS256 on both signing and verification.  Pinning

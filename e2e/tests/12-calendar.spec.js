@@ -1,4 +1,4 @@
-// beacon2/e2e/tests/12-calendar.spec.js
+// beacon2026/e2e/tests/12-calendar.spec.js
 // Calendar and Event Types tests.
 // Beacon UG §5.9 — "The Calendar"
 //

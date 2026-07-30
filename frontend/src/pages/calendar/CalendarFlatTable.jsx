@@ -1,4 +1,4 @@
-// beacon2/frontend/src/pages/calendar/CalendarFlatTable.jsx
+// beacon2026/frontend/src/pages/calendar/CalendarFlatTable.jsx
 // Read-only sortable flat-list "table" view. Extracted from Calendar.jsx — no behaviour change.
 
 import { Link } from 'react-router-dom';

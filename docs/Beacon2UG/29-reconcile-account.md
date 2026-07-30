@@ -1,6 +1,6 @@
 # 29. Reconcile Account
 
-Reconciliation is the process of matching your Beacon2 ledger against your bank
+Reconciliation is the process of matching your beacon2026 ledger against your bank
 statement to make sure everything agrees. This is an important routine task for
 any u3a treasurer.
 
@@ -19,7 +19,7 @@ To open this screen, click **Reconcile account** on the **Home** page.
 3. **Enter the statement balance** [C] — type the closing balance shown on your
    bank statement.
 
-Beacon2 will display a summary and a list of uncleared transactions.
+beacon2026 will display a summary and a list of uncleared transactions.
 
 ---
 
@@ -29,7 +29,7 @@ The balance summary panel shows three key figures:
 
 | Figure | Meaning |
 |--------|---------|
-| **Cleared balance** | The total of all transactions already marked as cleared in Beacon2 |
+| **Cleared balance** | The total of all transactions already marked as cleared in beacon2026 |
 | **Statement balance** | The closing balance you entered from your bank statement |
 | **Difference** | The gap between the two — your goal is to get this to **zero** |
 
@@ -48,7 +48,7 @@ been cleared**. Each row has:
   information.
 
 Work through your bank statement line by line. For each item on the statement,
-find the matching transaction in Beacon2 and tick its checkbox.
+find the matching transaction in beacon2026 and tick its checkbox.
 
 ---
 
@@ -74,13 +74,13 @@ Use the quick-selection controls to:
 ## Finishing the reconciliation
 
 Once the **Difference** is **zero**, click the **Reconcile Account** button [H]
-to confirm. Beacon2 will mark all ticked transactions as cleared.
+to confirm. beacon2026 will mark all ticked transactions as cleared.
 
 > **Tip:** If the difference is not zero, double-check your statement balance
 > and review the uncleared list carefully. Common causes include:
-> - A transaction entered in Beacon2 that has not yet appeared on the bank
+> - A transaction entered in beacon2026 that has not yet appeared on the bank
 >   statement (e.g. an uncleared cheque).
-> - A bank charge or interest payment that has not been entered in Beacon2.
+> - A bank charge or interest payment that has not been entered in beacon2026.
 > - A transposed digit in the statement balance.
 
 ---

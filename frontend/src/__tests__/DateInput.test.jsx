@@ -1,4 +1,4 @@
-// beacon2/frontend/src/__tests__/DateInput.test.jsx
+// beacon2026/frontend/src/__tests__/DateInput.test.jsx
 import { describe, it, expect, vi } from 'vitest';
 import { render, fireEvent } from '@testing-library/react';
 import DateInput from '../components/DateInput.jsx';

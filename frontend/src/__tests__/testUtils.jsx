@@ -1,4 +1,4 @@
-// beacon2/frontend/src/__tests__/testUtils.jsx
+// beacon2026/frontend/src/__tests__/testUtils.jsx
 //
 // Shared test helpers for frontend component/page tests, to cut the
 // render-wrapping boilerplate repeated across the suite.

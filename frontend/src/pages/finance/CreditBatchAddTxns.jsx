@@ -1,4 +1,4 @@
-// beacon2/frontend/src/pages/finance/CreditBatchAddTxns.jsx
+// beacon2026/frontend/src/pages/finance/CreditBatchAddTxns.jsx
 //
 // "Add transactions to an existing batch" view of CreditBatches. Presentation
 // only: state and handlers are owned by the parent; the selection table is the

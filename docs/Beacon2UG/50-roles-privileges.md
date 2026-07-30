@@ -1,6 +1,6 @@
 # 50. Roles and Privileges
 
-Roles and Privileges is where you control **who can do what** in Beacon2. You
+Roles and Privileges is where you control **who can do what** in beacon2026. You
 create roles (such as "Membership Secretary" or "Treasurer"), assign privileges
 to each role, and then assign roles to individual users.
 
@@ -54,7 +54,7 @@ can see and do. It only appears when editing a role.
 
 ### How it works
 
-- **Rows** represent resources — the different areas of Beacon2 (Members,
+- **Rows** represent resources — the different areas of beacon2026 (Members,
   Groups, Finance, Email, Set Up, etc.)
 - **Columns** represent actions — **View**, **Create**, **Change**, **Delete**,
   and **Other**
@@ -73,7 +73,7 @@ resource to users with this role.
 ### View is required
 
 **View** permission is a prerequisite for any other action on the same resource.
-If you tick Create, Change, or Delete without ticking View, Beacon2 will
+If you tick Create, Change, or Delete without ticking View, beacon2026 will
 automatically enable View for you. A user cannot change what they cannot see.
 
 ### Repeating headers

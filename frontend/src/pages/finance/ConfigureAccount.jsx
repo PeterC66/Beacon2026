@@ -1,4 +1,4 @@
-// beacon2/frontend/src/pages/finance/ConfigureAccount.jsx
+// beacon2026/frontend/src/pages/finance/ConfigureAccount.jsx
 // Configure Account screen — doc 8.6 sections c, d, e.
 // Accessible via the "configure" link on the Finance Accounts list.
 

@@ -1,4 +1,4 @@
-// beacon2/frontend/src/pages/Home.jsx
+// beacon2026/frontend/src/pages/Home.jsx
 // Landing page after login — main administration menu.
 
 import { useState, useEffect } from 'react';

@@ -1,4 +1,4 @@
-// beacon2/backend/src/routes/finance/transactions.js
+// beacon2026/backend/src/routes/finance/transactions.js
 // Thin controllers for transaction list, single, create, bulk-pending, update,
 // delete, and refund. Input is validated here (Zod) at the route boundary; the
 // business logic and data access live in services/transactionService.js.

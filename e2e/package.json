@@ -1,8 +1,8 @@
 {
-  "name": "beacon2-e2e",
+  "name": "beacon2026-e2e",
   "private": true,
   "type": "module",
-  "description": "End-to-end user tests for Beacon2 — run against a staging environment after each deployment.",
+  "description": "End-to-end user tests for beacon2026 — run against a staging environment after each deployment.",
   "scripts": {
     "test": "playwright test",
     "test:headed": "playwright test --headed",

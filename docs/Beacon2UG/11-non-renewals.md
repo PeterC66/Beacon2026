@@ -71,7 +71,7 @@ permanently removes the selected member records from the system.
 
 ## When to use Resigned, Lapsed, or Deceased
 
-Beacon2 provides several statuses for members who are no longer current. Here is
+beacon2026 provides several statuses for members who are no longer current. Here is
 guidance on which to use:
 
 - **Resigned** — The member has actively told you they do not wish to continue.

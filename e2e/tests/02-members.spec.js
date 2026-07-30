@@ -1,4 +1,4 @@
-// beacon2/e2e/tests/02-members.spec.js
+// beacon2026/e2e/tests/02-members.spec.js
 // Member management tests.
 // Beacon UG §4   — "Membership"
 // Beacon UG §4.1 — "The Membership List"

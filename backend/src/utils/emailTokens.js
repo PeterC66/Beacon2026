@@ -1,4 +1,4 @@
-// beacon2/backend/src/utils/emailTokens.js
+// beacon2026/backend/src/utils/emailTokens.js
 // Resolves email tokens for a given member record.
 // Token names are case-insensitive (we normalise to uppercase before matching).
 
@@ -65,7 +65,7 @@ function buildTokenMap(member, u3aName) {
     '#RENEW': fmtDate(m.next_renewal),
     '#MEMCLASS': m.class_name || '',
     '#AFFILIATION': m.home_u3a || '',
-    '#EMERGENCY': '', // not yet in Beacon2 schema
+    '#EMERGENCY': '', // not yet in beacon2026 schema
 
     // Partner tokens
     '#PFAM': famName(partner),

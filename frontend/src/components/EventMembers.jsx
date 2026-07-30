@@ -1,4 +1,4 @@
-// beacon2/frontend/src/components/EventMembers.jsx
+// beacon2026/frontend/src/components/EventMembers.jsx
 // Event Members tab — manage members registered for an event.
 
 import { useState, useEffect, useCallback } from 'react';

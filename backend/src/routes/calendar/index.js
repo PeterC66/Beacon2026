@@ -1,4 +1,4 @@
-// beacon2/backend/src/routes/calendar/index.js
+// beacon2026/backend/src/routes/calendar/index.js
 // Parent router for the calendar — the aggregated view of all group_events
 // (including open meetings). Owns the shared middleware (requireAuth + the
 // `events` feature gate), then mounts the concern-specific sub-routers. The

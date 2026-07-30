@@ -1,4 +1,4 @@
-// beacon2/backend/src/utils/logger.js
+// beacon2026/backend/src/utils/logger.js
 //
 // Minimal, dependency-free structured logger.
 //

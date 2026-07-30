@@ -1,4 +1,4 @@
-// beacon2/backend/src/services/transactionService.js
+// beacon2026/backend/src/services/transactionService.js
 // Business logic for finance transactions: list, single, create, bulk-pending,
 // update, delete, and refund. Routes (routes/finance/transactions.js) are thin
 // controllers that validate input (Zod) and delegate to these functions.

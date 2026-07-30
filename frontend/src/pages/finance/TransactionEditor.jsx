@@ -1,4 +1,4 @@
-// beacon2/frontend/src/pages/finance/TransactionEditor.jsx
+// beacon2026/frontend/src/pages/finance/TransactionEditor.jsx
 // Add or edit a financial transaction — implements Beacon doc 7.2.
 
 import { useState, useEffect, useMemo, useRef } from 'react';

@@ -1,4 +1,4 @@
-// beacon2/frontend/src/components/EntityBulkActions.jsx
+// beacon2026/frontend/src/components/EntityBulkActions.jsx
 // "Do with selected" bulk-action bar (email / download / remove / add-to-other)
 // plus the download field picker. Extracted from EntityMembers; presentation
 // only — all state and handlers live in the parent and arrive as props.

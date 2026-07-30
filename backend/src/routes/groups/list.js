@@ -1,4 +1,4 @@
-// beacon2/backend/src/routes/groups/list.js
+// beacon2026/backend/src/routes/groups/list.js
 // Group listing and list-level downloads (Excel/PDF). Guarded by the
 // `groups_list` privilege resource.
 

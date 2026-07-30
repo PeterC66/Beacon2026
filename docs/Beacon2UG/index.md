@@ -1,13 +1,13 @@
-# Beacon2 User Guide
+# beacon2026 User Guide
 
-Welcome to the **Beacon2 User Guide**. Beacon2 is the modern management platform for
+Welcome to the **beacon2026 User Guide**. beacon2026 is the modern management platform for
 u3a organisations in the UK, replacing the original Beacon system.
 
-This guide covers all areas of Beacon2 — from day-to-day membership management through
+This guide covers all areas of beacon2026 — from day-to-day membership management through
 to system set-up and online services. It is written for u3a volunteers who administer
-their u3a using Beacon2.
+their u3a using beacon2026.
 
-> **Tip:** If you are familiar with the original Beacon, you will find that Beacon2
+> **Tip:** If you are familiar with the original Beacon, you will find that beacon2026
 > works in a very similar way, with a modern interface and some additional features.
 
 ---
@@ -104,4 +104,4 @@ their u3a using Beacon2.
 
 ---
 
-*This guide is for Beacon2 version 0.7.14 and later.*
+*This guide is for beacon2026 version 0.7.14 and later.*

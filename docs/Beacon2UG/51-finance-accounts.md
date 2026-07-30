@@ -1,6 +1,6 @@
 # 51. Finance Accounts
 
-Finance Accounts is where you set up and manage the accounts that Beacon2 uses
+Finance Accounts is where you set up and manage the accounts that beacon2026 uses
 to track your u3a's money. Most u3as will have at least a current account and
 possibly a savings account or petty cash account.
 
@@ -19,14 +19,14 @@ The main table shows all your finance accounts with:
 |--------|---------------|
 | **Account name** | The name of the account |
 | **Active** | Whether the account is currently in use |
-| **Balance B/F** | The balance brought forward from before Beacon2 |
+| **Balance B/F** | The balance brought forward from before beacon2026 |
 | **Configure** | A link to open the account's detailed settings |
 
 ---
 
 ## Balance brought forward [B]
 
-When you first set up Beacon2, you may need to enter an opening balance for each
+When you first set up beacon2026, you may need to enter an opening balance for each
 account. Click the **Balance B/F** field to edit it inline — type the amount and
 press **Enter** or click away to save.
 

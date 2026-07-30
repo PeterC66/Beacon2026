@@ -1,4 +1,4 @@
-// beacon2/frontend/src/pages/membership/MemberStatusList.jsx
+// beacon2026/frontend/src/pages/membership/MemberStatusList.jsx
 // Membership statuses — locked system statuses shown read-only;
 // custom statuses can be added, edited inline, and deleted.
 

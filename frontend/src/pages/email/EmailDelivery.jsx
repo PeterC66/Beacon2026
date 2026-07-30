@@ -1,4 +1,4 @@
-// beacon2/frontend/src/pages/email/EmailDelivery.jsx
+// beacon2026/frontend/src/pages/email/EmailDelivery.jsx
 // List of email batches sent by the current user.
 
 import { useState, useEffect, useRef } from 'react';

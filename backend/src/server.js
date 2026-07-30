@@ -1,4 +1,4 @@
-// beacon2/backend/src/server.js
+// beacon2026/backend/src/server.js
 // Entry point: migrate, seed, then start listening.
 // app.js exports the pure Express app (importable without side-effects for tests).
 
@@ -17,7 +17,7 @@ const PORT = process.env.PORT ?? 3001;
 migrateAndSeed()
   .then(() => {
     app.listen(PORT, () => {
-      logger.info(`Beacon2 API v${version} running on port ${PORT}`, {
+      logger.info(`beacon2026 API v${version} running on port ${PORT}`, {
         env: process.env.NODE_ENV,
       });
     });

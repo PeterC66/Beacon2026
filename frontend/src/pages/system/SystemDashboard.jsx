@@ -1,4 +1,4 @@
-// beacon2/frontend/src/pages/system/SystemDashboard.jsx
+// beacon2026/frontend/src/pages/system/SystemDashboard.jsx
 // Tenant management: list tenants, create new ones, enable/disable, restore backups.
 
 import { useState, useEffect, useCallback, useRef } from 'react';

@@ -1,6 +1,6 @@
 # 63. Data Export and Backup
 
-The **Data Export and Backup** page lets you download your Beacon2 data as
+The **Data Export and Backup** page lets you download your beacon2026 data as
 Excel spreadsheets and restore data from backup files. This is useful for
 keeping offline copies, performing analysis in a spreadsheet application, or
 migrating between systems.
@@ -33,7 +33,7 @@ will be generated and saved to your computer's downloads folder.
 
 > **Warning:** These files may contain **personal information** (names,
 > addresses, email addresses, phone numbers). If you store them outside
-> Beacon2 -- for example on a USB drive or in cloud storage -- you should
+> beacon2026 -- for example on a USB drive or in cloud storage -- you should
 > **encrypt** the file to comply with data protection requirements.
 
 ---
@@ -41,13 +41,13 @@ will be generated and saved to your computer's downloads folder.
 ## Restoring from backup
 
 The page also provides a **Restore** section [J] that lets you upload a
-previously downloaded backup file to restore your data. Beacon2 supports two
+previously downloaded backup file to restore your data. beacon2026 supports two
 backup formats:
 
-- **Beacon2 backup** -- a file previously downloaded from the **Backup all
+- **beacon2026 backup** -- a file previously downloaded from the **Backup all
   data** option above.
 - **Original Beacon backup** -- a backup file exported from the legacy Beacon
-  system. Use this when migrating from the original Beacon to Beacon2.
+  system. Use this when migrating from the original Beacon to beacon2026.
 
 To restore, click **Choose file**, select your backup file, and follow the
 on-screen instructions. A confirmation dialog will appear before any data is

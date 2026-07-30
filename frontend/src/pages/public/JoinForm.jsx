@@ -1,4 +1,4 @@
-// beacon2/frontend/src/pages/public/JoinForm.jsx
+// beacon2026/frontend/src/pages/public/JoinForm.jsx
 // Public-facing online joining form for new members.
 // No authentication required. Tenant resolved from URL slug.
 

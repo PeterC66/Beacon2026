@@ -1,4 +1,4 @@
-// beacon2/backend/src/__tests__/db.test.js
+// beacon2026/backend/src/__tests__/db.test.js
 // Unit tests for the tenant-slug guards in utils/db.js. These run against the
 // real module (no Prisma mock) — the guards throw before any DB call, so no
 // database connection is needed.

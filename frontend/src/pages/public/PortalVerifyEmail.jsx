@@ -1,4 +1,4 @@
-// beacon2/frontend/src/pages/public/PortalVerifyEmail.jsx
+// beacon2026/frontend/src/pages/public/PortalVerifyEmail.jsx
 // Email verification landing page.
 
 import { useState, useEffect } from 'react';

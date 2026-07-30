@@ -1,4 +1,4 @@
-// beacon2/backend/src/routes/members/lifecycle.js
+// beacon2026/backend/src/routes/members/lifecycle.js
 // Membership lifecycle: renewals, renew, non-renewals, and lapse.
 
 import { Router } from 'express';

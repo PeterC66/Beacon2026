@@ -1,4 +1,4 @@
-// beacon2/frontend/src/components/PortalVersion.jsx
+// beacon2026/frontend/src/components/PortalVersion.jsx
 // Discrete version badge for portal screens — top-right corner.
 
 const APP_VERSION = typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : '';

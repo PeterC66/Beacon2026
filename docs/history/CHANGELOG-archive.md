@@ -1,4 +1,4 @@
-# Beacon2 Changelog — Archive (0.9.7 and earlier)
+# beacon2026 Changelog — Archive (0.9.7 and earlier)
 
 Older changelog entries, archived from the main [`CHANGELOG.md`](../../CHANGELOG.md)
 to keep it navigable. These cover versions **0.9.7 (2026-04-18) and earlier**.
@@ -14,13 +14,13 @@ The main changelog retains 0.10.5 onward.
   be given two ways (developer-weeks by hand; calendar time with Claude
   Code in the loop), with the basis stated and the exclusions spelled
   out
-- **`docs/website-post-types-from-beacon2.md`** — design note extending
-  `docs/website-editing-options.md`. Sets out what would be required for Beacon2
+- **`docs/website-post-types-from-beacon2026.md`** — design note extending
+  `docs/website-editing-options.md`. Sets out what would be required for beacon2026
   to create and modify the four in-scope SiteWorks custom post-types
   (`u3a_group`, `u3a_event`, `u3a_venue`, `u3a_contact`). Records the design
-  decisions taken (push-only from Beacon2; per-type plus per-post exclusion;
+  decisions taken (push-only from beacon2026; per-type plus per-post exclusion;
   Application Passwords + small companion plugin; background queue with
-  "publish now"; trash on WP-side for Beacon2 deletes, reconciliation view
+  "publish now"; trash on WP-side for beacon2026 deletes, reconciliation view
   for WP-side deletes), covers the backend/frontend work, the companion
   plugin, field-mapping gotchas (including `u3a_contact` privacy), the
   comparison utility, a feasibility note on one-off data load from
@@ -32,7 +32,7 @@ The main changelog retains 0.10.5 onward.
 - **Security C1 — hardcoded default admin credentials removed** — `SEED_ADMIN_EMAIL`
   and `SEED_ADMIN_PASSWORD` are now required by both `backend/src/seed/index.js` and
   the automatic startup seeder in `backend/src/utils/migrate.js`. The `ChangeMe123!`
-  and `admin@beacon2.local` fallbacks are gone; if no sysadmin exists and either var
+  and `admin@beacon2026.local` fallbacks are gone; if no sysadmin exists and either var
   is missing the process exits with a clear error. The seed password is no longer
   echoed to stdout — only the email is printed
 - **Security C2 — recovery temp password no longer logged** — `sendRecoveryEmail()`
@@ -129,12 +129,12 @@ The main changelog retains 0.10.5 onward.
 - **`docs/website-editing-options.md` — effort estimates now given two ways**
   (developer-weeks by hand; calendar time with Claude Code in the loop), with
   the basis and exclusions stated above the options table. Option D entry
-  cross-refers to `docs/website-post-types-from-beacon2.md` for the worked
+  cross-refers to `docs/website-post-types-from-beacon2026.md` for the worked
   SiteWorks post-type case
 
 ### Added
 - **`docs/website-editing-options.md`** — management-facing options document for
-  enabling Beacon2 users to edit the u3a SiteWorks WordPress site. Sets out four
+  enabling beacon2026 users to edit the u3a SiteWorks WordPress site. Sets out four
   integration architectures (link-out, managed WP users, SSO, embedded editor)
   and five editing tiers, with costs and trade-offs. Recommends starting with a
   link-out + WordPress Editor/Author roles for fastest, most reversible delivery
@@ -308,7 +308,7 @@ The main changelog retains 0.10.5 onward.
   shows a confirmation dialog warning that the module will be hidden from users and
   that existing data is preserved.
 - **Feature config — backup/restore** — `feature_config` is now included in the data
-  export (Settings sheet) and restored in the Beacon2 restore path. Legacy Beacon
+  export (Settings sheet) and restored in the beacon2026 restore path. Legacy Beacon
   restores leave feature config as the default (all on).
 - **Feature configuration** — new per-u3a feature toggles system. Each u3a can
   choose which modules and sub-features are active via a new "Feature Configuration"
@@ -472,7 +472,7 @@ The main changelog retains 0.10.5 onward.
 
 ### Added
 - **Portal version number** — all 10 portal screens now show the app version discreetly
-  in the top-right corner, matching the main Beacon2 screens
+  in the top-right corner, matching the main beacon2026 screens
 - **Public groups list** — unauthenticated page at `/public/{slug}/groups` showing all
   active groups; fields controlled by `group_info_config` public flags; supports `?hdr=0`
   to hide header for iframe embedding
@@ -487,14 +487,14 @@ The main changelog retains 0.10.5 onward.
 ### Fixed
 - **Restore (Beacon legacy)** — now imports venues (as proper venue records linked to
   groups) and group ledger entries
-- **Restore (Beacon2)** — now imports venues, venue_id on groups, and group ledger entries
+- **Restore (beacon2026)** — now imports venues, venue_id on groups, and group ledger entries
 - **Restore (both formats)** — restored users are now forced to change password on first
   login (`must_change_password = true`)
 - **System set-temp-password** — now also sets `must_change_password = true` for all
   affected users
 
 ### Changed
-- **Beacon2 export** — Groups sheet now includes `venue_id`; Venues sheet exports full
+- **beacon2026 export** — Groups sheet now includes `venue_id`; Venues sheet exports full
   venue records; new "Group Ledgers" sheet exports group ledger entries
 
 ---
@@ -649,8 +649,8 @@ The main changelog retains 0.10.5 onward.
 ## [0.7.15] — 2026-03-28
 
 ### Added
-- Beacon2 User Guide (`docs/Beacon2UG/`) — 64 sections covering all modules,
-  structured around Beacon2's actual navigation. Outline-level content with
+- beacon2026 User Guide (`docs/beacon2026UG/`) — 64 sections covering all modules,
+  structured around beacon2026's actual navigation. Outline-level content with
   screenshot placeholders, ready to be fleshed out and have screenshots added.
 
 ---
@@ -669,7 +669,7 @@ The main changelog retains 0.10.5 onward.
   membership renewals bulk, credit batch full workflow)
 
 ### Changed
-- Comprehensive review and update of `Beacon2 Project Definition.md`:
+- Comprehensive review and update of `beacon2026 Project Definition.md`:
   - Updated version reference from 0.7.10 to 0.7.14
   - Added missing features to "What has been built": Letters module, Custom fields,
     Utilities page
@@ -683,7 +683,7 @@ The main changelog retains 0.10.5 onward.
   - Updated outdated deferred items: portal replacement card is built, portal features are built
   - Added 7 missing portal pages to frontend pages table + documented `portalApi` methods
   - Fixed Cookie Consent section (all 8 items implemented, removed stale "deferred" reference)
-  - Added missing localStorage key `beacon2_tam_submission`
+  - Added missing localStorage key `beacon2026_tam_submission`
   - Added new sections: §22 Custom Fields, §23 Gift Aid Log
   - Added missing shared components: BeaconLogo, GoToMemberButton
 - Added test coverage inventory to `CLAUDE-E2E.md`: catalog of all 11 spec files,
@@ -713,7 +713,7 @@ The main changelog retains 0.10.5 onward.
   feedback (blue border highlight) during drag
 - TAM submission cookie — when downloading in TAM format, the selected Status
   and Class filters are saved to localStorage (consent-gated) and restored
-  next time TAM format is selected (`beacon2_tam_submission`)
+  next time TAM format is selected (`beacon2026_tam_submission`)
 
 ### Fixed
 - CSV/TSV export column mismatch — headers had 8 columns (including "Address 4")
@@ -738,7 +738,7 @@ The main changelog retains 0.10.5 onward.
 - `portal_details_updated` system message template — confirmation email for portal
   detail changes
 - Production options document (`docs/production-options.md`) — high-level technical
-  options paper for scaling Beacon2 to production
+  options paper for scaling beacon2026 to production
 
 ---
 
@@ -831,7 +831,7 @@ The main changelog retains 0.10.5 onward.
 - Shared address change dialog: 3-option modal (both / me-only / cancel),
   triggered only on address-field changes
 - Utilities menu added under Misc on Home screen
-- BeaconUG-Comparison.md — living comparison document tracking Beacon2 vs
+- BeaconUG-Comparison.md — living comparison document tracking beacon2026 vs
   original Beacon User Guide
 
 ### Fixed

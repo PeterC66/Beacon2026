@@ -1,7 +1,7 @@
 # 8. Adding a New Member
 
 When someone joins your u3a, this is where you create their membership record
-and log their first payment. Beacon2 guides you through a simple form that
+and log their first payment. beacon2026 guides you through a simple form that
 collects the new member's details, address, and payment information in one go.
 
 ![The Add New Member page](images/add-new-member.png)
@@ -22,7 +22,7 @@ the top of the [Members List](6-members-list.md).
 ## The new member form
 
 The form is divided into several sections. Fields with labels in **bold** are
-mandatory -- Beacon2 will prompt you if any are missing when you try to save.
+mandatory -- beacon2026 will prompt you if any are missing when you try to save.
 
 The new member's status is automatically set to **Current**.
 
@@ -37,7 +37,7 @@ The new member's status is automatically set to **Current**.
 | **Email** | Email addresses are automatically converted to lowercase. |
 | **Mobile** | Mobile phone number. |
 
-> **Note:** The **Initials** field is not shown on this form. Beacon2 generates
+> **Note:** The **Initials** field is not shown on this form. beacon2026 generates
 > initials automatically from the forenames. You can edit them later on the
 > [Member Record](7-member-record.md) if needed.
 
@@ -66,7 +66,7 @@ Tick the **Gift Aid** checkbox if the member has signed a Gift Aid declaration.
 The consent date is set to today's date automatically.
 
 > **Remember:** Gift Aid requires a **Title** (Mr, Mrs, etc.) on the member
-> record. Beacon2 will remind you if the title is missing.
+> record. beacon2026 will remind you if the title is missing.
 
 ### 5. Membership class [E]
 
@@ -114,14 +114,14 @@ Every new member needs a payment record. Fill in the following:
 ## Saving the new member
 
 When you have filled in all the required fields, click **Save** (or **Add Member**).
-Beacon2 will:
+beacon2026 will:
 
 1. Create the new member record with a status of **Current**.
 2. Create a membership payment transaction in the financial ledger.
 3. Return you to the Members List, where the new member will now appear.
 
 If any mandatory fields are missing or a value is in the wrong format (e.g. an
-invalid postcode), Beacon2 will highlight the problem and ask you to correct it
+invalid postcode), beacon2026 will highlight the problem and ask you to correct it
 before saving.
 
 ---

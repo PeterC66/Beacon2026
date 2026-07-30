@@ -1,4 +1,4 @@
-// beacon2/frontend/src/pages/members/MemberCompactView.jsx
+// beacon2026/frontend/src/pages/members/MemberCompactView.jsx
 // Read-only condensed member view — experimental layout inspired by Beacon.
 // Displays all member data on a single screen for laptop users,
 // while remaining responsive on smaller screens.

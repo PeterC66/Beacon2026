@@ -1,4 +1,4 @@
-// beacon2/e2e/tests/17-setup-extended.spec.js
+// beacon2026/e2e/tests/17-setup-extended.spec.js
 // Extended setup tests: Polls, System Messages, Public Links, Custom Fields,
 // Feature Configuration, Event Types.
 // Beacon UG §§8.8, 9.4, 8.3

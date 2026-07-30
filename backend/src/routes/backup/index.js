@@ -1,4 +1,4 @@
-// beacon2/backend/src/routes/backup/index.js
+// beacon2026/backend/src/routes/backup/index.js
 // Parent router for data export/backup. Mounts the export sub-router and
 // re-exports the restore helpers used by system.js and the test suite.
 
@@ -13,7 +13,7 @@ router.use('/', exportRouter);
 export {
   clearTenantData,
   resetSequences,
-  restoreBeacon2,
+  restorebeacon2026,
   restoreBeacon,
   BEACON_DEFAULT_PASSWORD,
 } from './restore.js';

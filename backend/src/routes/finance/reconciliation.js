@@ -1,4 +1,4 @@
-// beacon2/backend/src/routes/finance/reconciliation.js
+// beacon2026/backend/src/routes/finance/reconciliation.js
 // Account reconciliation.
 
 import { Router } from 'express';

@@ -1,4 +1,4 @@
-// beacon2/frontend/src/pages/public/PortalRenewal.jsx
+// beacon2026/frontend/src/pages/public/PortalRenewal.jsx
 // Members Portal — online membership renewal (doc 10.2.1).
 // Shows renewal fee, Gift Aid options, and initiates PayPal payment.
 

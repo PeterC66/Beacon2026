@@ -1,4 +1,4 @@
-// beacon2/backend/src/__tests__/financeTransfers.test.js
+// beacon2026/backend/src/__tests__/financeTransfers.test.js
 // Coverage for the transfer-money sub-router (routes/finance/transfers.js),
 // added in Chunk 7 of docs/ImprovementPlan.md.
 

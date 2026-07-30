@@ -1,7 +1,7 @@
 # 64. Utilities
 
 The **Utilities** page provides access to a collection of administrative tools
-for maintaining and checking your Beacon2 data.
+for maintaining and checking your beacon2026 data.
 
 To open it, click **Utilities** in the **Misc** section of the Home page.
 
@@ -19,7 +19,7 @@ brief description of what it does. Currently the following tool is available:
   dates. See [Section 15](15-validate-member-data.md) for full details.
 
 > **Note:** This page will expand over time as additional utilities are added
-> to Beacon2.
+> to beacon2026.
 
 ---
 

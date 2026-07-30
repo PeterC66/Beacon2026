@@ -1,4 +1,4 @@
-// beacon2/e2e/fixtures/admin.js
+// beacon2026/e2e/fixtures/admin.js
 // Playwright fixture that provides a page already logged in as the
 // test-tenant admin user.  Import { test, expect } from here instead of
 // '@playwright/test' in every spec file.
@@ -18,11 +18,11 @@ function readSlug() {
     const state = JSON.parse(readFileSync(resolve(__dirname, '../.e2e-state.json'), 'utf8'));
     return state.slug;
   } catch { /* state file missing — use env/default */ }
-  return process.env.BEACON2_TEST_TENANT_SLUG || 'e2etest';
+  return process.env.beacon2026_TEST_TENANT_SLUG || 'e2etest';
 }
 const SLUG     = readSlug();
-const USERNAME = process.env.BEACON2_TEST_ADMIN_USERNAME || 'testadmin';
-const PASSWORD = process.env.BEACON2_TEST_ADMIN_PASSWORD || 'TestAdmin99!';
+const USERNAME = process.env.beacon2026_TEST_ADMIN_USERNAME || 'testadmin';
+const PASSWORD = process.env.beacon2026_TEST_ADMIN_PASSWORD || 'TestAdmin99!';
 
 /**
  * Extended test fixture.  Use `adminPage` in tests; it is already signed in.

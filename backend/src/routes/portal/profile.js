@@ -1,4 +1,4 @@
-// beacon2/backend/src/routes/portal/profile.js
+// beacon2026/backend/src/routes/portal/profile.js
 // Members Portal — dashboard, personal details, photo, password, and
 // replacement-card endpoints (docs 10.2.4–10.2.5 plus the /home dashboard).
 

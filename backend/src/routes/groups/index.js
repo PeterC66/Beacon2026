@@ -1,4 +1,4 @@
-// beacon2/backend/src/routes/groups/index.js
+// beacon2026/backend/src/routes/groups/index.js
 // Parent router for group routes. Owns the shared middleware (requireAuth +
 // the `groups` feature gate), then mounts the concern-specific sub-routers.
 // Order matters: the list router owns the literal `/download` path, so it is

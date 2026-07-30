@@ -101,7 +101,7 @@ a single payment of `+45.00` might be `+30.00` "Subscriptions" + `+15.00`
 |--------|------|----------|-------|
 | `tkey` | string | no | FK to `Ledger.tkey` |
 | `category` | string | no | FK to `Finance Categories.name` (by name, case-insensitive) |
-| `amount` | decimal | no | Portion of the parent transaction allocated to this category. **Sign convention is preserved** from the parent — but Beacon2's importer stores `Math.abs(amount)` in its destination DB. For analysis, prefer the absolute value plus the parent transaction's `type` (`in`/`out`). |
+| `amount` | decimal | no | Portion of the parent transaction allocated to this category. **Sign convention is preserved** from the parent — but beacon2026's importer stores `Math.abs(amount)` in its destination DB. For analysis, prefer the absolute value plus the parent transaction's `type` (`in`/`out`). |
 
 **Composite uniqueness:** `(tkey, category)`.
 
@@ -140,7 +140,7 @@ a single payment of `+45.00` might be `+30.00` "Subscriptions" + `+15.00`
 - **Transfers:** Money moved between two `Finance Accounts` may appear as two
   transactions (one negative, one positive). There's no transfer link in
   legacy Beacon — sniff by matching same date, opposite amounts, both with
-  `payee` referring to the other account. Beacon2 introduces a `transfer_id`
+  `payee` referring to the other account. beacon2026 introduces a `transfer_id`
   but legacy backups don't have it.
 - **Gift Aid:** The `gift_aid` and `claimed` columns are sparsely populated.
   If gift-aid analysis is needed, cross-reference with `Members.gift_aid`

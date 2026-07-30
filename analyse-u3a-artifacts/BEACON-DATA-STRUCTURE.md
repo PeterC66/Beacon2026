@@ -6,7 +6,7 @@
 >
 > **Source of truth:** This document is reverse-engineered from
 > `backend/src/routes/backup.js` (function `restoreBeacon`, lines 1214–1729) in
-> the **Beacon2** repository, and verified against a real backup file:
+> the **beacon2026** repository, and verified against a real backup file:
 > `docs/FromBeacon/202603170140_St Ives Cambridge Demo24 u3abackup.xlsx`.
 >
 > If you find a discrepancy between this document and the actual xlsx file,
@@ -239,7 +239,7 @@ Beacon does not store a "left on" date. Churn is inferred by:
 
 A real example backup is at:
 `docs/FromBeacon/202603170140_St Ives Cambridge Demo24 u3abackup.xlsx` (in the
-Beacon2 repo, not copied here — files containing real member data must not
+beacon2026 repo, not copied here — files containing real member data must not
 leave the local machine).
 
 For unit tests, create a small synthetic xlsx fixture rather than copying the

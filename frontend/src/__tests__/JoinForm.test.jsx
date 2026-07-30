@@ -1,4 +1,4 @@
-// beacon2/frontend/src/__tests__/JoinForm.test.jsx
+// beacon2026/frontend/src/__tests__/JoinForm.test.jsx
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';

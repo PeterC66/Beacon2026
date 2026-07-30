@@ -1,4 +1,4 @@
-// beacon2/backend/src/middleware/requireFeature.js
+// beacon2026/backend/src/middleware/requireFeature.js
 // Checks that a feature toggle is enabled for the current tenant.
 // Must be used AFTER requireAuth middleware.
 //

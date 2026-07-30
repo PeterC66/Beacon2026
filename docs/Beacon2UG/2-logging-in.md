@@ -1,18 +1,18 @@
 # 2. Logging In
 
-To use Beacon2 you need three things: your **u3a identifier**, your **Username**,
+To use beacon2026 you need three things: your **u3a identifier**, your **Username**,
 and your **Password**. These are provided by your u3a's Site Administrator.
 
 ## The login page
 
-![The Beacon2 login page](images/login-page.png)
+![The beacon2026 login page](images/login-page.png)
 
-The login page shows the Beacon2 logo and the heading **Administration** [A].
+The login page shows the beacon2026 logo and the heading **Administration** [A].
 Below it are three fields:
 
 - **u3a** [B] -- your u3a's unique identifier (sometimes called the "slug").
   This is a short text code for your u3a, for example `example-u3a`. If you
-  have accepted optional cookies, Beacon2 will remember this value for your
+  have accepted optional cookies, beacon2026 will remember this value for your
   next visit.
 
 - **Username** [C] -- the username given to you by your Site Administrator.
@@ -27,7 +27,7 @@ Press the **Enter** button [E] to log in.
 
 ## Failed login attempts
 
-If your credentials are not recognised, Beacon2 will display an error message
+If your credentials are not recognised, beacon2026 will display an error message
 and tell you how many tries you have left. **After 3 failed attempts** you will
 be unable to log in further from this session. If this happens, you should
 contact your Site Administrator, who can confirm your username and reset your
@@ -48,9 +48,9 @@ Click here.** [F]. This opens an inline recovery section on the same page.
 
 Enter the following details to identify your account:
 
-- **Forename** -- your first name as recorded in Beacon2
-- **Surname** -- your surname as recorded in Beacon2
-- **Postcode** -- your postcode as recorded in Beacon2
+- **Forename** -- your first name as recorded in beacon2026
+- **Surname** -- your surname as recorded in beacon2026
+- **Postcode** -- your postcode as recorded in beacon2026
 - **Email** -- the email address linked to your account
 
 Press **Submit** to continue.
@@ -59,18 +59,18 @@ Press **Submit** to continue.
 
 ![Recovery form -- security question](images/login-recovery-question.png)
 
-If your details match an account, Beacon2 will display your personal security
+If your details match an account, beacon2026 will display your personal security
 question (the one you set when you first changed your password). Type the
 answer **in the same format as when it was originally set** and press **Submit**.
 
 ### Step 3 -- Check your email
 
-If the answer is correct, Beacon2 will send an email to your registered email
+If the answer is correct, beacon2026 will send an email to your registered email
 address containing your username and a temporary password. You can then close
 the recovery section and log in normally. On your next login you will be asked
 to set a new password (see [Section 3](3-changing-password.md)).
 
-> **Important:** If you do not have an email address registered in Beacon2,
+> **Important:** If you do not have an email address registered in beacon2026,
 > the self-service recovery will not work. Please contact your Site
 > Administrator instead.
 

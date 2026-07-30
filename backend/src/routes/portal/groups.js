@@ -1,4 +1,4 @@
-// beacon2/backend/src/routes/portal/groups.js
+// beacon2026/backend/src/routes/portal/groups.js
 // Members Portal — Groups (doc 10.2.2): browse active groups and join/leave.
 
 import { Router } from 'express';

@@ -18,7 +18,7 @@ any manual data entry by your volunteers.
 1. A prospective member visits the joining page (linked from your u3a website).
 2. They fill in the form and click **Join**.
 3. They are taken to PayPal to pay the membership fee.
-4. On successful payment, Beacon2 creates their member record, sends confirmation
+4. On successful payment, beacon2026 creates their member record, sends confirmation
    emails, and shows them their new membership number.
 5. They are prompted to register for the [Members Portal](42-members-portal.md).
 
@@ -59,7 +59,7 @@ means the member consents to your u3a reclaiming tax on their subscription under
 the Gift Aid scheme.
 
 > **Important:** HMRC requires a **Title** and a **House no / name** for Gift Aid
-> claims. If the applicant ticks the Gift Aid box, Beacon2 will insist that both
+> claims. If the applicant ticks the Gift Aid box, beacon2026 will insist that both
 > fields are filled in before allowing them to continue.
 
 ### 5. Privacy policy [E]
@@ -71,7 +71,7 @@ applicant must acknowledge this before submitting.
 
 ## Validation
 
-Beacon2 checks the form before allowing the applicant to proceed:
+beacon2026 checks the form before allowing the applicant to proceed:
 
 - **Forenames**, **Surname**, **Email**, and **Postcode** are all required.
 - **Postcode** must be in a valid UK format (e.g. AB1 2CD, A1 2BC).
@@ -79,7 +79,7 @@ Beacon2 checks the form before allowing the applicant to proceed:
   (this is an HMRC requirement for Gift Aid declarations).
 - **Email** must be in a valid format.
 
-If anything is missing or incorrect, Beacon2 highlights the field and displays a
+If anything is missing or incorrect, beacon2026 highlights the field and displays a
 helpful message explaining what needs to be corrected.
 
 ---
@@ -93,14 +93,14 @@ they selected.
 - The applicant can pay with a PayPal account or with a debit/credit card.
 - If they cancel the payment, they are returned to the form and no record is
   created.
-- If the payment succeeds, PayPal redirects them back to Beacon2 to complete the
+- If the payment succeeds, PayPal redirects them back to beacon2026 to complete the
   process.
 
 ---
 
 ## What happens after successful payment
 
-When payment is confirmed, Beacon2 performs several actions automatically:
+When payment is confirmed, beacon2026 performs several actions automatically:
 
 1. **Member record created** — a new member is created with an initial status of
    **Applicant**, then immediately promoted to **Current**.

@@ -1,4 +1,4 @@
-# Beacon2 — Independent Codebase & Documentation Review (2026-06-14)
+# beacon2026 — Independent Codebase & Documentation Review (2026-06-14)
 
 > **Status:** active working plan. This is a *second, independent* review,
 > separate from the June-2026 effort archived in
@@ -8,7 +8,7 @@
 
 ## Context
 
-Beacon2 is a multi-tenant Node/Express + React/Vite reproduction of the live
+beacon2026 is a multi-tenant Node/Express + React/Vite reproduction of the live
 u3a *Beacon* system (demo: https://demo.u3abeacon.org.uk/). It is **not yet in
 production**. The goal for this review is **demo/portfolio quality**:
 "experienced developers should see nothing they object to" when reading the
@@ -77,7 +77,7 @@ For a "faithful reproduction," the deferred features are the main completeness
 story. They are tracked but scattered across `KNOWN-ISSUES.md`.
 
 - 🟡 **Consolidate the parity gap list** *(new)* and reconcile with
-  `docs/Beacon2UG-Comparison.md` so there is one authoritative "what's missing
+  `docs/beacon2026UG-Comparison.md` so there is one authoritative "what's missing
   vs Beacon" view.
 - 🟡 Feature gaps worth a decision before claiming parity *(KI, DEFERRED)*:
   PayPal is a stub; shared-email portal login has no UI disambiguation;
@@ -221,7 +221,7 @@ and ends with the standard wrap-up (tests, lint, CHANGELOG, KNOWN-ISSUES).
 - Reuse: `backend/src/__tests__/mocks.js`, existing setup patterns.
 
 ### Chunk 7 — Completeness reconciliation *(medium; partly a decision task)* — **DONE (2026-06-14)**
-- Build one authoritative parity-gap list; sync `docs/Beacon2UG-Comparison.md`.
+- Build one authoritative parity-gap list; sync `docs/beacon2026UG-Comparison.md`.
 - Then pick the low-cost gaps to close now: wire `show_addresses`/`hide_contact`
   visibility, display `public_phone`/`public_email`, resolve the Calendar-export
   no-op, fix the doc 7.10.5 typo and the Ledger wording.
@@ -229,7 +229,7 @@ and ends with the standard wrap-up (tests, lint, CHANGELOG, KNOWN-ISSUES).
 
 **Outcome:** Closed: displayed `public_phone`/`public_email`/`home_page` on the
 Portal sign-in + Join form (new `PublicContact` component + `GET /:slug/info`);
-fixed the doc 7.10.5 eligibility wording (Beacon2 doc + editor's note on the UG
+fixed the doc 7.10.5 eligibility wording (beacon2026 doc + editor's note on the UG
 transcription); aligned the "Central Ledger" wording. Owner decisions: Calendar
 export left as-is (placeholder message made accurate); `hide_contact`/
 `show_addresses` visibility **deferred with a clearer note** — re-verification
@@ -308,7 +308,7 @@ is executed**:
   bite; Chunk 5 — exercise refresh-token reuse with Redis off to confirm the
   fallback path.
 - **Wrap-up each session:** update `CHANGELOG.md`, move resolved items in
-  `KNOWN-ISSUES.md` to `[FIXED]`, and update `docs/Beacon2UG-Comparison.md` if a
+  `KNOWN-ISSUES.md` to `[FIXED]`, and update `docs/beacon2026UG-Comparison.md` if a
   feature changed.
 
 ## Open decisions to confirm before executing

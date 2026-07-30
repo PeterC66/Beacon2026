@@ -1,9 +1,9 @@
-# Contributing to Beacon2
+# Contributing to beacon2026
 
-Thanks for your interest in Beacon2. This guide covers how to get set up, the
+Thanks for your interest in beacon2026. This guide covers how to get set up, the
 conventions the codebase follows, and how changes are reviewed.
 
-> **Note:** Much of Beacon2's development is carried out through Claude Code
+> **Note:** Much of beacon2026's development is carried out through Claude Code
 > sessions. `CLAUDE.md`, `CLAUDE-STANDARDS.md`, and `CLAUDE-REFERENCE.md` are
 > tooling for those sessions — this file (and `README.md`) is the entry point
 > for human contributors. The conventions below are the same ones the AI
@@ -42,7 +42,7 @@ conventions the codebase follows, and how changes are reviewed.
 - Frontend styling is **Tailwind CSS v3** exclusively.
 - Never define a React component inside another component (it remounts on every
   render) — use a plain render function or a top-level component.
-- Spell **u3a** in lowercase. The new system is **Beacon2**; the original is
+- Spell **u3a** in lowercase. The new system is **beacon2026**; the original is
   **Beacon**.
 
 See [`CLAUDE-STANDARDS.md`](CLAUDE-STANDARDS.md) for the full cross-cutting
@@ -88,7 +88,7 @@ needed.
 
 ## Documentation
 
-Beacon2 keeps several living documents up to date alongside code:
+beacon2026 keeps several living documents up to date alongside code:
 
 - `CHANGELOG.md` — add an entry under the current version for any user-facing
   change (`### Added` / `### Changed` / `### Fixed`).

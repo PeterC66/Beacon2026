@@ -1,4 +1,4 @@
-// beacon2/backend/src/utils/sqlSafety.js
+// beacon2026/backend/src/utils/sqlSafety.js
 // Safety helpers for the SQL reports feature.
 //
 // The reports tool lets users run raw SELECT/WITH queries against their tenant

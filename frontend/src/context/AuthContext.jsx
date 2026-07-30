@@ -1,4 +1,4 @@
-// beacon2/frontend/src/context/AuthContext.jsx
+// beacon2026/frontend/src/context/AuthContext.jsx
 // Provides authentication state and actions to the whole app.
 
 import { createContext, useContext, useState, useEffect, useRef, useCallback } from 'react';

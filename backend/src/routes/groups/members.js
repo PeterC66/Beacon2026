@@ -1,4 +1,4 @@
-// beacon2/backend/src/routes/groups/members.js
+// beacon2026/backend/src/routes/groups/members.js
 // Group membership sub-resource: /groups/:id/members. Listing, downloads, and
 // add/remove/bulk operations. Guarded by the `group_records_all` privilege.
 

@@ -1,4 +1,4 @@
-// beacon2/frontend/src/__tests__/VenueEditor.test.jsx
+// beacon2026/frontend/src/__tests__/VenueEditor.test.jsx
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';

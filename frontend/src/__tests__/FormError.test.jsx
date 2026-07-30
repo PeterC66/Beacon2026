@@ -1,4 +1,4 @@
-// beacon2/frontend/src/__tests__/FormError.test.jsx
+// beacon2026/frontend/src/__tests__/FormError.test.jsx
 import { describe, it, expect } from 'vitest';
 import { render } from '@testing-library/react';
 import FormError from '../components/FormError.jsx';

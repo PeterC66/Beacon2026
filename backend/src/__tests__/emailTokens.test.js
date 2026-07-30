@@ -1,4 +1,4 @@
-// beacon2/backend/src/__tests__/emailTokens.test.js
+// beacon2026/backend/src/__tests__/emailTokens.test.js
 // Regression tests for the email token resolver — in particular the
 // HTML escaping of substituted values on the html/ field path.
 

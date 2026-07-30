@@ -1,4 +1,4 @@
-// beacon2/backend/src/utils/paypal.js
+// beacon2026/backend/src/utils/paypal.js
 // PayPal integration stub.
 // This module defines the interface for PayPal payments.
 // Currently uses stub implementations for development/testing.

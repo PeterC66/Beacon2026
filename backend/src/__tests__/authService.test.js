@@ -1,4 +1,4 @@
-// beacon2/backend/src/__tests__/authService.test.js
+// beacon2026/backend/src/__tests__/authService.test.js
 // Unit tests for the security-critical paths in authService.js:
 //   H1 — refresh token must reject a tenant slug mismatch
 //   H2 — failed-login counter increments and locks the account

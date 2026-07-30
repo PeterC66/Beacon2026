@@ -2,7 +2,7 @@
 
 The **Email Unblocker** is an admin tool that removes an email address from
 SendGrid's bounce and spam report lists. Once unblocked, future emails sent through
-Beacon2 will be delivered to that address again.
+beacon2026 will be delivered to that address again.
 
 To open it, click **E-mail unblocker** on the **Home** page. This feature requires
 the full email permission.
@@ -20,7 +20,7 @@ is unblocked.
 
 You should use the unblocker when:
 
-- A member tells you they are not receiving emails from Beacon2.
+- A member tells you they are not receiving emails from beacon2026.
 - You see a **Blocked**, **Bounced**, or **Dropped** status on the
   [Email Delivery](37-email-delivery.md) detail page.
 - You have confirmed that the member's email address is correct and working (ask

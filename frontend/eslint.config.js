@@ -1,4 +1,4 @@
-// beacon2/frontend/eslint.config.js
+// beacon2026/frontend/eslint.config.js
 // Flat-config ESLint setup for the React frontend (ES modules, browser runtime).
 import js from '@eslint/js';
 import globals from 'globals';

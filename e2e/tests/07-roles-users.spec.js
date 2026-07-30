@@ -1,4 +1,4 @@
-// beacon2/e2e/tests/07-roles-users.spec.js
+// beacon2026/e2e/tests/07-roles-users.spec.js
 // Roles, privileges and system users tests.
 // Beacon UG §8.1 — "Site Administration" (users)
 // Beacon UG §8.4 — "Roles and Privileges"
@@ -142,7 +142,7 @@ test.describe('System users', () => {
 
     // Step 5: Fill required fields
     await page.locator('input[name="username"]').fill(USER_UNAME);
-    await page.locator('input[name="email"]').fill(`${USER_UNAME}@beacon2-e2e.invalid`);
+    await page.locator('input[name="email"]').fill(`${USER_UNAME}@beacon2026-e2e.invalid`);
 
     await page.getByRole('button', { name: /save user/i }).click();
 
@@ -167,7 +167,7 @@ test.describe('System users', () => {
     await page.getByRole('heading', { name: 'System User Record' }).waitFor({ timeout: 10_000 });
 
     // Change email and save
-    await page.locator('input[name="email"]').fill(`${USER_UNAME}2@beacon2-e2e.invalid`);
+    await page.locator('input[name="email"]').fill(`${USER_UNAME}2@beacon2026-e2e.invalid`);
     await page.getByRole('button', { name: /save user/i }).click();
 
     await expect(page.getByText(/saved/i).first()).toBeVisible({ timeout: 6_000 });

@@ -1,20 +1,20 @@
-# Creating and modifying SiteWorks post-types from Beacon2
+# Creating and modifying SiteWorks post-types from beacon2026
 
 ## Why this note exists
 
 `docs/website-editing-options.md` sets out four broad architectures (A–D) and
-five editing tiers for letting Beacon2 users edit the u3a SiteWorks WordPress
+five editing tiers for letting beacon2026 users edit the u3a SiteWorks WordPress
 website. It recommends starting with option A (link out to WordPress) because
 it is the cheapest reversible step.
 
 This note is a deeper dive into a narrower, higher-value question: what would
-it take for Beacon2 itself to **create and modify the structured SiteWorks
+it take for beacon2026 itself to **create and modify the structured SiteWorks
 custom post-types** — `u3a_group`, `u3a_event`, `u3a_venue`, `u3a_contact` —
-so that the website reflects Beacon2 data automatically, without anyone
+so that the website reflects beacon2026 data automatically, without anyone
 logging into WordPress to maintain those entries.
 
 This is a specific form of option D from the earlier note, confined to
-structured content that Beacon2 already models. Free-form pages and news
+structured content that beacon2026 already models. Free-form pages and news
 posts are out of scope for this work; a note at the end covers how they
 might be incorporated later.
 
@@ -27,18 +27,18 @@ change the shape of the work significantly.
 
 | Decision | Choice |
 |---|---|
-| Direction of data flow | **Beacon2 → WordPress only.** Beacon2 is the source of truth. Beacon2 writes; it does not read the website back except to detect mismatches. |
-| Exclusion model | **Per post-type default plus per-post override.** Each u3a decides, for each of the four post-types, whether Beacon2 manages that type. Individual posts can be flagged "not managed by Beacon2" on the WordPress side and Beacon2 will leave them alone. |
-| Post-types in scope | `u3a_group`, `u3a_event`, `u3a_venue`, `u3a_contact`. Notices are handled as a special event type inside Beacon2 and flow through `u3a_event`. Generic WordPress `post` and `page` are out of scope for now. |
+| Direction of data flow | **beacon2026 → WordPress only.** beacon2026 is the source of truth. beacon2026 writes; it does not read the website back except to detect mismatches. |
+| Exclusion model | **Per post-type default plus per-post override.** Each u3a decides, for each of the four post-types, whether beacon2026 manages that type. Individual posts can be flagged "not managed by beacon2026" on the WordPress side and beacon2026 will leave them alone. |
+| Post-types in scope | `u3a_group`, `u3a_event`, `u3a_venue`, `u3a_contact`. Notices are handled as a special event type inside beacon2026 and flow through `u3a_event`. Generic WordPress `post` and `page` are out of scope for now. |
 | Rollout | **Phased.** Groups first, then events, then venues and contacts. Each phase is a delivery that stands on its own. |
-| Authentication to WordPress | **WordPress Application Passwords (built into WP core) plus a small Beacon2 companion plugin.** Application Passwords carry the authentication load; the companion plugin only provides the per-post "Beacon2-managed" flag, an admin overview and a handful of UI affordances. No custom auth code. |
+| Authentication to WordPress | **WordPress Application Passwords (built into WP core) plus a small beacon2026 companion plugin.** Application Passwords carry the authentication load; the companion plugin only provides the per-post "beacon2026-managed" flag, an admin overview and a handful of UI affordances. No custom auth code. |
 | Push trigger | **Background queue** with an optional "publish now" action. Saves commit locally and an async worker pushes to WordPress within a short interval. A failed push is retried with exponential backoff. |
-| Beacon2-side delete | **Trash the WordPress post** (reversible within WP's trash retention window). |
-| WordPress-side delete | **Reconciliation view.** Beacon2 does not silently re-create a deleted post nor silently flip the Beacon2 record. It surfaces the mismatch for a human. |
+| beacon2026-side delete | **Trash the WordPress post** (reversible within WP's trash retention window). |
+| WordPress-side delete | **Reconciliation view.** beacon2026 does not silently re-create a deleted post nor silently flip the beacon2026 record. It surfaces the mismatch for a human. |
 
 ---
 
-## What has to be built in Beacon2
+## What has to be built in beacon2026
 
 ### Backend
 
@@ -51,19 +51,19 @@ change the shape of the work significantly.
   `tenant_id, entity_type, entity_id, operation (create|update|delete),
    payload_hash, attempts, next_attempt_at, status, last_error`.
   The outbox is the single source of truth for what still needs to happen;
-  a row is inserted whenever a Beacon2 record is saved or deleted.
+  a row is inserted whenever a beacon2026 record is saved or deleted.
 - **Worker loop.** A single job type that pulls due rows, calls the
   WordPress REST API, updates status, and schedules retries. Runs alongside
   the existing backend process; no new infrastructure.
-- **Field mappers — one per post-type.** Translates a Beacon2 record into
+- **Field mappers — one per post-type.** Translates a beacon2026 record into
   the shape the WordPress REST API expects, including the SiteWorks meta
   fields (`group_startdate`, `contact_phone`, etc.). This is where the
   real work lives; see §Field mapping below.
 - **Reconciliation service.** Periodically walks the WordPress REST API
-  for each managed post-type, compares against Beacon2's own records, and
+  for each managed post-type, compares against beacon2026's own records, and
   records three categories: (i) on both and in sync, (ii) on both but
   differing, (iii) on one only (either an orphaned WP post or an unpushed
-  Beacon2 record).
+  beacon2026 record).
 - **New privilege resource** — `website_integration` — gated by the
   standard `requirePrivilege` pattern. Seeded in `privilegeResources.js`
   and granted to the Administration role in `defaultRoles.js` (per the
@@ -84,24 +84,24 @@ change the shape of the work significantly.
 
 ---
 
-## The Beacon2 companion WordPress plugin
+## The beacon2026 companion WordPress plugin
 
 Kept deliberately small. It does **not** handle authentication and it does
-**not** call Beacon2. Its only job is to make "Beacon2 manages this post"
+**not** call beacon2026. Its only job is to make "beacon2026 manages this post"
 visible and controllable inside WordPress.
 
-- A per-post meta field `_beacon2_managed` (boolean) and
-  `_beacon2_record_id` (string). The latter prevents duplicates when a
+- A per-post meta field `_beacon2026_managed` (boolean) and
+  `_beacon2026_record_id` (string). The latter prevents duplicates when a
   push retries.
 - A meta box in the editor for the four in-scope post-types showing the
-  current management state, the Beacon2 record ID, and the last-synced
-  timestamp. A checkbox lets an admin flip "managed by Beacon2" off for
+  current management state, the beacon2026 record ID, and the last-synced
+  timestamp. A checkbox lets an admin flip "managed by beacon2026" off for
   this specific post.
-- A "Managed by Beacon2" column in the post-type admin list so an admin
-  can see at a glance which posts are owned by Beacon2.
-- A read-only admin page listing all Beacon2-managed posts grouped by
+- A "Managed by beacon2026" column in the post-type admin list so an admin
+  can see at a glance which posts are owned by beacon2026.
+- A read-only admin page listing all beacon2026-managed posts grouped by
   type, with counts — mainly for reassurance and audit.
-- An activation check that records the plugin version; used by Beacon2
+- An activation check that records the plugin version; used by beacon2026
   during `test connection` to warn if the plugin is missing or outdated.
 
 Estimated plugin size: a few hundred lines of PHP. Maintenance across
@@ -123,16 +123,16 @@ version-stamp somewhere so we notice if a SiteWorks upgrade changes the
 expectations. Specific points to watch:
 
 - **`u3a_group`** — meeting schedule fields (day, start-time, frequency)
-  have specific string formats. Beacon2's richer scheduling model will
+  have specific string formats. beacon2026's richer scheduling model will
   not always round-trip; the mapper has to choose a "best fit" summary
   for groups whose schedule is more complex than SiteWorks supports.
 - **`u3a_event`** — date/time handling needs explicit `::date` / `::time`
   casts (per `CLAUDE-REFERENCE.md` §1). Recurring events may produce
   either one post or many; decide this up front.
 - **`u3a_venue`** — straightforward, but deduplication matters:
-  Beacon2 venue 12 should always correspond to the same WP post.
+  beacon2026 venue 12 should always correspond to the same WP post.
 - **`u3a_contact`** — **privacy-sensitive.** Committee contact details
-  are usually public on the website, but Beacon2 holds plenty of
+  are usually public on the website, but beacon2026 holds plenty of
   contact data that is not public. The mapper must explicitly filter to
   the fields intended for public display, and only for members who are
   flagged as committee / public contacts. A default of "don't push"
@@ -147,14 +147,14 @@ can be deferred.
 ## Comparison utility
 
 Useful from day one and essential before flipping a u3a from "manual
-WordPress editing" to "Beacon2-managed". For each of the four post-types:
+WordPress editing" to "beacon2026-managed". For each of the four post-types:
 
 - Pull every post of that type from WordPress (paginated REST call).
-- Pair them with Beacon2 records using `_beacon2_record_id` where
+- Pair them with beacon2026 records using `_beacon2026_record_id` where
   present, and title-based fuzzy match where absent.
 - Show three lists: **matched and equivalent**, **matched but differ**
   (side-by-side diff of mapped fields), **unmatched** (WP-only or
-  Beacon2-only).
+  beacon2026-only).
 
 The comparison view is read-only — no changes are made until an
 administrator chooses an action per row. This makes it safe to run at
@@ -162,29 +162,29 @@ any time, including before the first push.
 
 ---
 
-## One-off data load from SiteWorks to Beacon2
+## One-off data load from SiteWorks to beacon2026
 
 Asked whether this is possible, especially for generic pages and posts.
 
 **For the four in-scope post-types:** technically feasible — the REST
 API returns everything the comparison utility needs. In practice its
-value is small, because Beacon2 already holds better-quality data for
+value is small, because beacon2026 already holds better-quality data for
 groups, events, venues and members. The likely use case is a u3a
-onboarding onto Beacon2 who is currently maintaining the website by
+onboarding onto beacon2026 who is currently maintaining the website by
 hand and wants a shortcut. A dev-only import script, guarded by a
 feature flag, is a reasonable way to do that without building a full UI.
 
 **For generic `post` (news) and `page`:** possible at the REST-API
 level — the content, title, author and date are all accessible. The
-awkward part is where the data would *go*: Beacon2 has no "generic
+awkward part is where the data would *go*: beacon2026 has no "generic
 pages" or "news" module. Importing without a destination just dumps
 HTML into a column. Two honest options:
 
-1. **Park until there is a Beacon2 module that holds such content.**
+1. **Park until there is a beacon2026 module that holds such content.**
    There is no rush; Option A (link out) already covers editing of
    pages and posts on the WordPress side.
-2. **Build a minimal "Beacon2 news" module** that stores imported
-   posts and lets Beacon2 users edit them; then phase 2+ of this work
+2. **Build a minimal "beacon2026 news" module** that stores imported
+   posts and lets beacon2026 users edit them; then phase 2+ of this work
    pushes them back to WordPress. That is a substantial piece of work
    in its own right — probably three to four weeks — and should not be
    bundled into the post-type sync work.
@@ -237,7 +237,7 @@ u3a can opt in to groups-only without the others.
   from you. This figure is *compressed* human-developer time, not time
   you can spend elsewhere.
 - **WordPress access and a test site.** A throwaway SiteWorks instance
-  to point Beacon2 at is essential; setting one up is not in the
+  to point beacon2026 at is essential; setting one up is not in the
   estimates above.
 - **Real-world u3a roll-out** — onboarding the first u3a, training,
   documentation, support. None of these scale down with Claude.
@@ -248,24 +248,24 @@ u3a can opt in to groups-only without the others.
 
 - **SiteWorks meta-key stability.** If SiteWorks changes its meta keys
   in a future release, our mappers break. Mitigation: pin a tested
-  SiteWorks version on each u3a's site and re-test Beacon2 integration
+  SiteWorks version on each u3a's site and re-test beacon2026 integration
   before upgrading it. A warning on the settings page if the detected
   SiteWorks version is outside the tested range.
 - **Companion plugin maintenance.** One plugin across many u3a
   websites. Distribution, versioning and upgrade path need deciding
-  (zip on a Beacon2 release page? hosted repo? packaged inside
-  Beacon2's "test connection" flow with a guided install?). Flagged
+  (zip on a beacon2026 release page? hosted repo? packaged inside
+  beacon2026's "test connection" flow with a guided install?). Flagged
   here rather than solved.
 - **Privacy for `u3a_contact`.** As noted above — default to the
   minimum set of fields, opt-in for anything more.
-- **Hosting and multi-tenancy.** A single Beacon2 instance can serve
+- **Hosting and multi-tenancy.** A single beacon2026 instance can serve
   many u3as, each with its own website and its own Application
   Password. No architectural problem, but worth stating: each outbox
   row carries `tenant_id` and the worker uses `tenantQuery()` /
   `withTenant()` throughout (per the CLAUDE.md rule on tenant queries).
 - **Manual WordPress edits.** Even with the per-post "managed" flag,
   some admins will hand-edit a managed post and be surprised when
-  Beacon2 overwrites it on next save. The reconciliation view, a
+  beacon2026 overwrites it on next save. The reconciliation view, a
   clear indicator in the WordPress editor, and sensible defaults
   ("off" until an admin explicitly turns management on) all help, but
   this is a user-education issue as much as a technical one.
@@ -274,7 +274,7 @@ u3a can opt in to groups-only without the others.
 
 ## Summary
 
-Building Beacon2-driven creation and modification of the four SiteWorks
+Building beacon2026-driven creation and modification of the four SiteWorks
 custom post-types is well-defined work. The heavy items — outbox, worker,
 companion plugin, privilege, settings, reconciliation, comparison — are
 front-loaded into phase 1 and then reused for each subsequent type.
@@ -284,7 +284,7 @@ Total effort to cover all four in-scope post-types is in the region of
 — or roughly **two to three calendar weeks of active driving with Claude
 Code in the loop**, delivered in three releasable phases. A one-off
 import from SiteWorks is feasible for the four post-types (low value)
-and for generic pages/posts (blocked on the absence of a Beacon2
+and for generic pages/posts (blocked on the absence of a beacon2026
 destination module, best deferred).
 
 The design stays compatible with the existing `website-editing-options.md`

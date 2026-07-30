@@ -1,4 +1,4 @@
-// beacon2/frontend/src/pages/public/PortalRequestCard.jsx
+// beacon2026/frontend/src/pages/public/PortalRequestCard.jsx
 // Members Portal — request replacement membership card by email (doc 10.2.5).
 
 import { useState } from 'react';

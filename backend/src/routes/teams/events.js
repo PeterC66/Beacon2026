@@ -1,4 +1,4 @@
-// beacon2/backend/src/routes/teams/events.js
+// beacon2026/backend/src/routes/teams/events.js
 // Team events (schedule) sub-resource: /teams/:id/events. Guarded by the
 // `group_records_all` privilege resource (teams share group privileges).
 

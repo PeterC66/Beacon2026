@@ -79,7 +79,7 @@ This text may be displayed on the Members Portal and your website.
 ### Notes
 
 A multi-line text area [O] for private notes. These are only visible to
-Beacon2 administrators and are not shown to members or the public.
+beacon2026 administrators and are not shown to members or the public.
 
 > **SiteWorks note:** If **SiteWorks** integration is activated in System
 > Settings, the **When**, **Start/End time**, **Venue**, **Enquiries**, and
@@ -92,7 +92,7 @@ Click the **Save Record** button [P] (or **Add Group** when creating a new
 group) to save. A green confirmation banner appears at the top of the page
 when the save is successful.
 
-If you try to navigate away with unsaved changes, Beacon2 will warn you.
+If you try to navigate away with unsaved changes, beacon2026 will warn you.
 
 ## Deleting a group
 

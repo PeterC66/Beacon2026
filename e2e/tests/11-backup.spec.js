@@ -1,4 +1,4 @@
-// beacon2/e2e/tests/11-backup.spec.js
+// beacon2026/e2e/tests/11-backup.spec.js
 // Data export and backup tests.
 // Beacon UG §9.5 — "Data Export and Backup"
 //

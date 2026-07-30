@@ -1,4 +1,4 @@
-// beacon2/backend/src/utils/db.js
+// beacon2026/backend/src/utils/db.js
 // Prisma client singleton + tenant-scoped query helpers
 
 import { PrismaClient } from '@prisma/client';

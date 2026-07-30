@@ -1,4 +1,4 @@
-// beacon2/frontend/src/pages/finance/FinancialStatement.jsx
+// beacon2026/frontend/src/pages/finance/FinancialStatement.jsx
 // Receipts & Payments report and Balance Sheet (doc 7.6).
 
 import { useState, useEffect } from 'react';

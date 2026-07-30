@@ -1,4 +1,4 @@
-// beacon2/backend/src/middleware/errorHandler.js
+// beacon2026/backend/src/middleware/errorHandler.js
 // Central error handler. Always returns JSON. Never exposes stack traces in production.
 
 import { logger } from '../utils/logger.js';

@@ -1,4 +1,4 @@
-// beacon2/frontend/src/components/CookieConsent.jsx
+// beacon2026/frontend/src/components/CookieConsent.jsx
 // Cookie consent dialog matching the original Beacon's Cookie Control panel.
 // Shows on first visit; gear icon allows reopening after dismissal.
 
@@ -14,8 +14,8 @@ export default function CookieConsent() {
     if (getConsentValue() === null) setVisible(true);
 
     const handler = () => setVisible(false);
-    window.addEventListener('beacon2-consent-changed', handler);
-    return () => window.removeEventListener('beacon2-consent-changed', handler);
+    window.addEventListener('beacon2026-consent-changed', handler);
+    return () => window.removeEventListener('beacon2026-consent-changed', handler);
   }, []);
 
   const handleAccept = () => {
@@ -85,13 +85,13 @@ export default function CookieConsent() {
             </h2>
 
             <p className="text-sm text-slate-300 mb-3">
-              As well as essential cookies, Beacon2 has optional cookies that save your preferences
+              As well as essential cookies, beacon2026 has optional cookies that save your preferences
               for future visits in order to improve your experience. These optional cookies are
               described below.
             </p>
 
             <p className="text-sm text-slate-300 mb-3">
-              Beacon2 does not use third party, tracking or statistics cookies.
+              beacon2026 does not use third party, tracking or statistics cookies.
             </p>
 
             <p className="text-sm text-slate-300 mb-5">
@@ -126,7 +126,7 @@ export default function CookieConsent() {
 
             {showDetails && (
               <div className="text-sm text-slate-300">
-                <p className="mb-2">Beacon2 uses cookies to retain preferences between visits.</p>
+                <p className="mb-2">beacon2026 uses cookies to retain preferences between visits.</p>
                 <ul className="list-disc ml-5 space-y-1">
                   <li>The name of the u3a site you login to</li>
                   <li>The timeout period of inactivity after which you will be logged out</li>

@@ -1,4 +1,4 @@
-// beacon2/backend/src/__tests__/financeReconciliation.test.js
+// beacon2026/backend/src/__tests__/financeReconciliation.test.js
 // Coverage for the reconciliation sub-router (routes/finance/reconciliation.js),
 // added in Chunk 7 of docs/ImprovementPlan.md.
 

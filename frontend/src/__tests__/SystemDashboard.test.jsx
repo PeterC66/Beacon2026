@@ -1,4 +1,4 @@
-// beacon2/frontend/src/__tests__/SystemDashboard.test.jsx
+// beacon2026/frontend/src/__tests__/SystemDashboard.test.jsx
 import { describe, it, expect, vi } from 'vitest';
 import { render } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
@@ -30,7 +30,7 @@ describe('SystemDashboard page', () => {
     expect(container).toBeTruthy();
   });
 
-  it('shows Beacon2 / System Admin heading', () => {
+  it('shows beacon2026 / System Admin heading', () => {
     const { getByText } = render(
       <MemoryRouter>
         <SystemDashboard />

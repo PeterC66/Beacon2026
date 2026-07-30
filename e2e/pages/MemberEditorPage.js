@@ -1,4 +1,4 @@
-// beacon2/e2e/pages/MemberEditorPage.js
+// beacon2026/e2e/pages/MemberEditorPage.js
 // Page Object Model for the member editor (/members/new, /members/:id).
 // Beacon UG §4.2 — "The Member Record"
 // Beacon UG §4.3 — "Add a New Member"

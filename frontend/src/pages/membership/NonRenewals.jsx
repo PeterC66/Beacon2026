@@ -1,4 +1,4 @@
-// beacon2/frontend/src/pages/membership/NonRenewals.jsx
+// beacon2026/frontend/src/pages/membership/NonRenewals.jsx
 // Doc 4.6 — Non-renewals (Lapsed, Resigned, Deceased members)
 
 import { useState, useEffect } from 'react';

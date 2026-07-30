@@ -1,4 +1,4 @@
-// beacon2/backend/src/__tests__/logger.test.js
+// beacon2026/backend/src/__tests__/logger.test.js
 // Unit tests for the minimal structured logger: console routing, level
 // gating via LOG_LEVEL, line format, and safe handling of bad context.
 

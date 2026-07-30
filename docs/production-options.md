@@ -1,4 +1,4 @@
-# Beacon2 — Production Options
+# beacon2026 — Production Options
 
 **Date:** 2026-03-27
 **Status:** Draft — for internal decision-making
@@ -8,7 +8,7 @@
 
 ## 1. Context
 
-Beacon2 is a multi-tenant membership management system for u3a organisations.
+beacon2026 is a multi-tenant membership management system for u3a organisations.
 The current implementation is a proof-of-concept deployed on Render (backend +
 PostgreSQL) and Vercel (React SPA frontend), both on free tiers.
 
@@ -215,7 +215,7 @@ to consolidate on AWS.
 model works well. No need for SSR — this is an authenticated app, not a
 content site that needs SEO.
 
-**Consider:** Custom domain (e.g., `app.beacon2.org.uk`) rather than the
+**Consider:** Custom domain (e.g., `app.beacon2026.org.uk`) rather than the
 default Vercel URL. Vercel supports this on free and paid tiers.
 
 ---

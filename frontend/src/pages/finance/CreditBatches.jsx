@@ -1,4 +1,4 @@
-// beacon2/frontend/src/pages/finance/CreditBatches.jsx
+// beacon2026/frontend/src/pages/finance/CreditBatches.jsx
 // Credit Batches — list, view, create, add/remove transactions (doc 7.4).
 
 import { useState, useEffect, useCallback, useRef } from 'react';

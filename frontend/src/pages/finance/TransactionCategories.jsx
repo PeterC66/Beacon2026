@@ -1,4 +1,4 @@
-// beacon2/frontend/src/pages/finance/TransactionCategories.jsx
+// beacon2026/frontend/src/pages/finance/TransactionCategories.jsx
 //
 // Category-allocation section of TransactionEditor. Presentation only: the
 // running total/validation and category amounts are computed by the parent and

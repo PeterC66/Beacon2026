@@ -1,4 +1,4 @@
-// beacon2/backend/src/utils/spreadsheet.js
+// beacon2026/backend/src/utils/spreadsheet.js
 // Defence against CSV / spreadsheet formula injection.
 //
 // Excel, LibreOffice Calc, and Google Sheets execute the contents of any

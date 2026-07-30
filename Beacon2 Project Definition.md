@@ -1,4 +1,4 @@
-# Beacon2 — Project Definition (last reviewed 2026-06-14)
+# beacon2026 — Project Definition (last reviewed 2026-06-14)
 
 > **Note:** This document describes the *current* state of the project as of
 > 2026-06-14 (version 0.11.1). It is the canonical inventory of modules, routes,
@@ -11,14 +11,14 @@
 
 ## What this is
 
-**Beacon2** is a modern full-stack web application replacing **Beacon** — the management
+**beacon2026** is a modern full-stack web application replacing **Beacon** — the management
 platform used by u3a organisations in the UK.
 
 A **u3a** (always lowercase) is a community organisation for retired and semi-retired
 people, offering learning and social activities. Each u3a has members, groups (activity
 classes), a committee, finances, and so on.
 
-Beacon2 is a ground-up rebuild with these goals:
+beacon2026 is a ground-up rebuild with these goals:
 - Modernise the codebase (maintainable, extensible, secure)
 - Improve multi-tenancy architecture
 - Replicate all Beacon functionality
@@ -243,7 +243,7 @@ Beacon2 is a ground-up rebuild with these goals:
 - **Event financials** — per-event income/costs summary with transaction links;
   "Add transaction" pre-fills event_id; transactions linkable to events via search-as-you-type
 
-### Reports module (Beacon2 extra)
+### Reports module (beacon2026 extra)
 - **SQL reports** — hybrid of (a) a library of saved parameterised reports
   that any user with `reports:run` can execute, and (b) an ad-hoc SQL editor
   for site administrators. All queries run in a read-only Postgres transaction
@@ -257,7 +257,7 @@ Beacon2 is a ground-up rebuild with these goals:
 - **Gift Aid log** — date-filtered view of Gift Aid consent given/withdrawn; member filter dropdown
 - **u3a Officers** — CRUD; email sending; status-based styling
 - **Personal preferences** — display prefs, change password, security Q&A, inactivity timeout
-- **Data export & backup** — 8 export types (Excel); full restore (Beacon2 + Beacon format)
+- **Data export & backup** — 8 export types (Excel); full restore (beacon2026 + Beacon format)
   including venues, group ledger entries, and venue_id linkage; restored users forced
   to change password on first login
 - **Validate member data** — comprehensive data quality tool
@@ -364,9 +364,9 @@ frontend/
 e2e/                       Playwright E2E tests (staging or local docker stack)
 shared/                    constants.js shared by backend and frontend
 docs/
-  Beacon2UG/               Beacon2 User Guide (64 sections + index, Markdown)
+  beacon2026UG/               beacon2026 User Guide (64 sections + index, Markdown)
   BeaconUG/                Beacon User Guide pages (Markdown + images)
-  BeaconUG-Comparison.md   Feature comparison: Beacon2 vs original Beacon
+  BeaconUG-Comparison.md   Feature comparison: beacon2026 vs original Beacon
   FromBeacon/              Selected files from original Beacon codebase
   history/                 Archived 2026-06 review docs (point-in-time, read-only)
 ```
@@ -398,8 +398,8 @@ is one webpage, converted from PDF to Markdown with images preserved.
 
 **Before using any folder**, check for unconverted PDFs — warn the user if found.
 
-The **Beacon2 User Guide** lives in `docs/Beacon2UG/` — 64 sections organised
-around Beacon2's actual navigation (not the original Beacon numbering). Currently
-at outline level with screenshot placeholders. See `docs/Beacon2UG/index.md` for
+The **beacon2026 User Guide** lives in `docs/beacon2026UG/` — 64 sections organised
+around beacon2026's actual navigation (not the original Beacon numbering). Currently
+at outline level with screenshot placeholders. See `docs/beacon2026UG/index.md` for
 the full table of contents.
 If docs for a feature don't exist, ask the user.

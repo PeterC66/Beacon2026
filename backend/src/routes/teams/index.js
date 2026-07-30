@@ -1,4 +1,4 @@
-// beacon2/backend/src/routes/teams/index.js
+// beacon2026/backend/src/routes/teams/index.js
 // Parent router for team routes. Teams are like groups but without scheduling,
 // faculty, venue, or waiting list. They share the same underlying `groups`
 // table (type = 'team') and privileges. Owns the shared middleware

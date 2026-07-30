@@ -1,4 +1,4 @@
-// beacon2/frontend/src/pages/members/MemberListTable.jsx
+// beacon2026/frontend/src/pages/members/MemberListTable.jsx
 //
 // Results section of MemberList — the "Select:" quick-select controls and the
 // sortable member table. Presentation only: sorting, selection, and navigation

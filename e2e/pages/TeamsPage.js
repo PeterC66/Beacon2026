@@ -1,4 +1,4 @@
-// beacon2/e2e/pages/TeamsPage.js
+// beacon2026/e2e/pages/TeamsPage.js
 // Page Object Models for Teams list and record.
 // Beacon UG §5 — "Teams"
 

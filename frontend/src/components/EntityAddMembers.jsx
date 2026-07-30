@@ -1,4 +1,4 @@
-// beacon2/frontend/src/components/EntityAddMembers.jsx
+// beacon2026/frontend/src/components/EntityAddMembers.jsx
 // "Add a member" panel (by name dropdown or by membership number). Extracted
 // from EntityMembers; presentation only — state and handlers arrive as props.
 

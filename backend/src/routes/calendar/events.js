@@ -1,4 +1,4 @@
-// beacon2/backend/src/routes/calendar/events.js
+// beacon2026/backend/src/routes/calendar/events.js
 // Calendar read side — the aggregated view of all group_events (including open
 // meetings), PDF/Excel exports, member/event-type lookups for the calendar UI,
 // event search, single-event lookup, and event financials. Guarded by the

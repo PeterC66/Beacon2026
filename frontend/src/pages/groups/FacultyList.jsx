@@ -1,4 +1,4 @@
-// beacon2/frontend/src/pages/groups/FacultyList.jsx
+// beacon2026/frontend/src/pages/groups/FacultyList.jsx
 // Manage group faculties (5.8)
 
 import { useState } from 'react';

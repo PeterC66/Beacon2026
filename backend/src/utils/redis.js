@@ -1,4 +1,4 @@
-// beacon2/backend/src/utils/redis.js
+// beacon2026/backend/src/utils/redis.js
 // Redis client — used for refresh token revocation and session invalidation.
 // Set USE_REDIS=false in environment to run without Redis (POC / free hosting).
 //

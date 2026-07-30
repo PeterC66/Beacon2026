@@ -1,4 +1,4 @@
-# Beacon2
+# beacon2026
 
 Modern rebuild of the [Beacon](https://www.u3abeacon.org.uk/) u3a management system —
 a multi-tenant web app for running u3a groups across the UK.
@@ -9,9 +9,9 @@ a multi-tenant web app for running u3a groups across the UK.
 > Claude Code sessions, not primary documentation — read them only if you want to
 > understand how the AI-assisted workflow operates.
 
-## What Beacon2 is (plain-language overview)
+## What beacon2026 is (plain-language overview)
 
-Beacon2 is a web application that u3a organisations use to run their membership,
+beacon2026 is a web application that u3a organisations use to run their membership,
 groups, finances, and communications. Each u3a gets its own private, isolated
 area within one shared system ("multi-tenant"), so many u3as can be hosted
 together at low cost.
@@ -39,12 +39,12 @@ together at low cost.
 | **User-guide screenshots** | Outstanding — guide text is complete |
 
 For the authoritative feature inventory, see
-[`Beacon2 Project Definition.md`](Beacon2%20Project%20Definition.md).
+[`beacon2026 Project Definition.md`](beacon2026%20Project%20Definition.md).
 
 ## Project structure
 
 ```
-beacon2/
+beacon2026/
 ├── backend/                   Node.js 20 + Express 4 API
 │   ├── src/
 │   │   ├── server.js          Entry point (migrate → seed → listen)
@@ -75,7 +75,7 @@ beacon2/
 ├── e2e/                       Playwright end-to-end tests
 │
 ├── docs/
-│   ├── Beacon2UG/             Beacon2 User Guide (64 sections, Markdown)
+│   ├── beacon2026UG/             beacon2026 User Guide (64 sections, Markdown)
 │   ├── BeaconUG/              Beacon User Guide pages (Markdown + images)
 │   ├── FromBeacon/            Selected files from the original Beacon codebase
 │   └── history/              Archived 2026-06 review docs (read-only)
@@ -90,7 +90,7 @@ beacon2/
 ```
 
 > For the full module/route/page inventory, see
-> [`Beacon2 Project Definition.md`](Beacon2%20Project%20Definition.md) — this tree
+> [`beacon2026 Project Definition.md`](beacon2026%20Project%20Definition.md) — this tree
 > is a quick orientation map; that document is the authoritative detail.
 
 ## Quick start (local development)
@@ -220,7 +220,7 @@ Render (backend + Postgres) and Vercel (frontend) — no command-line knowledge 
 - [x] Audit log
 - [x] u3a Officers
 - [x] Personal preferences (display, password, security Q&A)
-- [x] Data export & backup / restore (Beacon2 + legacy Beacon format)
+- [x] Data export & backup / restore (beacon2026 + legacy Beacon format)
 - [x] Polls (setup, member assignment)
 - [x] System settings
 - [x] Feature configuration (per-u3a module and sub-feature toggles)

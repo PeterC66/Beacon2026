@@ -1,4 +1,4 @@
-// beacon2/frontend/src/pages/public/PortalHome.jsx
+// beacon2026/frontend/src/pages/public/PortalHome.jsx
 // Members Portal dashboard (doc 10.2) — shows available features based on portal_config.
 
 import { useState, useEffect } from 'react';

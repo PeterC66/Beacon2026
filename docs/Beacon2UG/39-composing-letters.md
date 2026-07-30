@@ -1,6 +1,6 @@
 # 39. Composing Letters
 
-Beacon2 lets you compose personalised letters for any selection of members and
+beacon2026 lets you compose personalised letters for any selection of members and
 download them as a multi-page PDF -- one letter per member. You reach the letter
 compose page by selecting members and choosing **Send letter** from the
 **Do with selected** menu.
@@ -115,7 +115,7 @@ When you are happy with your letter, click the **Download** button at the bottom
 of the page. The button shows the number of letters that will be generated (e.g.
 "Download (42 letters)").
 
-Beacon2 generates a multi-page PDF file with one letter per selected member.
+beacon2026 generates a multi-page PDF file with one letter per selected member.
 Each letter has the personalisation tokens replaced with that member's details.
 The PDF downloads automatically to your computer.
 

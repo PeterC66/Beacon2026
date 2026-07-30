@@ -1,4 +1,4 @@
-// beacon2/frontend/src/pages/groups/VenueEditor.jsx
+// beacon2026/frontend/src/pages/groups/VenueEditor.jsx
 // Add / Edit a group venue (5.7)
 
 import { useState, useEffect, useRef } from 'react';

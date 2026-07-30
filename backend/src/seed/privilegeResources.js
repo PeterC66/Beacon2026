@@ -1,4 +1,4 @@
-// beacon2/backend/src/seed/privilegeResources.js
+// beacon2026/backend/src/seed/privilegeResources.js
 // Complete list of privilege resources, derived from the Beacon documentation.
 // codes are snake_case versions of the resource names.
 // actions lists all possible actions for each resource.

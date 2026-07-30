@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Beacon2 — Users, Roles, Privileges & Authentication: Design Document</title>
+<title>beacon2026 — Users, Roles, Privileges & Authentication: Design Document</title>
 <style>
   body { font-family: Arial, sans-serif; font-size: 13px; color: #222; max-width: 960px; margin: 40px auto; padding: 0 30px; line-height: 1.6; }
   h1 { font-size: 24px; color: #1a3a5c; border-bottom: 3px solid #1a3a5c; padding-bottom: 8px; margin-bottom: 4px; }
@@ -40,7 +40,7 @@
 </head>
 <body>
 
-<h1>Beacon2</h1>
+<h1>beacon2026</h1>
 <h2 style="border:none; margin-top:0; color:#444; font-size:16px;">Users, Roles, Privileges &amp; Authentication — Design Document</h2>
 <div class="meta">
   Version 0.1 &nbsp;|&nbsp; Draft &nbsp;|&nbsp; March 2026 &nbsp;|&nbsp; Module: AUTH
@@ -67,9 +67,9 @@
 <!-- ───────────────────────────── 1 ───────────────────────────── -->
 <h2 id="s1"><span class="section-num">1.</span> Purpose &amp; Scope</h2>
 
-<p>This document defines the design for the <strong>Users, Roles, Privileges and Authentication</strong> module of Beacon2 — the modernised replacement for the Beacon u3a management system.</p>
+<p>This document defines the design for the <strong>Users, Roles, Privileges and Authentication</strong> module of beacon2026 — the modernised replacement for the Beacon u3a management system.</p>
 
-<p>Beacon2 serves many independent u3a organisations. Each u3a must feel as though they are the only user of the system — their data and configuration are completely isolated from all others. This principle is called <strong>multi-tenancy</strong> and it underpins every decision in this module.</p>
+<p>beacon2026 serves many independent u3a organisations. Each u3a must feel as though they are the only user of the system — their data and configuration are completely isolated from all others. This principle is called <strong>multi-tenancy</strong> and it underpins every decision in this module.</p>
 
 <div class="callout">
   <strong>Scope of this document:</strong> Login and session management; user accounts; roles; privileges; role assignment to users; and the system-level tier for creating and managing u3a tenants. Data migration from Beacon is noted but detailed separately.
@@ -116,7 +116,7 @@
 <!-- ───────────────────────────── 4 ───────────────────────────── -->
 <h2 id="s4"><span class="section-num">4.</span> Multi-tenancy Architecture</h2>
 
-<p>Beacon2 uses a <strong>shared database, separate schemas</strong> approach, sometimes called the "schema-per-tenant" pattern in PostgreSQL.</p>
+<p>beacon2026 uses a <strong>shared database, separate schemas</strong> approach, sometimes called the "schema-per-tenant" pattern in PostgreSQL.</p>
 
 <ul>
   <li>Each u3a gets its own PostgreSQL <strong>schema</strong> (e.g. <code>u3a_oxfordshire</code>). All of that u3a's tables live in their schema.</li>
@@ -130,7 +130,7 @@
 </div>
 
 <h3>Tenant lifecycle (system-level)</h3>
-<p>When a new u3a joins Beacon2, a system administrator performs these steps:</p>
+<p>When a new u3a joins beacon2026, a system administrator performs these steps:</p>
 <ol>
   <li>Creates a new tenant record in the <code>public.tenants</code> table.</li>
   <li>Runs a migration to create the u3a's schema and seed its tables.</li>
@@ -141,14 +141,14 @@
 <!-- ───────────────────────────── 5 ───────────────────────────── -->
 <h2 id="s5"><span class="section-num">5.</span> Access Tiers</h2>
 
-<p>Beacon2 has three distinct access tiers. Users at a higher tier cannot be created or managed from within a lower tier's interface.</p>
+<p>beacon2026 has three distinct access tiers. Users at a higher tier cannot be created or managed from within a lower tier's interface.</p>
 
 <table>
   <thead><tr><th>Tier</th><th>Who</th><th>What they can do</th></tr></thead>
   <tbody>
     <tr>
       <td><span class="tier tier-system">System</span></td>
-      <td>Beacon2 platform operators</td>
+      <td>beacon2026 platform operators</td>
       <td>Create / suspend / delete u3a tenants; view cross-tenant diagnostics; manage system-level configuration; create other system admins</td>
     </tr>
     <tr>
@@ -454,10 +454,10 @@ model refresh_token {
 <p>A full migration design is out of scope for this document, but the following points are relevant to the auth module specifically:</p>
 
 <ul>
-  <li>Beacon user passwords cannot be migrated directly (they are hashed with an unknown algorithm and the plaintext is unavailable). The recommended approach is to <strong>force a password reset</strong> for all users on first login to Beacon2.</li>
-  <li>Roles and their privilege assignments can be migrated by reading the Beacon configuration and mapping to the Beacon2 privilege resource codes defined in Section 7.</li>
+  <li>Beacon user passwords cannot be migrated directly (they are hashed with an unknown algorithm and the plaintext is unavailable). The recommended approach is to <strong>force a password reset</strong> for all users on first login to beacon2026.</li>
+  <li>Roles and their privilege assignments can be migrated by reading the Beacon configuration and mapping to the beacon2026 privilege resource codes defined in Section 7.</li>
   <li>User–role assignments can be migrated directly once roles are in place.</li>
-  <li>The migration tool should be a standalone script that connects to the Beacon data export and populates the correct tenant schema in Beacon2.</li>
+  <li>The migration tool should be a standalone script that connects to the Beacon data export and populates the correct tenant schema in beacon2026.</li>
 </ul>
 
 <!-- ───────────────────────────── 12 ───────────────────────────── -->
@@ -466,7 +466,7 @@ model refresh_token {
 <table>
   <thead><tr><th>#</th><th>Question</th><th>Impact</th></tr></thead>
   <tbody>
-    <tr><td>1</td><td>Should Beacon2 support login via email magic link in addition to password? This would simplify the forced password reset migration.</td><td>Auth flow, user table</td></tr>
+    <tr><td>1</td><td>Should beacon2026 support login via email magic link in addition to password? This would simplify the forced password reset migration.</td><td>Auth flow, user table</td></tr>
     <tr><td>2</td><td>What is the password policy? Minimum length, complexity, expiry?</td><td>User creation, login flow</td></tr>
     <tr><td>3</td><td>Can a user belong to more than one u3a? (i.e. can the same email address exist in two tenants?)</td><td>Multi-tenancy model</td></tr>
     <tr><td>4</td><td>Is there a requirement for two-factor authentication (2FA) — particularly for the Administration role?</td><td>Auth flow complexity</td></tr>
@@ -477,8 +477,8 @@ model refresh_token {
 
 <hr>
 <div style="color:#888; font-size:11px; text-align:center;">
-  Beacon2 Design Document — AUTH module — v0.1 Draft — March 2026<br>
-  This document should be version-controlled in the Beacon2 repository under <code>/docs/design/auth.html</code>
+  beacon2026 Design Document — AUTH module — v0.1 Draft — March 2026<br>
+  This document should be version-controlled in the beacon2026 repository under <code>/docs/design/auth.html</code>
 </div>
 
 </body>

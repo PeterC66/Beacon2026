@@ -53,7 +53,7 @@ The **Financial Statement** (see [Section 30](30-financial-statement.md)) only
 includes confirmed transactions. Pending transactions are left out so that your
 formal reports reflect actual finances.
 
-When pending transactions exist for the selected accounts and year, Beacon2
+When pending transactions exist for the selected accounts and year, beacon2026
 displays a **warning banner** at the top of the Financial Statement to let you
 know that some transactions have been excluded.
 

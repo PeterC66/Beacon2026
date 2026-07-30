@@ -1,4 +1,4 @@
-// beacon2/frontend/src/pages/members/AddressesExport.jsx
+// beacon2026/frontend/src/pages/members/AddressesExport.jsx
 // Addresses Export and Label printing (docs 4.8 and 4.8.1).
 // Formats: TAM (Excel), Labels (PDF), Excel, CSV, TSV.
 // Partners sharing the same address are combined in the same row.

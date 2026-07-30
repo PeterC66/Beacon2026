@@ -1,4 +1,4 @@
-// beacon2/frontend/src/pages/groups/GroupDetails.jsx
+// beacon2026/frontend/src/pages/groups/GroupDetails.jsx
 // Details tab of the Group record (create/edit group fields).
 // Extracted from GroupRecord.jsx — no behaviour change.
 

@@ -1,4 +1,4 @@
-// beacon2/frontend/src/components/GoToMemberButton.jsx
+// beacon2026/frontend/src/components/GoToMemberButton.jsx
 //
 // Small "..." button that navigates to a member's record.
 // Usage: <GoToMemberButton memberId={123} />

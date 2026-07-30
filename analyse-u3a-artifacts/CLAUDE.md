@@ -79,7 +79,7 @@ Suggested baseline:
 |-------|--------|-----|
 | Runtime | Node.js (LTS) | Cross-platform, ships with `npm` |
 | Language | TypeScript | Schemas already TS-native |
-| xlsx parsing | `exceljs` | Same library Beacon2 uses; battle-tested |
+| xlsx parsing | `exceljs` | Same library beacon2026 uses; battle-tested |
 | Validation | `zod` | Schemas already authored as Zod |
 | UI | Vite + React | Fast dev loop; widely understood by AI agents |
 | Charts | `recharts` or `chart.js` | Both work locally without external resources |
@@ -160,13 +160,13 @@ After loading, build the lookup maps described in
 
 ## Coding conventions
 
-These mirror Beacon2's conventions where applicable.
+These mirror beacon2026's conventions where applicable.
 
 - **ES modules** (`import` / `export`) — never `require()`.
 - **TypeScript strict mode** on. No `any` unless commented why.
 - **u3a is always lowercase** (the organisation's house style).
 - **The original system is "Beacon"; the data structure docs reference
-  "Beacon" not "Beacon2"** because the file format predates Beacon2.
+  "Beacon" not "beacon2026"** because the file format predates beacon2026.
 - **No `localStorage` for member data.** In-memory only while the file is
   loaded. If you need persistence (e.g. saved analysis configs), store
   config-only — never member data.

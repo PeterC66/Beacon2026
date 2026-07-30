@@ -2,11 +2,11 @@
 
 Generated reference material for the **Analyse u3a** project — a separate,
 local-only desktop app that consumes the same `.xlsx` backup format that
-Beacon2 imports from the original Beacon system.
+beacon2026 imports from the original Beacon system.
 
-This folder is produced **inside the Beacon2 repo** so it can be reviewed and
+This folder is produced **inside the beacon2026 repo** so it can be reviewed and
 revised here, but its **only purpose is to be copied wholesale into the new
-Analyse u3a repo**. None of the files in this folder are read by Beacon2 at
+Analyse u3a repo**. None of the files in this folder are read by beacon2026 at
 runtime.
 
 ---
@@ -58,7 +58,7 @@ runtime.
 ## Source of truth
 
 These files were reverse-engineered from
-`backend/src/routes/backup.js` (the `restoreBeacon` function) in the Beacon2
+`backend/src/routes/backup.js` (the `restoreBeacon` function) in the beacon2026
 repository, and verified against the real backup
 `docs/FromBeacon/202603170140_St Ives Cambridge Demo24 u3abackup.xlsx`.
 

@@ -1,4 +1,4 @@
-// beacon2/frontend/src/pages/finance/CreditBatchDetail.jsx
+// beacon2026/frontend/src/pages/finance/CreditBatchDetail.jsx
 //
 // Batch detail/edit view of CreditBatches — editable header, the batch's
 // transaction table with optional "remove?" column, and the action buttons.

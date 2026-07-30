@@ -1,4 +1,4 @@
-// beacon2/backend/src/routes/offices.js
+// beacon2026/backend/src/routes/offices.js
 // u3a Officers (offices and post holders) — doc 9.3
 
 import { Router } from 'express';

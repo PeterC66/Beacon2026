@@ -1,4 +1,4 @@
-// beacon2/backend/src/__tests__/letters.test.js
+// beacon2026/backend/src/__tests__/letters.test.js
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import supertest from 'supertest';

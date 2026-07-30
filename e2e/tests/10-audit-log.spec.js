@@ -1,4 +1,4 @@
-// beacon2/e2e/tests/10-audit-log.spec.js
+// beacon2026/e2e/tests/10-audit-log.spec.js
 // Audit log tests.
 // Beacon UG §9.2 — "Audit Logs"
 //

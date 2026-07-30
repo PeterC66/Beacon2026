@@ -1,4 +1,4 @@
-// beacon2/backend/src/utils/audit.js
+// beacon2026/backend/src/utils/audit.js
 // Best-effort audit logging helper. Never throws — a logging failure must not
 // break the operation that triggered it.
 

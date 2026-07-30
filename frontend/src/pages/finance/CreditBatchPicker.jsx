@@ -1,4 +1,4 @@
-// beacon2/frontend/src/pages/finance/CreditBatchPicker.jsx
+// beacon2026/frontend/src/pages/finance/CreditBatchPicker.jsx
 //
 // Shared "select unbatched credit transactions" table, used both when creating a
 // new batch and when adding transactions to an existing one. Presentation only:

@@ -1,4 +1,4 @@
-// beacon2/frontend/src/pages/groups/GroupLedger.jsx
+// beacon2026/frontend/src/pages/groups/GroupLedger.jsx
 // Ledger (cash) tab of the Group record. Extracted from GroupRecord.jsx — no behaviour change.
 
 import { useState, useEffect } from 'react';

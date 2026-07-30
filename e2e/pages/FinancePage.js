@@ -1,4 +1,4 @@
-// beacon2/e2e/pages/FinancePage.js
+// beacon2026/e2e/pages/FinancePage.js
 // Page Object Models for Finance pages.
 // Beacon UG §7 — "Finance"
 

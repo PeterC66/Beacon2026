@@ -1,4 +1,4 @@
-// beacon2/backend/src/seed/createTenant.js
+// beacon2026/backend/src/seed/createTenant.js
 // Creates a new u3a tenant: DB schema + default roles + privilege resources + first admin user
 
 import { readFileSync } from 'fs';

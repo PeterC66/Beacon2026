@@ -1,4 +1,4 @@
-// beacon2/frontend/src/pages/audit/AuditRecord.jsx
+// beacon2026/frontend/src/pages/audit/AuditRecord.jsx
 // Audit record detail view — doc 9.2(a)
 
 import { useState, useEffect } from 'react';

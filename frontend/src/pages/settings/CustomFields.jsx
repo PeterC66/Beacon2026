@@ -1,4 +1,4 @@
-// beacon2/frontend/src/pages/settings/CustomFields.jsx
+// beacon2026/frontend/src/pages/settings/CustomFields.jsx
 // Configuration page for custom field labels (doc 8.7).
 
 import { useState, useEffect } from 'react';

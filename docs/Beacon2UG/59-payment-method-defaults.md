@@ -2,7 +2,7 @@
 
 Payment Method Defaults let you map each payment method to a default finance
 account. This saves time when adding members and processing renewals, because
-Beacon2 automatically selects the right account based on how the member is
+beacon2026 automatically selects the right account based on how the member is
 paying.
 
 This page is accessed from the **Finance Accounts** page — click the

@@ -1,4 +1,4 @@
-// beacon2/frontend/src/pages/members/MemberListBulkActions.jsx
+// beacon2026/frontend/src/pages/members/MemberListBulkActions.jsx
 //
 // "Do with selected members" panel of MemberList — action picker, the
 // poll/group/team target selectors, and the download field picker. Presentation

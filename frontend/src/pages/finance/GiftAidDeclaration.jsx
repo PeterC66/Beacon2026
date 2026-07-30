@@ -1,4 +1,4 @@
-// beacon2/frontend/src/pages/finance/GiftAidDeclaration.jsx
+// beacon2026/frontend/src/pages/finance/GiftAidDeclaration.jsx
 // Gift Aid declaration: view eligible transactions, download Excel, mark as claimed (doc 7.8).
 
 import { useState, useEffect, useRef } from 'react';

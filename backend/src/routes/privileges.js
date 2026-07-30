@@ -1,4 +1,4 @@
-// beacon2/backend/src/routes/privileges.js
+// beacon2026/backend/src/routes/privileges.js
 // Returns the list of all available privilege resources (for building the role editor UI)
 
 import { Router } from 'express';

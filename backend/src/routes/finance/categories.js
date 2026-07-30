@@ -1,4 +1,4 @@
-// beacon2/backend/src/routes/finance/categories.js
+// beacon2026/backend/src/routes/finance/categories.js
 // Finance category CRUD.
 
 import { Router } from 'express';

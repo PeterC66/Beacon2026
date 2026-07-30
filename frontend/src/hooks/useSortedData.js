@@ -1,4 +1,4 @@
-// beacon2/frontend/src/hooks/useSortedData.js
+// beacon2026/frontend/src/hooks/useSortedData.js
 // Client-side sort state for table columns.
 // Usage:
 //   const { sorted, sortKey, sortDir, onSort } = useSortedData(data);

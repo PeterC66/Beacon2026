@@ -1,13 +1,13 @@
-# Beacon2 vs Beacon User Guide — Comparison
+# beacon2026 vs Beacon User Guide — Comparison
 
-> **Purpose:** Continuously track how Beacon2 differs from the original Beacon
+> **Purpose:** Continuously track how beacon2026 differs from the original Beacon
 > as documented in the Beacon User Guide (`docs/BeaconUG/`).
 >
 > **How to read this document:**
 > - **Built** — feature exists and broadly matches the UG description
 > - **Partial** — feature exists but some aspects are missing or different
 > - **Not started** — feature not yet implemented
-> - **Beacon2 extra** — functionality in Beacon2 that is not in the original Beacon
+> - **beacon2026 extra** — functionality in beacon2026 that is not in the original Beacon
 >
 > **Last updated:** 2026-06-14
 
@@ -17,8 +17,8 @@
 
 | Aspect | Status | Notes |
 |--------|--------|-------|
-| General introduction to the system | Built | Beacon2 serves the same purpose — management platform for u3a organisations |
-| **Beacon2 extra:** Modern tech stack | Beacon2 extra | React + Node.js + PostgreSQL replaces the original platform; multi-tenant schema-per-tenant architecture |
+| General introduction to the system | Built | beacon2026 serves the same purpose — management platform for u3a organisations |
+| **beacon2026 extra:** Modern tech stack | beacon2026 extra | React + Node.js + PostgreSQL replaces the original platform; multi-tenant schema-per-tenant architecture |
 
 ---
 
@@ -26,9 +26,9 @@
 
 | Aspect | Status | Notes |
 |--------|--------|-------|
-| Username/password login | Built | Beacon2 uses username-based login (lowercase alphanumeric) with email fallback for legacy users |
+| Username/password login | Built | beacon2026 uses username-based login (lowercase alphanumeric) with email fallback for legacy users |
 | Login page | Built | Dedicated login page with inline password recovery |
-| **Beacon2 extra:** Cookie consent | Beacon2 extra | GDPR-compliant cookie consent dialog on first visit; gear icon to reopen |
+| **beacon2026 extra:** Cookie consent | beacon2026 extra | GDPR-compliant cookie consent dialog on first visit; gear icon to reopen |
 
 ---
 
@@ -43,7 +43,7 @@
 | Documents link | Built | Links to prospective Beacon users documentation |
 | System-wide message | Built | Editable by system admin from System Dashboard; displayed on all tenants' Home pages |
 | Home page notice (tenant message) | Built | Uses `home_page_notice` system message with `#U3ANAME` substitution |
-| **Beacon2 extra:** Privilege-gated cards | Beacon2 extra | Home page cards are greyed out if user lacks privileges (rather than hidden) |
+| **beacon2026 extra:** Privilege-gated cards | beacon2026 extra | Home page cards are greyed out if user lacks privileges (rather than hidden) |
 
 ---
 
@@ -65,10 +65,10 @@
 | Cookie usage explanation | Built | Cookie consent dialog lists all cookies used |
 | Essential vs optional cookies | Built | Essential (refresh token, consent) always allowed; optional cookies gated behind consent |
 | Anti-tracking software guidance | Not started | No dedicated guidance page; cookie consent handles the functional aspect |
-| Last membership class cookie | Built | Addresses Export persists last class filter in `beacon2_last_export_class` (consent-gated) |
-| Label printing settings cookie | Built | Label settings persist in `beacon2_label_settings` (now consent-gated) |
-| TAM submission cookie | Built | TAM status + class persist in `beacon2_tam_submission` (consent-gated); restored when TAM format selected |
-| Email compose prefs cookie | Built | From address and copy-to-self persist in `beacon2_email_compose_prefs` (consent-gated) |
+| Last membership class cookie | Built | Addresses Export persists last class filter in `beacon2026_last_export_class` (consent-gated) |
+| Label printing settings cookie | Built | Label settings persist in `beacon2026_label_settings` (now consent-gated) |
+| TAM submission cookie | Built | TAM status + class persist in `beacon2026_tam_submission` (consent-gated); restored when TAM format selected |
+| Email compose prefs cookie | Built | From address and copy-to-self persist in `beacon2026_email_compose_prefs` (consent-gated) |
 
 ---
 
@@ -77,7 +77,7 @@
 | Aspect | Status | Notes |
 |--------|--------|-------|
 | General usage tips | Not started | No dedicated tips page; contextual help via HelpWidget (Zendesk integration) |
-| **Beacon2 extra:** Context-sensitive help | Beacon2 extra | HelpWidget provides route-mapped help links |
+| **beacon2026 extra:** Context-sensitive help | beacon2026 extra | HelpWidget provides route-mapped help links |
 
 ---
 
@@ -98,9 +98,9 @@
 | Bulk actions (add to poll, add to group, send email, send letter) | Built | — |
 | Download (Excel/PDF/email CSV) | Built | — |
 | Sortable columns | Built | Via `useSortedData` hook (supports compound sort keys) |
-| **Beacon2 extra:** Letter filter | Beacon2 extra | Filter members by letter assignment |
-| **Beacon2 extra:** Consolidated name column | Beacon2 extra | Single "Name" column showing `forenames (known_as) surname`; sortable by name or by surname; member number and name both link to member record |
-| **Beacon2 extra:** Telephone + mobile columns | Beacon2 extra | Separate telephone and mobile columns shown instead of email |
+| **beacon2026 extra:** Letter filter | beacon2026 extra | Filter members by letter assignment |
+| **beacon2026 extra:** Consolidated name column | beacon2026 extra | Single "Name" column showing `forenames (known_as) surname`; sortable by name or by surname; member number and name both link to member record |
+| **beacon2026 extra:** Telephone + mobile columns | beacon2026 extra | Separate telephone and mobile columns shown instead of email |
 
 ---
 
@@ -118,8 +118,8 @@
 | Poll tick boxes | Built | — |
 | Groups & Ledger tabs | Built | — |
 | Photo upload | Built | Upload/view/remove in member record and portal; appears on membership cards and group members PDF. Drag-and-drop supported. |
-| **Beacon2 extra:** Inline validation | Beacon2 extra | Field-level blur validation with error messages |
-| **Beacon2 extra:** Compact view | Beacon2 extra | Read-only condensed layout at `/members/:id/compact` — fits all member data on one laptop screen, inspired by Beacon's dense layout. Accessible via "Compact View" nav link on member record |
+| **beacon2026 extra:** Inline validation | beacon2026 extra | Field-level blur validation with error messages |
+| **beacon2026 extra:** Compact view | beacon2026 extra | Read-only condensed layout at `/members/:id/compact` — fits all member data on one laptop screen, inspired by Beacon's dense layout. Accessible via "Compact View" nav link on member record |
 
 ---
 
@@ -149,7 +149,7 @@
 
 > **Why contact-hiding is deferred:** correct enforcement needs to distinguish a
 > *group leader* viewer from a *membership-admin* viewer (UG 4.2.4 hides contact
-> from leaders only). In Beacon2 the scoped privileges `group_records_as_leader` /
+> from leaders only). In beacon2026 the scoped privileges `group_records_as_leader` /
 > `group_records_as_member` are **seeded but not enforced anywhere** — every group
 > members view is gated solely by `group_records_all`, so there is no runtime
 > signal for "this viewer is a leader". Wiring `hide_contact`/`show_addresses`
@@ -199,7 +199,7 @@
 |--------|--------|-------|
 | Recently joined/renewed list | Built | — |
 | Bulk actions (Do with selected) | Built | Download names txt, Send email, Send letter, Add to poll, Add to group, Download Excel/PDF |
-| **Beacon2 extra:** Consolidated name column | Beacon2 extra | Single "Name" column with `formatMemberName()`; Name/by surname sort options |
+| **beacon2026 extra:** Consolidated name column | beacon2026 extra | Single "Name" column with `formatMemberName()`; Name/by surname sort options |
 
 ---
 
@@ -209,8 +209,8 @@
 |--------|--------|-------|
 | Period tabs | Built | — |
 | Bulk renew with finance transactions | Built | — |
-| **Beacon2 extra:** Payment method defaults | Beacon2 extra | Auto-populates from Membership Payment Method Defaults (doc 8.6c) |
-| **Beacon2 extra:** Sortable columns + consolidated name | Beacon2 extra | `useSortedData` sorting with Name/by surname options |
+| **beacon2026 extra:** Payment method defaults | beacon2026 extra | Auto-populates from Membership Payment Method Defaults (doc 8.6c) |
+| **beacon2026 extra:** Sortable columns + consolidated name | beacon2026 extra | `useSortedData` sorting with Name/by surname options |
 
 ---
 
@@ -231,7 +231,7 @@
 |--------|--------|-------|
 | This year / long term modes | Built | — |
 | Bulk lapse / delete | Built | — |
-| **Beacon2 extra:** Consolidated name + extra columns | Beacon2 extra | Name/by surname sort; Address, Phone, Last Renewal (year) columns; no-email icon |
+| **beacon2026 extra:** Consolidated name + extra columns | beacon2026 extra | Name/by surname sort; Address, Phone, Last Renewal (year) columns; no-email icon |
 
 ---
 
@@ -246,7 +246,7 @@
 | Excel card data export | Built | — |
 | Send card by email | Built | — |
 | Mark-as-printed flow | Built | — |
-| **Beacon2 extra:** Consolidated name + short address | Beacon2 extra | Name/by surname sort; single address column replaces town/postcode; no email column |
+| **beacon2026 extra:** Consolidated name + short address | beacon2026 extra | Name/by surname sort; single address column replaces town/postcode; no email column |
 | Advance expiry to next year | Built | — |
 | Auto-attach cards to confirmation emails | Not started | `email_cards` setting stored but not wired to email flow |
 | Portal: order replacement card | Built | PortalRequestCard.jsx; validates Current status and renewal period; marks card_printed=false; PDF attachment in confirmation email still stubbed |
@@ -306,8 +306,8 @@
 | Group details tab | Built | — |
 | Venue dropdown | Built | — |
 | Faculty assignment | Built | — |
-| **Beacon2 extra:** SiteWorks integration | Beacon2 extra | Feature Configuration toggle hides scheduling/venue fields when SiteWorks manages events |
-| **Beacon2 extra:** Record timestamps | Beacon2 extra | "Group record created …; last changed …" shown at the bottom of the Details tab |
+| **beacon2026 extra:** SiteWorks integration | beacon2026 extra | Feature Configuration toggle hides scheduling/venue fields when SiteWorks manages events |
+| **beacon2026 extra:** Record timestamps | beacon2026 extra | "Group record created …; last changed …" shown at the bottom of the Details tab |
 
 ---
 
@@ -331,7 +331,7 @@
 | Waiting list with auto-enforcement | Built | — |
 | PDF download with photos | Built | Includes member photos when available; falls back to tabular layout when no photos exist |
 | Bulk actions (Do with selected) | Built | Send email, Download Excel/PDF, Remove members, Add to another group (with waiting-list support) |
-| **Beacon2 extra:** Consistent with members list | Beacon2 extra | Columns, name formatting, links, sort, overdue styling, and no-email indicator all match the main members list |
+| **beacon2026 extra:** Consistent with members list | beacon2026 extra | Columns, name formatting, links, sort, overdue styling, and no-email indicator all match the main members list |
 
 ---
 
@@ -341,7 +341,7 @@
 |--------|--------|-------|
 | Per-group in/out transactions | Built | Independent from main finance |
 | Download Excel | Built | — |
-| **Beacon2 extra:** distinction from Finance Ledger made explicit | Beacon2 extra | Tab now shows a description line under the heading and the shortcut button is labelled **"Central Ledger"** (with tooltip) so users don't mistake the two lists for the same data |
+| **beacon2026 extra:** distinction from Finance Ledger made explicit | beacon2026 extra | Tab now shows a description line under the heading and the shortcut button is labelled **"Central Ledger"** (with tooltip) so users don't mistake the two lists for the same data |
 
 ---
 
@@ -353,11 +353,11 @@
 
 ---
 
-### 5.6a Teams (Beacon2 extra)
+### 5.6a Teams (beacon2026 extra)
 
 | Aspect | Status | Notes |
 |--------|--------|-------|
-| **Beacon2 extra:** Teams concept | Built | Teams are like groups but without faculties, max members, waiting list, or online join. Implemented via `type` column on `groups` table. |
+| **beacon2026 extra:** Teams concept | Built | Teams are like groups but without faculties, max members, waiting list, or online join. Implemented via `type` column on `groups` table. |
 | Team List page | Built | Separate list with letter filter, status filter, bulk actions (email leaders, download, add to poll); "Switch to Groups" link |
 | Team Record: Details tab | Built | Name, status, information, notes, show-addresses toggle |
 | Team Record: Members tab | Built | Add/remove members, mark leaders, bulk actions (email, download, remove, add to another team) |
@@ -402,10 +402,10 @@
 | Clickable links to group/venue records | Built | — |
 | Google Maps link for venues | Built | For venues with postcode |
 | Download PDF | Built | — |
-| **Beacon2 extra:** Calendar/Table view toggle | Beacon2 extra | Sortable tabular view with Start/End/Group/Topic/Venue/Postcode/Enquiries/Details columns |
-| **Beacon2 extra:** Show past events toggle | Beacon2 extra | Expands `from` date back 12 months in one click |
-| **Beacon2 extra:** Download Excel | Beacon2 extra | `/calendar/events/excel` — same filters as PDF download |
-| **Beacon2 extra:** Upcoming events widget on Home | Beacon2 extra | Collapsible panel showing next 5 events in next 90 days; collapse state stored in personal preferences |
+| **beacon2026 extra:** Calendar/Table view toggle | beacon2026 extra | Sortable tabular view with Start/End/Group/Topic/Venue/Postcode/Enquiries/Details columns |
+| **beacon2026 extra:** Show past events toggle | beacon2026 extra | Expands `from` date back 12 months in one click |
+| **beacon2026 extra:** Download Excel | beacon2026 extra | `/calendar/events/excel` — same filters as PDF download |
+| **beacon2026 extra:** Upcoming events widget on Home | beacon2026 extra | Collapsible panel showing next 5 events in next 90 days; collapse state stored in personal preferences |
 
 ---
 
@@ -422,9 +422,9 @@
 | Aspect | Status | Notes |
 |--------|--------|-------|
 | One-off event groups | Built | Can create groups for single events |
-| **Beacon2 extra:** Event Types | Beacon2 extra | Non-group events with flexible event types (e.g. Open Meetings, Social Events); managed via the Calendar **Open Meetings and Other** filter with recurrence support; configurable event types in Set up |
-| **Beacon2 extra:** Event Members | Beacon2 extra | Track members registered for any event (group or standalone); add by name/number; "Copy from group" for one-time snapshot; organiser toggle; download PDF |
-| **Beacon2 extra:** Event Financials | Beacon2 extra | Per-event financial summary (income/costs/net); transactions linkable to events via TransactionEditor; Event Record page with Details/Members/Financials tabs |
+| **beacon2026 extra:** Event Types | beacon2026 extra | Non-group events with flexible event types (e.g. Open Meetings, Social Events); managed via the Calendar **Open Meetings and Other** filter with recurrence support; configurable event types in Set up |
+| **beacon2026 extra:** Event Members | beacon2026 extra | Track members registered for any event (group or standalone); add by name/number; "Copy from group" for one-time snapshot; organiser toggle; download PDF |
+| **beacon2026 extra:** Event Financials | beacon2026 extra | Per-event financial summary (income/costs/net); transactions linkable to events via TransactionEditor; Event Record page with Details/Members/Financials tabs |
 
 ---
 
@@ -525,8 +525,8 @@
 | Aspect | Status | Notes |
 |--------|--------|-------|
 | Account/category/group views | Built | Group view includes teams; button labelled "Group/Team" |
-| **Beacon2 extra:** Event view | Beacon2 extra | Fourth view tab on the ledger — search-as-you-type event picker, shows all transactions linked to the chosen event (year selector hidden) |
-| **Beacon2 extra:** Consolidated ledger menu | Beacon2 extra | The three legacy *Ledger (by …)* menu entries collapsed into a single **Ledger** item; the view toggle handles selection |
+| **beacon2026 extra:** Event view | beacon2026 extra | Fourth view tab on the ledger — search-as-you-type event picker, shows all transactions linked to the chosen event (year selector hidden) |
+| **beacon2026 extra:** Consolidated ledger menu | beacon2026 extra | The three legacy *Ledger (by …)* menu entries collapsed into a single **Ledger** item; the view toggle handles selection |
 | Year selector | Built | Calendar year filtering (hidden in the Event view) |
 | Running balance | Built | Shown in all views; excludes pending transactions |
 | Group view with per-group B/F rows | Built | When enabled via 7.10.6 setting |
@@ -725,7 +725,7 @@
 | Aspect | Status | Notes |
 |--------|--------|-------|
 | Set-up module overview | Built | — |
-| Feature configuration | Beacon2 extra | Per-u3a feature toggles (25 toggles across 7 sections — 6 master modules plus Membership and Other sub-feature groups) — new in Beacon2. All toggles are backend-enforced via `requireFeature()` middleware. Legacy Beacon restores apply the "Beacon Migration Default" Standard Implementation preset (all on except SiteWorks Integration and Custom Fields). Presets live in `shared/constants.js` as `STANDARD_IMPLEMENTATIONS` |
+| Feature configuration | beacon2026 extra | Per-u3a feature toggles (25 toggles across 7 sections — 6 master modules plus Membership and Other sub-feature groups) — new in beacon2026. All toggles are backend-enforced via `requireFeature()` middleware. Legacy Beacon restores apply the "Beacon Migration Default" Standard Implementation preset (all on except SiteWorks Integration and Custom Fields). Presets live in `shared/constants.js` as `STANDARD_IMPLEMENTATIONS` |
 
 ---
 
@@ -811,8 +811,8 @@
 | Finance accounts CRUD | Built | Locked protection, active toggle, balance b/f |
 | Finance categories | Built | — |
 | Group B/F tickbox | Built | — |
-| **Beacon2 extra:** Membership Payment Method Defaults | Beacon2 extra | Default payment method and per-type default account (doc 8.6c); auto-populates renewals |
-| **Beacon2 extra:** Refund enable per account | Beacon2 extra | Per-account `enable_refunds` toggle (doc 8.6e) |
+| **beacon2026 extra:** Membership Payment Method Defaults | beacon2026 extra | Default payment method and per-type default account (doc 8.6c); auto-populates renewals |
+| **beacon2026 extra:** Refund enable per account | beacon2026 extra | Per-account `enable_refunds` toggle (doc 8.6e) |
 
 ---
 
@@ -914,7 +914,7 @@
 | Aspect | Status | Notes |
 |--------|--------|-------|
 | 7 export types + full backup (Excel) | Built | Members, Finance (with credit batches), Groups & teams (with events/ledgers), System users, Officers, Settings (with templates/payment defaults) |
-| Full restore (Beacon2 + Beacon format) | Built | Beacon2 restore preserves all exported data including teams, custom fields, gift aid, refund links, credit batches, events, templates, payment defaults. Beacon restore now also re-creates the default "Open Meetings" event type and migrates Open Meetings from the legacy `Calendar` sheet (group-tied calendar rows are still skipped — see KNOWN-ISSUES.md) |
+| Full restore (beacon2026 + Beacon format) | Built | beacon2026 restore preserves all exported data including teams, custom fields, gift aid, refund links, credit batches, events, templates, payment defaults. Beacon restore now also re-creates the default "Open Meetings" event type and migrates Open Meetings from the legacy `Calendar` sheet (group-tied calendar rows are still skipped — see KNOWN-ISSUES.md) |
 | Member photos in export | Deferred | Base64 data too large for Excel; needs separate mechanism (see KNOWN-ISSUES.md) |
 | Email delivery history in export | Skipped | Transient SendGrid data; not meaningful to restore |
 
@@ -1064,13 +1064,13 @@
 
 | Aspect | Status | Notes |
 |--------|--------|-------|
-| Network/region features | Not started | No network or region functionality exists in Beacon2 |
+| Network/region features | Not started | No network or region functionality exists in beacon2026 |
 
 ---
 
-## Beacon2 Additions Not Covered by UG Sections
+## beacon2026 Additions Not Covered by UG Sections
 
-These are features or architectural aspects of Beacon2 that have no counterpart in the original Beacon User Guide.
+These are features or architectural aspects of beacon2026 that have no counterpart in the original Beacon User Guide.
 
 | Feature | Description |
 |---------|-------------|
@@ -1087,7 +1087,7 @@ These are features or architectural aspects of Beacon2 that have no counterpart 
 | **Validate member data** | Comprehensive data quality tool checking all members for issues; inline fix |
 | **Context-sensitive help** | HelpWidget with Zendesk integration; route-mapped help links |
 | **CI/CD** | GitHub Actions runs backend + frontend tests on every push; Playwright E2E against staging |
-| **Data restore from Beacon format** | Full restore supports both Beacon2 and original Beacon data formats |
+| **Data restore from Beacon format** | Full restore supports both beacon2026 and original Beacon data formats |
 
 ---
 
@@ -1100,7 +1100,7 @@ These are features or architectural aspects of Beacon2 that have no counterpart 
 | **Built** | 244 | Feature broadly matches UG description |
 | **Partial** | 12 | Feature exists but some aspects missing (PayPal stubs, system settings not yet wired, portal notification stubs) |
 | **Not started** | 15 | Feature not yet implemented (public pages, guidance pages, networks/regions) |
-| **Beacon2 extra** | 12 | New in Beacon2 (architecture, SiteWorks, open meetings, refunds, etc.) |
+| **beacon2026 extra** | 12 | New in beacon2026 (architecture, SiteWorks, open meetings, refunds, etc.) |
 
 ### Key gaps (Not started)
 
@@ -1114,15 +1114,15 @@ These are features or architectural aspects of Beacon2 that have no counterpart 
 
 ### Key differences from Beacon
 
-1. **Login**: Both use username-based login; Beacon2 adds email fallback for legacy users
-2. **Hide address**: Beacon2 has both a per-member `hide_contact` checkbox AND a per-group `show_addresses` toggle, but **neither is yet enforced** in the group members view — enforcement depends first on implementing the scoped group-leader access model (`group_records_as_leader`), which is seeded but unused. See KNOWN-ISSUES.md → Group / Member Contact Hiding.
+1. **Login**: Both use username-based login; beacon2026 adds email fallback for legacy users
+2. **Hide address**: beacon2026 has both a per-member `hide_contact` checkbox AND a per-group `show_addresses` toggle, but **neither is yet enforced** in the group members view — enforcement depends first on implementing the scoped group-leader access model (`group_records_as_leader`), which is seeded but unused. See KNOWN-ISSUES.md → Group / Member Contact Hiding.
 3. **Financial year**: Configurable via `year_start_month` / `year_start_day` (default January = calendar year); same concept as Beacon
-4. **Architecture**: Both are multi-tenant; Beacon2 uses schema-per-tenant PostgreSQL; the UG describes a single tenant's view
+4. **Architecture**: Both are multi-tenant; beacon2026 uses schema-per-tenant PostgreSQL; the UG describes a single tenant's view
 5. **Auth**: JWT + refresh token (vs Beacon's session-based auth)
-6. **Cookie consent**: Both have cookie consent dialogs; Beacon2's is GDPR-compliant with essential vs optional distinction
+6. **Cookie consent**: Both have cookie consent dialogs; beacon2026's is GDPR-compliant with essential vs optional distinction
 
 ---
 
-> **Maintenance:** Update this document whenever Beacon2 features are added, changed,
+> **Maintenance:** Update this document whenever beacon2026 features are added, changed,
 > or when a deeper comparison of a specific section is performed. Include the date
 > of the update at the top of the file.

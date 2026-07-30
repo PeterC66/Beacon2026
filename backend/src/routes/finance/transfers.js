@@ -1,4 +1,4 @@
-// beacon2/backend/src/routes/finance/transfers.js
+// beacon2026/backend/src/routes/finance/transfers.js
 // Transfer money CRUD.
 
 import { Router } from 'express';

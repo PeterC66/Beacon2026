@@ -1,4 +1,4 @@
-# Beacon2 backend image — for LOCAL development and running the E2E suite
+# beacon2026 backend image — for LOCAL development and running the E2E suite
 # without a deployed staging instance. NOT used by the Render deployment
 # (Render builds from source via render.yaml). Build context is the repo root
 # because the backend imports shared/constants.js from the repo root.

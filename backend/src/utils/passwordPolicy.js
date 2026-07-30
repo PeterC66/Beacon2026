@@ -1,4 +1,4 @@
-// beacon2/backend/src/utils/passwordPolicy.js
+// beacon2026/backend/src/utils/passwordPolicy.js
 // Single source of truth for the password-strength policy and temporary-
 // password generation, so every flow (admin change, force-change, user
 // create/update, tenant create, and all portal reset/register flows) enforces

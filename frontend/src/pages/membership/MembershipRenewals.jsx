@@ -1,4 +1,4 @@
-// beacon2/frontend/src/pages/membership/MembershipRenewals.jsx
+// beacon2026/frontend/src/pages/membership/MembershipRenewals.jsx
 // Doc 4.5 — Membership Renewals
 
 import { useState, useEffect, useMemo, useRef } from 'react';

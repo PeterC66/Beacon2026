@@ -1,4 +1,4 @@
-// beacon2/e2e/tests/19-event-members.spec.js
+// beacon2026/e2e/tests/19-event-members.spec.js
 // Event Members and Event Financials tests.
 // Beacon UG §5.9 — "The Calendar" (event record, attendance, financials)
 //

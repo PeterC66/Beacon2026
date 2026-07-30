@@ -1,4 +1,4 @@
-// beacon2/frontend/src/pages/reports/ReportList.jsx
+// beacon2026/frontend/src/pages/reports/ReportList.jsx
 // List saved SQL reports. Admins see Edit/Delete/New/Ad-hoc SQL actions.
 
 import { useState, useEffect } from 'react';

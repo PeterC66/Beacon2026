@@ -1,4 +1,4 @@
-// beacon2/frontend/src/pages/public/ResumePayment.jsx
+// beacon2026/frontend/src/pages/public/ResumePayment.jsx
 // Reached via the resume-payment link (from email or bookmark).
 // Looks up the Applicant by payment token and offers to pay.
 

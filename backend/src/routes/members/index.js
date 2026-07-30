@@ -1,4 +1,4 @@
-// beacon2/backend/src/routes/members/index.js
+// beacon2026/backend/src/routes/members/index.js
 // Parent router for member routes. Mounts the listing, lifecycle, and CRUD
 // sub-routers. Order matters: the literal-path routers (list, lifecycle) are
 // mounted before the CRUD router so their paths are matched ahead of `/:id`.

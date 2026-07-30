@@ -1,4 +1,4 @@
-// beacon2/backend/src/routes/membershipCards.js
+// beacon2026/backend/src/routes/membershipCards.js
 // Membership Cards (doc 4.7) — download PDF cards, blank cards, Excel card data,
 // mark cards as printed, and list members for card selection.
 

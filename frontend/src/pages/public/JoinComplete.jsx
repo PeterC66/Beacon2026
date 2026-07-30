@@ -1,4 +1,4 @@
-// beacon2/frontend/src/pages/public/JoinComplete.jsx
+// beacon2026/frontend/src/pages/public/JoinComplete.jsx
 // Displayed after returning from PayPal (or stub).
 // Confirms payment with the backend and shows the result.
 

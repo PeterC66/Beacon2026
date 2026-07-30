@@ -1,4 +1,4 @@
-// beacon2/backend/src/routes/members/crud.js
+// beacon2026/backend/src/routes/members/crud.js
 // Single-member CRUD: fetch, create, update, delete, photo, and group membership.
 
 import { Router } from 'express';

@@ -1,4 +1,4 @@
-# Beacon2 — Cross-Cutting Standards Checklist
+# beacon2026 — Cross-Cutting Standards Checklist
 
 **Read this before starting implementation of any new page or endpoint.**
 Every item below applies to every new feature — no exceptions.
@@ -183,7 +183,7 @@ Every item below applies to every new feature — no exceptions.
   update `backend/src/routes/backup.js` to match:
   1. **Export** — add the column to the relevant `buildXxxSheets` SELECT query and the
      `addSheet` column list.
-  2. **Beacon2 restore** — add the column to the corresponding INSERT in `restoreFromBeacon2`.
+  2. **beacon2026 restore** — add the column to the corresponding INSERT in `restoreFrombeacon2026`.
   3. **Beacon restore** — if the old Beacon format has an equivalent field, map it in
      `restoreFromBeacon`.
   When adding an entire new table, add export, restore, and clear (`DELETE FROM …`) entries.
@@ -410,13 +410,13 @@ Every item below applies to every new feature — no exceptions.
   Also call out what each figure excludes: the driver's own time, test
   environments, external integrations, onboarding and user support.
   See `docs/website-editing-options.md` and
-  `docs/website-post-types-from-beacon2.md` for worked examples.
+  `docs/website-post-types-from-beacon2026.md` for worked examples.
 
 ## Naming and style
 
 - [ ] **u3a** always lowercase.
 
-- [ ] **Beacon2** (not Beacon 2, beacon2, etc.).
+- [ ] **beacon2026** (not Beacon 2, beacon2026, etc.).
 
 - [ ] **Development branch** — always `claude/...`; never push directly to `main`.
 

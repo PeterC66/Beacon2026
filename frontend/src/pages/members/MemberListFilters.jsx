@@ -1,4 +1,4 @@
-// beacon2/frontend/src/pages/members/MemberListFilters.jsx
+// beacon2026/frontend/src/pages/members/MemberListFilters.jsx
 //
 // Filter panel for MemberList — status checkboxes, class/poll/payment-method
 // selectors, and the Quick Find / custom-field search forms. Presentation only:

@@ -19,7 +19,7 @@ in, reviews their renewal fee, optionally confirms Gift Aid, and pays via PayPal
 ### Step 1 — Start the renewal
 
 The member logs in to the [Members Portal](42-members-portal.md) and clicks
-**Renew your membership**. Beacon2 loads their current renewal details and shows
+**Renew your membership**. beacon2026 loads their current renewal details and shows
 a renewal summary.
 
 ### Step 2 — Review the renewal summary [A]
@@ -48,12 +48,12 @@ The member clicks **Make Payment** and is taken to PayPal to pay the total. They
 can pay with a PayPal account or a debit/credit card.
 
 - If they cancel, they are returned to the portal and nothing is changed.
-- If the payment succeeds, PayPal redirects them back to Beacon2, which confirms
+- If the payment succeeds, PayPal redirects them back to beacon2026, which confirms
   the renewal.
 
 ### Step 5 — Confirmation [C]
 
-On successful payment, Beacon2:
+On successful payment, beacon2026:
 
 1. **Records the payment** and updates the member's **next renewal date** to the
    following membership year.

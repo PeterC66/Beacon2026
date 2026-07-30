@@ -1,4 +1,4 @@
-// beacon2/backend/src/routes/portal/renewals.js
+// beacon2026/backend/src/routes/portal/renewals.js
 // Members Portal — Online Renewals (doc 10.2.1): renewal eligibility/fee lookup,
 // PayPal payment initiation, and post-payment confirmation.
 
