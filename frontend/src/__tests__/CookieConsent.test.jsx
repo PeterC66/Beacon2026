@@ -47,7 +47,10 @@ describe('useCookieConsent', () => {
     localStorage.setItem('beacon2026_prefs', JSON.stringify({ sortBy: 'forename' }));
     localStorage.setItem('beacon2026_label_settings', JSON.stringify({ cols: 2 }));
     localStorage.setItem('beacon2026_last_export_class', '5');
-    localStorage.setItem('beacon2026_email_compose_prefs', JSON.stringify({ fromEmail: 'a@b.com' }));
+    localStorage.setItem(
+      'beacon2026_email_compose_prefs',
+      JSON.stringify({ fromEmail: 'a@b.com' }),
+    );
 
     setConsent(false);
 

@@ -21,8 +21,8 @@ export default function RestoreBackupSection({
     <section className="bg-white rounded-xl shadow-sm p-6">
       <h2 className="text-lg font-semibold text-slate-700 mb-1">Restore from Backup</h2>
       <p className="text-sm text-slate-500 mb-4">
-        Upload a beacon2026 backup or a legacy Beacon export file to restore a tenant&apos;s data. The
-        format is detected automatically. User accounts and roles are included in the restore.
+        Upload a beacon2026 backup or a legacy Beacon export file to restore a tenant&apos;s data.
+        The format is detected automatically. User accounts and roles are included in the restore.
       </p>
 
       <div className="rounded-md bg-amber-50 border border-amber-300 px-4 py-3 text-amber-800 text-sm mb-5">
