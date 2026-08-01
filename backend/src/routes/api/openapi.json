@@ -1,0 +1,427 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "beacon2026 public read API",
+    "version": "1.0.0",
+    "summary": "Read-only access to a u3a's published groups, events, venues and interest areas.",
+    "description": "A read-only interface to the information a u3a has chosen to publish. It never exposes more than that u3a's own public web pages already show, and it never exposes member data.\n\nThe interface is owned by the Third Age Trust. No field or endpoint in v1 will be withdrawn, or change meaning, with less than six months' published notice. Notice is signalled on affected responses with the `Deprecation` and `Sunset` headers (RFC 8594) as well as on the published documentation page — please have your integration surface those headers somewhere a human will see them.\n\nNew fields may be added to any response at any time. Clients must ignore fields they do not recognise.\n\nAccess is anonymous: no key, no registration. Each u3a opts in individually, so a 404 may mean the u3a has not enabled the API rather than that it does not exist. Please cache responses — they carry `Cache-Control` and `ETag`, and honouring them keeps the service fast for everyone.",
+    "contact": {
+      "name": "Third Age Trust"
+    },
+    "license": { "name": "See repository LICENSE" }
+  },
+  "servers": [{ "url": "/api/v1", "description": "This beacon2026 instance" }],
+  "tags": [
+    { "name": "Organisation" },
+    { "name": "Groups" },
+    { "name": "Events" },
+    { "name": "Venues" },
+    { "name": "Interest areas" }
+  ],
+  "paths": {
+    "/{slug}/org": {
+      "get": {
+        "tags": ["Organisation"],
+        "summary": "The u3a's name and public contact details",
+        "parameters": [{ "$ref": "#/components/parameters/slug" }],
+        "responses": {
+          "200": {
+            "description": "The organisation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": { "data": { "$ref": "#/components/schemas/Org" } }
+                }
+              }
+            }
+          },
+          "404": { "$ref": "#/components/responses/NotFound" }
+        }
+      }
+    },
+    "/{slug}/faculties": {
+      "get": {
+        "tags": ["Interest areas"],
+        "summary": "Interest areas used to categorise groups",
+        "parameters": [
+          { "$ref": "#/components/parameters/slug" },
+          { "$ref": "#/components/parameters/limit" },
+          { "$ref": "#/components/parameters/offset" }
+        ],
+        "responses": {
+          "200": {
+            "description": "A page of interest areas",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    { "$ref": "#/components/schemas/Collection" },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "array",
+                          "items": { "$ref": "#/components/schemas/Faculty" }
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "404": { "$ref": "#/components/responses/NotFound" }
+        }
+      }
+    },
+    "/{slug}/venues": {
+      "get": {
+        "tags": ["Venues"],
+        "summary": "Venues where groups meet",
+        "description": "Returns 404 unless the u3a publishes venues on its public groups page.",
+        "parameters": [
+          { "$ref": "#/components/parameters/slug" },
+          { "$ref": "#/components/parameters/limit" },
+          { "$ref": "#/components/parameters/offset" }
+        ],
+        "responses": {
+          "200": {
+            "description": "A page of venues",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    { "$ref": "#/components/schemas/Collection" },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "array",
+                          "items": { "$ref": "#/components/schemas/Venue" }
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "404": { "$ref": "#/components/responses/NotFound" }
+        }
+      }
+    },
+    "/{slug}/venues/{id}": {
+      "get": {
+        "tags": ["Venues"],
+        "summary": "One venue",
+        "parameters": [
+          { "$ref": "#/components/parameters/slug" },
+          { "$ref": "#/components/parameters/id" }
+        ],
+        "responses": {
+          "200": {
+            "description": "The venue",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": { "data": { "$ref": "#/components/schemas/Venue" } }
+                }
+              }
+            }
+          },
+          "404": { "$ref": "#/components/responses/NotFound" }
+        }
+      }
+    },
+    "/{slug}/groups": {
+      "get": {
+        "tags": ["Groups"],
+        "summary": "Active interest groups",
+        "description": "Only active interest groups are returned. Which optional fields appear depends on what the u3a has chosen to publish, so a field being absent is normal and clients must not depend on it.",
+        "parameters": [
+          { "$ref": "#/components/parameters/slug" },
+          {
+            "name": "faculty",
+            "in": "query",
+            "description": "Filter to one interest area, by its id.",
+            "schema": { "type": "string", "maxLength": 64 }
+          },
+          { "$ref": "#/components/parameters/limit" },
+          { "$ref": "#/components/parameters/offset" }
+        ],
+        "responses": {
+          "200": {
+            "description": "A page of groups",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    { "$ref": "#/components/schemas/Collection" },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "array",
+                          "items": { "$ref": "#/components/schemas/Group" }
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "404": { "$ref": "#/components/responses/NotFound" }
+        }
+      }
+    },
+    "/{slug}/groups/{id}": {
+      "get": {
+        "tags": ["Groups"],
+        "summary": "One active interest group",
+        "parameters": [
+          { "$ref": "#/components/parameters/slug" },
+          { "$ref": "#/components/parameters/id" }
+        ],
+        "responses": {
+          "200": {
+            "description": "The group",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": { "data": { "$ref": "#/components/schemas/Group" } }
+                }
+              }
+            }
+          },
+          "404": { "$ref": "#/components/responses/NotFound" }
+        }
+      }
+    },
+    "/{slug}/events": {
+      "get": {
+        "tags": ["Events"],
+        "summary": "Public calendar events",
+        "description": "Events the u3a has not marked private. Which optional fields appear depends on what the u3a has chosen to publish.",
+        "parameters": [
+          { "$ref": "#/components/parameters/slug" },
+          {
+            "name": "from",
+            "in": "query",
+            "description": "Earliest event date, inclusive (YYYY-MM-DD).",
+            "schema": { "type": "string", "format": "date" }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "description": "Latest event date, inclusive (YYYY-MM-DD).",
+            "schema": { "type": "string", "format": "date" }
+          },
+          {
+            "name": "group",
+            "in": "query",
+            "description": "Filter to one group, by its id.",
+            "schema": { "type": "string", "maxLength": 64 }
+          },
+          { "$ref": "#/components/parameters/limit" },
+          { "$ref": "#/components/parameters/offset" }
+        ],
+        "responses": {
+          "200": {
+            "description": "A page of events",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    { "$ref": "#/components/schemas/Collection" },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "array",
+                          "items": { "$ref": "#/components/schemas/Event" }
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "404": { "$ref": "#/components/responses/NotFound" }
+        }
+      }
+    },
+    "/{slug}/events/{id}": {
+      "get": {
+        "tags": ["Events"],
+        "summary": "One public event",
+        "parameters": [
+          { "$ref": "#/components/parameters/slug" },
+          { "$ref": "#/components/parameters/id" }
+        ],
+        "responses": {
+          "200": {
+            "description": "The event",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": { "data": { "$ref": "#/components/schemas/Event" } }
+                }
+              }
+            }
+          },
+          "404": { "$ref": "#/components/responses/NotFound" }
+        }
+      }
+    }
+  },
+  "components": {
+    "parameters": {
+      "slug": {
+        "name": "slug",
+        "in": "path",
+        "required": true,
+        "description": "The u3a's identifier. Lower-case letters, digits and underscores only.",
+        "schema": { "type": "string", "pattern": "^[a-z0-9_]+$" }
+      },
+      "id": {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "schema": { "type": "string" }
+      },
+      "limit": {
+        "name": "limit",
+        "in": "query",
+        "description": "Page size, 1–200.",
+        "schema": { "type": "integer", "minimum": 1, "maximum": 200, "default": 50 }
+      },
+      "offset": {
+        "name": "offset",
+        "in": "query",
+        "schema": { "type": "integer", "minimum": 0, "default": 0 }
+      }
+    },
+    "responses": {
+      "BadRequest": {
+        "description": "The query string was not valid.",
+        "content": {
+          "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+        }
+      },
+      "NotFound": {
+        "description": "No such u3a or resource — or the u3a has not enabled this API.",
+        "content": {
+          "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+        }
+      }
+    },
+    "schemas": {
+      "Error": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "object",
+            "properties": {
+              "code": { "type": "string" },
+              "message": { "type": "string" }
+            },
+            "required": ["code", "message"]
+          }
+        }
+      },
+      "Collection": {
+        "type": "object",
+        "properties": {
+          "meta": {
+            "type": "object",
+            "properties": {
+              "total": { "type": "integer" },
+              "limit": { "type": "integer" },
+              "offset": { "type": "integer" }
+            },
+            "required": ["total", "limit", "offset"]
+          }
+        }
+      },
+      "Org": {
+        "type": "object",
+        "properties": {
+          "slug": { "type": "string" },
+          "name": { "type": "string" },
+          "phone": { "type": ["string", "null"] },
+          "email": { "type": ["string", "null"] },
+          "homePage": { "type": ["string", "null"] }
+        },
+        "required": ["slug", "name"]
+      },
+      "Faculty": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "name": { "type": "string" }
+        },
+        "required": ["id", "name"]
+      },
+      "Venue": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "name": { "type": "string" },
+          "postcode": { "type": ["string", "null"] }
+        },
+        "required": ["id", "name"]
+      },
+      "Group": {
+        "type": "object",
+        "description": "Fields beyond the required ones appear only if the u3a publishes them.",
+        "properties": {
+          "id": { "type": "string" },
+          "name": { "type": "string" },
+          "facultyId": { "type": ["string", "null"] },
+          "faculty": { "type": ["string", "null"] },
+          "when": {
+            "type": ["string", "null"],
+            "description": "Free text, e.g. \"2nd Thursday at 2:00pm\"."
+          },
+          "startTime": { "type": ["string", "null"] },
+          "endTime": { "type": ["string", "null"] },
+          "status": { "type": "string" },
+          "venue": { "type": ["string", "null"] },
+          "venuePostcode": { "type": ["string", "null"] },
+          "contact": { "type": ["string", "null"] },
+          "enquiries": { "type": ["string", "null"] },
+          "information": { "type": ["string", "null"] }
+        },
+        "required": ["id", "name", "facultyId", "faculty", "when", "startTime", "endTime"]
+      },
+      "Event": {
+        "type": "object",
+        "description": "Fields beyond the required ones appear only if the u3a publishes them.",
+        "properties": {
+          "id": { "type": "string" },
+          "date": { "type": "string", "format": "date" },
+          "startTime": { "type": ["string", "null"] },
+          "endTime": { "type": ["string", "null"] },
+          "groupId": { "type": ["string", "null"] },
+          "groupName": { "type": "string" },
+          "venue": { "type": ["string", "null"] },
+          "venuePostcode": { "type": ["string", "null"] },
+          "topic": { "type": ["string", "null"] },
+          "contact": { "type": ["string", "null"] },
+          "details": { "type": ["string", "null"] }
+        },
+        "required": ["id", "date", "startTime", "endTime", "groupId", "groupName"]
+      }
+    }
+  }
+}
