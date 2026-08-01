@@ -555,29 +555,58 @@ out of them.
    not judged worth it. Fold at the 75-octet boundary, the `VTIMEZONE`
    definition and all-day `DTEND` semantics are the parts most likely to be
    subtly wrong. Subscribe from one real client when the demo tenant is
-   smoke-tested (item 8 below).
-3. `[DEFERRED]` **Shared SiteWorks display plugin (phase 2b)** — one WordPress
-   plugin, used by every u3a, rendering groups and events from this API with
-   sensible caching. Separate codebase. It is the deliverable most u3as will
-   actually see, and the main defence against a per-u3a support load: the
-   common case should need no support at all.
-4. `[CONDITIONAL]` **API keys (phase 3)** — tenant-scoped keys, hashed at rest,
+   smoke-tested (item 10 below).
+3. `[OPEN]` **Shared SiteWorks display plugin (phase 2b) — proof of concept
+   built, not released.** Separate codebase, local only:
+   `C:\Claude\beacon2026-siteworks-plugin` (git repo, not pushed). "beacon2026
+   Display" 0.1.0 — three server-rendered shortcodes (`[beacon2026_groups]`,
+   `[beacon2026_events]`, `[beacon2026_calendar_link]`), a settings page with a
+   live connection check, `If-None-Match` revalidation, stale-on-error, and the
+   `Deprecation`/`Sunset` headers surfaced as a WP admin notice. 83 assertions
+   plus an over-HTTP integration check against a bundled stand-in API; its own
+   README carries the full limitations list. **Not verified against a real
+   beacon2026** (none is live) and **never activated inside WordPress** — it is
+   linked into the Local site `dev-based-on-20260519` awaiting that. Blocks
+   rather than shortcodes, and matching the SiteWorks theme, are the obvious
+   next steps.
+4. `[OPEN]` **The overlap with `u3a-siteworks-core` is unresolved, and is the
+   real phase 2b question.** `docs/API-design.md` was written without this
+   detail: `u3a-siteworks-core` (v2.1.2, on every SiteWorks site) already
+   registers `u3a_group`, `u3a_event`, `u3a_venue` and `u3a_contact` post
+   types, ships the `u3a/grouplist`, `u3a/groupdata`, `u3a/venuelist` and
+   `u3a/venuedata` blocks, and `u3a-importexport` defines a CSV format that is
+   today's manual Beacon → SiteWorks path. A display plugin therefore stands
+   *beside* a mature, theme-styled Groups system rather than filling a gap, and
+   a u3a running both has two of everything. The alternative — a plugin the
+   u3a installs that **pulls** from `/api/v1` and populates those existing post
+   types — gets what "push" was wanted for (real WP posts, search-engine
+   indexing, the theme's own styling, every existing block working untouched)
+   without anyone holding a WordPress application password per u3a, which is
+   what made push unattractive in the design. Decide this before anything past
+   the proof of concept; it changes what the plugin is.
+5. `[DEFERRED]` **Shared SiteWorks display plugin — release.** Whichever shape
+   wins above, it is the deliverable most u3as will actually see, and the main
+   defence against a per-u3a support load: the common case should need no
+   support at all. Distribution (zip passed around vs central submission),
+   a `.pot` file, and a SiteWorks instance to develop against are all still
+   open.
+6. `[CONDITIONAL]` **API keys (phase 3)** — tenant-scoped keys, hashed at rest,
    with scopes, an admin page and revocation. Deliberately *not* scheduled: the
    settled decision is anonymous-first, and keys get built only if a consumer
    appears that already-public data cannot serve. Do not build speculatively.
-5. `[CONDITIONAL]` **Member endpoints (phase 4)** — `/members/stats` (aggregate
+7. `[CONDITIONAL]` **Member endpoints (phase 4)** — `/members/stats` (aggregate
    counts) before any individual records, key plus explicit `members:read`
    scope, never in a default role, never anonymous. A data-protection decision
    for each u3a, not a routine feature.
-6. `[OPEN]` **Deprecation notice needs channels that do not depend on
+8. `[OPEN]` **Deprecation notice needs channels that do not depend on
    identity.** Anonymous access is what lets this scale to every u3a, and the
    price is that we cannot email integrators. In-band `Deprecation`/`Sunset`
    headers are implemented; a Trust-owned changes page and an optional
    voluntary notification list are not. Needed before v1 is publicised widely.
-7. `[OPEN]` **Trust agreement to own the interface (phase 0b).** Not code. It
+9. `[OPEN]` **Trust agreement to own the interface (phase 0b).** Not code. It
    gates *publishing* rather than building, and should be secured before the
    API is advertised to other u3as.
-8. `[OPEN]` **`/api/v1` has never run against a real database.** The 46 tests in
+10. `[OPEN]` **`/api/v1` has never run against a real database.** The 46 tests in
    `apiV1.test.js` mock the DB layer, as every other route test here does, so
    the SQL itself is unexercised — column names, the `= ANY($1)` leader lookup,
    the `::date` casts in the event filters, and the `::text` casts and
