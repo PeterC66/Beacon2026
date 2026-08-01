@@ -7,6 +7,7 @@ import { email as emailApi } from '../../lib/api.js';
 import { useAuth } from '../../context/AuthContext.jsx';
 import NavBar from '../../components/NavBar.jsx';
 import PageHeader from '../../components/PageHeader.jsx';
+import DemoUnavailableBanner from '../../components/DemoUnavailableBanner.jsx';
 
 export default function EmailUnblocker() {
   const { tenant } = useAuth();
@@ -40,6 +41,8 @@ export default function EmailUnblocker() {
 
       <div className="max-w-xl mx-auto px-4 py-8">
         <h1 className="text-xl font-bold text-center mb-6">Email Unblocker</h1>
+
+        <DemoUnavailableBanner feature="Email unblocker" />
 
         <div className="bg-white/90 rounded-lg shadow-sm p-6">
           <p className="text-sm text-slate-600 mb-4">

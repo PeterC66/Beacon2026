@@ -34,6 +34,7 @@ export const auth = {
       body: JSON.stringify({ tenantSlug, username, password }),
     }),
   logout: () => request('/auth/logout', { method: 'POST' }),
+  sessionTimeout: () => request('/auth/session-timeout', { method: 'POST' }),
   refresh: () => request('/auth/refresh', { method: 'POST' }),
   changePassword: (currentPassword, newPassword) =>
     request('/auth/change-password', {

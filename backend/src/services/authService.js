@@ -110,6 +110,15 @@ export async function loginUser(tenantSlug, username, password) {
   // 6. Update last_login
   await tenantQuery(tenantSlug, `UPDATE users SET last_login = now() WHERE id = $1`, [user.id]);
 
+  await logAudit(tenantSlug, {
+    userId: user.id,
+    userName: user.name,
+    action: 'login',
+    entityType: 'user',
+    entityId: user.id,
+    entityName: user.name,
+  });
+
   return {
     accessToken,
     refreshToken,
@@ -209,6 +218,34 @@ export async function refreshTokens(tenantSlug, refreshToken) {
       mustChangePassword: user.must_change_password || false,
     },
   };
+}
+
+// ─── Refresh token issuance ───────────────────────────────────────────────
+
+/**
+ * Sign and store a new refresh token for a user, outside of the normal
+ * login/refresh flow (e.g. after a password change that revokes the
+ * caller's other sessions but must keep the current one alive).
+ *
+ * @param {string} tenantSlug
+ * @param {string} userId
+ * @returns {Promise<string>} the raw refresh token (caller sets the cookie)
+ */
+export async function issueRefreshToken(tenantSlug, userId) {
+  const refreshToken = signRefreshToken({ userId, tenantSlug });
+  const tokenHash = hashToken(refreshToken);
+  const expiresAt = new Date();
+  expiresAt.setDate(
+    expiresAt.getDate() + parseInt(process.env.JWT_REFRESH_EXPIRES_DAYS ?? '30', 10),
+  );
+
+  await tenantQuery(
+    tenantSlug,
+    `INSERT INTO refresh_tokens (user_id, token_hash, expires_at) VALUES ($1, $2, $3)`,
+    [userId, tokenHash, expiresAt],
+  );
+
+  return refreshToken;
 }
 
 // ─── Logout ───────────────────────────────────────────────────────────────

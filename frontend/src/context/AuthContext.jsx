@@ -66,8 +66,10 @@ export function AuthProvider({ children }) {
     const minutes = getPreferences().inactivityTimeout;
     inactivityTimer.current = setTimeout(
       () => {
-        // Fire auth:expired to trigger logout
-        window.dispatchEvent(new Event('auth:expired'));
+        // Fire auth:expired to trigger logout; mark the reason so the
+        // handler below can audit-log it as a timeout rather than a
+        // generic session expiry (e.g. a revoked/expired refresh token).
+        window.dispatchEvent(new CustomEvent('auth:expired', { detail: { reason: 'timeout' } }));
       },
       minutes * 60 * 1000,
     );
@@ -89,7 +91,12 @@ export function AuthProvider({ children }) {
 
   // Listen for auth:expired events fired by the API client or inactivity timer
   useEffect(() => {
-    const handler = () => {
+    const handler = (e) => {
+      if (e?.detail?.reason === 'timeout') {
+        // Best-effort — the access token is still valid at this point
+        // (only the idle timer fired), so this call can still authenticate.
+        authApi.sessionTimeout().catch(() => {});
+      }
       setUser(null);
       setTenant(null);
       setPrivs([]);

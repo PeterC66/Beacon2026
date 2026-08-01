@@ -9,6 +9,7 @@ import { useAuth } from '../../context/AuthContext.jsx';
 import { hasOptionalCookieConsent } from '../../hooks/useCookieConsent.js';
 import NavBar from '../../components/NavBar.jsx';
 import PageHeader from '../../components/PageHeader.jsx';
+import DemoUnavailableBanner from '../../components/DemoUnavailableBanner.jsx';
 import {
   SS_EMAIL_COMPOSE_MEMBER_IDS,
   SS_EMAIL_GIFT_AID_DATES,
@@ -251,6 +252,8 @@ export default function EmailCompose() {
 
       <div className="max-w-5xl mx-auto px-4 py-4">
         <h1 className="text-xl font-bold text-center mb-4">Send Email</h1>
+
+        <DemoUnavailableBanner feature="Sending email" />
 
         {error && (
           <div className="rounded-md bg-red-50 border border-red-300 px-4 py-3 text-red-700 text-sm font-medium text-center mb-4">
