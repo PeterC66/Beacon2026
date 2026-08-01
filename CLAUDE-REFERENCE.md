@@ -2161,8 +2161,10 @@ public in JSON but missing from the feed is a bug, not a safety margin.
 ### The consumer side lives outside this repo
 
 The phase 2b WordPress plugin ("beacon2026 Display", proof of concept) is a
-**separate local repo**: `C:\Claude\beacon2026-siteworks-plugin`, not pushed
-anywhere. It is the only thing that consumes `/api/v1` today, so it is where a
+**separate repo**:
+[`PeterC66/beacon2026-siteworks-plugin`](https://github.com/PeterC66/beacon2026-siteworks-plugin)
+(private), cloned at `C:\Claude\beacon2026-siteworks-plugin`. It is the only
+thing that consumes `/api/v1` today, so it is where a
 contract change gets noticed first — if you add, rename or remove a v1 field,
 check its `includes/class-b2026-render.php` before assuming nothing depends on
 it. Its own README carries the setup, the test commands and the limitations;

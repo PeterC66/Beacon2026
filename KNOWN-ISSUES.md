@@ -557,8 +557,9 @@ out of them.
    subtly wrong. Subscribe from one real client when the demo tenant is
    smoke-tested (item 10 below).
 3. `[OPEN]` **Shared SiteWorks display plugin (phase 2b) — proof of concept
-   built, not released.** Separate codebase, local only:
-   `C:\Claude\beacon2026-siteworks-plugin` (git repo, not pushed). "beacon2026
+   built, not released.** Separate codebase:
+   [`PeterC66/beacon2026-siteworks-plugin`](https://github.com/PeterC66/beacon2026-siteworks-plugin)
+   (**private**), cloned at `C:\Claude\beacon2026-siteworks-plugin`. "beacon2026
    Display" 0.1.0 — three server-rendered shortcodes (`[beacon2026_groups]`,
    `[beacon2026_events]`, `[beacon2026_calendar_link]`), a settings page with a
    live connection check, `If-None-Match` revalidation, stale-on-error, and the
