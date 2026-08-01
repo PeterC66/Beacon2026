@@ -8,6 +8,18 @@ import { settings as settingsApi, calendar as calendarApi } from '../lib/api.js'
 import PageHeader from '../components/PageHeader.jsx';
 import { getPreferences, savePreferences } from '../hooks/usePreferences.js';
 
+// TEMPORARY: flags menu items that are new in beacon2026 vs the original
+// Beacon, so admins familiar with Beacon can spot them at a glance. Remove
+// the `isNew` markers below (and this badge) once no longer needed — see
+// KNOWN-ISSUES.md.
+function NewBadge() {
+  return (
+    <span className="ml-1 align-super text-[9px] font-bold text-amber-700 bg-amber-100 rounded px-1">
+      NEW
+    </span>
+  );
+}
+
 export default function Home() {
   const { user, tenant, logout, can, hasFeature } = useAuth();
   const navigate = useNavigate();
@@ -162,6 +174,7 @@ export default function Home() {
           tip: 'View and manage teams',
           to: can('groups_list', 'view') ? '/teams' : null,
           f: 'teams',
+          isNew: true,
         },
       ],
     },
@@ -268,12 +281,14 @@ export default function Home() {
           label: 'Utilities',
           tip: 'Administrative utilities',
           to: can('utilities', 'view') ? '/utilities' : null,
+          isNew: true,
         },
         {
           label: 'SQL reports',
           tip: 'Run saved SQL reports and ad-hoc queries',
           to: can('reports', 'view') ? '/reports' : null,
           f: 'reports',
+          isNew: true,
         },
       ],
     },
@@ -285,6 +300,7 @@ export default function Home() {
           label: 'Feature configuration',
           tip: 'Choose which modules are available for your u3a',
           to: can('feature_config', 'view') ? '/feature-config' : null,
+          isNew: true,
         },
         {
           label: 'System users',
@@ -346,6 +362,7 @@ export default function Home() {
           tip: 'Define event types for non-group events',
           to: can('event_types', 'view') ? '/event-types' : null,
           f: 'eventTypes',
+          isNew: true,
         },
       ],
     },
@@ -465,6 +482,7 @@ export default function Home() {
                         {item.label}
                       </span>
                     )}
+                    {item.isNew && <NewBadge />}
                   </li>
                 ))}
               </ul>
@@ -505,6 +523,7 @@ export default function Home() {
                         {item.label}
                       </span>
                     )}
+                    {item.isNew && <NewBadge />}
                   </li>
                 ))}
               </ul>

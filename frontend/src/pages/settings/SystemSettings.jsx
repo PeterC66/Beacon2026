@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useAuth } from '../../context/AuthContext.jsx';
 import PageHeader from '../../components/PageHeader.jsx';
 import NavBar from '../../components/NavBar.jsx';
+import DemoUnavailableBanner from '../../components/DemoUnavailableBanner.jsx';
 import { settings as settingsApi } from '../../lib/api.js';
 import { useUnsavedChanges } from '../../hooks/useUnsavedChanges.js';
 import { SETTINGS_PAYMENT_METHODS as PAYMENT_METHODS } from '../../lib/constants.js';
@@ -493,6 +494,7 @@ export default function SystemSettings() {
             {/* ── Online Payments (PayPal) ── */}
             <section className="bg-white/90 rounded-lg shadow-sm p-4 sm:p-6 space-y-4">
               <SectionHeading>Online Payments (PayPal)</SectionHeading>
+              <DemoUnavailableBanner feature="Online payments (PayPal)" />
               <Field label="PayPal account email" htmlFor="settings-paypal-email">
                 <input
                   id="settings-paypal-email"

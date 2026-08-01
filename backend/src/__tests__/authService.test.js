@@ -153,8 +153,13 @@ describe('loginUser — failed-login lockout (H2)', () => {
     expect(resetCall).toBeTruthy();
     expect(resetCall[2]).toEqual(['u1']);
 
-    // A successful login is not an audit "failed/locked" event.
-    expect(logAudit).not.toHaveBeenCalled();
+    // A successful login is audited as 'login', not a failed/locked event.
+    expect(logAudit).toHaveBeenCalledWith(
+      TENANT,
+      expect.objectContaining({
+        action: 'login',
+      }),
+    );
   });
 
   it('does not touch the counter when the user does not exist', async () => {

@@ -521,3 +521,14 @@ All items in this section have been completed (v0.8.6).
   `backend/Dockerfile` and Docker Build Context Directory = `.` in Render's
   service settings, without recreating the service. See
   `DEPLOYMENT.md` → Troubleshooting for the general fix if this recurs.
+
+## Temporary UI — Deferred Items
+
+- `[DEFERRED]` **Menu "NEW" badges are temporary and should be removed.**
+  Added 2026-08-01 to call out the sections that are genuinely new in
+  beacon2026 vs the original Beacon (Teams, Utilities, SQL reports, Feature
+  configuration, Event types) for admins who are used to Beacon. Implemented
+  as `isNew: true` on the relevant item objects in `Home.jsx`'s `sections`
+  array, rendered via the top-level `NewBadge()` function in the same file.
+  Once admins no longer need the callout, delete the `isNew` flags and the
+  `NewBadge` component/render calls.
