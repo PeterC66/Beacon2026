@@ -32,13 +32,16 @@ beacon2026's own code (`backend/src/seed/privilegeResources.js`,
 With that extraction complete, there was no remaining reason to host Franklin's
 actual copyrighted files, verbatim and publicly, in this repo.
 
+**`202603170140_St Ives Cambridge Demo24 u3abackup.xlsx` and
+`Gift-Aid-Schedule-Excel.ods` removed 2026-08-01.** These had served their
+purpose as format references during development; there was no ongoing need to
+keep hosting them.
+
 ## Contents
 
 | File | What it is |
 |------|------------|
-| `202603170140_St Ives Cambridge Demo24 u3abackup.xlsx` | A sample/demo Beacon backup export, used to understand the export format and data shapes. |
-| `Gift-Aid-Schedule-Excel.ods` | Example Gift Aid schedule spreadsheet, used as a format reference. |
-| `Cookie Control text.png` | Screenshot reference. |
+| `Cookie Control text.png` | Screenshot of the original Beacon's Cookie Control panel. Not imported or referenced by any beacon2026 code — kept only as a documentation reference. |
 
 ## Why keep it here
 
