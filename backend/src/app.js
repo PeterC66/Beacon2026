@@ -41,6 +41,7 @@ import membershipCardRoutes from './routes/membershipCards.js';
 import letterRoutes from './routes/letters.js';
 import customFieldRoutes from './routes/customFields.js';
 import reportRoutes from './routes/reports.js';
+import apiV1Routes from './routes/api/index.js';
 import { errorHandler } from './middleware/errorHandler.js';
 
 // Refuse to start in production without CORS_ORIGIN — otherwise the cors
@@ -56,6 +57,35 @@ if (process.env.NODE_ENV === 'production' && !process.env.CORS_ORIGIN) {
 const app = express();
 
 app.set('trust proxy', 1); // trust Render's load balancer
+
+// ─── Public read API (/api/v1) ────────────────────────────────────────────
+// Mounted BEFORE the app-wide helmet/cors/rate-limit middleware, because it
+// needs different values for all three and whichever runs first wins:
+//
+//  • CORS — `cors({ origin: CORS_ORIGIN })` echoes that one configured origin
+//    to every caller rather than matching it against the request, so a u3a's
+//    own website would be refused. This API is public and needs `*`.
+//  • Helmet — the default `Cross-Origin-Resource-Policy: same-origin` blocks
+//    cross-origin reads even when CORS is correct, which fails in a way that
+//    looks like a CORS bug and is not.
+//  • Rate limit — `generalLimiter` is per-IP and shared with the frontend. A
+//    u3a website is a single IP, so without its own bucket a busy site could
+//    exhaust the allowance and take the frontend down with it.
+//
+// No `express.json()` either: v1 is read-only and parses no bodies.
+const apiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: parseInt(process.env.API_RATE_LIMIT_MAX || '600', 10),
+  message: { error: { code: 'rate_limited', message: 'Too many requests, please slow down.' } },
+});
+
+app.use(
+  '/api/v1',
+  helmet({ crossOriginResourcePolicy: { policy: 'cross-origin' } }),
+  cors({ origin: '*' }),
+  apiLimiter,
+  apiV1Routes,
+);
 
 app.use(helmet());
 app.use(

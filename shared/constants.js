@@ -23,7 +23,15 @@ export const FEATURE_DEPS = {
 
 // Features that default to OFF when the key is missing from feature_config.
 // All other features default to ON (opt-out model).
-export const FEATURE_DEFAULTS_OFF = new Set(['giftAid', 'groupLedger', 'siteworks']);
+export const FEATURE_DEFAULTS_OFF = new Set([
+  'giftAid',
+  'groupLedger',
+  'siteworks',
+  // The public read API is a published external interface. A u3a that has
+  // never heard of it must be unaffected by it, so it defaults off and is
+  // opted into deliberately — see docs/API-design.md.
+  'publicApi',
+]);
 
 /** Is a single feature key on, considering its default? */
 export function isOn(config, key) {
@@ -70,7 +78,13 @@ export const ALL_FEATURE_KEYS = Object.freeze([
   // Other
   'reports',
   'publicPages',
+  'publicApi',
 ]);
+
+// ── Public read API ─────────────────────────────────────────────────────
+// The version served at /api/v1. Bumping this is a deliberate act with a
+// six-month notice period attached — see docs/API-design.md.
+export const API_VERSION = 'v1';
 
 // ── Standard Beacon Implementations ─────────────────────────────────────
 // Named presets for the full feature_config JSON.  An entry is applied to a

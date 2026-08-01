@@ -34,6 +34,7 @@ Read `CLAUDE-STANDARDS.md` first for the cross-cutting checklist that applies to
 24. [Help Widget (Zendesk Web Widget)](#24-help-widget-zendesk-web-widget)
 25. [Feature Toggles](#25-feature-toggles)
 26. [Deployment and Infrastructure](#26-deployment-and-infrastructure)
+27. [Public read API (`/api/v1`)](#27-public-read-api-apiv1)
 
 ---
 
@@ -1893,11 +1894,11 @@ Per-tenant feature configuration allowing each u3a to choose which modules are a
 ### Storage
 
 Single JSONB column `feature_config` on `tenant_settings` (singleton row). Uses an
-**opt-out model** where most missing keys default to `true` (on). Three features default
-to `false` (off) when never set: `giftAid`, `groupLedger`, `siteworks`. See
-"Default-off features" below.
+**opt-out model** where most missing keys default to `true` (on). Four features default
+to `false` (off) when never set: `giftAid`, `groupLedger`, `siteworks`, `publicApi`.
+See "Default-off features" below.
 
-### Toggle inventory (25 toggles)
+### Toggle inventory (26 toggles)
 
 **Master toggles (6):** `groups`, `finance`, `email`, `portal`, `onlineJoining`, `events`
 
@@ -1914,7 +1915,8 @@ to `false` (off) when never set: `giftAid`, `groupLedger`, `siteworks`. See
 
 **Communications:** `letters` (compose/print PDF — no SendGrid dependency)
 
-**Other (2):** `reports` (SQL Reports), `publicPages` (Public Groups/Calendar)
+**Other (3):** `reports` (SQL Reports), `publicPages` (Public Groups/Calendar),
+`publicApi` (public read API at `/api/v1` — **default off**, see §27)
 
 All toggles are backend-enforced. Route files call `requireFeature(key)` (after
 `requireAuth`) or `isFeatureEnabled(slug, key)` for pre-auth public routes. A
@@ -1943,11 +1945,17 @@ individual route tests get a pass-through mock of this middleware from
 
 ### Default-off features
 
-Three features default to **off** when their key is missing from `feature_config`:
-`giftAid`, `groupLedger`, `siteworks`. Both `hasFeature()` and `requireFeature()`
-use a `FEATURE_DEFAULTS_OFF` set for these. All other features default to on (opt-out
-model). If you add a new feature that should default to off, add it to the set in
-**both** `AuthContext.jsx` and `requireFeature.js`.
+Four features default to **off** when their key is missing from `feature_config`:
+`giftAid`, `groupLedger`, `siteworks`, `publicApi`. Both `hasFeature()` and
+`requireFeature()` use the `FEATURE_DEFAULTS_OFF` set for these. All other features
+default to on (opt-out model).
+
+If you add a new feature that should default to off, add it to
+`FEATURE_DEFAULTS_OFF` in **`shared/constants.js`** — the single source of truth.
+Backend (`requireFeature.js`) and frontend (`AuthContext.jsx`, via
+`frontend/src/lib/constants.js`) both import it, so one edit covers both.
+(This note previously said to edit two separate copies; they were consolidated
+into `shared/constants.js` and no duplicate set remains.)
 
 ### Parent dependency chain
 
@@ -2045,5 +2053,67 @@ Vercel dashboard (frontend: `VITE_API_URL`, `VITE_ZENDESK_KEY`).
 **Database replacement** (e.g. free tier expiry): create a new Render PostgreSQL
 instance, update `DATABASE_URL` on the backend service, and save. Auto-migration
 on startup (see §1) handles the rest. Full instructions in `DEPLOYMENT.md`.
+
+[↑ Back to top](#contents)
+
+---
+
+## 27. Public read API (`/api/v1`)
+
+The **published, external** interface — as opposed to the internal API the React
+frontend uses. Read `docs/API-design.md` before changing anything here; the
+decisions below are not local implementation choices.
+
+### The two rules that constrain every change
+
+1. **v1 is a contract owned by the Third Age Trust, with six months' notice.**
+   Adding a field is free. Changing a field's meaning, removing one, or altering
+   a status code is a months-long process. When in doubt, leave a field out —
+   the asymmetry is entirely one way.
+2. **The anonymous tier can never expose more than the u3a's public web pages
+   already do.** Field visibility comes from the same `group_info_config` /
+   `calendar_config` toggles as the public Groups and Calendar pages, and every
+   toggle defaults to not-public.
+
+### Layout
+
+| File | Role |
+|------|------|
+| `routes/api/index.js` | Version router: deprecation headers, spec, tenant resolution, `publicApi` gate, resource mounts, 404 + error handler |
+| `routes/api/helpers.js` | Envelope, pagination, feature gating, visibility loading, `Deprecation`/`Sunset` |
+| `routes/api/{org,faculties,venues,groups,events}.js` | One module per resource |
+| `routes/api/openapi.json` | Hand-written OpenAPI 3.1, loaded via `createRequire` |
+| `utils/resolveTenant.js` | Slug → tenant, shared with `routes/public/` |
+
+### Things that will bite you
+
+- **Mount order in `app.js` is load-bearing.** `/api/v1` is mounted *before* the
+  app-wide `helmet()`, `cors()` and `generalLimiter` because it needs different
+  values for all three and whichever runs first wins. Moving it below them
+  silently breaks cross-origin reads. The comment in `app.js` explains each.
+- **`cors({ origin: CORS_ORIGIN })` does not match the request origin** — it
+  echoes the configured string to everyone, so the shared config would refuse a
+  u3a's own website. `/api/v1` uses `origin: '*'`.
+- **Helmet's default `Cross-Origin-Resource-Policy: same-origin`** blocks
+  cross-origin reads even when CORS is correct, and fails in a way that looks
+  like a CORS bug. Relaxed to `cross-origin` for this router only.
+- **Everything unavailable is a 404, never a 403.** A u3a that has not enabled
+  `publicApi`, a disabled module, a venue collection the u3a does not publish —
+  all 404. A 403 would confirm the u3a exists and merely declined.
+- **Projection functions are the only place fields are chosen.** The tests in
+  `apiV1.test.js` assert the *exact key set* of each anonymous response, so a
+  column added to a query cannot reach a response without a deliberate test
+  change. Keep it that way — that assertion is the leak guard.
+- **No member data.** There is no members endpoint in v1 and none in the spec;
+  `apiV1.test.js` asserts both. Adding one is a phase-4 decision (API keys plus
+  an explicit scope), not a routine change.
+
+### Configuration
+
+| Variable | Effect |
+|---|---|
+| `API_RATE_LIMIT_MAX` | Requests per 15 min per IP (default 600) |
+| `API_V1_SUNSET` | ISO date; when set, sends `Deprecation: true` + `Sunset`. Unset = not deprecated (the normal state) |
+| `API_V1_SUNSET_LINK` | Optional URL for the `Link: …; rel="sunset"` header |
 
 [↑ Back to top](#contents)

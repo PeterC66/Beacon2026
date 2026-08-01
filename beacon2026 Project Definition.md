@@ -1,7 +1,7 @@
 # beacon2026 — Project Definition (last reviewed 2026-06-14)
 
 > **Note:** This document describes the *current* state of the project as of
-> 2026-06-14 (version 0.11.1). It is the canonical inventory of modules, routes,
+> 2026-06-14 (version 0.12.0). It is the canonical inventory of modules, routes,
 > and pages; for a contributor-oriented repo map and quickstart see
 > [`README.md`](README.md). Read it alongside `CLAUDE.md`, `CLAUDE-STANDARDS.md`,
 > and `CLAUDE-REFERENCE.md` in the repository root, which contain coding
@@ -26,7 +26,7 @@ beacon2026 is a ground-up rebuild with these goals:
 
 ---
 
-## What has been built (as of version 0.11.1)
+## What has been built (as of version 0.12.0)
 
 ### Infrastructure and platform
 - Full multi-tenant architecture (PostgreSQL schema-per-tenant)
@@ -252,6 +252,25 @@ beacon2026 is a ground-up rebuild with these goals:
   Named `:param` placeholders are substituted with positional `$N` server-side.
   Results render as a table; Excel download via ExcelJS. Every run is audited.
 
+### Public read API (beacon2026 extra)
+- **`/api/v1` — versioned, read-only, anonymous** interface for a u3a's own
+  website and other external consumers. Owned by the Third Age Trust with a
+  six-month deprecation notice period; design in `docs/API-design.md`.
+  Distinct from the internal API the React frontend uses, which stays private
+  and unversioned.
+- Resources: `org`, `faculties`, `venues` (+ `/:id`), `groups` (+ `/:id`,
+  `?faculty=`), `events` (+ `/:id`, `?from=&to=&group=`). Collections are
+  paginated and return `{ data, meta }`; errors are `{ error: { code, message } }`
+- **Opt-in per u3a** behind the `publicApi` feature toggle (defaults **off** —
+  the only feature besides `giftAid`, `groupLedger` and `siteworks` to do so)
+- **Field visibility reuses `group_info_config` / `calendar_config`**, so the
+  API can never expose more than the u3a's public Groups and Calendar pages.
+  **No member data exists in v1** — no endpoint, none in the specification
+- Cacheable (`Cache-Control` + `ETag`), own rate-limit bucket, CORS `*` and
+  relaxed `Cross-Origin-Resource-Policy`; mounted before the app-wide
+  helmet/cors/limiter in `app.js`, which is load-bearing (see the comment there)
+- OpenAPI 3.1 document served at `/api/v1/openapi.json`
+
 ### Admin / Misc module
 - **Audit log** — date-filtered view + delete-before-date; clickable When → Audit Record detail; clickable Record → entity view
 - **Gift Aid log** — date-filtered view of Gift Aid consent given/withdrawn; member filter dropdown
@@ -315,6 +334,9 @@ backend/
                            addressExport  email  giftAid  systemMessages
                            publicLinks  public  portal  calendar  eventTypes
                            letters  membershipCards  officers  customFields  audit
+      api/                 Public read API v1 — index (tenant + feature gate),
+                           helpers (envelope, pagination, visibility),
+                           org  faculties  venues  groups  events  openapi.json
     services/              authService
     utils/                 db  jwt  password  redis  migrate  audit  emailTokens  paypal
     seed/                  index  createTenant  privilegeResources  defaultRoles

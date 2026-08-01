@@ -15,6 +15,46 @@ under the Unreleased headings below).
 ## [Unreleased] — 2026-08-01
 
 ### Added
+- **Public read API (`/api/v1`) — phase 1.** A new versioned, read-only,
+  anonymous interface exposing a u3a's organisation details, interest areas
+  (faculties), venues, groups and calendar events, so a u3a's own website can
+  show its groups and what's on without anyone re-keying them. Design and
+  rationale are in [`docs/API-design.md`](docs/API-design.md).
+  - **Opt-in per u3a** via a new **Public read API** toggle under Set up →
+    Feature Configuration → Other. It defaults to **off**: a u3a that does
+    nothing is unaffected, and while it is off every `/api/v1` route returns
+    404.
+  - **It can never show more than your public web pages already do.** Field
+    visibility reuses the same Public Links toggles that drive the public
+    Groups and Calendar pages, and every one of them defaults to not-public.
+    A u3a that enables the API without ticking anything publishes only group
+    and event names, dates and times.
+  - **No member data at all.** There is no members endpoint in v1, and none
+    is described in the specification.
+  - Endpoints: `/api/v1/:slug/org`, `/faculties`, `/venues` (+ `/:id`),
+    `/groups` (+ `/:id`, `?faculty=`), `/events` (+ `/:id`, `?from=&to=&group=`).
+    All collections are paginated (`?limit=` max 200, `?offset=`) and return
+    `{ data, meta }`; errors return `{ error: { code, message } }`.
+  - Responses carry `Cache-Control: public, max-age=300` and an `ETag`, so a
+    website that honours them adds almost no load.
+  - Machine-readable specification (OpenAPI 3.1) at `/api/v1/openapi.json`.
+  - Interface owned by the Third Age Trust with a **six-month deprecation
+    notice period**, signalled in-band by `Deprecation`/`Sunset` headers
+    (RFC 8594) when `API_V1_SUNSET` is set. v1 is not deprecated, so no such
+    headers are sent today.
+
+### Changed
+- `/api/v1` is mounted ahead of the app-wide helmet, CORS and rate-limit
+  middleware and supplies its own: cross-origin reads are allowed (the shared
+  `CORS_ORIGIN` echoes a single configured origin to every caller, which would
+  refuse a u3a's own website), `Cross-Origin-Resource-Policy` is relaxed to
+  `cross-origin`, and the API gets its own rate-limit bucket
+  (`API_RATE_LIMIT_MAX`, default 600 per 15 minutes) so a busy u3a website
+  cannot exhaust the frontend's allowance.
+- Tenant-slug resolution for the public pages moved to
+  `backend/src/utils/resolveTenant.js` and is now shared with `/api/v1`, so
+  the two cannot drift from the slug guard in `utils/db.js`. No behaviour
+  change to the existing public routes.
 - **Login, logout, and session-timeout events are now written to the audit
   log** — previously the tenant `audit_log` captured `login_failed`,
   `login_locked`, `change_password` and `force_change_password`, but not a

@@ -532,3 +532,50 @@ All items in this section have been completed (v0.8.6).
   array, rendered via the top-level `NewBadge()` function in the same file.
   Once admins no longer need the callout, delete the `isNew` flags and the
   `NewBadge` component/render calls.
+
+## Public read API (`/api/v1`) — deferred items
+
+Design, decisions and the phased plan are in
+[`docs/API-design.md`](docs/API-design.md). Phase 1 (anonymous read API) is
+built; the items below are deliberately out of it.
+
+1. `[DEFERRED]` **`events.ics` iCalendar feed (phase 2)** — RFC 5545 feed at
+   `/api/v1/:slug/events.ics` with a `?group=` filter, so members can subscribe
+   to the u3a calendar in Google/Apple/Outlook. Needs stable `UID`s derived
+   from event id + tenant so a subscriber's calendar updates events in place
+   rather than duplicating them. Small, and the highest value-per-line item
+   remaining.
+2. `[DEFERRED]` **Shared SiteWorks display plugin (phase 2b)** — one WordPress
+   plugin, used by every u3a, rendering groups and events from this API with
+   sensible caching. Separate codebase. It is the deliverable most u3as will
+   actually see, and the main defence against a per-u3a support load: the
+   common case should need no support at all.
+3. `[CONDITIONAL]` **API keys (phase 3)** — tenant-scoped keys, hashed at rest,
+   with scopes, an admin page and revocation. Deliberately *not* scheduled: the
+   settled decision is anonymous-first, and keys get built only if a consumer
+   appears that already-public data cannot serve. Do not build speculatively.
+4. `[CONDITIONAL]` **Member endpoints (phase 4)** — `/members/stats` (aggregate
+   counts) before any individual records, key plus explicit `members:read`
+   scope, never in a default role, never anonymous. A data-protection decision
+   for each u3a, not a routine feature.
+5. `[OPEN]` **Deprecation notice needs channels that do not depend on
+   identity.** Anonymous access is what lets this scale to every u3a, and the
+   price is that we cannot email integrators. In-band `Deprecation`/`Sunset`
+   headers are implemented; a Trust-owned changes page and an optional
+   voluntary notification list are not. Needed before v1 is publicised widely.
+6. `[OPEN]` **Trust agreement to own the interface (phase 0b).** Not code. It
+   gates *publishing* rather than building, and should be secured before the
+   API is advertised to other u3as.
+
+## Test flakiness
+
+1. `[OPEN]` **`TransferMoney.test.jsx > validates that a positive amount is
+   required` times out intermittently under load.** Observed twice on
+   2026-08-01 while the backend suite and other work were competing for CPU;
+   the assertion times out at ~5.4 s. Not reproducible in isolation (5/5 pass)
+   and passes consistently on an otherwise idle machine (checked against both a
+   clean tree and the `/api/v1` branch — 4 consecutive full-suite passes).
+   Environmental rather than a real defect, but the test is close enough to its
+   timeout that it will keep surfacing in CI; worth raising the timeout or
+   awaiting the button explicitly rather than relying on `findByRole` racing
+   the initial data load.
