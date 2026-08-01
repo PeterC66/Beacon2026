@@ -7,6 +7,7 @@ import { email as emailApi } from '../../lib/api.js';
 import { useAuth } from '../../context/AuthContext.jsx';
 import NavBar from '../../components/NavBar.jsx';
 import PageHeader from '../../components/PageHeader.jsx';
+import DemoUnavailableBanner from '../../components/DemoUnavailableBanner.jsx';
 import ScrollButtons from '../../components/ScrollButtons.jsx';
 import { fmtDateTime } from '../../lib/dateFormatters.js';
 
@@ -45,6 +46,8 @@ export default function EmailDelivery() {
 
       <div className="max-w-4xl mx-auto px-4 py-4">
         <h1 className="text-xl font-bold text-center mb-4">Email Delivery</h1>
+
+        <DemoUnavailableBanner feature="Email delivery tracking" />
 
         {/* Date filter */}
         <div className="bg-white/90 rounded-lg shadow-sm p-3 mb-4 flex flex-wrap gap-3 items-end">

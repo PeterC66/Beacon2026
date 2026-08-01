@@ -186,8 +186,10 @@ At the end of every session:
 3. If any features were added, changed, or fixed, update `docs/BeaconUG-Comparison.md`
    to reflect the new status of the relevant UG section(s).
    - Also update **`beacon2026 Project Definition.md`** if the change altered the
-     module/route/page inventory, and bump its version line if `package.json`
-     version changed (keep them in step).
+     module/route/page inventory. To bump the version, run
+     `npm run bump-version -- <x.y.z>` from the repo root — it updates both
+     `package.json` files, refreshes both `package-lock.json` files, and
+     updates the version line in the Project Definition doc together.
 4. **Update `CHANGELOG.md`** — add bullet points under the current version for any
    features added, changed, or fixed during this session. Group entries under
    `### Added`, `### Changed`, or `### Fixed` headings. If the current version
