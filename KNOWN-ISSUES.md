@@ -491,6 +491,15 @@ All items in this section have been completed (v0.8.6).
 
 ## Render / Deployment — Deferred Items
 
+- `[FIXED]` **`beacon2026.vercel.app` login failed with "Failed to fetch"
+  while `beacon2.vercel.app` still worked.** Cause: `CORS_ORIGIN` on Render
+  was left pointing at the old `beacon2.vercel.app` domain after the rename,
+  so the browser blocked the cross-origin request from the new one (no CORS
+  headers = generic fetch failure, not a helpful error). Fixed by setting
+  `CORS_ORIGIN` to `https://beacon2026.vercel.app` in Render. That domain is
+  now canonical; `beacon2.vercel.app` is retired. Also fixed in the same pass:
+  `SystemLogin.jsx`/`SystemDashboard.jsx` still hardcoded a "Beacon2" header
+  (PR #465). Resolved 2026-08-01.
 - `[ACCEPTED]` **Backend service keeps the `beacon2-backend.onrender.com` URL.**
   Renaming a Render service (done 2026-07-30, beacon2 → beacon2026) does not
   change its auto-generated `*.onrender.com` hostname — Render never renames
