@@ -11,11 +11,14 @@ html, body {
   background-size: cover;
   background-color: #9dc8df;
 }
-html[data-daytime='day'] {
+/* Targeted via the html ancestor (not html, body together): body paints its
+   own opaque box over html's, so body needs the image directly or it hides
+   whatever html has underneath. */
+html[data-daytime='day'], html[data-daytime='day'] body {
   background: url('/light-day.png') no-repeat center center fixed;
   background-size: cover;
 }
-html[data-daytime='night'] {
+html[data-daytime='night'], html[data-daytime='night'] body {
   background: url('/light-night.png') no-repeat center center fixed;
   background-size: cover;
 }
