@@ -96,6 +96,19 @@ beacon2026 keeps several living documents up to date alongside code:
   up later. Items carry a `[OPEN]` / `[ACCEPTED]` / `[DEFERRED]` status tag.
 - `docs/BeaconUG-Comparison.md` — update when a feature changes.
 
+## Versioning
+
+`backend/package.json` and `frontend/package.json` versions are kept in step.
+To bump both, run from the repo root:
+
+```bash
+npm run bump-version -- <x.y.z>
+```
+
+This updates both `package.json` files, refreshes both `package-lock.json`
+files, and updates the version line in `beacon2026 Project Definition.md`.
+Do not edit the version fields by hand.
+
 ## Licensing
 
 This project is **proprietary** — see the root [`LICENSE`](LICENSE). The code is
