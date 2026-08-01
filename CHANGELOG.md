@@ -15,6 +15,16 @@ under the Unreleased headings below).
 ## [Unreleased] — 2026-08-01
 
 ### Fixed
+- **System admin "Create tenant" errors showed only "Validation error" with no
+  detail** — `system.js`'s `systemFetch()` (frontend `lib/api/system.js`) threw
+  `Error(b.error)`, which is just the generic label the backend's
+  `errorHandler.js` sends for a `ZodError`; the actual per-field messages sit
+  in the response's `issues` array and were being dropped. `systemFetch` now
+  builds the thrown error message from `issues` (e.g. `adminPassword:
+  Password must contain at least one uppercase, one lowercase, and one
+  numeric character.`) when present, falling back to `error` otherwise. Fixes
+  every system-admin action that goes through `systemFetch` (tenant create,
+  settings updates, etc.), not just tenant creation.
 - **System admin header still read "Beacon2"** in `SystemLogin.jsx` and
   `SystemDashboard.jsx` — a leftover from before the beacon2 → beacon2026
   rename that the text-rename script (see 2026-07-31 entry below) missed
