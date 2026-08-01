@@ -257,7 +257,7 @@ export default function SystemDashboard() {
       {/* Header */}
       <header className="bg-white shadow-sm px-6 py-4 flex items-center justify-between">
         <h1 className="text-xl font-bold text-slate-800">
-          Beacon<span className="text-blue-600">2</span>
+          Beacon<span className="text-blue-600">2026</span>
           <span className="text-slate-400 font-normal text-base ml-2">/ System Admin</span>
         </h1>
         <div className="flex items-center gap-4">
