@@ -64,6 +64,15 @@ After a PR merges, delete the branch both locally and on GitHub
 (`git branch -D <branch>` / `gh pr merge --delete-branch`, or the "Delete
 branch" button on the merged PR) before starting the next one.
 
+**If PR B references a file added by unmerged PR A, merge A first.** Branching
+fresh off `origin/main` (correctly) means B does not contain A's files, so any
+link or code comment in B pointing at them dangles until A lands. This happened
+on 2026-08-01: `docs/API-design.md` (#472) was referenced from ten places in the
+phase-1 implementation (#473). Merging in order fixed it with no code change —
+but merging B first would have shipped ten broken references, including two
+Markdown links that 404 on GitHub. Check for cross-PR references before merging,
+not after.
+
 The "if a document is missing" flow below (`git merge origin/main --no-edit`)
 is only for pulling newly-uploaded reference docs into the *current* branch
 mid-task — it is not a substitute for starting the *next* task from a fresh
@@ -179,6 +188,32 @@ cd frontend && npm run lint && npm run format:check
 ESLint 9 (flat config, `eslint.config.js`) and Prettier (root `.prettierrc.json`)
 are configured in both packages. CI (`ci.yml`) runs `lint` and `format:check` for
 each, so both must pass. Use `npm run lint:fix` and `npm run format` to auto-fix.
+
+### `format:check` on Windows reports ~146 false failures — do not "fix" them
+
+`.prettierrc.json` sets `endOfLine: "lf"`, but a Windows checkout with
+`core.autocrlf=true` has CRLF in the working tree. Prettier therefore flags
+**every file it checks** (~146: `backend/src`, `frontend/src`, `shared`) on line
+endings alone. It looks like the codebase is catastrophically unformatted. It is
+not, and CI (Linux, LF) passes fine.
+
+**Never run `npm run format` to clear it** — that rewrites ~146 untouched files
+and buries your actual change in the diff.
+
+To check only the files you touched, compare with line endings normalised on
+**both** sides — prettier's own output is not reliably LF here either, and
+normalising only the input produces false "differs" results:
+
+```bash
+diff <(tr -d '\r' < path/to/file.js) <(npx prettier path/to/file.js | tr -d '\r')
+```
+
+No output means the file is correctly formatted and differs only by line
+endings. For files you created in this session (already LF), plain
+`npx prettier --check <file>` works normally.
+
+Note `format:check` globs only `src/**/*.js(x)` and `shared/**/*.js` — root
+Markdown (`CLAUDE*.md`, `README.md`, `docs/`) is not checked by CI at all.
 Lint must be **error-free**; `react-hooks/exhaustive-deps` is a warning only.
 The frontend deliberately stays on `eslint-plugin-react-hooks` **v5** — do not
 upgrade to v7 without budgeting for the refactors its new rules require (see
