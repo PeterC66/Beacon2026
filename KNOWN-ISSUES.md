@@ -488,3 +488,18 @@ These are catalogued and re-verified in `docs/history/ImprovementPlan.md` (Chunk
 ## Feature Toggles — deferred phases
 
 All items in this section have been completed (v0.8.6).
+
+## Render / Deployment — Deferred Items
+
+- `[ACCEPTED]` **Backend service keeps the `beacon2-backend.onrender.com` URL.**
+  Renaming a Render service (done 2026-07-30, beacon2 → beacon2026) does not
+  change its auto-generated `*.onrender.com` hostname — Render never renames
+  that slug after creation. To get a `beacon2026`-branded URL you'd need to
+  either recreate the service (risks losing the existing DB link — the
+  database itself also can't be renamed, it stays `beacon2_a89s`) or add a
+  custom domain. Left as-is for now since it's cosmetic only; revisit if a
+  custom domain is wanted before general availability.
+- `[OPEN]` **Verify `DATABASE_URL` on Render is the actual connection string**,
+  not just a copied label — worth a quick visual check in the dashboard before
+  going live, since this wasn't independently confirmed during the 2026-07-31
+  rename clean-up session (see CHANGELOG).

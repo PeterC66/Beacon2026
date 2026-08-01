@@ -1,0 +1,19 @@
+# beacon2026/.gitattributes
+# Normalize all text files to LF line endings (matches .prettierrc.json
+# "endOfLine": "lf") regardless of the committer's OS, and make sure binary
+# assets are never treated as text (which corrupts them via line-ending
+# or encoding conversion — see the July 2026 rename-script incident).
+
+* text=auto eol=lf
+
+# Explicit binary types — never diff, merge, or line-ending-convert these
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.pdf binary
+*.woff binary
+*.woff2 binary
+*.ttf binary
+*.eot binary
