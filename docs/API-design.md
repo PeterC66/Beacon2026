@@ -61,6 +61,8 @@ of them changes the shape of the work.
 
 | Decision | Choice |
 |---|---|
+| Driving use case | **The u3a's own SiteWorks website.** Settled 2026-08-01. Other consumers are welcome, but the first release is scoped to what a website needs and nothing more. |
+| Credential for the first release | **Anonymous, no key.** Settled 2026-08-01. API keys are phase 3 and conditional — they are built only if a consumer appears that needs more than already-public data. |
 | Number of public surfaces | **One.** A single versioned API under `/api/v1`, serving every external consumer. |
 | Direction of data flow | **Read-only for v1.** beacon2026 remains the source of truth and exposes it; it accepts no writes through this API. Writes already have purpose-built flows (online joining, Members Portal). |
 | Access tiers | **Three tiers on the same routes** — anonymous, API key, member — differing only in which fields are projected, never in which routes exist. |
@@ -377,16 +379,25 @@ enough to commit a date to.
 | **0** | This decision recorded and the boundary published: internal vs public, versioning policy, the no-anonymous-PII invariant. No code. | ½ day | 2 hours |
 | **1** | Anonymous read API — org, faculties, venues, groups, events. Router tree, tenant/tier middleware, projections, envelope, pagination, ETag and caching, the four `app.js` fixes, `publicApi` toggle, OpenAPI document, tests. | 2 weeks | 3–4 days |
 | **2** | `events.ics` iCalendar feed, including the per-group filter. | 3 days | ½ day |
-| **3** | API keys — table, hashing, scopes, admin page, one-time reveal, revocation, key-authed field expansion, documentation for integrators. | 2 weeks | 3–4 days |
-| **4** | Member endpoints — `/members/stats` first, then individual records if genuinely needed. | 1 week | 2 days |
+| **3** *(conditional)* | API keys — table, hashing, scopes, admin page, one-time reveal, revocation, key-authed field expansion, documentation for integrators. | 2 weeks | 3–4 days |
+| **4** *(conditional)* | Member endpoints — `/members/stats` first, then individual records if genuinely needed. | 1 week | 2 days |
 | **5 (later)** | Webhooks; cross-tenant region/network aggregation; write access. | Defer; estimate when scoped. | — |
 
+**Phases 0–2 are the committed scope; phases 3–5 are conditional.**
+That follows directly from the two answers above: a website consumer
+needs only already-public data, so it needs no key, and it needs no
+member records. Phases 3 and 4 are therefore not deferred work with a
+date on it — they are work we build *if and when* a consumer turns up
+that phases 1–2 cannot serve. Carrying them as "planned" would invite
+building an authentication system for nobody.
+
 Phase 1 is heavier than it looks because it carries all the
-scaffolding — everything after it is incremental. **Phases 1 and 2
-together are a coherent, useful release**, and the strong
-recommendation is to ship them and let a real u3a use them in anger
-before committing to phase 3. If the only consumer turns out to be our
-own website, keys may never be needed at all.
+scaffolding; phase 2 is small precisely because phase 1 has already
+paid for the routing, tenant resolution and projection layer.
+
+The natural checkpoint is after phase 2: put the API behind the u3a
+website, run it for a term, and let real use — not this document —
+decide whether phase 3 is ever worth starting.
 
 ### What the "with Claude Code" figure does not include
 
@@ -402,24 +413,29 @@ own website, keys may never be needed at all.
 
 ## Risks and open questions
 
-**Open questions for the project owner.** Two of these change the plan
-materially and are worth settling before any code is written.
+**Settled 2026-08-01.** Two questions that would have changed the plan
+materially have been answered, and both went the way this note
+recommended:
 
-1. **Is the driving use case the SiteWorks website specifically, or
-   something broader?** If it is purely the website, phases 1–2 plus a
-   thin display plugin may be the entire project, and phase 3 never
-   happens.
-2. **Anonymous-first, or keys from day one?** This note recommends
-   anonymous-first because it is genuinely lower risk — it can only
-   expose already-public data — and unblocks the website with no key
-   distribution problem. If instead every consumer should be
-   identified and revocable from the start, phases 1 and 3 merge:
-   somewhat more work up front, and no anonymous tier to deprecate
-   later.
-3. **Do we want other u3as using this, or only ours?** A single-u3a
+- **The driving use case is the SiteWorks website specifically**, not a
+  general-purpose data platform. So the committed scope is phases 0–2,
+  and phases 3–5 are conditional on evidence rather than planned work.
+- **Anonymous-first**, not keys from day one. Phases 1 and 3 stay
+  separate, and the first release needs no key distribution, no key
+  storage and no revocation story.
+
+These reinforce each other: together they mean the first release can be
+smaller and safer than the general case, because a website only ever
+needs data the u3a has already chosen to publish.
+
+**Still open.**
+
+1. **Do we want other u3as using this, or only ours?** A single-u3a
    tool can be looser about versioning and documentation. Anything
    offered to other u3as needs the OpenAPI document, a support story
-   and a deprecation policy, and the effort figures above assume it.
+   and a deprecation policy — and the effort figures above assume it,
+   so answering "only ours" would take something off phase 1 rather
+   than adding to it.
 
 **Risks.**
 
@@ -456,8 +472,13 @@ already do.** That rule is what makes the first release safe enough to
 ship quickly.
 
 Phases 1 and 2 — the read API and the iCalendar feed — are the
-recommended first delivery, at roughly **two and a half developer-weeks
+committed first delivery, at roughly **two and a half developer-weeks
 by hand, or under a week of calendar time with Claude Code in the
 loop.** They cover the website use case and the member-calendar use
-case between them. Everything beyond that, including API keys and any
-member data at all, should wait for evidence that it is needed.
+case between them.
+
+With the driving use case settled as the SiteWorks website and the
+first release settled as anonymous, that is very likely the whole of
+this project. **API keys and member endpoints are not scheduled work**
+— they are options we hold, to be exercised only if a consumer appears
+that already-public data cannot serve.
