@@ -181,11 +181,28 @@ These are catalogued and re-verified in `docs/history/ImprovementPlan.md` (Chunk
    material only, with all original copyright (© John Franklin 2017) retained
    and **no claim of redistribution rights** asserted. Files retained for
    reference; removal offered on rights-holder request. Resolved in the
-   2026-06-14 review, Chunk 1.
+   2026-06-14 review, Chunk 1. **Superseded 2026-08-01**: all original Beacon
+   files in that directory (`privileges.php`, `styles.css`, the demo backup
+   `.xlsx`, `Gift-Aid-Schedule-Excel.ods`, `Cookie Control text.png`) have
+   since been removed entirely, having served their reference purpose — see
+   item 4 below and `docs/FromBeacon/README.md`.
 3. `[FIXED]` **No `SECURITY.md`** — added a vulnerability-disclosure policy
    directing reports through GitHub private security advisories, with supported
    scope and a do-not-include-real-PII note. Resolved in the 2026-06-14 review,
    Chunk 1.
+4. `[OPEN]` **Verbatim Beacon text pending permission from the Third Age
+   Trust.** `frontend/src/components/CookieConsent.jsx` deliberately mirrors
+   the original Beacon Cookie Control panel's wording and button labels
+   (formerly documented by the now-removed `docs/FromBeacon/Cookie Control
+   text.png`) closely, by owner choice, so the upgrade path looks as familiar
+   as possible to existing Beacon users. This wording was not authored
+   independently — it's close enough to the original that it should be treated
+   as copied text pending permission. Owner (2026-08-01) intends to seek
+   permission from the Third Age Trust for this and any other verbatim text
+   carried over from Beacon. Do not "fix" this by rewording without checking
+   with the owner first — the whole point is to keep it identical if
+   permission is granted. If permission is refused, this text needs
+   reworking to convey the same information in original wording.
 
 ---
 

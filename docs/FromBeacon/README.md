@@ -37,11 +37,18 @@ actual copyrighted files, verbatim and publicly, in this repo.
 purpose as format references during development; there was no ongoing need to
 keep hosting them.
 
+**`Cookie Control text.png` removed 2026-08-01.** Not imported or referenced by
+any beacon2026 code, so there was no reason to keep hosting it. See
+`KNOWN-ISSUES.md` → "Repo hygiene & licensing" for the still-open question of
+whether the *wording* it documented (used in `CookieConsent.jsx`) needs
+permission from the Third Age Trust.
+
 ## Contents
 
-| File | What it is |
-|------|------------|
-| `Cookie Control text.png` | Screenshot of the original Beacon's Cookie Control panel. Not imported or referenced by any beacon2026 code — kept only as a documentation reference. |
+This directory is currently empty of tracked files other than this README —
+all original Beacon material that had served its reference purpose has been
+removed. It remains here as a place to document provenance if any such
+material is added back in future.
 
 ## Why keep it here
 
