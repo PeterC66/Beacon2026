@@ -32,7 +32,8 @@ export function apiErrorHandler(err, req, res, _next) {
 
 // ─── Success envelope ─────────────────────────────────────────────────────
 
-const MAX_AGE_SECONDS = 300;
+/** Shared by every public response, JSON and iCalendar alike. */
+export const MAX_AGE_SECONDS = 300;
 
 /**
  * Send a cacheable public response. Express generates the ETag and answers

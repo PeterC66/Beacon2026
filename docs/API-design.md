@@ -174,6 +174,37 @@ It is also the one item here that delivers value directly to ordinary
 members rather than to webmasters, which makes it the easiest to
 justify and the easiest to demonstrate.
 
+**Four decisions settled while building it (phase 2, 2026-08-01).** Each
+is part of the published contract, so each is recorded here rather than
+only in the code.
+
+- **Bounded, not paginated.** A calendar client fetches the whole file
+  every time, so `?limit=` and `?offset=` are meaningless here. Instead
+  the feed carries events from **180 days ago onwards, with no end date,
+  up to 5000 events**. Both numbers are in the OpenAPI description. The
+  window is the one thing a subscriber could notice changing, so
+  widening it later is safe and narrowing it is not.
+- **`Europe/London` with a `VTIMEZONE`, not floating time and not UTC.**
+  Floating times read correctly in Britain and an hour out for a member
+  looking at their calendar from abroad; UTC loses the summer-time
+  transition. Spelling the timezone out costs seventeen lines once.
+- **`DTSTAMP` from the row's `updated_at`, never from the clock.** A
+  feed built from `now()` differs on every request, which defeats the
+  `ETag` and turns every poll into a full download — exactly the load
+  the caching design exists to avoid.
+- **`UID` is `<event id>@<slug>.beacon2026` and is frozen.** It is how a
+  subscriber's calendar recognises an event it already holds. Changing
+  the recipe would not break anything visibly; it would silently give
+  every existing subscriber a duplicate of every event, with no way for
+  us to know and no way for them to fix it except unsubscribing. This is
+  the single most irreversible commitment in v1.
+
+The feed is only half the value while nothing in beacon2026 tells a
+member the URL exists. A "subscribe to this calendar" link on the public
+Calendar page is the obvious companion, and is a frontend change rather
+than an API one — carried in `KNOWN-ISSUES.md` rather than done here, so
+that phase 2 stayed the size it was estimated at.
+
 ---
 
 ## Cross-cutting design
@@ -414,6 +445,11 @@ decisions, review and real-browser testing.
 
 Both columns are rough — honest enough for go / no-go, not accurate
 enough to commit a date to.
+
+**Status: phases 0, 1 and 2 are built** (2026-08-01). Phase 2b has not
+started. What remains open within the built phases — the Trust
+agreement, the deprecation-notice channels, and a first run against a
+real database — is tracked in `KNOWN-ISSUES.md`, not here.
 
 | Phase | Contents | By hand | With Claude Code |
 |---|---|---|---|
