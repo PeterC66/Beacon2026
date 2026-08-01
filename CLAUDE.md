@@ -45,6 +45,30 @@ If the user refers to a document you cannot find, run `git fetch origin main` an
 
 All work goes on a branch whose name starts with `claude/`. Never push directly to `main`.
 
+**Start every new task/PR from a fresh branch off current `origin/main`** —
+never branch off an existing `claude/*` branch, and never keep adding new work
+to a branch whose PR has already merged:
+
+```bash
+git fetch origin main
+git checkout -b claude/short-task-name origin/main
+```
+
+PRs here are squash-merged, so a merged branch never shows as "merged" by SHA
+ancestry — reusing it (or repeatedly merging `main` back into it) causes real
+duplication: changes get silently re-applied or revert earlier fixes, not just
+a cosmetic "ahead of main" count. (This happened for real on 2026-08-01 with
+PRs #464/#465, which re-applied and dropped CHANGELOG content.)
+
+After a PR merges, delete the branch both locally and on GitHub
+(`git branch -D <branch>` / `gh pr merge --delete-branch`, or the "Delete
+branch" button on the merged PR) before starting the next one.
+
+The "if a document is missing" flow below (`git merge origin/main --no-edit`)
+is only for pulling newly-uploaded reference docs into the *current* branch
+mid-task — it is not a substitute for starting the *next* task from a fresh
+branch.
+
 ---
 
 ## Reviewing the codebase (lessons from past reviews)
