@@ -85,9 +85,9 @@ export default function CookieConsent() {
             </h2>
 
             <p className="text-sm text-slate-300 mb-3">
-              As well as essential cookies, beacon2026 has optional cookies that save your preferences
-              for future visits in order to improve your experience. These optional cookies are
-              described below.
+              As well as essential cookies, beacon2026 has optional cookies that save your
+              preferences for future visits in order to improve your experience. These optional
+              cookies are described below.
             </p>
 
             <p className="text-sm text-slate-300 mb-3">
@@ -126,7 +126,9 @@ export default function CookieConsent() {
 
             {showDetails && (
               <div className="text-sm text-slate-300">
-                <p className="mb-2">beacon2026 uses cookies to retain preferences between visits.</p>
+                <p className="mb-2">
+                  beacon2026 uses cookies to retain preferences between visits.
+                </p>
                 <ul className="list-disc ml-5 space-y-1">
                   <li>The name of the u3a site you login to</li>
                   <li>The timeout period of inactivity after which you will be logged out</li>

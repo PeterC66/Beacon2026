@@ -112,7 +112,9 @@ describe('POST /auth/refresh', () => {
   });
 
   it('returns 400 when x-tenant-slug header is missing', async () => {
-    const res = await request(app).post('/auth/refresh').set('Cookie', 'beacon2026_refresh=sometoken');
+    const res = await request(app)
+      .post('/auth/refresh')
+      .set('Cookie', 'beacon2026_refresh=sometoken');
 
     expect(res.status).toBe(400);
     expect(res.body.error).toBe('Tenant not specified.');

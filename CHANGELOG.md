@@ -12,6 +12,26 @@ under the Unreleased headings below).
 
 ---
 
+## [Unreleased] — 2026-07-31
+
+### Fixed
+- **Beacon2026 rename script corruption** — the local PowerShell script used to
+  rename `beacon2` → `beacon2026` across the repo processed every file as text,
+  including binaries. This had silently corrupted 762 PNG/JPG screenshots under
+  `docs/BeaconUG/`, the frontend lighthouse background photo
+  (`frontend/public/light.jpg` — explains the blue-fallback-only sign-in page),
+  and injected CRLF into `docs/Beacon2 DML.pdf` (breaking its internal xref
+  table). All affected binaries restored from the last good commit before the
+  rename ran; added `.gitattributes` marking image/PDF/font types as binary so
+  git itself never text-converts them again.
+- **CI "Check formatting" failures** — 4 lines exceeded Prettier's 100-char
+  `printWidth` once `beacon2` became `beacon2026` (4 characters longer):
+  `backend/src/__tests__/auth.test.js`, `frontend/src/__tests__/CookieConsent.test.jsx`,
+  `frontend/src/components/CookieConsent.jsx`,
+  `frontend/src/pages/system/RestoreBackupSection.jsx`. Re-wrapped with
+  `prettier --write`. (Line endings were briefly suspected but were a red
+  herring caused by a local `core.autocrlf=true` setting, not the repo content.)
+
 ## [Unreleased] — 2026-06-14
 
 ### Fixed
