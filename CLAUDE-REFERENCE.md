@@ -116,6 +116,34 @@ and strips invalid chars.
 Redis-based (optional, `USE_REDIS=false` for current POC). Role changes invalidate
 affected sessions via Redis, or expire naturally after 15 min.
 
+### Password-change routes must reissue the refresh cookie
+
+`POST /auth/change-password` and `/auth/force-change-password` intentionally
+revoke **all** of a user's refresh tokens (kills any other logged-in sessions)
+via `UPDATE refresh_tokens SET revoked = true WHERE user_id = $1` +
+`invalidateUserSessions`. Any route that does this must then call
+`issueRefreshToken(tenantSlug, userId)` (`authService.js`) and
+`res.cookie(COOKIE_NAME, newRefreshToken, cookieOptions)` for the **current**
+session before responding — otherwise the browser keeps its now-revoked
+cookie and the next `/auth/refresh` call (triggered transparently by
+`frontend/src/lib/api/core.js`) fails with "Invalid refresh token." and
+force-logs the user out on their very next action. This was a real bug, fixed
+2026-08-01 (see CHANGELOG). `issueRefreshToken` is the shared helper for
+"sign + store + return a refresh token outside the normal login/refresh
+flow" — reuse it rather than duplicating the sign/hash/insert sequence again.
+
+### Audit events for login/logout/timeout
+
+`loginUser()` success path, `POST /auth/logout`, and a dedicated
+`POST /auth/session-timeout` (called by `AuthContext.jsx` when the client-side
+inactivity timer fires — this is the only one of the three the backend can't
+detect on its own) all write to `audit_log` with actions `'login'`,
+`'logout'`, `'session_timeout'` respectively. The inactivity timer dispatches
+`window.dispatchEvent(new CustomEvent('auth:expired', { detail: { reason:
+'timeout' } }))` so the shared `auth:expired` handler in `AuthContext.jsx` can
+tell a real timeout apart from a generic refresh-token failure (the latter is
+not separately audited — it's a revoked/expired session, not a user action).
+
 ### Personal Preferences (doc 9.1)
 
 - Frontend only: `PersonalPreferences.jsx` at `/preferences`
@@ -1136,6 +1164,23 @@ models into the default stub; pass top-level extras (e.g. `$queryRawUnsafe`) the
 same way. `passwordMock()` covers `hashPassword`/`verifyPassword`/`generateToken`/
 `hashOpaqueToken`. The older hand-written `vi.mock('../utils/db.js', () => ({ ... }))`
 form still works and remains in many files — there is no need to migrate them all.
+
+### Gotcha: adding an export to a module a test file fully mocks
+
+When a route imports a *new* function from a service module (e.g. `auth.js`
+importing `issueRefreshToken` from `authService.js`), any test file that does
+`vi.mock('../services/authService.js', () => ({ loginUser: vi.fn(), ... }))`
+by hand (not via a factory) must add the new export to that literal object too
+— otherwise the route calls `undefined(...)`, throws, and the request fails
+with a 500 that has nothing to do with the actual change. Worse, if the test
+had already queued `tenantQuery.mockResolvedValueOnce(...)` calls for that
+request and the handler throws before consuming all of them, the leftover
+queued value bleeds into the *next* test and produces a confusing, unrelated
+failure (e.g. a "returns 400" test suddenly getting a 404 because it received
+another test's queued mock). If a supertest assertion fails with a status code
+that doesn't match the scenario being tested, check whether an earlier test in
+the same `describe` left mock calls unconsumed before debugging the route logic
+itself. (Hit in `auth.test.js` 2026-08-01 when adding `issueRefreshToken`.)
 
 ### SQL is exercised only by E2E (T4)
 
