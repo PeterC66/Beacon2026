@@ -446,10 +446,44 @@ decisions, review and real-browser testing.
 Both columns are rough — honest enough for go / no-go, not accurate
 enough to commit a date to.
 
-**Status: phases 0, 1 and 2 are built** (2026-08-01). Phase 2b has not
-started. What remains open within the built phases — the Trust
-agreement, the deprecation-notice channels, and a first run against a
-real database — is tracked in `KNOWN-ISSUES.md`, not here.
+**Status: phases 0, 1 and 2 are built** (2026-08-01), and phase 2b has a
+proof of concept — see the correction below, which the proof of concept
+turned up and which this note did not anticipate. What remains open
+within the built phases — the Trust agreement, the deprecation-notice
+channels, and a first run against a real database — is tracked in
+`KNOWN-ISSUES.md`, not here.
+
+### Correction: what a SiteWorks site already has (2026-08-01)
+
+This note assumed phase 2b filled a gap. It does not, and the estimate
+and the argument above should be read with that in mind.
+
+Every SiteWorks site already runs **`u3a-siteworks-core`** (v2.1.2),
+which registers `u3a_group`, `u3a_event`, `u3a_venue` and `u3a_contact`
+post types, ships the `u3a/grouplist`, `u3a/groupdata`, `u3a/venuelist`
+and `u3a/venuedata` blocks, and is styled by `u3a-siteworks-theme`.
+Beside it, **`u3a-importexport`** defines a Groups / Events / Venues /
+Contacts CSV format — the manual export-and-import that is today's
+Beacon-to-website path.
+
+So a display plugin does not add groups to a site that had none. It
+stands next to a mature, themed Groups system, and a u3a running both
+has two of everything.
+
+That reopens the push/pull table above with a row it does not contain.
+Push was rejected because *we* would have to hold a WordPress
+application password for every u3a. But a plugin **the u3a installs**
+can pull from `/api/v1` and materialise the results into those existing
+post types — real WordPress posts, indexed by search engines, styled by
+the theme, with every existing block and page working untouched, and no
+credential held by anyone but the u3a. It would replace the CSV round
+trip, which is the part that actually hurts.
+
+The proof of concept built in August 2026 is nonetheless the **display**
+plugin as specified here, deliberately: it is the smaller of the two,
+it exercises the API end to end, and it is the cheaper thing to throw
+away. The choice between the two shapes is recorded as an open decision
+in `KNOWN-ISSUES.md` and should be made before anything is released.
 
 | Phase | Contents | By hand | With Claude Code |
 |---|---|---|---|
