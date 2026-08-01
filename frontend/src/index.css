@@ -3,12 +3,21 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Page background — lighthouse photo with sky-blue fallback */
+/* Page background — lighthouse photo with sky-blue fallback.
+   html[data-daytime] is set at runtime (see src/utils/backgroundTime.js):
+   "day" 06:00–18:00 local time, "night" otherwise. */
 html, body {
   min-height: 100vh;
-  background: url('/light.jpg') no-repeat center center fixed;
   background-size: cover;
   background-color: #9dc8df;
+}
+html[data-daytime='day'] {
+  background: url('/light-day.png') no-repeat center center fixed;
+  background-size: cover;
+}
+html[data-daytime='night'] {
+  background: url('/light-night.png') no-repeat center center fixed;
+  background-size: cover;
 }
 
 /* ── Text size preference ─────────────────────────────────────────────── */
