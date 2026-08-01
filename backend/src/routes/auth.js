@@ -4,7 +4,13 @@
 import { Router } from 'express';
 import { z } from 'zod';
 import sgMail from '@sendgrid/mail';
-import { loginUser, logoutUser, refreshTokens, loginSysAdmin } from '../services/authService.js';
+import {
+  loginUser,
+  logoutUser,
+  refreshTokens,
+  loginSysAdmin,
+  issueRefreshToken,
+} from '../services/authService.js';
 import { requireAuth } from '../middleware/auth.js';
 import { tenantQuery, prisma } from '../utils/db.js';
 import { verifyPassword, hashPassword } from '../utils/password.js';
@@ -89,8 +95,38 @@ router.post('/logout', requireAuth, async (req, res, next) => {
     const refreshToken = req.cookies?.[COOKIE_NAME];
     await logoutUser(req.user.tenantSlug, refreshToken);
 
+    logAudit(req.user.tenantSlug, {
+      userId: req.user.userId,
+      userName: req.user.name,
+      action: 'logout',
+      entityType: 'user',
+      entityId: req.user.userId,
+      entityName: req.user.name,
+    });
+
     res.clearCookie(COOKIE_NAME);
     res.json({ message: 'Logged out successfully.' });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// ─── POST /auth/session-timeout ───────────────────────────────────────────
+// Fired by the frontend when a session ends due to inactivity, purely so the
+// event is recorded — the frontend has already cleared its own state by the
+// time this call is made (fire-and-forget).
+
+router.post('/session-timeout', requireAuth, async (req, res, next) => {
+  try {
+    logAudit(req.user.tenantSlug, {
+      userId: req.user.userId,
+      userName: req.user.name,
+      action: 'session_timeout',
+      entityType: 'user',
+      entityId: req.user.userId,
+      entityName: req.user.name,
+    });
+    res.json({ message: 'Recorded.' });
   } catch (err) {
     next(err);
   }
@@ -179,11 +215,16 @@ router.post('/change-password', requireAuth, async (req, res, next) => {
     // Revoke all other refresh tokens for this user and mark sessions
     // invalidated in Redis so any access tokens still in flight stop working
     // at their next request. The caller's current access token continues to
-    // work until it expires (matches admin password-change behaviour).
+    // work until it expires (matches admin password-change behaviour). A
+    // fresh refresh token is then issued for THIS session so the caller isn't
+    // logged out the next time their access token needs refreshing.
     await tenantQuery(slug, `UPDATE refresh_tokens SET revoked = true WHERE user_id = $1`, [
       user.id,
     ]);
     await invalidateUserSessions(slug, user.id);
+
+    const newRefreshToken = await issueRefreshToken(slug, user.id);
+    res.cookie(COOKIE_NAME, newRefreshToken, cookieOptions);
 
     logAudit(slug, {
       userId: req.user.userId,
@@ -398,6 +439,9 @@ router.post('/force-change-password', requireAuth, async (req, res, next) => {
       req.user.userId,
     ]);
     await invalidateUserSessions(slug, req.user.userId);
+
+    const newRefreshToken = await issueRefreshToken(slug, req.user.userId);
+    res.cookie(COOKIE_NAME, newRefreshToken, cookieOptions);
 
     logAudit(slug, {
       userId: req.user.userId,

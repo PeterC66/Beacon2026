@@ -14,7 +14,36 @@ under the Unreleased headings below).
 
 ## [Unreleased] — 2026-08-01
 
+### Added
+- **Login, logout, and session-timeout events are now written to the audit
+  log** — previously the tenant `audit_log` captured `login_failed`,
+  `login_locked`, `change_password` and `force_change_password`, but not a
+  successful login or a logout. `loginUser()` (`authService.js`) now logs
+  `action: 'login'` on success, `POST /auth/logout` logs `action: 'logout'`,
+  and a new `POST /auth/session-timeout` endpoint (called by `AuthContext.jsx`
+  when the client-side inactivity timer fires) logs `action: 'session_timeout'`
+  — the only one of the three that can only be detected in the browser.
+- **"Not available in this demo" banners** on the three features that aren't
+  wired up in this demo environment: sending email (`EmailCompose.jsx`), the
+  email unblocker (`EmailUnblocker.jsx`), and the "Online Payments (PayPal)"
+  panel in `SystemSettings.jsx`. New shared `DemoUnavailableBanner.jsx`
+  component.
+- **Temporary "NEW" badges on the main menu** next to Teams, Utilities, SQL
+  reports, Feature configuration and Event types — sections that don't exist
+  in the original Beacon, to help admins used to Beacon spot what's new in
+  beacon2026. Implemented as an `isNew` flag on the `Home.jsx` menu items;
+  see `KNOWN-ISSUES.md` for the removal note once this is no longer needed.
+
 ### Fixed
+- **Changing your password logged you out on the next screen** —
+  `POST /auth/change-password` and `POST /auth/force-change-password` revoke
+  all of the user's refresh tokens (correct, to kill other sessions) but
+  never issued a new one for the session making the request, unlike
+  `/auth/login` and `/auth/refresh`. The browser kept its now-revoked refresh
+  cookie, so the next token refresh failed with "Invalid refresh token." and
+  force-logged the user out. Both routes now call the new
+  `issueRefreshToken()` helper (`authService.js`) and set a fresh refresh
+  cookie, exactly like login/refresh do.
 - **System admin "Create tenant" errors showed only "Validation error" with no
   detail** — `system.js`'s `systemFetch()` (frontend `lib/api/system.js`) threw
   `Error(b.error)`, which is just the generic label the backend's

@@ -30,6 +30,7 @@ vi.mock('../services/authService.js', () => ({
   logoutUser: vi.fn().mockResolvedValue(undefined),
   refreshTokens: vi.fn(),
   loginSysAdmin: vi.fn(),
+  issueRefreshToken: vi.fn().mockResolvedValue('new.refresh.token'),
 }));
 
 const { default: app } = await import('../app.js');
