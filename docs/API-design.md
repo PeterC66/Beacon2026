@@ -61,7 +61,8 @@ of them changes the shape of the work.
 
 | Decision | Choice |
 |---|---|
-| Driving use case | **The u3a's own SiteWorks website.** Settled 2026-08-01. Other consumers are welcome, but the first release is scoped to what a website needs and nothing more. |
+| Audience | **All u3as, not just ours.** Settled 2026-08-01. This is a published national interface, not an internal tool, and the versioning, documentation and support commitments below follow from it. |
+| Driving use case | **A u3a's own SiteWorks website.** Settled 2026-08-01. Other consumers are welcome, but the first release is scoped to what a website needs and nothing more. |
 | Credential for the first release | **Anonymous, no key.** Settled 2026-08-01. API keys are phase 3 and conditional — they are built only if a consumer appears that needs more than already-public data. |
 | Number of public surfaces | **One.** A single versioned API under `/api/v1`, serving every external consumer. |
 | Direction of data flow | **Read-only for v1.** beacon2026 remains the source of truth and exposes it; it accepts no writes through this API. Writes already have purpose-built flows (online joining, Members Portal). |
@@ -360,6 +361,19 @@ building the worker. Building the read API first also de-risks the
 push work if we do go on to do it, since the field mappers need
 exactly the same projection logic.
 
+**Serving all u3as tilts this decisively towards pull.** Push means
+holding a WordPress application password for every participating u3a,
+encrypted at rest and each one a credential we are responsible for; it
+means a worker whose failures are per-tenant and whose retry queue we
+have to monitor across hundreds of sites; and it means a
+reconciliation view someone has to actually look at. Pull means a
+plugin the u3a installs, credentials we never hold, and failure that
+is local, visible and their own. At one u3a the two are arguable. At
+several hundred, the operational asymmetry is large enough that push
+should now be treated as the exception — justified per u3a by a real
+need for content to live in WordPress — rather than the default
+direction of travel.
+
 ---
 
 ## Phased rollout and effort
@@ -379,11 +393,12 @@ enough to commit a date to.
 | **0** | This decision recorded and the boundary published: internal vs public, versioning policy, the no-anonymous-PII invariant. No code. | ½ day | 2 hours |
 | **1** | Anonymous read API — org, faculties, venues, groups, events. Router tree, tenant/tier middleware, projections, envelope, pagination, ETag and caching, the four `app.js` fixes, `publicApi` toggle, OpenAPI document, tests. | 2 weeks | 3–4 days |
 | **2** | `events.ics` iCalendar feed, including the per-group filter. | 3 days | ½ day |
+| **2b** | **SiteWorks display plugin** — one WordPress plugin, shared by every u3a, rendering groups and events from the API with sensible caching. Separate codebase; the deliverable most u3as will actually see. | 2 weeks | ½–1 week |
 | **3** *(conditional)* | API keys — table, hashing, scopes, admin page, one-time reveal, revocation, key-authed field expansion, documentation for integrators. | 2 weeks | 3–4 days |
 | **4** *(conditional)* | Member endpoints — `/members/stats` first, then individual records if genuinely needed. | 1 week | 2 days |
 | **5 (later)** | Webhooks; cross-tenant region/network aggregation; write access. | Defer; estimate when scoped. | — |
 
-**Phases 0–2 are the committed scope; phases 3–5 are conditional.**
+**Phases 0–2b are the committed scope; phases 3–5 are conditional.**
 That follows directly from the two answers above: a website consumer
 needs only already-public data, so it needs no key, and it needs no
 member records. Phases 3 and 4 are therefore not deferred work with a
@@ -406,36 +421,69 @@ decide whether phase 3 is ever worth starting.
 - **Integrator support.** Onboarding the first u3a webmaster, writing
   the worked example they will actually copy, and answering their
   questions is real work that does not scale down with Claude.
-- **The WordPress side.** A display plugin, if we go the pull route,
-  is separate work in a separate codebase.
+- **WordPress infrastructure.** The phase 2b figure covers writing the
+  plugin, not a throwaway SiteWorks instance to develop it against, nor
+  submission and review if it is to be distributed centrally rather
+  than passed around as a zip.
 
 ---
 
 ## Risks and open questions
 
-**Settled 2026-08-01.** Two questions that would have changed the plan
-materially have been answered, and both went the way this note
-recommended:
+**Settled 2026-08-01.** All three opening questions have been
+answered:
 
-- **The driving use case is the SiteWorks website specifically**, not a
-  general-purpose data platform. So the committed scope is phases 0–2,
-  and phases 3–5 are conditional on evidence rather than planned work.
+- **The driving use case is a u3a's SiteWorks website**, not a
+  general-purpose data platform. The committed scope is phases 0–2;
+  phases 3–5 are conditional on evidence rather than planned work.
 - **Anonymous-first**, not keys from day one. Phases 1 and 3 stay
   separate, and the first release needs no key distribution, no key
   storage and no revocation story.
+- **It is for all u3as**, not only ours.
 
-These reinforce each other: together they mean the first release can be
-smaller and safer than the general case, because a website only ever
-needs data the u3a has already chosen to publish.
+The first two reinforce each other: a website only ever needs data the
+u3a has already chosen to publish, so the first release can be smaller
+and safer than the general case.
+
+The third pulls the other way, and is the most consequential of the
+three. It does not add features — the endpoint list is unchanged — but
+it changes what each of them *commits us to*:
+
+- **Versioning stops being a good intention.** With one consumer, a
+  breaking change is a phone call. With hundreds, v1 is permanent.
+  Every field in the first release should be treated as forever.
+- **Anonymous-first gets better, not worse.** Issuing, storing,
+  rotating and revoking keys for hundreds of u3as would be a
+  significant standing administrative burden, all of it falling on
+  whoever runs beacon2026. Anonymous access scales to any number of
+  u3as at zero marginal admin cost. This decision was already
+  recommended; at national scale it becomes close to essential.
+- **Per-u3a opt-in becomes essential rather than merely tidy.** The
+  `publicApi` toggle defaulting to off means a u3a that has never
+  heard of this is unaffected by it, which is the right default when
+  the u3a — not us — is the data controller.
+- **A shared WordPress display plugin becomes the main deliverable,
+  not an afterthought.** One plugin serving every SiteWorks site is a
+  far better outcome than a few hundred webmasters each writing their
+  own fetch code, and it is the difference between a support load we
+  can carry and one we cannot. It is added as phase 2b below.
+- **Caching and rate limiting become load-bearing.** They were already
+  in the design; at this scale they are what stands between us and an
+  outage. The upside is that anonymous responses are public and
+  cacheable, so they can sit behind a CDN cheaply if volume warrants.
 
 **Still open.**
 
-1. **Do we want other u3as using this, or only ours?** A single-u3a
-   tool can be looser about versioning and documentation. Anything
-   offered to other u3as needs the OpenAPI document, a support story
-   and a deprecation policy — and the effort figures above assume it,
-   so answering "only ours" would take something off phase 1 rather
-   than adding to it.
+1. **Who owns this interface, and who may deprecate it?** If
+   beacon2026 becomes the national replacement for Beacon, this API is
+   a national interface with u3as depending on it, and "St Ives
+   decided to change it" is not an adequate change-control process. It
+   needs a named owner, a deprecation notice period stated up front in
+   the published documentation, and somewhere for integrators to be
+   told about changes. This does not block phase 1 — but the
+   deprecation policy has to be published *with* v1, because
+   retrofitting one to consumers who already integrated is exactly the
+   problem it exists to prevent.
 
 **Risks.**
 
@@ -448,14 +496,31 @@ needs data the u3a has already chosen to publish.
   projection in one place, allow-lists rather than deny-lists, and a
   test that asserts the exact key set of each anonymous response so
   that a new field fails the build rather than shipping quietly.
-- **Load on a small backend.** A handful of u3a websites polling
-  uncached would be noticeable on the current Render plan.
-  Mitigation: caching and ETags from day one, and documented guidance
-  that integrators should cache.
+- **Contact-detail harvesting at scale.** This one is a direct
+  consequence of serving all u3as and deserves care. Where a u3a has
+  ticked "contact — public", the anonymous response carries leader
+  names, and the free-text `enquiries` field frequently contains an
+  email address or phone number. None of that is *newly* exposed — the
+  existing public groups page already renders it — but a uniform,
+  documented, national API changes the economics of collecting it from
+  "scrape several hundred differently-built websites" to "one loop".
+  The invariant should not be broken to fix this; it is the backbone
+  of the design. Mitigations instead: keep rate limiting meaningful
+  for anonymous callers, do not add a bulk cross-tenant endpoint (a
+  deliberate non-feature), and warn u3as on the Public Links page that
+  anything ticked public is machine-readable. Worth raising with
+  whoever owns the interface before v1 rather than after.
+- **Load.** Several hundred u3a websites polling uncached would not be
+  survivable on the current Render plan. Mitigation: caching and ETags
+  from day one, documented guidance that integrators should cache, and
+  a shared plugin that caches properly so that good behaviour is the
+  default rather than something each webmaster has to get right. CDN
+  fronting is available if volume warrants it.
 - **Support burden.** Every published API acquires users who need
-  help. This is not a reason not to build it, but it is a real
-  ongoing cost and it should be a conscious acceptance rather than a
-  surprise.
+  help, and at national scale that is the cost most likely to be
+  underestimated. The single most effective mitigation is that the
+  phase 2b plugin should be good enough that the common case involves
+  no support at all.
 
 ---
 
@@ -471,14 +536,19 @@ to test: **it can never expose more than the u3a's public web pages
 already do.** That rule is what makes the first release safe enough to
 ship quickly.
 
-Phases 1 and 2 — the read API and the iCalendar feed — are the
-committed first delivery, at roughly **two and a half developer-weeks
-by hand, or under a week of calendar time with Claude Code in the
-loop.** They cover the website use case and the member-calendar use
-case between them.
+Phases 1, 2 and 2b — the read API, the iCalendar feed and the shared
+SiteWorks plugin — are the committed first delivery, at roughly
+**four and a half developer-weeks by hand, or one and a half to two
+weeks of calendar time with Claude Code in the loop.** They cover the
+website use case and the member-calendar use case between them.
 
-With the driving use case settled as the SiteWorks website and the
-first release settled as anonymous, that is very likely the whole of
-this project. **API keys and member endpoints are not scheduled work**
-— they are options we hold, to be exercised only if a consumer appears
-that already-public data cannot serve.
+**API keys and member endpoints are not scheduled work** — they are
+options we hold, to be exercised only if a consumer appears that
+already-public data cannot serve. Anonymous access is what lets this
+scale to every u3a without a standing administrative burden.
+
+The one thing that must not be deferred is the consequence of building
+for all u3as: **v1 is a promise to people we will never meet.** The
+deprecation policy, the OpenAPI document and a named owner for the
+interface belong in the first release, not the second — they are
+cheap to publish alongside v1 and impossible to impose afterwards.
