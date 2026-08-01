@@ -1,0 +1,8 @@
+{
+  "name": "beacon2026",
+  "private": true,
+  "description": "Repo-root scripts for beacon2026 (backend + frontend live in their own packages)",
+  "scripts": {
+    "bump-version": "node scripts/bump-version.js"
+  }
+}

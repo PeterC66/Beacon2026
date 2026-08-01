@@ -23,11 +23,17 @@ under the Unreleased headings below).
   and a new `POST /auth/session-timeout` endpoint (called by `AuthContext.jsx`
   when the client-side inactivity timer fires) logs `action: 'session_timeout'`
   — the only one of the three that can only be detected in the browser.
-- **"Not available in this demo" banners** on the three features that aren't
+- **"Not available in this demo" banners** on the features that aren't
   wired up in this demo environment: sending email (`EmailCompose.jsx`), the
-  email unblocker (`EmailUnblocker.jsx`), and the "Online Payments (PayPal)"
-  panel in `SystemSettings.jsx`. New shared `DemoUnavailableBanner.jsx`
-  component.
+  email unblocker (`EmailUnblocker.jsx`), email delivery tracking
+  (`EmailDelivery.jsx`), and the "Online Payments (PayPal)" panel in
+  `SystemSettings.jsx`. New shared `DemoUnavailableBanner.jsx` component.
+- **`npm run bump-version -- <x.y.z`** (repo-root script,
+  `scripts/bump-version.js`) — updates `backend/package.json` and
+  `frontend/package.json` together, refreshes both `package-lock.json`
+  files via `npm install`, and updates the version line in
+  `beacon2026 Project Definition.md`, replacing the previous manual
+  "keep them in step" convention.
 - **Temporary "NEW" badges on the main menu** next to Teams, Utilities, SQL
   reports, Feature configuration and Event types — sections that don't exist
   in the original Beacon, to help admins used to Beacon spot what's new in
