@@ -499,7 +499,16 @@ All items in this section have been completed (v0.8.6).
   database itself also can't be renamed, it stays `beacon2_a89s`) or add a
   custom domain. Left as-is for now since it's cosmetic only; revisit if a
   custom domain is wanted before general availability.
-- `[OPEN]` **Verify `DATABASE_URL` on Render is the actual connection string**,
-  not just a copied label — worth a quick visual check in the dashboard before
-  going live, since this wasn't independently confirmed during the 2026-07-31
-  rename clean-up session (see CHANGELOG).
+- `[FIXED]` **`DATABASE_URL` on Render confirmed correct** — checked in the
+  dashboard 2026-08-01, holds the real internal connection string, not just a
+  label.
+- `[FIXED]` **Render backend service was in Docker mode with the wrong build
+  context, breaking every deploy** (`COPY backend/ ./backend/: not found`).
+  Happened because the service was recreated via Render's "New Web Service"
+  wizard rather than "New → Blueprint" against `render.yaml`, so it
+  auto-detected `backend/Dockerfile` and defaulted to Docker with Root
+  Directory `backend` — but that Dockerfile expects a repo-root build
+  context. Fixed 2026-08-01 by setting Dockerfile Path =
+  `backend/Dockerfile` and Docker Build Context Directory = `.` in Render's
+  service settings, without recreating the service. See
+  `DEPLOYMENT.md` → Troubleshooting for the general fix if this recurs.
