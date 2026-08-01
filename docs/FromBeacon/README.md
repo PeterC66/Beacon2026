@@ -8,31 +8,34 @@ covered by the beacon2026 `LICENSE`.
 ## Copyright and status
 
 All material in this directory remains the property of its respective copyright
-holders. In particular, the original Beacon source files carry the notice:
-
-> *This script is Copyright John Franklin for all content as at 1st February
-> 2017. © John Franklin 2017. The Third Age Trust is permitted to use and modify
-> the script according to the terms of the Software Licence Agreement dated
-> 7th February 2017. This copyright notice must be retained.*
-
-That notice is **retained in full** in the files themselves and is reproduced
-here. The beacon2026 project:
+holders. beacon2026:
 
 - makes **no claim of ownership** over any of this material;
 - makes **no claim of any right to redistribute** it;
-- includes it **only as reference** to inform a clean-room reproduction, not as
-  a basis for copying the original code.
+- includes only what is genuinely needed **only as reference**, not as a basis
+  for copying original code or content.
 
 If any rights holder would prefer this material not be present in the
 repository, it will be removed on request (see `SECURITY.md` / repository
 contact).
 
+**`privileges.php` and `styles.css` removed 2026-08-01.** These were original
+Beacon source files carrying the notice *"This script is Copyright John
+Franklin for all content as at 1st February 2017. © John Franklin 2017. The
+Third Age Trust is permitted to use and modify the script according to the
+terms of the Software Licence Agreement dated 7th February 2017."* — a licence
+that runs to the Third Age Trust, not to this project. The facts they
+documented (Beacon's internal privilege/audit numeric codes, needed to
+interpret Beacon export files) have already been independently re-expressed in
+beacon2026's own code (`backend/src/seed/privilegeResources.js`,
+`backend/src/routes/backup/restore.js`) using original naming and structure.
+With that extraction complete, there was no remaining reason to host Franklin's
+actual copyrighted files, verbatim and publicly, in this repo.
+
 ## Contents
 
 | File | What it is |
 |------|------------|
-| `privileges.php` | Original Beacon source — privilege/audit-type definitions (© John Franklin 2017). Reference for the privilege model only. |
-| `styles.css` | Original Beacon stylesheet (© John Franklin 2017). Reference for legacy look-and-feel only. |
 | `202603170140_St Ives Cambridge Demo24 u3abackup.xlsx` | A sample/demo Beacon backup export, used to understand the export format and data shapes. |
 | `Gift-Aid-Schedule-Excel.ods` | Example Gift Aid schedule spreadsheet, used as a format reference. |
 | `Cookie Control text.png` | Screenshot reference. |
