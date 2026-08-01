@@ -241,6 +241,12 @@ const SECTIONS = [
         defaultValue: true,
         tip: 'Public Groups and Public Calendar pages visible without login',
       },
+      {
+        key: 'publicApi',
+        label: 'Public read API',
+        defaultValue: false,
+        tip: 'Lets your website read your groups, events, venues and interest areas. It only ever shows what you have already ticked as public below — and never member details.',
+      },
     ],
   },
 ];
