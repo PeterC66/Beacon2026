@@ -395,6 +395,29 @@ Every item below applies to every new feature — no exceptions.
 - [ ] **Multiple text instances** — if heading appears in NavBar breadcrumb AND `<h1>`,
   use `getAllByText` not `getByText` in tests.
 
+- [ ] **Prove a guard test can fail before trusting it.** When a test exists to
+  stop something bad reaching production — a leak guard, a spec-vs-code parity
+  check, an invariant assertion — deliberately break the thing it guards, watch
+  it go red, then restore. A guard that silently passes because it asserts two
+  empty arrays against each other is worse than none, because it buys
+  confidence it has not earned. Add a cheap non-vacuity assertion too (e.g.
+  `expect(actual.length).toBeGreaterThanOrEqual(8)`). Done for the `/api/v1`
+  key-set and OpenAPI parity tests on 2026-08-01; both were verified red on
+  injected drift.
+
+- [ ] **Assert the exact key set for anything published externally.** For
+  responses whose whole safety property is "only these fields", assert
+  `Object.keys(x).sort()` equals the full expected list rather than checking
+  individual fields are present or absent. A field added to a query then fails
+  the build instead of shipping quietly. See `apiV1.test.js`.
+
+- [ ] **Investigate an intermittent failure before dismissing it.** Do not
+  assume a flake is pre-existing. Establish a mechanism (is there even a
+  dependency path from the change to the test?) and get evidence — run the test
+  in isolation, run the suite repeatedly, and `git stash` the change to compare
+  against a clean tree. Then record the finding in `KNOWN-ISSUES.md` so the next
+  session does not repeat the investigation.
+
 ## Reports, design notes, and estimates
 
 - [ ] **State the basis for every effort estimate.** Never give a bare

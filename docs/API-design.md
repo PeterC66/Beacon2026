@@ -103,6 +103,23 @@ not return the venue, for the same reason the public groups page does
 not show it. There is no new judgement call for a u3a to make and no
 new way to leak.
 
+**One deliberate exception, recorded during phase 1.** Faculties
+(interest areas) have no entry in `group_info_config`, so nothing in
+Public Links governs them and they are not covered by the rule as
+stated. They are exposed anyway — `id` and `name` only — on the
+narrower ground that a faculty is pure taxonomy: a label a u3a
+invented to categorise its own groups, carrying no personal data of
+any kind, and the organising axis that makes a website's groups page
+useful at all. The same reasoning covers the `faculty` / `facultyId`
+fields on a group.
+
+The exception is noted here rather than left in a code comment because
+it slightly weakens a rule the rest of this design leans on, and
+anyone auditing that rule should meet the exception at the same time
+as the rule. If it is ever revisited, `routes/api/faculties.js` and
+the faculty fields in `routes/api/groups.js` are the only two places
+to change.
+
 This tier alone satisfies the website use case.
 
 ### Tier 2 — API key
