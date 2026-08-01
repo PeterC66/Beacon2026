@@ -109,6 +109,11 @@ This updates both `package.json` files, refreshes both `package-lock.json`
 files, and updates the version line in `beacon2026 Project Definition.md`.
 Do not edit the version fields by hand.
 
+**Only bump when `backend/` or `frontend/` source actually changed** — i.e.
+something that changes runtime behaviour. Skip the bump for PRs that touch
+only docs (`*.md`, `docs/`), CI/config files, or `CHANGELOG.md`/
+`KNOWN-ISSUES.md` entries with no accompanying code change.
+
 ## Licensing
 
 This project is **proprietary** — see the root [`LICENSE`](LICENSE). The code is
