@@ -82,7 +82,7 @@ const apiLimiter = rateLimit({
 app.use(
   '/api/v1',
   helmet({ crossOriginResourcePolicy: { policy: 'cross-origin' } }),
-  cors({ origin: '*' }),
+  cors({ origin: '*', exposedHeaders: ['Content-Disposition'] }),
   apiLimiter,
   apiV1Routes,
 );

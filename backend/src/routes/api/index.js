@@ -24,6 +24,7 @@ import facultyRoutes from './faculties.js';
 import venueRoutes from './venues.js';
 import groupRoutes from './groups.js';
 import eventRoutes from './events.js';
+import icsRoutes from './ics.js';
 
 const require = createRequire(import.meta.url);
 const openapi = require('./openapi.json');
@@ -71,6 +72,7 @@ router.use('/', facultyRoutes);
 router.use('/', venueRoutes);
 router.use('/', groupRoutes);
 router.use('/', eventRoutes);
+router.use('/', icsRoutes);
 
 // ─── Fallbacks ────────────────────────────────────────────────────────────
 

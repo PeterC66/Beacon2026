@@ -2082,6 +2082,7 @@ decisions below are not local implementation choices.
 | `routes/api/index.js` | Version router: deprecation headers, spec, tenant resolution, `publicApi` gate, resource mounts, 404 + error handler |
 | `routes/api/helpers.js` | Envelope, pagination, feature gating, visibility loading, `Deprecation`/`Sunset` |
 | `routes/api/{org,faculties,venues,groups,events}.js` | One module per resource |
+| `routes/api/ics.js` | The `events.ics` iCalendar feed — a second serialisation of `events.js`, not a second data source |
 | `routes/api/openapi.json` | Hand-written OpenAPI 3.1, loaded via `createRequire` |
 | `utils/resolveTenant.js` | Slug → tenant, shared with `routes/public/` |
 
@@ -2120,6 +2121,42 @@ decisions below are not local implementation choices.
   faculty is pure taxonomy carrying no personal data. If that judgement is
   revisited, `routes/api/faculties.js` and the `faculty`/`facultyId` fields in
   `routes/api/groups.js` are the only two places to change.
+
+### The iCalendar feed (`ics.js`)
+
+`GET /api/v1/:slug/events.ics?group=` is the same rows as `GET /events`, put
+through `calendar_config` in the same way and then serialised as RFC 5545.
+**If you add a field to one, decide deliberately whether it belongs in the
+other** — they are two representations of one resource, and a field that is
+public in JSON but missing from the feed is a bug, not a safety margin.
+
+- **The leak guard is `veventProps()` in `apiV1.test.js`**, which asserts the
+  exact set of VEVENT property names, and a list of values that must not appear
+  anywhere in the body. Same idea as the key-set assertions, different
+  serialisation. Verified red on an injected `visible()` bypass.
+- **`DTSTAMP`/`LAST-MODIFIED` come from the row's `updated_at`, never from the
+  clock.** Using `new Date()` would change every byte of the feed on every
+  request, defeating the `ETag` and making every poll a full download.
+- **`UID` is `<event id>@<slug>.beacon2026` and must never change.** It is how
+  a subscriber's calendar recognises an event it already has; change the recipe
+  and every subscriber silently accumulates a duplicate of everything.
+- **Folding is by octet, not character** (RFC 5545 says 75 octets), and
+  `fold()` backs off a split that would land inside a multi-byte character. Cut
+  a UTF-8 sequence in half and the subscriber sees `U+FFFD` where a dash or an
+  accent should be. The test asserts both the byte limit and that unfolding
+  round-trips; the round-trip half was verified red with the backoff removed.
+- **The feed is bounded, not paginated** — 180 days back, no forward limit,
+  5000 events. `?limit=` would be meaningless to a calendar client. Both
+  numbers are in the OpenAPI description, so they are part of the contract.
+- **`DTEND` is omitted when it is not strictly after `DTSTART`.** Some clients
+  reject an entire calendar over one invalid event rather than skipping it.
+- **Times are `TZID=Europe/London` with a `VTIMEZONE` in the file.** Floating
+  times would read an hour out for a member abroad; UTC would lose the
+  summer-time transition.
+- **The SQL casts `event_date`, `start_time` and `end_time` to `text` and
+  formats `updated_at` with `to_char`.** No `pg` type parsers are configured,
+  so a `DATE` arrives as a JS `Date` at *local* midnight — fine for JSON, but a
+  timezone bug waiting to happen when it is reformatted into `YYYYMMDD`.
 
 ### Configuration
 
