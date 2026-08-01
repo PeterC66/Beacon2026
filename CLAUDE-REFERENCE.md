@@ -2107,6 +2107,19 @@ decisions below are not local implementation choices.
 - **No member data.** There is no members endpoint in v1 and none in the spec;
   `apiV1.test.js` asserts both. Adding one is a phase-4 decision (API keys plus
   an explicit scope), not a routine change.
+- **The spec cannot drift from the code.** A parity test walks the Express
+  router stacks, converts `/:slug/groups/:id` to `/{slug}/groups/{id}`, and
+  asserts the result equals the documented path list *both ways round* — an
+  undocumented route fails, and so does a documented path that does not exist.
+  A hand-written OpenAPI document is only worth having with this guard in
+  place. Both it and the key-set assertions were verified red against injected
+  drift on 2026-08-01; re-verify the same way if you rework them.
+- **Faculties sit slightly outside the public-parity rule, deliberately.**
+  They have no `group_info_config` entry, so nothing in Public Links governs
+  them. They are exposed (id and name only) on the narrower ground that a
+  faculty is pure taxonomy carrying no personal data. If that judgement is
+  revisited, `routes/api/faculties.js` and the `faculty`/`facultyId` fields in
+  `routes/api/groups.js` are the only two places to change.
 
 ### Configuration
 

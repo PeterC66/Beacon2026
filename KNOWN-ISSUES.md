@@ -566,6 +566,15 @@ built; the items below are deliberately out of it.
 6. `[OPEN]` **Trust agreement to own the interface (phase 0b).** Not code. It
    gates *publishing* rather than building, and should be secured before the
    API is advertised to other u3as.
+7. `[OPEN]` **`/api/v1` has never run against a real database.** The 35 tests in
+   `apiV1.test.js` mock the DB layer, as every other route test here does, so
+   the SQL itself is unexercised — column names, the `= ANY($1)` leader lookup,
+   and the `::date` casts in the event filters are all verified by inspection
+   only. Merged 2026-08-01 (#473) in that state deliberately: the feature is off
+   by default, so nothing is exposed until a u3a opts in. **Before enabling it
+   for any u3a**, enable `publicApi` on the demo tenant and hit
+   `/api/v1/demo2/{org,faculties,venues,groups,events}` — a few minutes' work
+   that closes the gap.
 
 ## Test flakiness
 
