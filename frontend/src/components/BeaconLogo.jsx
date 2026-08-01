@@ -1,7 +1,7 @@
 // beacon2026/frontend/src/components/BeaconLogo.jsx
 // Approximate recreation of the u3a Beacon logo using styled text.
-// Expects light.jpg in frontend/public/ for the page background,
-// but the logo itself is pure CSS.
+// Expects light-day.png / light-night.png in frontend/public/ for the page
+// background (see src/utils/backgroundTime.js), but the logo itself is pure CSS.
 
 const BLUE = '#1d5da8';
 

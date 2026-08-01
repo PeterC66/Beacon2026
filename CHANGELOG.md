@@ -14,6 +14,15 @@ under the Unreleased headings below).
 
 ## [Unreleased] — 2026-08-01
 
+### Changed
+- **Sign-in page background swapped for a day/night pair.** The lighthouse
+  photo (`frontend/public/light.jpg`) was a licensed stock image; it's
+  replaced with two AI-generated lighthouse images (`light-day.png` for
+  06:00–18:00 local time, `light-night.png` otherwise), switched at runtime by
+  `frontend/src/utils/backgroundTime.js` via `html[data-daytime]` in
+  `index.css`. Re-checks every 5 minutes so a page left open crosses the
+  boundary correctly.
+
 ### Added
 - **Public read API (`/api/v1`) — phase 1.** A new versioned, read-only,
   anonymous interface exposing a u3a's organisation details, interest areas
