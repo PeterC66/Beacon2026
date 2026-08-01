@@ -405,6 +405,28 @@ Every item below applies to every new feature — no exceptions.
   key-set and OpenAPI parity tests on 2026-08-01; both were verified red on
   injected drift.
 
+- [ ] **A guard can also pass vacuously because the *fixture* never reaches the
+  boundary.** Distinct from the empty-array case above, and harder to spot,
+  because the assertion is correct and the data is simply too tame to exercise
+  it. On 2026-08-01 the `events.ics` fold test asserted that unfolding
+  round-trips, to catch a UTF-8 character split across the 75-octet boundary —
+  and still passed with the multi-byte backoff deleted, because the em dash in
+  the fixture happened to sit 30 bytes clear of the split. The fix was to
+  choose data that *must* hit the boundary (a run of 3-byte characters at an
+  offset not divisible by 3) and to assert on the general symptom, `U+FFFD`,
+  rather than on one expected substring. When you break the code and the test
+  stays green, suspect the fixture before you conclude the test is wrong.
+
+- [ ] **Read the actual target environment before building to a design note.**
+  A design document describes what someone believed when they wrote it. On
+  2026-08-01 `docs/API-design.md` specified a WordPress plugin "rendering
+  groups and events" — written without inspecting a SiteWorks site, which
+  already has `u3a_group` / `u3a_event` / `u3a_venue` post types, matching
+  blocks and a themed front end. Twenty minutes reading the real plugin folder
+  before writing any code turned a premise error into a recorded decision
+  instead of a week of the wrong plugin. Cheapest possible check: list what is
+  already installed where the thing will run.
+
 - [ ] **Assert the exact key set for anything published externally.** For
   responses whose whole safety property is "only these fields", assert
   `Object.keys(x).sort()` equals the full expected list rather than checking
