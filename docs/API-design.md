@@ -18,6 +18,13 @@ This note answers that question, recommends a shape, and sets out a
 phased plan. Finance is deliberately out of scope throughout — the
 resources in scope are groups, members, events, venues and faculties.
 
+**Status:** the four questions this note opened with — audience,
+driving use case, credential model and ownership — were all settled on
+2026-08-01 and are recorded in the decisions table below. This is a
+decided plan awaiting implementation, not a proposal awaiting a
+verdict. The one remaining external dependency is the Third Age
+Trust's agreement to own the published interface (phase 0b).
+
 It is a companion to `docs/website-editing-options.md` and
 `docs/website-post-types-from-beacon2026.md`, which look at the same
 problem from the WordPress end. The last section of this note explains
@@ -54,10 +61,11 @@ of which has to independently get PII filtering right.
 
 ---
 
-## Design decisions proposed
+## Design decisions
 
 These are the choices the rest of this note is built on. Changing any
-of them changes the shape of the work.
+of them changes the shape of the work. All were settled on 2026-08-01;
+none is still open.
 
 | Decision | Choice |
 |---|---|
@@ -73,6 +81,8 @@ of them changes the shape of the work.
 | Versioning | **`v1` in the path, additive-only.** New fields may be added; existing fields never change meaning or disappear within a version. |
 | Credential type | **Dedicated API keys**, not JWTs. Stored hashed, tenant-scoped, scoped by resource, revocable, with a recorded last-used time. |
 | Documentation | **OpenAPI 3.1**, hand-written and checked into the repo, served at `/api/v1/openapi.json`. |
+| Interface owner | **The Third Age Trust.** Settled 2026-08-01. The Trust owns the published contract and is the change-control authority; beacon2026 implements it. Named as owner in the published documentation, with a Trust contact route for integrators. |
+| Deprecation notice | **Six months minimum.** Settled 2026-08-01. No field or endpoint in v1 is withdrawn or changed in meaning with less than six months' published notice, signalled in-band by `Deprecation` and `Sunset` response headers (RFC 8594) as well as on the published documentation page. |
 
 ---
 
@@ -390,8 +400,9 @@ enough to commit a date to.
 
 | Phase | Contents | By hand | With Claude Code |
 |---|---|---|---|
-| **0** | This decision recorded and the boundary published: internal vs public, versioning policy, the no-anonymous-PII invariant. No code. | ½ day | 2 hours |
-| **1** | Anonymous read API — org, faculties, venues, groups, events. Router tree, tenant/tier middleware, projections, envelope, pagination, ETag and caching, the four `app.js` fixes, `publicApi` toggle, OpenAPI document, tests. | 2 weeks | 3–4 days |
+| **0** | This decision recorded and the boundary published: internal vs public, versioning policy, the no-anonymous-PII invariant, and the Trust's six-month deprecation policy. No code. | ½ day | 2 hours |
+| **0b** | **Trust agreement to own the interface.** Not development work and not estimable in developer-weeks, but a prerequisite for *publishing* rather than for building. Start it in parallel with phase 1. | — | — |
+| **1** | Anonymous read API — org, faculties, venues, groups, events. Router tree, tenant/tier middleware, projections, envelope, pagination, ETag and caching, the four `app.js` fixes, `publicApi` toggle, `Deprecation`/`Sunset` header support, OpenAPI document, tests. | 2 weeks | 3–4 days |
 | **2** | `events.ics` iCalendar feed, including the per-group filter. | 3 days | ½ day |
 | **2b** | **SiteWorks display plugin** — one WordPress plugin, shared by every u3a, rendering groups and events from the API with sensible caching. Separate codebase; the deliverable most u3as will actually see. | 2 weeks | ½–1 week |
 | **3** *(conditional)* | API keys — table, hashing, scopes, admin page, one-time reveal, revocation, key-authed field expansion, documentation for integrators. | 2 weeks | 3–4 days |
@@ -428,7 +439,7 @@ decide whether phase 3 is ever worth starting.
 
 ---
 
-## Risks and open questions
+## Settled questions and risks
 
 **Settled 2026-08-01.** All three opening questions have been
 answered:
@@ -472,18 +483,48 @@ it changes what each of them *commits us to*:
   outage. The upside is that anonymous responses are public and
   cacheable, so they can sit behind a CDN cheaply if volume warrants.
 
-**Still open.**
+**Governance settled 2026-08-01: the Third Age Trust owns the
+interface, with six months' deprecation notice.** That answers the
+last open question and closes the design. Three things follow.
 
-1. **Who owns this interface, and who may deprecate it?** If
-   beacon2026 becomes the national replacement for Beacon, this API is
-   a national interface with u3as depending on it, and "St Ives
-   decided to change it" is not an adequate change-control process. It
-   needs a named owner, a deprecation notice period stated up front in
-   the published documentation, and somewhere for integrators to be
-   told about changes. This does not block phase 1 — but the
-   deprecation policy has to be published *with* v1, because
-   retrofitting one to consumers who already integrated is exactly the
-   problem it exists to prevent.
+**It is a dependency, not just a decision.** Naming the Trust as owner
+assigns it a standing obligation — change control, a contact route for
+integrators, and a support expectation from every u3a that integrates.
+That agreement has to be secured *before* v1 publishes, because the
+commitment is unilateral in the wrong direction otherwise: u3as would
+be relying on a promise the Trust has not made. This is an
+organisational conversation rather than a technical task, it is not on
+the critical path for *building* phases 1–2b, and it **is** on the
+critical path for publishing them. Worth starting early, since it will
+move more slowly than the code.
+
+**Six months' notice needs a channel, and anonymous access removes the
+obvious one.** This is the one real tension the settled decisions
+create between them: anonymous access is what lets the API scale to
+every u3a with no administrative burden, and the price is that we do
+not know who our integrators are, so we cannot email them. The
+recommended answer is three overlapping channels, none of which
+requires knowing anyone's identity:
+
+- **In-band headers.** `Deprecation` and `Sunset` (RFC 8594) on every
+  affected response, from the moment notice starts. A well-built
+  client can surface these; the phase 2b plugin should log them
+  visibly in WP admin, which covers most u3as automatically.
+- **A published changes page**, owned by the Trust, linked from the
+  OpenAPI document, stating the current version and the date until
+  which it is guaranteed.
+- **Voluntary integrator registration** — an email address on a
+  notification list, no key and no authentication attached. Cheap,
+  optional, and it recovers the ability to notify for the integrators
+  who care enough to sign up.
+
+**It sets a floor on v1's lifetime.** Publishing v1 commits to it for
+at least six months past any future notice, so the honest planning
+assumption is that **every field shipped in phase 1 is supported for
+well over a year.** That is an argument for shipping fewer fields
+initially, not more: an omitted field can be added at any time as an
+additive change, whereas a field shipped carelessly is load-bearing
+for years. Where there is doubt about a field, leave it out.
 
 **Risks.**
 
@@ -549,6 +590,17 @@ scale to every u3a without a standing administrative burden.
 
 The one thing that must not be deferred is the consequence of building
 for all u3as: **v1 is a promise to people we will never meet.** The
-deprecation policy, the OpenAPI document and a named owner for the
-interface belong in the first release, not the second — they are
-cheap to publish alongside v1 and impossible to impose afterwards.
+Third Age Trust owns that promise and has six months' notice to honour
+before anything in it changes, so the deprecation policy, the OpenAPI
+document and the Trust's contact route belong in the first release —
+they are cheap to publish alongside v1 and impossible to impose
+afterwards.
+
+Two practical consequences worth carrying into phase 1. First,
+**secure the Trust's agreement early**; it gates publishing rather
+than building, and it will move more slowly than the code. Second,
+**ship fewer fields than feel natural.** Six months' notice means
+anything published in phase 1 is load-bearing for well over a year,
+while anything omitted can be added at any time without notice at all.
+The asymmetry is entirely one-way, and it should be reflected in every
+judgement call about what goes in the first response.
