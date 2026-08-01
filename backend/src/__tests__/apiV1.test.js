@@ -366,6 +366,176 @@ describe('GET /events', () => {
   });
 });
 
+// ── The iCalendar feed ──────────────────────────────────────────────────────
+// Same data and the same visibility rules as GET /events, in a second
+// serialisation. The leak guard is the same idea as the key-set assertions
+// above, applied to VEVENT property names.
+
+const ICS_ROW = {
+  id: 'e1',
+  event_date: '2026-09-01',
+  start_time: '14:30:00',
+  end_time: '16:00:00',
+  group_name: 'Walking',
+  event_type_name: null,
+  venue_name: 'Village Hall',
+  venue_postcode: 'PE27 1AA',
+  topic: 'Autumn walk',
+  contact: 'walk@demo.example',
+  details: 'Meet at the bridge',
+  stamp: '20260801T090000Z',
+};
+
+const ALL_CALENDAR_PUBLIC = [
+  {
+    group_info_config: {},
+    calendar_config: {
+      venue: { public: true },
+      topic: { public: true },
+      enquiries: { public: true },
+      detail: { public: true },
+    },
+  },
+];
+
+/** Fetch the feed with a given visibility config and event rows. */
+async function getIcs({ visibility = NOTHING_PUBLIC, rows = [ICS_ROW], query = '' } = {}) {
+  tenantQuery
+    .mockResolvedValueOnce(FEATURES_ON)
+    .mockResolvedValueOnce(visibility)
+    .mockResolvedValueOnce(rows);
+  return request(app).get(`${BASE}/events.ics${query}`);
+}
+
+/** The property names used inside the first VEVENT, e.g. 'DTSTART;TZID=…' → 'DTSTART'. */
+function veventProps(body) {
+  const lines = body.split('\r\n');
+  const start = lines.indexOf('BEGIN:VEVENT');
+  const end = lines.indexOf('END:VEVENT');
+  return lines
+    .slice(start + 1, end)
+    .filter((l) => !l.startsWith(' '))
+    .map((l) => l.split(/[;:]/)[0])
+    .sort();
+}
+
+describe('GET /events.ics', () => {
+  it('serves a cacheable calendar that defines its own timezone', async () => {
+    const res = await getIcs();
+    expect(res.status).toBe(200);
+    expect(res.headers['content-type']).toMatch(/^text\/calendar; charset=utf-8/);
+    expect(res.headers['cache-control']).toBe('public, max-age=300');
+    expect(res.headers['content-disposition']).toBe('inline; filename="demo-events.ics"');
+    expect(res.headers.etag).toBeDefined();
+    expect(res.text.startsWith('BEGIN:VCALENDAR\r\n')).toBe(true);
+    expect(res.text.endsWith('END:VCALENDAR\r\n')).toBe(true);
+    expect(res.text).toContain('TZID:Europe/London');
+    expect(res.text).toContain('X-WR-CALNAME:Demo u3a');
+  });
+
+  it('publishes a timed event in local time with a stable uid', async () => {
+    const res = await getIcs();
+    expect(res.text).toContain('UID:e1@demo.beacon2026');
+    expect(res.text).toContain('DTSTART;TZID=Europe/London:20260901T143000');
+    expect(res.text).toContain('DTEND;TZID=Europe/London:20260901T160000');
+    // From the row's updated_at, not the clock, so the feed is byte-stable.
+    expect(res.text).toContain('DTSTAMP:20260801T090000Z');
+  });
+
+  it('publishes an event with no start time as an all-day event', async () => {
+    const res = await getIcs({ rows: [{ ...ICS_ROW, start_time: null, end_time: null }] });
+    expect(res.text).toContain('DTSTART;VALUE=DATE:20260901');
+    expect(res.text).toContain('DTEND;VALUE=DATE:20260902');
+  });
+
+  it('omits an end time that is not after the start, rather than emitting invalid ics', async () => {
+    const res = await getIcs({ rows: [{ ...ICS_ROW, end_time: '14:30:00' }] });
+    expect(res.text).toContain('DTSTART;TZID=Europe/London:20260901T143000');
+    expect(res.text).not.toContain('DTEND');
+  });
+
+  it('exposes only identity and timing properties when nothing is ticked public', async () => {
+    const res = await getIcs();
+    expect(veventProps(res.text)).toEqual([
+      'DTEND',
+      'DTSTAMP',
+      'DTSTART',
+      'LAST-MODIFIED',
+      'SUMMARY',
+      'UID',
+    ]);
+    for (const secret of ['Village Hall', 'PE27', 'Autumn walk', 'walk@demo.example', 'bridge']) {
+      expect(res.text).not.toContain(secret);
+    }
+    expect(res.text).toContain('SUMMARY:Walking');
+  });
+
+  it('includes venue, topic, details and enquiries once they are ticked public', async () => {
+    const res = await getIcs({ visibility: ALL_CALENDAR_PUBLIC });
+    expect(veventProps(res.text)).toContain('LOCATION');
+    expect(veventProps(res.text)).toContain('DESCRIPTION');
+    expect(res.text).toContain('SUMMARY:Walking: Autumn walk');
+    expect(res.text).toContain('LOCATION:Village Hall');
+    expect(res.text).toContain('Meet at the bridge');
+    expect(res.text).toContain('Enquiries: walk@demo.example');
+  });
+
+  it('falls back to the event type name for open meetings', async () => {
+    const res = await getIcs({
+      rows: [{ ...ICS_ROW, group_name: null, event_type_name: 'Open Meeting' }],
+    });
+    expect(res.text).toContain('SUMMARY:Open Meeting');
+  });
+
+  it('escapes separators and folds long lines to 75 octets', async () => {
+    // The dash is 3 bytes and the run of them is long enough that a naive
+    // 75-character fold is guaranteed to cut one in half.
+    const dashes = '—'.repeat(40);
+    const res = await getIcs({
+      visibility: ALL_CALENDAR_PUBLIC,
+      rows: [
+        {
+          ...ICS_ROW,
+          group_name: `Walking, Rambling; and Strolling ${dashes} the long way round`,
+          topic: 'Bring a coat\nand boots',
+        },
+      ],
+    });
+    expect(res.text).toContain('Walking\\, Rambling\\; and Strolling');
+    expect(res.text).toContain('Bring a coat\\nand boots');
+    for (const line of res.text.split('\r\n')) {
+      expect(Buffer.byteLength(line, 'utf8')).toBeLessThanOrEqual(75);
+    }
+    // Unfolding must give back exactly what went in — a split that landed
+    // inside a dash would surface as U+FFFD here.
+    const unfolded = res.text.replace(/\r\n /g, '');
+    expect(unfolded).not.toContain('�');
+    expect(unfolded).toContain(`Strolling ${dashes} the long way round`);
+  });
+
+  it('never includes private events, and reaches a bounded way back', async () => {
+    await getIcs();
+    const [, sql, params] = tenantQuery.mock.calls.at(-1);
+    expect(sql).toContain('ge.is_private IS NOT TRUE');
+    expect(sql).toContain('ge.event_date >= $1::date');
+    expect(params[0]).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+    expect(params.at(-1)).toBe(5000); // the VEVENT ceiling, not a page size
+  });
+
+  it('filters to one group and names the calendar after it', async () => {
+    const res = await getIcs({ query: '?group=g1' });
+    expect(tenantQuery.mock.calls.at(-1)[2]).toContain('g1');
+    expect(res.text).toContain('X-WR-CALNAME:Demo u3a — Walking');
+  });
+
+  it('404s when the u3a has not enabled the API', async () => {
+    tenantQuery.mockResolvedValueOnce([{ feature_config: {} }]);
+    const res = await request(app).get(`${BASE}/events.ics`);
+    expect(res.status).toBe(404);
+    expect(res.body.error.code).toBe('not_found');
+  });
+});
+
 // ── Venues, faculties and org ───────────────────────────────────────────────
 
 describe('venues, faculties and org', () => {
@@ -431,6 +601,7 @@ describe('specification matches the routes', () => {
       import('../routes/api/venues.js'),
       import('../routes/api/groups.js'),
       import('../routes/api/events.js'),
+      import('../routes/api/ics.js'),
     ]);
 
     // '/:slug/groups/:id' (Express) → '/{slug}/groups/{id}' (OpenAPI)
@@ -443,7 +614,7 @@ describe('specification matches the routes', () => {
     const documented = Object.keys(res.body.paths).sort();
 
     // Guard against a vacuous pass if router introspection ever returns nothing.
-    expect(actual.length).toBeGreaterThanOrEqual(8);
+    expect(actual.length).toBeGreaterThanOrEqual(9);
     expect(documented).toEqual(actual);
   });
 });

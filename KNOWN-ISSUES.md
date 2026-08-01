@@ -536,45 +536,58 @@ All items in this section have been completed (v0.8.6).
 ## Public read API (`/api/v1`) — deferred items
 
 Design, decisions and the phased plan are in
-[`docs/API-design.md`](docs/API-design.md). Phase 1 (anonymous read API) is
-built; the items below are deliberately out of it.
+[`docs/API-design.md`](docs/API-design.md). Phase 1 (anonymous read API) and
+phase 2 (the `events.ics` feed) are built; the items below are deliberately
+out of them.
 
-1. `[DEFERRED]` **`events.ics` iCalendar feed (phase 2)** — RFC 5545 feed at
-   `/api/v1/:slug/events.ics` with a `?group=` filter, so members can subscribe
-   to the u3a calendar in Google/Apple/Outlook. Needs stable `UID`s derived
-   from event id + tenant so a subscriber's calendar updates events in place
-   rather than duplicating them. Small, and the highest value-per-line item
-   remaining.
-2. `[DEFERRED]` **Shared SiteWorks display plugin (phase 2b)** — one WordPress
+1. `[OPEN]` **Nothing in beacon2026 tells a member the feed URL exists.** The
+   `events.ics` feed is built and works, but its value depends on members
+   finding it, and today they can only find it by reading the API
+   documentation. A "Subscribe to this calendar" link on the public Calendar
+   page — and a per-group one on the group's own entry — is the obvious next
+   step and is a frontend change, not an API one. Deliberately not done with
+   phase 2, which was scoped to the feed itself.
+2. `[OPEN]` **The feed has not been read by a real calendar client.** Its
+   structure is asserted line by line in `apiV1.test.js` and was checked by
+   hand against RFC 5545, but no third-party validator or actual
+   Google/Apple/Outlook subscription has seen it — no iCalendar parser is
+   available locally and adding a dependency to test-parse our own output was
+   not judged worth it. Fold at the 75-octet boundary, the `VTIMEZONE`
+   definition and all-day `DTEND` semantics are the parts most likely to be
+   subtly wrong. Subscribe from one real client when the demo tenant is
+   smoke-tested (item 8 below).
+3. `[DEFERRED]` **Shared SiteWorks display plugin (phase 2b)** — one WordPress
    plugin, used by every u3a, rendering groups and events from this API with
    sensible caching. Separate codebase. It is the deliverable most u3as will
    actually see, and the main defence against a per-u3a support load: the
    common case should need no support at all.
-3. `[CONDITIONAL]` **API keys (phase 3)** — tenant-scoped keys, hashed at rest,
+4. `[CONDITIONAL]` **API keys (phase 3)** — tenant-scoped keys, hashed at rest,
    with scopes, an admin page and revocation. Deliberately *not* scheduled: the
    settled decision is anonymous-first, and keys get built only if a consumer
    appears that already-public data cannot serve. Do not build speculatively.
-4. `[CONDITIONAL]` **Member endpoints (phase 4)** — `/members/stats` (aggregate
+5. `[CONDITIONAL]` **Member endpoints (phase 4)** — `/members/stats` (aggregate
    counts) before any individual records, key plus explicit `members:read`
    scope, never in a default role, never anonymous. A data-protection decision
    for each u3a, not a routine feature.
-5. `[OPEN]` **Deprecation notice needs channels that do not depend on
+6. `[OPEN]` **Deprecation notice needs channels that do not depend on
    identity.** Anonymous access is what lets this scale to every u3a, and the
    price is that we cannot email integrators. In-band `Deprecation`/`Sunset`
    headers are implemented; a Trust-owned changes page and an optional
    voluntary notification list are not. Needed before v1 is publicised widely.
-6. `[OPEN]` **Trust agreement to own the interface (phase 0b).** Not code. It
+7. `[OPEN]` **Trust agreement to own the interface (phase 0b).** Not code. It
    gates *publishing* rather than building, and should be secured before the
    API is advertised to other u3as.
-7. `[OPEN]` **`/api/v1` has never run against a real database.** The 35 tests in
+8. `[OPEN]` **`/api/v1` has never run against a real database.** The 46 tests in
    `apiV1.test.js` mock the DB layer, as every other route test here does, so
    the SQL itself is unexercised — column names, the `= ANY($1)` leader lookup,
-   and the `::date` casts in the event filters are all verified by inspection
-   only. Merged 2026-08-01 (#473) in that state deliberately: the feature is off
-   by default, so nothing is exposed until a u3a opts in. **Before enabling it
-   for any u3a**, enable `publicApi` on the demo tenant and hit
-   `/api/v1/demo2/{org,faculties,venues,groups,events}` — a few minutes' work
-   that closes the gap.
+   the `::date` casts in the event filters, and the `::text` casts and
+   `to_char(… AT TIME ZONE 'UTC', …)` in the `events.ics` query are all verified
+   by inspection only. Merged 2026-08-01 (#473, and the feed in phase 2) in that
+   state deliberately: the feature is off by default, so nothing is exposed
+   until a u3a opts in. **Before enabling it for any u3a**, enable `publicApi`
+   on the demo tenant and hit
+   `/api/v1/demo2/{org,faculties,venues,groups,events,events.ics}` — a few
+   minutes' work that closes the gap.
 
 ## Test flakiness
 

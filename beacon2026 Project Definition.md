@@ -1,7 +1,7 @@
 # beacon2026 — Project Definition (last reviewed 2026-06-14)
 
 > **Note:** This document describes the *current* state of the project as of
-> 2026-06-14 (version 0.12.0). It is the canonical inventory of modules, routes,
+> 2026-06-14 (version 0.12.1). It is the canonical inventory of modules, routes,
 > and pages; for a contributor-oriented repo map and quickstart see
 > [`README.md`](README.md). Read it alongside `CLAUDE.md`, `CLAUDE-STANDARDS.md`,
 > and `CLAUDE-REFERENCE.md` in the repository root, which contain coding
@@ -26,7 +26,7 @@ beacon2026 is a ground-up rebuild with these goals:
 
 ---
 
-## What has been built (as of version 0.12.0)
+## What has been built (as of version 0.12.1)
 
 ### Infrastructure and platform
 - Full multi-tenant architecture (PostgreSQL schema-per-tenant)
@@ -261,6 +261,11 @@ beacon2026 is a ground-up rebuild with these goals:
 - Resources: `org`, `faculties`, `venues` (+ `/:id`), `groups` (+ `/:id`,
   `?faculty=`), `events` (+ `/:id`, `?from=&to=&group=`). Collections are
   paginated and return `{ data, meta }`; errors are `{ error: { code, message } }`
+- **`events.ics` — the public calendar as a subscribable iCalendar feed**
+  (RFC 5545, `?group=` filter), so a member can subscribe in Google, Apple or
+  Outlook Calendar. Same rows and same visibility rules as `events`; bounded
+  (180 days back, no forward limit, 5,000 events) rather than paginated, with
+  stable `UID`s and `Europe/London` times
 - **Opt-in per u3a** behind the `publicApi` feature toggle (defaults **off** —
   the only feature besides `giftAid`, `groupLedger` and `siteworks` to do so)
 - **Field visibility reuses `group_info_config` / `calendar_config`**, so the

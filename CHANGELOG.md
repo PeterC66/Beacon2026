@@ -43,6 +43,28 @@ under the Unreleased headings below).
     (RFC 8594) when `API_V1_SUNSET` is set. v1 is not deprecated, so no such
     headers are sent today.
 
+- **Subscribable calendar feed (`/api/v1/:slug/events.ics`) — phase 2 of the
+  public read API.** The u3a's public calendar as an iCalendar (RFC 5545) feed,
+  so a member can paste the URL into Google Calendar, Apple Calendar or Outlook
+  once and have the programme keep itself up to date. No key, no registration
+  and nothing to install — the URL *is* the integration.
+  - `?group=<id>` narrows it to a single group, for a member who only wants
+    their own group's meetings in their calendar. A filtered feed is named
+    after the group, so two subscriptions are easy to tell apart.
+  - **Shows exactly what `/events` shows** — the same Public Links toggles
+    decide whether venue, topic, details and enquiries appear, and all of them
+    default to not-public. Private events are never included.
+  - Each event carries a permanent identifier, so a subscriber's calendar
+    updates a changed event in place instead of collecting duplicates, and
+    times are published in the `Europe/London` timezone so they read correctly
+    for someone abroad and across the summer-time change. Events with no start
+    time appear as all-day events.
+  - The feed covers the last 180 days onwards, with no end date, up to 5000
+    events — a calendar application fetches the whole file every time, so
+    unlike the JSON endpoints it is bounded rather than paginated.
+  - Needs the same **Public read API** feature toggle; it is 404 until a u3a
+    turns that on.
+
 ### Changed
 - `/api/v1` is mounted ahead of the app-wide helmet, CORS and rate-limit
   middleware and supplies its own: cross-origin reads are allowed (the shared

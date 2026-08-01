@@ -259,6 +259,32 @@
         }
       }
     },
+    "/{slug}/events.ics": {
+      "get": {
+        "tags": ["Events"],
+        "summary": "The public calendar as a subscribable iCalendar feed",
+        "description": "The same events as `/{slug}/events`, serialised as iCalendar (RFC 5545) so it can be subscribed to directly in Google Calendar, Apple Calendar or Outlook. No key and no client code are needed — the URL is the integration.\n\nUnlike the JSON collection this feed is not paginated, because a calendar application fetches it whole. Instead it is bounded: it contains events from 180 days ago onwards, with no end date, up to a maximum of 5000 events.\n\nEach event carries a stable `UID` derived from its id and the u3a, so a subscriber's calendar updates events in place rather than duplicating them. Timed events are published in the `Europe/London` timezone, which the feed defines; events with no start time are published as all-day events. Which of `LOCATION` and `DESCRIPTION` appear depends on what the u3a has chosen to publish, exactly as for the JSON representation.",
+        "parameters": [
+          { "$ref": "#/components/parameters/slug" },
+          {
+            "name": "group",
+            "in": "query",
+            "description": "Filter to one group, by its id, so a member can subscribe to just their own group.",
+            "schema": { "type": "string", "maxLength": 64 }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "An iCalendar document",
+            "content": {
+              "text/calendar": { "schema": { "type": "string" } }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "404": { "$ref": "#/components/responses/NotFound" }
+        }
+      }
+    },
     "/{slug}/events/{id}": {
       "get": {
         "tags": ["Events"],
