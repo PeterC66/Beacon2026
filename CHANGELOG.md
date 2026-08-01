@@ -15,6 +15,27 @@ under the Unreleased headings below).
 ## [Unreleased] — 2026-08-01
 
 ### Fixed
+- **System admin "Create tenant" errors showed only "Validation error" with no
+  detail** — `system.js`'s `systemFetch()` (frontend `lib/api/system.js`) threw
+  `Error(b.error)`, which is just the generic label the backend's
+  `errorHandler.js` sends for a `ZodError`; the actual per-field messages sit
+  in the response's `issues` array and were being dropped. `systemFetch` now
+  builds the thrown error message from `issues` (e.g. `adminPassword:
+  Password must contain at least one uppercase, one lowercase, and one
+  numeric character.`) when present, falling back to `error` otherwise. Fixes
+  every system-admin action that goes through `systemFetch` (tenant create,
+  settings updates, etc.), not just tenant creation.
+- **System admin header still read "Beacon2"** in `SystemLogin.jsx` and
+  `SystemDashboard.jsx` — a leftover from before the beacon2 → beacon2026
+  rename that the text-rename script (see 2026-07-31 entry below) missed
+  because the "2026" was split across JSX text and a `<span>`. Both now read
+  "Beacon2026".
+- **`beacon2026.vercel.app` login failed with "Failed to fetch"** while
+  `beacon2.vercel.app` kept working — the backend's `CORS_ORIGIN` on Render
+  was still allowlisting only the old `beacon2.vercel.app` origin, so the
+  browser silently blocked the cross-origin fetch from the new domain.
+  Updated `CORS_ORIGIN` to `https://beacon2026.vercel.app`, which is now the
+  canonical frontend domain; `beacon2.vercel.app` is retired.
 - **Render backend deploy failures after the rename** — the Render service had
   ended up in **Docker** mode (auto-detected `backend/Dockerfile` via the "New
   Web Service" wizard rather than `render.yaml` via "New → Blueprint") with a

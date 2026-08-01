@@ -23,7 +23,12 @@ export function hasSysToken() {
 function systemFetch(url, options = {}) {
   return fetch(url, options).then((r) =>
     r.json().then((b) => {
-      if (!r.ok) throw new Error(b.error ?? `HTTP ${r.status}`);
+      if (!r.ok) {
+        const detail = Array.isArray(b.issues)
+          ? b.issues.map((i) => (i.path ? `${i.path}: ${i.message}` : i.message)).join('; ')
+          : null;
+        throw new Error(detail || b.error || `HTTP ${r.status}`);
+      }
       return b;
     }),
   );
