@@ -152,6 +152,27 @@ Then go to the `beacon2026-backend` service and click **Manual Deploy → Deploy
 The app will restart and, if no admin exists, create a new one. If one already exists,
 delete the user record from the database first via Render's database dashboard.
 
+**Render build fails with `COPY backend/ ./backend/: ... not found` (or similar for `shared/`)**
+This means the service was set up as a **Docker** environment instead of **Node**, most
+likely because it was created via Render's "New Web Service" wizard (which auto-detects
+[`backend/Dockerfile`](backend/Dockerfile) and defaults to Docker) rather than via
+**New → Blueprint** pointing at `render.yaml` (see Step 2 — this is the supported path
+and always creates a correctly-configured Node service). `backend/Dockerfile` is for local
+dev/E2E only and expects a repo-root build context; a wizard-created Docker service
+normally has its Root Directory set to `backend`, which breaks that Dockerfile's `COPY`
+paths.
+
+Render does not let you switch an existing service's environment (Docker ↔ Node) after
+creation. Two ways out, without needing to recreate the service and re-link the database:
+- In **Settings → Build & Deploy**, set **Dockerfile Path** to `backend/Dockerfile` and
+  **Docker Build Context Directory** to `.` (repo root) — this makes the existing Docker
+  service build correctly instead of switching it to Node.
+- Or recreate the service via **New → Blueprint** (the Step 2 path) if you're able to
+  re-link to the existing database (`beacon2_a89s`) cleanly — riskier, only do this if the
+  Docker-context fix above doesn't work.
+
+(This happened once, 2026-08-01, after renaming the Render service — see CHANGELOG.)
+
 ---
 
 ## Replacing the database (e.g. free tier expiry)

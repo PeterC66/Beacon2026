@@ -12,6 +12,20 @@ under the Unreleased headings below).
 
 ---
 
+## [Unreleased] — 2026-08-01
+
+### Fixed
+- **Render backend deploy failures after the rename** — the Render service had
+  ended up in **Docker** mode (auto-detected `backend/Dockerfile` via the "New
+  Web Service" wizard rather than `render.yaml` via "New → Blueprint") with a
+  build context that didn't match what that Dockerfile expects, breaking every
+  deploy (`COPY backend/ ./backend/: not found`). Fixed in Render's dashboard
+  by setting Dockerfile Path = `backend/Dockerfile` and Docker Build Context
+  Directory = `.`, without recreating the service or its database link. See
+  `DEPLOYMENT.md` → Troubleshooting and `KNOWN-ISSUES.md` → Render / Deployment.
+- Confirmed `DATABASE_URL` on Render holds the real connection string (not
+  just a copied label).
+
 ## [Unreleased] — 2026-07-31
 
 ### Fixed
