@@ -870,6 +870,7 @@
 | Delete-before-date | Built | — |
 | Clickable When → Audit Record detail | Built | — |
 | Clickable Record → entity view | Built | — |
+| Login / logout / session-timeout events | Built | Added 2026-08-01 — previously only failed-login, lockout, and password-change events were recorded |
 
 ---
 
