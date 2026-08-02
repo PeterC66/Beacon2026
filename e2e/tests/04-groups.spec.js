@@ -82,13 +82,13 @@ test.describe('Group tabs', () => {
     await page.waitForURL(/\/groups\/[^/]+$/);
   }
 
-  test('Schedule tab is visible and clickable', async ({ adminPage: page }) => {
+  test('Events tab is visible and clickable', async ({ adminPage: page }) => {
     await openGroup(page);
-    const scheduleTab = page.getByRole('tab', { name: /schedule/i }).first();
-    await expect(scheduleTab).toBeVisible();
-    await scheduleTab.click();
-    // Schedule panel should contain an "Add Events" section or similar
-    await expect(page.getByText(/schedule/i).first()).toBeVisible();
+    const eventsTab = page.getByRole('tab', { name: /events/i }).first();
+    await expect(eventsTab).toBeVisible();
+    await eventsTab.click();
+    // Events panel should contain an "Add Events" section
+    await expect(page.getByText(/add events/i).first()).toBeVisible();
   });
 
   test('Members tab is visible and clickable', async ({ adminPage: page }) => {
@@ -98,18 +98,18 @@ test.describe('Group tabs', () => {
     await membersTab.click();
   });
 
-  test('Ledger tab is visible and clickable', async ({ adminPage: page }) => {
+  test('Group Cash tab is visible and clickable', async ({ adminPage: page }) => {
     await openGroup(page);
-    const ledgerTab = page.getByRole('tab', { name: /ledger/i }).first();
-    await expect(ledgerTab).toBeVisible();
-    await ledgerTab.click();
+    const cashTab = page.getByRole('tab', { name: /group cash/i }).first();
+    await expect(cashTab).toBeVisible();
+    await cashTab.click();
     // Ledger panel loads
     await expect(page.getByText(/brought forward/i).first()).toBeVisible({ timeout: 6_000 });
   });
 
-  test('add a schedule event', async ({ adminPage: page }) => {
+  test('add an event', async ({ adminPage: page }) => {
     await openGroup(page);
-    await page.getByRole('tab', { name: /schedule/i }).first().click();
+    await page.getByRole('tab', { name: /events/i }).first().click();
 
     // Fill add-event form — native date input uses YYYY-MM-DD format
     const dateInput = page.locator('input[name="eventDate"]').first();

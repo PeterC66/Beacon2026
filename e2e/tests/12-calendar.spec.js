@@ -14,6 +14,9 @@ import { test, expect } from '../fixtures/admin.js';
 
 // ── Helper: SPA-navigate to a Home link ──────────────────────────────────
 
+// The Calendar page (route /calendar) renders under an "Events" heading
+// (renamed from "Calendar" in commit 8342f14, 2026-04-20) — the route/nav
+// link is still /calendar, only the on-page <h1> text changed.
 async function gotoHomeLink(page, href, headingText) {
   await page.evaluate(() => {
     const h = document.querySelector('a[href="/"]');
@@ -33,7 +36,7 @@ async function gotoHomeLink(page, href, headingText) {
 
 test.describe('Calendar', () => {
   test('page loads with heading and filter controls', async ({ adminPage: page }) => {
-    await gotoHomeLink(page, '/calendar', 'Calendar');
+    await gotoHomeLink(page, '/calendar', 'Events');
 
     // Filter radio buttons
     await expect(page.getByText('All').first()).toBeVisible();
@@ -44,7 +47,7 @@ test.describe('Calendar', () => {
   });
 
   test('Download PDF button appears when events exist', async ({ adminPage: page }) => {
-    await gotoHomeLink(page, '/calendar', 'Calendar');
+    await gotoHomeLink(page, '/calendar', 'Events');
 
     // Button only renders when events are loaded and non-empty.
     // In a fresh tenant there may be no events, so verify either
@@ -55,7 +58,7 @@ test.describe('Calendar', () => {
   });
 
   test('Show Detail checkbox is present exactly once', async ({ adminPage: page }) => {
-    await gotoHomeLink(page, '/calendar', 'Calendar');
+    await gotoHomeLink(page, '/calendar', 'Events');
 
     // Wait for the filter controls to render
     await expect(page.locator('input[type="date"][name="from"]')).toBeVisible();
@@ -66,7 +69,7 @@ test.describe('Calendar', () => {
   });
 
   test('"Other" filter mode shows event type dropdown', async ({ adminPage: page }) => {
-    await gotoHomeLink(page, '/calendar', 'Calendar');
+    await gotoHomeLink(page, '/calendar', 'Events');
 
     // Click the "other" radio button
     const otherRadio = page.locator('input[name="filter"][value="other"]');
@@ -87,7 +90,7 @@ test.describe('Calendar', () => {
   });
 
   test('Group/Team filter dropdown is present', async ({ adminPage: page }) => {
-    await gotoHomeLink(page, '/calendar', 'Calendar');
+    await gotoHomeLink(page, '/calendar', 'Events');
 
     // Wait for filter controls to render, then click the "group" radio
     const groupRadio = page.locator('input[name="filter"][value="group"]');

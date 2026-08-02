@@ -51,25 +51,25 @@ test.describe('Team tabs', () => {
     await expect(page.getByRole('heading', { name: TEAM_NAME })).toBeVisible({ timeout: 10_000 });
   }
 
-  test('Schedule tab is visible and clickable', async ({ adminPage: page }) => {
+  test('Events tab is visible and clickable', async ({ adminPage: page }) => {
     await openTeam(page);
-    const scheduleTab = page.getByRole('tab', { name: /schedule/i }).first();
-    await expect(scheduleTab).toBeVisible();
-    await scheduleTab.click();
-    await expect(page.getByText(/schedule/i).first()).toBeVisible();
+    const eventsTab = page.getByRole('tab', { name: /events/i }).first();
+    await expect(eventsTab).toBeVisible();
+    await eventsTab.click();
+    await expect(page.getByText(/add events/i).first()).toBeVisible();
   });
 
-  test('Ledger tab is visible and clickable', async ({ adminPage: page }) => {
+  test('Team Cash tab is visible and clickable', async ({ adminPage: page }) => {
     await openTeam(page);
-    const ledgerTab = page.getByRole('tab', { name: /ledger/i }).first();
-    await expect(ledgerTab).toBeVisible();
-    await ledgerTab.click();
+    const cashTab = page.getByRole('tab', { name: /team cash/i }).first();
+    await expect(cashTab).toBeVisible();
+    await cashTab.click();
     await expect(page.getByText(/brought forward/i).first()).toBeVisible({ timeout: 6_000 });
   });
 
-  test('add a schedule event to a team', async ({ adminPage: page }) => {
+  test('add an event to a team', async ({ adminPage: page }) => {
     await openTeam(page);
-    await page.getByRole('tab', { name: /schedule/i }).first().click();
+    await page.getByRole('tab', { name: /events/i }).first().click();
 
     const dateInput = page.locator('input[name="eventDate"]').first();
     await expect(dateInput).toBeVisible({ timeout: 5_000 });
