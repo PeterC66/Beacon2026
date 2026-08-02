@@ -7,8 +7,12 @@ Format: `## [version] — YYYY-MM-DD` with bullet points per change.
 heading for the next release sit under dated `## [Unreleased]` headings; released
 versions follow as `## [x.y.z] — date`. Entries for **0.9.7 and earlier** live in
 [`docs/history/CHANGELOG-archive.md`](docs/history/CHANGELOG-archive.md). The most
-recent released version is **[0.10.8](#0108--2026-04-21)** (later work is staged
-under the Unreleased headings below).
+recent released version is **[0.12.2](#0122--2026-08-02)** — check
+`backend/package.json` / `frontend/package.json` for the authoritative current
+version, since not every `## [Unreleased]` heading below has been retitled with
+its release version yet (several date from 2026-04-28 through 2026-07-31, covering
+the 0.11.0–0.12.0 release cycles): their content did ship, just under a heading
+that still says "Unreleased".
 
 ---
 
@@ -28,6 +32,8 @@ under the Unreleased headings below).
   showing them greyed out. `frontend/src/pages/Home.jsx`'s `visibleSections`
   filter now drops any item without an accessible route, matching how
   feature-toggled items were already hidden.
+
+## [0.12.1] — 2026-08-01
 
 ### Changed
 - **Sign-in page background swapped for a day/night pair.** The lighthouse
