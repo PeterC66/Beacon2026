@@ -7,7 +7,7 @@ Format: `## [version] — YYYY-MM-DD` with bullet points per change.
 heading for the next release sit under dated `## [Unreleased]` headings; released
 versions follow as `## [x.y.z] — date`. Entries for **0.9.7 and earlier** live in
 [`docs/history/CHANGELOG-archive.md`](docs/history/CHANGELOG-archive.md). The most
-recent released version is **[0.12.2](#0122--2026-08-02)** — check
+recent released version is **[0.12.3](#0123--2026-08-02)** — check
 `backend/package.json` / `frontend/package.json` for the authoritative current
 version, since not every `## [Unreleased]` heading below has been retitled with
 its release version yet (several date from 2026-04-28 through 2026-07-31, covering
@@ -16,7 +16,15 @@ that still says "Unreleased".
 
 ---
 
-## [Unreleased] — 2026-08-02
+## [0.12.3] — 2026-08-02
+
+### Added
+- **"+ Add Event" button on the Events page.** Adding a non-group event
+  (an open meeting or other general event) previously required knowing to
+  select the "open meetings and other" filter radio first — nothing on the
+  page hinted that was also how you add one. A persistent button in the
+  page header now switches to that mode and scrolls straight to the
+  existing "Add Events" form. `frontend/src/pages/calendar/Calendar.jsx`.
 
 ### Fixed
 - **Forced password change was still logging the user out, even after

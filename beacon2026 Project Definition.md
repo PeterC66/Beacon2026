@@ -1,7 +1,7 @@
 # beacon2026 — Project Definition (last reviewed 2026-06-14)
 
 > **Note:** This document describes the *current* state of the project as of
-> 2026-06-14 (version 0.12.2). It is the canonical inventory of modules, routes,
+> 2026-06-14 (version 0.12.3). It is the canonical inventory of modules, routes,
 > and pages; for a contributor-oriented repo map and quickstart see
 > [`README.md`](README.md). Read it alongside `CLAUDE.md`, `CLAUDE-STANDARDS.md`,
 > and `CLAUDE-REFERENCE.md` in the repository root, which contain coding
@@ -26,7 +26,7 @@ beacon2026 is a ground-up rebuild with these goals:
 
 ---
 
-## What has been built (as of version 0.12.2)
+## What has been built (as of version 0.12.3)
 
 ### Infrastructure and platform
 - Full multi-tenant architecture (PostgreSQL schema-per-tenant)
