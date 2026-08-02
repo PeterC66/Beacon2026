@@ -75,7 +75,7 @@ export async function isSessionInvalidated(tenantSlug, userId, tokenIssuedAt) {
     const value = await client.get(key);
     if (!value) return false;
     const invalidatedAt = parseInt(value, 10);
-    return tokenIssuedAt * 1000 < invalidatedAt;
+    return tokenIssuedAt < invalidatedSeconds(invalidatedAt);
   }
   if (USE_REDIS) return false;
   const [row] = await tenantQuery(
@@ -84,7 +84,24 @@ export async function isSessionInvalidated(tenantSlug, userId, tokenIssuedAt) {
     [userId],
   );
   if (!row) return false;
-  return tokenIssuedAt * 1000 < new Date(row.invalidated_at).getTime();
+  return tokenIssuedAt < invalidatedSeconds(new Date(row.invalidated_at).getTime());
+}
+
+// JWT `iat` is second-precision (jsonwebtoken floors it), but the
+// invalidation marker is stored with millisecond precision. Comparing them
+// directly (`tokenIssuedAt * 1000 < invalidatedAtMs`) means a token minted
+// milliseconds *after* invalidation — e.g. the fresh access token a
+// password-change route reissues for the caller's own session, moments
+// after calling invalidateUserSessions() — can land in the very same
+// second as the marker (its floored `iat` equals the marker's floored
+// second) and still get wrongly flagged as stale. Flooring the marker to
+// whole seconds before comparing removes that race: a token issued in the
+// same second as the marker is no longer treated as predating it. This
+// only widens the "still valid" window by under a second at the boundary —
+// an unavoidable consequence of `iat` losing sub-second precision, not a
+// meaningful weakening of the invalidation guarantee.
+function invalidatedSeconds(invalidatedAtMs) {
+  return Math.floor(invalidatedAtMs / 1000);
 }
 
 // Remove every session-invalidation mark for a tenant. Used after a restore,

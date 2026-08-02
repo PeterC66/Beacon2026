@@ -59,6 +59,21 @@ describe('redis.js Postgres fallback (Redis disabled)', () => {
     expect(result).toBe(false);
   });
 
+  it('isSessionInvalidated returns false for a token issued in the same second as the marker', async () => {
+    // Regression test: a self-service route (e.g. change-password) calls
+    // invalidateUserSessions() and then immediately mints a fresh token for
+    // the caller's own session. JWT `iat` is second-precision, so that fresh
+    // token can land in the exact same second as the (millisecond-precision)
+    // invalidation marker. It must not be treated as predating the marker,
+    // or the caller is logged out by their own password change.
+    const invalidatedAt = new Date(2_000_500); // second 2000, 500ms in
+    const tokenIssuedAt = 2_000; // seconds — same second, issued after the marker
+    tenantQuery.mockResolvedValueOnce([{ invalidated_at: invalidatedAt }]);
+
+    const result = await isSessionInvalidated(SLUG, SUBJECT, tokenIssuedAt);
+    expect(result).toBe(false);
+  });
+
   it('purgeTenantInvalidations clears the tenant fallback rows', async () => {
     tenantQuery.mockResolvedValueOnce([]);
     await purgeTenantInvalidations(SLUG);
