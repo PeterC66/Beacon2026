@@ -22,7 +22,7 @@
 //    ✓ Add-transaction link is present
 //    ✓ Create transaction linked to event
 //  Schedule View link:
-//    ✓ View link in group schedule opens EventRecord
+//    ✓ Date link in group Events tab opens EventRecord
 //  Cleanup:
 //    ✓ Delete the test member
 //    ✓ Delete the test group
@@ -385,19 +385,21 @@ test.describe('Event Financials', () => {
 
 // ── Schedule View Link ──────────────────────────────────────────────────
 
-test.describe('Events tab View link', () => {
-  test('View link in group Events tab opens EventRecord', async ({ adminPage: page }) => {
+test.describe('Events tab date link', () => {
+  test('date link in group Events tab opens EventRecord', async ({ adminPage: page }) => {
     await openGroup(page);
     await page.getByRole('tab', { name: /events/i }).first().click();
 
     // Wait for the events list to load with our event
     await expect(page.getByText(EVENT_TOPIC)).toBeVisible({ timeout: 6_000 });
 
-    // Click the "View" link for the event
+    // The event's date/time cell is itself the link to EventRecord — there
+    // is no separate "View" link/button (Schedule.jsx wraps the date text
+    // in a <Link to={`/calendar/events/${ev.id}`}>).
     const eventRow = page.getByRole('row').filter({ hasText: EVENT_TOPIC });
-    const viewLink = eventRow.getByRole('link', { name: 'View' });
-    await expect(viewLink).toBeVisible();
-    await viewLink.click();
+    const dateLink = eventRow.locator('a[href^="/calendar/events/"]');
+    await expect(dateLink.first()).toBeVisible();
+    await dateLink.first().click();
 
     // Should navigate to EventRecord
     await expect(page).toHaveURL(/\/calendar\/events\/[^/]+$/);
