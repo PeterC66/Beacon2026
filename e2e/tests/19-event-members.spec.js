@@ -37,8 +37,20 @@ const GROUP_NAME  = 'E2EEvtGroup';
 const MEMBER_SUR  = 'E2EEvtMbr';
 const MEMBER_FORE = 'Eve';
 const EVENT_TOPIC = 'E2E Event Test';
-const EVENT_DATE  = '2026-06-15';
 const TXN_PAYEE   = 'E2EEvtPayee';
+
+// The Calendar page only shows events within its default filter window
+// (today .. today+3 months — see frontend/src/pages/calendar/calendarUtils.js).
+// A hardcoded past date would silently drop out of that window as time
+// passes, so compute a date 14 days out instead.
+const eventDateObj = new Date();
+eventDateObj.setDate(eventDateObj.getDate() + 14);
+const EVENT_DATE      = eventDateObj.toISOString().slice(0, 10); // YYYY-MM-DD, for date inputs
+const EVENT_DATE_DISP = [
+  String(eventDateObj.getDate()).padStart(2, '0'),
+  String(eventDateObj.getMonth() + 1).padStart(2, '0'),
+  eventDateObj.getFullYear(),
+].join('/'); // DD/MM/YYYY, for display assertions
 
 // ── Helpers ─────────────────────────────────────────────────────────────
 
@@ -194,7 +206,7 @@ test.describe('EventRecord navigation and details', () => {
     await gotoEventViaCalendar(page);
 
     // Date in DD/MM/YYYY format
-    await expect(page.getByText('15/06/2026', { exact: true })).toBeVisible();
+    await expect(page.getByText(EVENT_DATE_DISP, { exact: true })).toBeVisible();
     // Time
     await expect(page.getByText('10:00', { exact: true })).toBeVisible();
     // Group name as a link
