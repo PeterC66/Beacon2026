@@ -42,6 +42,9 @@ const TXN_PAYEE   = 'E2EEvtPayee';
 
 // ── Helpers ─────────────────────────────────────────────────────────────
 
+// Note: the Calendar page (route /calendar) renders under an "Events"
+// heading, and the Group "Schedule" tab is now labelled "Events" — see
+// e2e/tests/12-calendar.spec.js and 04-groups.spec.js for the same rename.
 async function gotoHomeLink(page, href, headingText) {
   await page.evaluate(() => {
     const h = document.querySelector('a[href="/"]');
@@ -59,7 +62,7 @@ async function gotoHomeLink(page, href, headingText) {
 
 /** Navigate to Calendar, find the test event, click into EventRecord. */
 async function gotoEventViaCalendar(page) {
-  await gotoHomeLink(page, '/calendar', 'Calendar');
+  await gotoHomeLink(page, '/calendar', 'Events');
   // Wait for events to load — find the row containing our topic
   const eventRow = page.getByRole('row').filter({ hasText: EVENT_TOPIC });
   await expect(eventRow.first()).toBeVisible({ timeout: 15_000 });
@@ -107,9 +110,9 @@ test.describe('Event members setup', () => {
     await expect(page.getByRole('heading', { name: GROUP_NAME })).toBeVisible({ timeout: 10_000 });
   });
 
-  test('add a schedule event to the group', async ({ adminPage: page }) => {
+  test('add an event to the group', async ({ adminPage: page }) => {
     await openGroup(page);
-    await page.getByRole('tab', { name: /schedule/i }).first().click();
+    await page.getByRole('tab', { name: /events/i }).first().click();
 
     const dateInput = page.locator('input[name="eventDate"]').first();
     await expect(dateInput).toBeVisible({ timeout: 5_000 });
@@ -370,12 +373,12 @@ test.describe('Event Financials', () => {
 
 // ── Schedule View Link ──────────────────────────────────────────────────
 
-test.describe('Schedule View link', () => {
-  test('View link in group schedule opens EventRecord', async ({ adminPage: page }) => {
+test.describe('Events tab View link', () => {
+  test('View link in group Events tab opens EventRecord', async ({ adminPage: page }) => {
     await openGroup(page);
-    await page.getByRole('tab', { name: /schedule/i }).first().click();
+    await page.getByRole('tab', { name: /events/i }).first().click();
 
-    // Wait for the schedule to load with our event
+    // Wait for the events list to load with our event
     await expect(page.getByText(EVENT_TOPIC)).toBeVisible({ timeout: 6_000 });
 
     // Click the "View" link for the event
