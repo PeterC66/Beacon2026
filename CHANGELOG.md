@@ -12,7 +12,7 @@ under the Unreleased headings below).
 
 ---
 
-## [Unreleased] — 2026-08-02
+## [0.12.2] — 2026-08-02
 
 ### Fixed
 - **Forced password change (restore / new user set-up) no longer logs the
