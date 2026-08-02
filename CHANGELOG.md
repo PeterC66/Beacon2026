@@ -16,6 +16,24 @@ that still says "Unreleased".
 
 ---
 
+## [Unreleased] — 2026-08-02
+
+### Fixed
+- **Forced password change was still logging the user out, even after
+  0.12.2.** That fix reissued a fresh access token immediately after
+  revoking the caller's sessions, but the two calls landed in the same
+  request and often the same millisecond — and `isSessionInvalidated()`
+  (`backend/src/utils/redis.js`) compared the token's second-precision
+  `iat` against a millisecond-precision invalidation marker, so the brand
+  new token could still land in the same second as the marker and get
+  flagged as predating it. Fixed by flooring the marker to whole seconds
+  before comparing; see `CLAUDE-REFERENCE.md` → "Password-change routes
+  must reissue the refresh cookie" for the full race-condition writeup.
+
+### Changed
+- **Sign-in background dark period narrowed to 01:00–05:00 local time**
+  (previously night ran 18:00–06:00). `frontend/src/utils/backgroundTime.js`.
+
 ## [0.12.2] — 2026-08-02
 
 ### Fixed

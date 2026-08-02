@@ -150,6 +150,26 @@ change) so the in-memory token is replaced before anything else fires. Fixed
 2026-08-02 — previously only the forced-change flow visibly hit this, since the
 regular change-password screen doesn't navigate anywhere afterward.
 
+That still wasn't the whole story: `issueAccessToken()` is called *immediately*
+after `invalidateUserSessions()`, often within the same millisecond. JWT `iat`
+is second-precision (`jsonwebtoken` floors `Date.now()/1000`), but the
+Redis/Postgres invalidation marker is stored with millisecond precision
+(`Date.now()`). `isSessionInvalidated()` (`utils/redis.js`) originally compared
+`tokenIssuedAt * 1000 < invalidatedAtMs` — so a brand-new token minted a few ms
+after the marker could still land in the *same second* as the marker and get
+flagged as predating it, 401ing on its very first use and forcing a real
+logout (the retry-once transparent-refresh in `core.js` doesn't save you: the
+refreshed token faces the identical same-second race). Fixed 2026-08-02 by
+flooring the marker to whole seconds before comparing
+(`invalidatedSeconds()` in `utils/redis.js`) — a token issued in the same
+second as the marker is no longer treated as predating it. This is the kind
+of bug that's easy to miss because it's timing-dependent: it reproduces
+reliably in production (same-request calls land in the same second constantly)
+but any test asserting it with a realistic multi-second gap between marker and
+token (as the original `redis.test.js` cases did) won't catch it — the
+regression test added alongside the fix uses a token issued in the *same*
+second as the marker specifically to exercise the race.
+
 ### Audit events for login/logout/timeout
 
 `loginUser()` success path, `POST /auth/logout`, and a dedicated
