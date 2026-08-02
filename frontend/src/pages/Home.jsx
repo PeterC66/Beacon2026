@@ -368,12 +368,14 @@ export default function Home() {
     },
   ];
 
-  // Filter items by feature toggles, then filter out empty sections
+  // Filter items by feature toggle and privilege, then filter out empty sections.
+  // Items the user lacks the privilege for (item.to === null) are omitted
+  // entirely rather than shown disabled/greyed out.
   const visibleSections = sections
     .filter((s) => !s.feature || hasFeature(s.feature))
     .map((s) => ({
       ...s,
-      items: s.items.filter((item) => !item.f || hasFeature(item.f)),
+      items: s.items.filter((item) => (!item.f || hasFeature(item.f)) && item.to),
     }))
     .filter((s) => s.items.length > 0);
 
@@ -473,15 +475,9 @@ export default function Home() {
               <ul className="divide-y divide-slate-100">
                 {section.items.map((item) => (
                   <li key={item.label} className="px-4 py-2.5 text-sm">
-                    {item.to ? (
-                      <Link to={item.to} title={item.tip} className="text-blue-700 hover:underline">
-                        {item.label}
-                      </Link>
-                    ) : (
-                      <span title={item.tip} className="text-slate-400">
-                        {item.label}
-                      </span>
-                    )}
+                    <Link to={item.to} title={item.tip} className="text-blue-700 hover:underline">
+                      {item.label}
+                    </Link>
                     {item.isNew && <NewBadge />}
                   </li>
                 ))}
@@ -514,15 +510,9 @@ export default function Home() {
                     key={item.label}
                     className="px-4 py-1 text-sm border-b border-slate-200 last:border-b-0 whitespace-nowrap"
                   >
-                    {item.to ? (
-                      <Link to={item.to} title={item.tip} className="text-blue-700 hover:underline">
-                        {item.label}
-                      </Link>
-                    ) : (
-                      <span title={item.tip} className="text-slate-400">
-                        {item.label}
-                      </span>
-                    )}
+                    <Link to={item.to} title={item.tip} className="text-blue-700 hover:underline">
+                      {item.label}
+                    </Link>
                     {item.isNew && <NewBadge />}
                   </li>
                 ))}

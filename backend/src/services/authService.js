@@ -248,6 +248,37 @@ export async function issueRefreshToken(tenantSlug, userId) {
   return refreshToken;
 }
 
+/**
+ * Sign a fresh access token reflecting the user's current privileges,
+ * outside of the normal login/refresh flow (e.g. after a password change
+ * so the caller's in-memory token is replaced instead of only their
+ * refresh cookie, avoiding a round-trip through the 401-refresh cycle).
+ *
+ * @param {string} tenantSlug
+ * @param {string} userId
+ * @returns {Promise<string>} a signed access token
+ */
+export async function issueAccessToken(tenantSlug, userId) {
+  const [user] = await tenantQuery(
+    tenantSlug,
+    `SELECT id, name, is_site_admin FROM users WHERE id = $1`,
+    [userId],
+  );
+  if (!user) throw AppError('User not found.', 404);
+
+  const privileges = user.is_site_admin
+    ? await computeAllPrivileges(tenantSlug)
+    : await computePrivileges(tenantSlug, user.id);
+
+  return signAccessToken({
+    userId: user.id,
+    tenantSlug,
+    name: user.name,
+    privileges,
+    isSiteAdmin: user.is_site_admin || false,
+  });
+}
+
 // ─── Logout ───────────────────────────────────────────────────────────────
 
 export async function logoutUser(tenantSlug, refreshToken) {

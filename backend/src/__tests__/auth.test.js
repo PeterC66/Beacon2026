@@ -31,6 +31,7 @@ vi.mock('../services/authService.js', () => ({
   refreshTokens: vi.fn(),
   loginSysAdmin: vi.fn(),
   issueRefreshToken: vi.fn().mockResolvedValue('new.refresh.token'),
+  issueAccessToken: vi.fn().mockResolvedValue('new.access.token'),
 }));
 
 const { default: app } = await import('../app.js');
@@ -217,6 +218,7 @@ describe('POST /auth/change-password', () => {
       .send(validBody);
 
     expect(res.status).toBe(200);
+    expect(res.body.accessToken).toBe('new.access.token');
 
     const sqlCalls = tenantQuery.mock.calls.map((c) => c[1]);
     expect(sqlCalls.some((s) => /UPDATE refresh_tokens SET revoked = true/.test(s))).toBe(true);
@@ -289,6 +291,7 @@ describe('POST /auth/force-change-password', () => {
       .send(validBody);
 
     expect(res.status).toBe(200);
+    expect(res.body.accessToken).toBe('new.access.token');
     const sqlCalls = tenantQuery.mock.calls.map((c) => c[1]);
     expect(
       sqlCalls.some((s) =>

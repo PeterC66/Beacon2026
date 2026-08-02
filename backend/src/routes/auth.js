@@ -10,6 +10,7 @@ import {
   refreshTokens,
   loginSysAdmin,
   issueRefreshToken,
+  issueAccessToken,
 } from '../services/authService.js';
 import { requireAuth } from '../middleware/auth.js';
 import { tenantQuery, prisma } from '../utils/db.js';
@@ -226,6 +227,11 @@ router.post('/change-password', requireAuth, async (req, res, next) => {
     const newRefreshToken = await issueRefreshToken(slug, user.id);
     res.cookie(COOKIE_NAME, newRefreshToken, cookieOptions);
 
+    // Also hand back a fresh access token so the caller can replace its
+    // in-memory token immediately, rather than relying on the next 401 to
+    // trigger a refresh (which the invalidation above would otherwise force).
+    const newAccessToken = await issueAccessToken(slug, user.id);
+
     logAudit(slug, {
       userId: req.user.userId,
       userName: req.user.name,
@@ -234,7 +240,7 @@ router.post('/change-password', requireAuth, async (req, res, next) => {
       entityId: user.id,
       entityName: req.user.name,
     });
-    res.json({ message: 'Password changed.' });
+    res.json({ message: 'Password changed.', accessToken: newAccessToken });
   } catch (err) {
     next(err);
   }
@@ -443,6 +449,11 @@ router.post('/force-change-password', requireAuth, async (req, res, next) => {
     const newRefreshToken = await issueRefreshToken(slug, req.user.userId);
     res.cookie(COOKIE_NAME, newRefreshToken, cookieOptions);
 
+    // Also hand back a fresh access token so the caller can replace its
+    // in-memory token immediately — matches /auth/change-password behaviour
+    // so a forced change (restore / new user) doesn't force a re-login either.
+    const newAccessToken = await issueAccessToken(slug, req.user.userId);
+
     logAudit(slug, {
       userId: req.user.userId,
       userName: req.user.name,
@@ -451,7 +462,7 @@ router.post('/force-change-password', requireAuth, async (req, res, next) => {
       entityId: req.user.userId,
       entityName: req.user.name,
     });
-    res.json({ message: 'Password changed successfully.' });
+    res.json({ message: 'Password changed successfully.', accessToken: newAccessToken });
   } catch (err) {
     next(err);
   }
