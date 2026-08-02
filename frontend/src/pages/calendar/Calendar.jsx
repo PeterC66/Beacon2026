@@ -1,7 +1,7 @@
 // beacon2026/frontend/src/pages/calendar/Calendar.jsx
 // Calendar — chronological list of all group/team events + non-group events.
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import {
   calendar as calendarApi,
@@ -70,6 +70,8 @@ export default function Calendar() {
   const [addForm, setAddForm] = useState(EMPTY_EV);
   const [addError, setAddError] = useState(null);
   const [addSaving, setAddSaving] = useState(false);
+  const [scrollToAddForm, setScrollToAddForm] = useState(false);
+  const addFormRef = useRef(null);
 
   const canManage = can('meetings', 'create') || can('meetings', 'change');
   const canViewMeetings = can('meetings', 'view');
@@ -164,6 +166,22 @@ export default function Calendar() {
       setEventTypeId(eventTypeList[0].id);
     }
   }, [filterMode, eventTypeList]);
+
+  // Scroll the "Add Events" form into view after the "Add Event" header button is used
+  useEffect(() => {
+    if (scrollToAddForm && filterMode === 'other' && eventTypeId && addFormRef.current) {
+      addFormRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      setScrollToAddForm(false);
+    }
+  }, [scrollToAddForm, filterMode, eventTypeId]);
+
+  function handleAddEventClick() {
+    setFilterMode('other');
+    clearMember();
+    setVenueId('');
+    setGroupId('');
+    setScrollToAddForm(true);
+  }
 
   function setAdd(field, value) {
     setAddForm((prev) => ({ ...prev, [field]: value }));
@@ -297,7 +315,18 @@ export default function Calendar() {
       <NavBar links={navLinks} />
 
       <div className="max-w-6xl mx-auto px-4 mt-4 space-y-4">
-        <h1 className="text-xl font-bold text-center">Events</h1>
+        <div className="relative">
+          <h1 className="text-xl font-bold text-center">Events</h1>
+          {canManage && canViewMeetings && (
+            <button
+              type="button"
+              onClick={handleAddEventClick}
+              className="absolute right-0 top-0 bg-blue-600 hover:bg-blue-700 text-white rounded px-4 py-1.5 text-sm font-medium transition-colors"
+            >
+              + Add Event
+            </button>
+          )}
+        </div>
 
         {/* Filter controls */}
         <div className="bg-white/90 rounded-lg shadow-sm p-4 space-y-3">
@@ -711,7 +740,7 @@ export default function Calendar() {
 
   function renderAddForm() {
     return (
-      <div className="bg-white/90 rounded-lg shadow-sm p-4">
+      <div ref={addFormRef} className="bg-white/90 rounded-lg shadow-sm p-4">
         <h3 className="text-sm font-semibold text-slate-700 mb-3">Add Events</h3>
         {addError && <p className="text-red-600 text-sm mb-2">{addError}</p>}
         <form onSubmit={handleAdd} noValidate className="space-y-3">
