@@ -133,6 +133,23 @@ force-logs the user out on their very next action. This was a real bug, fixed
 "sign + store + return a refresh token outside the normal login/refresh
 flow" — reuse it rather than duplicating the sign/hash/insert sequence again.
 
+Reissuing the refresh cookie isn't quite enough on its own: `invalidateUserSessions`
+also marks the **access token already in the client's memory** as stale (checked
+by `requireAuth` via `isSessionInvalidated`), so the very next authenticated
+request 401s and only recovers once `core.js`'s transparent-refresh-on-401 path
+completes. That's normally invisible, but a route that navigates straight to a
+page that fires its own authenticated request on mount (e.g. `ChangePassword.jsx`
+→ Home → `getHomeInfo()`) can expose it as a visible flash/failure, and it's one
+more round trip than necessary either way. Both password-change routes now also
+call `issueAccessToken(tenantSlug, userId)` (`authService.js` — recomputes
+privileges and signs a fresh access token, same shape as login/refresh) and
+return it as `accessToken` in the JSON body; the frontend calls
+`setAccessToken()` (`frontend/src/lib/api/core.js`) immediately on success in
+both `ChangePassword.jsx` (forced change) and `PersonalPreferences.jsx` (regular
+change) so the in-memory token is replaced before anything else fires. Fixed
+2026-08-02 — previously only the forced-change flow visibly hit this, since the
+regular change-password screen doesn't navigate anywhere afterward.
+
 ### Audit events for login/logout/timeout
 
 `loginUser()` success path, `POST /auth/logout`, and a dedicated
@@ -1970,6 +1987,11 @@ are treated as off. If you add a new sub-feature, add it to **both** maps.
 - `PF` shorthand = `ProtectedRoute` + `FeatureRoute`
 - Home.jsx items have optional `f` property for feature key filtering
 - Home.jsx sections have optional `feature` property for master toggle filtering
+- Home.jsx items are also filtered on privilege (`item.to` is `null` when `can()`
+  is false) — `visibleSections` drops any item without a route entirely, so
+  menu options the user has no privilege for are omitted, not shown greyed
+  out. Fixed 2026-08-02 (see CHANGELOG); previously the item still rendered
+  as a disabled `<span>`.
 - Group/Team record tabs use `hasFeature()` for Schedule (`events`) and Ledger (`groupLedger`)
 
 ### Backend patterns

@@ -16,6 +16,12 @@ export function clearAuth() {
   tenantSlug = null;
 }
 
+// Replace just the access token (e.g. after a password change), keeping
+// the current tenant slug — unlike setAuth() this doesn't imply a fresh login.
+export function setAccessToken(token) {
+  accessToken = token;
+}
+
 export function getAccessToken() {
   return accessToken;
 }

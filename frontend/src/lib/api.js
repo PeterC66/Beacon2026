@@ -10,6 +10,7 @@ import { request, requestBlob, requestMultipart, fetchAuthBlob } from './api/cor
 export {
   setAuth,
   clearAuth,
+  setAccessToken,
   getAccessToken,
   restoreSession,
   ApiError,

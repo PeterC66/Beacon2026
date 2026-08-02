@@ -12,7 +12,22 @@ under the Unreleased headings below).
 
 ---
 
-## [Unreleased] — 2026-08-01
+## [Unreleased] — 2026-08-02
+
+### Fixed
+- **Forced password change (restore / new user set-up) no longer logs the
+  user out.** `/auth/change-password` and `/auth/force-change-password` both
+  revoke the caller's other sessions, but only the regular change flow kept
+  the current session alive — the forced-change screen navigated straight to
+  Home with the now-stale in-memory access token, surfacing as an unwanted
+  re-login. Both endpoints now also return a freshly-signed access token in
+  the response, which the frontend stores immediately
+  (`frontend/src/lib/api/core.js` → `setAccessToken`), so neither flow forces
+  a re-login.
+- **Home menu now hides options the user has no privilege for**, instead of
+  showing them greyed out. `frontend/src/pages/Home.jsx`'s `visibleSections`
+  filter now drops any item without an accessible route, matching how
+  feature-toggled items were already hidden.
 
 ### Changed
 - **Sign-in page background swapped for a day/night pair.** The lighthouse

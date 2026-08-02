@@ -2,7 +2,7 @@
 // Personal preferences — doc 9.1
 
 import { useState, useEffect } from 'react';
-import { auth as authApi } from '../../lib/api.js';
+import { auth as authApi, setAccessToken } from '../../lib/api.js';
 import { useAuth } from '../../context/AuthContext.jsx';
 import NavBar from '../../components/NavBar.jsx';
 import PageHeader from '../../components/PageHeader.jsx';
@@ -112,7 +112,8 @@ export default function PersonalPreferences() {
     setPwMsg(null);
     setPwErr({});
     try {
-      await authApi.changePassword(pwForm.current, pwForm.newPw);
+      const result = await authApi.changePassword(pwForm.current, pwForm.newPw);
+      if (result?.accessToken) setAccessToken(result.accessToken);
       markClean();
       setPwMsg({ type: 'success', text: 'Password changed successfully.' });
       setPwForm({ current: '', newPw: '', confirm: '' });

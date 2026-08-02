@@ -43,7 +43,7 @@
 | Documents link | Built | Links to prospective Beacon users documentation |
 | System-wide message | Built | Editable by system admin from System Dashboard; displayed on all tenants' Home pages |
 | Home page notice (tenant message) | Built | Uses `home_page_notice` system message with `#U3ANAME` substitution |
-| **beacon2026 extra:** Privilege-gated cards | beacon2026 extra | Home page cards are greyed out if user lacks privileges (rather than hidden) |
+| **beacon2026 extra:** Privilege-gated cards | beacon2026 extra | Home page cards a user lacks privileges for are omitted entirely (changed 2026-08-02 — previously shown greyed out) |
 
 ---
 
@@ -55,6 +55,7 @@
 | Password requirements | Built | Min 10 chars, no spaces, upper+lower+number |
 | Security Q&A setup | Built | Required during forced password change |
 | Blocks navigation until completed | Built | — |
+| Doesn't force a re-login afterward | Built | Matches the regular change-password flow (fixed 2026-08-02) |
 
 ---
 

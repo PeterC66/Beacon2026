@@ -5,7 +5,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext.jsx';
-import { auth as authApi } from '../lib/api.js';
+import { auth as authApi, setAccessToken } from '../lib/api.js';
 import BeaconLogo from '../components/BeaconLogo.jsx';
 import FormError from '../components/FormError.jsx';
 
@@ -64,7 +64,12 @@ export default function ChangePassword() {
     setApiError(null);
     setErrors({});
     try {
-      await authApi.forceChangePassword(form.newPassword, form.question.trim(), form.answer.trim());
+      const result = await authApi.forceChangePassword(
+        form.newPassword,
+        form.question.trim(),
+        form.answer.trim(),
+      );
+      if (result?.accessToken) setAccessToken(result.accessToken);
       clearMustChangePassword();
       navigate('/');
     } catch (err) {
