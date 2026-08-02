@@ -98,7 +98,10 @@ async function gotoEventMembersTab(page) {
 async function gotoEventFinancialsTab(page) {
   await gotoEventViaCalendar(page);
   await page.getByRole('tab', { name: /financials/i }).first().click();
-  await page.getByText(/income/i).first().waitFor({ timeout: 10_000 });
+  // 20s: the financials fetch runs after a fresh calendar->event navigation
+  // (itself two round-trips), and has been observed to occasionally exceed
+  // 10s under CI load without indicating an actual app problem.
+  await page.getByText(/income/i).first().waitFor({ timeout: 20_000 });
 }
 
 /** Open the test group record from the group list. */
