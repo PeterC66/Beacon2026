@@ -137,6 +137,40 @@ Defining a React component inside another component causes remount on every rend
 The migration system auto-seeds privileges on every startup. (This process is also
 documented for human contributors in `CONTRIBUTING.md` → "New pages & privileges".)
 
+### Gate access with privileges, not hard-coded role/flag checks
+
+**Default to a privilege, granted by default to the appropriate role(s) —
+never hard-code `req.user.isSiteAdmin` or a role-name string as the actual
+access check for a new feature.** A privilege is inspectable (Roles and
+Privileges screen), independently grantable to a custom role later, and
+consistent with how every other feature in the app is gated. A hard-coded
+check bypasses all of that silently.
+
+- **Tenant-wide "manage everything" access** for a resource → a normal
+  `resource:action` privilege granted to **Administration** by default
+  (`defaultRoles.js`), exactly like any other privilege — not an
+  `isSiteAdmin` check. (Standard Emails/Letters ownership, added
+  2026-08-03, uses this: `email_standard_messages_all` /
+  `letters_standard_messages_all`, granted to Administration.)
+- **Access scoped to "groups/teams this specific user leads"** → the
+  `*_as_leader` privilege pattern already established for the group/team
+  Ledger tab (`backend/src/routes/groups/ledger.js` `hasLedgerAccess`):
+  grant the `_as_leader` privilege to the **Group Leaders** / **Team
+  Leaders** roles by default, then check it *plus* a runtime lookup
+  (`users.member_id` → `group_members.is_leader` → the specific
+  `group_id` in question) — never just the privilege alone, since the
+  privilege only proves the role, not leadership of *that* group.
+
+**The one existing exception is SQL Reports**
+(`backend/src/routes/reports.js`, `requireSiteAdmin`): creating/editing/
+deleting saved reports and running ad-hoc SQL are hard-gated on
+`req.user.isSiteAdmin` rather than a delegable privilege, because the
+person doing it is writing raw SQL against the tenant's own database — a
+single mistake or a compromised low-privilege account could expose the
+whole tenant. **Do not add another `isSiteAdmin`-gated feature without
+asking the user first** — it's a deliberate, narrow carve-out, not a
+precedent to extend by default.
+
 ---
 
 ## Reference documentation
