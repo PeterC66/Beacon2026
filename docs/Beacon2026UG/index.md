@@ -101,6 +101,7 @@ their u3a using beacon2026.
 - [62. u3a Officers](62-officers.md)
 - [63. Data Export and Backup](63-data-export-backup.md)
 - [64. Utilities](64-utilities.md)
+- [65. SQL Reports](65-sql-reports.md)
 
 ---
 

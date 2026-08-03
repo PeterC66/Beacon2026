@@ -1087,6 +1087,7 @@ These are features or architectural aspects of beacon2026 that have no counterpa
 | **Pending transactions** | Per-account config (disabled/optional/by_type); excluded from running balance and statements |
 | **Gift Aid log** | Date-filtered view of Gift Aid consent given/withdrawn; member filter |
 | **Validate member data** | Comprehensive data quality tool checking all members for issues; inline fix |
+| **SQL reports** | Library of saved parameterised queries plus a site-admin-only ad-hoc SQL editor; read-only, capped rows/time; documented in UG [Section 65](Beacon2026UG/65-sql-reports.md) |
 | **Context-sensitive help** | HelpWidget with Zendesk integration; route-mapped help links |
 | **CI/CD** | GitHub Actions runs backend + frontend tests on every push; Playwright E2E against staging |
 | **Data restore from Beacon format** | Full restore supports both beacon2026 and original Beacon data formats |

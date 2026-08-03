@@ -16,6 +16,26 @@ that still says "Unreleased".
 
 ---
 
+## [Unreleased] — 2026-08-03
+
+### Added
+- **User guide chapter for SQL Reports.** The feature existed and was
+  menu-accessible but had no end-user documentation. New
+  `docs/Beacon2026UG/65-sql-reports.md` covers who can view/run vs.
+  create/edit/delete saved reports, the ad-hoc SQL editor, and the
+  read-only/row/time safety limits. Linked from the index and from
+  `docs/BeaconUG-Comparison.md`.
+
+### Changed
+- **Add Events form now shows the selected category.** The category
+  (event type, e.g. "Open Meeting") was chosen via an unlabelled dropdown
+  above the form and never repeated inside it. The dropdown now has a
+  visible "Category" label, and the Add Events form heading shows
+  "— Category: <name>" so it's confirmed right where events are being
+  added. `frontend/src/pages/calendar/Calendar.jsx`.
+
+---
+
 ## [0.12.3] — 2026-08-02
 
 ### Added
