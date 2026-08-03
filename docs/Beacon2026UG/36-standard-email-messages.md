@@ -53,6 +53,17 @@ To remove a template you no longer need:
 
 ---
 
+## Default templates on a new u3a
+
+Every new beacon2026 tenant starts with two ready-made templates, adapted from
+the original Beacon User Guide: **New Member Welcome** and **Renewal
+Confirmation**. Both include bracketed placeholders (e.g. "[add a link to
+your u3a website]") for the handful of details that are specific to your own
+u3a. Edit, rename or delete these like any other Standard Message -- they are
+a starting point, not fixed content.
+
+---
+
 ## Tips
 
 - Templates can include **personalisation tokens** (e.g. `#FAM`, `#SURNAME`). When
