@@ -10,6 +10,7 @@ import { hashPassword } from '../utils/password.js';
 import { splitSQL } from '../utils/migrate.js';
 import { PRIVILEGE_RESOURCES } from './privilegeResources.js';
 import { DEFAULT_ROLES } from './defaultRoles.js';
+import { DEFAULT_STANDARD_MESSAGES, DEFAULT_STANDARD_LETTERS } from './defaultTemplates.js';
 import { logger } from '../utils/logger.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -20,7 +21,9 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
  *  2. Create the PostgreSQL schema
  *  3. Seed privilege resources
  *  4. Seed default roles with their default privileges
- *  5. Create the first admin user
+ *  5. Seed default member statuses and member class
+ *  6. Seed default Standard Email Messages and Standard Letters
+ *  7. Create the first admin user
  *
  * @param {{ name, slug, adminEmail, adminName, adminPassword, adminUsername }} params
  */
@@ -94,7 +97,25 @@ export async function createTenantSchema({
     ['Individual'],
   );
 
-  // 7. Create first admin user (gets the Administration role)
+  // 7. Seed default Standard Email Messages and Standard Letters
+  for (const msg of DEFAULT_STANDARD_MESSAGES) {
+    await tenantQuery(
+      slug,
+      `INSERT INTO standard_messages (name, subject, body) VALUES ($1, $2, $3)
+       ON CONFLICT (name) DO NOTHING`,
+      [msg.name, msg.subject, msg.body],
+    );
+  }
+  for (const letter of DEFAULT_STANDARD_LETTERS) {
+    await tenantQuery(
+      slug,
+      `INSERT INTO standard_letters (name, body) VALUES ($1, $2)
+       ON CONFLICT (name) DO NOTHING`,
+      [letter.name, letter.body],
+    );
+  }
+
+  // 8. Create first admin user (gets the Administration role)
   const passwordHash = await hashPassword(adminPassword);
   const [user] = await tenantQuery(
     slug,

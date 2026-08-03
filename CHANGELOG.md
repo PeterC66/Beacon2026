@@ -25,6 +25,14 @@ that still says "Unreleased".
   create/edit/delete saved reports, the ad-hoc SQL editor, and the
   read-only/row/time safety limits. Linked from the index and from
   `docs/BeaconUG-Comparison.md`.
+- **Default Standard Email Messages and Standard Letters for new tenants.**
+  Every new u3a tenant previously started with an empty template list. Now
+  seeds two email templates ("New Member Welcome", "Renewal Confirmation",
+  adapted from the original Beacon User Guide's doc 6.1.2) and one letter
+  ("Annual Data Check Form"), each generic with bracketed placeholders for
+  u3a-specific details (website links, postal address, phone, contact
+  email). `backend/src/seed/defaultTemplates.js`, wired into
+  `createTenantSchema()`. Documented in `docs/Beacon2026UG/36-standard-email-messages.md`.
 
 ### Changed
 - **Add Events form now shows the selected category.** The category
