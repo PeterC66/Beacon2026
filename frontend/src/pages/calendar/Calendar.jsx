@@ -75,6 +75,9 @@ export default function Calendar() {
 
   const canManage = can('meetings', 'create') || can('meetings', 'change');
   const canViewMeetings = can('meetings', 'view');
+  const selectedEventTypeName = eventTypeList.find(
+    (et) => String(et.id) === String(eventTypeId),
+  )?.name;
 
   // Load venues, groups+teams, and event types for dropdowns
   useEffect(() => {
@@ -472,18 +475,21 @@ export default function Calendar() {
                   open meetings and other
                 </label>
                 {filterMode === 'other' && (
-                  <select
-                    className={inputCls}
-                    name="eventTypeId"
-                    value={eventTypeId}
-                    onChange={(e) => setEventTypeId(e.target.value)}
-                  >
-                    {eventTypeList.map((et) => (
-                      <option key={et.id} value={et.id}>
-                        {et.name}
-                      </option>
-                    ))}
-                  </select>
+                  <label className="flex items-center gap-1">
+                    Category
+                    <select
+                      className={inputCls}
+                      name="eventTypeId"
+                      value={eventTypeId}
+                      onChange={(e) => setEventTypeId(e.target.value)}
+                    >
+                      {eventTypeList.map((et) => (
+                        <option key={et.id} value={et.id}>
+                          {et.name}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
                 )}
               </>
             )}
@@ -741,7 +747,14 @@ export default function Calendar() {
   function renderAddForm() {
     return (
       <div ref={addFormRef} className="bg-white/90 rounded-lg shadow-sm p-4">
-        <h3 className="text-sm font-semibold text-slate-700 mb-3">Add Events</h3>
+        <h3 className="text-sm font-semibold text-slate-700 mb-3">
+          Add Events
+          {selectedEventTypeName && (
+            <span className="ml-2 font-normal text-slate-500">
+              — Category: {selectedEventTypeName}
+            </span>
+          )}
+        </h3>
         {addError && <p className="text-red-600 text-sm mb-2">{addError}</p>}
         <form onSubmit={handleAdd} noValidate className="space-y-3">
           <div className="flex flex-wrap gap-3 items-end">

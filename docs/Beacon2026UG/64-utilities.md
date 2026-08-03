@@ -33,4 +33,4 @@ privileges.
 
 ---
 
-[← 63. Data Export and Backup](63-data-export-backup.md) | [Contents](index.md)
+[← 63. Data Export and Backup](63-data-export-backup.md) | [Contents](index.md) | [65. SQL Reports →](65-sql-reports.md)
