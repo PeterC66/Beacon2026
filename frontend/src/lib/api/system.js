@@ -107,4 +107,69 @@ export const system = {
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
       body: JSON.stringify(data),
     }),
+
+  // Default Standard Email Messages / Standard Letters — System Admin's
+  // CRUD + rollout library (item 11 of UX-Improvements-Plan-2026-08-04.md).
+
+  listDefaultMessages: (token) =>
+    systemFetch(`${BASE}/system/default-messages`, {
+      headers: { Authorization: `Bearer ${token}` },
+    }),
+
+  createDefaultMessage: (token, data) =>
+    systemFetch(`${BASE}/system/default-messages`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify(data),
+    }),
+
+  updateDefaultMessage: (token, id, data) =>
+    systemFetch(`${BASE}/system/default-messages/${id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify(data),
+    }),
+
+  deleteDefaultMessage: (token, id) =>
+    systemFetch(`${BASE}/system/default-messages/${id}`, {
+      method: 'DELETE',
+      headers: { Authorization: `Bearer ${token}` },
+    }),
+
+  rolloutDefaultMessage: (token, id) =>
+    systemFetch(`${BASE}/system/default-messages/${id}/rollout`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}` },
+    }),
+
+  listDefaultLetters: (token) =>
+    systemFetch(`${BASE}/system/default-letters`, {
+      headers: { Authorization: `Bearer ${token}` },
+    }),
+
+  createDefaultLetter: (token, data) =>
+    systemFetch(`${BASE}/system/default-letters`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify(data),
+    }),
+
+  updateDefaultLetter: (token, id, data) =>
+    systemFetch(`${BASE}/system/default-letters/${id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify(data),
+    }),
+
+  deleteDefaultLetter: (token, id) =>
+    systemFetch(`${BASE}/system/default-letters/${id}`, {
+      method: 'DELETE',
+      headers: { Authorization: `Bearer ${token}` },
+    }),
+
+  rolloutDefaultLetter: (token, id) =>
+    systemFetch(`${BASE}/system/default-letters/${id}/rollout`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}` },
+    }),
 };

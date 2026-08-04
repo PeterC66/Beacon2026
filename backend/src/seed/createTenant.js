@@ -10,7 +10,6 @@ import { hashPassword } from '../utils/password.js';
 import { splitSQL } from '../utils/migrate.js';
 import { PRIVILEGE_RESOURCES } from './privilegeResources.js';
 import { DEFAULT_ROLES } from './defaultRoles.js';
-import { DEFAULT_STANDARD_MESSAGES, DEFAULT_STANDARD_LETTERS } from './defaultTemplates.js';
 import { logger } from '../utils/logger.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -97,8 +96,12 @@ export async function createTenantSchema({
     ['Individual'],
   );
 
-  // 7. Seed default Standard Email Messages and Standard Letters
-  for (const msg of DEFAULT_STANDARD_MESSAGES) {
+  // 7. Seed default Standard Email Messages and Standard Letters — sourced
+  //    from the System Admin-maintained master tables (routes/system.js),
+  //    not a static file, so any template System Admin has added/edited
+  //    there is what every newly-created tenant gets.
+  const defaultMessages = await prisma.defaultStandardMessage.findMany();
+  for (const msg of defaultMessages) {
     await tenantQuery(
       slug,
       `INSERT INTO standard_messages (name, subject, body) VALUES ($1, $2, $3)
@@ -106,7 +109,8 @@ export async function createTenantSchema({
       [msg.name, msg.subject, msg.body],
     );
   }
-  for (const letter of DEFAULT_STANDARD_LETTERS) {
+  const defaultLetters = await prisma.defaultStandardLetter.findMany();
+  for (const letter of defaultLetters) {
     await tenantQuery(
       slug,
       `INSERT INTO standard_letters (name, body) VALUES ($1, $2)

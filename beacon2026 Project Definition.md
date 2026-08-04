@@ -1,7 +1,7 @@
 # beacon2026 — Project Definition (last reviewed 2026-06-14)
 
 > **Note:** This document describes the *current* state of the project as of
-> 2026-06-14 (version 0.12.4). It is the canonical inventory of modules, routes,
+> 2026-06-14 (version 0.12.5). It is the canonical inventory of modules, routes,
 > and pages; for a contributor-oriented repo map and quickstart see
 > [`README.md`](README.md). Read it alongside `CLAUDE.md`, `CLAUDE-STANDARDS.md`,
 > and `CLAUDE-REFERENCE.md` in the repository root, which contain coding
@@ -26,7 +26,7 @@ beacon2026 is a ground-up rebuild with these goals:
 
 ---
 
-## What has been built (as of version 0.12.4)
+## What has been built (as of version 0.12.5)
 
 ### Infrastructure and platform
 - Full multi-tenant architecture (PostgreSQL schema-per-tenant)
@@ -299,6 +299,10 @@ beacon2026 is a ground-up rebuild with these goals:
   to change password on first login
 - **Validate member data** — comprehensive data quality tool
 - **Utilities** — administrative utilities page
+- **Default standard email/letter templates (System Admin)** — CRUD library on the
+  System Admin dashboard for the templates every newly-created tenant is seeded with,
+  plus a per-template "Roll out" action that pushes it into any existing tenant that
+  doesn't already have one of that name
 
 ---
 

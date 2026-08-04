@@ -51,7 +51,13 @@ export async function migrateAndSeed() {
     );
   }
 
-  // 3. Bring all existing tenant schemas up to date
+  // 3. One-time bootstrap of the default standard email/letter templates
+  //    (System Admin's CRUD + rollout library — see routes/system.js). Only
+  //    runs when a table is completely empty, so it never resurrects a
+  //    template System Admin has since deleted.
+  await seedDefaultTemplates();
+
+  // 4. Bring all existing tenant schemas up to date
   await migrateTenantSchemas();
 
   // NOTE: migrateDefaultRolePrivileges() was a one-time fix (March 2026) to
@@ -59,6 +65,172 @@ export async function migrateAndSeed() {
   // were overhauled to match doc 8.4.1.  It is no longer called on startup —
   // the canonical set is now applied only when a new tenant is created via
   // createTenant.js.  The function is kept below for reference.
+}
+
+// ── Default Standard Email/Letter templates (one-time bootstrap) ───────────
+// Content below is the original seed introduced by PR #497
+// (backend/src/seed/defaultTemplates.js, now removed — this is its sole
+// remaining home). Adapted from the Beacon User Guide's "Templates for
+// Copying" (doc 6.1.2) and the Annual Data Check Form used by u3as running
+// Beacon. Every u3a-specific detail (postal address, phone number, contact
+// email) is left as a bracketed placeholder, since this ships to every
+// tenant. System Admin can add/edit/delete these freely via the
+// `default_standard_messages` / `default_standard_letters` master tables
+// (routes/system.js) — this function only fires when a table is completely
+// empty (i.e. before the very first row has ever existed), so it can never
+// resurrect something System Admin deleted.
+
+export const BOOTSTRAP_STANDARD_MESSAGES = [
+  {
+    name: 'New Member Welcome',
+    subject: 'Welcome to #U3ANAME',
+    body: `WELCOME TO #U3ANAME
+
+Dear #FAM,
+
+We would like to welcome you as a new member of #U3ANAME.
+
+Please check that your details shown below are correct and let us know by return email if any changes are required or if there is any additional information that can be added.
+
+You can find out more about #U3ANAME on [add a link to your u3a website].
+
+If you go to [add a link to the page on your website about the Members Portal] you will see details of how you can log in to the Members Portal where you can update your personal details and view additional Groups & Calendar information that is not available to the general public.
+
+We look forward to seeing you at our future meetings and events,
+
+Best regards,
+
+The Membership Team
+#U3ANAME
+
+-----------------------------------------------------
+
+Name: #TITLE #FORENAME #SURNAME
+Familiar name: #FAM
+Address: #ADDRESSV
+Email address: #EMAIL
+Home phone: #TELEPHONE
+Mobile Phone: #MOBILE
+Emergency Contact: #EMERGENCY
+Membership number: #MEMNO
+Affiliation: #AFFILIATION
+Membership Class: #MEMCLASS
+Membership Renewal Date: #RENEW`,
+  },
+  {
+    name: 'Renewal Confirmation',
+    subject: 'Membership renewal confirmation — #U3ANAME',
+    body: `MEMBERSHIP RENEWAL CONFIRMATION
+
+Dear #FAM,
+
+Thank you for renewing your membership of #U3ANAME. Please check the details about you below and let us know by return email if any changes are required or if there is any additional information that can be added.
+
+Best regards,
+
+The Membership Team
+#U3ANAME
+
+-----------------------------------------------------
+
+Name: #TITLE #FORENAME #SURNAME
+Familiar name: #FAM
+Address: #ADDRESSV
+Email address: #EMAIL
+Home phone: #TELEPHONE
+Mobile phone: #MOBILE
+Emergency contact: #EMERGENCY
+Membership class: #MEMCLASS
+Membership number: #MEMNO
+Affiliation: #AFFILIATION
+Next renewal date: #RENEW`,
+  },
+];
+
+// Standard Letters store `body` as a serialised Tiptap document
+// (`{ type: 'doc', content: [...] }`) — see `tiptapToPdfContent()` in
+// `backend/src/routes/letters.js`. Each paragraph renders as one
+// line/block in the generated PDF; empty paragraphs render as blank lines.
+function bootstrapPara(text, { bold = false, heading = false } = {}) {
+  if (text === '') return { type: 'paragraph' };
+  const node = {
+    type: heading ? 'heading' : 'paragraph',
+    content: [{ type: 'text', text, ...(bold ? { marks: [{ type: 'bold' }] } : {}) }],
+  };
+  if (heading) node.attrs = { level: 2 };
+  return node;
+}
+
+function bootstrapLabelledPara(label, value) {
+  return {
+    type: 'paragraph',
+    content: [
+      { type: 'text', text: label, marks: [{ type: 'bold' }] },
+      { type: 'text', text: value },
+    ],
+  };
+}
+
+const BOOTSTRAP_ANNUAL_DATA_CHECK_DOC = {
+  type: 'doc',
+  content: [
+    bootstrapPara('#U3ANAME Annual Data Check', { heading: true }),
+    bootstrapPara(''),
+    bootstrapLabelledPara('Membership Number: ', '#MEMNO'),
+    bootstrapPara(''),
+    bootstrapPara(
+      'Please check that these details are correct, and make any required amendments in CAPITAL LETTERS.',
+    ),
+    bootstrapPara(''),
+    bootstrapLabelledPara('Name: ', '#TITLE #FORENAME #SURNAME'),
+    bootstrapPara(''),
+    bootstrapLabelledPara('Known As: ', '#FAM'),
+    bootstrapPara(''),
+    bootstrapPara('Address:', { bold: true }),
+    bootstrapPara('#ADDRESSV'),
+    bootstrapPara(''),
+    bootstrapLabelledPara('Telephone: ', '#TELEPHONE'),
+    bootstrapPara(''),
+    bootstrapLabelledPara('Mobile: ', '#MOBILE'),
+    bootstrapPara(''),
+    bootstrapPara(''),
+    bootstrapPara(
+      'If you do not want group convenors to see your contact details, put a cross in the box below. (Bear in mind that if you do this then, as you do not have an email address, group convenors and outings organisers will be unable to communicate with you using Beacon.)',
+    ),
+    bootstrapPara('I do not want group convenors to see my contact details:  [ ]'),
+    bootstrapPara(''),
+    bootstrapPara(''),
+    bootstrapPara(
+      "This form can be returned at a Members Open Meeting, or posted to the Membership Secretary at [add your Membership Secretary's postal address]. Alternatively, you can telephone [add a contact phone number] to tell us of any changes.",
+    ),
+    bootstrapPara(''),
+    bootstrapPara(
+      'You are receiving this request by letter because we do not have an email address for you. If you have an email address that you use regularly, and would prefer us to contact you that way, please email [add your membership contact email address] (quoting ref: #MEMNO) to let us know.',
+    ),
+    bootstrapPara(''),
+    bootstrapPara("If there are no changes, then you don't need to do anything."),
+  ],
+};
+
+export const BOOTSTRAP_STANDARD_LETTERS = [
+  {
+    name: 'Annual Data Check Form',
+    body: JSON.stringify(BOOTSTRAP_ANNUAL_DATA_CHECK_DOC),
+  },
+];
+
+async function seedDefaultTemplates() {
+  const messageCount = await prisma.defaultStandardMessage.count();
+  if (messageCount === 0) {
+    await prisma.defaultStandardMessage.createMany({ data: BOOTSTRAP_STANDARD_MESSAGES });
+    logger.info(`✓ Seeded ${BOOTSTRAP_STANDARD_MESSAGES.length} default standard message(s).`);
+  }
+
+  const letterCount = await prisma.defaultStandardLetter.count();
+  if (letterCount === 0) {
+    await prisma.defaultStandardLetter.createMany({ data: BOOTSTRAP_STANDARD_LETTERS });
+    logger.info(`✓ Seeded ${BOOTSTRAP_STANDARD_LETTERS.length} default standard letter(s).`);
+  }
 }
 
 /**

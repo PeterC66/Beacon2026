@@ -293,6 +293,182 @@ router.post('/restore/:tenantSlug', upload.single('backup'), async (req, res, ne
   }
 });
 
+// ─── Default Standard Email Messages / Standard Letters ──────────────────────
+// System Admin's own CRUD + rollout library for the templates seeded into
+// every newly-created tenant (seed/createTenant.js reads these same master
+// tables). "Roll out" pushes a template into every tenant that doesn't
+// already have one of that name — see item 11 of
+// docs/UX-Improvements-Plan-2026-08-04.md.
+
+const defaultMessageSchema = z.object({
+  name: z.string().min(1).max(200),
+  subject: z.string().max(500).default(''),
+  body: z.string().min(1),
+});
+
+const defaultLetterSchema = z.object({
+  name: z.string().min(1).max(200),
+  body: z.string().min(1),
+});
+
+// GET /system/default-messages
+router.get('/default-messages', async (_req, res, next) => {
+  try {
+    const rows = await prisma.defaultStandardMessage.findMany({ orderBy: { name: 'asc' } });
+    res.json(rows);
+  } catch (err) {
+    next(err);
+  }
+});
+
+// POST /system/default-messages
+router.post('/default-messages', async (req, res, next) => {
+  try {
+    const data = defaultMessageSchema.parse(req.body);
+    const existing = await prisma.defaultStandardMessage.findUnique({
+      where: { name: data.name },
+    });
+    if (existing) throw AppError('A default standard email with that name already exists.', 409);
+    const row = await prisma.defaultStandardMessage.create({ data });
+    res.status(201).json(row);
+  } catch (err) {
+    next(err);
+  }
+});
+
+// PATCH /system/default-messages/:id
+router.patch('/default-messages/:id', async (req, res, next) => {
+  try {
+    const data = defaultMessageSchema.partial().parse(req.body);
+    const row = await prisma.defaultStandardMessage.update({
+      where: { id: req.params.id },
+      data,
+    });
+    res.json(row);
+  } catch (err) {
+    next(err);
+  }
+});
+
+// DELETE /system/default-messages/:id
+router.delete('/default-messages/:id', async (req, res, next) => {
+  try {
+    await prisma.defaultStandardMessage.delete({ where: { id: req.params.id } });
+    res.status(204).end();
+  } catch (err) {
+    next(err);
+  }
+});
+
+// POST /system/default-messages/:id/rollout — push into every active tenant
+// that does not already have a standard email of this name.
+router.post('/default-messages/:id/rollout', async (req, res, next) => {
+  try {
+    const template = await prisma.defaultStandardMessage.findUnique({
+      where: { id: req.params.id },
+    });
+    if (!template) throw AppError('Default standard email not found.', 404);
+
+    const tenants = await prisma.sysTenant.findMany({ where: { active: true } });
+    const results = [];
+    for (const tenant of tenants) {
+      const rows = await tenantQuery(
+        tenant.slug,
+        `INSERT INTO standard_messages (name, subject, body) VALUES ($1, $2, $3)
+         ON CONFLICT (name) DO NOTHING
+         RETURNING id`,
+        [template.name, template.subject, template.body],
+      );
+      results.push({
+        slug: tenant.slug,
+        name: tenant.name,
+        created: rows.length > 0,
+      });
+    }
+    res.json({ template: template.name, results });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// GET /system/default-letters
+router.get('/default-letters', async (_req, res, next) => {
+  try {
+    const rows = await prisma.defaultStandardLetter.findMany({ orderBy: { name: 'asc' } });
+    res.json(rows);
+  } catch (err) {
+    next(err);
+  }
+});
+
+// POST /system/default-letters
+router.post('/default-letters', async (req, res, next) => {
+  try {
+    const data = defaultLetterSchema.parse(req.body);
+    const existing = await prisma.defaultStandardLetter.findUnique({ where: { name: data.name } });
+    if (existing) throw AppError('A default standard letter with that name already exists.', 409);
+    const row = await prisma.defaultStandardLetter.create({ data });
+    res.status(201).json(row);
+  } catch (err) {
+    next(err);
+  }
+});
+
+// PATCH /system/default-letters/:id
+router.patch('/default-letters/:id', async (req, res, next) => {
+  try {
+    const data = defaultLetterSchema.partial().parse(req.body);
+    const row = await prisma.defaultStandardLetter.update({
+      where: { id: req.params.id },
+      data,
+    });
+    res.json(row);
+  } catch (err) {
+    next(err);
+  }
+});
+
+// DELETE /system/default-letters/:id
+router.delete('/default-letters/:id', async (req, res, next) => {
+  try {
+    await prisma.defaultStandardLetter.delete({ where: { id: req.params.id } });
+    res.status(204).end();
+  } catch (err) {
+    next(err);
+  }
+});
+
+// POST /system/default-letters/:id/rollout — push into every active tenant
+// that does not already have a standard letter of this name.
+router.post('/default-letters/:id/rollout', async (req, res, next) => {
+  try {
+    const template = await prisma.defaultStandardLetter.findUnique({
+      where: { id: req.params.id },
+    });
+    if (!template) throw AppError('Default standard letter not found.', 404);
+
+    const tenants = await prisma.sysTenant.findMany({ where: { active: true } });
+    const results = [];
+    for (const tenant of tenants) {
+      const rows = await tenantQuery(
+        tenant.slug,
+        `INSERT INTO standard_letters (name, body) VALUES ($1, $2)
+         ON CONFLICT (name) DO NOTHING
+         RETURNING id`,
+        [template.name, template.body],
+      );
+      results.push({
+        slug: tenant.slug,
+        name: tenant.name,
+        created: rows.length > 0,
+      });
+    }
+    res.json({ template: template.name, results });
+  } catch (err) {
+    next(err);
+  }
+});
+
 // ─── GET /system/tenants/:slug/feature-config ───────────────────────────────
 // Returns the feature config for a specific tenant. System admin can view any tenant's config.
 router.get('/tenants/:slug/feature-config', async (req, res, next) => {

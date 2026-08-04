@@ -32,7 +32,7 @@
 | 8 | "Add Events" panel submit button: "Add Events" → "Save" | DONE — see below |
 | 9 | Unsaved-changes warning on all group/team tabs, not just Details | DONE — see below |
 | 10 | Per-tenant switch: A–Z buttons = Filter vs Jump-to-first-record | DONE — see below |
-| 11 | System Admin: CRUD + rollout mechanism for default standard emails/letters | NOT STARTED — see below |
+| 11 | System Admin: CRUD + rollout mechanism for default standard emails/letters | DONE — see below |
 
 ---
 
@@ -405,3 +405,32 @@ per-tenant, `isSiteAdmin`-gated, out of scope here.
    its own copy of the letter via the existing item-7 tenant screen to add
    the real address/phone/email — the same way any tenant customises its
    own copy, no special-casing inside the rollout mechanism itself.
+
+**Built:** exactly as planned above. Two new master-DB Prisma models,
+`DefaultStandardMessage`/`DefaultStandardLetter`
+(`backend/prisma/schema.prisma`, tables `default_standard_messages`/
+`default_standard_letters`), applied automatically by the existing
+`prisma db push` startup step — no separate migration script needed. New
+`DefaultTemplatesSection.jsx` on `SystemDashboard.jsx`, list+inline-form CRUD
+for both types plus a per-row "Roll out" button showing which tenants were
+created-in vs already-had-it. New routes in
+[`backend/src/routes/system.js`](../backend/src/routes/system.js) (already
+`requireSysAdmin`-gated, no new middleware):
+`GET/POST/PATCH/DELETE /system/default-messages(|/:id)` and
+`/system/default-letters(|/:id)`, plus `POST .../:id/rollout` on each, which
+loops `prisma.sysTenant.findMany({ where: { active: true } })` and runs the
+same `INSERT … ON CONFLICT (name) DO NOTHING` `createTenant.js` always used.
+`createTenant.js` now reads `prisma.defaultStandardMessage.findMany()` /
+`defaultStandardLetter.findMany()` instead of importing a static file;
+`backend/src/seed/defaultTemplates.js` is deleted. The two master tables are
+bootstrapped once with the original seed content by
+`seedDefaultTemplates()` in `backend/src/utils/migrate.js`, guarded on
+`count() === 0` per table so a template System Admin later deletes is never
+resurrected on the next deploy. **St Ives itself has not yet been seeded** —
+that's a live-tenant action for Peter to trigger from `/system` when ready,
+not something done as part of this build. Verified via lint, format, and the
+full frontend/backend test suites (all green), including new route tests in
+`system.test.js` (CRUD + the rollout "creates where missing, skips where
+present" behaviour) and a new `DefaultTemplatesSection.test.jsx`. Not yet
+click-tested in a live browser (no local Postgres/seeded tenant available
+in-session, same constraint as items 4/6/7/9/10).
