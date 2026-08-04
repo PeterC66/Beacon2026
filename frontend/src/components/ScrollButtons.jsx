@@ -94,13 +94,11 @@ export default function ScrollButtons({ containerRef }) {
   }, [update, containerRef]);
 
   const scrollToTop = () => {
-    const el = containerRef?.current;
-    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const scrollToBottom = () => {
-    const el = containerRef?.current;
-    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'end' });
+    window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
   };
 
   if (!showTop && !showBottom) return null;

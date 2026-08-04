@@ -22,8 +22,8 @@
 |---|------|--------|
 | 7 | Admin CRUD screen for org-wide (unowned) standard emails/letters | DONE — see below |
 | 1 | Remove "Save as standard email/letter" buttons from compose screens | NOT STARTED — do after #7 |
-| 2 | Floating scroll arrows: scope trigger to table, fix target to full page | NOT STARTED |
-| 3 | Home menu: "Poll" → "Polls" | NOT STARTED |
+| 2 | Floating scroll arrows: scope trigger to table, fix target to full page | DONE — see below |
+| 3 | Home menu: "Poll" → "Polls" | DONE — see below |
 | 4 | Rich formatting for emails (bring to parity with letters) | NOT STARTED — approved, larger piece |
 | 5 | Seed St Ives's own standard emails/letters into the existing tenant | NOT STARTED — data action, not new code |
 | 6 | Un-cap table-heavy tab widths (e.g. group Members) | NOT STARTED |
@@ -94,11 +94,20 @@ separate bugs matching what was reported:
   `window.scrollTo({ top: 0, behavior: 'smooth' })` and
   `window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' })`.
 
+**Built:** `scrollToTop`/`scrollToBottom` in `ScrollButtons.jsx` now call
+`window.scrollTo(...)` exactly as planned above, instead of
+`containerRef.current.scrollIntoView(...)`. No other change — visibility
+scoping was already correct. No dedicated test file existed for this
+component.
+
 ---
 
 ## 3. "Poll" → "Polls"
 
 One-line label change, [`Home.jsx:349`](../frontend/src/pages/Home.jsx).
+
+**Built:** the `label:` field in the "Set up" nav item for `/polls` changed
+from `'Poll'` to `'Polls'`. No test referenced the old label text.
 
 ---
 
