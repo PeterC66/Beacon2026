@@ -324,6 +324,16 @@ export default function Home() {
           f: 'email',
         },
         {
+          label: 'Std emails & letters',
+          tip: 'Manage org-wide standard email and letter templates',
+          to:
+            (hasFeature('email') && can('email_standard_messages_all', 'view')) ||
+            (hasFeature('letters') && can('letters_standard_messages_all', 'view'))
+              ? '/standard-messages'
+              : null,
+          isNew: true,
+        },
+        {
           label: 'Finance accounts',
           tip: 'Set up bank accounts and payment methods',
           to: can('finance_accounts', 'view') ? '/finance/accounts' : null,
