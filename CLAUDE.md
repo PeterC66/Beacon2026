@@ -78,6 +78,22 @@ is only for pulling newly-uploaded reference docs into the *current* branch
 mid-task — it is not a substitute for starting the *next* task from a fresh
 branch.
 
+**Independent same-day PRs that each update a shared status doc (a work-plan
+table, `CHANGELOG.md`) will conflict on merge even with zero overlapping code
+files.** Each branch's diff inserts a new line at the same anchor point (the
+next-blank-line in a status table, the next bullet under the same `###
+Changed` heading) — pure independent insertions at the same location are a
+textbook git merge conflict, not something `git merge`'s three-way algorithm
+resolves silently. Expect this whenever multiple `claude/*` branches are
+prepared from the same session's work-plan doc and merged back-to-back. Fix:
+after merging the first PR, `git checkout` each remaining branch, `git merge
+origin/main --no-edit`, resolve by keeping both sides' content (the doc
+sections themselves — the "Built:" prose paragraphs — auto-merge fine; only
+the table-row / bullet-insertion point conflicts), then push and merge as
+normal. (Hit for real 2026-08-04 merging PRs #508/#509/#510, all editing
+`docs/UX-Improvements-Plan-2026-08-04.md`'s status table and
+`CHANGELOG.md`'s `### Changed` section.)
+
 ---
 
 ## Reviewing the codebase (lessons from past reviews)

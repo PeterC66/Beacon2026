@@ -1316,6 +1316,24 @@ render(<MemoryRouter><MyPage /></MemoryRouter>);
 expect(getByText('Page Title')).toBeInTheDocument();
 ```
 
+### Gotcha: an incomplete `useAuth()` mock breaks the moment a component calls that field unconditionally
+
+A hand-written `vi.mock('../context/AuthContext.jsx', () => ({ useAuth: () => ({ tenant, can }) }))`
+only needs to include the context fields the component under test actually
+*calls* — but "actually calls" can change silently as a component evolves.
+`GroupList.jsx`/`TeamList.jsx`/`MemberList.jsx` previously only ever passed
+`hasFeature` down as a prop (never called it directly), so their mocks in
+`GroupList.test.jsx`/`MemberList.test.jsx` omitted it with no failure. Adding
+a `const azJump = hasFeature('azButtonsJumpToRecord');` at the top of each
+component (unconditional, not inside a callback) made `hasFeature` undefined
+under the old mock, and calling `undefined(...)` threw on the very first
+render — both tests' "renders without crashing" case failed immediately, not
+with a subtle assertion mismatch. When adding a *new* top-level call to any
+`useAuth()` field (`hasFeature`, `can`, etc.) in a component, check every
+test file that mocks `useAuth` for that component and add the field, even if
+it feels unrelated to what that specific test is asserting. (Hit adding the
+A-Z jump-to-record feature, PR #511, 2026-08-04.)
+
 ### Multiple text instances
 
 When heading appears in NavBar AND `<h1>`, use `getAllByText` not `getByText`.

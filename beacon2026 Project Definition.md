@@ -173,10 +173,11 @@ beacon2026 is a ground-up rebuild with these goals:
   and "Delete standard letter" button remain for use while composing.
 
 ### Set-up module
-- **Feature configuration** — per-u3a feature toggles (25 toggles across 7
+- **Feature configuration** — per-u3a feature toggles (29 toggles across 7
   sections — 6 master modules plus the Membership and Other sub-feature groups);
   expandable-sections UI; system-admin-only toggles for features requiring
-  external service setup; opt-out model (everything on by default).
+  external service setup; opt-out model (everything on by default, except
+  `giftAid`/`groupLedger`/`siteworks`/`publicApi` which default off).
   **All toggles are backend-enforced**: turning one off returns 403 from every
   matching API route (via `requireFeature()` / `isFeatureEnabled()`), not just
   hiding the nav item.
