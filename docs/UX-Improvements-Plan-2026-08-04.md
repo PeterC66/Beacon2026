@@ -26,7 +26,7 @@
 | 3 | Home menu: "Poll" → "Polls" | DONE — see below |
 | 4 | Rich formatting for emails (bring to parity with letters) | DONE — see below |
 | 5 | Seed St Ives's own standard emails/letters into the existing tenant | NOT STARTED — data action, not new code |
-| 6 | Un-cap table-heavy tab widths (e.g. group Members) | NOT STARTED |
+| 6 | Un-cap table-heavy tab widths (e.g. group Members) | DONE — see below |
 | 8 | "Add Events" panel submit button: "Add Events" → "Save" | NOT STARTED |
 | 9 | Unsaved-changes warning on all group/team tabs, not just Details | NOT STARTED |
 | 10 | Per-tenant switch: A–Z buttons = Filter vs Jump-to-first-record | NOT STARTED |
@@ -214,6 +214,19 @@ a quick sweep once started. Plan: widen data-table-heavy tabs (Members,
 Events, Ledger, Std Emails/Letters) to `max-w-6xl`/`max-w-7xl` or drop the
 cap entirely on a laptop-sized viewport, while keeping the Details form tab
 narrower (a long form doesn't benefit from full width the way a table does).
+
+**Built:** confirmed `TeamRecord.jsx` had the identical `max-w-4xl` wrapper.
+Also swept and found the same tabbed-record pattern in
+[`EventRecord.jsx`](../frontend/src/pages/calendar/EventRecord.jsx)
+(Details/Members/Financials) and included it. All three now compute a
+`wrapperMaxW` local (`max-w-4xl` on the Details tab, `max-w-7xl` on every
+other tab) and interpolate it into the outer wrapper's className, instead of
+a hard-coded class — the wrapper width now responds to which tab is active.
+No other record-style pages (Member, Venue, Event Type, etc.) share this
+multi-tab table-heavy pattern, so they were left untouched. Not yet visually
+checked in a live browser (no local Postgres/seeded tenant available
+in-session, same constraint as items 4/7) — verified via lint, format, and
+the full frontend test suite (all green).
 
 ---
 

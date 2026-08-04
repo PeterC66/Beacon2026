@@ -77,6 +77,13 @@ that still says "Unreleased".
   the Std Emails/Letters tabs.
 - **Home menu label "Poll" → "Polls"** (`Home.jsx`), matching the plural used
   elsewhere in the app.
+- **Table-heavy tabs on group/team/event records no longer capped at
+  max-w-4xl.** `GroupRecord.jsx`, `TeamRecord.jsx`, and `EventRecord.jsx`
+  hard-coded the same `max-w-4xl` (~896px) wrapper for the whole page,
+  cramping the Members/Events/Group Cash/Std Emails/Std Letters/Financials
+  tables into a form-width column regardless of viewport. The wrapper width
+  is now conditional on the active tab: `max-w-4xl` for the Details form,
+  `max-w-7xl` for every other tab.
 
 ### Fixed
 - **Floating scroll arrows scrolled the table, not the page.** The
