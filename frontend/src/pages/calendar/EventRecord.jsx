@@ -115,12 +115,16 @@ export default function EventRecord() {
 
   const title = event.topic || event.group_name || event.event_type_name || 'Event';
 
+  // Details is a form and doesn't benefit from full width; Members/Financials
+  // are table-heavy and get a wider cap so their columns aren't cramped.
+  const wrapperMaxW = activeTab !== 'details' ? 'max-w-7xl' : 'max-w-4xl';
+
   return (
     <div className="min-h-screen pb-10">
       <PageHeader tenant={tenant} />
       <NavBar links={navLinks} />
 
-      <div className="max-w-4xl mx-auto px-4 py-4">
+      <div className={`${wrapperMaxW} mx-auto px-4 py-4`}>
         <p className="text-xs font-semibold tracking-widest text-slate-500 uppercase text-center mb-1">
           Event
         </p>
