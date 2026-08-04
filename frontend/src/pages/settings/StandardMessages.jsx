@@ -52,7 +52,13 @@ function StdEmailsSection() {
 
   function startEdit(msg) {
     setEditingId(msg.id);
-    setForm({ name: msg.name, subject: msg.subject ?? '', body: msg.body ?? '' });
+    let text = '';
+    try {
+      text = tiptapDocToText(JSON.parse(msg.body));
+    } catch {
+      text = '';
+    }
+    setForm({ name: msg.name, subject: msg.subject ?? '', body: text });
     setSaveError(null);
   }
 
@@ -71,7 +77,7 @@ function StdEmailsSection() {
       await emailApi.saveStandardMessage({
         name: form.name.trim(),
         subject: form.subject,
-        body: form.body,
+        body: JSON.stringify(textToTiptapDoc(form.body)),
         ownerGroupId: null,
       });
       cancelEdit();
@@ -98,7 +104,9 @@ function StdEmailsSection() {
       <h2 className="text-lg font-semibold mb-1">Std Emails</h2>
       <p className="text-xs text-slate-600 mb-3">
         Org-wide standard email messages, available to everyone composing an email. Group/team-owned
-        templates are managed from the group or team's own Std Emails tab instead.
+        templates are managed from the group or team's own Std Emails tab instead. Editing here is
+        plain text only — bold/italic/underline formatting from the full email editor is not
+        preserved if you save changes here.
       </p>
 
       {error && <p className="text-red-600 text-sm mb-3">{error}</p>}
@@ -188,7 +196,7 @@ function StdEmailsSection() {
           </div>
           <div className="mb-3">
             <label htmlFor="std-email-body" className={labelCls}>
-              Message body
+              Message body (one paragraph per line)
             </label>
             <textarea
               id="std-email-body"

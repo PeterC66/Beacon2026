@@ -6,9 +6,16 @@
 //   entityId — the group or team ID
 //   api      — the API module (groups or teams), must have
 //              listStdMessages/saveStdMessage/deleteStdMessage
+//
+// Message bodies are stored as a Tiptap document (see EmailCompose.jsx /
+// backend/src/utils/richEmailBody.js), matching StdLettersTab.jsx. This tab
+// edits them as plain text (one line = one paragraph) rather than embedding
+// the full rich-text editor used on the Email Compose page — editing a
+// richly-formatted message here will flatten its formatting.
 
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext.jsx';
+import { textToTiptapDoc, tiptapDocToText } from '../lib/simpleTiptapDoc.js';
 
 const EMPTY = { name: '', subject: '', body: '' };
 
@@ -48,7 +55,13 @@ export default function StdEmailsTab({ entityId, api }) {
 
   function startEdit(msg) {
     setEditingId(msg.id);
-    setForm({ name: msg.name, subject: msg.subject ?? '', body: msg.body ?? '' });
+    let text = '';
+    try {
+      text = tiptapDocToText(JSON.parse(msg.body));
+    } catch {
+      text = '';
+    }
+    setForm({ name: msg.name, subject: msg.subject ?? '', body: text });
     setSaveError(null);
   }
 
@@ -67,7 +80,7 @@ export default function StdEmailsTab({ entityId, api }) {
       await api.saveStdMessage(entityId, {
         name: form.name.trim(),
         subject: form.subject,
-        body: form.body,
+        body: JSON.stringify(textToTiptapDoc(form.body)),
       });
       cancelEdit();
       await load();
@@ -98,7 +111,8 @@ export default function StdEmailsTab({ entityId, api }) {
       <p className="text-xs text-slate-600 mb-3">
         Standard email messages owned by this group/team. Anyone composing an email can load and use
         these — only this group/team's leaders (and Administration) can add, edit or delete them
-        here.
+        here. Editing here is plain text only — bold/italic/underline formatting from the full email
+        editor is not preserved if you save changes from this tab.
       </p>
 
       {error && <p className="text-red-600 text-sm mb-3">{error}</p>}
@@ -188,7 +202,7 @@ export default function StdEmailsTab({ entityId, api }) {
           </div>
           <div className="mb-3">
             <label htmlFor="std-email-body" className={labelCls}>
-              Message body
+              Message body (one paragraph per line)
             </label>
             <textarea
               id="std-email-body"

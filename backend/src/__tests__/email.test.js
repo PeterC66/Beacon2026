@@ -7,7 +7,7 @@ import supertest from 'supertest';
 import { makeAuthHeader, TEST_TENANT } from './helpers.js';
 
 vi.mock('../utils/db.js', () => ({
-  prisma: { $disconnect: vi.fn() },
+  prisma: { $disconnect: vi.fn(), sysTenant: { findUnique: vi.fn() } },
   tenantQuery: vi.fn(),
   withTenant: vi.fn(),
 }));
@@ -15,7 +15,10 @@ vi.mock('../utils/redis.js', () => ({
   isSessionInvalidated: vi.fn().mockResolvedValue(false),
 }));
 
-const { tenantQuery } = await import('../utils/db.js');
+const sgSend = vi.fn().mockResolvedValue([{ headers: { 'x-message-id': 'sg-1' } }]);
+vi.mock('@sendgrid/mail', () => ({ default: { setApiKey: vi.fn(), send: sgSend } }));
+
+const { tenantQuery, prisma } = await import('../utils/db.js');
 const { default: app } = await import('../app.js');
 const request = supertest(app);
 const auth = makeAuthHeader();
@@ -97,5 +100,76 @@ describe('DELETE /email/standard-messages/:id (tenant-wide — Administration on
       .set('Authorization', leaderOnly);
     expect(res.status).toBe(403);
     expect(tenantQuery).not.toHaveBeenCalled();
+  });
+});
+
+describe('POST /email/send (rich TipTap body)', () => {
+  beforeEach(() => {
+    prisma.sysTenant.findUnique.mockResolvedValue({ slug: TEST_TENANT, name: 'Test u3a' });
+  });
+
+  const richBody = {
+    type: 'doc',
+    content: [
+      {
+        type: 'paragraph',
+        content: [
+          { type: 'text', text: 'Hi #FORENAME, ' },
+          { type: 'text', text: 'welcome', marks: [{ type: 'bold' }] },
+        ],
+      },
+    ],
+  };
+
+  it('sends a personalised HTML + text email built from the TipTap doc', async () => {
+    tenantQuery
+      .mockResolvedValueOnce([{ member_id: 'mem-officer', name: 'Test User' }]) // users lookup
+      .mockResolvedValueOnce([{ email: 'officer@example.com', forenames: 'Test', surname: 'User' }]) // member lookup
+      .mockResolvedValueOnce([]) // offices lookup
+      .mockResolvedValueOnce([
+        { id: 'm1', forenames: 'Jo', surname: 'Bloggs', email: 'jo@example.com' },
+      ]) // fetchMembersForEmail
+      .mockResolvedValueOnce([{ id: 'batch-1' }]) // createBatch insert
+      .mockResolvedValueOnce([]); // storeRecipients insert
+
+    const res = await request
+      .post('/email/send')
+      .set('Authorization', auth)
+      .send({
+        memberIds: ['m1'],
+        subject: 'Hello #FORENAME',
+        body: richBody,
+        fromEmail: 'officer@example.com',
+        replyTo: 'officer@example.com',
+      });
+
+    expect(res.status).toBe(200);
+    expect(res.body).toEqual({ batchId: 'batch-1', sent: 1, failed: 0 });
+    expect(sgSend).toHaveBeenCalledTimes(1);
+    const [msg] = sgSend.mock.calls[0];
+    expect(msg.subject).toBe('Hello Jo');
+    expect(msg.html).toBe('<p>Hi Jo, <strong>welcome</strong></p>');
+    expect(msg.text).toBe('Hi Jo, welcome');
+
+    // email_batches.body is stored as a JSON string of the TipTap doc
+    const createBatchCall = tenantQuery.mock.calls.find((c) =>
+      String(c[1]).includes('INSERT INTO email_batches'),
+    );
+    expect(JSON.parse(createBatchCall[2][2])).toEqual(richBody);
+  });
+
+  it('rejects a plain-string body (the pre-rich-formatting shape) with a validation error', async () => {
+    const res = await request
+      .post('/email/send')
+      .set('Authorization', auth)
+      .send({
+        memberIds: ['m1'],
+        subject: 'Hi',
+        body: 'plain text body',
+        fromEmail: 'officer@example.com',
+        replyTo: 'officer@example.com',
+      });
+    expect(res.status).toBe(422);
+    expect(sgSend).not.toHaveBeenCalled();
   });
 });

@@ -2,14 +2,16 @@
 // Compose and send an email to selected members.
 // Member IDs are passed via sessionStorage key 'emailComposeMemberIds'.
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { Link } from 'react-router-dom';
+import { useEditor, EditorContent } from '@tiptap/react';
 import { email as emailApi, members as membersApi } from '../../lib/api.js';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { hasOptionalCookieConsent } from '../../hooks/useCookieConsent.js';
 import NavBar from '../../components/NavBar.jsx';
 import PageHeader from '../../components/PageHeader.jsx';
 import DemoUnavailableBanner from '../../components/DemoUnavailableBanner.jsx';
+import { RICH_TEXT_EXTENSIONS, EditorToolbar } from '../../components/RichTextEditor.jsx';
 import {
   SS_EMAIL_COMPOSE_MEMBER_IDS,
   SS_EMAIL_GIFT_AID_DATES,
@@ -71,7 +73,6 @@ export default function EmailCompose() {
 
   const [fromEmail, setFromEmail] = useState('');
   const [subject, setSubject] = useState('');
-  const [body, setBody] = useState('');
   const [copyToSelf, setCopyToSelf] = useState(() => loadEmailPrefs().copyToSelf || false);
   const [attachments, setAttachments] = useState([]); // File[]
 
@@ -82,8 +83,13 @@ export default function EmailCompose() {
   const [sent, setSent] = useState(null); // { batchId, sent, failed }
   const [giftAidDates, setGiftAidDates] = useState(null); // { from, to } when sent from GA page
 
-  const bodyRef = useRef(null);
   const subjectRef = useRef(null);
+
+  const editor = useEditor({
+    extensions: RICH_TEXT_EXTENSIONS,
+    content: '<p></p>',
+  });
+  const bodyEmpty = !editor || editor.isEmpty;
 
   useEffect(() => {
     // Read member IDs from sessionStorage
@@ -132,45 +138,45 @@ export default function EmailCompose() {
       .catch(() => {});
   }, [memberIds]);
 
-  function insertToken(token) {
-    // Insert token at cursor position in the focused field
-    const el = document.activeElement;
-    if (el === subjectRef.current) {
-      const s = el.selectionStart;
-      const e = el.selectionEnd;
-      const next = subject.slice(0, s) + token + subject.slice(e);
-      setSubject(next);
-      setTimeout(() => {
-        el.setSelectionRange(s + token.length, s + token.length);
-      }, 0);
-    } else {
-      // Default: insert into body
-      const el2 = bodyRef.current;
-      if (!el2) return;
-      const s = el2.selectionStart;
-      const e = el2.selectionEnd;
-      const next = body.slice(0, s) + token + body.slice(e);
-      setBody(next);
-      setTimeout(() => {
-        el2.setSelectionRange(s + token.length, s + token.length);
-        el2.focus();
-      }, 0);
-    }
-  }
+  const insertToken = useCallback(
+    (token) => {
+      // Insert token at cursor position in the focused field
+      const el = document.activeElement;
+      if (el === subjectRef.current) {
+        const s = el.selectionStart;
+        const e = el.selectionEnd;
+        const next = subject.slice(0, s) + token + subject.slice(e);
+        setSubject(next);
+        setTimeout(() => {
+          el.setSelectionRange(s + token.length, s + token.length);
+        }, 0);
+      } else {
+        // Default: insert into body
+        if (!editor) return;
+        editor.chain().focus().insertContent(token).run();
+      }
+    },
+    [editor, subject],
+  );
 
   function handleLoadMsg(id) {
-    if (!id) return;
+    if (!id || !editor) return;
     const msg = stdMessages.find((m) => m.id === id);
     if (msg) {
       if (msg.subject) setSubject(msg.subject);
-      setBody(msg.body);
+      try {
+        editor.commands.setContent(JSON.parse(msg.body));
+      } catch {
+        // If body is not JSON (plain text), set as paragraph
+        editor.commands.setContent(`<p>${msg.body}</p>`);
+      }
     }
     setLoadMsgId('');
   }
 
   async function handleSend(e) {
     e.preventDefault();
-    if (!fromEmail || !subject.trim() || !body.trim()) {
+    if (!fromEmail || !subject.trim() || !editor || bodyEmpty) {
       setError('From address, subject, and message body are required.');
       return;
     }
@@ -182,7 +188,14 @@ export default function EmailCompose() {
     setSending(true);
     setError(null);
     try {
-      const sendData = { memberIds, subject, body, fromEmail, replyTo: fromEmail, copyToSelf };
+      const sendData = {
+        memberIds,
+        subject,
+        body: editor.getJSON(),
+        fromEmail,
+        replyTo: fromEmail,
+        copyToSelf,
+      };
       if (giftAidDates) sendData.giftAidDates = giftAidDates;
       const result = await emailApi.send(sendData, attachments);
       setSent(result);
@@ -345,15 +358,10 @@ export default function EmailCompose() {
               </div>
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">Message</label>
-                <textarea
-                  ref={bodyRef}
-                  name="body"
-                  value={body}
-                  onChange={(e) => setBody(e.target.value)}
-                  rows={14}
-                  className="w-full border border-slate-300 rounded px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="Type your message here. Use tokens from the panel on the right to personalise each email."
-                />
+                <EditorToolbar editor={editor} />
+                <div className="border border-slate-300 rounded min-h-[300px] px-3 py-2 text-sm focus-within:ring-2 focus-within:ring-blue-500 prose prose-sm max-w-none">
+                  <EditorContent editor={editor} />
+                </div>
               </div>
             </div>
 
@@ -400,7 +408,7 @@ export default function EmailCompose() {
               <button
                 onClick={handleSend}
                 disabled={
-                  sending || !fromEmail || !subject.trim() || !body.trim() || memberIds.length === 0
+                  sending || !fromEmail || !subject.trim() || bodyEmpty || memberIds.length === 0
                 }
                 className="bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white rounded px-5 py-2 text-sm font-medium transition-colors"
               >

@@ -49,6 +49,22 @@ that still says "Unreleased".
   `GET/POST/DELETE /email/standard-messages` and `/letters/standard-letters`
   routes (no backend changes needed), gated on `email_standard_messages_all`
   / `letters_standard_messages_all`.
+- **Rich formatting for emails, bringing them to parity with letters.**
+  `EmailCompose.jsx` now uses the same TipTap rich-text editor as
+  `LetterCompose.jsx` (bold/italic/underline, paragraph alignment, font size)
+  instead of a plain `<textarea>`; both compose screens now share one editor
+  implementation (`components/RichTextEditor.jsx`). Email bodies are stored
+  and sent as a TipTap JSON document, resolved per recipient into a real HTML
+  part plus a plain-text fallback (`backend/src/utils/richEmailBody.js`) —
+  sending real multipart email instead of plain-text-only, with `#TOKEN`
+  values HTML-escaped so member-supplied data can't inject markup into a
+  broadcast. `POST /email/send`'s `body` field is now a TipTap doc object
+  (previously a plain string) — matching `POST /letters/download`'s existing
+  shape. The group/team "Std Emails" tab and the tenant-wide Standard
+  Messages admin screen edit these bodies as plain text (one paragraph per
+  line), the same simplification `StdLettersTab.jsx` already used for letters
+  — editing a richly-formatted email from either of those screens flattens
+  its formatting.
 
 ### Changed
 - **"Save as standard email/letter" removed from the compose screens.**

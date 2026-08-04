@@ -8,7 +8,8 @@ import { tenantQuery, prisma } from '../utils/db.js';
 import { requirePrivilege } from '../middleware/requirePrivilege.js';
 import { requireAuth } from '../middleware/auth.js';
 import { requireFeature } from '../middleware/requireFeature.js';
-import { resolveTokens, fmtDate } from '../utils/emailTokens.js';
+import { fmtDate } from '../utils/emailTokens.js';
+import { resolveRichBody } from '../utils/richEmailBody.js';
 import {
   sanitizeAttachmentFilename,
   mimeFileFilter,
@@ -304,7 +305,10 @@ router.get('/from-addresses', requirePrivilege('email', 'send'), async (req, res
 const sendSchema = z.object({
   memberIds: z.array(z.string()).min(1),
   subject: z.string().min(1).max(500),
-  body: z.string().min(1),
+  body: z.object({
+    type: z.literal('doc'),
+    content: z.array(z.any()),
+  }),
   fromEmail: z.string().email(),
   replyTo: z.string().email(),
   copyToSelf: z.boolean().default(false),
@@ -400,7 +404,7 @@ router.post(
         req.user.tenantSlug,
         req.user.userId,
         subject,
-        body,
+        JSON.stringify(body),
         fromEmail,
         replyTo,
         recipients.length,
@@ -422,21 +426,16 @@ router.post(
           }
           const {
             subject: resolvedSubject,
-            body: resolvedBody,
-            bodyHtml: resolvedBodyHtml,
-          } = resolveTokens(subject, body, member, u3aName, extraTokens);
-          // text/ field keeps raw values; html/ field uses the value-escaped
-          // variant so a member with `<a href="...">` in their name can't
-          // inject markup into a templated broadcast that resolves their
-          // forename token for partners or other recipients.
-          const htmlBody = resolvedBodyHtml.replace(/\n/g, '<br>');
+            text: resolvedText,
+            html: resolvedHtml,
+          } = resolveRichBody(subject, body, member, u3aName, extraTokens);
           const msg = {
             to: { email: member.email, name: `${member.forenames} ${member.surname}`.trim() },
             from: { email: FROM_ADDRESS, name: u3aName },
             replyTo: { email: replyTo, name: u3aName },
             subject: resolvedSubject,
-            text: resolvedBody,
-            html: htmlBody,
+            text: resolvedText,
+            html: resolvedHtml,
             attachments: attachments.length > 0 ? attachments : undefined,
             customArgs: { batch_id: batchId },
           };
@@ -477,15 +476,17 @@ router.post(
 
       await storeRecipients(req.user.tenantSlug, batchId, recipientRows);
 
-      // Optional copy to self (no token substitution)
+      // Optional copy to self (no token substitution — resolveRichBody with
+      // member: null leaves #TOKENs in the rendered body verbatim)
       if (copyToSelf && replyTo) {
+        const { text: copyText, html: copyHtml } = resolveRichBody(subject, body, null);
         const selfMsg = {
           to: replyTo,
           from: { email: FROM_ADDRESS, name: u3aName },
           replyTo: { email: replyTo, name: u3aName },
           subject: `[COPY] ${subject}`,
-          text: body,
-          html: body.replace(/\n/g, '<br>'),
+          text: copyText,
+          html: copyHtml,
           attachments: attachments.length > 0 ? attachments : undefined,
         };
         await sgMail.send(selfMsg).catch(() => {});

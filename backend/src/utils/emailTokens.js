@@ -143,4 +143,4 @@ export function resolveTokens(subject, body, member, u3aName, extraTokens) {
 /**
  * Format a date for display (exported for reuse).
  */
-export { fmtDate, buildTokenMap, applyTokens };
+export { fmtDate, buildTokenMap, applyTokens, escapeHtml };

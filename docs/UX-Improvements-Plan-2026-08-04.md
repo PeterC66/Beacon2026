@@ -24,7 +24,7 @@
 | 1 | Remove "Save as standard email/letter" buttons from compose screens | DONE — see below |
 | 2 | Floating scroll arrows: scope trigger to table, fix target to full page | DONE — see below |
 | 3 | Home menu: "Poll" → "Polls" | DONE — see below |
-| 4 | Rich formatting for emails (bring to parity with letters) | NOT STARTED — approved, larger piece |
+| 4 | Rich formatting for emails (bring to parity with letters) | DONE — see below |
 | 5 | Seed St Ives's own standard emails/letters into the existing tenant | NOT STARTED — data action, not new code |
 | 6 | Un-cap table-heavy tab widths (e.g. group Members) | NOT STARTED |
 | 8 | "Add Events" panel submit button: "Add Events" → "Save" | NOT STARTED |
@@ -147,6 +147,38 @@ substitution used in templates) needs an HTML-aware variant — flagged as a
 latent gap for a related flow in `KNOWN-ISSUES.md` Security #23
 (`resolveTokens` callers using `body` not `bodyHtml`), worth resolving as
 part of this same piece of work rather than separately.
+
+**Built:** `EmailCompose.jsx` now uses the same TipTap editor as
+`LetterCompose.jsx` — the shared config/toolbar was pulled out into
+[`components/RichTextEditor.jsx`](../frontend/src/components/RichTextEditor.jsx)
+so both compose screens share one implementation (`LetterCompose.jsx` was
+refactored to use it too, no behaviour change there). Body is stored/sent as
+the TipTap JSON-doc shape (matching `POST /letters/download`'s existing
+schema) rather than HTML — `POST /email/send`'s `body` field changed from
+`z.string()` to the doc-object schema. Per-recipient resolution moved into a
+new [`backend/src/utils/richEmailBody.js`](../backend/src/utils/richEmailBody.js)
+(`resolveRichBody()`), which walks the doc the same way
+`tiptapToPdfContent()` does for letters (paragraph/heading, bold/italic/
+underline, `textStyle` fontSize, alignment, hardBreak) and produces a real
+HTML part plus a plain-text fallback, with `#TOKEN` values HTML-escaped so
+member-supplied data can't inject markup into a broadcast — `sgMail.send()`
+now gets distinct `text`/`html` instead of the old `body.replace(/\n/g,
+'<br>')` shim. The old `resolveTokens()` (string-based) is untouched and
+still used by `routes/portal/*.js` and `routes/public/join.js`'s
+`system_messages` templates — those are a separate feature (portal/join
+confirmation emails) and were out of scope here; **`KNOWN-ISSUES.md` #23
+remains open**, it was never about `email.js`/`standard_messages`. The
+group/team "Std Emails" tab and the tenant-wide Standard Messages admin
+screen (item 7) edit these bodies as plain text (one paragraph per line) via
+`simpleTiptapDoc.js`, the same simplification already used for
+`StdLettersTab.jsx` — editing a richly-formatted email from either of those
+screens flattens its formatting, same trade-off letters already made. Not
+yet click-tested in a live browser (no local Postgres/seeded tenant available
+in-session, same constraint as item 7) — verified via lint, format, and the
+full frontend/backend test suites (all green), including new unit tests for
+`resolveRichBody()` (marks, alignment, hardBreak, token substitution/
+escaping, multi-line token values) and an integration test for `POST
+/email/send` asserting the SendGrid payload's `subject`/`html`/`text`.
 
 ---
 
