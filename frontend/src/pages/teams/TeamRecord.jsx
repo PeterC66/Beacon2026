@@ -87,12 +87,16 @@ export default function TeamRecord() {
     },
   ];
 
+  // Details is a long form and doesn't benefit from full width; the other
+  // tabs are table-heavy and get a wider cap so their columns aren't cramped.
+  const wrapperMaxW = !isNew && activeTab !== 'details' ? 'max-w-7xl' : 'max-w-4xl';
+
   return (
     <div className="min-h-screen pb-10">
       <PageHeader tenant={tenant} />
       <NavBar links={navLinks} />
 
-      <div className="max-w-4xl mx-auto px-4 py-4">
+      <div className={`${wrapperMaxW} mx-auto px-4 py-4`}>
         {/* Title */}
         <h1 className="text-xl font-bold text-center mb-3">
           {isNew ? 'Add New Team' : teamName || 'Team Record'}
