@@ -14,9 +14,11 @@ import { venues as venuesApi } from '../lib/api.js';
 import { useAuth } from '../context/AuthContext.jsx';
 import RequiredMark from './RequiredMark.jsx';
 import { fmtDate, fmtTime } from '../lib/dateFormatters.js';
+import { useUnsavedChanges } from '../hooks/useUnsavedChanges.js';
 
 export default function Schedule({ entityId, api, privilege = 'group_records_all' }) {
   const { can } = useAuth();
+  const { markDirty, markClean } = useUnsavedChanges();
   const [events, setEvents] = useState([]);
   const [venues, setVenues] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -69,6 +71,7 @@ export default function Schedule({ entityId, api, privilege = 'group_records_all
   }
 
   function setAdd(field, value) {
+    markDirty();
     setAddForm((prev) => ({ ...prev, [field]: value }));
   }
 
@@ -95,6 +98,7 @@ export default function Schedule({ entityId, api, privilege = 'group_records_all
       }
       await api.createEvents(entityId, payload);
       setAddForm(EMPTY_EV);
+      markClean();
       await load();
     } catch (err) {
       setAddError(err.message);

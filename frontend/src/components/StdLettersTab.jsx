@@ -15,11 +15,13 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext.jsx';
 import { textToTiptapDoc, tiptapDocToText } from '../lib/simpleTiptapDoc.js';
+import { useUnsavedChanges } from '../hooks/useUnsavedChanges.js';
 
 const EMPTY = { name: '', body: '' };
 
 export default function StdLettersTab({ entityId, api }) {
   const { can } = useAuth();
+  const { markDirty, markClean } = useUnsavedChanges();
   const [letters, setLetters] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -68,6 +70,12 @@ export default function StdLettersTab({ entityId, api }) {
     setEditingId(null);
     setForm(EMPTY);
     setSaveError(null);
+    markClean();
+  }
+
+  function set(field, value) {
+    markDirty();
+    setForm((p) => ({ ...p, [field]: value }));
   }
 
   async function handleSave(e) {
@@ -80,6 +88,7 @@ export default function StdLettersTab({ entityId, api }) {
         name: form.name.trim(),
         body: JSON.stringify(textToTiptapDoc(form.body)),
       });
+      markClean();
       cancelEdit();
       await load();
     } catch (err) {
@@ -177,7 +186,7 @@ export default function StdLettersTab({ entityId, api }) {
               id="std-letter-name"
               className={`${inputCls} w-full`}
               value={form.name}
-              onChange={(e) => setForm((p) => ({ ...p, name: e.target.value }))}
+              onChange={(e) => set('name', e.target.value)}
               disabled={!!editingId}
             />
           </div>
@@ -190,7 +199,7 @@ export default function StdLettersTab({ entityId, api }) {
               rows={10}
               className={`${inputCls} w-full font-mono text-xs`}
               value={form.body}
-              onChange={(e) => setForm((p) => ({ ...p, body: e.target.value }))}
+              onChange={(e) => set('body', e.target.value)}
             />
           </div>
           <div className="flex gap-2">

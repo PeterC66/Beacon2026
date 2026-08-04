@@ -16,11 +16,13 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext.jsx';
 import { textToTiptapDoc, tiptapDocToText } from '../lib/simpleTiptapDoc.js';
+import { useUnsavedChanges } from '../hooks/useUnsavedChanges.js';
 
 const EMPTY = { name: '', subject: '', body: '' };
 
 export default function StdEmailsTab({ entityId, api }) {
   const { can } = useAuth();
+  const { markDirty, markClean } = useUnsavedChanges();
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -69,6 +71,12 @@ export default function StdEmailsTab({ entityId, api }) {
     setEditingId(null);
     setForm(EMPTY);
     setSaveError(null);
+    markClean();
+  }
+
+  function set(field, value) {
+    markDirty();
+    setForm((p) => ({ ...p, [field]: value }));
   }
 
   async function handleSave(e) {
@@ -82,6 +90,7 @@ export default function StdEmailsTab({ entityId, api }) {
         subject: form.subject,
         body: JSON.stringify(textToTiptapDoc(form.body)),
       });
+      markClean();
       cancelEdit();
       await load();
     } catch (err) {
@@ -184,7 +193,7 @@ export default function StdEmailsTab({ entityId, api }) {
                 id="std-email-name"
                 className={`${inputCls} w-full`}
                 value={form.name}
-                onChange={(e) => setForm((p) => ({ ...p, name: e.target.value }))}
+                onChange={(e) => set('name', e.target.value)}
                 disabled={!!editingId}
               />
             </div>
@@ -196,7 +205,7 @@ export default function StdEmailsTab({ entityId, api }) {
                 id="std-email-subject"
                 className={`${inputCls} w-full`}
                 value={form.subject}
-                onChange={(e) => setForm((p) => ({ ...p, subject: e.target.value }))}
+                onChange={(e) => set('subject', e.target.value)}
               />
             </div>
           </div>
@@ -209,7 +218,7 @@ export default function StdEmailsTab({ entityId, api }) {
               rows={8}
               className={`${inputCls} w-full font-mono text-xs`}
               value={form.body}
-              onChange={(e) => setForm((p) => ({ ...p, body: e.target.value }))}
+              onChange={(e) => set('body', e.target.value)}
             />
           </div>
           <div className="flex gap-2">
