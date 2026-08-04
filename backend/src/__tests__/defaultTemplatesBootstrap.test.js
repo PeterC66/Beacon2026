@@ -1,14 +1,20 @@
-// beacon2026/backend/src/__tests__/defaultTemplates.test.js
-// Sanity checks for the Standard Email/Letter templates seeded into every
-// new tenant — every #TOKEN used must be one emailTokens.js actually
-// resolves, and no tenant-specific detail (a real u3a's own address/phone/
-// email) should have leaked into what's meant to be a generic default.
+// beacon2026/backend/src/__tests__/defaultTemplatesBootstrap.test.js
+// Sanity checks for the Standard Email/Letter templates used to bootstrap
+// the System Admin-maintained default_standard_messages/letters master
+// tables (utils/migrate.js seedDefaultTemplates(), see item 11 of
+// docs/UX-Improvements-Plan-2026-08-04.md) — every #TOKEN used must be one
+// emailTokens.js actually resolves, and no tenant-specific detail (a real
+// u3a's own address/phone/email) should have leaked into what's meant to be
+// a generic default.
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import supertest from 'supertest';
 import { makeAuthHeader } from './helpers.js';
 import { buildTokenMap } from '../utils/emailTokens.js';
-import { DEFAULT_STANDARD_MESSAGES, DEFAULT_STANDARD_LETTERS } from '../seed/defaultTemplates.js';
+import {
+  BOOTSTRAP_STANDARD_MESSAGES as DEFAULT_STANDARD_MESSAGES,
+  BOOTSTRAP_STANDARD_LETTERS as DEFAULT_STANDARD_LETTERS,
+} from '../utils/migrate.js';
 
 vi.mock('../utils/db.js', () => ({
   prisma: { $disconnect: vi.fn() },

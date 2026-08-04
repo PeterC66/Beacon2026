@@ -19,6 +19,20 @@ vi.mock('../utils/db.js', () =>
         delete: vi.fn(),
       },
       sysAdmin: { findUnique: vi.fn() },
+      defaultStandardMessage: {
+        findMany: vi.fn(),
+        findUnique: vi.fn(),
+        create: vi.fn(),
+        update: vi.fn(),
+        delete: vi.fn(),
+      },
+      defaultStandardLetter: {
+        findMany: vi.fn(),
+        findUnique: vi.fn(),
+        create: vi.fn(),
+        update: vi.fn(),
+        delete: vi.fn(),
+      },
       $executeRawUnsafe: vi.fn().mockResolvedValue(undefined),
       $queryRawUnsafe: vi.fn(),
     },
@@ -235,5 +249,158 @@ describe('GET /system/tenants/:slug/feature-config', () => {
       .get('/system/tenants/missing/feature-config')
       .set('Authorization', SYS);
     expect(res.status).toBe(404);
+  });
+});
+
+// ── Default Standard Emails / Letters (item 11) ─────────────────────────────
+
+describe('/system/default-messages', () => {
+  it('GET lists all default messages', async () => {
+    prisma.defaultStandardMessage.findMany.mockResolvedValueOnce([
+      { id: 'm1', name: 'Welcome', subject: 'Hi', body: 'Hello' },
+    ]);
+    const res = await request(app).get('/system/default-messages').set('Authorization', SYS);
+    expect(res.status).toBe(200);
+    expect(res.body[0].name).toBe('Welcome');
+  });
+
+  it('POST creates a new default message', async () => {
+    prisma.defaultStandardMessage.findUnique.mockResolvedValueOnce(null);
+    prisma.defaultStandardMessage.create.mockResolvedValueOnce({
+      id: 'm1',
+      name: 'Welcome',
+      subject: 'Hi',
+      body: 'Hello',
+    });
+    const res = await request(app)
+      .post('/system/default-messages')
+      .set('Authorization', SYS)
+      .send({ name: 'Welcome', subject: 'Hi', body: 'Hello' });
+    expect(res.status).toBe(201);
+    expect(res.body.name).toBe('Welcome');
+  });
+
+  it('POST returns 409 when the name is already taken', async () => {
+    prisma.defaultStandardMessage.findUnique.mockResolvedValueOnce({ id: 'm1', name: 'Welcome' });
+    const res = await request(app)
+      .post('/system/default-messages')
+      .set('Authorization', SYS)
+      .send({ name: 'Welcome', subject: 'Hi', body: 'Hello' });
+    expect(res.status).toBe(409);
+    expect(prisma.defaultStandardMessage.create).not.toHaveBeenCalled();
+  });
+
+  it('POST returns 422 when body is missing', async () => {
+    const res = await request(app)
+      .post('/system/default-messages')
+      .set('Authorization', SYS)
+      .send({ name: 'Welcome' });
+    expect(res.status).toBe(422);
+  });
+
+  it('PATCH updates a default message', async () => {
+    prisma.defaultStandardMessage.update.mockResolvedValueOnce({
+      id: 'm1',
+      name: 'Welcome',
+      subject: 'Updated',
+      body: 'Hello',
+    });
+    const res = await request(app)
+      .patch('/system/default-messages/m1')
+      .set('Authorization', SYS)
+      .send({ subject: 'Updated' });
+    expect(res.status).toBe(200);
+    expect(res.body.subject).toBe('Updated');
+  });
+
+  it('DELETE removes a default message', async () => {
+    prisma.defaultStandardMessage.delete.mockResolvedValueOnce({ id: 'm1' });
+    const res = await request(app).delete('/system/default-messages/m1').set('Authorization', SYS);
+    expect(res.status).toBe(204);
+  });
+
+  it('POST .../rollout returns 404 when the template does not exist', async () => {
+    prisma.defaultStandardMessage.findUnique.mockResolvedValueOnce(null);
+    const res = await request(app)
+      .post('/system/default-messages/missing/rollout')
+      .set('Authorization', SYS);
+    expect(res.status).toBe(404);
+  });
+
+  it('POST .../rollout inserts into tenants missing the template, skips tenants that already have it', async () => {
+    prisma.defaultStandardMessage.findUnique.mockResolvedValueOnce({
+      id: 'm1',
+      name: 'Welcome',
+      subject: 'Hi',
+      body: 'Hello',
+    });
+    prisma.sysTenant.findMany.mockResolvedValueOnce([
+      { slug: 'stives', name: 'St Ives' },
+      { slug: 'demo', name: 'Demo u3a' },
+    ]);
+    tenantQuery
+      .mockResolvedValueOnce([{ id: 'sm1' }]) // stives: created
+      .mockResolvedValueOnce([]); // demo: already present, ON CONFLICT DO NOTHING → no rows
+
+    const res = await request(app)
+      .post('/system/default-messages/m1/rollout')
+      .set('Authorization', SYS);
+
+    expect(res.status).toBe(200);
+    expect(res.body.template).toBe('Welcome');
+    expect(res.body.results).toEqual([
+      { slug: 'stives', name: 'St Ives', created: true },
+      { slug: 'demo', name: 'Demo u3a', created: false },
+    ]);
+    expect(prisma.sysTenant.findMany).toHaveBeenCalledWith({ where: { active: true } });
+  });
+});
+
+describe('/system/default-letters', () => {
+  it('GET lists all default letters', async () => {
+    prisma.defaultStandardLetter.findMany.mockResolvedValueOnce([
+      { id: 'l1', name: 'Annual Data Check Form', body: '{"type":"doc","content":[]}' },
+    ]);
+    const res = await request(app).get('/system/default-letters').set('Authorization', SYS);
+    expect(res.status).toBe(200);
+    expect(res.body[0].name).toBe('Annual Data Check Form');
+  });
+
+  it('POST creates a new default letter', async () => {
+    prisma.defaultStandardLetter.findUnique.mockResolvedValueOnce(null);
+    prisma.defaultStandardLetter.create.mockResolvedValueOnce({
+      id: 'l1',
+      name: 'New Letter',
+      body: '{"type":"doc","content":[]}',
+    });
+    const res = await request(app)
+      .post('/system/default-letters')
+      .set('Authorization', SYS)
+      .send({ name: 'New Letter', body: '{"type":"doc","content":[]}' });
+    expect(res.status).toBe(201);
+    expect(res.body.name).toBe('New Letter');
+  });
+
+  it('DELETE removes a default letter', async () => {
+    prisma.defaultStandardLetter.delete.mockResolvedValueOnce({ id: 'l1' });
+    const res = await request(app).delete('/system/default-letters/l1').set('Authorization', SYS);
+    expect(res.status).toBe(204);
+  });
+
+  it('POST .../rollout inserts into every tenant missing the letter', async () => {
+    prisma.defaultStandardLetter.findUnique.mockResolvedValueOnce({
+      id: 'l1',
+      name: 'Annual Data Check Form',
+      body: '{"type":"doc","content":[]}',
+    });
+    prisma.sysTenant.findMany.mockResolvedValueOnce([{ slug: 'stives', name: 'St Ives' }]);
+    tenantQuery.mockResolvedValueOnce([{ id: 'sl1' }]);
+
+    const res = await request(app)
+      .post('/system/default-letters/l1/rollout')
+      .set('Authorization', SYS);
+
+    expect(res.status).toBe(200);
+    expect(res.body.results).toEqual([{ slug: 'stives', name: 'St Ives', created: true }]);
   });
 });

@@ -48,3 +48,30 @@ model SysSettings {
 
   @@map("sys_settings")
 }
+
+// Default Standard Email Messages / Standard Letters, maintained by System
+// Admin (see routes/system.js). Rolled out on demand into individual tenant
+// schemas' own `standard_messages` / `standard_letters` tables (item 11 of
+// docs/UX-Improvements-Plan-2026-08-04.md), and read by seed/createTenant.js
+// to seed every newly-created tenant.
+
+model DefaultStandardMessage {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  subject   String   @default("")
+  body      String
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at")
+
+  @@map("default_standard_messages")
+}
+
+model DefaultStandardLetter {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  body      String
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at")
+
+  @@map("default_standard_letters")
+}

@@ -81,6 +81,31 @@ that still says "Unreleased".
   the previous filter-only behaviour is unchanged. New shared
   `useLetterJump.js` hook used by `MemberList.jsx`, `GroupList.jsx`, and
   `TeamList.jsx`.
+- **System Admin: CRUD + rollout for default standard emails/letters.** New
+  "Default Standard Emails & Letters" section on the System Admin dashboard
+  (`/system`, `DefaultTemplatesSection.jsx`) lets System Admin add, edit and
+  delete the templates every newly-created tenant is seeded with, and
+  "Roll out" any one of them into every active tenant that doesn't already
+  have a template of that name — the same idempotent
+  `INSERT ... ON CONFLICT (name) DO NOTHING` pattern `createTenant.js` has
+  always used, now user-triggerable instead of only running at tenant
+  creation. New master-DB tables `default_standard_messages` /
+  `default_standard_letters` (Prisma models `DefaultStandardMessage` /
+  `DefaultStandardLetter`), replacing the static
+  `backend/src/seed/defaultTemplates.js` (removed) as the single source of
+  truth — `createTenant.js` now reads from these tables, and they're
+  bootstrapped once (only when completely empty, so a deleted template is
+  never resurrected) from the same original content via
+  `seedDefaultTemplates()` in `backend/src/utils/migrate.js`. New routes
+  under the existing `requireSysAdmin`-gated `/system` router:
+  `GET/POST/PATCH/DELETE /system/default-messages(|/:id)` and
+  `/system/default-letters(|/:id)`, plus
+  `POST .../:id/rollout`. This is a System Admin function (separate
+  `/system/login` credentials, cross-tenant) — distinct from the per-tenant
+  `isSiteAdmin` flag SQL Reports uses, which is unaffected. Supersedes the
+  one-off "seed St Ives" data-action plan (item 5 →
+  `docs/UX-Improvements-Plan-2026-08-04.md` item 11): seeding an existing
+  tenant is now "log into `/system` and click Roll out."
 
 ### Changed
 - **"Save as standard email/letter" removed from the compose screens.**

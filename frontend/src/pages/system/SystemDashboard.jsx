@@ -11,6 +11,7 @@ import CreateTenantForm from './CreateTenantForm.jsx';
 import RestoreBackupSection from './RestoreBackupSection.jsx';
 import RestoreConfirmModal from './RestoreConfirmModal.jsx';
 import FeatureConfigModal from './FeatureConfigModal.jsx';
+import DefaultTemplatesSection from './DefaultTemplatesSection.jsx';
 
 export default function SystemDashboard() {
   const navigate = useNavigate();
@@ -410,6 +411,9 @@ export default function SystemDashboard() {
             {sysMessageSaved && <span className="text-green-600 text-sm font-medium">Saved</span>}
           </div>
         </section>
+
+        {/* Default Standard Emails & Letters */}
+        <DefaultTemplatesSection />
 
         {/* Restore from Backup */}
         <RestoreBackupSection

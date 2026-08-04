@@ -1082,6 +1082,7 @@ These are features or architectural aspects of beacon2026 that have no counterpa
 | Feature | Description |
 |---------|-------------|
 | **System tier** | Separate system admin login, tenant CRUD, set-temp-password — manages multiple u3a instances from a single dashboard |
+| **Default standard email/letter template library** | System Admin CRUD (Home dashboard's "Default Standard Emails & Letters" section) for the templates every newly-created tenant is seeded with, plus a "Roll out" action per template that pushes it into every existing tenant that doesn't already have one of that name — used to backfill a template into a tenant created before it existed. Added 2026-08-04. |
 | **Auto-migration** | `migrateTenantSchemas()` re-runs idempotent DDL on every startup; no manual schema management |
 | **JWT + refresh token auth** | Access token (15 min, in-memory only) + refresh token (30 days, httpOnly cookie); bcrypt 12 rounds (replaces Beacon's session-based auth) |
 | **SiteWorks integration** | Tenant-wide toggle hides group scheduling/venue fields when SiteWorks manages events |

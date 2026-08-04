@@ -10,6 +10,8 @@ vi.mock('../lib/api.js', () => ({
     createTenant: vi.fn(),
     setTenantActive: vi.fn(),
     getSettings: vi.fn().mockResolvedValue({ systemMessage: '' }),
+    listDefaultMessages: vi.fn().mockResolvedValue([]),
+    listDefaultLetters: vi.fn().mockResolvedValue([]),
   },
   getSysToken: vi.fn().mockReturnValue('fake-sys-token'),
   clearSysToken: vi.fn(),
