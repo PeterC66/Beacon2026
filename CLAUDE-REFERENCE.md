@@ -472,11 +472,13 @@ which requires categories). Users can categorize later.
 
 ### Group record tabs
 
-`GroupRecord.jsx` at `/groups/:id` — Details tab, Members tab, Schedule tab, Ledger tab.
-`TeamRecord.jsx` at `/teams/:id` — Details tab, Members tab, Schedule tab, Ledger tab.
+`GroupRecord.jsx` at `/groups/:id` — Details, Members, Schedule, Ledger, Std Emails, Std Letters tabs.
+`TeamRecord.jsx` at `/teams/:id` — same set (minus Schedule specifics that differ — see below).
 
 Members and Schedule tabs use shared components (`EntityMembers.jsx`, `Schedule.jsx`)
-parameterised by `entityType` (`'group'`/`'team'`), `api`, and `entityId`.
+parameterised by `entityType` (`'group'`/`'team'`), `api`, and `entityId`. Std Emails/Std
+Letters tabs use the same pattern (`StdEmailsTab.jsx`, `StdLettersTab.jsx`, parameterised
+by `entityId` + `api`) — see "Std Emails / Std Letters ownership" below.
 
 ### Shared Zod schemas (`backend/src/schemas/`)
 
@@ -538,6 +540,42 @@ Entirely independent from the Finance Ledger.
 - `GET /groups/:id/members/download?format=excel|pdf&ids=...&fields=...`
 - Download field picker, same pattern as MemberList
 - Checkboxes + Send Email button (stores member IDs in sessionStorage)
+
+### Std Emails / Std Letters ownership (beacon2026 extra, added 2026-08-04)
+
+A Standard Email/Letter template (`standard_messages`/`standard_letters`) is either
+unowned (Administration-only) or owned by a group/team (`owner_group_id`, `ON DELETE
+SET NULL`). This is a **second** implementation of the `_all`/`_as_leader` pattern
+first used by the Ledger tab — reuse it before inventing a third:
+
+- `backend/src/utils/groupLeader.js` — `isGroupLeader(tenantSlug, userId, groupId)`,
+  the shared version of the `users.member_id → group_members.is_leader` join that
+  `hasLedgerAccess()` in `groups/ledger.js` / `teams/ledger.js` still duplicates
+  privately. New leader-scoped features should import this rather than re-deriving
+  the SQL a third time.
+- `backend/src/utils/templateOwnership.js` — `hasTemplateManageAccess(req,
+  resourcePrefix, action, ownerGroupId)`, the generalised `hasLedgerAccess`
+  equivalent: checks `${resourcePrefix}_all:${action}` first, then
+  `${resourcePrefix}_as_leader:${action}` + `isGroupLeader()`.
+- `backend/src/routes/groupStdMessages.js` — **one shared router**, not the usual
+  per-module `groups/*.js` + `teams/*.js` duplication (see `ledger.js` for that
+  older pattern). Mounted identically under both `groups/index.js` and
+  `teams/index.js` because a team is just a `groups` row with `type='team'` and
+  `owner_group_id` doesn't care which — there was nothing group-vs-team-specific
+  left to duplicate. Routes: `GET/POST /:id/std-messages`,
+  `DELETE /:id/std-messages/:msgId`, and the `/std-letters` equivalents.
+- The **tenant-wide** `/email/standard-messages` and `/letters/standard-letters`
+  POST/DELETE (in `email.js`/`letters.js`) are Administration-only
+  (`${resource}_all:${action}`, checked directly — no `isGroupLeader` branch, since
+  there's no group in the URL to be leader of). They can set/clear/reassign
+  `owner_group_id`; the nested group/team routes cannot — ownership there is always
+  implicit from the URL.
+- **Gotcha:** `standard_letters.body` is a stringified Tiptap doc
+  (`{type:'doc',content:[...]}`), not plain text — see `tiptapToPdfContent()` in
+  `letters.js`. `StdLettersTab.jsx` edits it as plain text (one line = one
+  paragraph) via `frontend/src/lib/simpleTiptapDoc.js`, which flattens any
+  bold/italic/underline formatting on save — a deliberate scope cut (see
+  `KNOWN-ISSUES.md`), not a bug.
 
 [↑ Back to top](#contents)
 
@@ -711,7 +749,7 @@ financeApi.listAccounts() / .createAccount(data) / .updateAccount(id, data) / .d
 |-------|-------|
 | `email_batches` | Per Send click: user_id, subject, body, from_email, reply_to, recipient_count |
 | `email_recipients` | Per recipient: status, sendgrid_message_id |
-| `standard_messages` | Named templates; UNIQUE name (upsert on save) |
+| `standard_messages` | Named templates; UNIQUE name (upsert on save); `owner_group_id` nullable FK, `ON DELETE SET NULL` — beacon2026 extra, added 2026-08-04, see §6 |
 
 ### Token substitution
 
@@ -724,7 +762,8 @@ Case-insensitive. Key tokens: `#FAM`, `#FORENAME`, `#SURNAME`, `#TITLE`, `#MEMNO
 | Route | Privilege | Notes |
 |-------|-----------|-------|
 | `GET /email/from-addresses` | `email:send` | User's member email + office emails |
-| `GET/POST/DELETE /email/standard-messages` | `email_standard_messages:*` | Templates |
+| `GET /email/standard-messages` | `email_standard_messages:view` | List templates (all, incl. owner) |
+| `POST/DELETE /email/standard-messages` | `email_standard_messages_all:*` | Admin-only; can set/reassign `owner_group_id`. Group/team-scoped create/edit/delete goes through `groupStdMessages.js` instead — see §6 "Std Emails / Std Letters ownership" |
 | `POST /email/send` | `email:send` | Multipart (attachments) or JSON |
 | `GET /email/delivery` | `email_delivery:view` | Own batches; all if `email_delivery:all` |
 | `GET /email/delivery/:batchId` | `email_delivery:view` | Batch + recipients |
@@ -1715,15 +1754,16 @@ and support standard letter templates for reuse.
 ### Data model
 
 - `standard_letters` table: `id`, `name` (UNIQUE), `body` (TipTap JSON string),
-  `created_at`, `updated_at`
+  `owner_group_id` (nullable FK to `groups.id`, `ON DELETE SET NULL` — beacon2026
+  extra, added 2026-08-04, see CLAUDE-REFERENCE §6), `created_at`, `updated_at`
 
 ### Backend routes (`/letters`)
 
 | Method | Path | Privilege | Purpose |
 |--------|------|-----------|---------|
-| GET | `/standard-letters` | `letters_standard_messages:view` | List templates |
-| POST | `/standard-letters` | `letters_standard_messages:create` | Save/upsert template |
-| DELETE | `/standard-letters/:id` | `letters_standard_messages:delete` | Delete template |
+| GET | `/standard-letters` | `letters_standard_messages:view` | List templates (all, incl. owner) |
+| POST | `/standard-letters` | `letters_standard_messages_all:create` | Admin-only save/upsert; can set/reassign `owner_group_id`. Group/team-scoped create/edit goes through `groupStdMessages.js` instead |
+| DELETE | `/standard-letters/:id` | `letters_standard_messages_all:delete` | Admin-only delete |
 | POST | `/download` | `letters:download` | Generate PDF |
 
 ### PDF generation
