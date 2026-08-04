@@ -79,6 +79,7 @@ export const ALL_FEATURE_KEYS = Object.freeze([
   'reports',
   'publicPages',
   'publicApi',
+  'azButtonsJumpToRecord',
 ]);
 
 // ── Public read API ─────────────────────────────────────────────────────

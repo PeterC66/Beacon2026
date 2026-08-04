@@ -29,7 +29,7 @@
 | 6 | Un-cap table-heavy tab widths (e.g. group Members) | DONE — see below |
 | 8 | "Add Events" panel submit button: "Add Events" → "Save" | DONE — see below |
 | 9 | Unsaved-changes warning on all group/team tabs, not just Details | DONE — see below |
-| 10 | Per-tenant switch: A–Z buttons = Filter vs Jump-to-first-record | NOT STARTED |
+| 10 | Per-tenant switch: A–Z buttons = Filter vs Jump-to-first-record | DONE — see below |
 
 ---
 
@@ -298,3 +298,47 @@ record, matching classic Beacon, per Peter's explicit instruction that this
 should be the default). When on, clicking a letter scrolls to/selects the
 first record starting with that letter instead of filtering the list down to
 only that letter.
+
+**Built:** new opt-out feature-config key `azButtonsJumpToRecord` (camelCase,
+matching every other key's convention rather than the plan's illustrative
+snake_case), added to `ALL_FEATURE_KEYS` in
+[`shared/constants.js`](../shared/constants.js) (automatically defaults to
+`true` in every `STANDARD_IMPLEMENTATIONS` preset via `buildStandardFeatures`)
+and a toggle in the "Other" section of
+[`FeatureConfig.jsx`](../frontend/src/pages/settings/FeatureConfig.jsx). All
+three screens using the `ALPHABET`/letter-button pattern were covered —
+[`MemberList.jsx`](../frontend/src/pages/members/MemberList.jsx),
+[`GroupList.jsx`](../frontend/src/pages/groups/GroupList.jsx),
+[`TeamList.jsx`](../frontend/src/pages/teams/TeamList.jsx) — no others use it.
+New shared hook
+[`useLetterJump.js`](../frontend/src/hooks/useLetterJump.js) (real
+duplication across three near-identical pages, unlike the plan's original
+per-page framing) exposes `rowRef(id)` / `jumpToLetter(list, field, letter)` /
+`highlightId`: each page attaches `rowRef(id)` to its table rows, and in jump
+mode `handleLetterClick` calls `jumpToLetter(sorted, field, letter)` instead
+of setting the `letter` filter state — `field` is `'surname'` for members
+(matching the server's existing surname-based `letter` filter and the
+default sort) and `'name'` for groups/teams (matching the server's
+name-based filter and its `ORDER BY g.name`). The match is against whatever
+order the table is currently showing (`sorted`, respecting the user's active
+column sort, not forced back to surname/name order), so "first record
+starting with that letter" means the first one currently visible from the
+top, not necessarily alphabetically first if the user has re-sorted by
+another column — this only matters when a column sort other than the default
+is active. On jump, the target row gets a 1.5s amber highlight ring
+(`ring-2 ring-amber-400`) distinct from the existing blue bulk-selection
+outline, so the user can see where they landed. The "All" button (which has
+no meaning in jump mode — there is no filter to clear) is hidden when the
+toggle is on; the floating scroll-to-top/bottom arrows from item 2 already
+cover top-of-page navigation. `MemberListTable.jsx`'s pre-existing but
+never-read `rowRefs.current[surname[0]] = el` (dead infrastructure, keyed by
+letter and overwritten on every matching row so it only ever kept the last
+one) was replaced by the hook's per-id refs, which is what jump-to-*first*-
+record actually needs. `GroupList.jsx`/`TeamList.jsx` had no per-row refs at
+all before this. Existing `GroupList.test.jsx`/`MemberList.test.jsx` mocks
+of `useAuth()` were missing `hasFeature` (not previously called
+unconditionally at the top of either component) — added
+`hasFeature: vi.fn().mockReturnValue(true)` to both. Not yet click-tested in
+a live browser (no local Postgres/seeded tenant available in-session, same
+constraint as items 4/6/7/9) — verified via lint, format, and the full
+frontend/backend test suites (all green).

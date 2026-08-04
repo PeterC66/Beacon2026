@@ -72,6 +72,15 @@ that still says "Unreleased".
   `GroupLedger.jsx`/`TeamLedger.jsx`, and `StdEmailsTab.jsx`/
   `StdLettersTab.jsx` now call the existing `useUnsavedChanges()` hook the
   same way `GroupDetails.jsx`/`TeamDetails.jsx` already did.
+- **A-Z buttons on Members/Groups/Teams can jump to a record instead of
+  filtering.** New opt-out feature-config toggle "A-Z buttons jump to
+  record" (`azButtonsJumpToRecord`, on by default, matching classic
+  Beacon) under Feature Configuration → Other. When on, clicking a letter
+  scrolls to and briefly highlights the first record starting with that
+  letter instead of filtering the list down to only that letter; when off,
+  the previous filter-only behaviour is unchanged. New shared
+  `useLetterJump.js` hook used by `MemberList.jsx`, `GroupList.jsx`, and
+  `TeamList.jsx`.
 
 ### Changed
 - **"Save as standard email/letter" removed from the compose screens.**
