@@ -1274,6 +1274,21 @@ that doesn't match the scenario being tested, check whether an earlier test in
 the same `describe` left mock calls unconsumed before debugging the route logic
 itself. (Hit in `auth.test.js` 2026-08-01 when adding `issueRefreshToken`.)
 
+### Gotcha: `requireFeature` is globally no-op'd in tests — don't queue a mock for it
+
+`__tests__/setup.js` runs `vi.mock('../middleware/requireFeature.js', () => ({
+requireFeature: () => (req, res, next) => next(), isFeatureEnabled: vi.fn(async
+() => true) }))` for every test file, so `router.use(requireFeature('x'))` never
+touches `tenantQuery` in a normal test — don't queue an extra
+`tenantQuery.mockResolvedValueOnce(...)` "for the feature check" before a route's
+real DB calls, it will just shift every subsequent mocked value along by one and
+produce confusing failures. (A test file that specifically wants to exercise the
+real gate, e.g. `giftAid.test.js`, calls `vi.doUnmock('../middleware/requireFeature.js')`
+and re-imports.) Confirmed by instrumenting the real middleware with a
+`console.log` during a debugging session on 2026-08-04 — the log never fired
+even though `requireFeature('email')` is registered via `router.use(...)` at
+the top of `routes/email.js`.
+
 ### SQL is exercised only by E2E (T4)
 
 Because backend unit tests mock `tenantQuery`/`prisma` wholesale, **no SQL is
