@@ -69,6 +69,31 @@ describe('POST /letters/standard-letters', () => {
       .send({ name: '', body: '{}' });
     expect(res.status).toBe(422);
   });
+
+  it('can set the owner group', async () => {
+    tenantQuery.mockResolvedValueOnce([
+      { id: 'sl-new', name: 'Renewal', body: '{}', owner_group_id: 'g1' },
+    ]);
+    const res = await request
+      .post('/letters/standard-letters')
+      .set('Authorization', auth)
+      .send({ name: 'Renewal', body: '{}', ownerGroupId: 'g1' });
+    expect(res.status).toBe(201);
+    expect(res.body.owner_group_id).toBe('g1');
+    expect(tenantQuery.mock.calls[0][2]).toEqual(['Renewal', '{}', 'g1']);
+  });
+
+  it('denies a user without letters_standard_messages_all:create', async () => {
+    const leaderOnly = makeAuthHeader({
+      privileges: ['letters_standard_messages_as_leader:create'],
+    });
+    const res = await request
+      .post('/letters/standard-letters')
+      .set('Authorization', leaderOnly)
+      .send({ name: 'Renewal', body: '{}' });
+    expect(res.status).toBe(403);
+    expect(tenantQuery).not.toHaveBeenCalled();
+  });
 });
 
 describe('DELETE /letters/standard-letters/:id', () => {
@@ -76,6 +101,17 @@ describe('DELETE /letters/standard-letters/:id', () => {
     tenantQuery.mockResolvedValueOnce([]);
     const res = await request.delete('/letters/standard-letters/sl-1').set('Authorization', auth);
     expect(res.status).toBe(204);
+  });
+
+  it('denies a user without letters_standard_messages_all:delete', async () => {
+    const leaderOnly = makeAuthHeader({
+      privileges: ['letters_standard_messages_as_leader:delete'],
+    });
+    const res = await request
+      .delete('/letters/standard-letters/sl-1')
+      .set('Authorization', leaderOnly);
+    expect(res.status).toBe(403);
+    expect(tenantQuery).not.toHaveBeenCalled();
   });
 });
 

@@ -53,6 +53,31 @@ To remove a template you no longer need:
 
 ---
 
+## Ownership: who can add, edit or delete a template
+
+Every template is either **unowned** or **owned by a group or team**. Ownership
+only affects who can *manage* the template -- everyone who can compose an
+email can still see and use every template, regardless of who owns it.
+
+- **Unowned templates** can only be added, edited or deleted by
+  **Administration**. New templates saved from the email compose page's
+  **Save as standard message** button are unowned by default, and that button
+  is only shown to Administration.
+- **Group/team-owned templates** can also be added, edited or deleted by
+  that group or team's own **leaders**, from a **Std Emails** tab on the
+  group/team's own record page (alongside Details, Members and Group Cash).
+  A leader only sees and manages their own group/team's templates there --
+  not any other group's.
+- Only **Administration** can assign a template to a group/team, or move it
+  to a different one. A leader creating a new template from their group's
+  Std Emails tab automatically has it owned by that group -- there is no
+  group picker to choose otherwise.
+- If a group or team that owns templates is deleted, its templates become
+  unowned rather than being deleted -- an Administration user can then
+  reassign or edit them.
+
+---
+
 ## Default templates on a new u3a
 
 Every new beacon2026 tenant starts with two ready-made templates, adapted from
@@ -71,8 +96,9 @@ a starting point, not fixed content.
   like a normal email.
 - Give your templates clear, descriptive names so that other users can find and use
   them easily.
-- Templates are shared across all users of your u3a -- there are no private
-  templates.
+- Templates are visible to and usable by everyone at your u3a -- there are no
+  private templates. Who can *edit* a given template depends on its
+  ownership -- see "Ownership" above.
 
 ---
 

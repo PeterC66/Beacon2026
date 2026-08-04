@@ -392,7 +392,7 @@ export default function LetterCompose() {
                     </option>
                   ))}
                 </select>
-                {can('letters_standard_messages', 'delete') && loadLetterId && (
+                {can('letters_standard_messages_all', 'delete') && loadLetterId && (
                   <button
                     type="button"
                     onClick={handleDeleteLetter}
@@ -401,7 +401,7 @@ export default function LetterCompose() {
                     Delete standard letter
                   </button>
                 )}
-                {can('letters_standard_messages', 'create') && (
+                {can('letters_standard_messages_all', 'create') && (
                   <button
                     type="button"
                     onClick={() => setShowSaveRow((v) => !v)}
@@ -410,7 +410,7 @@ export default function LetterCompose() {
                     Save as standard letter
                   </button>
                 )}
-                {showSaveRow && (
+                {can('letters_standard_messages_all', 'create') && showSaveRow && (
                   <div className="flex gap-2 w-full mt-1">
                     <input
                       type="text"

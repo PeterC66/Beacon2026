@@ -174,7 +174,13 @@ function tiptapToPdfContent(doc, tokenMap) {
   return content;
 }
 
-// ─── Standard Letters CRUD ────────────────────────────────────────────────
+// ─── Standard Letters CRUD (tenant-wide "browse/use every template" screen) ──
+// Viewing is unrestricted (letters_standard_messages:view, unchanged). Add/
+// edit/delete/reassign-owner here is Administration-only
+// (letters_standard_messages_all) — a group/team leader manages their own
+// group's templates from the group/team's Std Letters tab instead
+// (routes/groupStdMessages.js), which is scoped to their own group and
+// can't reassign ownership.
 
 // GET /letters/standard-letters
 router.get(
@@ -185,7 +191,10 @@ router.get(
       const rows = await tenantQuery(
         req.user.tenantSlug,
         `
-      SELECT id, name, body FROM standard_letters ORDER BY name
+      SELECT sl.id, sl.name, sl.body, sl.owner_group_id, g.name AS owner_group_name
+      FROM standard_letters sl
+      LEFT JOIN groups g ON g.id = sl.owner_group_id
+      ORDER BY sl.name
     `,
         [],
       );
@@ -196,55 +205,54 @@ router.get(
   },
 );
 
-// POST /letters/standard-letters
-router.post(
-  '/standard-letters',
-  requirePrivilege('letters_standard_messages', 'create'),
-  async (req, res, next) => {
-    const schema = z.object({
-      name: z.string().min(1).max(200),
-      body: z.string().default(''),
+// POST /letters/standard-letters — Administration only (letters_standard_messages_all)
+router.post('/standard-letters', async (req, res, next) => {
+  if (!req.user.privileges.includes('letters_standard_messages_all:create')) {
+    return res.status(403).json({ error: 'Forbidden' });
+  }
+  const schema = z.object({
+    name: z.string().min(1).max(200),
+    body: z.string().default(''),
+    ownerGroupId: z.string().nullable().optional(),
+  });
+  const parsed = schema.safeParse(req.body);
+  if (!parsed.success)
+    return res.status(422).json({
+      error: 'Validation error',
+      issues: parsed.error.issues.map((i) => ({ path: i.path.join('.'), message: i.message })),
     });
-    const parsed = schema.safeParse(req.body);
-    if (!parsed.success)
-      return res.status(422).json({
-        error: 'Validation error',
-        issues: parsed.error.issues.map((i) => ({ path: i.path.join('.'), message: i.message })),
-      });
-    const { name, body } = parsed.data;
-    try {
-      const rows = await tenantQuery(
-        req.user.tenantSlug,
-        `
-      INSERT INTO standard_letters (name, body)
-      VALUES ($1, $2)
-      ON CONFLICT (name) DO UPDATE SET body = $2, updated_at = NOW()
-      RETURNING id, name, body
+  const { name, body, ownerGroupId } = parsed.data;
+  try {
+    const rows = await tenantQuery(
+      req.user.tenantSlug,
+      `
+      INSERT INTO standard_letters (name, body, owner_group_id)
+      VALUES ($1, $2, $3)
+      ON CONFLICT (name) DO UPDATE SET body = $2, owner_group_id = $3, updated_at = NOW()
+      RETURNING id, name, body, owner_group_id
     `,
-        [name, body],
-      );
-      res.status(201).json(rows[0]);
-    } catch (err) {
-      next(err);
-    }
-  },
-);
+      [name, body, ownerGroupId ?? null],
+    );
+    res.status(201).json(rows[0]);
+  } catch (err) {
+    next(err);
+  }
+});
 
-// DELETE /letters/standard-letters/:id
-router.delete(
-  '/standard-letters/:id',
-  requirePrivilege('letters_standard_messages', 'delete'),
-  async (req, res, next) => {
-    try {
-      await tenantQuery(req.user.tenantSlug, `DELETE FROM standard_letters WHERE id = $1`, [
-        req.params.id,
-      ]);
-      res.status(204).end();
-    } catch (err) {
-      next(err);
-    }
-  },
-);
+// DELETE /letters/standard-letters/:id — Administration only
+router.delete('/standard-letters/:id', async (req, res, next) => {
+  if (!req.user.privileges.includes('letters_standard_messages_all:delete')) {
+    return res.status(403).json({ error: 'Forbidden' });
+  }
+  try {
+    await tenantQuery(req.user.tenantSlug, `DELETE FROM standard_letters WHERE id = $1`, [
+      req.params.id,
+    ]);
+    res.status(204).end();
+  } catch (err) {
+    next(err);
+  }
+});
 
 // ─── PDF Download ─────────────────────────────────────────────────────────
 

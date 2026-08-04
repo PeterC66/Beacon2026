@@ -93,14 +93,14 @@ beacon2026 is a ground-up rebuild with these goals:
 - **Groups list** — sortable; create/edit/delete; row selection; bulk actions
   (send email to leaders, download Excel/PDF, add members to poll);
   "Switch to Teams" link at top
-- **Group record** — Details, Members, Schedule, Ledger tabs
+- **Group record** — Details, Members, Schedule, Ledger, Std Emails, Std Letters tabs
 - **Group members** — add/remove; mark leaders; waiting list with auto-enforcement;
   bulk actions (send email, download Excel/PDF, remove members, add to another group)
 - **Group schedule** — single + recurring events; inline edit; bulk delete
   (shared `Schedule` component used by both groups and teams)
 - **Group ledger** — independent from finance; per-group in/out; download Excel
 - **Teams list** — same pattern as groups; "Switch to Groups" link at top
-- **Team record** — Details, Members, Schedule, Ledger tabs
+- **Team record** — Details, Members, Schedule, Ledger, Std Emails, Std Letters tabs
 - **Team schedule** — same features as group schedule (single + recurring events,
   inline edit, bulk delete); backend `/teams/:id/events` CRUD routes
 - **Venues** — CRUD; venue dropdown on group details; single address field + postcode;
@@ -152,13 +152,20 @@ beacon2026 is a ground-up rebuild with these goals:
 
 ### Email module
 - **Email compose** — member selection, token substitution, attachments (SendGrid)
-- **Standard messages** — CRUD templates
+- **Standard messages** — CRUD templates; owned by a group/team or unowned
+  (Administration-only); two seeded on tenant creation (New Member Welcome,
+  Renewal Confirmation); managed tenant-wide (Administration, unowned only)
+  from the compose page, or per-group/team via that group/team's Std Emails tab
 - **Email delivery** — batch list; per-recipient status; SendGrid Activity refresh
 - **Email unblocker** — admin tool to remove from bounce/spam lists
 
 ### Letters module
 - **Letter compose** (docs 6.2, 6.2.1, 6.2.2) — compose letters with member selection,
   token substitution, print/download PDF
+- **Standard letters** — same ownership model as Standard Email Messages; one
+  seeded on tenant creation (Annual Data Check Form); managed tenant-wide
+  (Administration, unowned only) from the compose page's rich-text editor, or
+  per-group/team via that group/team's Std Letters tab (plain text only there)
 
 ### Set-up module
 - **Feature configuration** — per-u3a feature toggles (25 toggles across 7
