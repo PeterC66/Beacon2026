@@ -74,7 +74,6 @@ export default function ScrollButtons({ containerRef }) {
   }, [containerRef]);
 
   useEffect(() => {
-    update();
     window.addEventListener('scroll', update, { passive: true });
     window.addEventListener('resize', update, { passive: true });
 
@@ -92,6 +91,20 @@ export default function ScrollButtons({ containerRef }) {
       if (ro) ro.disconnect();
     };
   }, [update, containerRef]);
+
+  // The container this component watches (containerRef.current) is often
+  // still null on first mount — many list pages render the table only after
+  // an async fetch resolves (`{!loading && <Table ref={containerRef} />}`),
+  // which happens after the effect above has already run once and skipped
+  // attaching the ResizeObserver. Re-running the check on every render
+  // (rather than only on mount/scroll/resize) means the buttons appear
+  // correctly as soon as the table shows up, instead of only after the next
+  // scroll/resize event (which moving the mouse can coincidentally trigger
+  // via wheel movement, masking the bug). setShowTop/setShowBottom bail out
+  // of re-rendering when the value is unchanged, so this doesn't loop.
+  useEffect(() => {
+    update();
+  });
 
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
