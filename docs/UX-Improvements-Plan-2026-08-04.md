@@ -27,7 +27,7 @@
 | 4 | Rich formatting for emails (bring to parity with letters) | DONE — see below |
 | 5 | Seed St Ives's own standard emails/letters into the existing tenant | NOT STARTED — data action, not new code |
 | 6 | Un-cap table-heavy tab widths (e.g. group Members) | NOT STARTED |
-| 8 | "Add Events" panel submit button: "Add Events" → "Save" | NOT STARTED |
+| 8 | "Add Events" panel submit button: "Add Events" → "Save" | DONE — see below |
 | 9 | Unsaved-changes warning on all group/team tabs, not just Details | NOT STARTED |
 | 10 | Per-tenant switch: A–Z buttons = Filter vs Jump-to-first-record | NOT STARTED |
 
@@ -223,6 +223,12 @@ narrower (a long form doesn't benefit from full width the way a table does).
 submit button inside the Add Events panel (`{addSaving ? 'Adding...' : 'Add
 Events'}`). Change to "Save" (and probably "Saving..." for the in-flight
 state). Leave the "+ Add Event" header button (L329, opens the panel) alone.
+
+**Built:** the button now reads `{addSaving ? 'Saving...' : 'Save'}`. No
+other change — the header "+ Add Event" button was untouched, and no test
+referenced the old text. The equivalent button on the group/team Events tab
+(`components/Schedule.jsx`, a separate copy) was left as "Add Events" since
+it wasn't named in this item's scope.
 
 ---
 
