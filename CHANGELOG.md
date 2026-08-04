@@ -40,6 +40,15 @@ that still says "Unreleased".
   message/letter" buttons are now Administration-only (`backend/src/routes/
   groupStdMessages.js`, `backend/src/utils/templateOwnership.js`,
   `backend/src/utils/groupLeader.js`).
+- **Admin CRUD screen for org-wide standard emails/letters.** New page at
+  Home → Set up → "Std emails & letters" (`/standard-messages`,
+  `StandardMessages.jsx`) lists, adds, edits and deletes the org-wide
+  (unowned) standard emails/letters that were previously only creatable as a
+  side effect of "Save as standard email/letter" while composing — no edit
+  or delete existed for them before. Reuses the existing tenant-wide
+  `GET/POST/DELETE /email/standard-messages` and `/letters/standard-letters`
+  routes (no backend changes needed), gated on `email_standard_messages_all`
+  / `letters_standard_messages_all`.
 
 ### Fixed
 - **Inactivity timeout did not actually end the session.** The idle timer

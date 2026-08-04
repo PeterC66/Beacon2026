@@ -63,6 +63,7 @@ const EmailDelivery = lazy(() => import('./pages/email/EmailDelivery.jsx'));
 const EmailDeliveryDetail = lazy(() => import('./pages/email/EmailDeliveryDetail.jsx'));
 const EmailUnblocker = lazy(() => import('./pages/email/EmailUnblocker.jsx'));
 const SystemMessages = lazy(() => import('./pages/settings/SystemMessages.jsx'));
+const StandardMessages = lazy(() => import('./pages/settings/StandardMessages.jsx'));
 const PublicLinks = lazy(() => import('./pages/settings/PublicLinks.jsx'));
 const Calendar = lazy(() => import('./pages/calendar/Calendar.jsx'));
 const EventRecord = lazy(() => import('./pages/calendar/EventRecord.jsx'));
@@ -730,6 +731,14 @@ const router = createBrowserRouter([
           <ProtectedFeatureRoute feature="email">
             <SystemMessages />
           </ProtectedFeatureRoute>
+        ),
+      },
+      {
+        path: '/standard-messages',
+        element: (
+          <ProtectedRoute>
+            <StandardMessages />
+          </ProtectedRoute>
         ),
       },
       // Letters — PDF generation, does not require SendGrid

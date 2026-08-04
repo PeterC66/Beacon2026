@@ -20,7 +20,7 @@
 
 | # | Item | Status |
 |---|------|--------|
-| 7 | Admin CRUD screen for org-wide (unowned) standard emails/letters | NOT STARTED — build first |
+| 7 | Admin CRUD screen for org-wide (unowned) standard emails/letters | DONE — see below |
 | 1 | Remove "Save as standard email/letter" buttons from compose screens | NOT STARTED — do after #7 |
 | 2 | Floating scroll arrows: scope trigger to table, fix target to full page | NOT STARTED |
 | 3 | Home menu: "Poll" → "Polls" | NOT STARTED |
@@ -55,6 +55,21 @@ exist, granted to Administration per PR #498's ownership work). Lists every
 org-wide standard email/letter with add/edit/delete — same shape as
 `StdEmailsTab`/`StdLettersTab` but without an `entityId`. This becomes the
 sole path for org-wide templates once #1 removes the compose-screen buttons.
+
+**Built:** [`StandardMessages.jsx`](../frontend/src/pages/settings/StandardMessages.jsx),
+route `/standard-messages` ([`App.jsx`](../frontend/src/App.jsx)), nav entry
+"Std emails & letters" under Home → Set up
+([`Home.jsx`](../frontend/src/pages/Home.jsx)). Two sections (Std Emails, Std
+Letters) mirroring `StdEmailsTab`/`StdLettersTab`'s list+inline-form pattern,
+each filtering the existing `GET /email/standard-messages` /
+`GET /letters/standard-letters` responses to `owner_group_id == null`
+client-side (no server-side filter param exists) and always saving with
+`ownerGroupId: null`. Gated per-section on `hasFeature('email'|'letters')` and
+`can('..._all','view')`; add/edit further gated on `create`, delete on
+`delete`. No backend changes needed — the tenant-wide CRUD routes already
+existed. Not yet click-tested in a live browser (no local Postgres/seeded
+tenant available in-session) — verified via lint, format, and the full
+frontend/backend test suites (all green).
 
 ---
 

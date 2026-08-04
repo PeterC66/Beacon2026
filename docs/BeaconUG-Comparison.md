@@ -461,6 +461,7 @@
 |--------|--------|-------|
 | CRUD email templates | Built | — |
 | **beacon2026 extra:** Group/team ownership | beacon2026 extra | A template is unowned (Administration-only) or owned by a group/team (that group/team's leaders + Administration can manage it); viewing/using any template is unrestricted for everyone. Managed via a "Std Emails" tab on the group/team record. Added 2026-08-04. |
+| **beacon2026 extra:** Admin CRUD for unowned templates | beacon2026 extra | Org-wide (unowned) templates now have a dedicated admin screen — Home → Set up → "Std emails & letters" (`/standard-messages`) — instead of only being creatable as a side effect of "Save as standard email" while composing. Administration-only (`email_standard_messages_all`). Added 2026-08-04. |
 
 ---
 
@@ -512,6 +513,7 @@
 |--------|--------|-------|
 | Standard letter templates | Built | — |
 | **beacon2026 extra:** Group/team ownership | beacon2026 extra | Same ownership model as Standard Email Messages (see 6.1.2); managed via a "Std Letters" tab on the group/team record, editable there as plain text only (not the full rich-text editor). Added 2026-08-04. |
+| **beacon2026 extra:** Admin CRUD for unowned templates | beacon2026 extra | Same admin screen as Standard Email Messages (see 6.1.2) — Home → Set up → "Std emails & letters" (`/standard-messages`). Administration-only (`letters_standard_messages_all`). Added 2026-08-04. |
 
 ---
 
