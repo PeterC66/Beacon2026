@@ -152,6 +152,15 @@ that still says "Unreleased".
   which scrolled the table container into view rather than the page —
   visually indistinguishable from doing nothing on most layouts. Now calls
   `window.scrollTo(...)` to actually scroll the page to the top/bottom.
+- **Floating scroll arrows didn't appear until you moved the mouse.** Many
+  list pages render their table only after an async fetch resolves
+  (`{!loading && <Table ref={containerRef} />}`), but `ScrollButtons.jsx`
+  checked `containerRef.current` only once on mount and via `scroll`/`resize`
+  listeners — since the table hadn't mounted yet at that point, the buttons
+  stayed hidden until the next scroll/resize event (which moving the mouse
+  can coincidentally trigger via wheel movement, masking the real cause).
+  Now also rechecks on every render, so the buttons appear correctly as soon
+  as the table itself mounts.
 - **Inactivity timeout did not actually end the session.** The idle timer
   cleared the frontend's React state and logged a `session_timeout` audit
   entry, but never revoked the refresh token or cleared the
