@@ -42,4 +42,15 @@ describe('EmailCompose page', () => {
     );
     expect(screen.getByText('Send Email')).toBeTruthy();
   });
+
+  it('renders the rich-text editor toolbar (UX-Improvements-Plan item 4)', () => {
+    render(
+      <MemoryRouter>
+        <EmailCompose />
+      </MemoryRouter>,
+    );
+    expect(screen.getByTitle('Bold')).toBeTruthy();
+    expect(screen.getByTitle('Underline')).toBeTruthy();
+    expect(screen.getByTitle('Font size')).toBeTruthy();
+  });
 });

@@ -452,6 +452,7 @@
 | Email compose with member selection | Built | — |
 | Token substitution | Built | — |
 | Attachments | Built | Via SendGrid |
+| **beacon2026 extra:** Rich-text formatting | beacon2026 extra | Compose editor uses the same TipTap rich-text editor as letters (bold/italic/underline, alignment, font size) instead of plain text; sends real multipart email (HTML + plain-text fallback). Added 2026-08-04. |
 
 ---
 
