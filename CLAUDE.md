@@ -92,6 +92,13 @@ claim. The codebase is more mature than a surface scan implies, so headline
 alarms deserve extra scepticism. The most recent independent review and its
 chunked work plan live in `docs/ImprovementPlan-2026-06-14.md`.
 
+**Working through the open backlog** (not a fresh review — sequencing what's
+already in `KNOWN-ISSUES.md`) is tracked in
+`docs/Beacon2026-Tidying-Plan.md`. Check it at session start if picking up
+backlog work; update its Status column as items land, and keep it in sync
+with `KNOWN-ISSUES.md` (the plan sequences items, `KNOWN-ISSUES.md` remains
+the source of truth for what each item actually is).
+
 ---
 
 ## Key conventions
