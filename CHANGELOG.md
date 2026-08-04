@@ -41,6 +41,19 @@ that still says "Unreleased".
   groupStdMessages.js`, `backend/src/utils/templateOwnership.js`,
   `backend/src/utils/groupLeader.js`).
 
+### Fixed
+- **Inactivity timeout did not actually end the session.** The idle timer
+  cleared the frontend's React state and logged a `session_timeout` audit
+  entry, but never revoked the refresh token or cleared the
+  `beacon2026_refresh` cookie — so a page reload after an idle "timeout"
+  silently re-authenticated the user via `/auth/refresh` with no further
+  audit trail, and the 30-day refresh token stayed live regardless of how
+  long the browser sat idle. `POST /auth/session-timeout`
+  (`backend/src/routes/auth.js`) now revokes the refresh token and clears the
+  cookie, exactly like `/auth/logout`; the frontend's `auth:expired` handler
+  (`frontend/src/context/AuthContext.jsx`) now also clears the in-memory
+  access token via `clearAuth()`.
+
 ---
 
 ## [Unreleased] — 2026-08-03

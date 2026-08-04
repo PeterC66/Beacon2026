@@ -113,12 +113,19 @@ router.post('/logout', requireAuth, async (req, res, next) => {
 });
 
 // ─── POST /auth/session-timeout ───────────────────────────────────────────
-// Fired by the frontend when a session ends due to inactivity, purely so the
-// event is recorded — the frontend has already cleared its own state by the
-// time this call is made (fire-and-forget).
+// Fired by the frontend when a session ends due to inactivity (fire-and-forget
+// — the access token is still valid at this point, only the idle timer fired).
+// Beyond recording the event, this must actually end the session: revoke the
+// refresh token and clear the cookie, exactly like /logout does. Previously
+// this route only wrote an audit entry while leaving the refresh cookie live,
+// so a reload after an idle "timeout" silently re-authenticated the user via
+// /auth/refresh with no further audit trail — the timeout was cosmetic only.
 
 router.post('/session-timeout', requireAuth, async (req, res, next) => {
   try {
+    const refreshToken = req.cookies?.[COOKIE_NAME];
+    await logoutUser(req.user.tenantSlug, refreshToken);
+
     logAudit(req.user.tenantSlug, {
       userId: req.user.userId,
       userName: req.user.name,
@@ -127,6 +134,8 @@ router.post('/session-timeout', requireAuth, async (req, res, next) => {
       entityId: req.user.userId,
       entityName: req.user.name,
     });
+
+    res.clearCookie(COOKIE_NAME);
     res.json({ message: 'Recorded.' });
   } catch (err) {
     next(err);

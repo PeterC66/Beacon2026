@@ -182,6 +182,21 @@ detect on its own) all write to `audit_log` with actions `'login'`,
 tell a real timeout apart from a generic refresh-token failure (the latter is
 not separately audited — it's a revoked/expired session, not a user action).
 
+`/auth/session-timeout` also revokes the refresh token and clears the
+`beacon2026_refresh` cookie (calls the same `logoutUser()` as `/auth/logout`),
+and the frontend's `auth:expired` handler calls `clearAuth()` in addition to
+resetting React state. Before 2026-08-04 the route was audit-only, so a page
+reload right after an idle timeout silently re-authenticated the user via
+`/auth/refresh` with no further audit entry — the timeout looked real in the
+log but didn't actually end the session. See CHANGELOG 2026-08-04.
+
+Note the asymmetry this still leaves: `/auth/refresh` itself (used both for
+the retry-once transparent refresh in `core.js` and for `restoreSession()` on
+app load) writes no audit entry on success. A silent session restore from the
+`beacon_last_u3a` cookie — no password, no `login` audit row — is
+indistinguishable in the log from "nobody was here". Tracked as
+`[DEFERRED]` in `KNOWN-ISSUES.md` → "Audit log — session-restore visibility".
+
 ### Personal Preferences (doc 9.1)
 
 - Frontend only: `PersonalPreferences.jsx` at `/preferences`
