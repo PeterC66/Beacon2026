@@ -28,7 +28,7 @@
 | 5 | Seed St Ives's own standard emails/letters into the existing tenant | NOT STARTED — data action, not new code |
 | 6 | Un-cap table-heavy tab widths (e.g. group Members) | NOT STARTED |
 | 8 | "Add Events" panel submit button: "Add Events" → "Save" | DONE — see below |
-| 9 | Unsaved-changes warning on all group/team tabs, not just Details | NOT STARTED |
+| 9 | Unsaved-changes warning on all group/team tabs, not just Details | DONE — see below |
 | 10 | Per-tenant switch: A–Z buttons = Filter vs Jump-to-first-record | NOT STARTED |
 
 ---
@@ -245,6 +245,23 @@ Plan: wire `markDirty()`/`markClean()` into each of those the same way
 Details does — mark dirty on any field edit, call `markClean()` before
 navigating away after a successful save (per the hook's own doc comment,
 `markClean()` must run *before* `navigate()` in save handlers).
+
+**Built:** wired into all four as planned. None of these tabs navigate away
+on save (they stay on the same page/tab), so the ordering constraint from the
+hook's doc comment didn't apply here — `markClean()` is simply called
+after each successful save/add and in each cancel handler.
+`Schedule.jsx` (shared group/team Events tab): `markDirty()` in the Add
+Events form's `setAdd()`, `markClean()` after a successful add.
+`GroupLedger.jsx`/`TeamLedger.jsx`: introduced small `setAdd(patch)`/
+`setEdit(patch)` wrappers (replacing the repeated inline
+`setAddForm((p) => ...)`/`setEditForm((p) => ...)` lambdas) that call
+`markDirty()` before updating state; `markClean()` after a successful
+add/edit save and in `cancelEdit()`. `StdEmailsTab.jsx`/
+`StdLettersTab.jsx`: same pattern via a `set(field, value)` wrapper.
+Note: switching between tabs on the same record page does not itself
+trigger the warning (no route/URL change happens), matching the existing
+Details-tab behaviour — the guard only fires on in-app navigation away from
+the page and on browser refresh/close.
 
 ---
 
