@@ -13,8 +13,10 @@
 - Item 7 must land before item 1 (agreed 2026-08-04) — removing the
   "Save as standard" buttons before the admin screen exists would remove the
   only way to create an org-wide standard email/letter.
-- Item 5 needs a data action against the live/demo tenant(s), not new code —
-  see its row for what's already shipped vs what's still missing.
+- Item 5 is superseded by item 11 (agreed 2026-08-04) — rather than a one-off
+  script against St Ives's tenant, item 11 builds a reusable System Admin
+  CRUD + rollout mechanism for default standard emails/letters, and seeding
+  St Ives becomes one use of it (see item 11's row for the full plan).
 
 ---
 
@@ -25,11 +27,12 @@
 | 2 | Floating scroll arrows: scope trigger to table, fix target to full page | DONE — see below |
 | 3 | Home menu: "Poll" → "Polls" | DONE — see below |
 | 4 | Rich formatting for emails (bring to parity with letters) | DONE — see below |
-| 5 | Seed St Ives's own standard emails/letters into the existing tenant | NOT STARTED — data action, not new code |
+| 5 | Seed St Ives's own standard emails/letters into the existing tenant | SUPERSEDED by item 11 |
 | 6 | Un-cap table-heavy tab widths (e.g. group Members) | DONE — see below |
 | 8 | "Add Events" panel submit button: "Add Events" → "Save" | DONE — see below |
 | 9 | Unsaved-changes warning on all group/team tabs, not just Details | DONE — see below |
 | 10 | Per-tenant switch: A–Z buttons = Filter vs Jump-to-first-record | DONE — see below |
+| 11 | System Admin: CRUD + rollout mechanism for default standard emails/letters | NOT STARTED — see below |
 
 ---
 
@@ -184,24 +187,15 @@ escaping, multi-line token values) and an integration test for `POST
 
 ## 5. Seed St Ives's own standard emails/letters into the existing tenant
 
-**Already done, but only for *new* tenants:** PR #497 seeded two generic
-email templates ("New Member Welcome", "Renewal Confirmation", genericized
-from the wording you gave in `.../BeaconUG/MDs/6.1.2 Standard Email
-Messages – u3a Beacon/input.md`) and one letter ("Annual Data Check Form",
-built as a Tiptap doc, also genericized — St Ives-specific details like the
-Needingworth address were deliberately left out of the *default* seed by
-agreement, since it ships to every tenant) — but only via
-`backend/src/seed/createTenant.js`, i.e. **only on tenant creation**. It was
-never backfilled into St Ives's own existing tenant.
-
-**Plan:** this is a one-off data action against St Ives's live/demo tenant,
-not new code — run the same seed content (this time using the *actual*
-St Ives wording you gave for the "Annual Data Check Form" letter, with the
-real Needingworth address / phone / email, not the genericized default)
-against that tenant's database directly, or add a small one-shot admin
-script that applies `defaultTemplates.js`-equivalent content to a specified
-existing tenant slug. Confirm with Peter which tenant (live vs demo) before
-running it.
+**Superseded by item 11 (agreed 2026-08-04).** See item 11 below for the
+full plan and rationale — St Ives gets seeded by clicking "Roll out" on the
+three existing defaults from the new System Admin screen, not via a one-off
+script. Original context, still true: PR #497 seeded two generic email
+templates ("New Member Welcome", "Renewal Confirmation") and one letter
+("Annual Data Check Form", Tiptap doc) into every *new* tenant via
+`backend/src/seed/createTenant.js`, deliberately genericized (no Needingworth
+address) since the same content ships to every tenant — but this only ran at
+tenant-creation time, so St Ives's own existing tenant never got it.
 
 ---
 
@@ -342,3 +336,72 @@ unconditionally at the top of either component) — added
 a live browser (no local Postgres/seeded tenant available in-session, same
 constraint as items 4/6/7/9) — verified via lint, format, and the full
 frontend/backend test suites (all green).
+
+---
+
+## 11. System Admin: CRUD + rollout mechanism for default standard emails/letters
+
+**Confirmed with Peter 2026-08-04:** this is a **System Admin** function
+(the separate cross-tenant `/system/login` credential system,
+`requireSysAdmin` middleware, `SystemDashboard.jsx`) — **not** the per-tenant
+`isSiteAdmin` flag used by SQL Reports (`reports.js`, `requireSiteAdmin`).
+Those two are easy to confuse: System Admin reaches across every tenant and
+has its own login; `isSiteAdmin` is a flag on one user within one tenant's
+own auth, scoped to that tenant only. SQL Reports stays exactly as-is —
+per-tenant, `isSiteAdmin`-gated, out of scope here.
+
+**Current state (confirmed):**
+- The only place "loop over every tenant" happens today is
+  `migrateTenantSchemas()` in
+  [`backend/src/utils/migrate.js:164`](../backend/src/utils/migrate.js) — a
+  **startup script** (not user-triggered), which re-seeds privilege
+  resources, role privileges, member statuses and member classes on every
+  boot, but deliberately does **not** touch standard emails/letters.
+- The templates that do get seeded, but only at tenant-creation time, are
+  literal arrays in
+  [`backend/src/seed/defaultTemplates.js`](../backend/src/seed/defaultTemplates.js),
+  pulled in by
+  [`createTenant.js:100-116`](../backend/src/seed/createTenant.js) via
+  `INSERT … ON CONFLICT (name) DO NOTHING`.
+- The System Admin dashboard
+  ([`SystemDashboard.jsx`](../frontend/src/pages/system/SystemDashboard.jsx),
+  routes in [`backend/src/routes/system.js`](../backend/src/routes/system.js),
+  all behind `router.use(requireSysAdmin)`) already lists every tenant
+  (`prisma.sysTenant`), sets a site-wide System Message, and restores
+  backups — this is the natural home for the new section, no new auth
+  mechanism needed.
+- Item 7's `/standard-messages` screen is tenant-scoped only
+  (`tenantQuery(req.user.tenantSlug, …)` throughout `email.js`/`letters.js`)
+  and cannot reach other tenants — confirmed by reading those routes.
+
+**Plan:**
+1. Two new master-DB tables, `default_standard_messages` /
+   `default_standard_letters` (alongside `sys_tenants`, not per-tenant),
+   seeded once with the current contents of `defaultTemplates.js`.
+2. New `DefaultTemplatesSection` component added to `SystemDashboard.jsx`,
+   same pattern as the existing System Message / Restore from Backup
+   sections — list + inline add/edit/delete of the master templates.
+3. Each template row gets a **"Roll out"** button: calls a new endpoint that
+   loops `prisma.sysTenant` (active tenants) and, for each, runs the same
+   `INSERT … ON CONFLICT (name) DO NOTHING` pattern already used by
+   `createTenant.js` against that tenant's `standard_messages`/
+   `standard_letters` table — i.e. it only lands where that tenant doesn't
+   already have a template of that name. Returns a per-tenant
+   created/already-present result to show inline.
+4. New routes added directly to `backend/src/routes/system.js` (already
+   `requireSysAdmin`-gated, so no new middleware) — CRUD on the two master
+   tables plus the rollout endpoint. Frontend calls go through
+   `lib/api/system.js` using the existing `getSysToken()`, same as
+   `system.listTenants`/`system.createTenant`.
+5. `createTenant.js`'s seed step switches to reading from the new master
+   tables instead of `defaultTemplates.js`, so new-tenant seeding and
+   on-demand rollout share one source of truth. Delete
+   `defaultTemplates.js` once this lands (dead code otherwise).
+6. **Seed St Ives** (retiring item 5): log into `/system`, click "Roll out"
+   on the two email defaults and the one letter default against the live
+   tenant. The master defaults stay deliberately genericized (no
+   Needingworth address, per the existing agreement that new tenants
+   shouldn't inherit St Ives-specific content), so afterwards St Ives edits
+   its own copy of the letter via the existing item-7 tenant screen to add
+   the real address/phone/email — the same way any tenant customises its
+   own copy, no special-casing inside the rollout mechanism itself.
