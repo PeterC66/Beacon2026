@@ -50,7 +50,17 @@ that still says "Unreleased".
   routes (no backend changes needed), gated on `email_standard_messages_all`
   / `letters_standard_messages_all`.
 
+### Changed
+- **Home menu label "Poll" → "Polls"** (`Home.jsx`), matching the plural used
+  elsewhere in the app.
+
 ### Fixed
+- **Floating scroll arrows scrolled the table, not the page.** The
+  scroll-to-top/scroll-to-bottom buttons on long tables
+  (`ScrollButtons.jsx`) called `containerRef.current.scrollIntoView(...)`,
+  which scrolled the table container into view rather than the page —
+  visually indistinguishable from doing nothing on most layouts. Now calls
+  `window.scrollTo(...)` to actually scroll the page to the top/bottom.
 - **Inactivity timeout did not actually end the session.** The idle timer
   cleared the frontend's React state and logged a `session_timeout` audit
   entry, but never revoked the refresh token or cleared the

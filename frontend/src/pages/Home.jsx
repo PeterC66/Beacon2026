@@ -356,7 +356,7 @@ export default function Home() {
           to: can('member_statuses', 'view') ? '/membership/statuses' : null,
         },
         {
-          label: 'Poll',
+          label: 'Polls',
           tip: 'Set up and manage membership polls',
           to: can('poll_set_up', 'view') ? '/polls' : null,
           f: 'polls',
