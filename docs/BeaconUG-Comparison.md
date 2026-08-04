@@ -99,7 +99,7 @@
 | Bulk actions (add to poll, add to group, send email, send letter) | Built | — |
 | Download (Excel/PDF/email CSV) | Built | — |
 | Sortable columns | Built | Via `useSortedData` hook (supports compound sort keys) |
-| **beacon2026 extra:** Letter filter | beacon2026 extra | Filter members by letter assignment |
+| **beacon2026 extra:** A-Z buttons jump to record | beacon2026 extra | Clicking a letter scrolls to and briefly highlights the first member whose surname starts with it, matching classic Beacon (default; opt-out toggle `azButtonsJumpToRecord` in Feature Configuration → Other). When the toggle is off, the buttons instead filter the list down to that letter. Changed 2026-08-04. |
 | **beacon2026 extra:** Consolidated name column | beacon2026 extra | Single "Name" column showing `forenames (known_as) surname`; sortable by name or by surname; member number and name both link to member record |
 | **beacon2026 extra:** Telephone + mobile columns | beacon2026 extra | Separate telephone and mobile columns shown instead of email |
 
@@ -359,7 +359,7 @@
 | Aspect | Status | Notes |
 |--------|--------|-------|
 | **beacon2026 extra:** Teams concept | Built | Teams are like groups but without faculties, max members, waiting list, or online join. Implemented via `type` column on `groups` table. |
-| Team List page | Built | Separate list with letter filter, status filter, bulk actions (email leaders, download, add to poll); "Switch to Groups" link |
+| Team List page | Built | Separate list with A-Z jump/filter (see 4.1), status filter, bulk actions (email leaders, download, add to poll); "Switch to Groups" link |
 | Team Record: Details tab | Built | Name, status, information, notes, show-addresses toggle |
 | Team Record: Members tab | Built | Add/remove members, mark leaders, bulk actions (email, download, remove, add to another team) |
 | Team Record: Schedule tab | Built | Same features as group schedule — single + recurring events, inline edit, bulk delete; shared `Schedule` component |
