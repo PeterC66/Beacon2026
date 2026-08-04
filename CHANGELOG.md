@@ -84,6 +84,9 @@ that still says "Unreleased".
   the Std Emails/Letters tabs.
 - **Home menu label "Poll" → "Polls"** (`Home.jsx`), matching the plural used
   elsewhere in the app.
+- **Calendar "Add Events" panel submit button relabelled "Save"**
+  (`Calendar.jsx`), no longer duplicating the "+ Add Event" header button's
+  label.
 
 ### Fixed
 - **Floating scroll arrows scrolled the table, not the page.** The

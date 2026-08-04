@@ -893,7 +893,7 @@ export default function Calendar() {
               disabled={addSaving || !addForm.eventDate}
               className="bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white rounded px-5 py-2 text-sm font-medium transition-colors"
             >
-              {addSaving ? 'Adding...' : 'Add Events'}
+              {addSaving ? 'Saving...' : 'Save'}
             </button>
           </div>
         </form>
