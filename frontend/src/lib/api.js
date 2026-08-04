@@ -283,6 +283,17 @@ export const groups = {
     request(`/groups/${id}/ledger/${entryId}`, { method: 'PATCH', body: JSON.stringify(data) }),
   deleteLedgerEntry: (id, entryId) =>
     request(`/groups/${id}/ledger/${entryId}`, { method: 'DELETE' }),
+
+  listStdMessages: (id) => request(`/groups/${id}/std-messages`),
+  saveStdMessage: (id, data) =>
+    request(`/groups/${id}/std-messages`, { method: 'POST', body: JSON.stringify(data) }),
+  deleteStdMessage: (id, msgId) =>
+    request(`/groups/${id}/std-messages/${msgId}`, { method: 'DELETE' }),
+  listStdLetters: (id) => request(`/groups/${id}/std-letters`),
+  saveStdLetter: (id, data) =>
+    request(`/groups/${id}/std-letters`, { method: 'POST', body: JSON.stringify(data) }),
+  deleteStdLetter: (id, letterId) =>
+    request(`/groups/${id}/std-letters/${letterId}`, { method: 'DELETE' }),
 };
 
 // ─── Teams ───────────────────────────────────────────────────────────────
@@ -350,6 +361,17 @@ export const teams = {
     request(`/teams/${id}/events/${evId}`, { method: 'PATCH', body: JSON.stringify(data) }),
   deleteEvents: (id, ids) =>
     request(`/teams/${id}/events`, { method: 'DELETE', body: JSON.stringify({ ids }) }),
+
+  listStdMessages: (id) => request(`/teams/${id}/std-messages`),
+  saveStdMessage: (id, data) =>
+    request(`/teams/${id}/std-messages`, { method: 'POST', body: JSON.stringify(data) }),
+  deleteStdMessage: (id, msgId) =>
+    request(`/teams/${id}/std-messages/${msgId}`, { method: 'DELETE' }),
+  listStdLetters: (id) => request(`/teams/${id}/std-letters`),
+  saveStdLetter: (id, data) =>
+    request(`/teams/${id}/std-letters`, { method: 'POST', body: JSON.stringify(data) }),
+  deleteStdLetter: (id, letterId) =>
+    request(`/teams/${id}/std-letters/${letterId}`, { method: 'DELETE' }),
 };
 
 // ─── Finance ──────────────────────────────────────────────────────────────

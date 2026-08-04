@@ -22,7 +22,24 @@ export const PRIVILEGE_RESOURCES = [
   r('event_types', 'Event types', ['view', 'create', 'change', 'delete']),
   r('email_addresses', 'E-mail addresses', ['download']),
   r('email_delivery', 'E-mail delivery', ['view', 'all']),
-  r('email_standard_messages', 'E-mail standard messages', ['view', 'create', 'change', 'delete']),
+  // Viewing/using a Std Email/Letter template is unrestricted (any user who
+  // can compose an email/letter sees every template regardless of owner) —
+  // 'view' is the only action left here. Adding/editing/deleting a template
+  // is owner-scoped: see the _all / _as_leader resources below, which mirror
+  // the group_ledger_all / group_ledger_as_leader pattern.
+  r('email_standard_messages', 'E-mail standard messages', ['view']),
+  r('email_standard_messages_all', 'Std Email Messages (all)', [
+    'view',
+    'create',
+    'change',
+    'delete',
+  ]),
+  r('email_standard_messages_as_leader', 'Std Email Messages (as leader)', [
+    'view',
+    'create',
+    'change',
+    'delete',
+  ]),
   r('feature_config', 'Feature configuration', ['view', 'change']),
   r('finance_accounts', 'Finance: accounts', ['view', 'create', 'change', 'delete']),
   r('finance_batches', 'Finance: batches', ['view', 'create', 'delete']),
@@ -65,7 +82,9 @@ export const PRIVILEGE_RESOURCES = [
   r('groups_add_by_no', 'Groups: add members by number', ['change']),
   r('groups_add_by_no_leader', 'Groups: add members by number (as leader)', ['change']),
   r('letters', 'Letters', ['view', 'download']),
-  r('letters_standard_messages', 'Letters: standard messages', [
+  r('letters_standard_messages', 'Letters: standard messages', ['view']),
+  r('letters_standard_messages_all', 'Std Letters (all)', ['view', 'create', 'change', 'delete']),
+  r('letters_standard_messages_as_leader', 'Std Letters (as leader)', [
     'view',
     'create',
     'change',

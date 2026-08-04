@@ -16,6 +16,33 @@ that still says "Unreleased".
 
 ---
 
+## [Unreleased] — 2026-08-04
+
+### Added
+- **Standard Email/Letter template ownership by group/team.** A template is
+  either unowned (Administration-only) or owned by a group/team, in which
+  case that group/team's leaders can also add/edit/delete it — but never
+  reassign ownership, which stays Administration-only. Viewing/using any
+  template to compose an email or letter is unaffected and stays open to
+  everyone. New `owner_group_id` column on `standard_messages` and
+  `standard_letters` (`ON DELETE SET NULL` — a deleted group/team's templates
+  become unowned, not deleted). New privilege resources
+  `email_standard_messages_all` / `_as_leader` and
+  `letters_standard_messages_all` / `_as_leader`, mirroring the existing
+  `group_ledger_all` / `_as_leader` pattern; granted to Administration and to
+  the Group Leaders / Team Leaders roles respectively (the "Membership
+  Secretary" role's previous blanket edit rights on both were removed —
+  ownership is now the only non-admin path). New "Std Emails" and "Std
+  Letters" tabs on the group/team record (`StdEmailsTab.jsx`,
+  `StdLettersTab.jsx`), scoped to that group/team's own templates; the Std
+  Letters tab edits plain text only, not the full rich-text editor (see
+  `KNOWN-ISSUES.md`). The tenant-wide compose-page "Save as standard
+  message/letter" buttons are now Administration-only (`backend/src/routes/
+  groupStdMessages.js`, `backend/src/utils/templateOwnership.js`,
+  `backend/src/utils/groupLeader.js`).
+
+---
+
 ## [Unreleased] — 2026-08-03
 
 ### Added

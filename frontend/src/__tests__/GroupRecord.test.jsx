@@ -29,6 +29,14 @@ vi.mock('../lib/api.js', () => ({
     createEvents: vi.fn().mockResolvedValue([]),
     updateEvent: vi.fn().mockResolvedValue({}),
     deleteEvents: vi.fn().mockResolvedValue({}),
+    listStdMessages: vi
+      .fn()
+      .mockResolvedValue([{ id: 'sm-1', name: 'Group Welcome', subject: 'Hi', body: 'Hello' }]),
+    saveStdMessage: vi.fn().mockResolvedValue({}),
+    deleteStdMessage: vi.fn().mockResolvedValue({}),
+    listStdLetters: vi.fn().mockResolvedValue([{ id: 'sl-1', name: 'Group Letter', body: '{}' }]),
+    saveStdLetter: vi.fn().mockResolvedValue({}),
+    deleteStdLetter: vi.fn().mockResolvedValue({}),
   },
   faculties: { list: vi.fn().mockResolvedValue([]) },
   members: { list: vi.fn().mockResolvedValue([]) },
@@ -69,5 +77,27 @@ describe('GroupRecord page — existing group', () => {
       </MemoryRouter>,
     );
     expect(container).toBeTruthy();
+  });
+
+  it('shows the Std Emails tab and lists group-owned templates', async () => {
+    const { findByText } = render(
+      <MemoryRouter initialEntries={['/groups/g1?tab=std-emails']}>
+        <Routes>
+          <Route path="/groups/:id" element={<GroupRecord />} />
+        </Routes>
+      </MemoryRouter>,
+    );
+    expect(await findByText('Group Welcome')).toBeTruthy();
+  });
+
+  it('shows the Std Letters tab and lists group-owned templates', async () => {
+    const { findByText } = render(
+      <MemoryRouter initialEntries={['/groups/g1?tab=std-letters']}>
+        <Routes>
+          <Route path="/groups/:id" element={<GroupRecord />} />
+        </Routes>
+      </MemoryRouter>,
+    );
+    expect(await findByText('Group Letter')).toBeTruthy();
   });
 });

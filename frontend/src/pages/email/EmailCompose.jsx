@@ -62,7 +62,8 @@ const PARTNER_TOKENS = [
 ];
 
 export default function EmailCompose() {
-  const { tenant } = useAuth();
+  const { tenant, can } = useAuth();
+  const canManageStdMessages = can('email_standard_messages_all', 'create');
 
   const [memberIds, setMemberIds] = useState([]);
   const [recipients, setRecipients] = useState([]); // { id, forenames, surname, email }
@@ -344,14 +345,16 @@ export default function EmailCompose() {
                   </option>
                 ))}
               </select>
-              <button
-                type="button"
-                onClick={() => setShowSaveRow((v) => !v)}
-                className="border border-slate-300 text-slate-700 hover:bg-slate-50 rounded px-3 py-1.5 text-sm"
-              >
-                Save as standard message
-              </button>
-              {showSaveRow && (
+              {canManageStdMessages && (
+                <button
+                  type="button"
+                  onClick={() => setShowSaveRow((v) => !v)}
+                  className="border border-slate-300 text-slate-700 hover:bg-slate-50 rounded px-3 py-1.5 text-sm"
+                >
+                  Save as standard message
+                </button>
+              )}
+              {canManageStdMessages && showSaveRow && (
                 <div className="flex gap-2 w-full mt-1">
                   <input
                     type="text"

@@ -12,6 +12,8 @@ import {
 } from '../../lib/api.js';
 import Schedule from '../../components/Schedule.jsx';
 import EntityMembers from '../../components/EntityMembers.jsx';
+import StdEmailsTab from '../../components/StdEmailsTab.jsx';
+import StdLettersTab from '../../components/StdLettersTab.jsx';
 import { useAuth } from '../../context/AuthContext.jsx';
 import NavBar from '../../components/NavBar.jsx';
 import PageHeader from '../../components/PageHeader.jsx';
@@ -87,6 +89,24 @@ export default function GroupRecord() {
         hasFeature('groupLedger') &&
         (can('group_ledger_all', 'view') || can('group_ledger_as_leader', 'view')),
     },
+    {
+      key: 'std-emails',
+      label: 'Std Emails',
+      available:
+        !isNew &&
+        hasFeature('email') &&
+        (can('email_standard_messages_all', 'view') ||
+          can('email_standard_messages_as_leader', 'view')),
+    },
+    {
+      key: 'std-letters',
+      label: 'Std Letters',
+      available:
+        !isNew &&
+        hasFeature('letters') &&
+        (can('letters_standard_messages_all', 'view') ||
+          can('letters_standard_messages_as_leader', 'view')),
+    },
   ];
 
   return (
@@ -143,6 +163,8 @@ export default function GroupRecord() {
             <Schedule entityId={id} api={groupsApi} />
           )}
           {!isNew && activeTab === 'ledger' && <GroupLedger groupId={id} />}
+          {!isNew && activeTab === 'std-emails' && <StdEmailsTab entityId={id} api={groupsApi} />}
+          {!isNew && activeTab === 'std-letters' && <StdLettersTab entityId={id} api={groupsApi} />}
         </div>
       </div>
 

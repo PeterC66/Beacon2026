@@ -15,6 +15,7 @@ import crudRouter from './crud.js';
 import membersRouter from './members.js';
 import eventsRouter from './events.js';
 import ledgerRouter from './ledger.js';
+import stdMessagesRouter from '../groupStdMessages.js';
 
 const router = Router();
 router.use(requireAuth);
@@ -25,5 +26,6 @@ router.use('/', crudRouter);
 router.use('/', membersRouter);
 router.use('/', eventsRouter);
 router.use('/', ledgerRouter);
+router.use('/', stdMessagesRouter);
 
 export default router;

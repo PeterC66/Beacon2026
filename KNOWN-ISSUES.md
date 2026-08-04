@@ -648,3 +648,24 @@ out of them.
    timeout that it will keep surfacing in CI; worth raising the timeout or
    awaiting the button explicitly rather than relying on `findByRole` racing
    the initial data load.
+
+## Std Emails/Letters ownership (added 2026-08-04) — deferred items
+
+1. `[ACCEPTED]` **The group/team Std Letters tab edits plain text only, not
+   the full rich-text editor.** `StdLettersTab.jsx` converts between plain
+   text (one line = one paragraph) and the Tiptap doc `standard_letters.body`
+   requires, via `frontend/src/lib/simpleTiptapDoc.js`. Bold/italic/underline/
+   alignment are not supported there, and re-saving a richly-formatted letter
+   from this tab flattens its formatting. The full editor
+   (`frontend/src/pages/letters/LetterCompose.jsx`, `useEditor`/`EditorContent`
+   from `@tiptap/react`) was not extracted into a shared component in this
+   pass — doing so would let this tab offer full formatting too.
+2. `[DEFERRED]` **No dedicated "reassign owner" screen for Administration.**
+   Site Administrators can set/clear/reassign a template's `owner_group_id`
+   by including `ownerGroupId` in the existing `POST /email/standard-messages`
+   / `POST /letters/standard-letters` body, but neither compose page's simple
+   load/save bar exposes an owner picker or an "Owner" column — there is no
+   tenant-wide list/edit screen for these templates (unlike, say, SQL
+   Reports' `ReportList.jsx`). Reassignment today requires either a group/team
+   leader deleting and recreating the template under their own group's Std
+   Emails/Letters tab, or a direct API call.

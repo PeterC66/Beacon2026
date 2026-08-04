@@ -41,9 +41,10 @@ export const DEFAULT_ROLES = [
       { code: 'email_delivery', action: 'view' },
       { code: 'email_delivery', action: 'all' }, // vo (all = view all)
       { code: 'email_standard_messages', action: 'view' },
-      { code: 'email_standard_messages', action: 'create' },
-      { code: 'email_standard_messages', action: 'change' },
-      { code: 'email_standard_messages', action: 'delete' }, // vced
+      { code: 'email_standard_messages_all', action: 'view' },
+      { code: 'email_standard_messages_all', action: 'create' },
+      { code: 'email_standard_messages_all', action: 'change' },
+      { code: 'email_standard_messages_all', action: 'delete' }, // vced
 
       // Feature configuration
       { code: 'feature_config', action: 'view' },
@@ -136,9 +137,10 @@ export const DEFAULT_ROLES = [
       { code: 'letters', action: 'view' },
       { code: 'letters', action: 'download' }, // vo
       { code: 'letters_standard_messages', action: 'view' },
-      { code: 'letters_standard_messages', action: 'create' },
-      { code: 'letters_standard_messages', action: 'change' },
-      { code: 'letters_standard_messages', action: 'delete' }, // vced
+      { code: 'letters_standard_messages_all', action: 'view' },
+      { code: 'letters_standard_messages_all', action: 'create' },
+      { code: 'letters_standard_messages_all', action: 'change' },
+      { code: 'letters_standard_messages_all', action: 'delete' }, // vced
 
       // Meetings
       { code: 'meetings', action: 'view' },
@@ -250,6 +252,17 @@ export const DEFAULT_ROLES = [
       { code: 'groups_add_by_name_leader', action: 'change' }, // e
       { code: 'groups_add_by_no_leader', action: 'change' }, // e
 
+      // Std Emails/Letters (own groups only, via the group's Std Emails/Std
+      // Letters tab — not the tenant-wide Standard Messages screens)
+      { code: 'email_standard_messages_as_leader', action: 'view' },
+      { code: 'email_standard_messages_as_leader', action: 'create' },
+      { code: 'email_standard_messages_as_leader', action: 'change' },
+      { code: 'email_standard_messages_as_leader', action: 'delete' }, // vced
+      { code: 'letters_standard_messages_as_leader', action: 'view' },
+      { code: 'letters_standard_messages_as_leader', action: 'create' },
+      { code: 'letters_standard_messages_as_leader', action: 'change' },
+      { code: 'letters_standard_messages_as_leader', action: 'delete' }, // vced
+
       // Meetings
       { code: 'meetings', action: 'view' },
       { code: 'meetings', action: 'create' }, // vc
@@ -330,6 +343,17 @@ export const DEFAULT_ROLES = [
       { code: 'groups_list', action: 'view' }, // v
       { code: 'groups_add_by_name_leader', action: 'change' }, // e
       { code: 'groups_add_by_no_leader', action: 'change' }, // e
+
+      // Std Emails/Letters (own teams only, via the team's Std Emails/Std
+      // Letters tab — not the tenant-wide Standard Messages screens)
+      { code: 'email_standard_messages_as_leader', action: 'view' },
+      { code: 'email_standard_messages_as_leader', action: 'create' },
+      { code: 'email_standard_messages_as_leader', action: 'change' },
+      { code: 'email_standard_messages_as_leader', action: 'delete' }, // vced
+      { code: 'letters_standard_messages_as_leader', action: 'view' },
+      { code: 'letters_standard_messages_as_leader', action: 'create' },
+      { code: 'letters_standard_messages_as_leader', action: 'change' },
+      { code: 'letters_standard_messages_as_leader', action: 'delete' }, // vced
     ],
   },
 
@@ -347,10 +371,7 @@ export const DEFAULT_ROLES = [
       // Email
       { code: 'email', action: 'view' },
       { code: 'email', action: 'send' }, // vo
-      { code: 'email_standard_messages', action: 'view' },
-      { code: 'email_standard_messages', action: 'create' },
-      { code: 'email_standard_messages', action: 'change' },
-      { code: 'email_standard_messages', action: 'delete' }, // vced
+      { code: 'email_standard_messages', action: 'view' }, // v (edit rights are ownership-scoped, not role-scoped)
 
       // Gift Aid
       { code: 'gift_aid_declaration', action: 'view' },
@@ -389,10 +410,7 @@ export const DEFAULT_ROLES = [
       // Letters
       { code: 'letters', action: 'view' },
       { code: 'letters', action: 'download' }, // vo
-      { code: 'letters_standard_messages', action: 'view' },
-      { code: 'letters_standard_messages', action: 'create' },
-      { code: 'letters_standard_messages', action: 'change' },
-      { code: 'letters_standard_messages', action: 'delete' }, // vced
+      { code: 'letters_standard_messages', action: 'view' }, // v (edit rights are ownership-scoped, not role-scoped)
 
       // Poll
       { code: 'poll_set_up', action: 'view' },

@@ -834,4 +834,11 @@ CREATE TABLE IF NOT EXISTS :schema.saved_reports (
   created_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
   updated_at  TIMESTAMPTZ NOT NULL DEFAULT now()
 );
-CREATE UNIQUE INDEX IF NOT EXISTS :schema_idx_saved_reports_name ON :schema.saved_reports (name)
+CREATE UNIQUE INDEX IF NOT EXISTS :schema_idx_saved_reports_name ON :schema.saved_reports (name);
+
+-- ─── Standard Email/Letter template ownership ───────────────────────
+-- NULL = unowned (only Administration can add/edit/delete it). Set = only
+-- that group/team's leaders (plus Administration) can add/edit/delete it.
+-- Falls back to unowned automatically if the owning group/team is deleted.
+ALTER TABLE :schema.standard_messages ADD COLUMN IF NOT EXISTS owner_group_id TEXT REFERENCES :schema.groups(id) ON DELETE SET NULL;
+ALTER TABLE :schema.standard_letters ADD COLUMN IF NOT EXISTS owner_group_id TEXT REFERENCES :schema.groups(id) ON DELETE SET NULL;

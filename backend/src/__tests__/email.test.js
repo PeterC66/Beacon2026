@@ -50,3 +50,52 @@ describe('GET /email/standard-messages', () => {
     expect(tenantQuery.mock.calls[0][0]).toBe(TEST_TENANT);
   });
 });
+
+describe('POST /email/standard-messages (tenant-wide — Administration only)', () => {
+  it('creates/updates a template and can set the owner group', async () => {
+    tenantQuery.mockResolvedValueOnce([
+      { id: 'sm-1', name: 'Welcome', subject: 'Hi', body: 'Hello', owner_group_id: 'g1' },
+    ]);
+    const res = await request
+      .post('/email/standard-messages')
+      .set('Authorization', auth)
+      .send({ name: 'Welcome', subject: 'Hi', body: 'Hello', ownerGroupId: 'g1' });
+    expect(res.status).toBe(201);
+    expect(res.body.owner_group_id).toBe('g1');
+    expect(tenantQuery.mock.calls[0][2]).toEqual(['Welcome', 'Hi', 'Hello', 'g1']);
+  });
+
+  it('denies a user without email_standard_messages_all:create — group ownership does not bypass this endpoint', async () => {
+    const leaderOnly = makeAuthHeader({
+      privileges: [
+        'email_standard_messages_as_leader:create',
+        'email_standard_messages_as_leader:view',
+      ],
+    });
+    const res = await request
+      .post('/email/standard-messages')
+      .set('Authorization', leaderOnly)
+      .send({ name: 'Welcome', subject: 'Hi', body: 'Hello' });
+    expect(res.status).toBe(403);
+    expect(tenantQuery).not.toHaveBeenCalled();
+  });
+});
+
+describe('DELETE /email/standard-messages/:id (tenant-wide — Administration only)', () => {
+  it('deletes for a user with email_standard_messages_all:delete', async () => {
+    tenantQuery.mockResolvedValueOnce([]);
+    const res = await request.delete('/email/standard-messages/sm-1').set('Authorization', auth);
+    expect(res.status).toBe(204);
+  });
+
+  it('denies a user without email_standard_messages_all:delete', async () => {
+    const leaderOnly = makeAuthHeader({
+      privileges: ['email_standard_messages_as_leader:delete'],
+    });
+    const res = await request
+      .delete('/email/standard-messages/sm-1')
+      .set('Authorization', leaderOnly);
+    expect(res.status).toBe(403);
+    expect(tenantQuery).not.toHaveBeenCalled();
+  });
+});

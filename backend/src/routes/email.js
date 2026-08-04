@@ -201,7 +201,13 @@ function mapSgStatus(events) {
   return 'Despatched';
 }
 
-// ─── Standard Messages ────────────────────────────────────────────────────
+// ─── Standard Messages (tenant-wide "browse/use every template" screen) ───
+// Viewing is unrestricted (email_standard_messages:view, unchanged). Add/
+// edit/delete/reassign-owner here is Administration-only
+// (email_standard_messages_all) — a group/team leader manages their own
+// group's templates from the group/team's Std Emails tab instead
+// (routes/groupStdMessages.js), which is scoped to their own group and
+// can't reassign ownership.
 
 // GET /email/standard-messages
 router.get(
@@ -212,7 +218,11 @@ router.get(
       const rows = await tenantQuery(
         req.user.tenantSlug,
         `
-      SELECT id, name, subject, body FROM standard_messages ORDER BY name
+      SELECT sm.id, sm.name, sm.subject, sm.body, sm.owner_group_id,
+             g.name AS owner_group_name
+      FROM standard_messages sm
+      LEFT JOIN groups g ON g.id = sm.owner_group_id
+      ORDER BY sm.name
     `,
         [],
       );
@@ -223,56 +233,55 @@ router.get(
   },
 );
 
-// POST /email/standard-messages
-router.post(
-  '/standard-messages',
-  requirePrivilege('email_standard_messages', 'create'),
-  async (req, res, next) => {
-    const schema = z.object({
-      name: z.string().min(1).max(200),
-      subject: z.string().max(500).default(''),
-      body: z.string().default(''),
+// POST /email/standard-messages — Administration only (email_standard_messages_all)
+router.post('/standard-messages', async (req, res, next) => {
+  if (!req.user.privileges.includes('email_standard_messages_all:create')) {
+    return res.status(403).json({ error: 'Forbidden' });
+  }
+  const schema = z.object({
+    name: z.string().min(1).max(200),
+    subject: z.string().max(500).default(''),
+    body: z.string().default(''),
+    ownerGroupId: z.string().nullable().optional(),
+  });
+  const parsed = schema.safeParse(req.body);
+  if (!parsed.success)
+    return res.status(422).json({
+      error: 'Validation error',
+      issues: parsed.error.issues.map((i) => ({ path: i.path.join('.'), message: i.message })),
     });
-    const parsed = schema.safeParse(req.body);
-    if (!parsed.success)
-      return res.status(422).json({
-        error: 'Validation error',
-        issues: parsed.error.issues.map((i) => ({ path: i.path.join('.'), message: i.message })),
-      });
-    const { name, subject, body } = parsed.data;
-    try {
-      const rows = await tenantQuery(
-        req.user.tenantSlug,
-        `
-      INSERT INTO standard_messages (name, subject, body)
-      VALUES ($1, $2, $3)
-      ON CONFLICT (name) DO UPDATE SET subject = $2, body = $3, updated_at = NOW()
-      RETURNING id, name, subject, body
+  const { name, subject, body, ownerGroupId } = parsed.data;
+  try {
+    const rows = await tenantQuery(
+      req.user.tenantSlug,
+      `
+      INSERT INTO standard_messages (name, subject, body, owner_group_id)
+      VALUES ($1, $2, $3, $4)
+      ON CONFLICT (name) DO UPDATE SET subject = $2, body = $3, owner_group_id = $4, updated_at = NOW()
+      RETURNING id, name, subject, body, owner_group_id
     `,
-        [name, subject, body],
-      );
-      res.status(201).json(rows[0]);
-    } catch (err) {
-      next(err);
-    }
-  },
-);
+      [name, subject, body, ownerGroupId ?? null],
+    );
+    res.status(201).json(rows[0]);
+  } catch (err) {
+    next(err);
+  }
+});
 
-// DELETE /email/standard-messages/:id
-router.delete(
-  '/standard-messages/:id',
-  requirePrivilege('email_standard_messages', 'delete'),
-  async (req, res, next) => {
-    try {
-      await tenantQuery(req.user.tenantSlug, `DELETE FROM standard_messages WHERE id = $1`, [
-        req.params.id,
-      ]);
-      res.status(204).end();
-    } catch (err) {
-      next(err);
-    }
-  },
-);
+// DELETE /email/standard-messages/:id — Administration only
+router.delete('/standard-messages/:id', async (req, res, next) => {
+  if (!req.user.privileges.includes('email_standard_messages_all:delete')) {
+    return res.status(403).json({ error: 'Forbidden' });
+  }
+  try {
+    await tenantQuery(req.user.tenantSlug, `DELETE FROM standard_messages WHERE id = $1`, [
+      req.params.id,
+    ]);
+    res.status(204).end();
+  } catch (err) {
+    next(err);
+  }
+});
 
 // ─── From addresses ───────────────────────────────────────────────────────
 
