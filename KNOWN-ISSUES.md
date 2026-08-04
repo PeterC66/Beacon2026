@@ -663,12 +663,15 @@ out of them.
 2. `[DEFERRED]` **No dedicated "reassign owner" screen for Administration.**
    Site Administrators can set/clear/reassign a template's `owner_group_id`
    by including `ownerGroupId` in the existing `POST /email/standard-messages`
-   / `POST /letters/standard-letters` body, but neither compose page's simple
-   load/save bar exposes an owner picker or an "Owner" column — there is no
-   tenant-wide list/edit screen for these templates (unlike, say, SQL
-   Reports' `ReportList.jsx`). Reassignment today requires either a group/team
-   leader deleting and recreating the template under their own group's Std
-   Emails/Letters tab, or a direct API call.
+   / `POST /letters/standard-letters` body, but there is still no owner
+   picker or "Owner" column anywhere in the UI. **Partially addressed
+   2026-08-04:** unowned (org-wide) templates now have a full tenant-wide
+   list/create/edit/delete screen (`StandardMessages.jsx`, `/standard-
+   messages`, Home → Set up → "Std emails & letters") — the gap that
+   remains is specifically *reassignment* (moving a template between
+   unowned and a specific group/team, or between groups/teams), which still
+   requires either a group/team leader deleting and recreating the template
+   under their own group's Std Emails/Letters tab, or a direct API call.
 
 ## Audit log — session-restore visibility (added 2026-08-04)
 

@@ -154,8 +154,11 @@ beacon2026 is a ground-up rebuild with these goals:
 - **Email compose** — member selection, token substitution, attachments (SendGrid)
 - **Standard messages** — CRUD templates; owned by a group/team or unowned
   (Administration-only); two seeded on tenant creation (New Member Welcome,
-  Renewal Confirmation); managed tenant-wide (Administration, unowned only)
-  from the compose page, or per-group/team via that group/team's Std Emails tab
+  Renewal Confirmation); unowned templates managed tenant-wide via the admin
+  screen at `/standard-messages` (Home → Set up → "Std emails & letters"),
+  or per-group/team via that group/team's Std Emails tab. The compose page's
+  "Load standard message" dropdown remains for using a template while
+  composing.
 - **Email delivery** — batch list; per-recipient status; SendGrid Activity refresh
 - **Email unblocker** — admin tool to remove from bounce/spam lists
 
@@ -163,9 +166,11 @@ beacon2026 is a ground-up rebuild with these goals:
 - **Letter compose** (docs 6.2, 6.2.1, 6.2.2) — compose letters with member selection,
   token substitution, print/download PDF
 - **Standard letters** — same ownership model as Standard Email Messages; one
-  seeded on tenant creation (Annual Data Check Form); managed tenant-wide
-  (Administration, unowned only) from the compose page's rich-text editor, or
-  per-group/team via that group/team's Std Letters tab (plain text only there)
+  seeded on tenant creation (Annual Data Check Form); unowned templates
+  managed tenant-wide via the same `/standard-messages` admin screen (plain
+  text only there), or per-group/team via that group/team's Std Letters tab
+  (also plain text only). The compose page's "Load standard letter" dropdown
+  and "Delete standard letter" button remain for use while composing.
 
 ### Set-up module
 - **Feature configuration** — per-u3a feature toggles (25 toggles across 7

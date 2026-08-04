@@ -1,8 +1,8 @@
 // beacon2026/frontend/src/pages/settings/StandardMessages.jsx
 // Admin CRUD for org-wide (unowned) standard emails and standard letters —
-// the only place these can be edited or deleted, and (once the compose-screen
-// "Save as standard" buttons are removed — see UX-Improvements-Plan item #1)
-// the only place they can be created. Group/team-owned templates are managed
+// the sole place these can be created, edited or deleted, now that the
+// compose-screen "Save as standard" buttons have been removed (see
+// UX-Improvements-Plan item #1). Group/team-owned templates are managed
 // instead from the group/team's own Std Emails/Std Letters tabs
 // (StdEmailsTab.jsx / StdLettersTab.jsx).
 //

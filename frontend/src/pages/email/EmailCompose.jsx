@@ -62,8 +62,7 @@ const PARTNER_TOKENS = [
 ];
 
 export default function EmailCompose() {
-  const { tenant, can } = useAuth();
-  const canManageStdMessages = can('email_standard_messages_all', 'create');
+  const { tenant } = useAuth();
 
   const [memberIds, setMemberIds] = useState([]);
   const [recipients, setRecipients] = useState([]); // { id, forenames, surname, email }
@@ -76,9 +75,7 @@ export default function EmailCompose() {
   const [copyToSelf, setCopyToSelf] = useState(() => loadEmailPrefs().copyToSelf || false);
   const [attachments, setAttachments] = useState([]); // File[]
 
-  const [saveName, setSaveName] = useState('');
   const [loadMsgId, setLoadMsgId] = useState('');
-  const [showSaveRow, setShowSaveRow] = useState(false);
 
   const [sending, setSending] = useState(false);
   const [error, setError] = useState(null);
@@ -169,21 +166,6 @@ export default function EmailCompose() {
       setBody(msg.body);
     }
     setLoadMsgId('');
-  }
-
-  async function handleSaveMsg() {
-    if (!saveName.trim()) return;
-    try {
-      const saved = await emailApi.saveStandardMessage({ name: saveName.trim(), subject, body });
-      setStdMessages((prev) => {
-        const filtered = prev.filter((m) => m.name !== saved.name);
-        return [...filtered, saved].sort((a, b) => a.name.localeCompare(b.name));
-      });
-      setSaveName('');
-      setShowSaveRow(false);
-    } catch (err) {
-      setError(err.message);
-    }
   }
 
   async function handleSend(e) {
@@ -345,42 +327,6 @@ export default function EmailCompose() {
                   </option>
                 ))}
               </select>
-              {canManageStdMessages && (
-                <button
-                  type="button"
-                  onClick={() => setShowSaveRow((v) => !v)}
-                  className="border border-slate-300 text-slate-700 hover:bg-slate-50 rounded px-3 py-1.5 text-sm"
-                >
-                  Save as standard message
-                </button>
-              )}
-              {canManageStdMessages && showSaveRow && (
-                <div className="flex gap-2 w-full mt-1">
-                  <input
-                    type="text"
-                    name="saveName"
-                    value={saveName}
-                    onChange={(e) => setSaveName(e.target.value)}
-                    placeholder="Message name"
-                    className="flex-1 border border-slate-300 rounded px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                  <button
-                    onClick={handleSaveMsg}
-                    className="bg-blue-600 hover:bg-blue-700 text-white rounded px-4 py-1.5 text-sm"
-                  >
-                    Save
-                  </button>
-                  <button
-                    onClick={() => {
-                      setShowSaveRow(false);
-                      setSaveName('');
-                    }}
-                    className="border border-slate-300 text-slate-700 rounded px-3 py-1.5 text-sm"
-                  >
-                    Cancel
-                  </button>
-                </div>
-              )}
             </div>
 
             {/* Subject + Body */}
