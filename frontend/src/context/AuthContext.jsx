@@ -95,8 +95,12 @@ export function AuthProvider({ children }) {
       if (e?.detail?.reason === 'timeout') {
         // Best-effort — the access token is still valid at this point
         // (only the idle timer fired), so this call can still authenticate.
+        // The backend revokes the refresh token and clears the cookie here,
+        // so a page reload after this can't silently re-authenticate the
+        // user the way it could before this route did real revocation.
         authApi.sessionTimeout().catch(() => {});
       }
+      clearAuth();
       setUser(null);
       setTenant(null);
       setPrivs([]);

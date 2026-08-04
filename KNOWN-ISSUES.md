@@ -669,3 +669,23 @@ out of them.
    Reports' `ReportList.jsx`). Reassignment today requires either a group/team
    leader deleting and recreating the template under their own group's Std
    Emails/Letters tab, or a direct API call.
+
+## Audit log — session-restore visibility (added 2026-08-04)
+
+1. `[DEFERRED]` **Silent session restores are not audited.** On app load,
+   `AuthContext.jsx` calls `restoreSession()`, which does a `POST
+   /auth/refresh` using the httpOnly `beacon2026_refresh` cookie (valid up to
+   `JWT_REFRESH_EXPIRES_DAYS`, default 30) and re-authenticates with no
+   password prompt. Only a real credential login through `loginUser()` writes
+   an `action: 'login'` audit entry — `/auth/refresh` writes nothing — so the
+   audit log cannot show that a session was active on a given day if the user
+   never re-typed their password, only reloaded the page. This was surfaced
+   alongside the `session_timeout` revocation fix (see CHANGELOG 2026-08-04):
+   that fix stops idle timeouts from being silently bypassed by a reload, but
+   does not address the separate, older gap of legitimate multi-day sessions
+   being invisible in the log. Fixing this means adding a distinct audit
+   action (e.g. `session_resume`) to `/auth/refresh` on success — deferred
+   because every access-token refresh (roughly every 15 minutes while active)
+   would otherwise flood the log; it needs throttling to once per browser
+   session (e.g. only log when no prior resume/login exists within some
+   window) before it's worth shipping.
