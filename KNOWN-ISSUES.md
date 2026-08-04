@@ -651,15 +651,16 @@ out of them.
 
 ## Std Emails/Letters ownership (added 2026-08-04) — deferred items
 
-1. `[ACCEPTED]` **The group/team Std Letters tab edits plain text only, not
-   the full rich-text editor.** `StdLettersTab.jsx` converts between plain
-   text (one line = one paragraph) and the Tiptap doc `standard_letters.body`
-   requires, via `frontend/src/lib/simpleTiptapDoc.js`. Bold/italic/underline/
-   alignment are not supported there, and re-saving a richly-formatted letter
-   from this tab flattens its formatting. The full editor
-   (`frontend/src/pages/letters/LetterCompose.jsx`, `useEditor`/`EditorContent`
-   from `@tiptap/react`) was not extracted into a shared component in this
-   pass — doing so would let this tab offer full formatting too.
+1. `[RESOLVED 2026-08-04]` ~~The group/team Std Letters tab edits plain text
+   only, not the full rich-text editor.~~ All five Std Emails/Letters admin
+   screens (`StdEmailsTab.jsx`, `StdLettersTab.jsx`, the two sections of
+   `pages/settings/StandardMessages.jsx`, and both sections of
+   `pages/system/DefaultTemplatesSection.jsx`) now embed the same shared
+   `useEditor`/`EditorContent`/`EditorToolbar` rich-text editor
+   (`components/RichTextEditor.jsx`) used by Email/Letter Compose, so
+   bold/italic/underline/alignment round-trip correctly. The plain-text
+   roundtrip helper (`frontend/src/lib/simpleTiptapDoc.js`) is no longer used
+   and was deleted.
 2. `[DEFERRED]` **No dedicated "reassign owner" screen for Administration.**
    Site Administrators can set/clear/reassign a template's `owner_group_id`
    by including `ownerGroupId` in the existing `POST /email/standard-messages`

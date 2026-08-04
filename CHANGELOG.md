@@ -34,12 +34,11 @@ that still says "Unreleased".
   Secretary" role's previous blanket edit rights on both were removed —
   ownership is now the only non-admin path). New "Std Emails" and "Std
   Letters" tabs on the group/team record (`StdEmailsTab.jsx`,
-  `StdLettersTab.jsx`), scoped to that group/team's own templates; the Std
-  Letters tab edits plain text only, not the full rich-text editor (see
-  `KNOWN-ISSUES.md`). The tenant-wide compose-page "Save as standard
-  message/letter" buttons are now Administration-only (`backend/src/routes/
-  groupStdMessages.js`, `backend/src/utils/templateOwnership.js`,
-  `backend/src/utils/groupLeader.js`).
+  `StdLettersTab.jsx`), scoped to that group/team's own templates, using the
+  same rich-text editor as Email/Letter Compose. The tenant-wide compose-page
+  "Save as standard message/letter" buttons are now Administration-only
+  (`backend/src/routes/groupStdMessages.js`,
+  `backend/src/utils/templateOwnership.js`, `backend/src/utils/groupLeader.js`).
 - **Admin CRUD screen for org-wide standard emails/letters.** New page at
   Home → Set up → "Std emails & letters" (`/standard-messages`,
   `StandardMessages.jsx`) lists, adds, edits and deletes the org-wide
@@ -61,10 +60,27 @@ that still says "Unreleased".
   broadcast. `POST /email/send`'s `body` field is now a TipTap doc object
   (previously a plain string) — matching `POST /letters/download`'s existing
   shape. The group/team "Std Emails" tab and the tenant-wide Standard
-  Messages admin screen edit these bodies as plain text (one paragraph per
-  line), the same simplification `StdLettersTab.jsx` already used for letters
-  — editing a richly-formatted email from either of those screens flattens
-  its formatting.
+  Messages admin screen also use this same rich-text editor to edit these
+  bodies (see the "Rich-text editing for all Std Emails/Letters admin
+  screens" entry below).
+- **Rich-text editing for all Std Emails/Letters admin screens.** The
+  group/team "Std Emails" and "Std Letters" tabs (`StdEmailsTab.jsx`,
+  `StdLettersTab.jsx`), both sections of the tenant-wide Standard Messages
+  admin screen (`pages/settings/StandardMessages.jsx`), and both sections of
+  the System Admin "Default Standard Emails & Letters" screen
+  (`pages/system/DefaultTemplatesSection.jsx`) now all embed the same shared
+  `useEditor`/`EditorContent`/`EditorToolbar` rich-text editor
+  (`components/RichTextEditor.jsx`) used by Email/Letter Compose, instead of
+  a plain `<textarea>` that flattened bold/italic/underline/alignment on
+  save. The now-unused plain-text↔Tiptap conversion helper
+  (`frontend/src/lib/simpleTiptapDoc.js`) was deleted. Default Standard Email
+  bodies (previously stored as a raw string, unlike every other template
+  body which is a Tiptap JSON document) are now stored as Tiptap JSON too,
+  fixing a latent bug where such a template's paragraph breaks were lost
+  when loaded into Email Compose's fallback plain-text handling; legacy
+  plain-text bodies already saved are still displayed (as a single
+  paragraph) rather than blanked when opened for editing. See
+  `KNOWN-ISSUES.md` item "Std Emails/Letters ownership" #1 (now resolved).
 - **Unsaved-changes warning extended to every group/team record tab.**
   Previously only the Details tab warned before navigating away with
   unsaved edits; the Events, Group/Team Cash, and Std Emails/Std Letters

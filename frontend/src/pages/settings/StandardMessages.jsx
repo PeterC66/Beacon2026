@@ -10,12 +10,13 @@
 // filters to owner_group_id == null and always saves with ownerGroupId: null.
 
 import { useState, useEffect } from 'react';
+import { useEditor, EditorContent } from '@tiptap/react';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { email as emailApi, letters as lettersApi } from '../../lib/api.js';
-import { textToTiptapDoc, tiptapDocToText } from '../../lib/simpleTiptapDoc.js';
 import NavBar from '../../components/NavBar.jsx';
 import PageHeader from '../../components/PageHeader.jsx';
 import { inputCls, labelCls } from '../../components/ui/Input.jsx';
+import { RICH_TEXT_EXTENSIONS, EditorToolbar } from '../../components/RichTextEditor.jsx';
 
 const navLinks = [{ label: 'Home', to: '/' }];
 
@@ -25,10 +26,15 @@ function StdEmailsSection() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const [form, setForm] = useState({ name: '', subject: '', body: '' });
+  const [form, setForm] = useState({ name: '', subject: '' });
   const [editingId, setEditingId] = useState(null);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState(null);
+
+  const editor = useEditor({
+    extensions: RICH_TEXT_EXTENSIONS,
+    content: '<p></p>',
+  });
 
   const canManage = can('email_standard_messages_all', 'create');
   const canDelete = can('email_standard_messages_all', 'delete');
@@ -52,32 +58,35 @@ function StdEmailsSection() {
 
   function startEdit(msg) {
     setEditingId(msg.id);
-    let text = '';
-    try {
-      text = tiptapDocToText(JSON.parse(msg.body));
-    } catch {
-      text = '';
+    setForm({ name: msg.name, subject: msg.subject ?? '' });
+    if (editor) {
+      try {
+        editor.commands.setContent(JSON.parse(msg.body));
+      } catch {
+        // Legacy plain-text body (pre-dates rich-text storage) — wrap as-is.
+        editor.commands.setContent(`<p>${msg.body}</p>`);
+      }
     }
-    setForm({ name: msg.name, subject: msg.subject ?? '', body: text });
     setSaveError(null);
   }
 
   function cancelEdit() {
     setEditingId(null);
-    setForm({ name: '', subject: '', body: '' });
+    setForm({ name: '', subject: '' });
+    editor?.commands.setContent('<p></p>');
     setSaveError(null);
   }
 
   async function handleSave(e) {
     e.preventDefault();
-    if (!form.name.trim()) return;
+    if (!form.name.trim() || !editor) return;
     setSaving(true);
     setSaveError(null);
     try {
       await emailApi.saveStandardMessage({
         name: form.name.trim(),
         subject: form.subject,
-        body: JSON.stringify(textToTiptapDoc(form.body)),
+        body: JSON.stringify(editor.getJSON()),
         ownerGroupId: null,
       });
       cancelEdit();
@@ -104,9 +113,7 @@ function StdEmailsSection() {
       <h2 className="text-lg font-semibold mb-1">Std Emails</h2>
       <p className="text-xs text-slate-600 mb-3">
         Org-wide standard email messages, available to everyone composing an email. Group/team-owned
-        templates are managed from the group or team's own Std Emails tab instead. Editing here is
-        plain text only — bold/italic/underline formatting from the full email editor is not
-        preserved if you save changes here.
+        templates are managed from the group or team's own Std Emails tab instead.
       </p>
 
       {error && <p className="text-red-600 text-sm mb-3">{error}</p>}
@@ -195,16 +202,11 @@ function StdEmailsSection() {
             </div>
           </div>
           <div className="mb-3">
-            <label htmlFor="std-email-body" className={labelCls}>
-              Message body (one paragraph per line)
-            </label>
-            <textarea
-              id="std-email-body"
-              rows={8}
-              className={`${inputCls} w-full font-mono text-xs`}
-              value={form.body}
-              onChange={(e) => setForm((p) => ({ ...p, body: e.target.value }))}
-            />
+            <label className={labelCls}>Message body</label>
+            <EditorToolbar editor={editor} />
+            <div className="border border-slate-300 rounded min-h-[200px] px-3 py-2 text-sm focus-within:ring-2 focus-within:ring-blue-500 prose prose-sm max-w-none">
+              <EditorContent editor={editor} />
+            </div>
           </div>
           <div className="flex gap-2">
             <button
@@ -236,10 +238,15 @@ function StdLettersSection() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const [form, setForm] = useState({ name: '', body: '' });
+  const [form, setForm] = useState({ name: '' });
   const [editingId, setEditingId] = useState(null);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState(null);
+
+  const editor = useEditor({
+    extensions: RICH_TEXT_EXTENSIONS,
+    content: '<p></p>',
+  });
 
   const canManage = can('letters_standard_messages_all', 'create');
   const canDelete = can('letters_standard_messages_all', 'delete');
@@ -263,31 +270,33 @@ function StdLettersSection() {
 
   function startEdit(letter) {
     setEditingId(letter.id);
-    let text = '';
-    try {
-      text = tiptapDocToText(JSON.parse(letter.body));
-    } catch {
-      text = '';
+    setForm({ name: letter.name });
+    if (editor) {
+      try {
+        editor.commands.setContent(JSON.parse(letter.body));
+      } catch {
+        editor.commands.setContent('<p></p>');
+      }
     }
-    setForm({ name: letter.name, body: text });
     setSaveError(null);
   }
 
   function cancelEdit() {
     setEditingId(null);
-    setForm({ name: '', body: '' });
+    setForm({ name: '' });
+    editor?.commands.setContent('<p></p>');
     setSaveError(null);
   }
 
   async function handleSave(e) {
     e.preventDefault();
-    if (!form.name.trim()) return;
+    if (!form.name.trim() || !editor) return;
     setSaving(true);
     setSaveError(null);
     try {
       await lettersApi.saveStandardLetter({
         name: form.name.trim(),
-        body: JSON.stringify(textToTiptapDoc(form.body)),
+        body: JSON.stringify(editor.getJSON()),
         ownerGroupId: null,
       });
       cancelEdit();
@@ -314,9 +323,7 @@ function StdLettersSection() {
       <h2 className="text-lg font-semibold mb-1">Std Letters</h2>
       <p className="text-xs text-slate-600 mb-3">
         Org-wide standard letters, available to everyone composing a letter. Group/team-owned
-        templates are managed from the group or team's own Std Letters tab instead. Editing here is
-        plain text only — bold/italic/underline formatting from the full letter editor is not
-        preserved if you save changes here.
+        templates are managed from the group or team's own Std Letters tab instead.
       </p>
 
       {error && <p className="text-red-600 text-sm mb-3">{error}</p>}
@@ -388,16 +395,11 @@ function StdLettersSection() {
             />
           </div>
           <div className="mb-3">
-            <label htmlFor="std-letter-body" className={labelCls}>
-              Letter body (one paragraph per line)
-            </label>
-            <textarea
-              id="std-letter-body"
-              rows={10}
-              className={`${inputCls} w-full font-mono text-xs`}
-              value={form.body}
-              onChange={(e) => setForm((p) => ({ ...p, body: e.target.value }))}
-            />
+            <label className={labelCls}>Letter body</label>
+            <EditorToolbar editor={editor} />
+            <div className="border border-slate-300 rounded min-h-[250px] px-3 py-2 text-sm focus-within:ring-2 focus-within:ring-blue-500 prose prose-sm max-w-none">
+              <EditorContent editor={editor} />
+            </div>
           </div>
           <div className="flex gap-2">
             <button
