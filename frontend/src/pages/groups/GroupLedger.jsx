@@ -7,10 +7,12 @@ import { groups as groupsApi, requestBlob } from '../../lib/api.js';
 import { useAuth } from '../../context/AuthContext.jsx';
 import RequiredMark from '../../components/RequiredMark.jsx';
 import { fmtDate } from '../../lib/dateFormatters.js';
+import { useUnsavedChanges } from '../../hooks/useUnsavedChanges.js';
 
 export default function GroupLedger({ groupId }) {
   const { can } = useAuth();
   const navigate = useNavigate();
+  const { markDirty, markClean } = useUnsavedChanges();
 
   const thisYear = new Date().getFullYear();
   const [fromDate, setFromDate] = useState(`${thisYear}-01-01`);
@@ -74,6 +76,16 @@ export default function GroupLedger({ groupId }) {
     });
   }
 
+  function setAdd(patch) {
+    markDirty();
+    setAddForm((p) => ({ ...p, ...patch }));
+  }
+
+  function setEdit(patch) {
+    markDirty();
+    setEditForm((p) => ({ ...p, ...patch }));
+  }
+
   function startEdit(entry) {
     setEditId(entry.id);
     setEditForm({
@@ -90,6 +102,7 @@ export default function GroupLedger({ groupId }) {
     setEditId(null);
     setEditForm({});
     setEditError(null);
+    markClean();
   }
 
   async function handleSaveEdit(entryId) {
@@ -103,6 +116,7 @@ export default function GroupLedger({ groupId }) {
         moneyIn: editForm.moneyIn ? parseFloat(editForm.moneyIn) : null,
         moneyOut: editForm.moneyOut ? parseFloat(editForm.moneyOut) : null,
       });
+      markClean();
       cancelEdit();
       await load();
     } catch (err) {
@@ -136,6 +150,7 @@ export default function GroupLedger({ groupId }) {
         moneyOut: addForm.moneyOut ? parseFloat(addForm.moneyOut) : null,
       });
       setAddForm(EMPTY_ENTRY);
+      markClean();
       await load();
     } catch (err) {
       setAddError(err.message);
@@ -299,9 +314,7 @@ export default function GroupLedger({ groupId }) {
                             type="date"
                             className={inputCls}
                             value={editForm.entryDate}
-                            onChange={(e) =>
-                              setEditForm((p) => ({ ...p, entryDate: e.target.value }))
-                            }
+                            onChange={(e) => setEdit({ entryDate: e.target.value })}
                           />
                         </div>
                         <div className="flex-1 min-w-32">
@@ -313,7 +326,7 @@ export default function GroupLedger({ groupId }) {
                             name="payee"
                             className={`${inputCls} w-full`}
                             value={editForm.payee}
-                            onChange={(e) => setEditForm((p) => ({ ...p, payee: e.target.value }))}
+                            onChange={(e) => setEdit({ payee: e.target.value })}
                           />
                         </div>
                         <div className="flex-1 min-w-40">
@@ -325,7 +338,7 @@ export default function GroupLedger({ groupId }) {
                             name="detail"
                             className={`${inputCls} w-full`}
                             value={editForm.detail}
-                            onChange={(e) => setEditForm((p) => ({ ...p, detail: e.target.value }))}
+                            onChange={(e) => setEdit({ detail: e.target.value })}
                           />
                         </div>
                         <div className="w-24">
@@ -340,9 +353,7 @@ export default function GroupLedger({ groupId }) {
                             step="0.01"
                             className={inputCls}
                             value={editForm.moneyIn}
-                            onChange={(e) =>
-                              setEditForm((p) => ({ ...p, moneyIn: e.target.value, moneyOut: '' }))
-                            }
+                            onChange={(e) => setEdit({ moneyIn: e.target.value, moneyOut: '' })}
                           />
                         </div>
                         <div className="w-24">
@@ -357,9 +368,7 @@ export default function GroupLedger({ groupId }) {
                             step="0.01"
                             className={inputCls}
                             value={editForm.moneyOut}
-                            onChange={(e) =>
-                              setEditForm((p) => ({ ...p, moneyOut: e.target.value, moneyIn: '' }))
-                            }
+                            onChange={(e) => setEdit({ moneyOut: e.target.value, moneyIn: '' })}
                           />
                         </div>
                         <div className="flex gap-2">
@@ -442,7 +451,7 @@ export default function GroupLedger({ groupId }) {
                 required
                 className={inputCls}
                 value={addForm.entryDate}
-                onChange={(e) => setAddForm((p) => ({ ...p, entryDate: e.target.value }))}
+                onChange={(e) => setAdd({ entryDate: e.target.value })}
               />
             </div>
             <div className="flex-1 min-w-32">
@@ -454,7 +463,7 @@ export default function GroupLedger({ groupId }) {
                 name="payee"
                 className={`${inputCls} w-full`}
                 value={addForm.payee}
-                onChange={(e) => setAddForm((p) => ({ ...p, payee: e.target.value }))}
+                onChange={(e) => setAdd({ payee: e.target.value })}
               />
             </div>
             <div className="flex-1 min-w-40">
@@ -466,7 +475,7 @@ export default function GroupLedger({ groupId }) {
                 name="detail"
                 className={`${inputCls} w-full`}
                 value={addForm.detail}
-                onChange={(e) => setAddForm((p) => ({ ...p, detail: e.target.value }))}
+                onChange={(e) => setAdd({ detail: e.target.value })}
               />
             </div>
             <div className="w-24">
@@ -481,9 +490,7 @@ export default function GroupLedger({ groupId }) {
                 step="0.01"
                 className={inputCls}
                 value={addForm.moneyIn}
-                onChange={(e) =>
-                  setAddForm((p) => ({ ...p, moneyIn: e.target.value, moneyOut: '' }))
-                }
+                onChange={(e) => setAdd({ moneyIn: e.target.value, moneyOut: '' })}
               />
             </div>
             <div className="w-24">
@@ -498,9 +505,7 @@ export default function GroupLedger({ groupId }) {
                 step="0.01"
                 className={inputCls}
                 value={addForm.moneyOut}
-                onChange={(e) =>
-                  setAddForm((p) => ({ ...p, moneyOut: e.target.value, moneyIn: '' }))
-                }
+                onChange={(e) => setAdd({ moneyOut: e.target.value, moneyIn: '' })}
               />
             </div>
             <button

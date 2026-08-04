@@ -65,6 +65,13 @@ that still says "Unreleased".
   line), the same simplification `StdLettersTab.jsx` already used for letters
   — editing a richly-formatted email from either of those screens flattens
   its formatting.
+- **Unsaved-changes warning extended to every group/team record tab.**
+  Previously only the Details tab warned before navigating away with
+  unsaved edits; the Events, Group/Team Cash, and Std Emails/Std Letters
+  tabs silently discarded in-progress form edits. `Schedule.jsx`,
+  `GroupLedger.jsx`/`TeamLedger.jsx`, and `StdEmailsTab.jsx`/
+  `StdLettersTab.jsx` now call the existing `useUnsavedChanges()` hook the
+  same way `GroupDetails.jsx`/`TeamDetails.jsx` already did.
 
 ### Changed
 - **"Save as standard email/letter" removed from the compose screens.**
@@ -84,6 +91,9 @@ that still says "Unreleased".
   tables into a form-width column regardless of viewport. The wrapper width
   is now conditional on the active tab: `max-w-4xl` for the Details form,
   `max-w-7xl` for every other tab.
+- **Calendar "Add Events" panel submit button relabelled "Save"**
+  (`Calendar.jsx`), no longer duplicating the "+ Add Event" header button's
+  label.
 
 ### Fixed
 - **Floating scroll arrows scrolled the table, not the page.** The
