@@ -26,7 +26,8 @@ export default function MemberListTable({
   selectPortalPassword,
   selectNoPortalPassword,
   selectEmailNotConfirmed,
-  rowRefs,
+  rowRef,
+  highlightId,
   tableRef,
   can,
   navigate,
@@ -154,10 +155,8 @@ export default function MemberListTable({
             {sorted.map((m, i) => (
               <tr
                 key={m.id}
-                ref={(el) => {
-                  if (el) rowRefs.current[m.surname?.[0]?.toUpperCase()] = el;
-                }}
-                className={`border-b border-slate-100 ${i % 2 === 0 ? 'bg-yellow-50' : 'bg-white'} ${selected.has(m.id) ? 'outline outline-2 outline-blue-400' : ''}`}
+                ref={rowRef(m.id)}
+                className={`border-b border-slate-100 ${i % 2 === 0 ? 'bg-yellow-50' : 'bg-white'} ${selected.has(m.id) ? 'outline outline-2 outline-blue-400' : ''} ${highlightId === m.id ? 'ring-2 ring-amber-400 ring-offset-1' : ''}`}
               >
                 <td className="px-2 py-2">
                   <input

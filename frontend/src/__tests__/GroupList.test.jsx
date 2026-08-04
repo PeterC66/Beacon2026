@@ -8,6 +8,7 @@ vi.mock('../context/AuthContext.jsx', () => ({
   useAuth: () => ({
     tenant: 'test-u3a',
     can: vi.fn().mockReturnValue(true),
+    hasFeature: vi.fn().mockReturnValue(true),
   }),
 }));
 

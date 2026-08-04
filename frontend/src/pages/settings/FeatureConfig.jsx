@@ -247,6 +247,12 @@ const SECTIONS = [
         defaultValue: false,
         tip: 'Lets your website read your groups, events, venues and interest areas. It only ever shows what you have already ticked as public below — and never member details.',
       },
+      {
+        key: 'azButtonsJumpToRecord',
+        label: 'A-Z buttons jump to record',
+        defaultValue: true,
+        tip: 'On the Members/Groups/Teams lists, clicking a letter scrolls to the first matching record (classic Beacon behaviour). Turn off to filter the list down to that letter instead.',
+      },
     ],
   },
 ];

@@ -21,6 +21,7 @@ import NavBar from '../../components/NavBar.jsx';
 import PageHeader from '../../components/PageHeader.jsx';
 import ScrollButtons from '../../components/ScrollButtons.jsx';
 import { useSortedData } from '../../hooks/useSortedData.js';
+import { useLetterJump } from '../../hooks/useLetterJump.js';
 import { DOWNLOAD_FIELDS, ALPHABET } from './memberListConstants.js';
 import MemberListFilters from './MemberListFilters.jsx';
 import MemberListTable from './MemberListTable.jsx';
@@ -70,9 +71,9 @@ export default function MemberList() {
   const [downloading, setDownloading] = useState(false);
   const [dlError, setDlError] = useState(null);
 
-  // Row refs for letter-jump
-  const rowRefs = useRef({});
   const tableRef = useRef(null);
+  const azJump = hasFeature('azButtonsJumpToRecord');
+  const { rowRef, jumpToLetter, highlightId } = useLetterJump();
 
   // Load statuses, classes, polls, groups once
   useEffect(() => {
@@ -168,6 +169,10 @@ export default function MemberList() {
   }
 
   function handleLetterClick(l) {
+    if (azJump) {
+      jumpToLetter(sorted, 'surname', l);
+      return;
+    }
     setLetter(l === letter ? '' : l);
     setActiveSearch('');
     setSearchInput('');
@@ -361,17 +366,20 @@ export default function MemberList() {
 
         {/* ── Letter navigation ─────────────────────────────────────── */}
         <div className="flex flex-wrap gap-1 mb-3">
-          <button
-            onClick={() => handleLetterClick('')}
-            className={`px-2 py-0.5 text-sm rounded border ${letter === '' ? 'bg-blue-600 text-white border-blue-600' : 'border-slate-300 text-slate-600 hover:bg-slate-50'}`}
-          >
-            All
-          </button>
+          {!azJump && (
+            <button
+              onClick={() => handleLetterClick('')}
+              className={`px-2 py-0.5 text-sm rounded border ${letter === '' ? 'bg-blue-600 text-white border-blue-600' : 'border-slate-300 text-slate-600 hover:bg-slate-50'}`}
+            >
+              All
+            </button>
+          )}
           {ALPHABET.map((l) => (
             <button
               key={l}
               onClick={() => handleLetterClick(l)}
-              className={`px-2 py-0.5 text-sm rounded border ${letter === l ? 'bg-blue-600 text-white border-blue-600' : 'border-slate-300 text-slate-600 hover:bg-slate-50'}`}
+              title={azJump ? `Jump to first surname starting ${l}` : undefined}
+              className={`px-2 py-0.5 text-sm rounded border ${letter === l && !azJump ? 'bg-blue-600 text-white border-blue-600' : 'border-slate-300 text-slate-600 hover:bg-slate-50'}`}
             >
               {l}
             </button>
@@ -404,7 +412,8 @@ export default function MemberList() {
                 selectPortalPassword={selectPortalPassword}
                 selectNoPortalPassword={selectNoPortalPassword}
                 selectEmailNotConfirmed={selectEmailNotConfirmed}
-                rowRefs={rowRefs}
+                rowRef={rowRef}
+                highlightId={highlightId}
                 tableRef={tableRef}
                 can={can}
                 navigate={navigate}

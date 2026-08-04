@@ -15,6 +15,7 @@ import PageHeader from '../../components/PageHeader.jsx';
 import SortableHeader from '../../components/SortableHeader.jsx';
 import ScrollButtons from '../../components/ScrollButtons.jsx';
 import { useSortedData } from '../../hooks/useSortedData.js';
+import { useLetterJump } from '../../hooks/useLetterJump.js';
 
 const ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
 
@@ -30,7 +31,7 @@ const DOWNLOAD_FIELDS = [
 ];
 
 export default function GroupList() {
-  const { can, tenant } = useAuth();
+  const { can, tenant, hasFeature } = useAuth();
   const navigate = useNavigate();
   const [groupList, setGroupList] = useState([]);
   const { sorted, sortKey, sortDir, onSort } = useSortedData(groupList);
@@ -40,6 +41,8 @@ export default function GroupList() {
   const [error, setError] = useState(null);
 
   const tableRef = useRef(null);
+  const azJump = hasFeature('azButtonsJumpToRecord');
+  const { rowRef, jumpToLetter, highlightId } = useLetterJump();
 
   const [activeOnly, setActiveOnly] = useState(true);
   const [facultyId, setFacultyId] = useState('');
@@ -90,6 +93,10 @@ export default function GroupList() {
   }
 
   function handleLetterClick(l) {
+    if (azJump) {
+      jumpToLetter(sorted, 'name', l);
+      return;
+    }
     setLetter(l === letter ? '' : l);
   }
 
@@ -232,17 +239,20 @@ export default function GroupList() {
 
         {/* ── Letter navigation ─────────────────────────────────────── */}
         <div className="flex flex-wrap gap-1 mb-3">
-          <button
-            onClick={() => handleLetterClick('')}
-            className={`px-2 py-0.5 text-sm rounded border ${letter === '' ? 'bg-blue-600 text-white border-blue-600' : 'border-slate-300 text-slate-600 hover:bg-slate-50'}`}
-          >
-            All
-          </button>
+          {!azJump && (
+            <button
+              onClick={() => handleLetterClick('')}
+              className={`px-2 py-0.5 text-sm rounded border ${letter === '' ? 'bg-blue-600 text-white border-blue-600' : 'border-slate-300 text-slate-600 hover:bg-slate-50'}`}
+            >
+              All
+            </button>
+          )}
           {ALPHABET.map((l) => (
             <button
               key={l}
               onClick={() => handleLetterClick(l)}
-              className={`px-2 py-0.5 text-sm rounded border ${letter === l ? 'bg-blue-600 text-white border-blue-600' : 'border-slate-300 text-slate-600 hover:bg-slate-50'}`}
+              title={azJump ? `Jump to first group starting ${l}` : undefined}
+              className={`px-2 py-0.5 text-sm rounded border ${letter === l && !azJump ? 'bg-blue-600 text-white border-blue-600' : 'border-slate-300 text-slate-600 hover:bg-slate-50'}`}
             >
               {l}
             </button>
@@ -336,7 +346,8 @@ export default function GroupList() {
                     {sorted.map((g, i) => (
                       <tr
                         key={g.id}
-                        className={`border-b border-slate-100 ${i % 2 === 0 ? 'bg-yellow-50' : 'bg-white'} ${selected.has(g.id) ? 'outline outline-2 outline-blue-400' : ''}`}
+                        ref={rowRef(g.id)}
+                        className={`border-b border-slate-100 ${i % 2 === 0 ? 'bg-yellow-50' : 'bg-white'} ${selected.has(g.id) ? 'outline outline-2 outline-blue-400' : ''} ${highlightId === g.id ? 'ring-2 ring-amber-400 ring-offset-1' : ''}`}
                       >
                         <td className="px-2 py-2">
                           <input
