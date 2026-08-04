@@ -9,16 +9,16 @@
 //
 // Message bodies are stored as a Tiptap document (see EmailCompose.jsx /
 // backend/src/utils/richEmailBody.js), matching StdLettersTab.jsx. This tab
-// edits them as plain text (one line = one paragraph) rather than embedding
-// the full rich-text editor used on the Email Compose page — editing a
-// richly-formatted message here will flatten its formatting.
+// uses the same shared rich-text editor as the Email Compose page, so
+// bold/italic/underline/alignment formatting round-trips correctly.
 
 import { useState, useEffect } from 'react';
+import { useEditor, EditorContent } from '@tiptap/react';
 import { useAuth } from '../context/AuthContext.jsx';
-import { textToTiptapDoc, tiptapDocToText } from '../lib/simpleTiptapDoc.js';
+import { RICH_TEXT_EXTENSIONS, EditorToolbar } from './RichTextEditor.jsx';
 import { useUnsavedChanges } from '../hooks/useUnsavedChanges.js';
 
-const EMPTY = { name: '', subject: '', body: '' };
+const EMPTY = { name: '', subject: '' };
 
 export default function StdEmailsTab({ entityId, api }) {
   const { can } = useAuth();
@@ -31,6 +31,12 @@ export default function StdEmailsTab({ entityId, api }) {
   const [editingId, setEditingId] = useState(null);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState(null);
+
+  const editor = useEditor({
+    extensions: RICH_TEXT_EXTENSIONS,
+    content: '<p></p>',
+    onUpdate: () => markDirty(),
+  });
 
   const canManage =
     can('email_standard_messages_all', 'create') ||
@@ -57,19 +63,22 @@ export default function StdEmailsTab({ entityId, api }) {
 
   function startEdit(msg) {
     setEditingId(msg.id);
-    let text = '';
-    try {
-      text = tiptapDocToText(JSON.parse(msg.body));
-    } catch {
-      text = '';
+    setForm({ name: msg.name, subject: msg.subject ?? '' });
+    if (editor) {
+      try {
+        editor.commands.setContent(JSON.parse(msg.body));
+      } catch {
+        // Legacy plain-text body (pre-dates rich-text storage) — wrap as-is.
+        editor.commands.setContent(`<p>${msg.body}</p>`);
+      }
     }
-    setForm({ name: msg.name, subject: msg.subject ?? '', body: text });
     setSaveError(null);
   }
 
   function cancelEdit() {
     setEditingId(null);
     setForm(EMPTY);
+    editor?.commands.setContent('<p></p>');
     setSaveError(null);
     markClean();
   }
@@ -81,14 +90,14 @@ export default function StdEmailsTab({ entityId, api }) {
 
   async function handleSave(e) {
     e.preventDefault();
-    if (!form.name.trim()) return;
+    if (!form.name.trim() || !editor) return;
     setSaving(true);
     setSaveError(null);
     try {
       await api.saveStdMessage(entityId, {
         name: form.name.trim(),
         subject: form.subject,
-        body: JSON.stringify(textToTiptapDoc(form.body)),
+        body: JSON.stringify(editor.getJSON()),
       });
       markClean();
       cancelEdit();
@@ -120,8 +129,7 @@ export default function StdEmailsTab({ entityId, api }) {
       <p className="text-xs text-slate-600 mb-3">
         Standard email messages owned by this group/team. Anyone composing an email can load and use
         these — only this group/team's leaders (and Administration) can add, edit or delete them
-        here. Editing here is plain text only — bold/italic/underline formatting from the full email
-        editor is not preserved if you save changes from this tab.
+        here.
       </p>
 
       {error && <p className="text-red-600 text-sm mb-3">{error}</p>}
@@ -210,16 +218,11 @@ export default function StdEmailsTab({ entityId, api }) {
             </div>
           </div>
           <div className="mb-3">
-            <label htmlFor="std-email-body" className={labelCls}>
-              Message body (one paragraph per line)
-            </label>
-            <textarea
-              id="std-email-body"
-              rows={8}
-              className={`${inputCls} w-full font-mono text-xs`}
-              value={form.body}
-              onChange={(e) => set('body', e.target.value)}
-            />
+            <label className={labelCls}>Message body</label>
+            <EditorToolbar editor={editor} />
+            <div className="border border-slate-300 rounded min-h-[200px] px-3 py-2 text-sm focus-within:ring-2 focus-within:ring-blue-500 prose prose-sm max-w-none">
+              <EditorContent editor={editor} />
+            </div>
           </div>
           <div className="flex gap-2">
             <button

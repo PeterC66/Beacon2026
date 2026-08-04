@@ -7,17 +7,17 @@
 //              listStdLetters/saveStdLetter/deleteStdLetter
 //
 // Letter bodies are stored as a Tiptap document (see backend routes/letters.js
-// tiptapToPdfContent()). This tab edits them as plain text (one line = one
-// paragraph) rather than embedding the full rich-text editor used on the
-// Letter Compose page — editing a richly-formatted letter here will flatten
-// its formatting (bold/italic/underline/alignment are lost).
+// tiptapToPdfContent()). This tab uses the same shared rich-text editor as
+// the Letter Compose page, so bold/italic/underline/alignment formatting
+// round-trips correctly.
 
 import { useState, useEffect } from 'react';
+import { useEditor, EditorContent } from '@tiptap/react';
 import { useAuth } from '../context/AuthContext.jsx';
-import { textToTiptapDoc, tiptapDocToText } from '../lib/simpleTiptapDoc.js';
+import { RICH_TEXT_EXTENSIONS, EditorToolbar } from './RichTextEditor.jsx';
 import { useUnsavedChanges } from '../hooks/useUnsavedChanges.js';
 
-const EMPTY = { name: '', body: '' };
+const EMPTY = { name: '' };
 
 export default function StdLettersTab({ entityId, api }) {
   const { can } = useAuth();
@@ -30,6 +30,12 @@ export default function StdLettersTab({ entityId, api }) {
   const [editingId, setEditingId] = useState(null);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState(null);
+
+  const editor = useEditor({
+    extensions: RICH_TEXT_EXTENSIONS,
+    content: '<p></p>',
+    onUpdate: () => markDirty(),
+  });
 
   const canManage =
     can('letters_standard_messages_all', 'create') ||
@@ -56,19 +62,21 @@ export default function StdLettersTab({ entityId, api }) {
 
   function startEdit(letter) {
     setEditingId(letter.id);
-    let text = '';
-    try {
-      text = tiptapDocToText(JSON.parse(letter.body));
-    } catch {
-      text = '';
+    setForm({ name: letter.name });
+    if (editor) {
+      try {
+        editor.commands.setContent(JSON.parse(letter.body));
+      } catch {
+        editor.commands.setContent('<p></p>');
+      }
     }
-    setForm({ name: letter.name, body: text });
     setSaveError(null);
   }
 
   function cancelEdit() {
     setEditingId(null);
     setForm(EMPTY);
+    editor?.commands.setContent('<p></p>');
     setSaveError(null);
     markClean();
   }
@@ -80,13 +88,13 @@ export default function StdLettersTab({ entityId, api }) {
 
   async function handleSave(e) {
     e.preventDefault();
-    if (!form.name.trim()) return;
+    if (!form.name.trim() || !editor) return;
     setSaving(true);
     setSaveError(null);
     try {
       await api.saveStdLetter(entityId, {
         name: form.name.trim(),
-        body: JSON.stringify(textToTiptapDoc(form.body)),
+        body: JSON.stringify(editor.getJSON()),
       });
       markClean();
       cancelEdit();
@@ -118,8 +126,6 @@ export default function StdLettersTab({ entityId, api }) {
       <p className="text-xs text-slate-600 mb-3">
         Standard letters owned by this group/team. Anyone composing a letter can load and use these
         — only this group/team's leaders (and Administration) can add, edit or delete them here.
-        Editing here is plain text only; bold/italic/underline formatting from the full letter
-        editor is not preserved if you save changes from this tab.
       </p>
 
       {error && <p className="text-red-600 text-sm mb-3">{error}</p>}
@@ -191,16 +197,11 @@ export default function StdLettersTab({ entityId, api }) {
             />
           </div>
           <div className="mb-3">
-            <label htmlFor="std-letter-body" className={labelCls}>
-              Letter body (one paragraph per line)
-            </label>
-            <textarea
-              id="std-letter-body"
-              rows={10}
-              className={`${inputCls} w-full font-mono text-xs`}
-              value={form.body}
-              onChange={(e) => set('body', e.target.value)}
-            />
+            <label className={labelCls}>Letter body</label>
+            <EditorToolbar editor={editor} />
+            <div className="border border-slate-300 rounded min-h-[250px] px-3 py-2 text-sm focus-within:ring-2 focus-within:ring-blue-500 prose prose-sm max-w-none">
+              <EditorContent editor={editor} />
+            </div>
           </div>
           <div className="flex gap-2">
             <button

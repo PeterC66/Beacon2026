@@ -513,7 +513,7 @@
 | Aspect | Status | Notes |
 |--------|--------|-------|
 | Standard letter templates | Built | — |
-| **beacon2026 extra:** Group/team ownership | beacon2026 extra | Same ownership model as Standard Email Messages (see 6.1.2); managed via a "Std Letters" tab on the group/team record, editable there as plain text only (not the full rich-text editor). Added 2026-08-04. |
+| **beacon2026 extra:** Group/team ownership | beacon2026 extra | Same ownership model as Standard Email Messages (see 6.1.2); managed via a "Std Letters" tab on the group/team record, using the same rich-text editor as Letter Compose. Added 2026-08-04. |
 | **beacon2026 extra:** Admin CRUD for unowned templates | beacon2026 extra | Same admin screen as Standard Email Messages (see 6.1.2) — Home → Set up → "Std emails & letters" (`/standard-messages`). The compose-screen "Save as standard letter" button has been removed (the "Load standard letter" dropdown and "Delete standard letter" button remain). Administration-only (`letters_standard_messages_all`). Added 2026-08-04. |
 
 ---

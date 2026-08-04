@@ -7,14 +7,17 @@
 // tenant that does not already have one of that name — see item 11 of
 // docs/UX-Improvements-Plan-2026-08-04.md.
 //
-// Editing is plain text (one paragraph per line, letters stored as a minimal
-// Tiptap doc under the hood), the same simplification already used by the
-// tenant-scoped Std Emails/Letters screens (StdEmailsTab.jsx,
-// pages/settings/StandardMessages.jsx) — this screen has no rich-text editor.
+// Bodies are stored as a Tiptap document, matching every other Std
+// Emails/Letters screen (StdEmailsTab.jsx, pages/settings/StandardMessages.jsx)
+// — this screen uses the same shared rich-text editor as the compose pages.
+// Default email bodies pre-dating this were stored as plain strings; the
+// legacy fallback below still displays those for editing (as a single
+// paragraph) rather than blanking them.
 
 import { useState, useEffect } from 'react';
+import { useEditor, EditorContent } from '@tiptap/react';
 import { system, getSysToken } from '../../lib/api.js';
-import { textToTiptapDoc, tiptapDocToText } from '../../lib/simpleTiptapDoc.js';
+import { RICH_TEXT_EXTENSIONS, EditorToolbar } from '../../components/RichTextEditor.jsx';
 
 const inputCls =
   'w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500';
@@ -42,12 +45,17 @@ function MessagesSubsection() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const [form, setForm] = useState({ name: '', subject: '', body: '' });
+  const [form, setForm] = useState({ name: '', subject: '' });
   const [editingId, setEditingId] = useState(null);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState(null);
   const [rolloutId, setRolloutId] = useState(null);
   const [rolloutResult, setRolloutResult] = useState(null);
+
+  const editor = useEditor({
+    extensions: RICH_TEXT_EXTENSIONS,
+    content: '<p></p>',
+  });
 
   useEffect(() => {
     load();
@@ -67,24 +75,37 @@ function MessagesSubsection() {
 
   function startEdit(item) {
     setEditingId(item.id);
-    setForm({ name: item.name, subject: item.subject ?? '', body: item.body });
+    setForm({ name: item.name, subject: item.subject ?? '' });
+    if (editor) {
+      try {
+        editor.commands.setContent(JSON.parse(item.body));
+      } catch {
+        // Legacy plain-text body (pre-dates rich-text storage) — wrap as-is.
+        editor.commands.setContent(`<p>${item.body}</p>`);
+      }
+    }
     setSaveError(null);
     setRolloutResult(null);
   }
 
   function cancelEdit() {
     setEditingId(null);
-    setForm({ name: '', subject: '', body: '' });
+    setForm({ name: '', subject: '' });
+    editor?.commands.setContent('<p></p>');
     setSaveError(null);
   }
 
   async function handleSave(e) {
     e.preventDefault();
-    if (!form.name.trim()) return;
+    if (!form.name.trim() || !editor) return;
     setSaving(true);
     setSaveError(null);
     try {
-      const data = { name: form.name.trim(), subject: form.subject, body: form.body };
+      const data = {
+        name: form.name.trim(),
+        subject: form.subject,
+        body: JSON.stringify(editor.getJSON()),
+      };
       if (editingId) {
         await system.updateDefaultMessage(token, editingId, data);
       } else {
@@ -212,16 +233,11 @@ function MessagesSubsection() {
           />
         </div>
         <div className="mb-3">
-          <label htmlFor="def-msg-body" className={labelCls}>
-            Message body
-          </label>
-          <textarea
-            id="def-msg-body"
-            rows={8}
-            className={`${inputCls} font-mono text-xs`}
-            value={form.body}
-            onChange={(e) => setForm((p) => ({ ...p, body: e.target.value }))}
-          />
+          <label className={labelCls}>Message body</label>
+          <EditorToolbar editor={editor} />
+          <div className="border border-slate-300 rounded-lg min-h-[200px] px-3 py-2 text-sm focus-within:ring-2 focus-within:ring-blue-500 prose prose-sm max-w-none">
+            <EditorContent editor={editor} />
+          </div>
         </div>
         <div className="flex gap-2">
           <button
@@ -252,12 +268,17 @@ function LettersSubsection() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const [form, setForm] = useState({ name: '', body: '' });
+  const [form, setForm] = useState({ name: '' });
   const [editingId, setEditingId] = useState(null);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState(null);
   const [rolloutId, setRolloutId] = useState(null);
   const [rolloutResult, setRolloutResult] = useState(null);
+
+  const editor = useEditor({
+    extensions: RICH_TEXT_EXTENSIONS,
+    content: '<p></p>',
+  });
 
   useEffect(() => {
     load();
@@ -277,30 +298,32 @@ function LettersSubsection() {
 
   function startEdit(item) {
     setEditingId(item.id);
-    let text = '';
-    try {
-      text = tiptapDocToText(JSON.parse(item.body));
-    } catch {
-      text = '';
+    setForm({ name: item.name });
+    if (editor) {
+      try {
+        editor.commands.setContent(JSON.parse(item.body));
+      } catch {
+        editor.commands.setContent('<p></p>');
+      }
     }
-    setForm({ name: item.name, body: text });
     setSaveError(null);
     setRolloutResult(null);
   }
 
   function cancelEdit() {
     setEditingId(null);
-    setForm({ name: '', body: '' });
+    setForm({ name: '' });
+    editor?.commands.setContent('<p></p>');
     setSaveError(null);
   }
 
   async function handleSave(e) {
     e.preventDefault();
-    if (!form.name.trim()) return;
+    if (!form.name.trim() || !editor) return;
     setSaving(true);
     setSaveError(null);
     try {
-      const data = { name: form.name.trim(), body: JSON.stringify(textToTiptapDoc(form.body)) };
+      const data = { name: form.name.trim(), body: JSON.stringify(editor.getJSON()) };
       if (editingId) {
         await system.updateDefaultLetter(token, editingId, data);
       } else {
@@ -344,9 +367,7 @@ function LettersSubsection() {
       <h3 className="text-base font-semibold text-slate-700 mb-1">Default Standard Letters</h3>
       <p className="text-sm text-slate-500 mb-3">
         Seeded into every newly-created tenant. Use "Roll out" to push a template into every
-        existing tenant that doesn't already have one of that name. Editing here is plain text only
-        (one paragraph per line) — bold/heading formatting from an existing letter is preserved on
-        load but not editable here.
+        existing tenant that doesn't already have one of that name.
       </p>
 
       {error && <p className="text-red-600 text-sm mb-3">{error}</p>}
@@ -417,16 +438,11 @@ function LettersSubsection() {
           />
         </div>
         <div className="mb-3">
-          <label htmlFor="def-letter-body" className={labelCls}>
-            Letter body (one paragraph per line)
-          </label>
-          <textarea
-            id="def-letter-body"
-            rows={10}
-            className={`${inputCls} font-mono text-xs`}
-            value={form.body}
-            onChange={(e) => setForm((p) => ({ ...p, body: e.target.value }))}
-          />
+          <label className={labelCls}>Letter body</label>
+          <EditorToolbar editor={editor} />
+          <div className="border border-slate-300 rounded-lg min-h-[250px] px-3 py-2 text-sm focus-within:ring-2 focus-within:ring-blue-500 prose prose-sm max-w-none">
+            <EditorContent editor={editor} />
+          </div>
         </div>
         <div className="flex gap-2">
           <button

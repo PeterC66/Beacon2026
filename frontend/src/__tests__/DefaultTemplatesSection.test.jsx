@@ -43,27 +43,29 @@ describe('DefaultTemplatesSection', () => {
   });
 
   it('creates a new default message', async () => {
+    // Message body is now the shared Tiptap rich-text editor (a contenteditable
+    // div, not a labelled textarea) — typing into it isn't simulated here
+    // (jsdom doesn't drive ProseMirror's input handling); this just checks
+    // the name/subject fields and the save wiring, including that the body
+    // is sent as a Tiptap JSON document.
     createDefaultMessage.mockResolvedValueOnce({
       id: 'm2',
       name: 'Second Email',
       subject: 'Hi',
-      body: 'Hello',
+      body: '{"type":"doc","content":[{"type":"paragraph"}]}',
     });
     render(<DefaultTemplatesSection />);
     await screen.findByText('New Member Welcome');
 
     fireEvent.change(screen.getAllByLabelText('Name')[0], { target: { value: 'Second Email' } });
     fireEvent.change(screen.getByLabelText('Subject'), { target: { value: 'Hi' } });
-    fireEvent.change(screen.getByLabelText('Message body'), { target: { value: 'Hello' } });
     fireEvent.click(screen.getAllByRole('button', { name: 'Save' })[0]);
 
-    await waitFor(() =>
-      expect(createDefaultMessage).toHaveBeenCalledWith('fake-sys-token', {
-        name: 'Second Email',
-        subject: 'Hi',
-        body: 'Hello',
-      }),
-    );
+    await waitFor(() => expect(createDefaultMessage).toHaveBeenCalled());
+    const [, payload] = createDefaultMessage.mock.calls[0];
+    expect(payload.name).toBe('Second Email');
+    expect(payload.subject).toBe('Hi');
+    expect(JSON.parse(payload.body)).toMatchObject({ type: 'doc' });
   });
 
   it('rolls out a default message and shows the per-tenant result', async () => {
