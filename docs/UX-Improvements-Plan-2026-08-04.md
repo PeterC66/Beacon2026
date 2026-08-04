@@ -21,7 +21,7 @@
 | # | Item | Status |
 |---|------|--------|
 | 7 | Admin CRUD screen for org-wide (unowned) standard emails/letters | DONE — see below |
-| 1 | Remove "Save as standard email/letter" buttons from compose screens | NOT STARTED — do after #7 |
+| 1 | Remove "Save as standard email/letter" buttons from compose screens | DONE — see below |
 | 2 | Floating scroll arrows: scope trigger to table, fix target to full page | NOT STARTED |
 | 3 | Home menu: "Poll" → "Polls" | NOT STARTED |
 | 4 | Rich formatting for emails (bring to parity with letters) | NOT STARTED — approved, larger piece |
@@ -80,6 +80,20 @@ the save-as-standard button and its inline save-name row from
 `EmailCompose.jsx` (~L349-370) and `LetterCompose.jsx` (~L396-425). Leave the
 "Load standard message/letter" dropdown and delete-from-dropdown control in
 place — those are for *using* a template while composing, unaffected.
+
+**Built:** removed `handleSaveMsg`/`saveName`/`showSaveRow`/"Save as standard
+message" button+row from
+[`EmailCompose.jsx`](../frontend/src/pages/email/EmailCompose.jsx) (also
+dropped the now-unused `canManageStdMessages`/`can` since nothing else in the
+file used them), and the equivalent
+`handleSaveLetter`/`saveName`/`showSaveRow`/"Save as standard letter"
+button+row from
+[`LetterCompose.jsx`](../frontend/src/pages/letters/LetterCompose.jsx). Left
+the "Load standard message/letter" dropdown and (on the letters page) the
+"Delete standard letter" button untouched — creating/editing org-wide
+templates now goes exclusively through the item #7 admin screen; group/team
+leaders still create/edit their own group's templates via the Std
+Emails/Letters tabs, unaffected by this change.
 
 ---
 

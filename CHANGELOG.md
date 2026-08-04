@@ -50,6 +50,16 @@ that still says "Unreleased".
   routes (no backend changes needed), gated on `email_standard_messages_all`
   / `letters_standard_messages_all`.
 
+### Changed
+- **"Save as standard email/letter" removed from the compose screens.**
+  `EmailCompose.jsx` and `LetterCompose.jsx` no longer have a save-as-standard
+  button/inline name row — creating and editing org-wide standard
+  emails/letters now goes exclusively through the new admin screen (see
+  above). The "Load standard message/letter" dropdown, and (on the letters
+  page) the "Delete standard letter" button, are unchanged. Group/team
+  leaders are unaffected — they still manage their own group's templates via
+  the Std Emails/Letters tabs.
+
 ### Fixed
 - **Inactivity timeout did not actually end the session.** The idle timer
   cleared the frontend's React state and logged a `session_timeout` audit
