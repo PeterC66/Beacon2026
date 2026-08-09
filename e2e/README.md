@@ -2,8 +2,7 @@
 
 Playwright-based user acceptance tests for the beacon2026 administration system.
 
-Tests are organised to mirror the **Beacon User Guide** sections, so that each
-test can be traced back to documented user behaviour.
+Tests are organised to mirror the **Beacon User Guide** sections, so that each test can be traced back to documented user behaviour.
 
 ---
 
@@ -12,11 +11,8 @@ test can be traced back to documented user behaviour.
 - Node.js 18+
 - A running beacon2026 instance (frontend + backend + database). Either:
   - a deployed **staging** instance, **or**
-  - the **local docker stack** — run `docker compose up --build` from the repo
-    root, then use the localhost values documented at the top of `.env.example`
-    (this needs no separate staging environment)
-- A system-admin account on that instance (to create the test tenant). The local
-  docker stack seeds one automatically (`admin@beacon2026.local` / `ChangeMe123!`).
+  - the **local docker stack** — run `docker compose up --build` from the repo root, then use the localhost values documented at the top of `.env.example` (this needs no separate staging environment)
+- A system-admin account on that instance (to create the test tenant). The local docker stack seeds one automatically (`admin@beacon2026.local` / `ChangeMe123!`).
 
 ---
 
@@ -70,37 +66,23 @@ npm run test:report
 Runs **once** before any test file.
 
 1. Logs in as system admin.
-2. Creates the test tenant (`beacon2026_TEST_TENANT_SLUG`) if it does not already exist.
-   If it does exist, resets the admin password to the known value (so tests always
-   start from a known state even after a previous failed run).
+2. Creates the test tenant (`beacon2026_TEST_TENANT_SLUG`) if it does not already exist. If it does exist, resets the admin password to the known value (so tests always start from a known state even after a previous failed run).
 3. Logs in as the test-tenant admin.
-4. Seeds a **"Current Account"** finance account and a **"Joint"** member class
-   (the four default member statuses and "Individual" class are created automatically
-   by the beacon2026 tenant-creation process).
+4. Seeds a **"Current Account"** finance account and a **"Joint"** member class (the four default member statuses and "Individual" class are created automatically by the beacon2026 tenant-creation process).
 
 ### Auth fixture (`fixtures/admin.js`)
 
-Each test that needs a logged-in browser imports `{ test, expect }` from
-`fixtures/admin.js` instead of `@playwright/test`.  The `adminPage` fixture
-performs a fresh browser login before each test and provides the authenticated
-page.
+Each test that needs a logged-in browser imports `{ test, expect }` from `fixtures/admin.js` instead of `@playwright/test`.  The `adminPage` fixture performs a fresh browser login before each test and provides the authenticated page.
 
-Because beacon2026 stores the access token **in memory only** (never cookies or
-localStorage), there is no way to share a session via Playwright's `storageState`.
-A fresh login per test adds ~200 ms and keeps tests fully independent.
+Because beacon2026 stores the access token **in memory only** (never cookies or localStorage), there is no way to share a session via Playwright's `storageState`. A fresh login per test adds ~200 ms and keeps tests fully independent.
 
 ### Test data isolation
 
-Every test creates its own data (with a `Date.now()` suffix to avoid collisions)
-and cleans it up in the same test or the last test in a `describe` block.  Tests
-within a file run **serially** (Playwright `fullyParallel: false`) so the
-create → edit → delete sequence within a describe block is reliable.
+Every test creates its own data (with a `Date.now()` suffix to avoid collisions) and cleans it up in the same test or the last test in a `describe` block.  Tests within a file run **serially** (Playwright `fullyParallel: false`) so the create → edit → delete sequence within a describe block is reliable.
 
 ### Global teardown (`global-teardown.js`)
 
-Enabled by default.  The test tenant is **always** deleted after the run,
-regardless of whether tests passed or failed.  This prevents leftover tenants
-from accumulating in the database.
+Enabled by default.  The test tenant is **always** deleted after the run, regardless of whether tests passed or failed.  This prevents leftover tenants from accumulating in the database.
 
 ---
 
@@ -159,37 +141,24 @@ The tests are structured for **regression after deployment**:
 
 1. **Global setup** ensures a clean, known baseline every run.
 2. **Tests are self-contained** — no shared mutable state between test files.
-3. **Numbered ordering** matches the Beacon UG so gaps are obvious when new
-   features are added.
-4. **Acceptance criteria** map directly to user-guide behaviour, not
-   implementation details — so tests remain valid as the frontend evolves.
+3. **Numbered ordering** matches the Beacon UG so gaps are obvious when new features are added.
+4. **Acceptance criteria** map directly to user-guide behaviour, not implementation details — so tests remain valid as the frontend evolves.
 
 When a new beacon2026 feature is implemented:
-- Add a new spec file (or extend an existing one) that covers the corresponding
-  UG section.
+- Add a new spec file (or extend an existing one) that covers the corresponding UG section.
 - If global-setup needs new seed data for those tests, add it to `global-setup.js`.
 
 ---
 
 ## Troubleshooting
 
-**`global-setup` fails with "System-admin login failed"**
-→ Check `beacon2026_API_URL`, `beacon2026_SYSADMIN_USERNAME`, `beacon2026_SYSADMIN_PASSWORD`.
+**`global-setup` fails with "System-admin login failed"** → Check `beacon2026_API_URL`, `beacon2026_SYSADMIN_USERNAME`, `beacon2026_SYSADMIN_PASSWORD`.
 
-**`global-setup` fails with "Tenant admin login failed"**
-→ The tenant may have been left in a bad state from a previous run where teardown
-didn't complete (e.g. process killed).  Manually delete the tenant via the system
-admin UI, then re-run.
+**`global-setup` fails with "Tenant admin login failed"** → The tenant may have been left in a bad state from a previous run where teardown didn't complete (e.g. process killed).  Manually delete the tenant via the system admin UI, then re-run.
 
-**Tests fail with "waitForURL timed out"**
-→ The staging server may be slow.  Increase `navigationTimeout` in
-`playwright.config.js`.
+**Tests fail with "waitForURL timed out"** → The staging server may be slow.  Increase `navigationTimeout` in `playwright.config.js`.
 
-**Download tests time out**
-→ The export endpoint may be generating a large file.  Increase the timeout
-passed to `page.waitForEvent('download', { timeout: … })`.
+**Download tests time out** → The export endpoint may be generating a large file.  Increase the timeout passed to `page.waitForEvent('download', { timeout: … })`.
 
-**Selector not found**
-→ The UI may have changed.  Check the relevant Page Object Model and update the
-locator.  Prefer `getByRole` / `getByLabel` / `getByText` over CSS selectors for
-resilience.
+**Selector not found** → The UI may have changed.  Check the relevant Page Object Model and update the locator.  Prefer `getByRole` / `getByLabel` / `getByText` over CSS selectors for resilience.
+
