@@ -110,6 +110,15 @@ of `backend/.env.example`, plus:
   as the Render setup, carried across.
 - `PAYPAL_STUB_ALLOW` — **leave unset.** The stub refuses to run in
   production regardless of this value, so setting it does nothing useful.
+- `AUTH_RATE_LIMIT_MAX` / `GENERAL_RATE_LIMIT_MAX` — raised well above the
+  `backend/.env.example` defaults (100 / 300 per 15 min per IP) on this box.
+  A fast backend on a single VPS lets the E2E suite (which does a real login
+  per test, plus several requests each) burn through the default budgets
+  from a single CI runner IP well inside the 15-minute window — something
+  Render's slower/cold-start-prone responses had been masking by simply
+  taking longer per test. Real member traffic will come from many different
+  IPs, so raising these here is safe; if the site ever takes real abusive
+  traffic from one IP, lower them back down.
 
 ---
 
