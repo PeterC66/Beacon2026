@@ -16,6 +16,31 @@ that still says "Unreleased".
 
 ---
 
+## [Unreleased] — 2026-08-14
+
+### Added
+- **Production hosting moved from Render+Vercel to a dedicated OVHcloud VPS**
+  (`beacon2026.u3abeacon2.uk`), following the pattern established for
+  BusMaps.uk: single origin behind host Caddy, Docker Compose beneath,
+  Postgres + Redis on the same box, nightly backups with a drilled restore.
+  New `compose.prod.yaml` / `compose.staging.yaml` (a separate file from the
+  dev-only root `docker-compose.yml`, which is unchanged), `deploy/Caddyfile`,
+  `deploy/deploy.sh`, `deploy/deploy-staging.sh`, `deploy/backup.sh`,
+  `deploy/restore.sh`, and `docs/DEPLOY-VPS.md` (the runbook). See
+  `beacon2026-ovhcloud-vps-recommendation.md` for the full rationale and
+  `docs/production-options.md` §0 for how this squares with the existing
+  national-scale hosting analysis. `DEPLOYMENT.md` (the Render/Vercel POC
+  guide) stays in the repo as the documented no-command-line fallback for
+  u3a volunteers.
+
+### Changed
+- `app.set('trust proxy', 1)` comment in `backend/src/app.js` updated to
+  describe the reverse proxy generically (Render's load balancer or Caddy)
+  rather than naming only Render — the setting itself is unchanged and
+  correct for both.
+
+---
+
 ## [Unreleased] — 2026-08-04
 
 ### Added

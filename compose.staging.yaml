@@ -1,0 +1,88 @@
+# beacon2026 — staging compose file (Phase 8). Same shape as compose.prod.yaml
+# but run as a separate Compose project so volumes/networks never collide
+# with production, on a different backend port and its own static dist path.
+#
+# Run with: docker compose -p beacon2026-staging -f compose.staging.yaml ...
+# Config comes from .env.staging (a separate file from production's .env).
+#
+# Seed staging from a SANITISED copy of a production dump, or fresh demo
+# tenants — never a raw production dump (real member PII has no reason to
+# sit on a second, less-watched environment). See docs/DEPLOY-VPS.md §8.
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: beacon2026
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: beacon2026
+    volumes:
+      - beacon2026-staging-db:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U beacon2026']
+      interval: 5s
+      timeout: 5s
+      retries: 12
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    volumes:
+      - beacon2026-staging-redis:/data
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 5s
+      timeout: 5s
+      retries: 12
+
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    env_file: .env.staging
+    environment:
+      DATABASE_URL: postgresql://beacon2026:${POSTGRES_PASSWORD}@postgres:5432/beacon2026
+      REDIS_URL: redis://redis:6379
+      USE_REDIS: 'true'
+      NODE_ENV: production
+      PORT: '3001'
+      CORS_ORIGIN: https://staging.u3abeacon2.uk
+    ports:
+      - '127.0.0.1:3002:3001'
+
+  frontend-build:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+      args:
+        VITE_API_URL: /api
+    entrypoint: ['sh', '-c', 'rm -rf /host-dist/* && cp -r /app/frontend/dist/. /host-dist/']
+    volumes:
+      - /srv/beacon2026-staging/dist:/host-dist
+
+  backup:
+    image: postgres:16-alpine
+    entrypoint:
+      [
+        'sh',
+        '-c',
+        'pg_dump -Fc "postgresql://beacon2026:${POSTGRES_PASSWORD}@postgres:5432/beacon2026" > /backups/beacon2026-staging-$(date -u +%Y%m%dT%H%M%SZ).dump',
+      ]
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - /srv/beacon2026-staging/backups:/backups
+    profiles:
+      - backup
+
+volumes:
+  beacon2026-staging-db:
+  beacon2026-staging-redis:
