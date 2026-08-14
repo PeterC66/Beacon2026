@@ -33,11 +33,38 @@ that still says "Unreleased".
   guide) stays in the repo as the documented no-command-line fallback for
   u3a volunteers.
 
+- **Production is now live on the VPS** (`beacon2026.u3abeacon2.uk`), with real
+  data migrated from Render, a nightly-backed-up database, and a full green
+  E2E run (164/164) against it. GitHub Actions secrets now point at it.
+  Render+Vercel are being kept running in parallel for a safety window before
+  decommissioning (see `beacon2026-ovhcloud-vps-recommendation.md` Phase 9).
+
 ### Changed
 - `app.set('trust proxy', 1)` comment in `backend/src/app.js` updated to
   describe the reverse proxy generically (Render's load balancer or Caddy)
   rather than naming only Render — the setting itself is unchanged and
   correct for both.
+- **Refresh cookie `sameSite` is now configurable** (`COOKIE_SAME_SITE`,
+  default `'lax'`) instead of hardcoded `'none'`. `'none'` was only ever
+  needed for the Render+Vercel split-origin POC, which now sets it explicitly
+  via `render.yaml`. On the VPS's single origin, `'lax'` is correct and
+  CSRF-resistant by default.
+- **`generalLimiter` (the app-wide rate limiter) is now configurable**
+  (`GENERAL_RATE_LIMIT_MAX`, default unchanged at 300/15min/IP) instead of
+  hardcoded, matching `authLimiter`'s existing pattern. Found and needed
+  because the VPS is fast enough that the E2E suite's real per-test logins
+  and requests exhausted the default budget from a single CI-runner IP well
+  inside the rate-limit window — something Render's slower responses had
+  been masking. Both `AUTH_RATE_LIMIT_MAX` and `GENERAL_RATE_LIMIT_MAX` are
+  raised in the VPS's own `.env` (`docs/DEPLOY-VPS.md` §4); production's
+  documented defaults are unchanged.
+- Production/staging Postgres bumped `16-alpine` → `18-alpine`
+  (`compose.prod.yaml`/`compose.staging.yaml`) to match Render's own database,
+  which had been auto-upgraded to PG18 since the VPS plan was written — the
+  version mismatch blocked `pg_dump` during data migration. The 18+ image
+  also changed its expected data-volume mount point to `/var/lib/postgresql`
+  (was `.../data`); the dev-only root `docker-compose.yml` stays on 16-alpine
+  with the old mount, which is correct for that version.
 
 ---
 

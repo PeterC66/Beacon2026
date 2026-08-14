@@ -1,5 +1,10 @@
 # beacon2026 — Deployment Guide (Proof of Concept)
 
+> **This is not what production runs on.** Since 2026-08-14, production runs on a
+> dedicated OVHcloud VPS — see [`docs/DEPLOY-VPS.md`](docs/DEPLOY-VPS.md). This guide
+> is kept as a documented no-command-line fallback path for u3a volunteers without
+> server access.
+
 This guide gets beacon2026 live on the internet using free hosting.
 No command line or server knowledge needed — everything is done through websites.
 

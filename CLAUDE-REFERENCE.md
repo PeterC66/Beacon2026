@@ -2168,8 +2168,34 @@ changes the code, but treat it as a summary, not the authority.
 
 ## 26. Deployment and Infrastructure
 
-See `DEPLOYMENT.md` for the full step-by-step guide (written for non-technical users).
-Key facts for developers:
+**Production (since 2026-08-14) is a dedicated OVHcloud VPS**, single origin
+behind Caddy. See `docs/DEPLOY-VPS.md` for the full runbook (SSH access, deploy
+script, `.env` contents, backups/restore) and
+`beacon2026-ovhcloud-vps-recommendation.md` (PDC notes folder, outside this repo)
+for the migration rationale. Key facts for developers:
+
+| Component | Hosted on | Config |
+|-----------|-----------|--------|
+| Frontend + Backend | One OVHcloud VPS, behind Caddy | `compose.prod.yaml`, `deploy/Caddyfile`; Caddy's `handle_path /api/*` strips the prefix so the backend needs no route changes |
+| Database | Self-hosted PostgreSQL 18 (Docker) | Schema-per-tenant, `beacon2026` DB, named volume `beacon2026-db` |
+
+**Environment variables** live in `/srv/beacon2026/.env` on the VPS itself
+(never committed) — see `docs/DEPLOY-VPS.md` §4 for the full list, including
+`AUTH_RATE_LIMIT_MAX`/`GENERAL_RATE_LIMIT_MAX` raised above the
+`backend/.env.example` defaults (a fast single-VPS backend can otherwise exhaust
+either budget from one busy IP faster than the split-origin POC deployment ever
+could).
+
+**Database backup/restore**: nightly cron (`deploy/backup.sh`, 03:00 UTC,
+14-day retention) plus an off-box pull to the laptop. Restore with
+`deploy/restore.sh <dump-file>` — drops and recreates the database, so treat it
+as destructive. Full instructions in `docs/DEPLOY-VPS.md` §5.
+
+### POC/fallback deployment (Render + Vercel)
+
+See `DEPLOYMENT.md` for the full step-by-step guide (written for non-technical
+users) — kept in the repo as a no-command-line fallback path, **not** what
+production actually runs on.
 
 | Component | Hosted on | Config |
 |-----------|-----------|--------|
