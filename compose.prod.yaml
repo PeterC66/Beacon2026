@@ -1,0 +1,93 @@
+# beacon2026 — production compose file for the OVHcloud VPS.
+#
+# A separate file from the root docker-compose.yml, which stays exactly as it
+# is for local dev and the E2E suite. Differences here: no published
+# Postgres/Redis ports, backend published only on 127.0.0.1, restart policies
+# throughout, all secrets from .env (never committed), VITE_API_URL=/api so
+# the SPA calls Caddy's same-origin /api prefix, and the frontend is a
+# one-shot build container that writes dist/ to a host path Caddy serves
+# (rather than running `vite preview`).
+#
+# See docs/DEPLOY-VPS.md for the full runbook.
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: beacon2026
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: beacon2026
+    volumes:
+      - beacon2026-db:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U beacon2026']
+      interval: 5s
+      timeout: 5s
+      retries: 12
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    volumes:
+      - beacon2026-redis:/data
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 5s
+      timeout: 5s
+      retries: 12
+
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    env_file: .env
+    environment:
+      DATABASE_URL: postgresql://beacon2026:${POSTGRES_PASSWORD}@postgres:5432/beacon2026
+      REDIS_URL: redis://redis:6379
+      USE_REDIS: 'true'
+      NODE_ENV: production
+      PORT: '3001'
+      # PAYPAL_STUB_ALLOW deliberately left unset — the stub refuses to run
+      # in production regardless, so there is nothing to set here.
+    ports:
+      - '127.0.0.1:3001:3001'
+
+  frontend-build:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+      args:
+        VITE_API_URL: /api
+    # One-shot: copy the built dist/ to the host path Caddy serves, then exit.
+    # `docker compose up frontend-build` (or as part of deploy.sh) runs this;
+    # it is not a long-running service.
+    entrypoint: ['sh', '-c', 'rm -rf /host-dist/* && cp -r /app/frontend/dist/. /host-dist/']
+    volumes:
+      - /srv/beacon2026/dist:/host-dist
+
+  backup:
+    image: postgres:16-alpine
+    entrypoint:
+      [
+        'sh',
+        '-c',
+        'pg_dump -Fc "postgresql://beacon2026:${POSTGRES_PASSWORD}@postgres:5432/beacon2026" > /backups/beacon2026-$(date -u +%Y%m%dT%H%M%SZ).dump',
+      ]
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - /srv/beacon2026/backups:/backups
+    profiles:
+      - backup
+
+volumes:
+  beacon2026-db:
+  beacon2026-redis:

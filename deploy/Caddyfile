@@ -1,0 +1,56 @@
+# beacon2026 — Caddyfile for the OVHcloud VPS.
+#
+# The `handle_path /api/*` directive is the whole trick: it strips the /api
+# prefix before proxying, so the backend's root-mounted routes
+# (app.use('/auth', ...), '/members', etc. — see backend/src/app.js) need no
+# change, and the frontend's own /public/... SPA routes never collide with
+# the backend's /public API router. See
+# beacon2026-ovhcloud-vps-recommendation.md §3 and §8 for the full reasoning.
+#
+# Copy this file to /etc/caddy/Caddyfile on the VPS (or symlink it from the
+# repo checkout) and `systemctl reload caddy`.
+
+beacon2026.u3abeacon2.uk {
+    encode zstd gzip
+
+    handle_path /api/* {
+        reverse_proxy 127.0.0.1:3001
+    }
+
+    handle {
+        root * /srv/beacon2026/dist
+        try_files {path} /index.html
+        file_server
+    }
+
+    header {
+        X-Content-Type-Options nosniff
+        X-Frame-Options DENY
+        Referrer-Policy strict-origin-when-cross-origin
+        Strict-Transport-Security "max-age=63072000; includeSubDomains; preload"
+        Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self'; frame-ancestors 'none'; form-action 'self'; base-uri 'self'; object-src 'none'"
+    }
+}
+
+# Staging (Phase 8) — same shape, different backend port and static root.
+staging.u3abeacon2.uk {
+    encode zstd gzip
+
+    handle_path /api/* {
+        reverse_proxy 127.0.0.1:3002
+    }
+
+    handle {
+        root * /srv/beacon2026-staging/dist
+        try_files {path} /index.html
+        file_server
+    }
+
+    header {
+        X-Content-Type-Options nosniff
+        X-Frame-Options DENY
+        Referrer-Policy strict-origin-when-cross-origin
+        Strict-Transport-Security "max-age=63072000; includeSubDomains; preload"
+        Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self'; frame-ancestors 'none'; form-action 'self'; base-uri 'self'; object-src 'none'"
+    }
+}

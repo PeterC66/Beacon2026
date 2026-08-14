@@ -6,6 +6,21 @@
 
 ---
 
+## 0. Current hosting phase (added 2026-08-14)
+
+**For the current POC/pilot phase, hosting is a single OVHcloud VPS** — see
+`beacon2026-ovhcloud-vps-recommendation.md` (in the PDC notes folder, outside
+this repo) and [`docs/DEPLOY-VPS.md`](DEPLOY-VPS.md) for the as-built runbook.
+The analysis below sizes the eventual **1,000–2,000-tenant national system**
+and applies from the point beacon2026 takes on real tenants at that scale —
+it is not in conflict with the VPS move, just answering a different question
+at a different point on the growth curve. In particular, §3.4's caution
+against serving frontend and backend from one origin is right for a CDN-scale
+deployment; at single-VPS POC scale, single-origin is the better trade (see
+the VPS recommendation doc §6 for the full reconciliation).
+
+---
+
 ## 1. Context
 
 beacon2026 is a multi-tenant membership management system for u3a organisations.
