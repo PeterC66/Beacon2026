@@ -33,7 +33,7 @@ without command-line access — it is not deleted by this move.
   ┌──────────┴──────────────────────────────────────┐
   │  Docker Compose  (nothing else published)       │
   │                                                 │
-  │   backend ──────▶ postgres:16-alpine  ──▶ named volume  beacon2026-db
+  │   backend ──────▶ postgres:18-alpine  ──▶ named volume  beacon2026-db
   │      │        └─▶ redis:7-alpine                │
   │      │                                          │
   │   frontend-build  (one-shot: vite build → dist) │
