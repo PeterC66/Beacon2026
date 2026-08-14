@@ -56,8 +56,13 @@ beacon2026 is a ground-up rebuild with these goals:
 - System tier: separate system admin login, tenant CRUD, set-temp-password
   (forces `must_change_password` on all affected users)
 - Auto-migrate and auto-seed on startup (`migrate.js`) — no shell access needed
-- Redis session invalidation (disabled in POC; `USE_REDIS=false`)
-- Deployed: backend on Render, frontend on Vercel, DB on Render PostgreSQL
+- Redis session invalidation — enabled in production (`USE_REDIS=true` on the VPS);
+  the Render POC path still runs without it (`USE_REDIS=false`, falls back to a
+  Postgres table, see `backend/src/utils/redis.js`)
+- Deployed (since 2026-08-14): dedicated OVHcloud VPS, single origin behind Caddy
+  (`docs/DEPLOY-VPS.md`). The original Render (backend + DB) + Vercel (frontend)
+  POC deployment is documented in `DEPLOYMENT.md` as a no-command-line fallback
+  path, not what production runs on
 - CI: GitHub Actions runs backend + frontend tests on every push to `claude/**` branches
 - E2E: Playwright test suite against staging
 - **Cookie consent** — GDPR-compliant dialog on first visit; optional cookies
@@ -325,7 +330,7 @@ startup. All DDL uses `IF NOT EXISTS`; seed INSERTs use `ON CONFLICT DO NOTHING`
 | Frontend | React 18 + Vite |
 | UI styling | Tailwind CSS v3 |
 | Backend | Node.js + Express |
-| Database | PostgreSQL (Render) |
+| Database | PostgreSQL 18 (self-hosted on the VPS; Render Postgres for the POC fallback path) |
 | ORM/query | Prisma (system tables) + `$queryRawUnsafe` (tenant tables) |
 | Auth | JWT access (15 min, in-memory) + refresh token (30 days, httpOnly cookie) |
 | Password | bcrypt, 12 rounds |
@@ -333,7 +338,7 @@ startup. All DDL uses `IF NOT EXISTS`; seed INSERTs use `ON CONFLICT DO NOTHING`
 | Excel | ExcelJS (read + write) |
 | PDF | PDFKit (labels, member list download) |
 | Testing | Vitest (unit), Playwright (E2E) |
-| Deployment | Render (backend + DB), Vercel (frontend) |
+| Deployment | Dedicated OVHcloud VPS, single origin (`docs/DEPLOY-VPS.md`); Render+Vercel POC fallback documented in `DEPLOYMENT.md` |
 
 ### Project layout
 

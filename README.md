@@ -65,9 +65,10 @@ beacon2026/
 │   └── history/              Archived 2026-06 review docs (read-only)
 │
 ├── docker-compose.yml         Local full-stack (Postgres + Redis + apps)
+├── compose.prod.yaml          Production VPS stack (see docs/DEPLOY-VPS.md)
 ├── .github/workflows/ci.yml   Runs backend + frontend lint, format, tests
-├── render.yaml                Render blueprint (backend + Postgres)
-├── DEPLOYMENT.md              Step-by-step deployment guide (Render + Vercel)
+├── render.yaml                Render blueprint — POC/fallback path, not production
+├── DEPLOYMENT.md              Step-by-step no-CLI deployment guide (Render + Vercel POC)
 ├── CLAUDE.md                  Instructions for Claude Code (session workflow)
 ├── CLAUDE-STANDARDS.md        Cross-cutting development checklist
 └── CLAUDE-REFERENCE.md        Detailed implementation notes by module
@@ -164,7 +165,14 @@ This creates the tenant's PostgreSQL schema (`u3a_oxfordshire`), seeds all privi
 
 ## Deployment
 
-See [DEPLOYMENT.md](DEPLOYMENT.md) for a step-by-step guide to deploying on Render (backend + Postgres) and Vercel (frontend) — no command-line knowledge needed.
+**Production** runs on a dedicated OVHcloud VPS (single origin behind Caddy) — see
+[`docs/DEPLOY-VPS.md`](docs/DEPLOY-VPS.md) for the runbook and
+[`beacon2026-ovhcloud-vps-recommendation.md`](../beacon2026-ovhcloud-vps-recommendation.md)
+(PDC notes folder, outside this repo) for the migration rationale.
+
+For a free, no-command-line POC deployment (Render + Vercel), see
+[DEPLOYMENT.md](DEPLOYMENT.md) — kept in the repo as a documented fallback path for
+u3a volunteers without server access, not what production actually runs on.
 
 ## Modules implemented
 
