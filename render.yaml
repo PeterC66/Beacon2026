@@ -50,6 +50,9 @@ services:
       - key: CORS_ORIGIN
         sync: false        # Paste your Vercel frontend URL here
 
+      - key: COOKIE_SAME_SITE
+        value: none         # required for cross-origin (Vercel frontend -> Render backend)
+
 databases:
   - name: beacon2026-db
     region: frankfurt

@@ -33,7 +33,11 @@ const COOKIE_NAME = 'beacon2026_refresh';
 const cookieOptions = {
   httpOnly: true,
   secure: true,
-  sameSite: 'none', // required for cross-origin (Vercel frontend → Render backend)
+  // 'lax' is correct — and CSRF-resistant by default — for the normal
+  // single-origin deployment (VPS: Caddy serves frontend and backend from
+  // the same origin). Render+Vercel's split-origin deployment is the one
+  // exception and sets COOKIE_SAME_SITE=none in render.yaml to match.
+  sameSite: process.env.COOKIE_SAME_SITE ?? 'lax',
   maxAge: 1000 * 60 * 60 * 24 * parseInt(process.env.JWT_REFRESH_EXPIRES_DAYS ?? '30', 10),
 };
 
