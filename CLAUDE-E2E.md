@@ -1,7 +1,9 @@
 # beacon2026 — E2E Test Reference
 
 End-to-end tests live in `e2e/` and run via Playwright against a live
-staging deployment on Render.
+deployment — production, the OVHcloud VPS, since 2026-08-14 (see
+`docs/DEPLOY-VPS.md`). Earlier runs targeted the Render/Vercel POC deployment;
+references to "Render" below describe that era and are kept for history.
 
 ---
 
@@ -26,9 +28,24 @@ staging deployment on Render.
 cd e2e && npm test          # local (needs frontend + backend running)
 ```
 
-In CI the workflow (`.github/workflows/e2e.yml`) runs against the Render
-staging deployment. Backend/frontend URLs and credentials come from
-GitHub Secrets.
+In CI the workflow (`.github/workflows/e2e.yml`) runs against the deployment
+named in the `BEACON2026_BASE_URL`/`BEACON2026_API_URL` GitHub secrets — the VPS
+since 2026-08-14. Credentials also come from GitHub Secrets.
+
+**A fast backend can exhaust the rate limiters the E2E suite never used to hit.**
+The `adminPage` fixture does a real login per test (see "Critical constraint"
+below) plus several requests each; 164 tests is enough to burn through the
+default `AUTH_RATE_LIMIT_MAX` (100/15min/IP) and `GENERAL_RATE_LIMIT_MAX`
+(300/15min/IP) well inside the window when the backend responds fast — which
+Render's slower/cold-start responses had been masking by simply taking longer
+per test, never actually finishing 164 tests inside one 15-minute rate-limit
+window. Symptom: a long, consistent run of failures starting partway through
+the suite, each landing at just under the CI assertion timeout (15s), with no
+errors in the backend's own logs (429s aren't logged) — check
+`X-RateLimit-Remaining` on a live request before assuming it's a real app bug.
+Fix is in the target deployment's own `.env`, not the workflow: raise
+`AUTH_RATE_LIMIT_MAX`/`GENERAL_RATE_LIMIT_MAX` there (both are env-configurable
+in `backend/src/app.js`).
 
 ---
 
@@ -126,7 +143,7 @@ navigate from this starting point using SPA links.
 
 ## Global-setup flow
 
-1. Wait for frontend and backend services (handles Render cold starts)
+1. Wait for frontend and backend services (handled Render cold starts historically; a no-op wait against the always-on VPS)
 2. Log in as system admin
 3. Create the test tenant (or reset admin password if it already exists)
 4. Log in as the test-tenant admin
@@ -269,7 +286,8 @@ npx playwright show-trace e2e/test-results/<test-folder>/trace.zip
 
 ## Debugging E2E failures
 
-- **Render logs** — check the backend's application log for auth errors.
+- **Backend logs** (`docker logs beacon2026-backend-1` on the VPS, or the Render
+  dashboard for the POC deployment) — check for auth errors.
   Common patterns:
   - `POST /auth/login: Invalid credentials` at line 24 → tenant not found
   - `POST /auth/login: Invalid credentials` at line 48 → wrong password or

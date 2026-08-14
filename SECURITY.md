@@ -102,7 +102,8 @@ What the operator must still do:
 
 - Publish a privacy policy and lawful-basis statement for members.
 - Put a data-processing agreement in place with the hosting providers
-  (e.g. Render, Vercel, SendGrid).
+  (OVHcloud for the production VPS, plus SendGrid; Render/Vercel for the POC
+  fallback path).
 - Define and follow retention, breach-notification, and subject-rights
   procedures.
 
