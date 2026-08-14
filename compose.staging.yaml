@@ -11,7 +11,7 @@
 
 services:
   postgres:
-    image: postgres:16-alpine
+    image: postgres:18-alpine
     restart: unless-stopped
     environment:
       POSTGRES_USER: beacon2026
@@ -68,7 +68,7 @@ services:
       - /srv/beacon2026-staging/dist:/host-dist
 
   backup:
-    image: postgres:16-alpine
+    image: postgres:18-alpine
     entrypoint:
       [
         'sh',
