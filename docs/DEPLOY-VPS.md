@@ -122,7 +122,7 @@ which is why `deploy/deploy.sh` takes a `pg_dump` **before** it builds and
 restarts the backend, and why `deploy/backup.sh` runs nightly from cron:
 
 ```cron
-0 3 * * * /srv/beacon2026/deploy/backup.sh >> /var/log/beacon2026-backup.log 2>&1
+0 3 * * * /srv/beacon2026/deploy/backup.sh >> /srv/beacon2026/backups/cron.log 2>&1
 ```
 
 14-day local retention (`deploy/backup.sh` prunes older dumps), plus a
