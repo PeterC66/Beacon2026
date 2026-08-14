@@ -56,7 +56,7 @@ if (process.env.NODE_ENV === 'production' && !process.env.CORS_ORIGIN) {
 
 const app = express();
 
-app.set('trust proxy', 1); // trust Render's load balancer
+app.set('trust proxy', 1); // trust the reverse proxy in front of us (Render's load balancer, or Caddy on the VPS)
 
 // ─── Public read API (/api/v1) ────────────────────────────────────────────
 // Mounted BEFORE the app-wide helmet/cors/rate-limit middleware, because it
