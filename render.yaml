@@ -1,4 +1,11 @@
 # beacon2026/render.yaml
+#
+# This is the documented no-command-line deployment path for u3a volunteers
+# without server/SSH access (see DEPLOYMENT.md) — kept in the repo as a
+# supported fallback. It is NOT what production runs on; production is a
+# dedicated OVHcloud VPS (see docs/DEPLOY-VPS.md). See
+# docs/Phase9-Decommission-Plan.md for the status of the Render service this
+# blueprint originally deployed.
 
 services:
   - type: web
