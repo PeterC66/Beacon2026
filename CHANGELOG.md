@@ -16,6 +16,25 @@ that still says "Unreleased".
 
 ---
 
+## [Unreleased] — 2026-08-15
+
+### Added
+- **Staging environment live on the VPS** (`staging.u3abeacon2.uk`, Phase 8 of
+  `beacon2026-ovhcloud-vps-recommendation.md`) — same box, a second Docker
+  Compose project (`beacon2026-staging`) with its own Postgres, Redis and
+  named volumes, backend on `127.0.0.1:3002`, and a second Caddyfile server
+  block. Seeded fresh (no production data copied across). `docs/DEPLOY-VPS.md`
+  §6 has the runbook; `deploy/deploy-staging.sh` is meant to run from any
+  feature branch.
+
+### Fixed
+- `deploy/deploy-staging.sh` now passes `--env-file .env.staging` to every
+  `docker compose` invocation. `compose.staging.yaml`'s `${POSTGRES_PASSWORD}`
+  substitution is resolved by Compose itself, not by the backend service's
+  `env_file: .env.staging` — and Compose only reads a file literally named
+  `.env` by default. Without the flag, `POSTGRES_PASSWORD` silently defaulted
+  to blank and the postgres container failed its healthcheck on first deploy.
+
 ## [Unreleased] — 2026-08-14
 
 ### Added
