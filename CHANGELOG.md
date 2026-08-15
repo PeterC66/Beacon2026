@@ -19,6 +19,14 @@ that still says "Unreleased".
 ## [Unreleased] — 2026-08-15
 
 ### Added
+- **`docs/Phase9-Decommission-Plan.md`** — the plan for Phase 9 of
+  `beacon2026-ovhcloud-vps-recommendation.md` (cancelling the original
+  Render/Vercel deployment now that the VPS has been live for a parallel-run
+  safety window). Planning only — exit criteria, decommission steps, and a
+  recommended earliest date (2026-08-21) are recorded, but nothing has been
+  cancelled. `render.yaml` and `DEPLOYMENT.md` now carry a note marking them
+  as the documented no-command-line fallback path, independent of whatever
+  the project's own live Render/Vercel services are doing.
 - **Staging environment live on the VPS** (`staging.u3abeacon2.uk`, Phase 8 of
   `beacon2026-ovhcloud-vps-recommendation.md`) — same box, a second Docker
   Compose project (`beacon2026-staging`) with its own Postgres, Redis and

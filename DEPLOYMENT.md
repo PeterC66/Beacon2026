@@ -2,8 +2,11 @@
 
 > **This is not what production runs on.** Since 2026-08-14, production runs on a
 > dedicated OVHcloud VPS — see [`docs/DEPLOY-VPS.md`](docs/DEPLOY-VPS.md). This guide
+> — and the `render.yaml` / `frontend/vercel.json` config files it walks through —
 > is kept as a documented no-command-line fallback path for u3a volunteers without
-> server access.
+> server access, independent of whatever the project's own live Render/Vercel
+> services are doing (see [`docs/Phase9-Decommission-Plan.md`](docs/Phase9-Decommission-Plan.md)
+> for their status).
 
 This guide gets beacon2026 live on the internet using free hosting.
 No command line or server knowledge needed — everything is done through websites.
