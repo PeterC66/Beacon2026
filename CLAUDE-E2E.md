@@ -4,20 +4,27 @@ End-to-end tests live in `e2e/` and run via Playwright against a live
 deployment. Earlier runs targeted the Render/Vercel POC deployment;
 references to "Render" below describe that era and are kept for history.
 
-**Where CI currently points, and why that's worth revisiting:** `.github/workflows/e2e.yml`
-was written to run "against a live staging deployment" (its own header
-comment), but during the 2026-08-14 VPS migration the `BEACON2026_BASE_URL`/
+**Where CI points, and how it got fixed:** `.github/workflows/e2e.yml` was
+written to run "against a live staging deployment" (its own header comment),
+but during the 2026-08-14 VPS migration the `BEACON2026_BASE_URL`/
 `BEACON2026_API_URL` secrets were pointed at the **production** VPS as a
-one-off smoke test after the move, and were never repointed afterwards. A
-real staging environment now exists (`https://staging.u3abeacon2.uk`, see
-`docs/DEPLOY-VPS.md` §6, live since 2026-08-15) — pointing these secrets at
-it instead would match the workflow's original intent and stop a manually
-triggered E2E run from creating/deleting a real tenant against production.
-The workflow only runs on `workflow_dispatch` (its auto-triggers are
-commented out), so the exposure is bounded to whoever manually runs it — but
-this is still a live production risk worth closing out. Not yet done as of
-2026-08-15; ask before changing the secrets, since it's a CI/CD config change
-against a production-facing pipeline.
+one-off smoke test after the move, and were left there — a live production
+risk on a manually-triggered workflow that creates/deletes a real tenant.
+**Fixed 2026-08-15**, once the real staging environment
+(`https://staging.u3abeacon2.uk`, `docs/DEPLOY-VPS.md` §6) existed to point
+at instead: `BEACON2026_BASE_URL` and `BEACON2026_API_URL` now target
+staging. `BEACON2026_SYSADMIN_PASSWORD` had to be updated in the same pass —
+staging seeded its own fresh system-admin password on first deploy
+(`.env.staging`, generated separately from production's, never shared), so
+the old secret value (production's real password) would have failed
+`global-setup`'s login step against the new target. `BEACON2026_SYSADMIN_EMAIL`
+was unchanged (`peter@pcooper.me.uk` on both).
+
+**Lesson for next time a parallel/staging environment is stood up:**
+repointing *where* a workflow targets is not the whole job if the target has
+independent auth — check every secret the workflow depends on, not just the
+URL ones, or the first run just fails one step later with a less obvious
+error.
 
 ---
 
