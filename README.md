@@ -1,31 +1,16 @@
 # beacon2026
 
-Modern rebuild of the [Beacon](https://www.u3abeacon.org.uk/) u3a management system —
-a multi-tenant web app for running u3a groups across the UK.
+Modern rebuild of the [Beacon](https://www.u3abeacon.org.uk/) u3a management system — a multi-tenant web app for running u3a groups across the UK.
 
-> **For human contributors:** this `README.md` and [`CONTRIBUTING.md`](CONTRIBUTING.md)
-> are the entry points for people. The `CLAUDE*.md` files (`CLAUDE.md`,
-> `CLAUDE-STANDARDS.md`, `CLAUDE-REFERENCE.md`, `CLAUDE-E2E.md`) are tooling for
-> Claude Code sessions, not primary documentation — read them only if you want to
-> understand how the AI-assisted workflow operates.
+> **For human contributors:** this `README.md` and [`CONTRIBUTING.md`](CONTRIBUTING.md) are the entry points for people. The `CLAUDE*.md` files (`CLAUDE.md`, `CLAUDE-STANDARDS.md`, `CLAUDE-REFERENCE.md`, `CLAUDE-E2E.md`) are tooling for Claude Code sessions, not primary documentation — read them only if you want to understand how the AI-assisted workflow operates.
 
 ## What beacon2026 is (plain-language overview)
 
-beacon2026 is a web application that u3a organisations use to run their membership,
-groups, finances, and communications. Each u3a gets its own private, isolated
-area within one shared system ("multi-tenant"), so many u3as can be hosted
-together at low cost.
+beacon2026 is a web application that u3a organisations use to run their membership, groups, finances, and communications. Each u3a gets its own private, isolated area within one shared system ("multi-tenant"), so many u3as can be hosted together at low cost.
 
-- **Who uses it:** a u3a's own volunteers — membership secretary, treasurer,
-  group coordinators — through an ordinary web browser. There is nothing to
-  install. Members themselves can join and renew online through a self-service
-  portal.
-- **Where it runs / what it costs:** it deploys to low-cost cloud hosting. A
-  proof-of-concept runs on free tiers; a stable production setup is roughly
-  £12/month plus an optional domain name. See [DEPLOYMENT.md](DEPLOYMENT.md).
-- **Status:** feature-complete against the original Beacon and working end-to-end,
-  but currently a demonstration/proof-of-concept — see the table below and
-  [SECURITY.md](SECURITY.md) before putting real member data into it.
+- **Who uses it:** a u3a's own volunteers — membership secretary, treasurer, group coordinators — through an ordinary web browser. There is nothing to install. Members themselves can join and renew online through a self-service portal.
+- **Where it runs / what it costs:** it deploys to low-cost cloud hosting. A proof-of-concept runs on free tiers; a stable production setup is roughly £12/month plus an optional domain name. See [DEPLOYMENT.md](DEPLOYMENT.md).
+- **Status:** feature-complete against the original Beacon and working end-to-end, but currently a demonstration/proof-of-concept — see the table below and [SECURITY.md](SECURITY.md) before putting real member data into it.
 
 ### Status at a glance
 
@@ -38,8 +23,7 @@ together at low cost.
 | **Independent security audit / penetration test** | Not yet done (see [SECURITY.md](SECURITY.md)) |
 | **User-guide screenshots** | Outstanding — guide text is complete |
 
-For the authoritative feature inventory, see
-[`beacon2026 Project Definition.md`](beacon2026%20Project%20Definition.md).
+For the authoritative feature inventory, see [`beacon2026 Project Definition.md`](beacon2026%20Project%20Definition.md).
 
 ## Project structure
 
@@ -82,6 +66,7 @@ beacon2026/
 │
 ├── docker-compose.yml         Local full-stack (Postgres + Redis + apps)
 ├── compose.prod.yaml          Production VPS stack (see docs/DEPLOY-VPS.md)
+├── compose.staging.yaml       Staging VPS stack, same box, separate project (docs/DEPLOY-VPS.md §6)
 ├── .github/workflows/ci.yml   Runs backend + frontend lint, format, tests
 ├── render.yaml                Render blueprint — POC/fallback path, not production
 ├── DEPLOYMENT.md              Step-by-step no-CLI deployment guide (Render + Vercel POC)
@@ -90,9 +75,7 @@ beacon2026/
 └── CLAUDE-REFERENCE.md        Detailed implementation notes by module
 ```
 
-> For the full module/route/page inventory, see
-> [`beacon2026 Project Definition.md`](beacon2026%20Project%20Definition.md) — this tree
-> is a quick orientation map; that document is the authoritative detail.
+> For the full module/route/page inventory, see [`beacon2026 Project Definition.md`](beacon2026%20Project%20Definition.md) — this tree is a quick orientation map; that document is the authoritative detail.
 
 ## Quick start (local development)
 
@@ -112,10 +95,7 @@ npm run build                 # prisma generate — creates the Prisma client
 npm run dev                   # pushes schema + seeds first admin, then serves on :3001
 ```
 
-On startup the server runs `prisma db push` and seeds the first system admin
-automatically (from `SEED_ADMIN_EMAIL` / `SEED_ADMIN_PASSWORD`) — no separate
-migrate/seed step is needed. To run those manually instead, use
-`npm run db:migrate` and `npm run db:seed`.
+On startup the server runs `prisma db push` and seeds the first system admin automatically (from `SEED_ADMIN_EMAIL` / `SEED_ADMIN_PASSWORD`) — no separate migrate/seed step is needed. To run those manually instead, use `npm run db:migrate` and `npm run db:seed`.
 
 ### Frontend
 
@@ -130,17 +110,14 @@ The frontend expects the API at `VITE_API_URL` (defaults to `http://localhost:30
 
 ### Run the whole stack with Docker (optional)
 
-Instead of installing Postgres/Redis and running each service by hand, the repo
-ships a `docker-compose.yml` that brings up Postgres, Redis, the backend, and the
-frontend together — handy for a quick demo or for running the E2E suite locally:
+Instead of installing Postgres/Redis and running each service by hand, the repo ships a `docker-compose.yml` that brings up Postgres, Redis, the backend, and the frontend together — handy for a quick demo or for running the E2E suite locally:
 
 ```bash
 docker compose up --build       # http://localhost:5173 (frontend), :3001 (API)
 docker compose down -v          # stop and wipe the database volume
 ```
 
-All credentials in `docker-compose.yml` are throwaway local-only values; the
-stack is for development only and is never used to deploy a real instance.
+All credentials in `docker-compose.yml` are throwaway local-only values; the stack is for development only and is never used to deploy a real instance.
 
 ## Tests
 
@@ -150,12 +127,9 @@ cd frontend && npm test            # vitest + React Testing Library smoke tests
 cd e2e      && npm test            # Playwright (staging, or the local docker stack)
 ```
 
-Add coverage with `npm run test:coverage` in `backend/` or `frontend/` — it writes
-an HTML report to `coverage/` and prints a summary. The E2E suite can target
-staging or the local docker stack above (see `e2e/.env.example`).
+Add coverage with `npm run test:coverage` in `backend/` or `frontend/` — it writes an HTML report to `coverage/` and prints a summary. The E2E suite can target staging or the local docker stack above (see `e2e/.env.example`).
 
-CI runs backend + frontend lint, format check, and tests (with coverage uploaded
-as an artifact) on every push to a `claude/**` branch and on PRs to `main`.
+CI runs backend + frontend lint, format check, and tests (with coverage uploaded as an artifact) on every push to a `claude/**` branch and on PRs to `main`.
 
 ## Creating a u3a tenant
 
@@ -175,8 +149,7 @@ curl -X POST http://localhost:3001/system/tenants \
   }'
 ```
 
-This creates the tenant's PostgreSQL schema (`u3a_oxfordshire`), seeds all privilege
-resources, creates the five default roles, and sets up the first admin user.
+This creates the tenant's PostgreSQL schema (`u3a_oxfordshire`), seeds all privilege resources, creates the five default roles, and sets up the first admin user.
 
 ## Architecture
 
@@ -197,6 +170,11 @@ resources, creates the five default roles, and sets up the first admin user.
 [`docs/DEPLOY-VPS.md`](docs/DEPLOY-VPS.md) for the runbook and
 [`beacon2026-ovhcloud-vps-recommendation.md`](../beacon2026-ovhcloud-vps-recommendation.md)
 (PDC notes folder, outside this repo) for the migration rationale.
+
+**Staging** runs alongside it on the same VPS, at `https://staging.u3abeacon2.uk`
+— its own Postgres, Redis, and Compose project, seeded fresh (never a copy of
+real member data). See [`docs/DEPLOY-VPS.md`](docs/DEPLOY-VPS.md) §6 for how
+to deploy a feature branch there and reset it.
 
 For a free, no-command-line POC deployment (Render + Vercel), see
 [DEPLOYMENT.md](DEPLOYMENT.md) — kept in the repo as a documented fallback path for
@@ -235,3 +213,4 @@ u3a volunteers without server access, not what production actually runs on.
 - [x] Public links (online joining toggle, portal URLs)
 - [x] Public pages (groups list, calendar — unauthenticated)
 - [x] Members Portal (self-service: login, groups, calendar, personal details, online renewal, card request)
+

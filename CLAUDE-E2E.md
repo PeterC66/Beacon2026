@@ -1,9 +1,23 @@
 # beacon2026 — E2E Test Reference
 
 End-to-end tests live in `e2e/` and run via Playwright against a live
-deployment — production, the OVHcloud VPS, since 2026-08-14 (see
-`docs/DEPLOY-VPS.md`). Earlier runs targeted the Render/Vercel POC deployment;
+deployment. Earlier runs targeted the Render/Vercel POC deployment;
 references to "Render" below describe that era and are kept for history.
+
+**Where CI currently points, and why that's worth revisiting:** `.github/workflows/e2e.yml`
+was written to run "against a live staging deployment" (its own header
+comment), but during the 2026-08-14 VPS migration the `BEACON2026_BASE_URL`/
+`BEACON2026_API_URL` secrets were pointed at the **production** VPS as a
+one-off smoke test after the move, and were never repointed afterwards. A
+real staging environment now exists (`https://staging.u3abeacon2.uk`, see
+`docs/DEPLOY-VPS.md` §6, live since 2026-08-15) — pointing these secrets at
+it instead would match the workflow's original intent and stop a manually
+triggered E2E run from creating/deleting a real tenant against production.
+The workflow only runs on `workflow_dispatch` (its auto-triggers are
+commented out), so the exposure is bounded to whoever manually runs it — but
+this is still a live production risk worth closing out. Not yet done as of
+2026-08-15; ask before changing the secrets, since it's a CI/CD config change
+against a production-facing pipeline.
 
 ---
 

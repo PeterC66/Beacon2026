@@ -154,26 +154,51 @@ restarts — confirm tenant/member counts afterwards.
 
 ---
 
-## 6. Staging (Phase 8)
+## 6. Staging
 
-Same box, a second Compose project (`-p beacon2026-staging`), so volumes and
-networks never collide with production:
+**Live since 2026-08-15** at `https://staging.u3abeacon2.uk`. Same box, a
+second Compose project (`-p beacon2026-staging`), so volumes and networks
+never collide with production:
 
 ```bash
 cd /srv/beacon2026-staging
+git checkout <your-feature-branch>   # deploy-staging.sh deliberately doesn't force main
 ./deploy/deploy-staging.sh
 ```
 
 `compose.staging.yaml` publishes the backend on `127.0.0.1:3002` (not 3001),
 uses its own named volumes (`beacon2026-staging-db`, `beacon2026-staging-redis`),
-its own `.env.staging`, and `CORS_ORIGIN=https://staging.u3abeacon2.uk`. The
-Caddyfile's second server block routes `staging.u3abeacon2.uk` to port 3002
-and a separate static root, reusing the same `handle_path /api/*` trick.
+its own `.env.staging` (fresh secrets, not shared with production — see
+`/srv/beacon2026-staging/.env.staging` on the box, not committed), and
+`CORS_ORIGIN=https://staging.u3abeacon2.uk`. The Caddyfile's second server
+block routes `staging.u3abeacon2.uk` to port 3002 and a separate static root,
+reusing the same `handle_path /api/*` trick.
 
-Seed staging from a **sanitised** copy of a production dump, or fresh demo
-tenants — never a raw production dump. Staging is exempt from the nightly
-off-box backup pull (it's disposable by design); `deploy-staging.sh` still
-takes a local on-box dump before each deploy.
+**`docker compose` needs `--env-file .env.staging` on every invocation** —
+`deploy-staging.sh` already does this (fixed in PR #526). Compose's own
+`${POSTGRES_PASSWORD}` variable substitution in `compose.staging.yaml` is
+resolved by Compose itself, not by the backend service's
+`env_file: .env.staging` directive, and Compose only auto-reads a file
+literally named `.env` (which doesn't exist in `/srv/beacon2026-staging`).
+Running any raw `docker compose -p beacon2026-staging -f compose.staging.yaml
+...` command by hand without `--env-file .env.staging` will silently pass a
+blank Postgres password and fail the healthcheck — always use
+`deploy-staging.sh`, or prefix manual commands with `--env-file .env.staging`.
+
+Seeded fresh (no data copied across) at first deploy — no tenants exist until
+you create one via the system-admin UI at `https://staging.u3abeacon2.uk/system/login`.
+Going forward, seed from a **sanitised** copy of a production dump, or fresh
+demo tenants — never a raw production dump. Staging is exempt from the
+nightly off-box backup pull (it's disposable by design); `deploy-staging.sh`
+still takes a local on-box dump before each deploy.
+
+To wipe staging back to empty (e.g. after a batch of manual testing):
+
+```bash
+cd /srv/beacon2026-staging
+docker compose --env-file .env.staging -p beacon2026-staging -f compose.staging.yaml down -v
+./deploy/deploy-staging.sh
+```
 
 ---
 
@@ -194,3 +219,14 @@ config bug.
 — confirm Caddy actually reloaded (`systemctl status caddy`) and that the
 Caddyfile's `beacon2026.u3abeacon2.uk` block matches the DNS record exactly
 (no trailing dot / wrong record type).
+
+**First deploy to a brand-new domain fails the script's own `curl .../api/health`
+check with a TLS error, even though everything else succeeded** — this is a
+race, not a real failure. Caddy only starts its Let's Encrypt HTTP-01
+challenge *after* it reloads with the new domain in its config, and issuance
+takes a few seconds; the deploy script's `curl` can run before the
+certificate exists. Confirmed via `journalctl -u caddy`: on the first staging
+deploy (2026-08-15), the certificate was obtained ~7 seconds after
+`systemctl reload caddy` returned. Check `journalctl -u caddy --since '5
+minutes ago'` for `"certificate obtained successfully"` before assuming a
+real problem — this only happens once per domain, not on every deploy.
