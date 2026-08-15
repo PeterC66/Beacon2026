@@ -539,6 +539,20 @@ All items in this section have been completed (v0.8.6).
   service settings, without recreating the service. See
   `DEPLOYMENT.md` → Troubleshooting for the general fix if this recurs.
 
+## Staging — Deferred Items
+
+- `[OPEN]` **E2E CI (`.github/workflows/e2e.yml`) points at production, not
+  staging.** `BEACON2026_BASE_URL`/`BEACON2026_API_URL` were set to the
+  production VPS URL on 2026-08-14 as a one-off post-migration smoke test and
+  never repointed. A real staging environment now exists
+  (`https://staging.u3abeacon2.uk`, live 2026-08-15, `docs/DEPLOY-VPS.md` §6)
+  — repointing the secrets there would match the workflow's own documented
+  intent ("run against a live staging deployment") and stop a manually
+  triggered run from creating/deleting a real tenant against production. The
+  workflow only runs on `workflow_dispatch` (auto-triggers are commented
+  out), so exposure is bounded, but this should be closed out. See
+  `CLAUDE-E2E.md` for the full context.
+
 ## Temporary UI — Deferred Items
 
 - `[DEFERRED]` **Menu "NEW" badges are temporary and should be removed.**

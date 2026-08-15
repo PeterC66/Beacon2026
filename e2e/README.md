@@ -10,8 +10,14 @@ Tests are organised to mirror the **Beacon User Guide** sections, so that each t
 
 - Node.js 18+
 - A running beacon2026 instance (frontend + backend + database). Either:
-  - a deployed **staging** instance, **or**
+  - the deployed **staging** instance at `https://staging.u3abeacon2.uk` (see
+    `docs/DEPLOY-VPS.md` §6 — deploy your branch there first with
+    `deploy-staging.sh`), **or**
   - the **local docker stack** — run `docker compose up --build` from the repo root, then use the localhost values documented at the top of `.env.example` (this needs no separate staging environment)
+
+  In CI (`.github/workflows/e2e.yml`, manually triggered), the target is
+  whatever `BEACON2026_BASE_URL`/`BEACON2026_API_URL` point at — see
+  `CLAUDE-E2E.md` for the current target and an open decision about it.
 - A system-admin account on that instance (to create the test tenant). The local docker stack seeds one automatically (`admin@beacon2026.local` / `ChangeMe123!`).
 
 ---

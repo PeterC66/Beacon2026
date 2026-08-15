@@ -66,6 +66,7 @@ beacon2026/
 │
 ├── docker-compose.yml         Local full-stack (Postgres + Redis + apps)
 ├── compose.prod.yaml          Production VPS stack (see docs/DEPLOY-VPS.md)
+├── compose.staging.yaml       Staging VPS stack, same box, separate project (docs/DEPLOY-VPS.md §6)
 ├── .github/workflows/ci.yml   Runs backend + frontend lint, format, tests
 ├── render.yaml                Render blueprint — POC/fallback path, not production
 ├── DEPLOYMENT.md              Step-by-step no-CLI deployment guide (Render + Vercel POC)
@@ -169,6 +170,11 @@ This creates the tenant's PostgreSQL schema (`u3a_oxfordshire`), seeds all privi
 [`docs/DEPLOY-VPS.md`](docs/DEPLOY-VPS.md) for the runbook and
 [`beacon2026-ovhcloud-vps-recommendation.md`](../beacon2026-ovhcloud-vps-recommendation.md)
 (PDC notes folder, outside this repo) for the migration rationale.
+
+**Staging** runs alongside it on the same VPS, at `https://staging.u3abeacon2.uk`
+— its own Postgres, Redis, and Compose project, seeded fresh (never a copy of
+real member data). See [`docs/DEPLOY-VPS.md`](docs/DEPLOY-VPS.md) §6 for how
+to deploy a feature branch there and reset it.
 
 For a free, no-command-line POC deployment (Render + Vercel), see
 [DEPLOYMENT.md](DEPLOYMENT.md) — kept in the repo as a documented fallback path for

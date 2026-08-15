@@ -35,6 +35,16 @@ that still says "Unreleased".
   `.env` by default. Without the flag, `POSTGRES_PASSWORD` silently defaulted
   to blank and the postgres container failed its healthcheck on first deploy.
 
+### Documentation
+- Development/deployment docs (`README.md`, `docs/DEPLOY-VPS.md`,
+  `beacon2026 Project Definition.md`, `CLAUDE-E2E.md`, `e2e/README.md`,
+  `KNOWN-ISSUES.md`) updated for the new staging environment: how to deploy a
+  branch to it, how to reset it, and two gotchas hit on its first live deploy
+  (the `--env-file` bug above, and a harmless TLS race between Caddy's
+  certificate issuance and the deploy script's own health-check curl on a
+  brand-new domain). Flagged an open decision: CI's E2E workflow currently
+  points at production rather than the new staging environment.
+
 ## [Unreleased] — 2026-08-14
 
 ### Added
