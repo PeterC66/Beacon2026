@@ -7,21 +7,27 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
+# --env-file is required on every invocation: compose.staging.yaml's
+# ${POSTGRES_PASSWORD} substitution is resolved by Compose itself (not by
+# the backend service's `env_file: .env.staging`), and Compose only reads a
+# file named `.env` by default — which does not exist in this directory.
+COMPOSE="docker compose --env-file .env.staging -p beacon2026-staging -f compose.staging.yaml"
+
 echo "==> Backing up staging database before deploy..."
-docker compose -p beacon2026-staging -f compose.staging.yaml --profile backup run --rm backup
+$COMPOSE --profile backup run --rm backup
 
 echo "==> Pulling latest code on current branch: $(git branch --show-current)"
 git pull
 
 echo "==> Building images..."
-docker compose -p beacon2026-staging -f compose.staging.yaml build
+$COMPOSE build
 
 echo "==> Starting backend/postgres/redis..."
-docker compose -p beacon2026-staging -f compose.staging.yaml up -d postgres redis backend
+$COMPOSE up -d postgres redis backend
 
 echo "==> Building frontend into /srv/beacon2026-staging/dist..."
 mkdir -p /srv/beacon2026-staging/dist
-docker compose -p beacon2026-staging -f compose.staging.yaml run --rm frontend-build
+$COMPOSE run --rm frontend-build
 
 echo "==> Reloading Caddy..."
 sudo systemctl reload caddy
