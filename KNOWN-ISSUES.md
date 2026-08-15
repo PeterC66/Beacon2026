@@ -541,16 +541,15 @@ All items in this section have been completed (v0.8.6).
 
 ## Staging — Deferred Items
 
-- `[OPEN]` **E2E CI (`.github/workflows/e2e.yml`) points at production, not
+- `[FIXED]` **E2E CI (`.github/workflows/e2e.yml`) pointed at production, not
   staging.** `BEACON2026_BASE_URL`/`BEACON2026_API_URL` were set to the
   production VPS URL on 2026-08-14 as a one-off post-migration smoke test and
-  never repointed. A real staging environment now exists
-  (`https://staging.u3abeacon2.uk`, live 2026-08-15, `docs/DEPLOY-VPS.md` §6)
-  — repointing the secrets there would match the workflow's own documented
-  intent ("run against a live staging deployment") and stop a manually
-  triggered run from creating/deleting a real tenant against production. The
-  workflow only runs on `workflow_dispatch` (auto-triggers are commented
-  out), so exposure is bounded, but this should be closed out. See
+  left there. Repointed to `https://staging.u3abeacon2.uk` on 2026-08-15,
+  matching the workflow's own documented intent ("run against a live staging
+  deployment"). `BEACON2026_SYSADMIN_PASSWORD` also had to be updated in the
+  same pass — staging seeded its own fresh system-admin password
+  (`.env.staging`, not shared with production), so the old secret value would
+  have failed `global-setup`'s login step against the new target. See
   `CLAUDE-E2E.md` for the full context.
 
 ## Temporary UI — Deferred Items

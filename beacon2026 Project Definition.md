@@ -68,10 +68,9 @@ beacon2026 is a ground-up rebuild with these goals:
   Postgres/Redis, seeded fresh, for testing a feature branch before it merges
 - CI: GitHub Actions runs backend + frontend tests on every push to `claude/**` branches
 - E2E: Playwright test suite, manually triggered (`workflow_dispatch`) against
-  whatever URL the `BEACON2026_BASE_URL`/`BEACON2026_API_URL` GitHub secrets
-  point at — currently the production VPS, carried over unchanged from the
-  2026-08-14 migration smoke test (see `CLAUDE-E2E.md`); repointing these at
-  the new staging environment instead is an open decision, not yet made
+  the staging environment (`BEACON2026_BASE_URL`/`BEACON2026_API_URL` GitHub
+  secrets, repointed 2026-08-15 from a leftover 2026-08-14 production smoke
+  test — see `CLAUDE-E2E.md`)
 - **Cookie consent** — GDPR-compliant dialog on first visit; optional cookies
   (`beacon_last_u3a`, localStorage preferences) gated behind user consent;
   gear icon to reopen dialog; essential cookies (refresh token, consent choice)

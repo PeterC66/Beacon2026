@@ -18,6 +18,14 @@ that still says "Unreleased".
 
 ## [Unreleased] — 2026-08-15
 
+### Fixed
+- **E2E CI now actually targets staging, not production.** `BEACON2026_BASE_URL`/
+  `BEACON2026_API_URL` GitHub secrets repointed to `https://staging.u3abeacon2.uk`
+  (previously a leftover from the 2026-08-14 migration's one-off production
+  smoke test). `BEACON2026_SYSADMIN_PASSWORD` also updated to staging's own
+  seeded admin password, without which `global-setup` would have failed its
+  login step against the new target.
+
 ### Added
 - **`docs/Phase9-Decommission-Plan.md`** — the plan for Phase 9 of
   `beacon2026-ovhcloud-vps-recommendation.md` (cancelling the original
